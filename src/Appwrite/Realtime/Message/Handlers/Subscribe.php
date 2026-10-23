@@ -52,8 +52,7 @@ class Subscribe extends Action
         $userId = $realtime->connections[$connectionId]['userId'] ?? '';
 
         $parsedPayloads = [];
-        $existing = $realtime->getSubscriptionMetadata($connectionId);
-        $subscriptionsBefore = \count($existing);
+        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
 
         foreach ($items as $payload) {
             $subscriptionId = \array_key_exists('subscriptionId', $payload)
@@ -76,28 +75,6 @@ class Subscribe extends Action
                 'convertedChannels' => $convertedChannels,
                 'queries' => $convertedQueries,
             ];
-        }
-
-        // Checked against the whole batch before any state changes, so a rejected batch applies nothing.
-        $subscriptionIds = \array_keys($existing);
-        $channels = $realtime->connections[$connectionId]['channels'] ?? [];
-        foreach ($parsedPayloads as $parsedPayload) {
-            $subscriptionIds[] = $parsedPayload['subscriptionId'];
-            $channels = [...$channels, ...$parsedPayload['convertedChannels']];
-        }
-
-        if (\count(\array_unique($subscriptionIds)) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
-            throw new Exception(
-                Exception::REALTIME_POLICY_VIOLATION,
-                'Too many subscriptions. A connection can have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.'
-            );
-        }
-
-        if (\count(\array_unique($channels)) > APP_LIMIT_REALTIME_CHANNELS) {
-            throw new Exception(
-                Exception::REALTIME_POLICY_VIOLATION,
-                'Too many channels. A connection can subscribe to at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels.'
-            );
         }
 
         // Console live event tail: authorize every `console.tail.<projectId>` channel
@@ -154,6 +131,29 @@ class Subscribe extends Action
                 // Carry the authorizing roles so the tail is revoked when the viewer's roles change.
                 $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled, $readRoles];
             }
+        }
+
+        // Checked against the whole batch right before any state changes, with no yield in
+        // between, so a rejected batch applies nothing and concurrent frames cannot both pass.
+        $subscriptionIds = \array_keys($realtime->getSubscriptionMetadata($connectionId));
+        $channels = $realtime->connections[$connectionId]['channels'] ?? [];
+        foreach ($parsedPayloads as $parsedPayload) {
+            $subscriptionIds[] = $parsedPayload['subscriptionId'];
+            $channels = [...$channels, ...$parsedPayload['convertedChannels']];
+        }
+
+        if (\count(\array_unique($subscriptionIds)) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+            throw new Exception(
+                Exception::REALTIME_POLICY_VIOLATION,
+                'Too many subscriptions. A connection can have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.'
+            );
+        }
+
+        if (\count(\array_unique($channels)) > APP_LIMIT_REALTIME_CHANNELS) {
+            throw new Exception(
+                Exception::REALTIME_POLICY_VIOLATION,
+                'Too many channels. A connection can subscribe to at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels.'
+            );
         }
 
         foreach ($parsedPayloads as $parsedPayload) {
