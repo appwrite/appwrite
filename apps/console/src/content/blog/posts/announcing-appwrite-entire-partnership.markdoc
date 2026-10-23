@@ -25,7 +25,7 @@ faqs:
     answer: "Entire is available as a Git provider on [Appwrite Cloud](/sign-in). The self-hosted Appwrite Console does not offer new Entire connections yet."
 ---
 
-Software development has become agentic. A developer describes what they want, a coding agent writes the change, and the developer reviews it and moves on. One session can produce a new commit every few minutes.
+Not long ago, building a feature meant hours in your editor. Today, it often starts with a sentence. You describe what you want, a coding agent writes the change, and by the time you've read through the diff, the next commit is already waiting. Software development has become agentic.
 
 That changes where the time goes. Writing code is no longer the slow part. The slow part is everything after it: understanding why a change was made, and finding out whether it works once it's running.
 
