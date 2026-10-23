@@ -215,6 +215,10 @@ class Upsert extends Action
             throw new Exception($this->getLimitException(), $e->getMessage());
         }
 
+        if (\array_any($documents, fn (Document $document): bool => $document->offsetExists('$permissions'))) {
+            $this->purgeListCacheForPermissions($dbForProject, $database, $collection);
+        }
+
         foreach ($upserted as $document) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collection->getId());

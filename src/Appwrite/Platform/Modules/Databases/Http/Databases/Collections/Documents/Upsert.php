@@ -331,6 +331,10 @@ class Upsert extends Action
             throw new Exception($this->getLimitException(), $e->getMessage());
         }
 
+        if ($callerProvidedPermissions) {
+            $this->purgeListCacheForPermissions($dbForProject, $database, $collection);
+        }
+
         if (empty($upserted[0])) {
             $upserted[0] = $dbForDatabases->getDocument($collectionTableId, $documentId);
         }

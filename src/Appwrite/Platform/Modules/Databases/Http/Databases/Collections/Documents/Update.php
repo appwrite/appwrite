@@ -156,9 +156,11 @@ class Update extends Action
             PermissionType::Delete,
         ]);
 
+        $callerProvidedPermissions = !\is_null($permissions);
+
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
-        if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
+        if (!$isAPIKey && !$isPrivilegedUser && $callerProvidedPermissions) {
             foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
@@ -299,6 +301,10 @@ class Update extends Action
             throw $this->unauthorized($e);
         } catch (LimitException $e) {
             throw new Exception($this->getLimitException(), $e->getMessage());
+        }
+
+        if ($callerProvidedPermissions) {
+            $this->purgeListCacheForPermissions($dbForProject, $database, $collection);
         }
 
         $response->dynamic($document, $this->getResponseModel());

@@ -464,6 +464,14 @@ class Update extends Action
                     APP_COLLECTIONS_SUBQUERIES
                 ));
 
+                if ($this->setsPermissions($action, $data)) {
+                    try {
+                        $this->purgeListCacheForPermissions($dbForProject, $database, $collection);
+                    } catch (\Throwable $e) {
+                        Console::warning('Failed to purge cached list responses after a permission change: ' . $e->getMessage());
+                    }
+                }
+
                 $groupId = $this->getGroupId();
                 $resourceId = $this->getResourceId();
                 $contextKey = $this->getContext();
@@ -619,6 +627,16 @@ class Update extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    private function setsPermissions(string $action, mixed $data): bool
+    {
+        return match ($action) {
+            'update', 'upsert' => isset($data['$permissions']),
+            'bulkUpdate' => isset($data['data']['$permissions']),
+            'bulkUpsert' => \array_any($data, fn (mixed $document): bool => isset($document['$permissions'])),
+            default => false,
+        };
     }
 
     private function queueCleanup(DeletePublisher $publisherForDeletes, Document $project, Document $transaction): void

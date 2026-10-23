@@ -272,6 +272,19 @@ class Action extends AppwriteAction
     }
 
     /**
+     * Purge a collection's cached list responses after a write set document permissions.
+     *
+     * Only a collection with document security reads through document permissions, so only its
+     * cached responses can keep serving rows to a caller whose read was revoked.
+     */
+    protected function purgeListCacheForPermissions(Database $dbForProject, Document $database, Document $collection): void
+    {
+        if ($collection->getAttribute('documentSecurity', false)) {
+            $this->purgeListCache($dbForProject, $database, $collection->getId());
+        }
+    }
+
+    /**
      * The library refuses a related document granting a role the caller does not hold with the roles it holds, as
      * main's message did; any other refusal keeps the default message.
      */

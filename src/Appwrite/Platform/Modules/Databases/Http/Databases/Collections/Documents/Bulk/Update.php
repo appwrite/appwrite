@@ -231,6 +231,10 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        if (isset($data['$permissions'])) {
+            $this->purgeListCacheForPermissions($dbForProject, $database, $collection);
+        }
+
         foreach ($documents as $document) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collection->getId());
