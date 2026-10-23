@@ -31,8 +31,8 @@ class Delete extends Action
             ->desc('Delete project transfer')
             ->groups(['api', 'organization'])
             ->label('scope', 'projects.write')
-            ->label('audits.event', 'project.transfer.delete')
-            ->label('audits.resource', 'project.transfer/{request.transferId}')
+            ->label('audits.event', 'transfer.delete')
+            ->label('audits.resource', 'transfer/{request.transferId}')
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'transfers',

@@ -144,6 +144,10 @@ trait TransfersBase
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
         $this->assertSame(201, $restricted['headers']['status-code']);
+
+        // A client clock slightly ahead of the server still gets the full 30 days
+        $response = $this->createTransfer($projectId, ['expire' => DateTime::addSeconds(new \DateTime(), 30 * 24 * 60 * 60 + 60)]);
+        $this->assertSame(201, $response['headers']['status-code']);
         $this->assertSame($this->getClaimer()['teamId'], $restricted['body']['recipientId']);
 
         /**

@@ -36,7 +36,7 @@ class Update extends Action
             ->desc('Update project transfer status')
             ->groups(['api', 'organization'])
             ->label('scope', 'projects.write')
-            ->label('audits.event', 'project.transfer.update')
+            ->label('audits.event', 'transfer.update')
             ->label('audits.resource', 'project/{response.$id}')
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'ip:{ip},url:{url}')

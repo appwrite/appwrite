@@ -26,6 +26,8 @@ class Create extends Action
 
     private const DEFAULT_EXPIRE = 24 * 60 * 60;
     private const MAX_EXPIRE = 30 * 24 * 60 * 60;
+    // Clients compute "30 days from now" with their own clock, which can run ahead of ours
+    private const CLOCK_SKEW = 5 * 60;
 
     public static function getName()
     {
@@ -40,7 +42,7 @@ class Create extends Action
             ->desc('Create project transfer')
             ->groups(['api', 'organization'])
             ->label('scope', 'projects.write')
-            ->label('audits.event', 'project.transfer.create')
+            ->label('audits.event', 'transfer.create')
             ->label('audits.resource', 'project/{request.projectId}')
             ->label('sdk', new Method(
                 namespace: 'organization',
@@ -113,7 +115,7 @@ class Create extends Action
         $now = new \DateTime();
         if ($expire === null) {
             $expire = DateTime::addSeconds($now, self::DEFAULT_EXPIRE);
-        } elseif (new \DateTime($expire) > (clone $now)->modify('+' . self::MAX_EXPIRE . ' seconds')) {
+        } elseif (new \DateTime($expire) > (clone $now)->modify('+' . (self::MAX_EXPIRE + self::CLOCK_SKEW) . ' seconds')) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Expiration time must be at most 30 days from now.');
         }
 

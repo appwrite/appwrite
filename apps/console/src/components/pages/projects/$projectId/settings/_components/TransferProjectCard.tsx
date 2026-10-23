@@ -117,6 +117,37 @@ export function TransferProjectCard({
     }
   }, [displayedPage, requested.data, requested.isFetching, requestedPage])
 
+  // Go back to the shown page, so the next click requests the failed page again
+  useEffect(() => {
+    if (
+      requested.isError &&
+      !requested.isFetching &&
+      requestedPage !== displayedPage
+    ) {
+      toast.error(
+        getErrorMessage(requested.error, t('Failed to load transfer links')),
+      )
+      setRequestedPage(displayedPage)
+    }
+  }, [
+    displayedPage,
+    requested.error,
+    requested.isError,
+    requested.isFetching,
+    requestedPage,
+    t,
+  ])
+
+  // Deleting the last link on the last page leaves that page empty
+  const total = displayed.data?.total ?? 0
+  const lastPage = Math.max(1, Math.ceil(total / pageSize))
+  useEffect(() => {
+    if (displayed.data && displayedPage > lastPage) {
+      setRequestedPage(lastPage)
+      setDisplayedPage(lastPage)
+    }
+  }, [displayed.data, displayedPage, lastPage])
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const seconds =
@@ -160,7 +191,6 @@ export function TransferProjectCard({
   }
 
   const transfers = displayed.data?.transfers ?? []
-  const total = displayed.data?.total ?? 0
 
   return (
     <>
@@ -186,7 +216,7 @@ export function TransferProjectCard({
             </p>
           ) : transfers.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">
-              {displayed.isLoading
+              {displayed.isLoading || total > 0
                 ? t('Loading...')
                 : t('No active transfer links')}
             </p>
