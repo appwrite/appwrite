@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
@@ -7,21 +7,28 @@ import { OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS } from '@/lib/keyboard-shortcuts/u
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
 import { getActiveLaunchEvent } from '@/lib/init/events'
+import { resolveInitBrowseDisplayCurrentDay } from '@/lib/init/init-event-browse'
 import { applyInitEventVisibility } from '@/lib/init/event-visibility'
+import { Route } from '@/routes/_public/init'
 import { useInitLiveClock } from '@/lib/init/use-init-live-clock'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
-import { InitPresenceProvider, useInitPresence } from '@/lib/init/init-presence-context'
+import {
+  InitPresenceProvider,
+  useInitPresence,
+} from '@/lib/init/init-presence-context'
 import { scrollToInitDayFromHash } from '@/lib/init/scroll-to-day-card'
 import { hasLikelyConsoleSession } from '@/lib/console-account-get'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { cn } from '@/lib/utils'
 import { EventHero } from './_components/EventHero'
+import { Init5EventHero } from './_components/Init5EventHero'
 import { EventSchedule } from './_components/EventSchedule'
 import { InitTicketSection } from './_components/InitTicketSection'
 import { GiveawayPromoCard } from './_components/GiveawayPromoCard'
 import { GetInvolvedCards } from './_components/GetInvolvedCards'
 import { InitPrizesSection } from './_components/InitPrizesSection'
 import { InitPageCredits } from './_components/InitPageCredits'
+import { InitEventsBrowse } from './_components/InitEventsBrowse'
 import { InitGlobalCommunitySection } from './_components/InitGlobalCommunitySection'
 import { InitPresenceBaselineSync } from './_components/InitPresenceBaselineSync'
 import { useInitCommunityGlobeData } from '@/lib/init/use-init-community-globe-data'
@@ -142,7 +149,11 @@ function InitPageContent({
             <LiveBannerBar liveBanner={event.liveBanner} />
           ) : null}
 
-          <EventHero event={event} liveBanner={event.liveBanner} />
+          {event.id === 'init-nov-2026' ? (
+            <Init5EventHero event={event} liveBanner={event.liveBanner} />
+          ) : (
+            <EventHero event={event} liveBanner={event.liveBanner} />
+          )}
 
           <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-8 sm:px-6">
             <EventSchedule event={event} fullWidth />
@@ -150,7 +161,12 @@ function InitPageContent({
 
           <div className="border-t border-border" aria-hidden />
 
-          <div className={cn('relative overflow-hidden', INIT_TICKET_VIDEO_SURFACE_CLASS)}>
+          <div
+            className={cn(
+              'relative overflow-hidden',
+              INIT_TICKET_VIDEO_SURFACE_CLASS,
+            )}
+          >
             <div
               className={cn(
                 'pointer-events-none absolute inset-0',
@@ -159,10 +175,7 @@ function InitPageContent({
               aria-hidden
             />
             <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-4 pt-2 sm:px-6 sm:pb-6">
-              <InitTicketSection
-                event={event}
-                account={account}
-              />
+              <InitTicketSection event={event} account={account} />
             </div>
           </div>
 
@@ -221,9 +234,13 @@ function InitPageContent({
           <div className="mx-auto w-full max-w-7xl space-y-8 px-4 pb-8 pt-8 sm:px-6 sm:pb-10">
             <GetInvolvedCards event={event} account={account} />
 
+            <InitEventsBrowse activeEventId={event.id} />
+
             <InitPageCredits
               showPresenceCredit={Boolean(event.presenceEnabled && account)}
-              showGlobeCredit={Boolean(event.presenceEnabled && !event.isRecapMode)}
+              showGlobeCredit={Boolean(
+                event.presenceEnabled && !event.isRecapMode,
+              )}
             />
           </div>
         </InitTicketVideoRecordingProvider>
@@ -250,16 +267,36 @@ function InitPageContent({
 }
 
 export function View() {
-  const { mockInitCurrentDay } = useDebugOverrides()
+  const { event: browseEventSlug } = Route.useSearch()
+  const { mockInitCurrentDay, mockInitActiveEventId } = useDebugOverrides()
   const nowMs = useInitLiveClock(mockInitCurrentDay)
   const baseEvent = useMemo(() => {
-    const active = getActiveLaunchEvent()
+    const active = getActiveLaunchEvent(new Date(), {
+      browseEventSlug,
+      activeEventId: mockInitActiveEventId,
+    })
     if (!active) return undefined
+    const displayCurrentDay = resolveInitBrowseDisplayCurrentDay(
+      active,
+      mockInitCurrentDay,
+    )
     return applyInitEventVisibility(active, {
-      currentDay: mockInitCurrentDay,
+      currentDay: displayCurrentDay,
       nowMs,
     })
-  }, [mockInitCurrentDay, nowMs])
+  }, [browseEventSlug, mockInitActiveEventId, mockInitCurrentDay, nowMs])
+
+  const browseKeyRef = useRef<string | null>(null)
+  useEffect(() => {
+    const browseKey = `${browseEventSlug ?? ''}:${mockInitActiveEventId ?? ''}`
+    if (browseKeyRef.current === null) {
+      browseKeyRef.current = browseKey
+      return
+    }
+    if (browseKeyRef.current === browseKey) return
+    browseKeyRef.current = browseKey
+    window.scrollTo({ top: 0, behavior: 'auto' })
+  }, [browseEventSlug, mockInitActiveEventId])
 
   const {
     data: account,
@@ -283,10 +320,7 @@ export function View() {
       )}
     >
       <InitGiveawayRaffleProvider event={baseEvent}>
-        <InitPageContent
-          baseEvent={baseEvent}
-          account={account}
-        />
+        <InitPageContent baseEvent={baseEvent} account={account} />
       </InitGiveawayRaffleProvider>
     </InitPresenceProvider>
   )

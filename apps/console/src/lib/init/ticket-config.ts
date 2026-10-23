@@ -13,6 +13,15 @@ export const INIT_JULY_2026_TICKET_CONFIG: InitEventTicketConfig = {
   ],
 }
 
+/** Init Nov 2026 (Init 5) - same ticket types as July until event-specific rules are added. */
+export const INIT_NOV_2026_TICKET_CONFIG: InitEventTicketConfig = {
+  rules: [
+    { typeId: 'gold', when: INIT_TICKET_MATCHERS.appwriteVerified },
+    { typeId: 'silver', when: INIT_TICKET_MATCHERS.longTermVip },
+    { typeId: 'standard', when: INIT_TICKET_MATCHERS.always },
+  ],
+}
+
 /** Init Sep 2026 - same ticket types as July until event-specific rules are added. */
 export const INIT_SEP_2026_TICKET_CONFIG: InitEventTicketConfig = {
   rules: [
@@ -24,9 +33,12 @@ export const INIT_SEP_2026_TICKET_CONFIG: InitEventTicketConfig = {
 
 const INIT_EVENT_TICKET_CONFIGS: Record<string, InitEventTicketConfig> = {
   'init-july-2026': INIT_JULY_2026_TICKET_CONFIG,
+  'init-nov-2026': INIT_NOV_2026_TICKET_CONFIG,
   'init-sep-2026': INIT_SEP_2026_TICKET_CONFIG,
 }
 
-export function getInitEventTicketConfig(eventId: string): InitEventTicketConfig {
+export function getInitEventTicketConfig(
+  eventId: string,
+): InitEventTicketConfig {
   return INIT_EVENT_TICKET_CONFIGS[eventId] ?? DEFAULT_INIT_EVENT_TICKET_CONFIG
 }

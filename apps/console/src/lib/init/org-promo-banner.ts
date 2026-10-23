@@ -96,10 +96,13 @@ export function getInitOrgPromoBannerContent(options?: {
 export function isInitEventDuring(options?: {
   now?: Date
   currentDay?: number
+  activeEventId?: string | null
 }): boolean {
   if (!getEnvProfileFeatures().init) return false
 
-  const event = getActiveLaunchEvent(options?.now)
+  const event = getActiveLaunchEvent(options?.now, {
+    activeEventId: options?.activeEventId,
+  })
   if (!event?.featured || event.days.length === 0) return false
 
   const phase = resolveInitOrgPromoPhase(
