@@ -10,6 +10,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { ConnectVcsLink } from '@/components/global/shared/ConnectVcsLink'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
@@ -324,13 +325,17 @@ export function ConnectRepositorySection({
           <div className="flex flex-wrap items-center justify-center gap-2">
             {vcsOAuthProviders.map((provider) => (
               <Button key={provider.id} variant="secondary" asChild>
-                <a href={vcsAuthUrl(provider.id)}>
+                <ConnectVcsLink
+                  href={vcsAuthUrl(provider.id)}
+                  projectId={projectId}
+                  provider={provider.id}
+                >
                   <VcsIcon
                     type={provider.id}
                     className={vcsProviderButtonIconClassName}
                   />
                   {t(`Connect to ${provider.label}`)}
-                </a>
+                </ConnectVcsLink>
               </Button>
             ))}
           </div>
@@ -519,14 +524,16 @@ export function ConnectRepositorySection({
                         ),
                       )
                       .map((p) => (
-                        <a
+                        <ConnectVcsLink
                           key={p.id}
                           href={vcsAuthUrl(p.id)}
+                          projectId={projectId}
+                          provider={p.id}
                           className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                         >
                           <p.Icon className="h-3 w-3" />
                           {t(`Add ${p.label} account`)}
-                        </a>
+                        </ConnectVcsLink>
                       ))}
                   </div>
                 </SelectContent>

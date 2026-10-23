@@ -1391,4 +1391,11 @@ export const heSharedUiDictionary: Record<string, string> = {
   'App key copied': 'מפתח האפליקציה הועתק',
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
+  'Checking your existing installations...':
+    'בודקים את ההתקנות הקיימות שלכם...',
+  'Using an existing installation is not available yet.':
+    'עדיין אי אפשר להשתמש בהתקנה קיימת.',
+  'Use an account you already connected in another project, or add a new one.':
+    'השתמשו בחשבון שכבר חיברתם בפרויקט אחר, או הוסיפו חשבון חדש.',
+  'Add a new account': 'הוספת חשבון חדש',
 }

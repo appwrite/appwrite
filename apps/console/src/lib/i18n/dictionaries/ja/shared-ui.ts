@@ -1353,4 +1353,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Load more': 'さらに読み込む',
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
+  'Checking your existing installations...':
+    '既存のインストールを確認しています...',
+  'Using an existing installation is not available yet.':
+    '既存のインストールはまだ使用できません。',
+  'Use an account you already connected in another project, or add a new one.':
+    'ほかのプロジェクトで接続済みのアカウントを使用するか、新しいアカウントを追加してください。',
+  'Add a new account': '新しいアカウントを追加',
 }

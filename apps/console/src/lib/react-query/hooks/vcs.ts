@@ -15,6 +15,7 @@ import { Query } from '@appwrite.io/console'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { fetchOrganizationProjects, fetchOrganizations } from './organizations'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -54,6 +55,73 @@ export async function fetchVcsInstallations(
   const projectSdk = sdk.forProject(projectId)
   const queries = [Query.limit(limit), Query.offset(page * limit)]
   return await projectSdk.vcs.listInstallations({ queries })
+}
+
+/** A provider account the user already connected in another project. */
+export interface ReusableInstallation {
+  provider: string
+  providerInstallationId: string
+  organization: string
+  projects: Pick<Models.Project, '$id' | 'name'>[]
+}
+
+/**
+ * Installations from the user's other projects that the given project does not
+ * have yet, one entry per provider account. There is no endpoint listing them
+ * across projects, so this reads every project's installations a few at a time.
+ */
+export async function fetchReusableInstallations(
+  projectId: string,
+  provider: string,
+): Promise<ReusableInstallation[]> {
+  const [organizations, current] = await Promise.all([
+    fetchOrganizations(),
+    fetchVcsInstallations(projectId, 0, 100),
+  ])
+  const linked = new Set(
+    current.installations.map(
+      (installation) => installation.providerInstallationId,
+    ),
+  )
+  const projects = (
+    await Promise.all(
+      organizations.teams.map((team) => fetchOrganizationProjects(team.$id)),
+    )
+  )
+    .flatMap((result) => result.projects)
+    .filter((project) => project.$id !== projectId)
+
+  const accounts = new Map<string, ReusableInstallation>()
+  for (let index = 0; index < projects.length; index += 6) {
+    const batch = projects.slice(index, index + 6)
+    const lists = await Promise.all(
+      batch.map((project) =>
+        // A paused or blocked project should not hide the others.
+        fetchVcsInstallations(project.$id, 0, 100).catch(() => ({
+          installations: [] as Models.Installation[],
+        })),
+      ),
+    )
+    lists.forEach((list, position) => {
+      const project = batch[position]
+      for (const installation of list.installations) {
+        if (installation.provider !== provider) continue
+        if (linked.has(installation.providerInstallationId)) continue
+        const account = accounts.get(installation.providerInstallationId) ?? {
+          provider: installation.provider,
+          providerInstallationId: installation.providerInstallationId,
+          organization: installation.organization,
+          projects: [],
+        }
+        account.projects.push({ $id: project.$id, name: project.name })
+        accounts.set(installation.providerInstallationId, account)
+      }
+    })
+  }
+
+  return [...accounts.values()].sort((a, b) =>
+    a.organization.localeCompare(b.organization),
+  )
 }
 
 /**
@@ -396,6 +464,19 @@ export function vcsInstallationsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function reusableInstallationsQueryOptions(
+  projectId: string | null | undefined,
+  provider: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['vcs', 'installations', 'reusable', projectId, provider],
+    queryFn: () => fetchReusableInstallations(projectId!, provider!),
+    enabled: !!projectId && !!provider,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
   })
 }
 
