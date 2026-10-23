@@ -166,6 +166,19 @@ class Migrations extends Action
             return;
         }
 
+        // Claim it: a concurrent delivery that read the same document conflicts here instead of running it twice.
+        try {
+            $dbForProject->withRequestTimestamp(
+                new \DateTime($current->getUpdatedAt()),
+                fn () => $dbForProject->updateDocument('migrations', $current->getId(), new Document([
+                    'status' => 'processing',
+                ]))
+            );
+        } catch (Conflict) {
+            Console::warning('Migration(' . $migration->getId() . ') was claimed by another delivery, skipping this one');
+            return;
+        }
+
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
