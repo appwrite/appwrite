@@ -184,7 +184,7 @@ class Upsert extends Action
         $upserted = [];
 
         try {
-            $modified = $this->withPermissionFence(
+            $modified = $this->withPermissionPurge(
                 $dbForProject,
                 $database,
                 $collection,

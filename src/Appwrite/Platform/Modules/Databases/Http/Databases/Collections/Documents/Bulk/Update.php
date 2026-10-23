@@ -216,7 +216,7 @@ class Update extends Action
                     $documents[] = $document;
                 }
             };
-            $modified = $this->withPermissionFence(
+            $modified = $this->withPermissionPurge(
                 $dbForProject,
                 $database,
                 $collection,

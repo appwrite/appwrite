@@ -19,7 +19,9 @@ final class ListCacheTest extends TestCase
 
     private Outage $outage;
 
-    private ListCache $listCache;
+    private Cache $cache;
+
+    private string $key;
 
     protected function setUp(): void
     {
@@ -32,7 +34,8 @@ final class ListCacheTest extends TestCase
         }
 
         $this->outage = new Outage(new Redis($redis));
-        $this->listCache = new ListCache(new Cache($this->outage), 'list-cache-test:' . \bin2hex(\random_bytes(8)));
+        $this->cache = new Cache($this->outage);
+        $this->key = 'list-cache-test:' . \bin2hex(\random_bytes(8));
     }
 
     protected function tearDown(): void
@@ -40,100 +43,48 @@ final class ListCacheTest extends TestCase
         $this->outage->down = false;
     }
 
-    public function testCachesUnderLease(): void
+    public function testPurgesCachedResponsesAroundTheWrite(): void
     {
-        $this->listCache->save(self::FIELD, ['row'], $this->listCache->lease());
+        $this->cache->save($this->key, ['row read before the write'], self::FIELD);
 
-        $this->assertSame(['row'], $this->listCache->load(self::FIELD, self::TTL));
+        $result = ListCache::purged([new ListCache($this->cache, $this->key)], function (): string {
+            $this->cache->save($this->key, ['row read during the write'], self::FIELD);
+
+            return 'stored';
+        });
+
+        $this->assertSame('stored', $result);
+        $this->assertFalse($this->cache->load($this->key, self::TTL, self::FIELD));
     }
 
-    public function testFencedWriteRetiresCachedResponses(): void
-    {
-        $this->listCache->save(self::FIELD, ['row'], $this->listCache->lease());
-
-        ListCache::fenced([$this->listCache], fn () => null);
-
-        $this->assertFalse($this->listCache->load(self::FIELD, self::TTL));
-    }
-
-    public function testNothingIsSavedWhileFenced(): void
-    {
-        $token = $this->listCache->fence();
-
-        $this->assertNull($this->listCache->lease());
-
-        $this->listCache->release($token);
-
-        $this->assertNotNull($this->listCache->lease());
-    }
-
-    public function testReadRacingAFencedWriteIsNotSaved(): void
-    {
-        $lease = $this->listCache->lease();
-
-        ListCache::fenced([$this->listCache], fn () => null);
-        $this->listCache->save(self::FIELD, ['row read before the write'], $lease);
-
-        $this->assertFalse($this->listCache->load(self::FIELD, self::TTL));
-    }
-
-    public function testFenceThatCannotBeRegisteredRefusesTheWrite(): void
+    public function testPurgeFailureBeforeTheWriteRefusesIt(): void
     {
         $this->outage->down = true;
-        $written = false;
+        $stored = false;
 
         try {
-            ListCache::fenced([$this->listCache], function () use (&$written): void {
-                $written = true;
+            ListCache::purged([new ListCache($this->cache, $this->key)], function () use (&$stored): void {
+                $stored = true;
             });
-            $this->fail('A write that could not be fenced ran');
+            $this->fail('A write whose cached responses could not be purged was not refused');
         } catch (Unavailable) {
         }
 
-        $this->assertFalse($written, 'A write that could not be fenced ran');
+        $this->assertFalse($stored, 'A write whose cached responses could not be purged was stored');
     }
 
-    public function testFailedReleaseKeepsTheWriteAndServesNothingCachedBeforeIt(): void
+    public function testPurgeFailureAfterTheWriteKeepsIt(): void
     {
-        $this->listCache->save(self::FIELD, ['row read before the write'], $this->listCache->lease());
+        $stored = false;
 
-        $result = ListCache::fenced([$this->listCache], function (): string {
+        $result = ListCache::purged([new ListCache($this->cache, $this->key)], function () use (&$stored): string {
+            $stored = true;
             $this->outage->down = true;
 
             return 'stored';
         });
 
-        $this->assertSame('stored', $result, 'A stored write failed on its release');
-
-        $this->outage->down = false;
-
-        $this->assertFalse($this->listCache->load(self::FIELD, self::TTL), 'A response cached before the write was served after the cache recovered');
-        $this->assertNull($this->listCache->lease(), 'A response was saved before the unreleased fence lapsed');
-    }
-
-    public function testFailedWriteReleasesItsFence(): void
-    {
-        try {
-            ListCache::fenced([$this->listCache], function (): never {
-                throw new \LogicException('Write failed');
-            });
-        } catch (\LogicException $error) {
-            $this->assertSame('Write failed', $error->getMessage());
-        }
-
-        $this->assertNotNull($this->listCache->lease());
-    }
-
-    public function testFencesEveryCache(): void
-    {
-        $other = new ListCache(new Cache($this->outage), 'list-cache-test:' . \bin2hex(\random_bytes(8)));
-
-        ListCache::fenced([$this->listCache, $other], function () use ($other): void {
-            $this->assertNull($this->listCache->lease());
-            $this->assertNull($other->lease());
-        });
-
-        $this->assertNotNull($this->listCache->lease());
-        $this->assertNotNull($other->lease());
+        $this->assertSame('stored', $result, 'A stored write failed on the purge after it');
+        $this->assertTrue($stored);
     }
 }

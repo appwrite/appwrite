@@ -335,7 +335,7 @@ class Update extends Action
 
                 // Every write purges its cached rows, nested and cascaded rows included, inside a savepoint of
                 // this transaction, so a read before COMMIT can cache the old row again. Purge them again after COMMIT.
-                $purged = ListCache::fenced(
+                $purged = ListCache::purged(
                     $this->getPermissionListCaches($dbForProject, $authorization, $operations),
                     fn () => $dbForDatabases->getCache()->recordPurges(fn () => $dbForDatabases->withTransaction($commit)),
                 );

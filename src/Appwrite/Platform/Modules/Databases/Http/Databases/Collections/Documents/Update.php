@@ -277,7 +277,7 @@ class Update extends Action
         $this->validateTimestamps($data, $dbForDatabases);
 
         try {
-            $document = $this->withPermissionFence(
+            $document = $this->withPermissionPurge(
                 $dbForProject,
                 $database,
                 $collection,
