@@ -1,26 +1,28 @@
-//! Which forwarded headers the server believes for the client's address and
-//! scheme, when it runs behind a proxy.
+//! Which forwarded headers the server believes for the client's address,
+//! scheme, host and port, when it runs behind a proxy.
 //!
 //! PHP: `Utopia\Http\TrustedHeaders`.
 
-/// Headers naming the client address and the scheme it used, read in order;
-/// the first usable value wins. Names are lowercased and trimmed, empty ones
-/// dropped.
+/// Headers naming the client address, the scheme it used, the host it asked
+/// for and the port it connected to, read in order; the first usable value
+/// wins. Names are lowercased and trimmed, empty ones dropped.
 ///
-/// The default trusts no address header and `x-forwarded-proto` for the
-/// scheme.
+/// The default trusts no address, host or port header and
+/// `x-forwarded-proto` for the scheme.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TrustedHeaders {
     ip: Vec<String>,
     proto: Vec<String>,
+    host: Vec<String>,
+    port: Vec<String>,
 }
 
 impl Default for TrustedHeaders {
-    /// No address header, and `x-forwarded-proto` for the scheme.
+    /// No address, host or port header, and `x-forwarded-proto` for the scheme.
     ///
     /// PHP: `new TrustedHeaders()`.
     fn default() -> Self {
-        Self { ip: Vec::new(), proto: vec!["x-forwarded-proto".to_owned()] }
+        Self { ip: Vec::new(), proto: vec!["x-forwarded-proto".to_owned()], host: Vec::new(), port: Vec::new() }
     }
 }
 
@@ -32,19 +34,24 @@ impl TrustedHeaders {
         DEFAULT.clone()
     }
 
-    /// Trusts the headers `ip` for the client address and `proto` for the
-    /// scheme. Names are lowercased and trimmed; empty names and `0` are
-    /// dropped.
+    /// Trusts the headers `ip` for the client address, `proto` for the
+    /// scheme, `host` for the host asked for and `port` for the port
+    /// connected to. Names are lowercased and trimmed; empty names and `0`
+    /// are dropped.
     ///
-    /// PHP: `new TrustedHeaders($ip, $proto)`.
-    pub fn new<I, P>(ip: I, proto: P) -> Self
+    /// PHP: `new TrustedHeaders($ip, $proto, $host, $port)`.
+    pub fn new<I, P, H, O>(ip: I, proto: P, host: H, port: O) -> Self
     where
         I: IntoIterator,
         I::Item: AsRef<str>,
         P: IntoIterator,
         P::Item: AsRef<str>,
+        H: IntoIterator,
+        H::Item: AsRef<str>,
+        O: IntoIterator,
+        O::Item: AsRef<str>,
     {
-        Self { ip: normalize(ip), proto: normalize(proto) }
+        Self { ip: normalize(ip), proto: normalize(proto), host: normalize(host), port: normalize(port) }
     }
 
     /// Headers naming the client address.
@@ -55,6 +62,16 @@ impl TrustedHeaders {
     /// Headers naming the scheme the client used.
     pub fn proto(&self) -> &[String] {
         &self.proto
+    }
+
+    /// Headers naming the host the client asked for.
+    pub fn host(&self) -> &[String] {
+        &self.host
+    }
+
+    /// Headers naming the port the client connected to.
+    pub fn port(&self) -> &[String] {
+        &self.port
     }
 }
 

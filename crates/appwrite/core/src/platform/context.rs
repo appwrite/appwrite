@@ -142,7 +142,7 @@ impl Context {
             &state.config.trusted_headers,
             &state.config.trusted_proxies,
         );
-        let hostname = request_hostname(&request);
+        let hostname = request_hostname(&request, &state.config.trusted_proxies);
         let locale = state.config.locale.clone();
         Self {
             path_params: path_params.into_iter().map(|(k, v)| (k, Value::String(v))).collect(),
@@ -180,6 +180,13 @@ impl Context {
             db: None,
             platform_db: OnceLock::new(),
         }
+    }
+
+    /// The value a trusted proxy forwarded in `header` (`x-forwarded-host`,
+    /// `x-forwarded-port`): its rightmost entry, or `None` when the request
+    /// does not come from `_APP_TRUSTED_PROXIES` or the header is empty.
+    pub fn forwarded(&self, header: &str) -> Option<String> {
+        forwarded(&self.request, &self.state.config.trusted_proxies, header)
     }
 
     /// `dbForProject`.
@@ -428,10 +435,24 @@ impl Context {
     }
 }
 
-/// Request hostname (`x-forwarded-host` or `host`, lower-cased, no port).
-fn request_hostname(request: &Request) -> String {
-    let raw =
-        request.header("x-forwarded-host").filter(|h| !h.is_empty()).or_else(|| request.header("host")).unwrap_or("");
+/// The value the nearest trusted proxy wrote to a forwarded header (its
+/// rightmost entry); `None` when the connection is not from a trusted proxy
+/// or the header is missing or empty.
+///
+/// PHP: `Request::trustedValue()` over the `host` / `port` lists
+/// `Appwrite\Utopia\Request` trusts only from `_APP_TRUSTED_PROXIES`.
+fn forwarded(request: &Request, trusted_proxies: &[String], header: &str) -> Option<String> {
+    if !crate::network::from_proxy(request.remote_addr(), trusted_proxies) {
+        return None;
+    }
+    crate::network::forwarded(request.headers(), header)
+}
+
+/// Request hostname (a trusted proxy's `x-forwarded-host`, else `host`,
+/// lower-cased, no port).
+fn request_hostname(request: &Request, trusted_proxies: &[String]) -> String {
+    let raw = forwarded(request, trusted_proxies, "x-forwarded-host")
+        .unwrap_or_else(|| request.header_line_or("host", ""));
     let host = if raw.starts_with('[') {
         raw.split(']').next().map(|h| format!("{h}]")).unwrap_or_default()
     } else {

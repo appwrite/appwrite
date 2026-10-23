@@ -110,7 +110,7 @@ final class Harness
             $swoole->server['remote_addr'] = $spec['remote_addr'];
         }
         $trusted = isset($spec['trusted'])
-            ? new TrustedHeaders($spec['trusted']['ip'] ?? [], $spec['trusted']['proto'] ?? ['x-forwarded-proto'])
+            ? new TrustedHeaders($spec['trusted']['ip'] ?? [], $spec['trusted']['proto'] ?? ['x-forwarded-proto'], $spec['trusted']['host'] ?? [], $spec['trusted']['port'] ?? [])
             : new TrustedHeaders();
 
         return new Request($swoole, $trusted);
