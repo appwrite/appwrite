@@ -626,10 +626,26 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             $this->assertEquals('error', $response['type']);
             $this->assertStringContainsString('subscriptions is allowed per connection', (string) $response['data']['message']);
 
+            // A reused subscription ID keeps its channels, so new ones count against the same cap
+            $channels = static fn (string $prefix, int $count): array => \array_map(
+                static fn (int $index): string => $prefix . $index,
+                \range(1, $count),
+            );
+            $this->sendSubscribeMessage($client, [['subscriptionId' => 'grow', 'channels' => $channels('first', APP_LIMIT_ARRAY_PARAMS_SIZE)]]);
+
+            $client->send(\json_encode([
+                'type' => 'subscribe',
+                'data' => [['subscriptionId' => 'grow', 'channels' => $channels('second', 1)]],
+            ]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertEquals('error', $response['type']);
+            $this->assertStringContainsString('channels is allowed per subscription', (string) $response['data']['message']);
+
             /**
              * Test for SUCCESS
              */
             $this->sendSubscribeMessage($client, $batch('first'));
+            $this->sendSubscribeMessage($client, [['subscriptionId' => 'grow', 'channels' => $channels('first', APP_LIMIT_ARRAY_PARAMS_SIZE)]]);
         } finally {
             $client->close();
         }

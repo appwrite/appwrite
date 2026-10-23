@@ -52,15 +52,11 @@ class Subscribe extends Action
         $userId = $realtime->connections[$connectionId]['userId'] ?? '';
 
         $parsedPayloads = [];
-        $subscriptionIds = \array_keys($realtime->getSubscriptionMetadata($connectionId));
-        $subscriptionsBefore = \count($subscriptionIds);
 
         foreach ($items as $payload) {
             $subscriptionId = \array_key_exists('subscriptionId', $payload)
                 ? $payload['subscriptionId']
                 : Id::unique();
-
-            $subscriptionIds[] = $subscriptionId;
 
             $queries = $payload['queries'] ?? [];
 
@@ -78,10 +74,6 @@ class Subscribe extends Action
                 'convertedChannels' => $convertedChannels,
                 'queries' => $convertedQueries,
             ];
-        }
-
-        if (\count(\array_unique($subscriptionIds)) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
-            throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'A maximum of ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions is allowed per connection.');
         }
 
         // Console live event tail: authorize every `console.tail.<projectId>` channel
@@ -138,6 +130,26 @@ class Subscribe extends Action
                 // Carry the authorizing roles so the tail is revoked when the viewer's roles change.
                 $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled, $readRoles];
             }
+        }
+
+        // Checked after the tail lookups above, which can yield to a concurrent frame on this connection.
+        // Nothing between here and the subscribe calls yields, so the caps hold on the state being changed.
+        $existing = $realtime->getSubscriptionMetadata($connectionId);
+        $subscriptionsBefore = \count($existing);
+        $channels = \array_map(static fn (array $subscription): array => $subscription['channels'], $existing);
+
+        foreach ($parsedPayloads as $parsedPayload) {
+            // A reused subscription ID adds channels to the ones it already has
+            $subscriptionId = $parsedPayload['subscriptionId'];
+            $channels[$subscriptionId] = \array_values(\array_unique([...($channels[$subscriptionId] ?? []), ...$parsedPayload['convertedChannels']]));
+
+            if (\count($channels[$subscriptionId]) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+                throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'A maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels is allowed per subscription.');
+            }
+        }
+
+        if (\count($channels) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+            throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'A maximum of ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions is allowed per connection.');
         }
 
         foreach ($parsedPayloads as $parsedPayload) {
