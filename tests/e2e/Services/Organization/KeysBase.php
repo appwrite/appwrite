@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Organization;
 
 use Appwrite\Tests\Async;
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
@@ -913,6 +914,84 @@ trait KeysBase
 
         // Cleanup
         $this->deleteKey($keyId);
+    }
+
+    /**
+     * A key hands out nothing beyond its own grant: no scope it does not hold,
+     * no expiry past its own. Otherwise a narrow or expiring key could widen or
+     * renew itself through the keys it creates or changes.
+     */
+    public function testKeysStayWithinTheirCallersGrant(): void
+    {
+        $delegate = $this->createEphemeralKey(['keys.read', 'keys.write', 'users.read'], 600);
+        $this->assertSame(201, $delegate['headers']['status-code']);
+
+        $asDelegate = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $delegate['body']['secret'],
+        ];
+
+        $key = $this->createKey(Id::unique(), 'Delegated Key', ['users.read']);
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $ephemeral = $this->client->call(Client::METHOD_POST, $this->keysPath() . '/ephemeral', $asDelegate, [
+            'scopes' => ['users.read'],
+            'duration' => 60,
+        ]);
+        $this->assertSame(201, $ephemeral['headers']['status-code']);
+
+        $updated = $this->client->call(Client::METHOD_PUT, $this->keysPath() . '/' . $keyId, $asDelegate, [
+            'name' => 'Delegated Key',
+            'scopes' => ['users.read'],
+            'expire' => DateTime::addSeconds(new \DateTime(), 300),
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $refused = [
+            'ephemeral key with a scope the caller lacks' => [Client::METHOD_POST, $this->keysPath() . '/ephemeral', ['scopes' => ['users.write'], 'duration' => 60]],
+            'ephemeral key that outlives the caller' => [Client::METHOD_POST, $this->keysPath() . '/ephemeral', ['scopes' => ['users.read'], 'duration' => 3600]],
+            'key widened past the caller' => [Client::METHOD_PUT, $this->keysPath() . '/' . $keyId, ['name' => 'Delegated Key', 'scopes' => ['users.read', 'users.write']]],
+            'key made to never expire' => [Client::METHOD_PUT, $this->keysPath() . '/' . $keyId, ['name' => 'Delegated Key', 'scopes' => ['users.read']]],
+            'key made to expire after the caller' => [Client::METHOD_PUT, $this->keysPath() . '/' . $keyId, ['name' => 'Delegated Key', 'scopes' => ['users.read'], 'expire' => DateTime::addSeconds(new \DateTime(), 3600)]],
+        ];
+
+        foreach ($refused as $case => [$method, $path, $params]) {
+            $response = $this->client->call($method, $path, $asDelegate, $params);
+            $this->assertSame(403, $response['headers']['status-code'], $case);
+            $this->assertSame('key_creation_denied', $response['body']['type'], $case);
+        }
+
+        $unchanged = $this->getKey($keyId);
+        $this->assertSame(['users.read'], $unchanged['body']['scopes']);
+        $this->assertNotNull($unchanged['body']['expire']);
+
+        // A stored key with keys.write cannot widen itself either
+        $writer = $this->createKey(Id::unique(), 'Self Widening Key', ['keys.write', 'users.read']);
+        $this->assertSame(201, $writer['headers']['status-code']);
+
+        $widened = $this->client->call(Client::METHOD_PUT, $this->keysPath() . '/' . $writer['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $writer['body']['secret'],
+        ], [
+            'name' => 'Self Widening Key',
+            'scopes' => ['keys.write', 'users.read', 'users.write', 'databases.write'],
+        ]);
+        $this->assertSame(403, $widened['headers']['status-code']);
+        $this->assertSame('key_creation_denied', $widened['body']['type']);
+        $this->assertSame(['keys.write', 'users.read'], $this->getKey($writer['body']['$id'])['body']['scopes']);
+
+        // Cleanup
+        $this->deleteKey($keyId);
+        $this->deleteKey($writer['body']['$id']);
     }
 
     /**

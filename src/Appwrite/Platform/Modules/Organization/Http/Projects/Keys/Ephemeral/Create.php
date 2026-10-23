@@ -88,8 +88,16 @@ class Create extends Action
         AuditContext $auditContext,
         Request $request,
     ) {
+        $now = new \DateTime();
+        $expire = $now->add(new \DateInterval('PT' . $duration . 'S'))->format('Y-m-d\TH:i:s.u\Z');
+
         // A JWT stands in for its session for a few minutes; a key it left behind would outlive it
         if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
+        // A key hands out no more than it holds: no broader scopes and no later expiry
+        if ($apiKey !== null && !$apiKey->mayCreate(API_KEY_EPHEMERAL, $scopes, $expire)) {
             throw new Exception(Exception::KEY_CREATION_DENIED);
         }
 
@@ -107,9 +115,6 @@ class Create extends Action
             'projectSequence' => $project->getSequence(),
             'scopes' => $scopes
         ]);
-
-        $now = new \DateTime();
-        $expire = $now->add(new \DateInterval('PT' . $duration . 'S'))->format('Y-m-d\TH:i:s.u\Z');
 
         $key = new Document([
             '$id' => $keyId,

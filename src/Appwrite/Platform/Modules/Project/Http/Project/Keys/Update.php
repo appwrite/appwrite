@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
+use Appwrite\Auth\Key;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -74,6 +75,7 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('apiKey')
             ->inject('request')
             ->callback($this->action(...));
     }
@@ -89,10 +91,16 @@ class Update extends Base
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
+        ?Key $apiKey,
         Request $request,
     ) {
         // A JWT stands in for its session for a few minutes; a key it left behind would outlive it
         if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
+        // A key hands out no more than it holds: no broader scopes and no later expiry
+        if ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $scopes, $expire)) {
             throw new Exception(Exception::KEY_CREATION_DENIED);
         }
 

@@ -108,6 +108,11 @@ class Create extends Base
             throw new Exception(Exception::KEY_CREATION_DENIED);
         }
 
+        // A key hands out no more than it holds: no broader scopes and no later expiry
+        if ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $scopes, $expire)) {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         $keyId = ($keyId == 'unique()') ? Id::unique() : $keyId;
 
         $key = new Document([
