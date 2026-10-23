@@ -97,6 +97,7 @@ abstract class ReplayTestCase extends TestCase
 
         $this->database->createCollection(Collection::create('pushLedger', attributes: [
             Attribute::string('topic', 255, true),
+            Attribute::string('topicInternalId', 255, true),
             Attribute::string('data', 65535, true),
             Attribute::string('messageId', 255),
             Attribute::integer('sequence', true),
@@ -152,19 +153,21 @@ abstract class ReplayTestCase extends TestCase
         $this->database->updateDocument('topics', $topic, new Document(['sequence' => $tail]));
     }
 
-    /** Append messages $from..$to to a topic's ledger, written $age seconds ago. */
-    protected function appendLedger(string $topic, int $from, int $to, int $age = 0): void
+    /** Append messages $from..$to to the ledger of a topic's current instance, written $age seconds ago. */
+    protected function appendLedger(string $topic, int $from, int $to, int $age = 0, string $prefix = 'message'): void
     {
         $createdAt = DateTime::format((new \DateTime())->setTimestamp($this->now - $age));
+        $topicInternalId = $this->topicSequence($topic);
 
-        $this->database->withPreserveDates(true, function () use ($topic, $from, $to, $createdAt): void {
+        $this->database->withPreserveDates(true, function () use ($topic, $topicInternalId, $from, $to, $createdAt, $prefix): void {
             foreach (\range($from, $to) as $sequence) {
                 $this->database->createDocument('pushLedger', new Document([
                     '$createdAt' => $createdAt,
                     '$updatedAt' => $createdAt,
                     'topic' => $topic,
-                    'data' => 'message-' . $sequence,
-                    'messageId' => 'message' . $sequence,
+                    'topicInternalId' => $topicInternalId,
+                    'data' => $prefix . '-' . $sequence,
+                    'messageId' => $prefix . $sequence,
                     'sequence' => $sequence,
                 ]));
             }
