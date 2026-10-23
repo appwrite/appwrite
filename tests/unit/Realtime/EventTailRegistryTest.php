@@ -56,7 +56,7 @@ final class EventTailRegistryTest extends TestCase
     /** @param array<int,\Utopia\Database\Query> $queries */
     private function compile(array $queries): array
     {
-        return RuntimeQuery::compile($queries);
+        return RuntimeQuery::prepare($queries);
     }
 
     // ---- Realtime::toTailMetadata ----
@@ -570,16 +570,27 @@ final class EventTailRegistryTest extends TestCase
     public function testRevalidateConnectionDropsTailsWithRevokedRole(): void
     {
         $registry = new EventTailRegistry(rate: 100);
-        $registry->add(1, 'x', 'projA', $this->compile([]), 0.0, 'team:teamA');
-        $registry->add(1, 'y', 'projB', $this->compile([]), 0.0, 'team:teamB');
+        $registry->add(1, 'x', 'projA', $this->compile([]), 0.0, ['team:teamA/owner', 'team:teamA/developer']);
+        $registry->add(1, 'y', 'projB', $this->compile([]), 0.0, ['team:teamB/owner', 'team:teamB/developer']);
         $this->assertTrue($registry->isTailed('projA'));
         $this->assertTrue($registry->isTailed('projB'));
 
-        // The connection keeps teamB membership but loses teamA.
-        $registry->revalidateConnection(1, ['user:u1', 'team:teamB']);
+        // The connection keeps a teamB developer role but loses teamA.
+        $registry->revalidateConnection(1, ['user:u1', 'team:teamB', 'team:teamB/developer']);
 
         $this->assertFalse($registry->isTailed('projA'), 'tail for the revoked team must be dropped');
-        $this->assertTrue($registry->isTailed('projB'), 'tail for the still-held team must remain');
+        $this->assertTrue($registry->isTailed('projB'), 'tail for a still-held role must remain');
+    }
+
+    public function testRevalidateConnectionDropsTailsWhenOnlyTheBareTeamRoleRemains(): void
+    {
+        $registry = new EventTailRegistry(rate: 100);
+        $registry->add(1, 'x', 'projA', $this->compile([]), 0.0, ['team:teamA/owner', 'team:teamA/project-projA-developer']);
+
+        // Moved to a role on another project: still a team member, no longer allowed to read projA.
+        $registry->revalidateConnection(1, ['user:u1', 'team:teamA', 'team:teamA/project-projB-developer']);
+
+        $this->assertFalse($registry->isTailed('projA'));
     }
 
     public function testRevalidateConnectionKeepsEntriesWithoutRole(): void

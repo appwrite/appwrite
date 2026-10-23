@@ -40,7 +40,7 @@ class Update extends Action
                 group: null,
                 name: 'retry',
                 description: '/docs/references/migrations/retry-migration.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -48,7 +48,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', false, ['dbForProject'])
+            ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Migration unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')

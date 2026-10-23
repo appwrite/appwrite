@@ -10,8 +10,12 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Index;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Resource;
 
@@ -145,22 +149,22 @@ final class V25Test extends TestCase
                 continue;
             }
             $attributes = $id === 'topics'
-                ? \array_filter($collection['attributes'], fn (array $attribute) => !\in_array($attribute['$id'], $added, true))
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => !\in_array($attribute->key, $added, true))
                 : $collection['attributes'];
-            $database->createCollection(
-                $id,
-                \array_map(fn (array $attribute) => new Document($attribute), \array_values($attributes)),
-                \array_map(fn (array $index) => new Document($index), $collection['indexes']),
-            );
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($collection['indexes']),
+            ));
         }
-        $database->createCollection('audit');
+        $database->createCollection(Collection::create(id: 'audit'));
 
         $migration = new V25();
         $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
         $migration->execute();
         $migration->execute();
 
-        $this->assertFalse($database->getCollection('pushLedger')->isEmpty());
+        $this->assertInstanceOf(Collection::class, $database->findCollection('pushLedger'));
         $topics = \array_map(
             fn (Document $attribute) => $attribute->getId(),
             $database->getCollection('topics')->getAttribute('attributes', [])
@@ -168,6 +172,240 @@ final class V25Test extends TestCase
         foreach ($added as $attribute) {
             $this->assertContains($attribute, $topics);
         }
+    }
+
+    public function testCreatesVideoCollectionsForProjectFromPreviousRelease(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // These collections did not exist on 2.5.0. Seed its schema before running the upgrade.
+        $added = ['videos', 'videosTimelines', 'videosRenditions', 'videosRenditionsSegments', 'videosProfiles', 'videosCaptions', 'videosCaptionsSegments'];
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (\in_array($id, $added, true) || ($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $authorization->skip(fn () => $database->createDocument('videos', new Document([
+            '$id' => 'uploaded-video',
+            'bucketId' => 'bucket',
+            'fileId' => 'file',
+            'name' => 'Preserved upload',
+        ])));
+        $migration->execute();
+
+        $video = $authorization->skip(fn () => $database->getDocument('videos', 'uploaded-video'));
+        $this->assertSame('Preserved upload', $video->getAttribute('name'));
+        $this->assertSame('file', $video->getAttribute('fileId'));
+        foreach ($added as $collection) {
+            $rows = $authorization->skip(fn () => $database->find($collection));
+            $this->assertCount($collection === 'videos' ? 1 : 0, $rows);
+        }
+    }
+
+    public function testCreatesPresenceLogsWithConnectionsForLegacyProject(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A legacy project that never ran V24 has no presenceLogs collection at all.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if ($id === 'presenceLogs' || ($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $this->assertInstanceOf(Collection::class, $database->findCollection('presenceLogs'));
+        $attributes = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('presenceLogs')->getAttribute('attributes', [])
+        );
+        $this->assertContains('connections', $attributes);
+    }
+
+    public function testAddsConnectionsToExistingPresenceLogs(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created before this change has presenceLogs but no connections column.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $id === 'presenceLogs'
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => $attribute->key !== 'connections')
+                : $collection['attributes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $attributes = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('presenceLogs')->getAttribute('attributes', [])
+        );
+        $this->assertContains('connections', $attributes);
+    }
+
+    public function testBindsExistingPushLedgerToTopicInstances(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created on 2.3.0 keys its pushLedger by topic id only.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $collection['attributes'];
+            $indexes = $collection['indexes'];
+            if ($id === 'pushLedger') {
+                $attributes = \array_filter($attributes, static fn (Attribute $attribute): bool => $attribute->key !== 'topicInternalId');
+                $indexes = \array_filter($indexes, static fn (Index $index): bool => !\in_array($index->key, ['_key_topicInternalId_sequence', '_key_message_topicInternalId'], true));
+                $indexes[] = Index::key(key: '_key_topic_sequence', attributes: ['topic', 'sequence']);
+                $indexes[] = Index::unique(key: '_key_message_topic', attributes: ['messageId', 'topic']);
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($indexes),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+        $authorization->skip(fn () => $database->createDocument('pushLedger', new Document([
+            'topic' => 'news',
+            'data' => ['body' => 'before upgrade'],
+            'messageId' => 'message',
+            'sequence' => 1,
+        ])));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $ledger = $database->getCollection('pushLedger');
+        $attributes = \array_map(fn (Document $attribute) => $attribute->getId(), $ledger->getAttribute('attributes', []));
+        $indexes = \array_map(fn (Document $index) => $index->getId(), $ledger->getAttribute('indexes', []));
+        $this->assertContains('topicInternalId', $attributes);
+        $this->assertContains('_key_topicInternalId_sequence', $indexes);
+        $this->assertNotContains('_key_topic_sequence', $indexes, 'replay no longer reads by topic id, so its index must go');
+        $this->assertContains('_key_message_topicInternalId', $indexes);
+        $this->assertNotContains('_key_message_topic', $indexes, 'deduplication keys on the topic instance, so the topic id unique index must go');
+
+        $published = $authorization->skip(fn () => $database->createDocument('pushLedger', new Document([
+            'topic' => 'news',
+            'topicInternalId' => '7',
+            'data' => ['body' => 'after upgrade'],
+            'messageId' => 'message',
+            'sequence' => 2,
+        ])));
+        $this->assertSame('7', $published->getAttribute('topicInternalId'), 'a row written before the upgrade must not block the same message on a topic instance');
+    }
+
+    public function testBackfillsLegacyTypeOnExistingTransactions(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $id === 'transactions'
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => $attribute->key !== 'type')
+                : $collection['attributes'];
+            $indexes = $id === 'transactions'
+                ? \array_filter($collection['indexes'], static fn (Index $index): bool => $index->key !== '_key_type')
+                : $collection['indexes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($indexes),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $authorization->skip(fn () => $database->createDocument('transactions', new Document([
+            '$id' => 'pre-type-transaction',
+            'status' => 'pending',
+            'operations' => 1,
+            'expiresAt' => DateTime::now(),
+        ])));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $attributes = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('transactions')->getAttribute('attributes', [])
+        );
+        $this->assertContains('type', $attributes);
+
+        $transaction = $authorization->skip(fn () => $database->getDocument('transactions', 'pre-type-transaction'));
+        $this->assertSame(DATABASE_TYPE_LEGACY, $transaction->getAttribute('type'));
     }
 
     public function testRejectsResourcesCreatedAfterMigration(): void
@@ -193,5 +431,47 @@ final class V25Test extends TestCase
             '$createdAt' => '2026-01-03T00:00:00.000+00:00',
         ]), $document));
         $this->assertFalse($migration->isCandidate(new Document(), $document));
+    }
+
+    public function testDropsDevKeysFromConsoleProjects(): void
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+        $database->createCollection(Collection::create(
+            id: 'projects',
+            attributes: [
+                Attribute::string(key: 'name', size: 128),
+                Attribute::string(key: 'devKeys', size: 16384),
+            ],
+        ));
+
+        $migration = new class ($database) extends V25 {
+            public function __construct(Database $database)
+            {
+                $this->dbForProject = $database;
+                $this->project = new Document(['$id' => 'console', '$sequence' => 'console']);
+                $this->collections = ['console' => [
+                    'projects' => ['$collection' => Database::METADATA, '$id' => 'projects', 'attributes' => [], 'indexes' => []],
+                ]];
+            }
+        };
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $this->assertSame(['name'], \array_map(
+            fn (Attribute $attribute): string => $attribute->key,
+            $database->getCollection('projects')->attributes()
+        ));
     }
 }

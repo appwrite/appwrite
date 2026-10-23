@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\JobsSecret;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Compose\Files;
 use Appwrite\Docker\Compose\Generator;
@@ -449,7 +450,10 @@ class Install extends Action
             }
             $name = $var['name'];
             $value = $input[$name] ?? '';
-            $input[$name] = EncryptionKey::resolve(is_string($value) ? $value : '', $shouldGenerateSecrets);
+            $value = is_string($value) ? $value : '';
+            $input[$name] = $name === '_APP_JOBS_SECRET'
+                ? JobsSecret::resolve($value)
+                : EncryptionKey::resolve($value, $shouldGenerateSecrets);
         }
 
         // Multiline values (e.g. GitHub App PEM private keys) are allowed; env.phtml

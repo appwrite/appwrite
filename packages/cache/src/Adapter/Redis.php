@@ -185,7 +185,9 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             }
 
             return $data;
-        } catch (Throwable) {
+        } catch (Throwable $error) {
+            $this->recordWriteFailure('save', $error);
+
             return false;
         }
     }
@@ -220,7 +222,9 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             }
 
             return $data;
-        } catch (Throwable) {
+        } catch (Throwable $error) {
+            $this->recordWriteFailure('saveMany', $error);
+
             return false;
         }
     }
@@ -294,13 +298,32 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
                 throw NoScript::from($error);
             }
 
-            return $result;
+            return $this->confirmScript($result, $error);
         });
     }
 
     protected function leaseEval(string $script, string $key, array $args): mixed
     {
-        return $this->execute(fn (): mixed => $this->redis->eval($script, [$key, ...$args], 1));
+        return $this->execute(function () use ($script, $key, $args): mixed {
+            $this->redis->clearLastError();
+            $result = $this->redis->eval($script, [$key, ...$args], 1);
+
+            return $this->confirmScript($result, (string) $this->redis->getLastError());
+        });
+    }
+
+    /**
+     * A lease script replies with an integer, so php-redis reporting false is an error reply, not a result.
+     *
+     * @throws \RedisException
+     */
+    private function confirmScript(mixed $result, string $error): mixed
+    {
+        if ($result === false) {
+            throw new \RedisException($error === '' ? 'Lease script failed' : $error);
+        }
+
+        return $result;
     }
 
     protected function leaseHget(string $key, string $field): mixed

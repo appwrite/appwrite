@@ -330,7 +330,7 @@ jobs:
         steps:
             - name: Get token for ${{ env.DECLARATIVE_REPOSITORY }}
               id: app-token
-              uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+              uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
               with:
                   client-id: ${{ vars.DECLARATIVE_DEPLOYMENT_GITHUB_APP_ID }}
                   private-key: ${{ secrets.DECLARATIVE_DEPLOYMENT_GITHUB_APP_PRIVATE_KEY }}

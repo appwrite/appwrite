@@ -28,9 +28,11 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   isPasskeyAutofillAvailable,
   isPasskeyCancellation,
+  isPasskeySupported,
   passkeySignInErrorMessage,
   signInWithPasskey,
 } from '@/lib/passkeys'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
@@ -91,6 +93,8 @@ export const Route = createFileRoute('/_auth/sign-in')({
 
 interface PasskeyRequest {
   controller: AbortController
+  /** `conditional` for the email field's autofill, `optional` for the button's prompt. */
+  mediation: 'conditional' | 'optional'
   /** When the server's challenge expires, in milliseconds. */
   expire: number
   selected: boolean
@@ -237,11 +241,12 @@ function SignInPage() {
   const passkeyRequest = useRef<PasskeyRequest | null>(null)
   const passkeyRateLimited = useRef(false)
 
-  // Autofill: the browser offers the console's passkeys in the email field's
-  // suggestions. It shows nothing until a passkey for the console exists.
+  // Autofill offers the console's passkeys in the email field's suggestions,
+  // and shows nothing until one exists. The button opens the browser's prompt.
   const passkeySignInMutation = useMutation({
     mutationFn: async (request: PasskeyRequest) => {
       const token = await signInWithPasskey({
+        mediation: request.mediation,
         signal: request.controller.signal,
         onChallenge: (expire) => {
           request.expire = Date.parse(expire) || Number.POSITIVE_INFINITY
@@ -260,15 +265,17 @@ function SignInPage() {
     },
     onSuccess: () => finishSignIn('passkey'),
     onError: async (error: unknown, request: PasskeyRequest) => {
+      // A newer request replaced this one and owns the state now.
+      if (passkeyRequest.current !== request) return
+      passkeyRequest.current = null
       setPasskeySelected(false)
-      if (passkeyRequest.current === request) passkeyRequest.current = null
       if (error instanceof AppwriteException && error.code === 429) {
         passkeyRateLimited.current = true
       }
       if (isPasskeyCancellation(error)) return
       if (await openMfaIfRequired(error)) return
       // Autofill starts before any choice, so stay quiet until the user has picked a passkey.
-      if (!request.selected) return
+      if (request.mediation === 'conditional' && !request.selected) return
 
       toast.error(
         passkeySignInErrorMessage(error, t) ??
@@ -288,6 +295,7 @@ function SignInPage() {
     current?.controller.abort()
     const request: PasskeyRequest = {
       controller: new AbortController(),
+      mediation: 'conditional',
       expire: Number.POSITIVE_INFINITY,
       selected: false,
     }
@@ -297,9 +305,13 @@ function SignInPage() {
 
   // Runs for everyone: the page cannot know the user yet, and the browser only
   // offers a passkey it already holds for the console.
+  const { features } = useConsoleProfile()
+  const [passkeySupported, setPasskeySupported] = useState(false)
   const [passkeyAutofill, setPasskeyAutofill] = useState(false)
   useEffect(() => {
+    if (!features.accountPasskeys) return
     let active = true
+    setPasskeySupported(isPasskeySupported())
     void isPasskeyAutofillAvailable().then((available) => {
       if (!active || !available) return
       setPasskeyAutofill(true)
@@ -310,7 +322,26 @@ function SignInPage() {
       passkeyRequest.current?.controller.abort()
       passkeyRequest.current = null
     }
-  }, [startPasskeyAutofill])
+  }, [features.accountPasskeys, startPasskeyAutofill])
+
+  // The browser runs one passkey request at a time, so the prompt replaces the
+  // autofill request, and autofill comes back if the prompt ends without a session.
+  const handlePasskeySignIn = () => {
+    passkeyRequest.current?.controller.abort()
+    const request: PasskeyRequest = {
+      controller: new AbortController(),
+      mediation: 'optional',
+      expire: Number.POSITIVE_INFINITY,
+      selected: false,
+    }
+    passkeyRequest.current = request
+    setPasskeySelected(true)
+    mutatePasskeySignIn(request, {
+      onError: () => {
+        if (passkeyAutofill) startPasskeyAutofill()
+      },
+    })
+  }
 
   const passkeyBusy = passkeySignInMutation.isPending && passkeySelected
 
@@ -319,8 +350,17 @@ function SignInPage() {
       <SignIn
         mode="sign-in"
         onSubmit={(data) => signInMutation.mutate(data)}
-        onOAuthLogin={handleOAuthLogin}
-        onPasskeyAutofill={passkeyAutofill ? startPasskeyAutofill : undefined}
+        onOAuthLogin={features.accountOAuth ? handleOAuthLogin : undefined}
+        onPasskeyAutofill={
+          features.accountPasskeys && passkeyAutofill
+            ? startPasskeyAutofill
+            : undefined
+        }
+        onPasskeySignIn={
+          features.accountPasskeys && passkeySupported
+            ? handlePasskeySignIn
+            : undefined
+        }
         isLoading={signInMutation.isPending || passkeyBusy || isOpeningMfa}
         oauthLoading={oauthLoading}
         redirect={search.redirect}
