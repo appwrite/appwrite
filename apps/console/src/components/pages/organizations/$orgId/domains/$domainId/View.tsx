@@ -550,18 +550,12 @@ export function View({ initialData }: ViewProps = {}) {
 
     // The preset endpoint adds only the records the domain does not have yet,
     // so applying a preset again, or over matching records, is not an error.
-    // It returns all of the preset's records, so count those the domain lacked.
-    const existing = new Set(
-      (domain?.dnsRecords ?? []).map((record) => record.$id),
-    )
+    // It returns all of the preset's records, so the toast states no count.
     try {
-      const result = await createPresetMutation.mutateAsync(preset)
-      const added = result.dnsRecords.filter(
-        (record) => !existing.has(record.$id),
-      ).length
+      await createPresetMutation.mutateAsync(preset)
 
       toast.success(
-        `${t('Successfully added')} ${added} ${t('DNS records from')} ${presetLabels[preset]}`,
+        `${t('Successfully added')} ${t('DNS records from')} ${presetLabels[preset]}`,
       )
     } catch (error) {
       toast.error(getErrorMessage(error))
