@@ -17,9 +17,9 @@ Two numbers decide how a rendition looks and how much data it needs:
 
 A good profile pairs the two: enough bitrate for its resolution to look clean, and no more. Fast motion, like sports or games, needs more bitrate than a talking head at the same resolution.
 
-# Default ladder {% #default-ladder %}
+# Start with no profiles {% #start-with-no-profiles %}
 
-Every new project starts with a default ladder of profiles, so you can encode a video without creating any. Open **Videos** > **Encoding profiles** to see them.
+New projects have no profiles. Create the ones you need before you encode your first video. The [presets](#presets) are a good starting point.
 
 # What a profile contains {% #what-a-profile-contains %}
 
@@ -29,7 +29,9 @@ Every new project starts with a default ladder of profiles, so you can encode a 
 | `width`, `height` | Target picture size in pixels |
 | `videoBitRate` | Target video bitrate in **kilobits per second** |
 | `audioBitRate` | Target audio bitrate in **kilobits per second** |
-| `codec` | Video codec. Defaults to `h264` (H.264) |
+| `codec` | Video codec. Defaults to `h264` (H.264). List the codecs you can use with `videos.listCodecs()` |
+
+Width and height can be from 16 to 4,320 pixels. Video bitrate can be from 32 to 20,000 kbps, and audio bitrate from 32 to 512 kbps. Each profile must be unique: two profiles cannot share the same width, height, bitrates, and codec.
 
 # Presets {% #presets %}
 
@@ -52,6 +54,51 @@ When you create a profile in the Console, you can start from a preset or enter y
 4. Click **Create**.
 
 The new profile shows up in the **Profiles** list when you create a video or add renditions. Profile names are labels only, so name them by purpose if that helps your team, for example `720p-mobile`.
+
+With a server SDK, create profiles from the `project` service:
+
+{% info title="Required scope" %}
+The API key used for these calls needs the `project.profiles.write` scope.
+{% /info %}
+
+{% multicode %}
+  ```server-nodejs
+  import { Client, Project, VideoCodec } from 'node-appwrite';
+
+  const client = new Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>')
+      .setKey('<API_KEY>');
+
+  const project = new Project(client);
+
+  const profile = await project.createVideoProfile({
+      name: '720p',
+      width: 1280,
+      height: 720,
+      videoBitRate: 2800,
+      audioBitRate: 128,
+      codec: VideoCodec.H264 // optional, defaults to H.264
+  });
+  ```
+
+  ```http
+  POST /v1/project/videos/profiles HTTP/1.1
+  Content-Type: application/json
+  X-Appwrite-Project: <PROJECT_ID>
+  X-Appwrite-Key: <API_KEY>
+
+  {
+    "name": "720p",
+    "width": 1280,
+    "height": 720,
+    "videoBitRate": 2800,
+    "audioBitRate": 128
+  }
+  ```
+{% /multicode %}
+
+List profiles with `project.listVideoProfiles()`. Results are sorted from the lowest resolution to the highest, and you can search them by name with `Query.search('search', '720p')`.
 
 # Design a ladder {% #design-a-ladder %}
 
@@ -83,5 +130,5 @@ You can still encode an upscaling profile, for example to keep every video on th
 
 Profiles are configuration, not media:
 
-- **Updating** a profile does not re-encode renditions that already exist. To apply the change, delete those renditions and create them again.
-- **Deleting** a profile keeps the renditions that were already encoded with it.
+- **Updating** a profile does not re-encode renditions that already exist. To apply the change, delete those renditions and create them again. An update replaces every field except the codec, so pass the name, size, and bitrates each time. To change the codec, create a new profile.
+- **Deleting** a profile keeps the renditions that were already encoded with it. Each rendition keeps its own copy of the profile's size and bitrates.

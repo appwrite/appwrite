@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Timeline
-description: Learn how Appwrite Videos generates sprite sheets and a WebVTT index for scrubbing thumbnails, and how preview images become video posters.
+description: Learn how Appwrite Videos generates sprite sheets and a WebVTT index for scrubbing thumbnails, and how to load them in your player.
 ---
 
 The **timeline** gives a [video](/docs/products/videos/videos) scrubbing thumbnails: viewers see a preview frame while they drag across the progress bar. It is made of **sprite sheets**, images that pack many thumbnails into a grid, plus a **WebVTT index** that maps each time range to a thumbnail inside a sprite.
@@ -16,25 +16,35 @@ Appwrite queues timeline generation when you create a video. The job downloads i
 
 Open the video and select **Timeline** to browse the generated thumbnails.
 
-Audio-only sources have no picture, so they get no timeline.
+The video's `timelineStatus` shows how far the job has got:
+
+| Status | Meaning |
+|--------|---------|
+| `pending` | Waiting for a worker |
+| `started` | Generating the sprites and index |
+| `ready` | The index and sprites are available |
+| `skipped` | The source has no picture, such as an audio-only file |
+| `error` | Generation failed. `timelineError` says why |
+
+The timeline is generated once per video and is not retried if it fails.
 
 # WebVTT index {% #webvtt-index %}
 
-Fetch the index with `videos.getTimeline({ videoId })`, or from `/v1/videos/<VIDEO_ID>/timeline`. Each cue points at a sprite and the region of the thumbnail inside it, using a `#xywh=x,y,width,height` media fragment. For example:
+Load the index from `/v1/videos/<VIDEO_ID>/timelines?project=<PROJECT_ID>`. The SDKs expose it as `videos.getTimelines({ videoId })`. Each cue points at a sprite and the region of one thumbnail inside it, using a `#xywh=x,y,width,height` media fragment. For example:
 
 ```text
 WEBVTT
 
 00:00:00.000 --> 00:00:05.000
-previews/<PREVIEW_ID>#xywh=0,0,160,90
+thumbnails/<THUMBNAIL_ID>?project=<PROJECT_ID>#xywh=0,0,480,270
 
 00:00:05.000 --> 00:00:10.000
-previews/<PREVIEW_ID>#xywh=160,0,160,90
+thumbnails/<THUMBNAIL_ID>?project=<PROJECT_ID>#xywh=480,0,480,270
 ```
 
-Cue paths are relative to the timeline URL. Resolve them against it to get the full image URL.
+Each thumbnail is 480 pixels wide, and each sprite holds a grid of up to 4 × 4 thumbnails. Cue paths are relative to the timeline URL. Resolve them against it to get the full image URL.
 
-Many players can show thumbnails from a WebVTT thumbnail track, either built in or with a plugin. Until the timeline is generated, the request returns `video_timeline_not_found`. Since generation runs in the background, poll every few seconds after creating a video if you need the timeline right away.
+Many players can show thumbnails from a WebVTT thumbnail track, either built in or with a plugin. Until the timeline is generated, the request returns `video_timelines_not_found`. Since generation runs in the background, check `timelineStatus` every few seconds after creating a video if you need the timeline right away.
 
 # Use thumbnails in a custom player {% #custom-player %}
 
@@ -69,23 +79,12 @@ function showThumbnail(element, cues, seconds) {
 
 Load the sprite images once when the player opens, so the first hover does not wait on the network.
 
-# Previews {% #previews %}
+# Sprite images {% #sprite-images %}
 
-Timeline images are served as **previews**. Fetch one with `videos.getPreview({ videoId, previewId })`. Pass `width`, `height`, and `output` (`jpg`, `png`, `gif`, or `webp`) to resize or convert it.
+Each sprite is served as a **thumbnail**. Fetch one from the URL in the index, or with `videos.getThumbnail({ videoId, thumbnailId })`. Pass `output` (`jpg`, `jpeg`, `png`, `gif`, or `webp`) to convert it. Without `output`, browsers that accept WebP get WebP, and others get JPEG.
 
-The video's `previewId` points at the preview used as its **poster** image.
+A thumbnail is a whole sprite, not a single frame. `width` and `height` resize and crop the whole sprite, so the `#xywh` regions in the index no longer line up. Keep the original size when you use sprites for scrubbing.
 
-# Show a poster {% #show-a-poster %}
+# Posters {% #posters %}
 
-A poster fills the player before playback starts, and makes a good thumbnail in a list of videos. Request it at the size you display, in WebP, to keep pages light:
-
-```html
-<video
-  id="player"
-  controls
-  playsinline
-  poster="https://<REGION>.cloud.appwrite.io/v1/videos/<VIDEO_ID>/previews/<PREVIEW_ID>?project=<PROJECT_ID>&width=640&output=webp"
-></video>
-```
-
-Read `previewId` from the video first. It is empty until the timeline is generated, so show a placeholder until then.
+Videos does not set a poster image. To show one before playback starts, use your own image, for example a file in [Storage](/docs/products/storage) whose ID you keep next to the video ID in your database.

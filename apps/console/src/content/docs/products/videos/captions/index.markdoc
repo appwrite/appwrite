@@ -4,7 +4,7 @@ title: Captions
 description: Add WebVTT or SubRip captions to an Appwrite video, use subtitle tracks embedded in the source, and set a default language for players.
 ---
 
-**Captions** are text tracks attached to a [video](/docs/products/videos/videos). Players pick them up from the master manifest and let viewers switch languages. A caption comes from a file in Storage, from the caption editor in the Console, or from the source file itself.
+**Captions** are text tracks attached to a [video](/docs/products/videos/videos). Players pick them up from the master manifest and let viewers switch languages. A caption comes from a file in Storage, from the caption editor in the Console, or from the source file itself. Appwrite does not transcribe speech, so to caption a video that has no track yet, upload the output of a transcription service or write the track in the caption editor.
 
 Captions make a video usable with the sound off, accessible to deaf and hard-of-hearing viewers, and watchable in more languages. Each language is its own track, so one video can carry English, Spanish, and Japanese captions side by side.
 
@@ -71,13 +71,17 @@ await videos.createCaption({
 });
 ```
 
-The `name` is what viewers see in the player's captions menu, so make it clear, such as `Spanish` or `English (SDH)`. Names allow the letters `A-Z` and `a-z`, numbers, spaces, and `- . , ( ) _ '`. Accented and non-Latin characters are not allowed in names, but are fine inside the caption text.
+The `name` is what viewers see in the player's captions menu, so make it clear, such as `Spanish` or `English (SDH)`. Names are up to 128 characters and allow the letters `A-Z` and `a-z`, numbers, spaces, and `- . , ( ) _ '`. Accented and non-Latin characters are not allowed in names, but are fine inside the caption text.
 
-The parameter is called `xdefault` because `default` is a reserved word in several SDK languages.
+The parameter is called `xdefault` because `default` is a reserved word in several SDK languages. In the REST API it is `default`.
+
+You can add up to 30 captions per video per hour. Past that, `videos.createCaption()` returns a `general_rate_limit_exceeded` error until the hour is up.
 
 # Embedded captions {% #embedded-captions %}
 
-Subtitle tracks embedded in the source container are extracted automatically during the first rendition or timeline job. They appear in the captions list marked as embedded, with no backing file in Storage.
+Subtitle tracks embedded in the source container are extracted automatically during the first rendition or timeline job. They appear in the captions list marked as embedded (`embedded: true`), with no backing file in Storage.
+
+Only text tracks are extracted, such as SubRip, WebVTT, MP4 `mov_text`, and ASS/SSA. Image-based subtitles, such as PGS or VobSub tracks from Blu-ray and DVD rips, are skipped. To use those, convert them to WebVTT or SubRip and upload the result.
 
 Extraction runs once per video. If you delete an embedded caption, it is not extracted again.
 
@@ -114,7 +118,10 @@ Set a default when most viewers watch with the sound off, as on social feeds, or
 | `pending` | Queued | Waiting to be processed |
 | `started` | Processing | Converting to WebVTT and segmenting |
 | `ready` | Ready | Listed in the master manifest |
-| `error` | Failed | The file could not be processed |
+| `error` | Failed | The file could not be processed. `error` says why |
+| `aborted` | Aborted | Processing was stopped before it finished |
+
+To retry a failed caption, update it with a corrected file by passing a new `bucketId` and `fileId`, or delete it and upload again.
 
 # Caption editor {% #caption-editor %}
 
@@ -144,3 +151,5 @@ You can also **Download** any track as WebVTT or SubRip from its actions menu, f
 # Delete a caption {% #delete-a-caption %}
 
 Deleting a caption removes its segments and drops it from the manifest. For uploaded captions, the file stays in Storage.
+
+You cannot delete a caption while it is processing. The request returns `video_caption_in_progress`; wait for it to finish.

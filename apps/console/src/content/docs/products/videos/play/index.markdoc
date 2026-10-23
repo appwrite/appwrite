@@ -13,7 +13,7 @@ Open a video and select **Install**. Pick a platform, player, framework, and for
 # Before you start {% #before-you-start %}
 
 1. Make sure the video has at least one `ready` [rendition](/docs/products/videos/renditions) for the output you want to play.
-2. Grant read access on the source file to the viewers who should watch it. See [Permissions](/docs/products/videos/permissions).
+2. Grant read access on the video to the viewers who should watch it. See [Permissions](/docs/products/videos/permissions).
 3. Copy the master manifest URL from the video's **Streaming** page, or build it as described in [Outputs](/docs/products/videos/outputs#master-manifest-urls):
 
 ```text
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
 
 # Poster and thumbnails {% #poster-and-thumbnails %}
 
-Set the `<video>` element's `poster` to the video's preview image so viewers see a frame before they press play. For scrubbing thumbnails, load the [timeline](/docs/products/videos/timeline) into your player's thumbnail track, or [render them yourself](/docs/products/videos/timeline#custom-player).
+Videos does not set a poster image. To show a frame before viewers press play, set the `<video>` element's `poster` to [your own image](/docs/products/videos/timeline#posters). For scrubbing thumbnails, load the [timeline](/docs/products/videos/timeline) into your player's thumbnail track, or [render them yourself](/docs/products/videos/timeline#custom-player).
 
 # Autoplay {% #autoplay %}
 
@@ -308,7 +308,7 @@ Players hold network connections and decoders. In single-page apps, release them
 
 | Symptom | Check |
 |---------|-------|
-| `401` or `404` on the manifest | The source file's read permissions. See [Permissions](/docs/products/videos/permissions) |
+| `401` or `404` on the manifest | The video's read permissions. See [Permissions](/docs/products/videos/permissions) |
 | Manifest loads but lists no renditions | At least one rendition for that output is `ready` |
 | DASH does not play in Safari | Safari has no native DASH. Use the HLS manifest, or CMAF HLS |
 | Stalls or low quality | Open the [inspector](/docs/products/videos/inspector) to see buffer, bitrate, and network timing |

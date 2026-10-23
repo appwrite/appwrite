@@ -6,7 +6,7 @@ description: Stream video and audio with Appwrite Videos. Turn files in Storage 
 
 Appwrite **Videos** turns video and audio files in [Storage](/docs/products/storage) into adaptive streams. You create a video from a file that is already in a bucket, encode it into a ladder of renditions, and hand the master manifest URL to any HLS or DASH player.
 
-The source file stays in its bucket. Videos never replaces it, and playback follows the same [permissions](/docs/products/videos/permissions) as the file.
+The source file stays in its bucket, untouched. Each video has its own [permissions](/docs/products/videos/permissions), so who can watch a stream is separate from who can download the file.
 
 You manage videos under **Videos** in your project, and encoding profiles under **Videos** > **Encoding profiles**.
 
@@ -26,10 +26,10 @@ Use Videos for anything longer than a short loop, or anything watched on mobile 
 A video is built from a few resources:
 
 1. **Video**: Points at a source file in a Storage bucket and holds the media metadata probed from it, such as duration, resolution, and codecs. See [Videos](/docs/products/videos/videos).
-2. **Profile**: A reusable encoding target with a resolution, video and audio bitrate, and codec. Every project starts with a default ladder of profiles. See [Encoding profiles](/docs/products/videos/profiles).
+2. **Profile**: A reusable encoding target with a resolution, video and audio bitrate, and codec. You create profiles once per project, before you encode. See [Encoding profiles](/docs/products/videos/profiles).
 3. **Rendition**: One encode of a video against one profile, packaged for one output. Players switch between renditions as bandwidth changes. See [Renditions](/docs/products/videos/renditions).
 4. **Output**: The streaming format a rendition is packaged in: **HLS**, **DASH**, or **CMAF**. Each output has a master manifest that players load first. See [Outputs](/docs/products/videos/outputs).
-5. **Captions and timeline**: Text tracks listed in the manifest, and scrubbing thumbnails with a poster image. See [Captions](/docs/products/videos/captions) and [Timeline](/docs/products/videos/timeline).
+5. **Captions and timeline**: Text tracks listed in the manifest, and scrubbing thumbnails generated from the source. See [Captions](/docs/products/videos/captions) and [Timeline](/docs/products/videos/timeline).
 
 ```text
 Storage file ──> Video ──> Renditions (profile × output) ──> Master manifest ──> Player
@@ -39,12 +39,12 @@ Storage file ──> Video ──> Renditions (profile × output) ──> Master
 
 # The API at a glance {% #api-at-a-glance %}
 
-Everything the Console does is available from a [server SDK](/docs/sdks#server) with an API key. A typical integration makes four calls:
+Everything the Console does is available from a [server SDK](/docs/sdks#server) with an API key. Create your [encoding profiles](/docs/products/videos/profiles#create-a-profile) once per project with `project.createVideoProfile()`. After that, a typical integration makes four calls per video:
 
 | Step | Call | Notes |
 |------|------|-------|
-| 1. Upload the source | `storage.createFile()` | Any bucket. Set [permissions](/docs/products/videos/permissions) here, since playback follows them |
-| 2. Create the video | `videos.create({ bucketId, fileId })` | Queues the timeline. Metadata fills in shortly after |
+| 1. Upload the source | `storage.createFile()` | Any bucket. The file can stay private |
+| 2. Create the video | `videos.create({ bucketId, fileId, permissions })` | Set who can watch with [permissions](/docs/products/videos/permissions). Queues the timeline. Metadata fills in shortly after |
 | 3. Encode | `videos.createRendition({ videoId, profileId, output })` | Once per profile. Encoding runs in the background |
 | 4. Play | Master manifest URL | Build it from the video ID. See [Outputs](/docs/products/videos/outputs#master-manifest-urls) |
 
@@ -79,7 +79,7 @@ HLS, DASH, and CMAF, master manifests, and which players support each.
 Upload WebVTT or SubRip, extract embedded tracks, and set a default language.
 {% /cards_item %}
 {% cards_item href="/docs/products/videos/timeline" title="Timeline" %}
-Sprite sheets with a WebVTT index for scrubbing thumbnails and poster images.
+Sprite sheets with a WebVTT index for scrubbing thumbnails.
 {% /cards_item %}
 {% cards_item href="/docs/products/videos/permissions" title="Permissions" %}
 Who can watch a stream, and who can manage videos in your organization.
@@ -93,9 +93,6 @@ Step-by-step guides for playing and checking your streams.
 {% cards %}
 {% cards_item href="/docs/products/videos/play" title="Play a video in your app" %}
 Load the master manifest with hls.js, Shaka Player, Video.js, AVPlayer, ExoPlayer, Flutter, or React Native.
-{% /cards_item %}
-{% cards_item href="/docs/products/videos/embed" title="Embed the player" %}
-Copy an iframe from the Console and drop the Appwrite player on any page.
 {% /cards_item %}
 {% cards_item href="/docs/products/videos/inspector" title="Inspect playback" %}
 Watch the experience score, buffer, bitrate, and network requests for a playback session.

@@ -39,7 +39,7 @@ With a server SDK, create one rendition per profile:
       await videos.createRendition({
           videoId: '<VIDEO_ID>',
           profileId,
-          output: 'cmaf' // or 'hls', 'dash'
+          output: sdk.VideoOutput.Cmaf // or sdk.VideoOutput.Hls, sdk.VideoOutput.Dash
       });
   }
   ```
@@ -63,6 +63,8 @@ Renditions encode independently, so the video can start streaming as soon as the
 
 Encoding time depends mostly on the source duration and the profile's resolution. A 2160p rendition takes many times longer than a 480p one of the same clip.
 
+You can create up to 15 renditions per video per hour. Past that, `videos.createRendition()` returns a `general_rate_limit_exceeded` error until the hour is up.
+
 # Status and progress {% #status-and-progress %}
 
 A rendition reports its `status` and a `progress` percentage while it encodes.
@@ -77,7 +79,7 @@ A rendition reports its `status` and a `progress` percentage while it encodes.
 | `error` | Failed | The encode failed |
 | `aborted` | Aborted | The encode was stopped before it finished |
 
-Each rendition also records `startedAt` and `endedAt`, its final `width`, `height`, and bitrates, and `targetDuration`, the length of its longest segment in seconds.
+Each rendition also records `startedAt` and `endedAt`, its `width`, `height`, bitrates, and `codec`, and `targetDuration`, the length of its longest segment in seconds. When a rendition fails or is aborted, `error` says why.
 
 `progress` is a percentage sent as a string, such as `"42.5"`. Parse it with `parseFloat` before you compare or display it.
 
@@ -89,8 +91,8 @@ The Console updates rendition progress live. In your own backend, list the video
 async function isStreamable(videoId) {
     const { total } = await videos.listRenditions({
         videoId,
-        output: 'cmaf',
-        status: 'ready'
+        output: sdk.VideoOutput.Cmaf,
+        status: sdk.VideoRenditionStatus.Ready
     });
     return total > 0;
 }
@@ -106,11 +108,13 @@ A failed or aborted rendition is not retried in place. Delete it and create it a
 
 ```js
 await videos.deleteRendition({ videoId, renditionId });
-await videos.createRendition({ videoId, profileId, output: 'cmaf' });
+await videos.createRendition({ videoId, profileId, output: sdk.VideoOutput.Cmaf });
 ```
 
-If the same profile fails again, check the source. A file that is truncated, or uses a codec the encoder cannot read, fails every rendition. Playing the source file from Storage on your own machine is a quick way to rule this out.
+If the same profile fails again, read the rendition's `error`, then check the source. A file that is truncated, or uses a codec the encoder cannot read, fails every rendition. Playing the source file from Storage on your own machine is a quick way to rule this out.
 
 # Delete a rendition {% #delete-a-rendition %}
 
 Deleting a rendition removes its segments and drops it from the master manifest. Players stop offering that quality on their next manifest load. Other renditions of the video keep streaming.
+
+You cannot delete a rendition while it is encoding or uploading. The request returns `video_rendition_in_progress`; wait for the job to finish. A rendition that stays stuck in progress is eventually marked `aborted`, and can be deleted then.

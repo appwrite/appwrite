@@ -8,7 +8,7 @@ A **video** is the root resource in Appwrite Videos. It points at a video or aud
 
 # Source file {% #source-file %}
 
-You create a video from a `bucketId` and a `fileId`. The file must be a video or audio file, such as MP4, MOV, WebM, MKV, MP3, or M4A. The source stays in its bucket untouched: each encoding or timeline job downloads its own copy and deletes the copy when it ends.
+You create a video from a `bucketId` and a `fileId`. The file must be a video or audio file, such as MP4, MOV, WebM, MKV, MP3, or M4A, and you must be able to read it. The source stays in its bucket untouched: each encoding or timeline job downloads its own copy and deletes the copy when it ends.
 
 Think of the source as your master copy. Players never download it. They stream the [renditions](/docs/products/videos/renditions) encoded from it, which are smaller and split into short segments.
 
@@ -41,7 +41,8 @@ With a server SDK, create the video and then its renditions:
   const video = await videos.create({
       bucketId: '<BUCKET_ID>',
       fileId: '<FILE_ID>',
-      name: 'Launch keynote' // optional, defaults to the file name
+      name: 'Launch keynote', // optional, defaults to the file name
+      permissions: [sdk.Permission.read(sdk.Role.any())] // optional, who can watch
   });
   ```
 
@@ -54,12 +55,17 @@ With a server SDK, create the video and then its renditions:
   {
     "bucketId": "<BUCKET_ID>",
     "fileId": "<FILE_ID>",
-    "name": "Launch keynote"
+    "name": "Launch keynote",
+    "permissions": ["read(\"any\")"]
   }
   ```
 {% /multicode %}
 
 Creating a video stores the document and queues [timeline](/docs/products/videos/timeline) generation. Nothing is encoded until you [create renditions](/docs/products/videos/renditions#create-renditions).
+
+`permissions` decides who can watch and manage the video. Without it, a video created with an API key is readable only through the API and the Console. See [Permissions](/docs/products/videos/permissions).
+
+A project can create up to 10 videos per hour. Past that, `videos.create()` returns a `general_rate_limit_exceeded` error until the hour is up.
 
 # Metadata {% #metadata %}
 
@@ -67,7 +73,7 @@ Media metadata is empty right after you create a video. The first rendition or t
 
 | Field | Description |
 |-------|-------------|
-| `name` | Display name, up to 128 characters. Defaults to the source file name |
+| `name` | Display name, up to 2,048 characters. Defaults to the source file name |
 | `bucketId`, `fileId` | The source file in Storage |
 | `size` | Source size in bytes |
 | `format` | Container format, for example MP4 |
@@ -75,7 +81,9 @@ Media metadata is empty right after you create a video. The first rendition or t
 | `width`, `height`, `aspectRatio` | Picture size in pixels, and its ratio such as `16:9` |
 | `videoCodec`, `videoBitRate`, `videoFrameRate` | Video stream details. Bitrate is in bits per second |
 | `audioCodec`, `audioBitRate`, `audioSampleRate` | Audio stream details. Empty when the source has no audio |
-| `previewId` | The [preview image](/docs/products/videos/timeline#previews) used as the poster |
+| `timelineStatus` | Progress of the [timeline](/docs/products/videos/timeline#generation) job: `pending`, `started`, `ready`, `skipped`, or `error` |
+| `timelineError` | Why the timeline job failed. Empty unless `timelineStatus` is `error` |
+| `$permissions` | Who can watch and manage the video. See [Permissions](/docs/products/videos/permissions) |
 
 {% info title="Bitrate units" %}
 Bitrates on a video are in **bits per second**. Bitrates on [profiles](/docs/products/videos/profiles) and [renditions](/docs/products/videos/renditions) are in **kilobits per second**.
@@ -110,7 +118,7 @@ A video has no status of its own. The Console summarizes the status of its rendi
 
 # List and search {% #list-and-search %}
 
-List videos with [queries](/docs/products/databases/tablesdb/queries) and an optional `search` term. You can filter and sort on `bucketId`, `fileId`, `name`, `size`, `format`, `duration`, `width`, `height`, `videoCodec`, `videoBitRate`, `audioCodec`, and `audioBitRate`.
+List videos with [queries](/docs/products/databases/tablesdb/queries). You can filter and sort on `bucketId`, `fileId`, `name`, `size`, `format`, `duration`, `width`, `height`, `videoCodec`, `videoBitRate`, `audioCodec`, and `audioBitRate`.
 
 ```js
 const { Query } = sdk;
@@ -122,6 +130,10 @@ const { videos: longVideos } = await videos.list({
     ]
 });
 ```
+
+To search by name or source file ID, pass `Query.search('search', 'keynote')` in `queries`.
+
+With a session, the list only includes videos the user can read.
 
 # Connect videos to your data {% #connect-videos-to-your-data %}
 
@@ -141,7 +153,7 @@ To turn every upload into a stream without opening the Console, create the video
 Large files upload in chunks, and the create event fires once per chunk. Act only when the upload is complete:
 
 ```js
-import { Client, Videos } from 'node-appwrite';
+import { Client, Videos, VideoOutput, Permission, Role } from 'node-appwrite';
 
 // Profile IDs from Videos > Encoding profiles, stored as a function variable
 const PROFILE_IDS = process.env.VIDEO_PROFILE_IDS.split(',');
@@ -162,14 +174,15 @@ export default async ({ req, res, log }) => {
 
     const video = await videos.create({
         bucketId: file.bucketId,
-        fileId: file.$id
+        fileId: file.$id,
+        permissions: [Permission.read(Role.any())] // public; see Permissions for private videos
     });
 
     for (const profileId of PROFILE_IDS) {
         await videos.createRendition({
             videoId: video.$id,
             profileId,
-            output: 'cmaf'
+            output: VideoOutput.Cmaf
         });
     }
 
@@ -182,6 +195,8 @@ Give the function the `videos.write` scope in its settings so the key in `x-appw
 
 # Update and delete {% #update-and-delete %}
 
-You can change a video's **name** at any time from **Settings** on the video page, or with `videos.update()`.
+You can change a video's **name** at any time from **Settings** on the video page. With `videos.update()`, you can change its name and [permissions](/docs/products/videos/permissions). `name` is required, so pass the current name to keep it.
 
-Deleting a video removes its renditions, captions, previews, and transcoded segments. The source file stays in Storage. Delete it from its bucket if you no longer need it.
+Deleting a video removes its renditions, captions, timeline thumbnails, and transcoded segments. You cannot delete a video while one of its renditions is encoding or uploading; wait for the job to finish. The source file stays in Storage. Delete it from its bucket if you no longer need it.
+
+Deleting the source file does not delete the video. Renditions that are already encoded keep streaming, but new renditions fail because there is no source to encode. To remove a video completely, delete the video first, then the file.

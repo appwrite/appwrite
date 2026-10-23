@@ -678,10 +678,6 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/videos/play',
           },
           {
-            label: 'Embed the player',
-            href: '/docs/products/videos/embed',
-          },
-          {
             label: 'Inspect playback',
             href: '/docs/products/videos/inspector',
           },

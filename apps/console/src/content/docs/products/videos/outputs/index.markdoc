@@ -53,6 +53,8 @@ Add your endpoint in front and your project ID as a query parameter:
 https://<REGION>.cloud.appwrite.io/v1/videos/<VIDEO_ID>/outputs/cmaf/master.m3u8?project=<PROJECT_ID>
 ```
 
+Players cannot send Appwrite headers, so the project ID travels in the URL. Every playlist, segment, and caption link inside the manifest carries it too.
+
 In the Console, open a video and select **Streaming** to copy every URL, including the per-rendition playlists and caption manifests. The SDKs build the same URLs with `getHlsManifest()`, `getDashManifest()`, `getCmafHlsManifest()`, and `getCmafDashManifest()`.
 
 A master manifest lists only renditions that are `ready`. Until one is ready, there is nothing to stream. When more renditions finish, the manifest grows, and players pick them up the next time they load it.
@@ -65,7 +67,7 @@ The URL is stable. It does not change when you add or delete renditions, so you 
 2. A **media playlist** for the rendition it picks (HLS and CMAF HLS). DASH lists segments in the master manifest itself.
 3. **Segments**, a few seconds of video each, one after another. The player moves up or down the ladder between segments as bandwidth changes.
 
-All of these requests use the read permissions of the source file. See [Permissions](/docs/products/videos/permissions).
+All of these requests check the video's read permissions, not the source file's. See [Permissions](/docs/products/videos/permissions#playback).
 
 Players follow these links on their own. You only need the URLs below when you debug a stream or build tooling around it:
 
