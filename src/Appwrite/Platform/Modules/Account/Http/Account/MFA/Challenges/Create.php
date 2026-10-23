@@ -160,12 +160,18 @@ class Create extends Action
             ],
         ]);
 
-        if ($factor === Type::PHONE) {
-            // Lock the user like the phone update does, so a code is never sent to a number that just changed
-            $challenge = $dbForProject->withTransaction(function () use ($dbForProject, $user, $challenge) {
+        $address = match ($factor) {
+            Type::PHONE => 'phone',
+            Type::EMAIL => 'email',
+            default => null,
+        };
+
+        if ($address !== null) {
+            // Lock the user like an address update does, so a code is never sent to an address that just changed
+            $challenge = $dbForProject->withTransaction(function () use ($dbForProject, $user, $challenge, $address, $factor) {
                 $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
-                if ($current->getAttribute('phone') !== $user->getAttribute('phone')) {
-                    throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+                if ($current->getAttribute($address) !== $user->getAttribute($address)) {
+                    throw new Exception($factor === Type::PHONE ? Exception::USER_PHONE_NOT_FOUND : Exception::USER_EMAIL_NOT_FOUND);
                 }
 
                 return $dbForProject->createDocument('challenges', $challenge);
