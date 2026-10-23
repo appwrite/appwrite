@@ -1314,7 +1314,7 @@ return [
     ],
     Exception::KEY_CREATION_DENIED => [
         'name' => Exception::KEY_CREATION_DENIED,
-        'description' => 'An API key cannot be created from a request authorized with an API key. Authenticate with a session instead. To create a short-lived key from a server, use the ephemeral key endpoint.',
+        'description' => 'This request cannot create or change the key. A JWT cannot create or change keys, an API key cannot create another stored API key, and a key never gives out scopes it does not hold or an expiry later than its own. Authenticate with a session instead, or use the ephemeral key endpoint for a short-lived key within your key\'s grant.',
         'code' => 403,
     ],
     Exception::PLATFORM_NOT_FOUND => [
