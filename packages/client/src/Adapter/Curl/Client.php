@@ -474,6 +474,8 @@ class Client implements Adapter, ResponseStreamingClientInterface
                 $addresses = System::getaddrinfo($host, $family, SOCK_STREAM, STREAM_IPPROTO_TCP, '80', $remaining);
                 $found = [...$found, ...(\is_array($addresses) ? $addresses : [])];
             }
+        } elseif (!\extension_loaded('sockets')) {
+            throw new AdapterPreconditionException($request, 'The sockets extension is required to resolve hosts for these destinations.');
         } else {
             foreach (\socket_addrinfo_lookup($host, null, ['ai_socktype' => SOCK_STREAM]) ?: [] as $info) {
                 $address = \socket_addrinfo_explain($info)['ai_addr'];
