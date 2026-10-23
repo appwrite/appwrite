@@ -8,6 +8,10 @@ use Utopia\Http\TrustedHeaders;
 
 class Request extends UtopiaRequest
 {
+    private const string UPLOAD_PREFIX = 'swoole.upfile.';
+
+    private const int UPLOAD_SUFFIX_LENGTH = 6;
+
     /**
      * Swoole Request Object
      */
@@ -20,6 +24,8 @@ class Request extends UtopiaRequest
     {
         $this->swoole = $request;
         $this->trusted = $trusted;
+
+        $this->dropSpoofedUploads();
     }
 
     /**
@@ -248,120 +254,7 @@ class Request extends UtopiaRequest
     {
         $key = strtolower($key);
 
-        return $this->sanitizeUploads($this->swoole->files[$key] ?? []);
-    }
-
-    /**
-     * Neutralize upload entries Swoole did not generate itself
-     *
-     * For a genuine multipart upload Swoole writes the body to
-     * `<upload_tmp_dir>/swoole.upfile.XXXXXX` (an mkstemp-issued name) and
-     * reports that path as `tmp_name`. The multipart parser however trusts the
-     * internal `Swoole-Upload-File` marker in part headers and will accept a
-     * client-supplied value as `tmp_name` of a ready upload on any request
-     * (swoole/swoole-src#6309), turning a remote input into a pointer to an
-     * arbitrary server-local file that PHP users treat as a real upload.
-     *
-     * This guard rejects any `tmp_name` outside the temporary directories and
-     * outside the `swoole.upfile.XXXXXX` naming scheme, so a spoofed part
-     * collapses into a plain "could not write" upload instead of a live file.
-     *
-     * @param  array<mixed>  $files
-     * @return array<mixed>
-     */
-    private function sanitizeUploads(array $files): array
-    {
-        if (! isset($files['tmp_name'])) {
-            return $files;
-        }
-
-        $isList = \is_array($files['tmp_name']);
-
-        if ($isList) {
-            $paths = $files['tmp_name'];
-        } else {
-            $paths = [$files['tmp_name']];
-        }
-
-        $rejected = false;
-
-        foreach ($paths as $position => $path) {
-            if (! \is_string($path) || $this->isSwooleTempFile($path)) {
-                continue;
-            }
-
-            $paths[$position] = '';
-            $rejected = true;
-
-            if ($isList) {
-                if (\is_array($files['error'] ?? null)) {
-                    $files['error'][$position] = \UPLOAD_ERR_CANT_WRITE;
-                }
-                if (\is_array($files['size'] ?? null)) {
-                    $files['size'][$position] = 0;
-                }
-            }
-        }
-
-        if ($rejected) {
-            $files['tmp_name'] = $isList ? $paths : \reset($paths);
-            if (! $isList) {
-                $files['error'] = \UPLOAD_ERR_CANT_WRITE;
-                $files['size'] = 0;
-            }
-        }
-
-        return $files;
-    }
-
-    private function isSwooleTempFile(string $path): bool
-    {
-        if (! \preg_match('/^swoole\.upfile\.[A-Za-z0-9]{6}$/', \basename($path))) {
-            return false;
-        }
-
-        $absolute = \realpath($path);
-
-        if ($absolute === false) {
-            return false;
-        }
-
-        foreach ($this->uploadTempDirs() as $dir) {
-            if (\str_starts_with($absolute, $dir . DIRECTORY_SEPARATOR)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Temporary locations Swoole may have used for upload artifacts.
-     *
-     * Swoole resolves its upload directory independently from PHP
-     * (`php_get_temporary_directory` with a `/tmp` fallback), so both PHP's
-     * temporary location and `/tmp` are accepted.
-     *
-     * @return list<string>
-     */
-    private function uploadTempDirs(): array
-    {
-        $candidates = [
-            (string) (\ini_get('upload_tmp_dir') ?: \sys_get_temp_dir()),
-            '/tmp',
-        ];
-
-        $dirs = [];
-
-        foreach ($candidates as $candidate) {
-            $real = \realpath($candidate);
-
-            if (\is_string($real)) {
-                $dirs[$real] = true;
-            }
-        }
-
-        return \array_keys($dirs);
+        return $this->swoole->files[$key] ?? [];
     }
 
     /**
@@ -448,5 +341,142 @@ class Request extends UtopiaRequest
         }
 
         return $this->headers;
+    }
+
+    /**
+     * Drop upload paths Swoole did not create itself
+     *
+     * Swoole's multipart parser accepts a client-supplied `Swoole-Upload-File`
+     * part header as a ready temp file (swoole/swoole-src#6309): the path is
+     * reported as `tmp_name`, passes `is_uploaded_file()`, and is unlinked when
+     * the request is freed. Genuine uploads are mkstemp-issued
+     * `swoole.upfile.XXXXXX` files inside the upload directory, so any other
+     * path leaves `tmpfiles` (no unlink) and is blanked in `files`.
+     */
+    private function dropSpoofedUploads(): void
+    {
+        $tmpfiles = $this->swoole->tmpfiles;
+
+        if (! \is_array($tmpfiles)) {
+            return;
+        }
+
+        $genuine = [];
+        $spoofed = [];
+
+        foreach ($tmpfiles as $path) {
+            if (! \is_string($path)) {
+                continue;
+            }
+
+            if ($this->isUpload($path)) {
+                $genuine[] = $path;
+            } else {
+                $spoofed[] = $path;
+            }
+        }
+
+        if ($spoofed === []) {
+            return;
+        }
+
+        $this->swoole->tmpfiles = $genuine;
+
+        $files = $this->swoole->files;
+
+        if (! \is_array($files)) {
+            return;
+        }
+
+        foreach ($files as $key => $entry) {
+            if (! \is_array($entry) || ! isset($entry['tmp_name'])) {
+                continue;
+            }
+
+            [$entry['tmp_name'], $entry['error'], $entry['size']] = $this->dropPaths($entry['tmp_name'], $entry['error'] ?? null, $entry['size'] ?? null, $spoofed);
+            $files[$key] = $entry;
+        }
+
+        $this->swoole->files = $files;
+    }
+
+    /**
+     * Walk `tmp_name` with its parallel `error` and `size` trees, which nest
+     * for bracketed field names such as `file[]` or `file[0][part]`.
+     *
+     * @param  list<string>  $spoofed
+     * @return array{mixed, mixed, mixed}
+     */
+    private function dropPaths(mixed $path, mixed $error, mixed $size, array $spoofed): array
+    {
+        if (\is_string($path)) {
+            if (\in_array($path, $spoofed, true)) {
+                return ['', \UPLOAD_ERR_CANT_WRITE, 0];
+            }
+
+            return [$path, $error, $size];
+        }
+
+        if (! \is_array($path)) {
+            return [$path, $error, $size];
+        }
+
+        foreach ($path as $position => $child) {
+            [$path[$position], $childError, $childSize] = $this->dropPaths(
+                $child,
+                \is_array($error) ? $error[$position] ?? null : null,
+                \is_array($size) ? $size[$position] ?? null : null,
+                $spoofed,
+            );
+
+            if (\is_array($error)) {
+                $error[$position] = $childError;
+            }
+
+            if (\is_array($size)) {
+                $size[$position] = $childSize;
+            }
+        }
+
+        return [$path, $error, $size];
+    }
+
+    private function isUpload(string $path): bool
+    {
+        $absolute = \realpath($path);
+
+        if ($absolute === false) {
+            return false;
+        }
+
+        $name = \basename($absolute);
+        $suffix = \substr($name, \strlen(self::UPLOAD_PREFIX));
+
+        if (! \str_starts_with($name, self::UPLOAD_PREFIX) || \strlen($suffix) !== self::UPLOAD_SUFFIX_LENGTH || ! \ctype_alnum($suffix)) {
+            return false;
+        }
+
+        return \in_array(\dirname($absolute), $this->uploadDirectories(), true);
+    }
+
+    /**
+     * Swoole writes uploads to its own `upload_tmp_dir` setting, `/tmp` by
+     * default, so `/tmp` is accepted beside PHP's temporary locations.
+     *
+     * @return list<string>
+     */
+    private function uploadDirectories(): array
+    {
+        $directories = [];
+
+        foreach ([\ini_get('upload_tmp_dir') ?: \sys_get_temp_dir(), '/tmp'] as $candidate) {
+            $directory = \realpath($candidate);
+
+            if ($directory !== false) {
+                $directories[] = $directory;
+            }
+        }
+
+        return \array_values(\array_unique($directories));
     }
 }
