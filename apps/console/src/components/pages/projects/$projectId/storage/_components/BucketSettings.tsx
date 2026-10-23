@@ -245,7 +245,8 @@ export function BucketSettings() {
       return await projectSdk.storage.updateBucket({
         bucketId,
         name: bucket.name, // Required parameter
-        maximumFileSize,
+        // The server rejects 0; leaving it out applies the plan or server limit
+        maximumFileSize: maximumFileSize || undefined,
         enabled: bucket.enabled ?? undefined,
         encryption: bucket.encryption ?? undefined,
         antivirus: bucket.antivirus ?? undefined,
@@ -769,7 +770,9 @@ export function BucketSettings() {
               {t('Image transformations')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              {t('Enable image transformation features for files in this bucket.')}
+              {t(
+                'Enable image transformation features for files in this bucket.',
+              )}
             </p>
           </div>
           <div className="border-t border-border" />
@@ -856,7 +859,9 @@ export function BucketSettings() {
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">Gzip</span>
                         <span className="text-[11px] text-muted-foreground">
-                          {t('Good balance between compression ratio and speed.')}
+                          {t(
+                            'Good balance between compression ratio and speed.',
+                          )}
                         </span>
                       </div>
                     </SelectItem>
@@ -864,7 +869,9 @@ export function BucketSettings() {
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">Zstd</span>
                         <span className="text-[11px] text-muted-foreground">
-                          {t('Excellent compression ratios with fast decompression.')}
+                          {t(
+                            'Excellent compression ratios with fast decompression.',
+                          )}
                         </span>
                       </div>
                     </SelectItem>
@@ -906,8 +913,8 @@ export function BucketSettings() {
               {t('Set the maximum file size allowed.')}{' '}
               {maxFileSizeByPlan !== null ? (
                 <>
-                  {t('Maximum allowed value is')} {formatBytes(maxFileSizeByPlan)}{' '}
-                  {t('for your plan.')}{' '}
+                  {t('Maximum allowed value is')}{' '}
+                  {formatBytes(maxFileSizeByPlan)} {t('for your plan.')}{' '}
                   <Button
                     variant="link"
                     size="sm"
@@ -921,7 +928,9 @@ export function BucketSettings() {
                   >
                     {t('Upgrade')}
                   </Button>{' '}
-                  {t("to increase the limit. Set to 0 to use your plan's maximum limit")}{' '}
+                  {t(
+                    "to increase the limit. Set to 0 to use your plan's maximum limit",
+                  )}{' '}
                   ({formatBytes(maxFileSizeByPlan)}).
                 </>
               ) : (
@@ -1042,7 +1051,9 @@ export function BucketSettings() {
               className="h-9 text-[13px]"
               disabled={
                 !bucket ||
-                Math.abs(fileSizeInBytes - toByteCount(bucket.maximumFileSize)) < 1 ||
+                Math.abs(
+                  fileSizeInBytes - toByteCount(bucket.maximumFileSize),
+                ) < 1 ||
                 updateMaximumFileSizeMutation.isPending ||
                 fileSizeError !== null
               }
