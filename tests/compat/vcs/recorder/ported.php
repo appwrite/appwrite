@@ -956,3 +956,55 @@ $checks[] = call('supports_repository_clone_url');
 $checks[] = call('generate_push_command', ['owner' => 'checks', 'repositoryName' => 'site', 'directory' => '/tmp/clone', 'branch' => 'main']);
 $checks[] = step('fixture.requests');
 write("{$cases}/Checks.json", ['cases' => [['name' => 'Gitea: a check reported as a commit status', 'steps' => $checks]]]);
+
+/*
+ * AdapterTest: every adapter verifies provider certificates unless told to
+ * accept self-signed ones, and the setting reaches the calls: a provider on
+ * the fixture server's self-signed HTTPS port fails by default and answers
+ * once self-signed certificates are accepted.
+ */
+$list = [];
+foreach (['bitbucket', 'entire', 'forgejo', 'gitea', 'github', 'gitlab', 'gogs', 'origin'] as $adapter) {
+    $list[] = ['name' => "testVerifiesCertificatesByDefault {$adapter}", 'steps' => [
+        step('vcs.new', ['adapter' => $adapter, 'cache' => 'none'], 'a'),
+        call('is_self_signed'),
+    ]];
+    $list[] = ['name' => "testAcceptsSelfSignedCertificatesWhenOptedIn {$adapter}", 'steps' => [
+        step('vcs.new', ['adapter' => $adapter, 'cache' => 'none'], 'a'),
+        call('set_self_signed', ['selfSigned' => true]),
+        call('is_self_signed'),
+        call('set_self_signed', ['selfSigned' => false]),
+        call('is_self_signed'),
+    ]];
+}
+$tlsRoutes = [['method' => 'GET', 'path' => '/api/v1/repos/acme/site', 'body' => ['id' => 7, 'name' => 'site', 'full_name' => 'acme/site', 'private' => false]]];
+$list[] = ['name' => 'a provider on a self-signed certificate', 'steps' => [
+    step('fixture.script', ['routes' => $tlsRoutes]),
+    step('vcs.new', ['adapter' => 'gitea', 'cache' => 'none'], 'a'),
+    call('initialize_variables', ['installationId' => '', 'privateKey' => '', 'accessToken' => 'test-token-gitea']),
+    call('set_endpoint', ['endpoint' => '${vcs-tls}/~${ns}/gitea']),
+    call('get_repository', ['owner' => 'acme', 'repositoryName' => 'site']),
+    call('set_self_signed', ['selfSigned' => true]),
+    call('get_repository', ['owner' => 'acme', 'repositoryName' => 'site']),
+    call('set_self_signed', ['selfSigned' => false]),
+    call('get_repository', ['owner' => 'acme', 'repositoryName' => 'site']),
+    step('fixture.requests'),
+]];
+write("{$cases}/AdapterTest.json", ['source' => 'packages/vcs/tests/AdapterTest.php', 'cases' => $list]);
+
+/*
+ * AdapterCallTest: a provider answering 500 (an outage) hands its answer
+ * back without writing the request's parameters (a webhook secret) to any
+ * output.
+ */
+$outage = [['method' => 'POST', 'path' => '/api/v1/repos/owner/repository/hooks', 'status' => 500, 'headers' => ['Content-Type' => 'application/json'], 'body' => ['message' => 'Internal Server Error']]];
+write("{$cases}/AdapterCallTest.json", ['source' => 'packages/vcs/tests/AdapterCallTest.php', 'cases' => [
+    ['name' => 'testServerErrorDoesNotWriteRequestParamsToOutput', 'steps' => [
+        step('fixture.script', ['routes' => $outage]),
+        step('vcs.new', ['adapter' => 'gitea', 'cache' => 'none'], 'a'),
+        call('initialize_variables', ['installationId' => '', 'privateKey' => '', 'accessToken' => 'test-token-gitea']),
+        call('set_endpoint', ['endpoint' => '${vcs}/~${ns}/gitea']),
+        call('create_webhook', ['owner' => 'owner', 'repositoryName' => 'repository', 'url' => 'https://example.com/hook', 'secret' => 'webhook-secret']),
+        step('fixture.requests'),
+    ]],
+]]);

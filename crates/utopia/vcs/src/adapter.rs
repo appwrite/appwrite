@@ -135,6 +135,17 @@ pub trait Adapter: Send + Sync {
     /// PHP: `getName()`.
     fn name(&self) -> &str;
 
+    /// Accepts self-signed TLS certificates, for self-hosted providers on a
+    /// private CA. Off by default: provider API calls verify certificates.
+    ///
+    /// PHP: `setSelfSigned()`.
+    fn set_self_signed(&mut self, self_signed: bool);
+
+    /// Whether self-signed TLS certificates are accepted.
+    ///
+    /// PHP: `isSelfSigned()`.
+    fn is_self_signed(&self) -> bool;
+
     /// The version control system.
     ///
     /// PHP: `getType()`.

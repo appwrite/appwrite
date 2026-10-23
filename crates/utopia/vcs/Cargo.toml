@@ -27,4 +27,4 @@ utopia-console.workspace = true
 
 [package.metadata.utopia]
 category = "integrations"
-php-sync = "9150b6440a284a3d33d065969cbb52f1af80ef0f"
+php-sync = "e5d66e2c375a22ca0114fc3b9fab26311abf730f"

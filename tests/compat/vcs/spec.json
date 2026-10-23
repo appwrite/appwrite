@@ -1943,6 +1943,26 @@
         ],
         "reason": "a receipt names the core by this runtime's fixture address, so the two runtimes sign different claims; the steps after it check what the token proves"
       }
+    },
+    "vcs.set_self_signed": {
+      "doc": "$adapter->setSelfSigned(...named args): its result, a Command as its string, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
+      "covers": [
+        "Utopia\\VCS\\Adapter::setSelfSigned"
+      ],
+      "services": [
+        "vcs-http",
+        "vcs-https"
+      ]
+    },
+    "vcs.is_self_signed": {
+      "doc": "$adapter->isSelfSigned(...named args): its result, a Command as its string, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
+      "covers": [
+        "Utopia\\VCS\\Adapter::isSelfSigned"
+      ],
+      "services": [
+        "vcs-http",
+        "vcs-https"
+      ]
     }
   },
   "generators": {
@@ -3913,11 +3933,6 @@
     }
   },
   "deviations": [
-    {
-      "symbol": "Utopia\\VCS\\Adapter\\Git::call",
-      "php": "On a 500 answer call() echoes 'Server error(<method>: <path>. Params: <json>): <json>' to the script's output.",
-      "reason": "A library has no output of its own to write to: the Rust transport writes the same line to stderr."
-    },
     {
       "symbol": "Utopia\\VCS\\Adapter\\Git\\Origin::initializeVariables",
       "php": "A base64 64-byte libsodium secret key whose second half is not the public key of its first half still signs (libsodium signs with the halves as given), producing a JWT no key verifies.",

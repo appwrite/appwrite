@@ -232,6 +232,14 @@ impl Adapter for GitHub {
         "github"
     }
 
+    fn set_self_signed(&mut self, self_signed: bool) {
+        self.transport.self_signed = self_signed;
+    }
+
+    fn is_self_signed(&self) -> bool {
+        self.transport.self_signed
+    }
+
     fn vcs_type(&self) -> VcsType {
         VcsType::Git
     }
