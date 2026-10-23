@@ -3968,6 +3968,10 @@ Http::patch('/v1/account/email')
                             TOKEN_TYPE_EMAIL,
                         ]),
                     ]));
+                    $authorization->skip(fn () => $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::EMAIL]),
+                    ]));
                     // A pending invite was sent to the old address, so it must not prove the new one
                     $authorization->skip(fn () => $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
                         Query::equal('userInternalId', [$sequence]),
