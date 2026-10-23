@@ -188,28 +188,29 @@ class Update extends Action
                 throw new Exception(Exception::TRANSACTION_NOT_READY);
             }
 
-            $firstOperation = $authorization->skip(fn () => $dbForProject->findOne('transactionLogs', [
-                Query::equal('transactionInternalId', [$transaction->getSequence()]),
-                Query::orderAsc(),
-            ]));
-
-            if ($firstOperation->isEmpty()) {
-                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
-                    'transactions',
-                    $transactionId,
-                    new Document(['status' => 'committed'])
-                ));
-
-                $this->queueCleanup($publisherForDeletes, $project, $transaction);
-
-                $response
-                    ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-                    ->dynamic($transaction, $this->getResponseModel());
-
-                return;
-            }
-
+            // The transaction is claimed, so any failure from here on must mark it failed rather than leave it committing
             try {
+                $firstOperation = $authorization->skip(fn () => $dbForProject->findOne('transactionLogs', [
+                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                    Query::orderAsc(),
+                ]));
+
+                if ($firstOperation->isEmpty()) {
+                    $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+                        'transactions',
+                        $transactionId,
+                        new Document(['status' => 'committed'])
+                    ));
+
+                    $this->queueCleanup($publisherForDeletes, $project, $transaction);
+
+                    $response
+                        ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
+                        ->dynamic($transaction, $this->getResponseModel());
+
+                    return;
+                }
+
                 $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
                     Query::equal('$sequence', [$firstOperation['databaseInternalId']])
                 ]));
