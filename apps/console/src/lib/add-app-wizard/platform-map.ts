@@ -59,7 +59,8 @@ export function isValidHostname(value: string): boolean {
 export function isValidKey(value: string): boolean {
   const v = value.trim()
   if (v.length < 3) return false
-  return /^[a-zA-Z][a-zA-Z0-9._-]*(\.[a-zA-Z][a-zA-Z0-9._-]*)+$/.test(v)
+  // Two linear checks instead of one nested pattern, which backtracks exponentially.
+  return /^[a-zA-Z][a-zA-Z0-9._-]*$/.test(v) && /\.[a-zA-Z]/.test(v)
 }
 
 export function isValidKeyForVariant(variant: string, value: string): boolean {

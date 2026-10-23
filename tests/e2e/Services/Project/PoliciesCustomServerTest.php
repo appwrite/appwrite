@@ -17,6 +17,33 @@ final class PoliciesCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
+    public function testPasswordDictionaryAndPersonalDataWriteScopes(): void
+    {
+        $headers = $this->buildHeaders();
+        $readKey = $this->getNewKey(['project.policies.read']);
+        $readHeaders = array_replace($headers, ['x-appwrite-key' => $readKey]);
+
+        foreach (['password-dictionary', 'password-personal-data'] as $policy) {
+            $path = '/project/policies/' . $policy;
+            $before = $this->getPolicy($policy)['body'];
+            $response = $this->client->call(Client::METHOD_PATCH, $path, $readHeaders, ['enabled' => true, 'denyList' => ['blocked']]);
+            $this->assertSame(401, $response['headers']['status-code']);
+            $this->assertSame(Exception::GENERAL_UNAUTHORIZED_SCOPE, $response['body']['type']);
+            $this->assertSame($before, $this->getPolicy($policy)['body']);
+
+            foreach (['policies.write', 'project.policies.write'] as $scope) {
+                $writeHeaders = array_replace($headers, ['x-appwrite-key' => $this->getNewKey([$scope])]);
+                try {
+                    $response = $this->client->call(Client::METHOD_PATCH, $path, $writeHeaders, ['enabled' => true, 'denyList' => ['blocked']]);
+                    $this->assertSame(200, $response['headers']['status-code']);
+                    $this->assertSame(['blocked'], $this->getPolicy($policy)['body']['denyList']);
+                } finally {
+                    $this->client->call(Client::METHOD_PATCH, $path, $headers, ['enabled' => $before['enabled'], 'denyList' => $before['denyList']]);
+                }
+            }
+        }
+    }
+
     public function testUpdatePasswordRotationPolicyWithoutScope(): void
     {
         $path = '/projects/' . $this->getProject()['$id'] . '/keys';
