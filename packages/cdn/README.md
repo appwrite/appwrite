@@ -27,7 +27,7 @@ The cache API supports four purge modes:
 - key or cache-tag purges for providers like Fastly and Cloudflare
 - zone-wide purges, for when the whole cache has to go
 
-Domains are lowercase hostnames without a scheme or trailing slash. Paths begin with `/`; CDN resources are assumed to use HTTPS.
+Domains are lowercase hostnames without a scheme or trailing slash. Paths begin with `/` and contain no `.` or `..` segments; CDN resources are assumed to use HTTPS.
 
 ### Cloudflare
 

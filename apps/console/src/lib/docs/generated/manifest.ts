@@ -322,7 +322,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 22
+    "readingTimeMinutes": 23
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -1558,7 +1558,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Favicons",
     "description": "Fetch favicons from remote websites for link previews and bookmark displays.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 1
   },
   {
     "slug": "products/avatars/flags",
@@ -3743,6 +3743,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn how you can add the Appwrite MCP server to OpenCode to interact with both the Appwrite API and documentation.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "tooling/ai/agents/pi",
+    "title": "Pi",
+    "description": "Learn how you can add the Appwrite MCP server to Pi to interact with both the Appwrite API and documentation, and to react to events in your project.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/ai/agents/vscode",

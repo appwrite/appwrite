@@ -162,6 +162,26 @@ abstract class Request
     }
 
     /**
+     * Read the value the nearest proxy wrote to the first trusted header that carries one.
+     *
+     * @param  array<int, string>  $headers
+     */
+    protected function trustedValue(array $headers): ?string
+    {
+        foreach ($headers as $header) {
+            // Entries left of the nearest hop may come from the client.
+            $values = explode(',', $this->getHeaderLine($header));
+            $value = trim((string) end($values));
+
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Get IP
      *
      * Returns users IP address.

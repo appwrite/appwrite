@@ -14,6 +14,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
+use Appwrite\Vcs\Validator\Directory;
 use Executor\Executor;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
@@ -27,6 +28,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -89,7 +91,7 @@ class Update extends Base
             ->param('providerRepositoryId', '', new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
-            ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
+            ->param('providerRootDirectory', '', new Directory(), 'Path to site code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', null, fn (array $plan) => new Nullable(new Specification(
@@ -105,7 +107,7 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Runtime specification for the SSR executions.', true, ['plan'], example: 's-1vcpu-512mb')
-            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE)), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the site.', true)
             ->inject('request')
@@ -123,6 +125,7 @@ class Update extends Base
             ->inject('buildTimeout')
             ->inject('bus')
             ->inject('platform')
+            ->inject('deviceForBuilds')
             ->callback($this->action(...));
     }
 
@@ -166,7 +169,8 @@ class Update extends Base
         Deployments $deployments,
         int $buildTimeout,
         Bus $bus,
-        array $platform
+        array $platform,
+        ?Device $deviceForBuilds = null,
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -285,6 +289,22 @@ class Update extends Base
             }
         }
 
+        // Reconnecting a connected site only moves the site to the new installation, while
+        // webhook deployments take theirs from the repository link
+        if ($isConnected && !empty($providerRepositoryId) && !empty($repositoryId) && !$installation->isEmpty()) {
+            $repository = $dbForPlatform->getDocument('repositories', $repositoryId);
+            if (
+                !$repository->isEmpty()
+                && $repository->getAttribute('providerRepositoryId') === $providerRepositoryId
+                && $repository->getAttribute('installationInternalId') !== $installation->getSequence()
+            ) {
+                $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document([
+                    'installationId' => $installation->getId(),
+                    'installationInternalId' => $installation->getSequence(),
+                ]));
+            }
+        }
+
         $live = true;
 
         if (
@@ -319,6 +339,7 @@ class Update extends Base
             }
         }
 
+        $previous = $site;
         $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
             'name' => $name,
             'description' => $description,
@@ -350,6 +371,8 @@ class Update extends Base
             'fallbackFile' => $fallbackFile,
             'scopes' => $scopes ?? $site->getAttribute('scopes', []),
         ])));
+
+        $this->deleteStaleBuildCache($deviceForBuilds, $project->getId(), $previous, $site);
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {

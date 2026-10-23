@@ -84,6 +84,7 @@ class Create extends Base
 
         $secret = $jwt->encode([
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'scopes' => $scopes
         ]);
 
