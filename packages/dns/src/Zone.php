@@ -11,9 +11,7 @@ final readonly class Zone
 {
     public string $name;
 
-    /**
-     * @var list<Record>
-     */
+    /** @var list<Record> */
     public array $records;
 
     /**
@@ -37,10 +35,7 @@ final readonly class Zone
 
         $zoneSuffix = $this->name === '.' ? '.' : ".$this->name";
 
-        // Validate that all records belong to the zone, and keep one copy of identical
-        // records: RFC 2181 section 5 says servers should suppress such duplicates. The
-        // copy kept carries the lowest TTL among them, as section 5.2 has an RRset take,
-        // and an MX or SRV field left unset is the 0 it is encoded as.
+        // Validate that all records belong to the zone
         $unique = [];
         foreach ($records as $record) {
             if ($record->type === Record::TYPE_SOA) {
@@ -52,7 +47,17 @@ final readonly class Zone
                 );
             }
 
-            $key = implode("\0", [$record->name, $record->type, $record->class, $record->rdata, $record->priority ?? 0, $record->weight ?? 0, $record->port ?? 0]);
+            // Keep one copy of identical records (RFC 2181 section 5): the one with the lowest
+            // TTL (section 5.2). An unset priority, weight or port is encoded as 0, so it is 0 here.
+            $key = implode("\0", [
+                $record->name,
+                $record->type,
+                $record->class,
+                $record->rdata,
+                $record->priority ?? 0,
+                $record->weight ?? 0,
+                $record->port ?? 0,
+            ]);
             if (!isset($unique[$key]) || $record->ttl < $unique[$key]->ttl) {
                 $unique[$key] = $record;
             }
