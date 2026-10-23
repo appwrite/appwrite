@@ -1,4 +1,5 @@
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
+import { isCloudEndpointUrl } from '@/lib/debug-endpoint'
 import type { Models } from '@appwrite.io/console'
 import type { LucideIcon } from 'lucide-react'
 import {
@@ -22,7 +23,7 @@ import {
 
 export function isCloudEnvironment(): boolean {
   try {
-    return getBaseEndpoint().includes('cloud.appwrite.io')
+    return isCloudEndpointUrl(getBaseEndpoint())
   } catch {
     return false
   }

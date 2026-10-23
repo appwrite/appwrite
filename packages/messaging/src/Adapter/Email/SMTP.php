@@ -17,6 +17,7 @@ use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message as SmtpMessage;
 use Utopia\SMTP\Outcome;
 use Utopia\SMTP\Timeouts;
+use Utopia\SMTP\Tls;
 use Utopia\SMTP\Transport\Native;
 
 class SMTP extends EmailAdapter
@@ -38,6 +39,7 @@ class SMTP extends EmailAdapter
      * @param int $timelimit SMTP command timelimit in seconds.
      * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. Keep it under the server's idle timeout: a session the server closed inside the threshold fails its send without a retry. 0 probes before every reuse.
      * @param int $restartThreshold Messages a kept session carries before it is replaced. 0 disables.
+     * @param array<string, string> $addresses Host => address to dial it on, as each host appears in $host (e.g. "smtp1.example.com" => "203.0.113.10", "[2001:db8::1]" for IPv6), so the connection lands on an address the caller checked. The certificate is still verified against the host. A host not listed is dialled by name.
      */
     public function __construct(
         private readonly string $host,
@@ -52,6 +54,7 @@ class SMTP extends EmailAdapter
         private readonly int $timelimit = 30,
         private readonly int $pingThreshold = 30,
         private readonly int $restartThreshold = 100,
+        private readonly array $addresses = [],
     ) {
         parent::__construct();
         if (!\in_array($this->smtpSecure, ['', 'ssl', 'tls'])) {
@@ -81,7 +84,7 @@ class SMTP extends EmailAdapter
             $client = $this->keepAlive ? $this->client() : $this->dial();
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage(), $this->permanent($exception));
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception), $this->code($exception));
             }
 
             return $response->toArray();
@@ -102,21 +105,21 @@ class SMTP extends EmailAdapter
             }
 
             foreach ($result->rejected as $email => $reply) {
-                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent);
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent, $reply->code);
             }
         } catch (TransactionException $exception) {
             // Every recipient refused: each answers for itself. Otherwise the
             // refusal was the message's own (MAIL FROM, DATA) and holds for all.
             foreach ($recipients as $email) {
                 $reply = $exception->rejected[$email] ?? $exception->reply;
-                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent);
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent, $reply->code);
             }
 
             // A 421 during RCPT ends the session with the transaction.
             $keep = $keep && is_finite($client->idle());
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage(), $this->permanent($exception));
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception), $this->code($exception));
             }
 
             $keep = false;
@@ -175,10 +178,11 @@ class SMTP extends EmailAdapter
 
         $failures = [];
         $permanent = true;
+        $code = 0;
 
         foreach ($this->hosts() as [$host, $port, $encryption]) {
             $client = new Client(
-                new Native($host, $port),
+                isset($this->addresses[$host]) ? new Native($this->addresses[$host], $port, new Tls(peerName: \trim($host, '[]'))) : new Native($host, $port),
                 gethostname() ?: 'localhost',
                 $this->authenticators(),
                 $encryption,
@@ -194,6 +198,7 @@ class SMTP extends EmailAdapter
                 // One host that may answer differently later is reason enough
                 // to try the whole list again.
                 $permanent = $permanent && $this->permanent($exception);
+                $code = $code ?: $this->code($exception);
 
                 continue;
             }
@@ -201,7 +206,7 @@ class SMTP extends EmailAdapter
             return $client;
         }
 
-        throw new NoHostAnswered('No SMTP host answered: ' . implode('; ', $failures), $failures !== [] && $permanent);
+        throw new NoHostAnswered('No SMTP host answered: ' . implode('; ', $failures), $failures !== [] && $permanent, $code);
     }
 
     /**
@@ -226,6 +231,21 @@ class SMTP extends EmailAdapter
             $exception instanceof CapabilityException => true,
             $exception instanceof AuthenticationException => $previous instanceof TransactionException && $previous->isPermanent(),
             default => false,
+        };
+    }
+
+    /**
+     * The reply code the server refused with, or 0 when no reply stands behind the failure.
+     */
+    private function code(SmtpException $exception): int
+    {
+        $previous = $exception->getPrevious();
+
+        return match (true) {
+            $exception instanceof TransactionException => $exception->reply->code,
+            $exception instanceof NoHostAnswered => $exception->getCode(),
+            $exception instanceof AuthenticationException && $previous instanceof TransactionException => $previous->reply->code,
+            default => 0,
         };
     }
 

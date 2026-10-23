@@ -135,6 +135,20 @@ const KNOWN_CLIENTS: KnownOAuthClientMatcher[] = [
     uriPatterns: [LOOPBACK, /^https:\/\/(www\.)?(x\.ai|grok\.com)(\/|$)/i],
   },
   {
+    id: 'pi',
+    name: 'Pi',
+    iconPath: '/icons/apps/pi.svg',
+    // pi-mcp-adapter registers as "Pi Coding Agent" with a loopback
+    // http://127.0.0.1:<port>/callback redirect (OS-assigned port) and its
+    // GitHub repo as client_uri.
+    namePattern: /^pi(\s+coding\s+agent)?$/i,
+    uriPatterns: [
+      LOOPBACK,
+      /^https:\/\/(www\.)?pi\.dev(\/|$)/i,
+      /^https:\/\/github\.com\/nicobailon\/pi-mcp-adapter(\/|$)/i,
+    ],
+  },
+  {
     id: 'chatgpt',
     name: 'ChatGPT',
     iconPath: '/icons/apps/chatgpt.svg',

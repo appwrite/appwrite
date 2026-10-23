@@ -135,6 +135,10 @@
             "queries",
             "total"
         ],
+        "account.listMemberships": [
+            "queries",
+            "total"
+        ],
         "account.listMFAFactors": [],
         "account.listMfaFactors": [],
         "account.listPasskeys": [
@@ -3371,13 +3375,15 @@
             "rpId"
         ],
         "project.updatePasswordDictionaryPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordHistoryPolicy": [
             "total"
         ],
         "project.updatePasswordPersonalDataPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordPwnedPolicy": [
             "enabled",
@@ -3701,7 +3707,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.createFile": [
             "bucketId",
@@ -3773,7 +3780,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.updateFile": [
             "bucketId",
@@ -4696,6 +4704,10 @@
             "success",
             "failure"
         ],
+        "vcs.createEntireInstallation": [
+            "success",
+            "failure"
+        ],
         "vcs.createGitHubInstallation": [
             "success",
             "failure"
@@ -5111,6 +5123,10 @@
             "sessionId"
         ],
         "account.listIdentities": [
+            "queries",
+            "total"
+        ],
+        "account.listMemberships": [
             "queries",
             "total"
         ],
@@ -6780,6 +6796,115 @@
             "apiSecret",
             "from"
         ],
+        "migrations.createAppwriteMigration": [
+            "resources",
+            "endpoint",
+            "projectId",
+            "apiKey",
+            "onDuplicate"
+        ],
+        "migrations.createCSVExport": [
+            "databaseId",
+            "collectionId",
+            "filename",
+            "columns",
+            "queries",
+            "delimiter",
+            "enclosure",
+            "escape",
+            "header",
+            "notify"
+        ],
+        "migrations.createCSVImport": [
+            "bucketId",
+            "fileId",
+            "databaseId",
+            "collectionId",
+            "internalFile",
+            "onDuplicate"
+        ],
+        "migrations.createFirebaseMigration": [
+            "resources",
+            "serviceAccount"
+        ],
+        "migrations.createJSONExport": [
+            "databaseId",
+            "collectionId",
+            "filename",
+            "columns",
+            "queries",
+            "notify"
+        ],
+        "migrations.createJSONImport": [
+            "bucketId",
+            "fileId",
+            "databaseId",
+            "collectionId",
+            "internalFile",
+            "onDuplicate"
+        ],
+        "migrations.createNHostMigration": [
+            "resources",
+            "subdomain",
+            "region",
+            "adminSecret",
+            "database",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.createSupabaseMigration": [
+            "resources",
+            "endpoint",
+            "apiKey",
+            "databaseHost",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.delete": [
+            "migrationId"
+        ],
+        "migrations.get": [
+            "migrationId"
+        ],
+        "migrations.getAppwriteReport": [
+            "resources",
+            "endpoint",
+            "projectID",
+            "key"
+        ],
+        "migrations.getFirebaseReport": [
+            "resources",
+            "serviceAccount"
+        ],
+        "migrations.getNHostReport": [
+            "resources",
+            "subdomain",
+            "region",
+            "adminSecret",
+            "database",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.getSupabaseReport": [
+            "resources",
+            "endpoint",
+            "apiKey",
+            "databaseHost",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.list": [
+            "queries",
+            "search",
+            "total"
+        ],
+        "migrations.retry": [
+            "migrationId"
+        ],
         "organization.createEphemeralProjectKey": [
             "projectId",
             "scopes",
@@ -7312,13 +7437,15 @@
             "rpId"
         ],
         "project.updatePasswordDictionaryPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordHistoryPolicy": [
             "total"
         ],
         "project.updatePasswordPersonalDataPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordPwnedPolicy": [
             "enabled",
@@ -7602,7 +7729,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.createFile": [
             "bucketId",
@@ -7674,7 +7802,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.updateFile": [
             "bucketId",

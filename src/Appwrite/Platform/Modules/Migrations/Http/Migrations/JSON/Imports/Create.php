@@ -54,7 +54,7 @@ class Create extends Action
                 group: null,
                 name: 'createJSONImport',
                 description: '/docs/references/migrations/migration-json-import.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -120,6 +120,18 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }
 
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $databaseType = $database->getAttribute('type');
+
         // No encryption or compression on files above 20MB.
         $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
         $compression = $file->getAttribute('algorithm', Compression::NONE);
@@ -162,18 +174,6 @@ class Create extends Action
         }
 
         $fileSize = $deviceForMigrations->getFileSize($newPath);
-
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
-        }
-
-        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
-        if ($collection->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
-        }
-
-        $databaseType = $database->getAttribute('type');
         $resources = Transfer::extractServices([self::transferGroupForDatabaseType($databaseType)]);
         $parentResourceType = self::resourceTypeForDatabaseType($databaseType);
 
