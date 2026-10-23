@@ -374,7 +374,8 @@ trait MigrationsBase
 
     /**
      * private.appwrite.test is a subdomain of this deployment's domain that resolves to a private
-     * address outside the allowed ranges, and the API reaches itself on it through the docker host.
+     * address outside the allowed ranges, while the API and the worker reach the API on its fixed
+     * address in the docker network.
      * This deployment's own hosts may be internal, so the report and the migration both accept it.
      */
     public function testMigrationSourceAtPrivateDeploymentHostIsAccepted(): void
@@ -389,7 +390,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
-        $endpoint = 'http://private.appwrite.test:9501/v1';
+        $endpoint = 'http://private.appwrite.test/v1';
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $sourceHeaders, [
             'userId' => Id::unique(),
