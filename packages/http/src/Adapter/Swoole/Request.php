@@ -8,9 +8,7 @@ use Utopia\Http\TrustedHeaders;
 
 class Request extends UtopiaRequest
 {
-    private const string UPLOAD_PREFIX = 'swoole.upfile.';
-
-    private const int UPLOAD_SUFFIX_LENGTH = 6;
+    private const string UPLOAD_MARKER = 'swoole-upload-file';
 
     /**
      * Swoole Request Object
@@ -344,43 +342,29 @@ class Request extends UtopiaRequest
     }
 
     /**
-     * Drop upload paths Swoole did not create itself
+     * Drop upload paths named by the client
      *
      * Swoole's multipart parser accepts a client-supplied `Swoole-Upload-File`
      * part header as a ready temp file (swoole/swoole-src#6309): the path is
      * reported as `tmp_name`, passes `is_uploaded_file()`, and is unlinked when
-     * the request is freed. Genuine uploads are mkstemp-issued
-     * `swoole.upfile.XXXXXX` files inside the upload directory, so any other
-     * path leaves `tmpfiles` (no unlink) and is blanked in `files`.
+     * the request is freed. Such paths leave `tmpfiles` and are blanked in `files`.
      */
     private function dropSpoofedUploads(): void
     {
         $tmpfiles = $this->swoole->tmpfiles;
 
-        if (! \is_array($tmpfiles)) {
+        if (! \is_array($tmpfiles) || $tmpfiles === []) {
             return;
         }
 
-        $genuine = [];
-        $spoofed = [];
-
-        foreach ($tmpfiles as $path) {
-            if (! \is_string($path)) {
-                continue;
-            }
-
-            if ($this->isUpload($path)) {
-                $genuine[] = $path;
-            } else {
-                $spoofed[] = $path;
-            }
-        }
+        $markers = $this->uploadMarkers();
+        $spoofed = \array_values(\array_filter($tmpfiles, fn (mixed $path): bool => \is_string($path) && \in_array(\trim($path), $markers, true)));
 
         if ($spoofed === []) {
             return;
         }
 
-        $this->swoole->tmpfiles = $genuine;
+        $this->swoole->tmpfiles = \array_values(\array_filter($tmpfiles, fn (mixed $path): bool => ! \in_array($path, $spoofed, true)));
 
         $files = $this->swoole->files;
 
@@ -441,42 +425,38 @@ class Request extends UtopiaRequest
         return [$path, $error, $size];
     }
 
-    private function isUpload(string $path): bool
-    {
-        $absolute = \realpath($path);
-
-        if ($absolute === false) {
-            return false;
-        }
-
-        $name = \basename($absolute);
-        $suffix = \substr($name, \strlen(self::UPLOAD_PREFIX));
-
-        if (! \str_starts_with($name, self::UPLOAD_PREFIX) || \strlen($suffix) !== self::UPLOAD_SUFFIX_LENGTH || ! \ctype_alnum($suffix)) {
-            return false;
-        }
-
-        return \in_array(\dirname($absolute), $this->uploadDirectories(), true);
-    }
-
     /**
-     * Swoole writes uploads to its own `upload_tmp_dir` setting, `/tmp` by
-     * default, so `/tmp` is accepted beside PHP's temporary locations.
+     * Paths named by `Swoole-Upload-File` part headers, which Swoole matches
+     * case-insensitively at the start of a header line.
      *
      * @return list<string>
      */
-    private function uploadDirectories(): array
+    private function uploadMarkers(): array
     {
-        $directories = [];
+        $body = $this->swoole->rawContent();
 
-        foreach ([\ini_get('upload_tmp_dir') ?: \sys_get_temp_dir(), '/tmp'] as $candidate) {
-            $directory = \realpath($candidate);
+        if (! \is_string($body)) {
+            return [];
+        }
 
-            if ($directory !== false) {
-                $directories[] = $directory;
+        $markers = [];
+        $offset = 0;
+
+        while (($position = \stripos($body, self::UPLOAD_MARKER, $offset)) !== false) {
+            $offset = $position + \strlen(self::UPLOAD_MARKER);
+
+            if ($position === 0 || $body[$position - 1] !== "\n") {
+                continue;
+            }
+
+            $end = \strpos($body, "\n", $offset);
+            $line = \ltrim(\substr($body, $offset, $end === false ? null : $end - $offset), " \t");
+
+            if (\str_starts_with($line, ':')) {
+                $markers[] = \trim(\substr($line, 1));
             }
         }
 
-        return \array_values(\array_unique($directories));
+        return $markers;
     }
 }
