@@ -3472,12 +3472,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Transfer link actions': 'פעולות לקישור ההעברה',
   'transfer links': 'קישורי העברה',
   'Create transfer link': 'יצירת קישור העברה',
-  'Share this link with the recipient organization.':
-    'שתפו את הקישור עם הארגון הנמען.',
+  'Share this link with the recipient organization. You can copy it again from the list.':
+    'שתפו את הקישור עם הארגון הנמען. תוכלו להעתיק אותו שוב מהרשימה.',
   'Choose how long the link is valid and which organization can claim the project.':
     'בחרו לכמה זמן הקישור תקף ואיזה ארגון יוכל לקבל את הפרויקט.',
   'Transfer link': 'קישור ההעברה',
-  'This link is shown only once.': 'הקישור מוצג פעם אחת בלבד.',
   'Expires in': 'תוקף הקישור',
   'Recipient organization ID (optional)': 'מזהה הארגון הנמען (אופציונלי)',
   'Leave empty to let any organization claim the project.':
@@ -3502,6 +3501,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'This transfer link is no longer valid.': 'קישור ההעברה אינו תקף עוד.',
   'The project already belongs to this organization. Select a different one.':
     'הפרויקט כבר שייך לארגון זה. בחרו ארגון אחר.',
-  'This link can only be claimed by a different organization. Select another one.':
-    'רק ארגון אחר יכול לקבל את הקישור הזה. בחרו ארגון אחר.',
+  'will move from': 'יועבר מ-',
+  'to the organization you choose.': 'לארגון שתבחרו.',
+  'Only this organization can claim this link.':
+    'רק ארגון זה יכול לקבל את הקישור הזה.',
+  'This transfer is reserved for an organization you are not part of:':
+    'ההעברה הזו שמורה לארגון שאינכם חברים בו:',
 }

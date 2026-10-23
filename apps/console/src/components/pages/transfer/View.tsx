@@ -1,15 +1,27 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle } from 'lucide-react'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
+import { FolderInput, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
-import { AppwriteException } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useOrganizations } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
+import {
+  AuthFlowDescription,
+  AuthFlowNarrowCard,
+  AuthFlowTitle,
+} from '@/components/global/auth/AuthFlowCard'
+import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
+import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
+import { useAuthAccountSwitch } from '@/components/global/auth/useAuthAccountSwitch'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -35,6 +47,7 @@ export function ClaimProjectTransfer({
   const { organizations, isLoading: organizationsLoading } = useOrganizations()
   const [teamId, setTeamId] = useState('')
   const hasLink = transferId !== '' && secret !== ''
+  const hasOrganizations = organizationsLoading || organizations.length > 0
 
   useEffect(() => {
     if (teamId === '' && organizations.length > 0) {
@@ -51,6 +64,8 @@ export function ClaimProjectTransfer({
         .getProjectTransfer({ transferId, secret }),
     enabled: hasLink && teamId !== '',
     retry: false,
+    // Keeps the details while the recipient is selected, so the picker doesn't flicker
+    placeholderData: keepPreviousData,
   })
 
   const claimMutation = useMutation({
@@ -71,58 +86,146 @@ export function ClaimProjectTransfer({
     },
   })
 
+  const recipientId = preview.data?.recipientId ?? ''
+  const isRecipientMember = organizations.some(
+    (organization) => organization.$id === recipientId,
+  )
+  const isReserved =
+    recipientId !== '' && !organizationsLoading && !isRecipientMember
+
+  // Only one organization may claim it, so pick that one for the user
+  useEffect(() => {
+    if (recipientId !== '' && isRecipientMember && teamId !== recipientId) {
+      setTeamId(recipientId)
+    }
+  }, [recipientId, isRecipientMember, teamId])
+
   const isAlreadyOwner = preview.data?.senderId === teamId
   const canClaim =
-    preview.isSuccess && !isAlreadyOwner && !claimMutation.isPending
+    preview.isSuccess &&
+    !isAlreadyOwner &&
+    (recipientId === '' || teamId === recipientId) &&
+    !claimMutation.isPending
+
+  const problem = preview.isError
+    ? getErrorMessage(
+        preview.error,
+        t('This transfer link is no longer valid.'),
+      )
+    : isAlreadyOwner
+      ? t(
+          'The project already belongs to this organization. Select a different one.',
+        )
+      : null
+
+  const switchAccount = useAuthAccountSwitch()
+  const goToDashboard = () => navigate({ to: '/' })
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-background px-4 py-10">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h1 className="text-[15px] font-semibold text-foreground">
-            {t('Claim project')}
-          </h1>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            {t('Choose the organization that should receive this project.')}
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-4">
-          {!hasLink ? (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="text-[13px]">
-                {t(
-                  'This transfer link is incomplete. Ask the sender to share it again.',
-                )}
-              </AlertDescription>
-            </Alert>
-          ) : !organizationsLoading && organizations.length === 0 ? (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="text-[13px]">
-                {t(
-                  'You need an organization to claim this project. Create one, then open the link again.',
-                )}
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <>
-              {preview.data && (
-                <div className="rounded-lg border border-border px-4 py-3">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    {t('Project')}
-                  </p>
-                  <p className="text-[15px] font-medium text-foreground mt-1">
-                    {preview.data.resourceName}
-                  </p>
-                  <p className="text-[12px] text-muted-foreground mt-1">
-                    {t('Link expires')}{' '}
-                    <DateTooltip date={preview.data.expire} />
-                  </p>
+    <main id="main-content" className="h-[100dvh] max-h-[100dvh]">
+      <AuthFlowShell
+        width="narrow"
+        showLegal={false}
+        accountSwitcher={
+          <AuthFlowAccountSwitcher disabled={claimMutation.isPending} />
+        }
+      >
+        <AuthFlowNarrowCard>
+          {!hasLink || !hasOrganizations ? (
+            <div className="space-y-6">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <AuthFlowHeaderIcon
+                  icon={TriangleAlert}
+                  variant="destructive"
+                />
+                <div className="space-y-1">
+                  <AuthFlowTitle>{t('Claim project')}</AuthFlowTitle>
+                  <AuthFlowDescription>
+                    {!hasLink
+                      ? t(
+                          'This transfer link is incomplete. Ask the sender to share it again.',
+                        )
+                      : t(
+                          'You need an organization to claim this project. Create one, then open the link again.',
+                        )}
+                  </AuthFlowDescription>
                 </div>
-              )}
-              <div>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={goToDashboard}
+              >
+                {t('Go to dashboard')}
+              </Button>
+            </div>
+          ) : isReserved ? (
+            <div className="space-y-6">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <AuthFlowHeaderIcon
+                  icon={TriangleAlert}
+                  variant="destructive"
+                />
+                <div className="space-y-1">
+                  <AuthFlowTitle>{t('Claim project')}</AuthFlowTitle>
+                  <AuthFlowDescription>
+                    {t(
+                      'This transfer is reserved for an organization you are not part of:',
+                    )}{' '}
+                    <span className="text-foreground font-medium break-words">
+                      {preview.data?.recipientName || recipientId}
+                    </span>
+                    .
+                  </AuthFlowDescription>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="brandCta"
+                  className="w-full"
+                  onClick={() => void switchAccount()}
+                >
+                  {t('Use a different account')}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={goToDashboard}
+                >
+                  {t('Go to dashboard')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <AuthFlowHeaderIcon icon={FolderInput} />
+                <div className="space-y-1">
+                  <AuthFlowTitle>{t('Claim project')}</AuthFlowTitle>
+                  <AuthFlowDescription>
+                    {preview.data ? (
+                      <>
+                        <span className="text-foreground font-medium break-words">
+                          {preview.data.resourceName}
+                        </span>{' '}
+                        {t('will move from')}{' '}
+                        <span className="text-foreground font-medium break-words">
+                          {preview.data.senderName}
+                        </span>{' '}
+                        {t('to the organization you choose.')}{' '}
+                        {t('Link expires')}{' '}
+                        <DateTooltip date={preview.data.expire} />.
+                      </>
+                    ) : (
+                      t(
+                        'Choose the organization that should receive this project.',
+                      )
+                    )}
+                  </AuthFlowDescription>
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <Label
                   htmlFor="transfer-organization"
                   className="text-[13px] font-medium text-foreground"
@@ -132,12 +235,13 @@ export function ClaimProjectTransfer({
                 <Select
                   value={teamId}
                   onValueChange={setTeamId}
-                  disabled={organizationsLoading || claimMutation.isPending}
+                  disabled={
+                    organizationsLoading ||
+                    recipientId !== '' ||
+                    claimMutation.isPending
+                  }
                 >
-                  <SelectTrigger
-                    id="transfer-organization"
-                    className="mt-2 h-9"
-                  >
+                  <SelectTrigger id="transfer-organization" className="w-full">
                     <SelectValue
                       placeholder={
                         organizationsLoading
@@ -157,56 +261,37 @@ export function ClaimProjectTransfer({
                     ))}
                   </SelectContent>
                 </Select>
+                {problem ? (
+                  <p className="text-[12px] text-destructive">{problem}</p>
+                ) : recipientId !== '' ? (
+                  <p className="text-[12px] text-muted-foreground">
+                    {t('Only this organization can claim this link.')}
+                  </p>
+                ) : null}
               </div>
-              {preview.isError && (
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription className="text-[13px]">
-                    {/* The generic 403 message would not say what to do next */}
-                    {preview.error instanceof AppwriteException &&
-                    preview.error.type === 'transfer_recipient_mismatch'
-                      ? t(
-                          'This link can only be claimed by a different organization. Select another one.',
-                        )
-                      : getErrorMessage(
-                          preview.error,
-                          t('This transfer link is no longer valid.'),
-                        )}
-                  </AlertDescription>
-                </Alert>
-              )}
-              {isAlreadyOwner && (
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription className="text-[13px]">
-                    {t(
-                      'The project already belongs to this organization. Select a different one.',
-                    )}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </>
+
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="brandCta"
+                  className="w-full"
+                  disabled={!canClaim}
+                  onClick={() => claimMutation.mutate()}
+                >
+                  {t('Claim project')}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={claimMutation.isPending}
+                  onClick={goToDashboard}
+                >
+                  {t('Cancel')}
+                </Button>
+              </div>
+            </div>
           )}
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 text-[13px]"
-            onClick={() => navigate({ to: '/' })}
-          >
-            {t('Cancel')}
-          </Button>
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={!canClaim}
-            onClick={() => claimMutation.mutate()}
-          >
-            {t('Claim project')}
-          </Button>
-        </div>
-      </div>
-    </div>
+        </AuthFlowNarrowCard>
+      </AuthFlowShell>
+    </main>
   )
 }

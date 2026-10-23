@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, Copy, Trash2 } from 'lucide-react'
+import { Copy, Link2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -13,7 +13,6 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,6 +28,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -243,7 +243,14 @@ export function TransferProjectCard({
                       <TableRow key={transfer.$id}>
                         <TableCell className="px-4 py-3">
                           {transfer.recipientId ? (
-                            <CopyableId id={transfer.recipientId} size="xs" />
+                            <div className="flex items-center gap-2">
+                              {transfer.recipientName && (
+                                <span className="text-[13px] text-foreground">
+                                  {transfer.recipientName}
+                                </span>
+                              )}
+                              <CopyableId id={transfer.recipientId} size="xs" />
+                            </div>
                           ) : (
                             <span className="text-[13px] text-muted-foreground">
                               {t('Any organization')}
@@ -265,6 +272,19 @@ export function TransferProjectCard({
                                 />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    copyToClipboard(
+                                      t('Transfer link'),
+                                      buildTransferUrl(transfer),
+                                    )
+                                  }
+                                >
+                                  <MenuItemContent icon={Link2}>
+                                    {t('Copy link')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={() => setTransferToDelete(transfer)}
                                 >
@@ -315,7 +335,9 @@ export function TransferProjectCard({
             <DialogTitle>{t('Create transfer link')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {link
-                ? t('Share this link with the recipient organization.')
+                ? t(
+                    'Share this link with the recipient organization. You can copy it again from the list.',
+                  )
                 : t(
                     'Choose how long the link is valid and which organization can claim the project.',
                   )}
@@ -350,12 +372,6 @@ export function TransferProjectCard({
                   onClick={(event) => event.currentTarget.select()}
                 />
               </div>
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="text-[13px]">
-                  {t('This link is shown only once.')}
-                </AlertDescription>
-              </Alert>
             </div>
           ) : (
             <div className="px-6 pb-4 pt-0 space-y-4">

@@ -3540,12 +3540,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Transfer link actions': '転送リンクの操作',
   'transfer links': '件の転送リンク',
   'Create transfer link': '転送リンクを作成',
-  'Share this link with the recipient organization.':
-    '受取先の組織にこのリンクを共有してください。',
+  'Share this link with the recipient organization. You can copy it again from the list.':
+    '受取先の組織にこのリンクを共有してください。一覧からもう一度コピーできます。',
   'Choose how long the link is valid and which organization can claim the project.':
     'リンクの有効期間と、プロジェクトを受け取れる組織を選択します。',
   'Transfer link': '転送リンク',
-  'This link is shown only once.': 'このリンクは 1 回だけ表示されます。',
   'Expires in': '有効期間',
   'Recipient organization ID (optional)': '受取先の組織 ID (任意)',
   'Leave empty to let any organization claim the project.':
@@ -3570,6 +3569,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'This transfer link is no longer valid.': 'この転送リンクは無効になりました。',
   'The project already belongs to this organization. Select a different one.':
     'プロジェクトはすでにこの組織に属しています。別の組織を選択してください。',
-  'This link can only be claimed by a different organization. Select another one.':
-    'このリンクは別の組織だけが受け取れます。別の組織を選択してください。',
+  'will move from': 'は次の組織から移動します:',
+  'to the organization you choose.': '移動先は選択した組織です。',
+  'Only this organization can claim this link.':
+    'このリンクを受け取れるのはこの組織だけです。',
+  'This transfer is reserved for an organization you are not part of:':
+    'この転送は、あなたが所属していない組織専用です:',
 }
