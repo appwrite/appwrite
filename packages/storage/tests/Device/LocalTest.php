@@ -837,6 +837,7 @@ final class LocalTest extends TestCase
 
         $this->assertSame($path, $info->path);
         $this->assertSame(11, $info->size);
+        $this->assertSame('text/plain', $info->mimeType);
         $this->assertSame(md5('Hello World'), $info->etag);
         $this->assertEqualsWithDelta(time(), $info->modifiedAt?->getTimestamp() ?? 0, 5);
 

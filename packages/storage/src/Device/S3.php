@@ -861,12 +861,14 @@ class S3 extends Device
     {
         $headers = $this->getInfo($path);
         $modified = isset($headers['last-modified']) ? strtotime($headers['last-modified']) : false;
+        $mimeType = \trim(\explode(';', $headers['content-type'] ?? '', 2)[0]);
 
         return new FileInfo(
             path: $path,
             size: (int) ($headers['content-length'] ?? 0),
             modifiedAt: $modified === false ? null : new \DateTimeImmutable('@' . $modified),
             etag: isset($headers['etag']) ? $this->unquote($headers['etag']) : null,
+            mimeType: $mimeType === '' ? null : $mimeType,
         );
     }
 

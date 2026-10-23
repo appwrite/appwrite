@@ -44,9 +44,8 @@ function firstQueryValue(params: URLSearchParams, key: string): string | null {
 }
 
 /**
- * Drop first-party referrers. The old site ignored anything containing
- * `//appwrite.io`. This site is the console and the marketing origin, so
- * same-origin referrers are ignored too.
+ * Drop first-party referrers: appwrite.io and its subdomains (marketing, blog,
+ * regional consoles), and the current origin on any other host.
  */
 export function resolveExternalReferrer(
   documentReferrer: string,
@@ -54,15 +53,19 @@ export function resolveExternalReferrer(
 ): string | null {
   const referrer = documentReferrer.trim()
   if (!referrer) return null
-  if (referrer.includes('//appwrite.io')) return null
 
-  if (currentOrigin) {
-    try {
-      if (new URL(referrer).origin === currentOrigin) return null
-    } catch {
-      // Keep the raw referrer if it is not a valid URL.
-    }
+  let url: URL
+  try {
+    url = new URL(referrer)
+  } catch {
+    // Keep the raw referrer if it is not a valid URL.
+    return referrer
   }
+
+  if (url.hostname === 'appwrite.io' || url.hostname.endsWith('.appwrite.io')) {
+    return null
+  }
+  if (currentOrigin && url.origin === currentOrigin) return null
 
   return referrer
 }
