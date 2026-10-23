@@ -1344,6 +1344,7 @@ final class MqttServerTest extends Scope
     public function testRecreatedTopicDoesNotReplayDeletedTopicMessages(): void
     {
         $projectId = $this->getProject()['$id'];
+        ['userId' => $previousUserId] = $this->createUser();
         ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
 
         $server = [
@@ -1351,53 +1352,57 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-
-        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $server, [
-            'providerId' => Id::unique(),
-            'name' => 'appwrite-mqtt-recreate',
-            'enabled' => true,
-        ]);
-        $this->assertEquals(201, $provider['headers']['status-code']);
-        $providerId = $provider['body']['$id'];
-
+        $providerId = $this->setupAppwriteProvider($server);
         $topicId = Id::unique();
-        $createTopic = fn (): array => $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
             'topicId' => $topicId,
-            'name' => 'appwrite-mqtt-recreate',
+            'name' => 'appwrite-mqtt-deleted',
             'qos' => 1,
         ]);
-
-        $this->assertEquals(201, $createTopic()['headers']['status-code']);
-        $this->createSubscriber($server, $topicId, $this->createAppwriteTarget($server, $userId, $providerId));
-        $this->publishCampaign($server, $topicId, 'Old', 'deleted topic message');
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $this->createSubscriber($server, $topicId, $this->createAppwriteTarget($server, $previousUserId, $providerId));
+        $this->publishCampaign($server, $topicId, 'Deleted', 'deleted topic message');
 
         $deleted = $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, $server);
         $this->assertEquals(204, $deleted['headers']['status-code']);
 
-        $this->assertEquals(201, $createTopic()['headers']['status-code']);
+        $recreated = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
+            'topicId' => $topicId,
+            'name' => 'appwrite-mqtt-recreated',
+            'qos' => 1,
+        ]);
+        $this->assertEquals(201, $recreated['headers']['status-code']);
         $this->createSubscriber($server, $topicId, $this->createAppwriteTarget($server, $userId, $providerId));
 
-        $clientId = 'e2e-recreate-' . $userId;
-
+        $clientId = 'e2e-recreated-' . $userId;
         $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $seed->subscribe([$topicId]);
+        $this->assertSame([1], $seed->subscribe([$topicId]));
         $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
         $seed->disconnect();
 
-        $this->publishCampaign($server, $topicId, 'New', 'recreated topic message');
+        $this->publishCampaign($server, $topicId, 'Recreated', 'recreated topic message');
 
         $resume = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
-        $this->assertSame(0, $resume->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $resume->subscribe([$topicId]);
-        $received = $resume->consume(limit: 2, timeout: 5.0);
-        $resume->disconnect();
+        try {
+            $this->assertSame(0, $resume->connect($projectId, $jwt, $clientId, cleanStart: false));
+            $this->assertSame([1], $resume->subscribe([$topicId]));
+            $received = $resume->consume(limit: 3, timeout: 5.0);
+        } finally {
+            $resume->disconnect();
+        }
 
-        // Test for SUCCESS: only the recreated topic's message is replayed.
         $bodies = \array_map(
             fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
             $received,
         );
+
+        // Test for SUCCESS: the recreated topic's own message is replayed.
+        $this->assertContains('recreated topic message', $bodies);
+
+        // Test for FAILURE: nothing published to the deleted topic reaches the new subscriber.
+        $this->assertNotContains('deleted topic message', $bodies, 'a recreated topic replayed a message of the deleted topic');
         $this->assertSame(['recreated topic message'], $bodies);
     }
 

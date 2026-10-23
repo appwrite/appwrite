@@ -295,6 +295,68 @@ final class V25Test extends TestCase
         $this->assertContains('connections', $attributes);
     }
 
+    public function testBindsExistingPushLedgerToTopicInstances(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created on 2.3.0 keys its pushLedger by topic id only.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $collection['attributes'];
+            $indexes = $collection['indexes'];
+            if ($id === 'pushLedger') {
+                $attributes = \array_filter($attributes, static fn (Attribute $attribute): bool => $attribute->key !== 'topicInternalId');
+                $indexes = \array_filter($indexes, static fn (Index $index): bool => !\in_array($index->key, ['_key_topicInternalId_sequence', '_key_message_topicInternalId'], true));
+                $indexes[] = Index::key(key: '_key_topic_sequence', attributes: ['topic', 'sequence']);
+                $indexes[] = Index::unique(key: '_key_message_topic', attributes: ['messageId', 'topic']);
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($indexes),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+        $authorization->skip(fn () => $database->createDocument('pushLedger', new Document([
+            'topic' => 'news',
+            'data' => ['body' => 'before upgrade'],
+            'messageId' => 'message',
+            'sequence' => 1,
+        ])));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $ledger = $database->getCollection('pushLedger');
+        $attributes = \array_map(fn (Document $attribute) => $attribute->getId(), $ledger->getAttribute('attributes', []));
+        $indexes = \array_map(fn (Document $index) => $index->getId(), $ledger->getAttribute('indexes', []));
+        $this->assertContains('topicInternalId', $attributes);
+        $this->assertContains('_key_topicInternalId_sequence', $indexes);
+        $this->assertNotContains('_key_topic_sequence', $indexes, 'replay no longer reads by topic id, so its index must go');
+        $this->assertContains('_key_message_topicInternalId', $indexes);
+        $this->assertNotContains('_key_message_topic', $indexes, 'deduplication keys on the topic instance, so the topic id unique index must go');
+
+        $published = $authorization->skip(fn () => $database->createDocument('pushLedger', new Document([
+            'topic' => 'news',
+            'topicInternalId' => '7',
+            'data' => ['body' => 'after upgrade'],
+            'messageId' => 'message',
+            'sequence' => 2,
+        ])));
+        $this->assertSame('7', $published->getAttribute('topicInternalId'), 'a row written before the upgrade must not block the same message on a topic instance');
+    }
+
     public function testBackfillsLegacyTypeOnExistingTransactions(): void
     {
         $authorization = new Authorization();
