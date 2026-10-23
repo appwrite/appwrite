@@ -400,6 +400,13 @@ trait MigrationsBase
         $this->assertSame(201, $user['headers']['status-code']);
         $userId = $user['body']['$id'];
 
+        // Router protection only serves the API on platform hostnames and connected API domains.
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $sourceHeaders, [
+            'domain' => 'private.appwrite.test',
+        ]);
+        $this->assertSame(201, $rule['headers']['status-code'], \json_encode($rule['body']));
+        $ruleId = $rule['body']['$id'];
+
         try {
             $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', $destinationHeaders, [
                 'resources' => [Resource::TYPE_USER],
@@ -421,6 +428,7 @@ trait MigrationsBase
             $migrated = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $destinationHeaders);
             $this->assertSame(200, $migrated['headers']['status-code']);
         } finally {
+            $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $ruleId, $sourceHeaders);
             $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $destinationHeaders);
             $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $sourceHeaders);
         }
