@@ -479,6 +479,124 @@ abstract class Migration
         );
     }
 
+    public function syncCollections(): void
+    {
+        $collectionType = match ($this->project->getSequence()) {
+            'console' => 'console',
+            default => 'projects',
+        };
+
+        foreach ($this->collections[$collectionType] as $collection) {
+            if ($collection['$collection'] !== Database::METADATA) {
+                continue;
+            }
+
+            $this->syncCollection($this->dbForProject, $collection['$id']);
+        }
+
+        if ($this->dbForProject->findCollection('buckets') === null) {
+            return;
+        }
+
+        foreach ($this->dbForProject->cursor('buckets', batchSize: 25) as $bucket) {
+            $this->syncCollection($this->dbForProject, 'bucket_' . $bucket->getSequence(), 'files');
+        }
+    }
+
+    public function syncCollection(Database $database, string $collectionId, ?string $from = null): void
+    {
+        $from ??= $collectionId;
+
+        $collectionType = match ($this->project->getSequence()) {
+            'console' => 'console',
+            default => 'projects',
+        };
+
+        if ($from === 'files') {
+            $collectionType = 'buckets';
+        }
+
+        if ($from === 'collections') {
+            $collectionType = 'databases';
+        }
+
+        $collection = $this->collections[$collectionType][$from] ?? null;
+
+        if ($collection === null) {
+            throw new Exception('Collection ' . $from . ' not found');
+        }
+
+        $database->purgeCachedCollection($collectionId);
+
+        $existing = $database->findCollection($collectionId);
+
+        if ($existing === null) {
+            return;
+        }
+
+        $attributes = \array_values(\array_diff(
+            \array_map(fn (Attribute $attribute): string => $attribute->key, $collection['attributes'] ?? []),
+            \array_map(fn (Attribute $attribute): string => $attribute->key, $existing->attributes()),
+        ));
+
+        $created = [];
+
+        if (!empty($attributes)) {
+            Console::log('Creating attributes "' . \implode(', ', $attributes) . '" in collection ' . $collectionId);
+
+            try {
+                $this->createAttributesFromCollection($database, $collectionId, $attributes, $from);
+                $created = $attributes;
+            } catch (\Throwable $th) {
+                Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . '" in collection ' . $collectionId . ': ' . $th->getMessage());
+            }
+        }
+
+        foreach ($collection['attributes'] ?? [] as $attribute) {
+            if (
+                $attribute->default === null
+                || \in_array('encrypt', $attribute->filters, true)
+                || !\in_array($attribute->key, $created, true)
+            ) {
+                continue;
+            }
+
+            Console::log('Backfilling attribute "' . $attribute->key . '" in collection ' . $collectionId);
+
+            try {
+                foreach ($database->cursor($collectionId, [Query::isNull($attribute->key)], batchSize: $this->limit) as $document) {
+                    try {
+                        $database->withPreserveDates(true, fn () => $database->updateDocument($collectionId, $document->getId(), new Document([
+                            $attribute->key => $attribute->default,
+                            '$updatedAt' => $document->getUpdatedAt(),
+                        ])));
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to backfill attribute "' . $attribute->key . '" for document ' . $document->getId() . ' in collection ' . $collectionId . ': ' . $th->getMessage());
+                    }
+                }
+            } catch (\Throwable $th) {
+                Console::warning('Failed to backfill attribute "' . $attribute->key . '" in collection ' . $collectionId . ': ' . $th->getMessage());
+            }
+        }
+
+        $indexes = \array_values(\array_diff(
+            \array_map(fn (Index $index): string => $index->key, $collection['indexes'] ?? []),
+            \array_map(fn (Index $index): string => $index->key, $existing->indexes()),
+        ));
+
+        foreach ($indexes as $index) {
+            Console::log('Creating index "' . $index . '" in collection ' . $collectionId);
+
+            try {
+                $this->createIndexFromCollection($database, $collectionId, $index, $from);
+            } catch (\Throwable $th) {
+                Console::warning('Failed to create index "' . $index . '" in collection ' . $collectionId . ': ' . $th->getMessage());
+            }
+        }
+
+        $database->purgeCachedCollection($collectionId);
+    }
+
     /**
      * A JSON attribute stores its default encoded, as the json filter would on write.
      */
