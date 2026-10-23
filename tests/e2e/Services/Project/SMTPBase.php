@@ -683,6 +683,7 @@ trait SMTPBase
             senderEmail: 'sender@example.com',
             host: '169.254.169.254',
             port: 25,
+            password: 'password',
             enabled: true,
         );
 
@@ -696,6 +697,7 @@ trait SMTPBase
             senderEmail: 'sender@example.com',
             host: '169.254.169.254',
             port: 25,
+            password: 'password',
         );
 
         $this->assertSame(200, $response['headers']['status-code']);

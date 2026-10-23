@@ -799,7 +799,7 @@ class Handler implements MqttHandler
     }
 
     /**
-     * The newest ledger messages of a topic above $after, at most $maxDepth, oldest first, cut below
+     * The newest ledger messages of a topic instance above $after, at most $maxDepth, oldest first, cut below
      * the newest one written more than $expiry seconds ago. The cut is a prefix, not a per-message
      * filter: $createdAt is stamped by each writer's clock, so an expired message can sit between
      * fresh ones, and skipping only it would leave a gap that pins the cursor. A null expiry keeps
@@ -814,7 +814,7 @@ class Handler implements MqttHandler
         }
 
         $newestFirst = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
-            Query::equal('topic', [$topic->getId()]),
+            Query::equal('topicInternalId', [(string) $topic->getSequence()]),
             Query::greaterThan('sequence', $after),
             Query::orderDesc('sequence'),
             Query::orderDesc('$sequence'),
