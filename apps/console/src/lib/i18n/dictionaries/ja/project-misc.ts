@@ -3531,4 +3531,19 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Ship your apps to every store': 'アプリをすべてのストアに配信',
   'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
     'Android、iOS、Windows のリリースを 1 か所でビルドし、Google Play、App Store、Microsoft Store に提出できます。',
+  'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
+    '非アクティブなデプロイの保持期間を選択します。アクティブなデプロイとカスタムドメインに紐づくデプロイは常に保持されます。',
+  'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':
+    '2026年11月5日から、Appwrite Cloud では非アクティブなデプロイがデフォルトで30日後に削除されます。履歴をより長く残すには、それまでに保持期間を延長して「更新」をクリックしてください。',
+  'Retention limits are unavailable. Try reloading this page.':
+    '保持期間の上限を取得できません。ページを再読み込みしてください。',
+  'Your plan keeps up to 100 inactive deployments for up to 90 days.':
+    'ご利用のプランでは、非アクティブなデプロイを最大100件、最長90日間保持できます。',
+  'Your plan allows retention for up to 3 years.':
+    'ご利用のプランでは最長3年間保持できます。',
+  'Your organization has a custom retention policy.':
+    '組織にはカスタムの保持ポリシーが適用されています。',
+  'Your saved retention exceeds your plan limit. Save a supported period to update it.':
+    '保存済みの保持期間がプランの上限を超えています。対応する期間を選択して保存してください。',
+  '3 Years': '3 年',
 }
