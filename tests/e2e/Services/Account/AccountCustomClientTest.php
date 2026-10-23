@@ -5421,9 +5421,10 @@ final class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
+        $email = 'mfa_' . \uniqid() . '@localhost.test';
         $user = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
             'userId' => Id::unique(),
-            'email' => 'mfa_' . \uniqid() . '@localhost.test',
+            'email' => $email,
             'password' => 'password1234',
         ]);
         $this->assertSame(201, $user['headers']['status-code']);
@@ -5437,7 +5438,7 @@ final class AccountCustomClientTest extends Scope
             'x-appwrite-session' => $session['body']['secret'],
         ];
 
-        $createChallenge = function () use ($userId, $serverHeaders, $sessionHeaders): array {
+        $createChallenge = function () use (&$email, $userId, $serverHeaders, $sessionHeaders): array {
             $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $serverHeaders, [
                 'emailVerification' => true,
             ]);
@@ -5448,10 +5449,13 @@ final class AccountCustomClientTest extends Scope
             ]);
             $this->assertSame(201, $challenge['headers']['status-code']);
 
-            $secret = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $challenge['body']['$id'], $serverHeaders);
-            $this->assertSame(200, $secret['headers']['status-code']);
+            $mail = $this->getLastEmailByAddress($email, function (array $mail): void {
+                $this->assertStringStartsWith('Verification Code for ', (string) $mail['subject']);
+            });
+            $code = $this->extractEmailCode((string) $mail['text']);
+            $this->assertNotEmpty($code);
 
-            return [$challenge['body']['$id'], $secret['body']['code']];
+            return [$challenge['body']['$id'], $code];
         };
 
         /**
@@ -5459,8 +5463,9 @@ final class AccountCustomClientTest extends Scope
          */
         [$challengeId, $code] = $createChallenge();
 
+        $email = 'mfa_' . \uniqid() . '@localhost.test';
         $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/email', $serverHeaders, [
-            'email' => 'mfa_' . \uniqid() . '@localhost.test',
+            'email' => $email,
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
 
