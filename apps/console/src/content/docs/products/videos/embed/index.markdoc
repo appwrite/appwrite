@@ -1,0 +1,81 @@
+---
+layout: article
+title: Embed the player
+description: Embed the Appwrite video player on any page with an iframe from the Console, with an optional start time.
+---
+
+The Appwrite player is a hosted page that streams one video. Embed it with an iframe when you want playback on a page without adding a player library.
+
+# Embed or build your own {% #embed-or-build %}
+
+| Choose | When |
+|--------|------|
+| **Embed** | You want video on a page in a minute: a blog post, a CMS, a landing page, or a site you do not build yourself |
+| **Your own player** | You need custom controls, analytics events, playlists, or a native mobile player. See [Play a video in your app](/docs/products/videos/play) |
+
+Both play the same streams, so you can start with the embed and switch later without re-encoding anything.
+
+# Copy the embed code {% #copy-the-embed-code %}
+
+1. Open **Videos** in your project and select a video.
+2. Click **Embed**. You can also right-click a video in the list and choose **Embed**.
+3. Optionally turn on **Custom start time** and pick the moment playback should begin.
+4. Click **Copy embed code**.
+
+The snippet looks like this:
+
+```html
+<iframe
+  src="<EMBED_PLAYER_URL>"
+  title="Launch keynote"
+  allow="autoplay; fullscreen; picture-in-picture"
+  allowfullscreen
+  style="width:100%;aspect-ratio:16/9;border:0;"
+></iframe>
+```
+
+Paste it into any HTML page, CMS, or component. The iframe fills the width of its container at a 16:9 ratio.
+
+# Size and layout {% #size-and-layout %}
+
+The `style` attribute controls the frame, so change it to fit your layout:
+
+- **Fixed width**: Replace `width:100%` with a value such as `width:640px`, and keep `aspect-ratio` so the height follows.
+- **Portrait video**: Use `aspect-ratio:9/16` for vertical clips, and cap the width, for example `max-width:360px`, so the frame does not grow taller than the screen.
+- **Square video**: Use `aspect-ratio:1/1`.
+
+Keep the `allow` and `allowfullscreen` attributes. Without them, browsers block fullscreen and picture-in-picture inside the frame.
+
+In React, write the attributes in JSX form:
+
+```tsx
+export function VideoEmbed({ src, title }: { src: string; title: string }) {
+  return (
+    <iframe
+      src={src}
+      title={title}
+      allow="autoplay; fullscreen; picture-in-picture"
+      allowFullScreen
+      style={{ width: '100%', aspectRatio: '16 / 9', border: 0 }}
+    />
+  )
+}
+```
+
+# Start time {% #start-time %}
+
+The player URL takes an optional `start` query parameter, in seconds. With **Custom start time** on, the Console adds it for you. Change it in the URL to link to another moment, for example `&start=90` to start at 1:30.
+
+This is handy for chapters or a "jump to the demo" link: embed the same video several times with different start times, or build the URL in your app from a timestamp.
+
+# What the player does {% #what-the-player-does %}
+
+- Picks an output that has ready renditions, and switches quality automatically by default.
+- Lets viewers choose captions, lock a rendition, or leave quality on **Auto quality**.
+- Shows the video's [poster](/docs/products/videos/timeline#previews) and timeline thumbnails while scrubbing.
+
+# Access {% #access %}
+
+The embedded player requests the same manifests and segments as any other player, so it follows the source file's [permissions](/docs/products/videos/permissions). For a public page, grant read access to **Any**.
+
+The player can open as soon as the source is probed, and plays once a rendition is ready. If the frame shows an error on your page but plays in the Console, check the source file's permissions first.

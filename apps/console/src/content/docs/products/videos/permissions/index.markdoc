@@ -1,0 +1,76 @@
+---
+layout: article
+title: Permissions
+description: Learn how Appwrite Videos uses the source file's Storage permissions for playback, and which API key scopes manage videos.
+---
+
+Appwrite Videos has two kinds of access: who can **watch** a stream, and who can **manage** videos, renditions, captions, and profiles.
+
+# Playback {% #playback %}
+
+Videos has no permissions of its own for playback. Manifest, segment, and caption requests use the **read permissions of the source file** in [Storage](/docs/products/storage/permissions), the same way a file download does.
+
+| Goal | Grant Read on the source file or its bucket to |
+|------|------------------------------------------------|
+| Public video on a website or in an app | **Any** |
+| Members-only video | **Users**, or a specific user |
+| Video for one team or role | A **team**, or a team role |
+
+Use [bucket-level permissions](/docs/products/storage/permissions#bucket-level) to apply the same access to every video in a bucket. Turn on **File security** for [file-level permissions](/docs/products/storage/permissions#file-level) when each video needs its own audience.
+
+{% info title="Keep public and private videos apart" %}
+Store public and private sources in separate buckets. Granting **Any** at bucket level makes every video in that bucket public.
+{% /info %}
+
+Because the source file is the gate, you never manage access in two places. Whoever can read the file can watch its stream.
+
+## Common setups {% #common-setups %}
+
+| App | Setup |
+|-----|-------|
+| Marketing site or public course preview | One bucket with **Read** for **Any** at bucket level |
+| Paid course or members area | One bucket with **File security** on. Grant **Read** per file to the users or team who bought access |
+| Team workspace, such as internal recordings | **File security** on. Grant **Read** to the team, or to a team role such as `editor` |
+| User uploads shown only to the uploader | **File security** on. Grant **Read** to the uploading user when the file is created |
+
+## Set permissions on upload {% #set-permissions-on-upload %}
+
+With **File security** on, set who can watch when you upload the source. For example, to share a recording with one team:
+
+```js
+import { Client, Storage, ID, Permission, Role } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const storage = new Storage(client);
+
+await storage.createFile({
+    bucketId: '<BUCKET_ID>',
+    fileId: ID.unique(),
+    file: document.getElementById('uploader').files[0],
+    permissions: [
+        Permission.read(Role.team('<TEAM_ID>'))
+    ]
+});
+```
+
+To change access later, update the file's permissions in Storage. You do not need to touch the video.
+
+## Private playback {% #private-playback %}
+
+For a video that is not readable by **Any**, every manifest and segment request must carry the viewer's Appwrite session, the same as any private file download. Test private playback while signed in as a viewer, not only from the Console. A `401` or `404` on the manifest usually means the request reached Appwrite without a session that can read the source file.
+
+# Managing videos {% #managing-videos %}
+
+Creating, updating, and deleting videos, renditions, and captions requires an [API key](/docs/partners/project/api-keys) or a Console session with the right scopes.
+
+| Scope | Allows |
+|-------|--------|
+| `videos.read` | List and read videos, renditions, and captions |
+| `videos.write` | Create, update, and delete them |
+
+Use an API key with these scopes from a [server SDK](/docs/sdks#server). On Appwrite Cloud with [organization roles](/docs/advanced/security/roles) enabled, members manage videos according to their role.
+
+Give each key only what it needs. A backend that only checks whether renditions are ready needs `videos.read`. A [function that creates videos on upload](/docs/products/videos/videos#automate-with-functions) needs `videos.write`. Never ship an API key in a client app; let viewers stream with their own session instead.

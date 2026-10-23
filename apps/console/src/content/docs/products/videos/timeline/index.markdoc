@@ -1,0 +1,91 @@
+---
+layout: article
+title: Timeline
+description: Learn how Appwrite Videos generates sprite sheets and a WebVTT index for scrubbing thumbnails, and how preview images become video posters.
+---
+
+The **timeline** gives a [video](/docs/products/videos/videos) scrubbing thumbnails: viewers see a preview frame while they drag across the progress bar. It is made of **sprite sheets**, images that pack many thumbnails into a grid, plus a **WebVTT index** that maps each time range to a thumbnail inside a sprite.
+
+# Why sprite sheets {% #why-sprite-sheets %}
+
+A one-hour video could need hundreds of thumbnails. Loading each as its own image would mean hundreds of requests the moment a viewer starts scrubbing. A sprite sheet packs many thumbnails into one image, so the player downloads a handful of files and crops the right thumbnail out of each with CSS or a canvas. Scrubbing stays instant, even on slow connections.
+
+# Generation {% #generation %}
+
+Appwrite queues timeline generation when you create a video. The job downloads its own copy of the source, probes it if needed, and writes the sprites and index. There is nothing to configure.
+
+Open the video and select **Timeline** to browse the generated thumbnails.
+
+Audio-only sources have no picture, so they get no timeline.
+
+# WebVTT index {% #webvtt-index %}
+
+Fetch the index with `videos.getTimeline({ videoId })`, or from `/v1/videos/<VIDEO_ID>/timeline`. Each cue points at a sprite and the region of the thumbnail inside it, using a `#xywh=x,y,width,height` media fragment. For example:
+
+```text
+WEBVTT
+
+00:00:00.000 --> 00:00:05.000
+previews/<PREVIEW_ID>#xywh=0,0,160,90
+
+00:00:05.000 --> 00:00:10.000
+previews/<PREVIEW_ID>#xywh=160,0,160,90
+```
+
+Cue paths are relative to the timeline URL. Resolve them against it to get the full image URL.
+
+Many players can show thumbnails from a WebVTT thumbnail track, either built in or with a plugin. Until the timeline is generated, the request returns `video_timeline_not_found`. Since generation runs in the background, poll every few seconds after creating a video if you need the timeline right away.
+
+# Use thumbnails in a custom player {% #custom-player %}
+
+If your player has no thumbnail support, parse the index yourself and show the matching region as a CSS background while the pointer hovers the progress bar:
+
+```js
+function parseTimeline(vtt, timelineUrl) {
+    const toSeconds = (t) => t.split(':').reduce((sum, part) => sum * 60 + Number(part), 0);
+
+    return vtt.split(/\n{2,}/).flatMap((block) => {
+        const lines = block.trim().split('\n');
+        const timing = lines.findIndex((line) => line.includes('-->'));
+        if (timing < 0 || !lines[timing + 1]) return [];
+
+        const [start, end] = lines[timing].split('-->').map((t) => toSeconds(t.trim()));
+        const [path, fragment] = lines[timing + 1].split('#xywh=');
+        const [x, y, w, h] = fragment.split(',').map(Number);
+
+        return [{ start, end, url: new URL(path, timelineUrl).toString(), x, y, w, h }];
+    });
+}
+
+function showThumbnail(element, cues, seconds) {
+    const cue = cues.find((c) => seconds >= c.start && seconds < c.end);
+    if (!cue) return;
+    element.style.width = `${cue.w}px`;
+    element.style.height = `${cue.h}px`;
+    element.style.backgroundImage = `url("${cue.url}")`;
+    element.style.backgroundPosition = `-${cue.x}px -${cue.y}px`;
+}
+```
+
+Load the sprite images once when the player opens, so the first hover does not wait on the network.
+
+# Previews {% #previews %}
+
+Timeline images are served as **previews**. Fetch one with `videos.getPreview({ videoId, previewId })`. Pass `width`, `height`, and `output` (`jpg`, `png`, `gif`, or `webp`) to resize or convert it.
+
+The video's `previewId` points at the preview used as its **poster** image.
+
+# Show a poster {% #show-a-poster %}
+
+A poster fills the player before playback starts, and makes a good thumbnail in a list of videos. Request it at the size you display, in WebP, to keep pages light:
+
+```html
+<video
+  id="player"
+  controls
+  playsinline
+  poster="https://<REGION>.cloud.appwrite.io/v1/videos/<VIDEO_ID>/previews/<PREVIEW_ID>?project=<PROJECT_ID>&width=640&output=webp"
+></video>
+```
+
+Read `previewId` from the video first. It is empty until the timeline is generated, so show a placeholder until then.
