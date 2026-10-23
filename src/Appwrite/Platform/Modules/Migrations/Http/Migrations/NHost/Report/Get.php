@@ -77,7 +77,8 @@ class Get extends Action
         Response $response,
         PublicHostname $publicHostname
     ): void {
-        $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, (string) $port);
+        $nhost = (new NHost($subdomain, $region, $adminSecret, $database, $username, $password, (string) $port))
+            ->setDestinations($publicHostname->getDestinations());
 
         try {
             $nhost->setDatabaseAddress($publicHostname->address($nhost->getDatabaseHost()));
