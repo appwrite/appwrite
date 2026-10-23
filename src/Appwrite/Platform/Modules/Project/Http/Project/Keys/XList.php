@@ -8,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Keys;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -64,6 +65,7 @@ class XList extends Base
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -77,6 +79,7 @@ class XList extends Base
         Response $response,
         Database $dbForPlatform,
         Authorization $authorization,
+        Request $request,
     ) {
         try {
             $queries = Query::parseQueries($queries);
@@ -122,6 +125,13 @@ class XList extends Base
             $total = $includeTotal ? $authorization->skip(fn () => $dbForPlatform->count('keys', $filterQueries, APP_LIMIT_COUNT)) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
+
+        // Secrets are only for callers that could replace the keys anyway
+        if (!\in_array('keys.write', $request->getScopes(), true)) {
+            foreach ($keys as $key) {
+                $key->setAttribute('secret', '');
+            }
         }
 
         $response->dynamic(new Document([

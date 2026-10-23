@@ -114,13 +114,9 @@ class XList extends Action
             : $vcs->listBranches($owner, $repositoryName);
 
         $total = $includeTotal ? \count($branches) : 0;
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped->limit;
-        $offset = $grouped->offset;
+        $limit = (Query::getByType($queries, [QueryMethod::Limit])[0] ?? null)?->getValue() ?? APP_LIMIT_LIST_DEFAULT;
+        $offset = (Query::getByType($queries, [QueryMethod::Offset])[0] ?? null)?->getValue() ?? 0;
         $cursorQuery = \current(Query::getCursorQueries($queries, false));
-
-        $limit ??= APP_LIMIT_LIST_DEFAULT;
-        $offset ??= 0;
 
         if ($cursorQuery instanceof Query) {
             $cursor = $cursorQuery->getValue();

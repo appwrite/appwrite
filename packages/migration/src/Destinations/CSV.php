@@ -23,6 +23,11 @@ class CSV extends Destination
     protected string $outputFile;
     protected Local $local;
 
+    /**
+     * Set once shutdown() starts writing to deviceForFiles, cleared once the caller takes the file over.
+     */
+    private bool $uploaded = false;
+
     protected array $allowedColumns = [];
 
     /**
@@ -199,6 +204,8 @@ class CSV extends Destination
             throw new \Exception("No data to export for resource: $this->resourceId", MigrationException::CODE_NOT_FOUND);
         }
 
+        $this->uploaded = true;
+
         try {
             $result = $this->local->copy(
                 $sourcePath,
@@ -226,6 +233,32 @@ class CSV extends Destination
                 ));
             }
         }
+    }
+
+    /**
+     * The caller has taken the file over, so a later failure must leave it in place.
+     */
+    #[\Override]
+    public function success(): void
+    {
+        $this->uploaded = false;
+    }
+
+    /**
+     * shutdown() uploads the file before the caller learns whether the export failed,
+     * so a failed export removes the file it uploaded along with the local working copy.
+     * A file this run did not upload, or already handed over, belongs to someone else.
+     */
+    #[\Override]
+    public function error(): void
+    {
+        $path = $this->deviceForFiles->getPath($this->directory . '/' . $this->outputFile . '.csv');
+        if ($this->uploaded && $this->deviceForFiles->exists($path)) {
+            $this->deviceForFiles->delete($path);
+            $this->uploaded = false;
+        }
+
+        $this->local->delete($this->local->getRoot(), true);
     }
 
     /**

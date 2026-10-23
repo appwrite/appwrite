@@ -59,6 +59,7 @@ function formatRequestMethod(method: string | undefined): string {
 }
 
 function getTriggerBadge(trigger: string) {
+  // Values match execution.trigger / x-appwrite-trigger (Edge SMTP uses `email`).
   const triggerMap: Record<
     string,
     { label: string; variant: 'default' | 'secondary' | 'outline' }
@@ -67,6 +68,7 @@ function getTriggerBadge(trigger: string) {
     schedule: { label: 'Schedule', variant: 'secondary' },
     event: { label: 'Event', variant: 'outline' },
     manual: { label: 'Manual', variant: 'outline' },
+    email: { label: 'Email', variant: 'secondary' },
   }
   return (
     triggerMap[trigger?.toLowerCase()] || {

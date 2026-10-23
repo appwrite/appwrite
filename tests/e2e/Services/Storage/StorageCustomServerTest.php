@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Storage;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
 use CURLFile;
 use PHPUnit\Framework\Attributes\Group;
@@ -158,6 +159,7 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals(true, $bucket['body']['enabled']);
         $this->assertEquals(true, $bucket['body']['encryption']);
         $this->assertEquals(true, $bucket['body']['antivirus']);
+        $this->assertFalse($bucket['body']['stripMetadata']);
         $bucketId = $bucket['body']['$id'];
 
         /**
@@ -420,6 +422,7 @@ final class StorageCustomServerTest extends Scope
             'maximumFileSize' => 1000000,
             'compression' => Compression::GZIP,
             'encryption' => false,
+            'stripMetadata' => true,
         ]);
         $this->assertSame(201, $bucket['headers']['status-code']);
 
@@ -429,6 +432,7 @@ final class StorageCustomServerTest extends Scope
             'maximumFileSize' => null,
             'compression' => null,
             'encryption' => null,
+            'stripMetadata' => null,
         ]);
         $this->assertSame(200, $bucket['headers']['status-code']);
 
@@ -437,8 +441,115 @@ final class StorageCustomServerTest extends Scope
         $this->assertSame(1000000, $bucket['body']['maximumFileSize']);
         $this->assertSame(Compression::GZIP, $bucket['body']['compression']);
         $this->assertFalse($bucket['body']['encryption']);
+        $this->assertTrue($bucket['body']['stripMetadata']);
 
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], $headers);
+    }
+
+    public function testUpdateBucketDescription(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $keyword = ID::unique();
+        $newKeyword = ID::unique();
+
+        /**
+         * Test for SUCCESS
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'Invoices',
+            'description' => 'Customer invoices tagged ' . $keyword,
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertSame('Customer invoices tagged ' . $keyword, $bucket['body']['description']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $bucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, $headers);
+
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertSame('Customer invoices tagged ' . $keyword, $bucket['body']['description']);
+
+        $buckets = $this->client->call(Client::METHOD_GET, '/storage/buckets', $headers, [
+            'search' => $keyword,
+        ]);
+
+        $this->assertEquals(200, $buckets['headers']['status-code']);
+        $this->assertCount(1, $buckets['body']['buckets']);
+        $this->assertSame($bucketId, $buckets['body']['buckets'][0]['$id']);
+
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $headers, [
+            'name' => 'Invoices',
+            'description' => 'Receipts tagged ' . $newKeyword,
+        ]);
+
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertSame('Receipts tagged ' . $newKeyword, $bucket['body']['description']);
+
+        $buckets = $this->client->call(Client::METHOD_GET, '/storage/buckets', $headers, [
+            'search' => $newKeyword,
+        ]);
+
+        $this->assertEquals(200, $buckets['headers']['status-code']);
+        $this->assertCount(1, $buckets['body']['buckets']);
+        $this->assertSame($bucketId, $buckets['body']['buckets'][0]['$id']);
+
+        $buckets = $this->client->call(Client::METHOD_GET, '/storage/buckets', $headers, [
+            'search' => $keyword,
+        ]);
+
+        $this->assertEquals(200, $buckets['headers']['status-code']);
+        $this->assertCount(0, $buckets['body']['buckets']);
+
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $headers, [
+            'name' => 'Invoices',
+        ]);
+
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertSame('Receipts tagged ' . $newKeyword, $bucket['body']['description']);
+
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $headers, [
+            'name' => 'Invoices',
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertSame('', $bucket['body']['description']);
+
+        $plain = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'Plain',
+        ]);
+
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'Too long',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $bucket['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $bucket['body']['type']);
+
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $headers, [
+            'name' => 'Invoices',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $bucket['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $bucket['body']['type']);
+
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, $headers);
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $plain['body']['$id'], $headers);
     }
 
     public function testDeleteBucket(): void
@@ -484,6 +595,59 @@ final class StorageCustomServerTest extends Scope
             )
         );
         $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    public function testDeleteBucketKeepsBucketsSharingItsPrefix(): void
+    {
+        $headers = array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $deletedId = Id::unique();
+        $keptId = $deletedId . '2';
+        $files = [];
+
+        foreach ([$deletedId, $keptId] as $bucketId) {
+            $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+                'content-type' => 'application/json',
+            ], $headers), [
+                'bucketId' => $bucketId,
+                'name' => 'Prefix ' . $bucketId,
+                'fileSecurity' => false,
+            ]);
+            $this->assertSame(201, $bucket['headers']['status-code']);
+
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+            ], $headers), [
+                'fileId' => Id::unique(),
+                'file' => new CURLFile('data://text/plain;base64,' . \base64_encode('in ' . $bucketId), 'text/plain', 'file.txt'),
+            ]);
+            $this->assertSame(201, $file['headers']['status-code']);
+
+            $files[$bucketId] = $file['body']['$id'];
+        }
+
+        $uploads = getDevice(APP_STORAGE_UPLOADS . '/app-' . $this->getProject()['$id']);
+        $stored = fn (string $bucketId): array => $uploads->listFiles($uploads->getRoot() . '/' . $bucketId . '/', 10)->files;
+
+        $this->assertNotEmpty($stored($deletedId), 'The file is not visible under ' . $uploads->getRoot() . '/' . $deletedId);
+        $this->assertNotEmpty($stored($keptId), 'The file is not visible under ' . $uploads->getRoot() . '/' . $keptId);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $deletedId, array_merge([
+            'content-type' => 'application/json',
+        ], $headers));
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $this->assertEventually(function () use ($stored, $deletedId): void {
+            $this->assertSame([], $stored($deletedId));
+        }, 60000, 500);
+
+        $this->assertNotEmpty($stored($keptId), 'Deleting bucket ' . $deletedId . ' also deleted the files of bucket ' . $keptId);
+
+        $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $keptId . '/files/' . $files[$keptId] . '/download', $headers);
+        $this->assertSame(200, $download['headers']['status-code']);
+        $this->assertSame('in ' . $keptId, $download['body']);
     }
 
     /**
@@ -571,5 +735,348 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals($totalSize, $file['body']['sizeOriginal']);
         $this->assertEquals($file['body']['chunksTotal'], $file['body']['chunksUploaded']);
         $this->assertNotEmpty($file['body']['mimeType']);
+    }
+
+    public function testStripMetadataOnUpload(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $photo = $this->createTaggedPhoto(64, 48);
+        $text = \tempnam(\sys_get_temp_dir(), 'strip-text-');
+        \file_put_contents($text, 'GPSLatitude 37.7749 is just text here');
+
+        $stripBucket = $this->createBucketForStripping(true);
+        $keepBucket = $this->createBucketForStripping(false);
+
+        $file = $this->uploadFile($stripBucket, new CURLFile($photo, 'image/jpeg', 'photo.jpg'));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertLessThan(\filesize($photo), $file['body']['sizeOriginal']);
+
+        $download = $this->downloadFile($stripBucket, $file['body']['$id']);
+        $this->assertSame($file['body']['sizeOriginal'], \strlen($download));
+        $tags = $this->readTags($download);
+        foreach (['GPSLatitude', 'GPSLongitude', 'Make', 'Model', 'DateTimeOriginal', 'XMP', 'IPTC'] as $tag) {
+            $this->assertArrayNotHasKey($tag, $tags, "{$tag} was not removed");
+        }
+        $this->assertSame('6', $tags['Orientation'] ?? null);
+
+        // The format comes from the content, so a renamed photo can't keep its location.
+        $file = $this->uploadFile($stripBucket, new CURLFile($photo, 'image/png', 'disguised.png'));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertArrayNotHasKey('GPSLatitude', $this->readTags($this->downloadFile($stripBucket, $file['body']['$id'])));
+
+        $file = $this->uploadFile($keepBucket, new CURLFile($photo, 'image/jpeg', 'photo.jpg'));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $download = $this->downloadFile($keepBucket, $file['body']['$id']);
+        $this->assertSame(\file_get_contents($photo), $download);
+        $this->assertArrayHasKey('GPSLatitude', $this->readTags($download));
+
+        $file = $this->uploadFile($stripBucket, new CURLFile($text, 'text/plain', 'notes.txt'));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertSame(\file_get_contents($text), $this->downloadFile($stripBucket, $file['body']['$id']));
+
+        \unlink($photo);
+        \unlink($text);
+
+        /**
+         * Test for FAILURE
+         */
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => Id::unique(),
+            'name' => 'Strip Metadata Invalid',
+            'stripMetadata' => 'invalid',
+        ]);
+        $this->assertSame(400, $bucket['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $bucket['body']['type']);
+
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $stripBucket, $headers, [
+            'name' => 'Strip Metadata Invalid',
+            'stripMetadata' => 'invalid',
+        ]);
+        $this->assertSame(400, $bucket['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $bucket['body']['type']);
+
+        $bucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $stripBucket, $headers);
+        $this->assertSame(200, $bucket['headers']['status-code']);
+        $this->assertTrue($bucket['body']['stripMetadata']);
+    }
+
+    public function testStripMetadataOnChunkedUpload(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        // Random noise compresses poorly, so this JPEG is large enough to upload in chunks.
+        $photo = $this->createTaggedPhoto(1800, 1800, noise: true);
+        $totalSize = \filesize($photo);
+        $chunkSize = 5 * 1024 * 1024;
+        $this->assertGreaterThan($chunkSize, $totalSize, 'Fixture must be large enough to chunk.');
+        $this->assertLessThanOrEqual(APP_STORAGE_READ_BUFFER, $totalSize, 'Fixture must stay under the stripping size limit.');
+
+        $bucketId = $this->createBucketForStripping(true);
+        $handle = \fopen($photo, 'rb');
+        $this->assertNotFalse($handle);
+
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        $fileId = Id::unique();
+        $counter = 0;
+        $id = '';
+        $file = null;
+
+        while (!\feof($handle)) {
+            $chunk = \fread($handle, $chunkSize);
+            if ($chunk === '' || $chunk === false) {
+                break;
+            }
+            $start = $counter * $chunkSize;
+            $headers['content-range'] = 'bytes ' . $start . '-' . ($start + \strlen($chunk) - 1) . '/' . $totalSize;
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge($headers, $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => new CURLFile('data://image/jpeg;base64,' . \base64_encode($chunk), 'image/jpeg', 'large.jpg'),
+            ]);
+            $counter++;
+            $id = $file['body']['$id'] ?? $id;
+        }
+        \fclose($handle);
+
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertGreaterThan(1, $file['body']['chunksTotal']);
+        $this->assertLessThan($totalSize, $file['body']['sizeOriginal']);
+
+        $download = $this->downloadFile($bucketId, $file['body']['$id']);
+        $this->assertSame($file['body']['sizeOriginal'], \strlen($download));
+        $this->assertArrayNotHasKey('GPSLatitude', $this->readTags($download));
+
+        \unlink($photo);
+    }
+
+    private function createBucketForStripping(bool $stripMetadata): string
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => Id::unique(),
+            'name' => 'Strip Metadata ' . ($stripMetadata ? 'On' : 'Off'),
+            'stripMetadata' => $stripMetadata,
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+        $this->assertSame($stripMetadata, $bucket['body']['stripMetadata']);
+
+        return $bucket['body']['$id'];
+    }
+
+    private function uploadFile(string $bucketId, CURLFile $file): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => $file,
+        ]);
+    }
+
+    private function downloadFile(string $bucketId, string $fileId): string
+    {
+        $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $download['headers']['status-code']);
+
+        return $download['body'];
+    }
+
+    private function createTaggedPhoto(int $width, int $height, bool $noise = false): string
+    {
+        $path = \sys_get_temp_dir() . '/strip-photo-' . \uniqid() . '.jpg';
+
+        $image = new \Imagick();
+        $image->newImage($width, $height, new \ImagickPixel('skyblue'));
+        if ($noise) {
+            $image->addNoiseImage(\Imagick::NOISE_RANDOM);
+            $image->setImageCompressionQuality(100);
+        }
+        $image->setImageFormat('jpeg');
+
+        // tagged.jpg carries a location, camera, capture time, orientation, and XMP and IPTC creators.
+        $tagged = new \Imagick(__DIR__ . '/../../../resources/disk-a/tagged.jpg');
+        foreach ($tagged->getImageProfiles('*', true) as $name => $profile) {
+            $image->profileImage($name, $profile);
+        }
+        // Imagick writes the orientation from its own setting, not from the copied EXIF.
+        $image->setImageOrientation($tagged->getImageOrientation());
+        $image->writeImage($path);
+
+        return $path;
+    }
+
+    /**
+     * @return array<string, string> EXIF tags by name, plus XMP and IPTC when those blocks are present
+     */
+    private function readTags(string $contents): array
+    {
+        $image = new \Imagick();
+        $image->readImageBlob($contents);
+
+        $tags = [];
+        foreach ($image->getImageProperties('exif:*') as $name => $value) {
+            $tags[\substr($name, \strlen('exif:'))] = $value;
+        }
+        foreach ($image->getImageProfiles('*', false) as $name) {
+            $tags[\strtoupper($name)] = $name;
+        }
+
+        return $tags;
+    }
+
+    public function testChunkedUploadRejectsChangedTotal(): void
+    {
+        $bucketId = $this->setupBucket()['bucketId'];
+
+        $upload = function (string $range, string $body, ?string $resumeId = null) use ($bucketId): array {
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => $range,
+            ];
+
+            if ($resumeId !== null) {
+                $headers['x-appwrite-id'] = $resumeId;
+            }
+
+            return $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge($headers, $this->getHeaders()), [
+                'fileId' => $resumeId ?? Id::unique(),
+                'file' => new CURLFile('data://text/plain;base64,' . base64_encode($body), 'text/plain', 'chunk.txt'),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+        };
+
+        $chunkSize = 5 * 1024 * 1024;
+        $totalSize = $chunkSize + 1024;
+
+        $first = $upload('bytes 0-' . ($chunkSize - 1) . '/' . $totalSize, str_repeat('a', $chunkSize));
+        $this->assertEquals(201, $first['headers']['status-code']);
+        $fileId = $first['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         * The second chunk announces a different total than the first.
+         */
+        $second = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . ($totalSize + 1), str_repeat('b', 1024), $fileId);
+        $this->assertEquals(400, $second['headers']['status-code']);
+        $this->assertEquals('storage_invalid_content_range', $second['body']['type']);
+    }
+
+    public function testChunkedUploadRejectsShortChunk(): void
+    {
+        $bucketId = $this->setupBucket()['bucketId'];
+
+        $upload = function (string $range, string $body, ?string $resumeId = null) use ($bucketId): array {
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => $range,
+            ];
+
+            if ($resumeId !== null) {
+                $headers['x-appwrite-id'] = $resumeId;
+            }
+
+            return $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge($headers, $this->getHeaders()), [
+                'fileId' => $resumeId ?? Id::unique(),
+                'file' => new CURLFile('data://text/plain;base64,' . base64_encode($body), 'text/plain', 'chunk.txt'),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+        };
+
+        $chunkSize = 5 * 1024 * 1024;
+        $totalSize = $chunkSize + 1024;
+
+        $first = $upload('bytes 0-' . ($chunkSize - 1) . '/' . $totalSize, str_repeat('a', $chunkSize));
+        $this->assertEquals(201, $first['headers']['status-code']);
+        $fileId = $first['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         * The last chunk carries fewer bytes than its range announces.
+         */
+        $second = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, str_repeat('b', 10), $fileId);
+        $this->assertEquals(400, $second['headers']['status-code']);
+        $this->assertEquals('storage_invalid_content_range', $second['body']['type']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(404, $file['headers']['status-code']);
+    }
+
+    public function testFilePushContentDisposition(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => Id::unique(),
+            'name' => 'Push Filename',
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', 'café logo.svg'),
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+
+        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $push = fn (array $claims): array => $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/push', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'project' => $this->getProject()['$id'],
+            'jwt' => $encoder->encode(\array_merge([
+                'bucketId' => $bucketId,
+                'fileId' => $fileId,
+                'projectId' => $this->getProject()['$id'],
+            ], $claims)),
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        foreach ([[], ['disposition' => 'inline'], ['disposition' => 'other']] as $claims) {
+            $response = $push($claims);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame('attachment; filename="caf_ logo.svg"; filename*=UTF-8\'\'' . \rawurlencode('café logo.svg'), $response['headers']['content-disposition']);
+            $this->assertSame("script-src 'none';", $response['headers']['content-security-policy']);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $push(['fileId' => 'other']);
+        $this->assertSame(401, $response['headers']['status-code']);
     }
 }

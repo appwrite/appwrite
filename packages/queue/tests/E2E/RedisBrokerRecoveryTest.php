@@ -299,6 +299,48 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
         $this->assertSame(1, $broker->getQueueSize($this->queue), 'the message is back on the queue');
     }
 
+    /**
+     * A processing list left behind by a release without the sweep holds claims
+     * months old. The first sweep must park them, not run them all again.
+     */
+    public function testMaintainParksClaimsOlderThanReapMaxAge(): void
+    {
+        $broker = new Redis($this->connection, $this->connection, reapAfter: 0, reapMaxAge: 600);
+        $broker->publish($this->queue, ['n' => 1]);
+        $claimed = $broker->receive($this->queue, 0)[0] ?? null;
+        $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
+        $this->backdate($claimed->getPid(), 3600);
+        $this->expire('.claims.*');
+
+        $broker->maintain();
+
+        $this->assertSame(0, $this->processingSize());
+        $this->assertSame(1, $this->deadSize(), 'the ancient claim is parked, not re-run');
+        $this->assertSame(0, $broker->getQueueSize($this->queue));
+    }
+
+    public function testMaintainParksClaimsPastReapMaxAttempts(): void
+    {
+        $broker = new Redis($this->connection, $this->connection, reapAfter: 0, reapMaxAttempts: 1);
+        $broker->publish($this->queue, ['n' => 1]);
+        $broker->receive($this->queue, 0);
+        $this->expire('.claims.*');
+
+        $broker->maintain();
+
+        $claimed = $broker->receive($this->queue, 0)[0] ?? null;
+        $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
+        $this->assertSame(1, $claimed->getAttempts(), 'the first stranding is recovered');
+        $this->expire('.claims.*');
+        $this->expire('.reap-lock.*');
+
+        $broker->maintain();
+
+        $this->assertSame(0, $this->processingSize());
+        $this->assertSame(1, $this->deadSize(), 'the exhausted claim is parked, not looped');
+        $this->assertSame(0, $broker->getQueueSize($this->queue));
+    }
+
     public function testTheReapLockAdmitsOneSweepPerInterval(): void
     {
         $broker = new Redis($this->connection, $this->connection, reapAfter: 0);

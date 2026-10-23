@@ -406,7 +406,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Login with Bitbucket': 'התחברות עם Bitbucket',
   'Login with GitHub': 'התחברות עם GitHub',
   'Login with GitLab': 'התחברות עם GitLab',
-  'Login with Google': 'התחברות עם Google',
+  'Sign in with Google': 'התחברות עם Google',
   Login: 'התחברות',
   'New Password': 'סיסמה חדשה',
   'No verification methods are available for this account. Contact support if you need help signing in.':

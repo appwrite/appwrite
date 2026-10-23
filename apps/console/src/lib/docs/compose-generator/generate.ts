@@ -78,6 +78,12 @@ export function generateCompose({
   return compose.replaceAll('${_APP_DB_HOST:-postgresql}', database)
 }
 
+function randomJobsSecret(): string {
+  const bytes = new Uint8Array(32)
+  globalThis.crypto.getRandomValues(bytes)
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
 export function generateEnv({
   database,
   autogravity,
@@ -96,6 +102,7 @@ export function generateEnv({
         /^_APP_PWNED_PASSWORDS_DSN=.*$/m,
         '_APP_PWNED_PASSWORDS_DSN=none://localhost',
       )
+      .replace(/^_APP_JOBS_SECRET=.*$/m, `_APP_JOBS_SECRET=${randomJobsSecret()}`)
   )
 }
 

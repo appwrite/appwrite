@@ -12,6 +12,10 @@
 
 ### Added
 
+- `NHost::getDatabaseHost()` returns the Postgres host the source connects to (Supabase returns its configured host),
+  so a caller can check where it resolves before connecting.
+- `NHost::setDatabaseAddress()` connects to the database host on a given address (libpq `hostaddr`), so the
+  connection lands on the address a caller checked. `NHost::getDatabaseDsn()` returns the DSN it connects with.
 - `Target::setDestinations()` confines a target's requests to a `Utopia\Client\Destinations`. Each connection and
   redirect hop is checked against the address it actually reached, so DNS cannot answer differently between a check
   and the connection. The Appwrite source applies it to its SDK client too. Unset, requests connect anywhere.
