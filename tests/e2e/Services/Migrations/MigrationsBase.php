@@ -393,7 +393,7 @@ trait MigrationsBase
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $sourceHeaders, [
             'userId' => Id::unique(),
-            'email' => 'private-deployment-host@test.com',
+            'email' => \uniqid() . '-private-deployment-host@test.com',
             'password' => 'password',
         ]);
         $this->assertSame(201, $user['headers']['status-code']);
