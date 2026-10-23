@@ -11,6 +11,7 @@ use Utopia\Database\Attribute\Update as AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Query\Schema\ColumnType;
@@ -486,6 +487,23 @@ class V25 extends Migration
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.
                     $this->createCollection($id);
+                    // Ledger rows are bound to their topic instance. Rows written before the
+                    // binding keep a null topicInternalId and are never replayed; the age-based
+                    // prune removes them. A failure other than an existing attribute or index
+                    // propagates, since publishing needs the attribute.
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'topicInternalId');
+                    } catch (Duplicate) {
+                    }
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_topicInternalId_sequence');
+                    } catch (Duplicate) {
+                    }
+                    try {
+                        $this->dbForProject->deleteIndex($id, '_key_topic_sequence');
+                    } catch (NotFound) {
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
 
                 case 'buckets':

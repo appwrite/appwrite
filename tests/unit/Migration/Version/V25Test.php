@@ -295,6 +295,50 @@ final class V25Test extends TestCase
         $this->assertContains('connections', $attributes);
     }
 
+    public function testBindsExistingPushLedgerToTopicInstances(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created on 2.3.0 keys its pushLedger by topic id only.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $collection['attributes'];
+            $indexes = $collection['indexes'];
+            if ($id === 'pushLedger') {
+                $attributes = \array_filter($attributes, static fn (Attribute $attribute): bool => $attribute->key !== 'topicInternalId');
+                $indexes = \array_filter($indexes, static fn (Index $index): bool => $index->key !== '_key_topicInternalId_sequence');
+                $indexes[] = Index::key(key: '_key_topic_sequence', attributes: ['topic', 'sequence']);
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($indexes),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $ledger = $database->getCollection('pushLedger');
+        $attributes = \array_map(fn (Document $attribute) => $attribute->getId(), $ledger->getAttribute('attributes', []));
+        $indexes = \array_map(fn (Document $index) => $index->getId(), $ledger->getAttribute('indexes', []));
+        $this->assertContains('topicInternalId', $attributes);
+        $this->assertContains('_key_topicInternalId_sequence', $indexes);
+        $this->assertNotContains('_key_topic_sequence', $indexes, 'replay no longer reads by topic id, so its index must go');
+    }
+
     public function testBackfillsLegacyTypeOnExistingTransactions(): void
     {
         $authorization = new Authorization();

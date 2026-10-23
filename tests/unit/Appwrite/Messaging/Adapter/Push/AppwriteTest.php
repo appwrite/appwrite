@@ -125,6 +125,7 @@ final class AppwriteTest extends TestCase
             id: 'pushLedger',
             attributes: [
                 Attribute::string(key: 'topic', size: 255, required: true),
+                Attribute::string(key: 'topicInternalId', size: 255, required: true),
                 Attribute::string(key: 'data', size: 65535, required: true),
                 Attribute::string(key: 'messageId', size: 255),
                 Attribute::string(key: 'messageInternalId', size: 255),
@@ -208,6 +209,7 @@ final class AppwriteTest extends TestCase
         $this->assertCount(1, $ledger);
         $row = $ledger[0];
         $this->assertSame('topic-1', $row->getAttribute('topic'));
+        $this->assertSame((string) $topic->getSequence(), $row->getAttribute('topicInternalId'));
         $this->assertSame(1, $row->getAttribute('sequence'));
         $this->assertSame('msg-1', $row->getAttribute('messageId'));
         $this->assertSame('internal-1', $row->getAttribute('messageInternalId'));
@@ -277,6 +279,28 @@ final class AppwriteTest extends TestCase
 
         $this->assertCount(1, $this->ledger());
         $this->assertSame(1, $this->topic('topic-1')->getAttribute('sequence'));
+    }
+
+    public function testRecreatedTopicGetsItsOwnLedger(): void
+    {
+        $this->seedTopic('topic-1', 0);
+        $broker = new FakeBroker();
+        $this->adapter($broker, messageId: 'msg-1')->send(new Push(to: ['topic-1'], title: 'deleted topic'));
+        $deleted = (string) $this->topic('topic-1')->getSequence();
+        $this->database->deleteDocument('topics', 'topic-1');
+        $this->seedTopic('topic-1', 0);
+        $recreated = (string) $this->topic('topic-1')->getSequence();
+
+        $this->adapter($broker, messageId: 'msg-2')->send(new Push(to: ['topic-1'], title: 'recreated topic'));
+
+        $rows = [];
+        foreach ($this->ledger() as $row) {
+            $rows[$row->getAttribute('messageId')] = $row;
+        }
+        $this->assertNotSame($deleted, $recreated);
+        $this->assertSame($deleted, $rows['msg-1']->getAttribute('topicInternalId'));
+        $this->assertSame($recreated, $rows['msg-2']->getAttribute('topicInternalId'), 'a recreated topic must not share the deleted topic\'s ledger');
+        $this->assertSame(1, $rows['msg-2']->getAttribute('sequence'));
     }
 
     public function testEachTopicGetsItsOwnSequence(): void
