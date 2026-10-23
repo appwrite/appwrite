@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Auth\Scopes;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -110,6 +111,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
+            ->inject('scopes')
             ->callback($this->action(...));
     }
 
@@ -145,8 +147,16 @@ class Create extends Base
         Event $queueForEvents,
         Database $dbForPlatform,
         VcsFactory $vcsFactory,
-        RepositoryWebhooks $repositoryWebhooks
+        RepositoryWebhooks $repositoryWebhooks,
+        Scopes $grantedScopes
     ) {
+        // A caller may hand a site only the scopes it holds itself; the site
+        // runs with them through its ephemeral key
+        $missing = $grantedScopes->missing($scopes);
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
+        }
+
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);

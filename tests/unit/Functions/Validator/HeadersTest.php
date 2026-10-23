@@ -65,6 +65,39 @@ final class HeadersTest extends TestCase
         ];
         $this->assertFalse($this->object->isValid($headers));
 
+        // A line break in a value would start a second header line on the
+        // request to the runtime, one the caller may not send directly.
+        $headers = [
+            'x-custom' => "value\r\nx-appwrite-user-id: impersonated-user",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'x-custom' => "value\nx-appwrite-user-id: impersonated-user",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'x-custom' => "value\0",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'x-custom' => "tab\tseparated value, with ümlauts",
+        ];
+        $this->assertTrue($this->object->isValid($headers));
+
+        // The executor's protocol with the runtime is not the caller's to speak
+        $headers = [
+            'X-Open-Runtimes-Log-Id' => '../../other-runtime/logs/execution',
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'x-open-runtimes-timeout' => '1',
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
         $headers = [
             'Content-Type' => 'application/json',
             'X-Custom-Header' => 'value'
@@ -177,6 +210,14 @@ final class HeadersTest extends TestCase
 
         $this->assertSame([], Headers::stripReserved([
             'x-appwrite-user-id' => '',
+        ]));
+
+        $this->assertSame([
+            'x-custom' => 'ok',
+        ], Headers::stripReserved([
+            'x-custom' => 'ok',
+            'X-Open-Runtimes-Log-Id' => '../../other-runtime/logs/execution',
+            'x-open-runtimes-secret' => 'guess',
         ]));
 
         $this->assertSame([

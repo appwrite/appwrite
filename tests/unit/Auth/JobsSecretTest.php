@@ -87,4 +87,36 @@ final class JobsSecretTest extends TestCase
 
         $this->assertFalse(JobsSecret::verify($body, $signature, $secret));
     }
+
+    public function testAssertProductionRejectsEmpty(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('_APP_JOBS_SECRET is missing');
+
+        JobsSecret::assertProduction('production', '');
+    }
+
+    public function testAssertProductionRejectsMissing(): void
+    {
+        $this->expectException(\RuntimeException::class);
+
+        JobsSecret::assertProduction('production', null);
+    }
+
+    public function testAssertProductionAllowsUniqueAndDevelopment(): void
+    {
+        JobsSecret::assertProduction('production', 'operator-chosen-jobs-secret');
+        JobsSecret::assertProduction('development', '');
+        JobsSecret::assertProduction('development', JobsSecret::DEVELOPMENT);
+
+        $this->expectNotToPerformAssertions();
+    }
+
+    public function testDevelopmentValueIsTheRepositoryOne(): void
+    {
+        // The checked-in .env must carry exactly the value production warns about
+        $env = \file_get_contents(__DIR__ . '/../../../.env');
+        $this->assertNotFalse($env);
+        $this->assertStringContainsString('_APP_JOBS_SECRET=' . JobsSecret::DEVELOPMENT . "\n", $env);
+    }
 }

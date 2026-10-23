@@ -101,6 +101,13 @@ class Action extends PlatformAction
         $domains = $platform['hostnames'] ?? [];
 
         $deniedDomains = [...$domains];
+
+        // Platform hostnames too: the functions fallback domain and the CNAME target
+        foreach ([System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''), System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')] as $reserved) {
+            if (!empty($reserved)) {
+                $deniedDomains[] = $reserved;
+            }
+        }
         $restrictions = [];
 
         $sitesDomains = System::getEnv('_APP_DOMAIN_SITES', '');
@@ -289,7 +296,7 @@ class Action extends PlatformAction
         }
 
         foreach ($appwriteDomains as $appwriteDomain) {
-            if (\str_ends_with($domain, $appwriteDomain)) {
+            if (\str_ends_with($domain, '.' . $appwriteDomain)) {
                 return true;
             }
         }

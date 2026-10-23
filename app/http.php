@@ -6,6 +6,8 @@ require_once __DIR__ . '/init/span.php';
 $setRequestContext = require __DIR__ . '/init/resources/request.php';
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\ExecutorSecret;
+use Appwrite\Auth\JobsSecret;
 use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -34,6 +36,14 @@ try {
     EncryptionKey::assertProduction(
         System::getEnv('_APP_ENV', 'production'),
         System::getEnv('_APP_OPENSSL_KEY_V1')
+    );
+    JobsSecret::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        System::getEnv('_APP_JOBS_SECRET')
+    );
+    ExecutorSecret::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        System::getEnv('_APP_EXECUTOR_SECRET')
     );
 } catch (\RuntimeException $exception) {
     Console::error($exception->getMessage());

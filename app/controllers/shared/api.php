@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Scopes;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
@@ -64,7 +65,8 @@ Http::init()
     ->inject('lock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Response $response, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
+    ->inject('scopes')
+    ->action(function (Route $route, Request $request, Response $response, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser, Scopes $grantedScopes) {
 
         /**
          * Handle user authentication and session validation.
@@ -544,6 +546,13 @@ Http::init()
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
         $request->setScopes($scopes);
+        // What this caller holds, for actions that hand scopes on to a resource.
+        // Console members manage the whole project and create its keys with any
+        // scope, so their role's own scope list does not bound what they grant.
+        $grantedScopes->grant($scopes);
+        if ($rolesSource->isPrivileged($authorization->getRoles())) {
+            $grantedScopes->grant(\array_keys(Config::getParam('projectScopes', [])));
+        }
 
         // Step 10: Check if user is blocked
         if ($rolesSource->getAttribute('status') === false) { // Account is blocked

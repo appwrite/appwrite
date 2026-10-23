@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Auth\Scopes;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -127,6 +128,7 @@ class Update extends Base
             ->inject('authorization')
             ->inject('platform')
             ->inject('deviceForBuilds')
+            ->inject('scopes')
             ->callback($this->action(...));
     }
 
@@ -170,12 +172,23 @@ class Update extends Base
         Authorization $authorization,
         array $platform,
         ?Device $deviceForBuilds = null,
+        ?Scopes $grantedScopes = null,
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        // The function runs with its scopes through its ephemeral key, so a caller
+        // may add only scopes it holds itself; ones the function already has stay
+        // An override that still calls this action positionally (cloud) sends no
+        // scopes resource; holding nothing, it refuses additions, not the update
+        $grantedScopes ??= new Scopes();
+        $missing = $grantedScopes->missing(\array_values(\array_diff($scopes, $function->getAttribute('scopes', []))));
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
         }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);

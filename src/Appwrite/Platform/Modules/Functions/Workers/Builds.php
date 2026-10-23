@@ -490,8 +490,6 @@ class Builds extends Action
                     $this->confine($tmpDirectory, $rootDirectory),
                 );
             }
-
-            Console::execute((new Command('rm'))->flag('-rf')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
         } catch (\Throwable $th) {
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
             if ($deployment->getAttribute('status') === 'canceled') {
@@ -560,6 +558,13 @@ class Builds extends Action
                 throw $th;
             }
         } finally {
+            // The checkout holds the customer's source and, in its .git
+            // config, the provider token the clone used: it leaves this
+            // shared host however the build ends.
+            $stdout = '';
+            $stderr = '';
+            Console::execute((new Command('rm'))->flag('-rf')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
+
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();

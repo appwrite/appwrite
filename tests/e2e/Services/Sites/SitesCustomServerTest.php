@@ -3750,16 +3750,59 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringContainsString('domain=' . $domain, (string) $response['headers']['set-cookie']);
         $this->assertStringContainsString('path=/', (string) $response['headers']['set-cookie']);
         $this->assertNotEmpty($response['cookies']['a_jwt_console']);
-        $this->assertEquals($jwt['body']['jwt'], $response['cookies']['a_jwt_console']);
+        // The cookie reaches the site's runtime with every request, so it must
+        // not be the console JWT, which authenticates on the console API
+        $this->assertNotEquals($jwt['body']['jwt'], $response['cookies']['a_jwt_console']);
+        $preview = $response['cookies']['a_jwt_console'];
 
-        $this->assertEventually(function () use ($proxyClient, $jwt) {
+        $this->assertEventually(function () use ($proxyClient, $preview) {
             $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-                'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+                'cookie' => 'a_jwt_console=' . $preview
             ], followRedirects: false);
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertStringContainsString("Contact page", (string) $response['body']);
             $this->assertStringContainsString("Preview by", (string) $response['body']);
         });
+
+        // Failure: The console JWT itself is not a preview cookie
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+
+        // Failure: Only a console JWT authorizes a preview; one minted for a
+        // user of the project itself does not
+        $projectEmail = \uniqid() . 'visitor@appwrite.io';
+        $projectHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        $projectUser = $this->client->call(Client::METHOD_POST, '/account', $projectHeaders, [
+            'userId' => Id::unique(),
+            'email' => $projectEmail,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $projectUser['headers']['status-code']);
+        $projectSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $projectHeaders, [
+            'email' => $projectEmail,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $projectSession['headers']['status-code']);
+        $projectJwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge($projectHeaders, [
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $projectSession['cookies']['a_session_' . $this->getProject()['$id']],
+        ]), []);
+        $this->assertEquals(201, $projectJwt['headers']['status-code']);
+
+        foreach ([$projectJwt['body']['jwt'], 'not-a-jwt', ''] as $invalid) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+                'jwt' => $invalid,
+                'path' => '/contact'
+            ], followRedirects: false);
+            $this->assertEquals(401, $response['headers']['status-code'], \var_export($invalid, true));
+            $this->assertArrayNotHasKey('set-cookie', $response['headers']);
+        }
 
         // Success: Path defaults to the site root
         $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
@@ -3870,7 +3913,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(204, $session['headers']['status-code']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+            'cookie' => 'a_jwt_console=' . $preview
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
@@ -3886,9 +3929,17 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(201, $jwt['headers']['status-code']);
         $this->assertNotEmpty($jwt['body']['jwt']);
 
-        $this->assertEventually(function () use ($proxyClient, $jwt) {
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt'],
+            'path' => '/contact'
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['cookies']['a_jwt_console']);
+        $preview = $response['cookies']['a_jwt_console'];
+
+        $this->assertEventually(function () use ($proxyClient, $preview) {
             $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-                'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+                'cookie' => 'a_jwt_console=' . $preview
             ], followRedirects: false);
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertStringContainsString("Contact page", (string) $response['body']);
@@ -3905,7 +3956,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertFalse($user['body']['status']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+            'cookie' => 'a_jwt_console=' . $preview
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
@@ -3944,11 +3995,108 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(201, $jwt['headers']['status-code']);
         $this->assertNotEmpty($jwt['body']['jwt']);
 
+        // Any console session may exchange its JWT; the preview itself is
+        // what the membership check guards
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt'],
+            'path' => '/contact'
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['cookies']['a_jwt_console']);
+
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+            'cookie' => 'a_jwt_console=' . $response['cookies']['a_jwt_console']
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateSiteScopesBeyondKey(): void
+    {
+        $key = $this->getNewKey(['sites.read', 'sites.write']);
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $key,
+        ];
+
+        /**
+         * Test for FAILURE
+         */
+        // The scopes become the site's ephemeral key, so a key may not grant
+        // what it does not hold itself
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => Id::unique(),
+            'name' => 'Scoped',
+            'framework' => 'other',
+            'buildRuntime' => 'static-1',
+            'adapter' => 'static',
+            'scopes' => ['sites.read', 'users.write'],
+        ]);
+        $this->assertEquals(401, $site['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $site['body']['type']);
+        $this->assertStringContainsString('users.write', (string) $site['body']['message']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => Id::unique(),
+            'name' => 'Scoped',
+            'framework' => 'other',
+            'buildRuntime' => 'static-1',
+            'adapter' => 'static',
+            'scopes' => ['sites.read'],
+        ]);
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertEquals(['sites.read'], $site['body']['scopes']);
+        $siteId = $site['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $update = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $headers, [
+            'name' => 'Scoped',
+            'framework' => 'other',
+            'buildRuntime' => 'static-1',
+            'scopes' => ['databases.write'],
+        ]);
+        $this->assertEquals(401, $update['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $update['body']['type']);
+
+        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, $headers);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['sites.read'], $site['body']['scopes']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // The project key holds every scope
+        $update = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'name' => 'Scoped',
+            'framework' => 'other',
+            'buildRuntime' => 'static-1',
+            'scopes' => ['databases.write'],
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertEquals(['databases.write'], $update['body']['scopes']);
+
+        // Scopes the site already holds stay, even when the caller lacks
+        // them: saving it unchanged must not need them
+        $update = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $headers, [
+            'name' => 'Scoped',
+            'framework' => 'other',
+            'buildRuntime' => 'static-1',
+            'scopes' => ['databases.write'],
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertEquals(['databases.write'], $update['body']['scopes']);
 
         $this->cleanupSite($siteId);
     }
@@ -4000,8 +4148,15 @@ final class SitesCustomServerTest extends Scope
             $proxyClient = new Client();
             $proxyClient->setEndpoint('http://' . $domain);
 
+            // The preview cookie is the token /_appwrite/authorize issues for this host
+            $authorized = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+                'jwt' => $jwt['body']['jwt'],
+                'path' => '/cookie-header',
+            ], followRedirects: false);
+            $this->assertSame(301, $authorized['headers']['status-code']);
+
             $cookie = \implode('; ', [
-                'a_jwt_console=' . $jwt['body']['jwt'],
+                'a_jwt_console=' . $authorized['cookies']['a_jwt_console'],
                 'a_session_console=' . $secret,
                 'a_session_console_legacy=' . $secret,
                 'a_session_' . $this->getProject()['$id'] . '=' . $secret,

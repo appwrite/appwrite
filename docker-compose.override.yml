@@ -482,6 +482,8 @@ services:
         max-size: 10m
     networks:
       - appwrite
+      # A stand-in for a git provider on the internet: builds clone from it
+      - builds
     ports:
       - 9515:3000
     volumes:
@@ -678,6 +680,8 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+      # A stand-in for S3 on the internet: build sidecars upload artifacts to it
+      - builds
     environment:
       - MINIO_ROOT_USER=${_APP_STORAGE_S3_ACCESS_KEY:-minio}
       - MINIO_ROOT_PASSWORD=${_APP_STORAGE_S3_SECRET:-minio12345}

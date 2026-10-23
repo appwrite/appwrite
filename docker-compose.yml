@@ -58,6 +58,9 @@ services:
     networks:
       - appwrite
       - browser
+      # Build sidecars fetch deployment sources and post job callbacks here
+      # (_APP_JOBS_ENDPOINT); the API is the only service builds may reach.
+      - builds
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
@@ -1891,14 +1894,23 @@ services:
     user: root
     networks:
       - appwrite
+      - builds
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    # Without a key the jobs API is open to anything that can reach it, and it
+    # creates containers with any image, command and named volume. The key is
+    # the one Appwrite presents (see the jobs resource).
+    secrets:
+      - jobs-secret
     environment:
       - ORCHESTRATOR_BACKEND=docker
+      - API_KEY_FILE=/run/secrets/jobs-secret
       # The jobs plane and the serving planes read the network under different
-      # names; both name the network the workload containers join.
-      - ORCHESTRATOR_NETWORK=appwrite
-      - DOCKER_NETWORK=appwrite
+      # names; both name the network the workload containers join. Builds run
+      # customer code, so that is the builds network, not the one the
+      # databases, Redis and the executor are on.
+      - ORCHESTRATOR_NETWORK=builds
+      - DOCKER_NETWORK=builds
       - ARTIFACT_ENDPOINT=http://orchestrator:8080
       - S3_ENDPOINT=${_APP_STORAGE_S3_ENDPOINT:-}
       - S3_REGION=${_APP_STORAGE_S3_REGION:-us-east-1}
@@ -2059,6 +2071,14 @@ networks:
     name: runtimes
   browser:
     name: browser
+  # Build containers and their sidecars; only the API and the orchestrator
+  # join it from the stack. Anything else a build must reach - a git provider
+  # or an S3 endpoint hosted alongside the stack - has to join it too.
+  builds:
+    name: builds
+secrets:
+  jobs-secret:
+    environment: _APP_JOBS_SECRET
 volumes:
   appwrite-mariadb: null
   appwrite-mongodb: null

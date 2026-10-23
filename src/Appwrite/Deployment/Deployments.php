@@ -135,7 +135,9 @@ readonly class Deployments
         // The jobs-service has no GitHub client of its own — it only fetches
         // tarballs — so $reference must already be a concrete commit/branch/
         // tag; codeload only understands one ref per tarball, not a range.
-        $url = "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$reference}";
+        // Path segments, so a "?" or "#" in a name cannot reshape the request
+        $encode = fn (string $segment): string => \implode('/', \array_map('rawurlencode', \explode('/', $segment)));
+        $url = "https://codeload.github.com/{$encode($owner)}/{$encode($repository)}/tar.gz/{$encode($reference)}";
 
         return $this->submit($resource, $deployment, $timeout, ['url' => $url, 'subdir' => $rootDirectory]);
     }
@@ -579,7 +581,7 @@ readonly class Deployments
             $sourceUrl = "{$base}/download?" . \http_build_query([
                 'type' => Token::TYPE_SOURCE,
                 'project' => $projectId,
-                'token' => Token::sign($deploymentId, Token::TYPE_SOURCE, $ttl),
+                'token' => Token::sign($deploymentId, Token::TYPE_SOURCE, $ttl, $projectId),
             ]);
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $sourceUrl, out: 'source.tar.gz'),
@@ -628,10 +630,18 @@ readonly class Deployments
         if ($command !== '') {
             $build->argument($command);
         }
-        $env = self::variables($project, $resource, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
-            'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
-            'OPEN_RUNTIMES_BUILD_COMPRESSION' => static::compression(),
-        ] + ($isSite ? ['OPEN_RUNTIMES_BUILD_MANIFEST' => '/mnt/code/manifest.json'] : []) + $output['environment'];
+        // build.sh reads where the source is, and where the artifact and cache
+        // land, from these. A resource variable of the same name must not
+        // redirect them, so the platform's values are merged last and win.
+        $env = \array_merge(
+            self::variables($project, $resource, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout),
+            [
+                'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
+                'OPEN_RUNTIMES_BUILD_COMPRESSION' => static::compression(),
+            ],
+            $isSite ? ['OPEN_RUNTIMES_BUILD_MANIFEST' => '/mnt/code/manifest.json'] : [],
+            $output['environment'],
+        );
 
         // Two terminal callbacks: exit carries the code (fires before
         // post-job artifacts), complete confirms artifact delivery — the

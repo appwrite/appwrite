@@ -78,4 +78,30 @@ class Service
     {
         return $this->service['ports'];
     }
+
+    /**
+     * @return list<string> networks the container joins
+     */
+    public function getNetworks(): array
+    {
+        $networks = $this->service['networks'] ?? [];
+        if (!\is_array($networks)) {
+            return [];
+        }
+
+        return \array_is_list($networks) ? $networks : \array_keys($networks);
+    }
+
+    /**
+     * @return list<string> secrets mounted into the container
+     */
+    public function getSecrets(): array
+    {
+        $secrets = [];
+        foreach (($this->service['secrets'] ?? []) as $secret) {
+            $secrets[] = \is_array($secret) ? (string) ($secret['source'] ?? '') : (string) $secret;
+        }
+
+        return $secrets;
+    }
 }

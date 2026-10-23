@@ -30,6 +30,17 @@ runs:
         name: appwrite-image
         path: ${{ runner.temp }}/appwrite-image
 
+    # The repository .env carries public development values for the secrets the
+    # stack trusts on its internal network (build callbacks, the executor); a
+    # run must not be reachable with them, so each run gets its own.
+    - name: Generate per-run internal secrets
+      shell: bash
+      run: |
+        {
+          echo "_APP_JOBS_SECRET=$(openssl rand -hex 32)"
+          echo "_APP_EXECUTOR_SECRET=$(openssl rand -hex 32)"
+        } >> "$GITHUB_ENV"
+
     - name: Pull images
       shell: bash
       run: |

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Auth\Scopes;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -126,6 +127,7 @@ class Update extends Base
             ->inject('bus')
             ->inject('platform')
             ->inject('deviceForBuilds')
+            ->inject('scopes')
             ->callback($this->action(...));
     }
 
@@ -171,6 +173,7 @@ class Update extends Base
         Bus $bus,
         array $platform,
         ?Device $deviceForBuilds = null,
+        ?Scopes $grantedScopes = null,
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -192,6 +195,16 @@ class Update extends Base
 
         if ($site->isEmpty()) {
             throw new Exception(Exception::SITE_NOT_FOUND);
+        }
+
+        // The site runs with its scopes through its ephemeral key, so a caller
+        // may add only scopes it holds itself; ones the site already has stay
+        // An override that still calls this action positionally (cloud) sends no
+        // scopes resource; holding nothing, it refuses additions, not the update
+        $grantedScopes ??= new Scopes();
+        $missing = $grantedScopes->missing(\array_values(\array_diff($scopes ?? [], $site->getAttribute('scopes', []))));
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
         }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);

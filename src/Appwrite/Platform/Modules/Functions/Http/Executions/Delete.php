@@ -96,8 +96,14 @@ class Delete extends Base
 
         $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
-        $roles = ($isAPIKey || $isPrivilegedUser) ? null : $authorization->getRoles();
-        $execution = $executionStore->get($project->getId(), $executionId, $roles);
+
+        // Users and guests hold executions.write to create executions; deleting
+        // one, and canceling its schedule, is for the console and keys only
+        if (!$isAPIKey && !$isPrivilegedUser) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        $execution = $executionStore->get($project->getId(), $executionId, null);
         if ($execution->isEmpty()) {
             // A scheduled execution can be cancelled before its document has
             // been persisted by the executions worker. Remove the schedule and

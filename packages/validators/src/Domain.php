@@ -89,12 +89,13 @@ class Domain extends Validator
         }
 
         foreach ($this->restrictions as $restriction) {
-            $hostname = $restriction['hostname'];
+            $hostname = (string) $restriction['hostname'];
             $levels = $restriction['levels'];
             $prefixDenyList = $restriction['prefixDenyList'];
 
             // Only apply restriction rules to relevant domains
-            if (!str_ends_with($value, (string) $hostname)) {
+            // The hostname itself and its subdomains, not a longer name it happens to end with
+            if ($value !== $hostname && !str_ends_with($value, '.' . $hostname)) {
                 continue;
             }
 
