@@ -136,6 +136,33 @@ $platformCollections = [
         ],
     ],
 
+    'transfers' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('transfers'),
+        'name' => 'transfers',
+        'attributes' => [
+            // What is being transferred
+            Attribute::string(key: 'resourceType', required: true),
+            Attribute::string(key: 'resourceId', required: true),
+            Attribute::string(key: 'resourceInternalId', required: true),
+            // Who owns the resource when the transfer is created
+            Attribute::string(key: 'senderType', required: true),
+            Attribute::string(key: 'senderId', required: true),
+            Attribute::string(key: 'senderInternalId', required: true),
+            // Who may claim the resource; an empty recipientId allows any recipient of the type
+            Attribute::string(key: 'recipientType', required: true),
+            Attribute::string(key: 'recipientId', default: ''),
+            Attribute::string(key: 'recipientInternalId', default: ''),
+            Attribute::string(key: 'secret', size: 256, required: true),
+            Attribute::datetime(key: 'expire', required: true),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceInternalId']),
+            Index::key(key: '_key_sender', attributes: ['senderType', 'senderInternalId']),
+            Index::key(key: '_key_expire', attributes: ['expire']),
+        ],
+    ],
+
     'webhooks' => [
         '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('webhooks'),

@@ -3463,4 +3463,45 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Ship your apps to every store': 'הפצת האפליקציות שלכם לכל חנות',
   'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
     'בנו גרסאות Android,‏ iOS ו-Windows ממקום אחד והגישו אותן ל-Google Play,‏ App Store ו-Microsoft Store.',
+  'Create a link that lets another organization claim this project. Each link can be claimed once.':
+    'צרו קישור שמאפשר לארגון אחר לקבל את הפרויקט. ניתן לממש כל קישור פעם אחת.',
+  'Failed to load transfer links': 'טעינת קישורי ההעברה נכשלה',
+  'No active transfer links': 'אין קישורי העברה פעילים',
+  Recipient: 'נמען',
+  'Any organization': 'כל ארגון',
+  'Transfer link actions': 'פעולות לקישור ההעברה',
+  'transfer links': 'קישורי העברה',
+  'Create transfer link': 'יצירת קישור העברה',
+  'Share this link with the recipient organization.':
+    'שתפו את הקישור עם הארגון הנמען.',
+  'Choose how long the link is valid and which organization can claim the project.':
+    'בחרו לכמה זמן הקישור תקף ואיזה ארגון יוכל לקבל את הפרויקט.',
+  'Transfer link': 'קישור ההעברה',
+  'This link is shown only once.': 'הקישור מוצג פעם אחת בלבד.',
+  'Expires in': 'תוקף הקישור',
+  'Recipient organization ID (optional)': 'מזהה הארגון הנמען (אופציונלי)',
+  'Leave empty to let any organization claim the project.':
+    'השאירו ריק כדי לאפשר לכל ארגון לקבל את הפרויקט.',
+  'Failed to create transfer link': 'יצירת קישור ההעברה נכשלה',
+  'Delete transfer link': 'מחיקת קישור העברה',
+  'The link will stop working and the project can no longer be claimed with it.':
+    'הקישור יפסיק לפעול ולא ניתן יהיה לקבל באמצעותו את הפרויקט.',
+  'Transfer link has been deleted': 'קישור ההעברה נמחק',
+  'Failed to delete transfer link': 'מחיקת קישור ההעברה נכשלה',
+  'Claim project': 'קבלת פרויקט',
+  'Choose the organization that should receive this project.':
+    'בחרו את הארגון שיקבל את הפרויקט.',
+  'Target organization': 'ארגון יעד',
+  'has been claimed': 'התקבל',
+  'Failed to claim project': 'קבלת הפרויקט נכשלה',
+  'This transfer link is incomplete. Ask the sender to share it again.':
+    'קישור ההעברה חלקי. בקשו מהשולח לשתף אותו שוב.',
+  'You need an organization to claim this project. Create one, then open the link again.':
+    'נדרש ארגון כדי לקבל את הפרויקט. צרו ארגון ופתחו את הקישור שוב.',
+  'Link expires': 'תוקף הקישור יפוג',
+  'This transfer link is no longer valid.': 'קישור ההעברה אינו תקף עוד.',
+  'The project already belongs to this organization. Select a different one.':
+    'הפרויקט כבר שייך לארגון זה. בחרו ארגון אחר.',
+  'This link can only be claimed by a different organization. Select another one.':
+    'רק ארגון אחר יכול לקבל את הקישור הזה. בחרו ארגון אחר.',
 }
