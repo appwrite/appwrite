@@ -28,7 +28,7 @@ images:
 
 Entire is one of Appwrite's Git providers for [Appwrite Sites](/docs/products/sites) and [Appwrite Functions](/docs/products/functions). You connect an Entire project to your Appwrite project once, then create Sites and Functions from its repositories. Appwrite installs as a plugin on your Entire project: Entire notifies Appwrite of each push, and Appwrite fetches that commit, builds it, and reports the result back.
 
-Every push to a connected repository creates a deployment:
+Each push to a connected repository can create a deployment:
 
 - **Production branch:** the deployment builds and activates.
 - **Any other branch:** the deployment builds but stays inactive. Sites get [preview links](/docs/products/sites/previews) for the branch and the commit, which only members of your Appwrite organization can open.
