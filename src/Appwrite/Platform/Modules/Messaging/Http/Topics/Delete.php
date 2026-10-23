@@ -12,7 +12,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -69,14 +68,6 @@ class Delete extends Action
         }
 
         $dbForProject->deleteDocument('topics', $topicId);
-
-        // The push ledger is keyed by the public topic ID, so it goes with the topic before the ID can be reused.
-        // A ledger write locks the topic row first, so none can land for this topic after its deletion.
-        if ($dbForProject->findCollection('pushLedger') !== null) {
-            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocuments('pushLedger', [
-                Query::equal('topic', [$topicId]),
-            ]));
-        }
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $queueForEvents->getProject(),
