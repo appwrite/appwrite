@@ -81,6 +81,11 @@ class Entire extends Git
     protected const FALLBACK_CODES = ['permission_not_accepted', 'unsupported_permission'];
 
     /**
+     * The conclusions a suite takes from its runs, worst first.
+     */
+    private const array SUITE_CONCLUSIONS = ['failure', 'timed_out', 'action_required', 'cancelled', 'neutral', 'skipped', 'success'];
+
+    /**
      * Check run status and conclusion for each state updateCheck() takes.
      * Entire files a cancelled run as neutral.
      */
@@ -2001,25 +2006,88 @@ class Entire extends Git
     public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = ''): void
     {
         $repositoryId = $this->repositoryId($owner, $repositoryName);
+        $path = '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/check-runs';
 
-        $response = $this->dataCall(
-            $repositoryId,
-            self::METHOD_POST,
-            '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/check-runs',
-            $this->checkRuns($this->branchContaining($repositoryId, $SHA), $state, $name, $title, $summary, $detailsUrl, $suite),
-        );
+        $write = $this->checkRuns($this->branchContaining($repositoryId, $SHA), $state, $name, $title, $summary, $detailsUrl, $suite);
+        $this->writeCheckRuns($repositoryId, $path, $write);
 
-        $statusCode = $this->status($response);
-        if ($statusCode >= 400) {
+        if ($suite === '') {
+            return;
+        }
+
+        // Entire evaluates a trail's gate as a write lands, which can be
+        // before it derives the suite's state from its runs, and nothing
+        // evaluates the gate again. A shared suite is therefore stated from
+        // every run under it, read after this run landed: of reports that
+        // finish together, the last to read has seen them all, and Entire
+        // keeps the newest suite state.
+        $readAt = $this->rfc3339Now();
+        $response = $this->dataCall($repositoryId, self::METHOD_GET, $path);
+        if ($this->status($response) >= 400) {
+            throw $this->requestFailed('Failed to list check runs', $response);
+        }
+
+        $runs = [];
+        foreach ($this->nested($this->body($response), 'check_runs') as $run) {
+            if (\is_array($run) && $this->text($run, 'suite_key') === $suite) {
+                $runs[$this->text($run, 'key')] = $run;
+            }
+        }
+        $run = $write['check_runs'][0];
+        $runs[$this->text($run, 'key')] = $run;
+
+        $this->writeCheckRuns($repositoryId, $path, [
+            'branch' => $write['branch'],
+            'check_suite' => [...$write['check_suite'], ...$this->suiteState($runs, $readAt)],
+            'check_runs' => [],
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $write
+     */
+    protected function writeCheckRuns(string $repositoryId, string $path, array $write): void
+    {
+        $response = $this->dataCall($repositoryId, self::METHOD_POST, $path, $write);
+
+        if ($this->status($response) >= 400) {
             throw $this->requestFailed('Failed to update commit status', $response);
         }
     }
 
     /**
+     * A suite's state from its runs: queued or running while any run is,
+     * otherwise completed with the worst conclusion among them.
+     *
+     * @param array<array<mixed>> $runs
+     * @return array<string, string>
+     */
+    protected function suiteState(array $runs, string $at): array
+    {
+        $state = ['external_updated_at' => $at];
+
+        $statuses = array_map(fn (array $run): string => $this->text($run, 'status'), $runs);
+        if (array_diff($statuses, ['completed']) !== []) {
+            return [...$state, 'status' => array_diff($statuses, ['queued']) === [] ? 'queued' : 'in_progress'];
+        }
+
+        $conclusions = array_map(fn (array $run): string => $this->text($run, 'conclusion'), $runs);
+        $conclusion = 'neutral';
+        foreach (self::SUITE_CONCLUSIONS as $candidate) {
+            if (\in_array($candidate, $conclusions, true)) {
+                $conclusion = $candidate;
+                break;
+            }
+        }
+
+        return [...$state, 'status' => 'completed', 'conclusion' => $conclusion, 'completed_at' => $at];
+    }
+
+    /**
      * The check run write for one report: its run, keyed by the check's
-     * name, filed under the named suite or a suite of its own. Several
-     * reports share a suite, so it carries no state: Entire derives it from
-     * every run under it.
+     * name, filed under the named suite or a suite of its own. A suite of
+     * its own carries the run's state; a shared one is stated afterwards
+     * from all its runs, see updateCheck().
      *
      * @return array{branch: string, check_suite: array<string, mixed>, check_runs: list<array<string, mixed>>}
      */
@@ -2054,9 +2122,14 @@ class Entire extends Git
             $run['details_url'] = $detailsUrl;
         }
 
+        $checkSuite = ['key' => $suiteKey, 'name' => $suiteKey, 'external_id' => $suiteKey];
+        if ($suite === '') {
+            $checkSuite = [...$checkSuite, ...$this->suiteState([$run], $now)];
+        }
+
         return [
             'branch' => $branch,
-            'check_suite' => ['key' => $suiteKey, 'name' => $suiteKey, 'external_id' => $suiteKey],
+            'check_suite' => $checkSuite,
             'check_runs' => [$run],
         ];
     }

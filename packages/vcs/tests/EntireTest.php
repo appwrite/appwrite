@@ -86,8 +86,8 @@ class MintingEntire extends Entire
 
 /**
  * Entire whose repository is already resolved and whose data-plane calls are
- * recorded and answered with one fixed response, so a request's shape and
- * the reading of its answer can be checked.
+ * recorded and answered in turn from a script, so the requests an operation
+ * makes and its reading of their answers can be checked.
  */
 class DataCallsEntire extends Entire
 {
@@ -97,9 +97,9 @@ class DataCallsEntire extends Entire
     public array $calls = [];
 
     /**
-     * @param array<mixed> $answer The body every call is answered with
+     * @param list<array{int, array<mixed>}> $answers The status and body each call in turn is answered with
      */
-    public function __construct(private readonly int $status, private readonly array $answer)
+    public function __construct(private array $answers)
     {
         parent::__construct(new Cache(new None()));
     }
@@ -120,8 +120,9 @@ class DataCallsEntire extends Entire
     protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true): array
     {
         $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params];
+        [$status, $body] = array_shift($this->answers) ?? [200, []];
 
-        return ['headers' => ['status-code' => $this->status], 'body' => $this->answer];
+        return ['headers' => ['status-code' => $status], 'body' => $body];
     }
 }
 
@@ -510,7 +511,7 @@ final class EntireTest extends TestCase
 
     public function testGetMergeBase(): void
     {
-        $adapter = new DataCallsEntire(200, ['mergeBaseSHA' => self::PREVIOUS_COMMIT_HASH, 'resolvedSHAs' => [self::PREVIOUS_COMMIT_HASH, self::COMMIT_HASH]]);
+        $adapter = new DataCallsEntire([[200, ['mergeBaseSHA' => self::PREVIOUS_COMMIT_HASH, 'resolvedSHAs' => [self::PREVIOUS_COMMIT_HASH, self::COMMIT_HASH]]]]);
 
         $this->assertSame(self::PREVIOUS_COMMIT_HASH, $adapter->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH));
         $this->assertSame([[
@@ -520,7 +521,7 @@ final class EntireTest extends TestCase
         ]], $adapter->calls);
 
         $this->expectException(\Exception::class);
-        new DataCallsEntire(404, ['code' => 'not_found'])->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH);
+        new DataCallsEntire([[404, ['code' => 'not_found']]])->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH);
     }
 
     public function testGetEventIgnoresTags(): void
@@ -629,8 +630,14 @@ final class EntireTest extends TestCase
         $this->assertSame('Site (Project)', $run['name']);
         $this->assertSame('Site (Project)', $run['external_id']);
         $this->assertSame(['title' => 'Starting...', 'summary' => 'Starting...'], $run['output']);
-        // Without a suite the run gets one of its own, which carries no state
-        $this->assertSame(['key' => 'Site (Project)', 'name' => 'Site (Project)', 'external_id' => 'Site (Project)'], $queued['check_suite']);
+        // Without a suite the run gets one of its own, which carries the run's state and no output
+        $this->assertSame([
+            'key' => 'Site (Project)',
+            'name' => 'Site (Project)',
+            'external_id' => 'Site (Project)',
+            'external_updated_at' => $run['external_updated_at'],
+            'status' => 'queued',
+        ], $queued['check_suite']);
 
         $this->assertSame('in_progress', $adapter->write('pending', 'check', 'Building...')['check_runs'][0]['status']);
         $this->assertSame('in_progress', $adapter->write('in_progress', 'check', 'Building...')['check_runs'][0]['status']);
@@ -641,6 +648,7 @@ final class EntireTest extends TestCase
             $this->assertSame('completed', $run['status'], $state);
             $this->assertSame($conclusion, $run['conclusion'], $state);
             $this->assertArrayHasKey('completed_at', $run, $state);
+            $this->assertSame($conclusion, $body['check_suite']['conclusion'], $state);
         }
     }
 
@@ -651,7 +659,7 @@ final class EntireTest extends TestCase
         $billing = $adapter->write('success', 'Billing', 'Build succeeded.', suite: 'Atlas Production');
         $hello = $adapter->write('pending', 'Hello', 'Building...', suite: 'Atlas Production');
 
-        // Each resource is a run of its project's suite, whose state Entire derives from its runs
+        // Each resource is a run of its project's suite, which updateCheck() states once the run landed
         $suite = ['key' => 'Atlas Production', 'name' => 'Atlas Production', 'external_id' => 'Atlas Production'];
         $this->assertSame($suite, $billing['check_suite']);
         $this->assertSame($suite, $hello['check_suite']);
@@ -659,6 +667,64 @@ final class EntireTest extends TestCase
         $this->assertSame('completed', $billing['check_runs'][0]['status']);
         $this->assertSame('Hello', $hello['check_runs'][0]['name']);
         $this->assertSame('in_progress', $hello['check_runs'][0]['status']);
+    }
+
+    public function testSharedSuiteIsStatedFromEveryRun(): void
+    {
+        $runs = [
+            ['suite_key' => 'Atlas Production', 'key' => 'Billing', 'status' => 'in_progress', 'conclusion' => null],
+            ['suite_key' => 'Atlas Production', 'key' => 'Hello', 'status' => 'completed', 'conclusion' => 'failure'],
+            ['suite_key' => 'Atlas Staging', 'key' => 'Billing (staging)', 'status' => 'in_progress', 'conclusion' => null],
+        ];
+        $adapter = new DataCallsEntire([
+            [200, [self::COMMIT_HASH => ['refs/heads/' . self::HEAD_BRANCH]]],
+            [200, []],
+            [200, ['check_runs' => $runs]],
+            [200, []],
+        ]);
+
+        $adapter->updateCheck(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'success', 'Billing', 'Build succeeded.', suite: 'Atlas Production');
+
+        // The run lands, the commit's runs are read, and the suite is written alone
+        $path = '/repos/repo_test-repo/commits/' . self::COMMIT_HASH . '/check-runs';
+        $this->assertSame(['POST', 'POST', 'GET', 'POST'], array_column($adapter->calls, 'method'));
+        $this->assertSame([$path, $path, $path], array_column(\array_slice($adapter->calls, 1), 'path'));
+        $this->assertNull($this->param($adapter, 1, 'check_suite', 'status'));
+        $this->assertSame('completed', $this->param($adapter, 1, 'check_runs', 0, 'status'));
+
+        // Billing now succeeded, but Hello failed, so the suite did; the
+        // staging run is another suite's
+        $this->assertSame(self::HEAD_BRANCH, $this->param($adapter, 3, 'branch'));
+        $this->assertSame([], $this->param($adapter, 3, 'check_runs'));
+        $this->assertSame('Atlas Production', $this->param($adapter, 3, 'check_suite', 'key'));
+        $this->assertSame('completed', $this->param($adapter, 3, 'check_suite', 'status'));
+        $this->assertSame('failure', $this->param($adapter, 3, 'check_suite', 'conclusion'));
+        $this->assertSame($this->param($adapter, 3, 'check_suite', 'external_updated_at'), $this->param($adapter, 3, 'check_suite', 'completed_at'));
+
+        // A run still building keeps the suite running
+        $adapter = new DataCallsEntire([
+            [200, [self::COMMIT_HASH => ['refs/heads/' . self::HEAD_BRANCH]]],
+            [200, []],
+            [200, ['check_runs' => $runs]],
+            [200, []],
+        ]);
+        $adapter->updateCheck(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'success', 'Hello', 'Build succeeded.', suite: 'Atlas Production');
+        $this->assertSame('in_progress', $this->param($adapter, 3, 'check_suite', 'status'));
+        $this->assertNull($this->param($adapter, 3, 'check_suite', 'conclusion'));
+    }
+
+    /**
+     * The value at a path in a recorded call's parameters, or null where
+     * the path leads nowhere.
+     */
+    protected function param(DataCallsEntire $adapter, int $call, string|int ...$path): mixed
+    {
+        $value = $adapter->calls[$call]['params'];
+        foreach ($path as $key) {
+            $value = \is_array($value) ? $value[$key] ?? null : null;
+        }
+
+        return $value;
     }
 
     public function testCheckRunsOutputAndDetails(): void
