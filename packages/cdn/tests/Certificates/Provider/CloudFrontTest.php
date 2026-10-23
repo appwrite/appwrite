@@ -288,9 +288,13 @@ final class CloudFrontTest extends TestCase
 
     public function testLeavesTenantsItDoesNotOwnAlone(): void
     {
-        $wildcard = new TestClient([$this->tenant(domain: '*.example.com')]);
+        $wildcard = new TestClient([$this->tenant(domains: ['*.example.com'])]);
         $this->provider($wildcard)->deleteCertificate('app.example.com');
         $this->assertCount(1, $wildcard->calls);
+
+        $shared = new TestClient([$this->tenant(domains: ['example.com', 'www.example.com'])]);
+        $this->provider($shared)->deleteCertificate('example.com');
+        $this->assertCount(1, $shared->calls);
 
         $foreign = new TestClient([$this->tenant(distributionId: 'other')]);
         $this->provider($foreign)->deleteCertificate('example.com');
@@ -317,14 +321,15 @@ final class CloudFrontTest extends TestCase
         return new CloudFront('AKID', 'secret', 'dist', connectionGroupId: 'cg_1', client: $client);
     }
 
-    private function tenant(int $status = 200, string $etag = 'E1', bool $enabled = true, string $customizations = '', string $domain = 'example.com', string $distributionId = 'dist'): Response
+    /** @param list<string> $domains */
+    private function tenant(int $status = 200, string $etag = 'E1', bool $enabled = true, string $customizations = '', array $domains = ['example.com'], string $distributionId = 'dist'): Response
     {
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'
             . '<DistributionTenant xmlns="http://cloudfront.amazonaws.com/doc/2020-05-31/">'
             . '<Id>tenant_1</Id><Arn>arn:aws:cloudfront::1:distribution-tenant/tenant_1</Arn><Name>example.com</Name>'
             . '<DistributionId>' . $distributionId . '</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId>'
             . $customizations
-            . '<Domains><DomainResult><Domain>' . $domain . '</Domain><Status>inactive</Status></DomainResult></Domains>'
+            . '<Domains>' . implode('', array_map(static fn (string $domain): string => '<DomainResult><Domain>' . $domain . '</Domain><Status>inactive</Status></DomainResult>', $domains)) . '</Domains>'
             . '<Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters>'
             . '<Enabled>' . ($enabled ? 'true' : 'false') . '</Enabled><Status>InProgress</Status>'
             . '</DistributionTenant>';

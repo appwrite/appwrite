@@ -215,9 +215,11 @@ class CloudFront implements Provider
     }
 
     /**
-     * The tenant this provider created for the domain. CloudFront also
-     * answers with a tenant whose wildcard covers the domain, or one on
-     * another distribution, and those are never this provider's to change.
+     * The tenant this provider created for the domain: on its distribution
+     * and holding that domain alone. CloudFront also answers with a tenant
+     * whose wildcard covers the domain, one that shares the domain with
+     * others, or one on another distribution, and changing or deleting any
+     * of those would affect domains this call was not about.
      *
      * @return Tenant|null
      */
@@ -231,7 +233,7 @@ class CloudFront implements Provider
         $this->assertSuccess('fetch CloudFront distribution tenant', $result);
 
         $tenant = $this->parseTenant($result);
-        if ($tenant['distributionId'] !== $this->distributionId || !\in_array($domain, array_map(strtolower(...), $tenant['domains']), true)) {
+        if ($tenant['distributionId'] !== $this->distributionId || array_map(strtolower(...), $tenant['domains']) !== [$domain]) {
             return null;
         }
 
