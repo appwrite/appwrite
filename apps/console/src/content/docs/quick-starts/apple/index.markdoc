@@ -48,11 +48,11 @@ You can skip optional steps.
 {% /section %}
 
 {% section #step-3 step=3 title="Add the Appwrite SDK" %}
-To add the Appwrite SDK for Apple as a dependency, open the **File** menu and click **Add Packages**.
+The SDK requires Xcode 16.3 or later and supports iOS 15, macOS 12, tvOS 15 and watchOS 8 or later. To add the Appwrite SDK for Apple as a dependency, open the **File** menu and click **Add Packages**.
 
 In the **Package URL** search box, enter https://github.com/appwrite/sdk-for-apple. 
 
-Once the SDK is found, use `10.1.0` as version, select **Up to Next Major Version** as your **Dependency Rule** and click **Add Package**.
+Once the SDK is found, use `21.0.0` as version, select **Up to Next Major Version** as your **Dependency Rule** and click **Add Package**.
 
 When dependency resolution is complete, click **Add Package** again to add the SDK package to your target.
 
@@ -74,7 +74,7 @@ In order to allow creating OAuth sessions, the following URL scheme must be adde
 </array>
 ```
 
-If you're using UIKit as opposed to SwiftUI, you will also need to add the following to your **SceneDelegate.swift** file.
+To save the session when the OAuth flow returns to your app, call `.registerOAuthHandler()` on the SwiftUI view that starts the flow. If you are using UIKit as opposed to SwiftUI, add the following to your **SceneDelegate.swift** file instead.
 
 ```swift
 func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
@@ -151,6 +151,7 @@ class Appwrite {
 Add the following code to `ContentView.swift`.
 
 ```swift
+import Appwrite
 import SwiftUI
 
 class ViewModel: ObservableObject {
@@ -196,6 +197,7 @@ struct ContentView: View {
             )
         }
         .padding()
+        .registerOAuthHandler()
     }
 }
 ```

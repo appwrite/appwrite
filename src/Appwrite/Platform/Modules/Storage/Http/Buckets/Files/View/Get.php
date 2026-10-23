@@ -119,7 +119,8 @@ class Get extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($file->isEmpty()) {
+        // A file stays incomplete until its final chunk is joined and scanned.
+        if ($file->isEmpty() || $file->getAttribute('chunksUploaded', 0) < $file->getAttribute('chunksTotal', 1)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -142,7 +143,7 @@ class Get extends Action
         // a download means it is never rendered as a top-level document.
         // Embedding through <img src> still works and is safe (browsers load
         // SVG there in a restricted mode with no scripting).
-        $disposition = $contentType === 'image/svg+xml' ? 'attachment' : 'inline';
+        $disposition = $contentType === 'image/svg+xml' ? Response::DISPOSITION_ATTACHMENT : Response::DISPOSITION_INLINE;
 
         $size = $file->getAttribute('sizeOriginal', 0);
 
@@ -174,7 +175,7 @@ class Get extends Action
             ->setContentType($contentType)
             ->addHeader('Content-Security-Policy', "script-src 'none';")
             ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', $disposition . '; filename="' . $file->getAttribute('name', '') . '"')
+            ->setContentDisposition($disposition, (string) $file->getAttribute('name', ''))
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
         ;
@@ -223,20 +224,35 @@ class Get extends Action
             return;
         }
 
-        $size = $deviceForFiles->getFileSize($path);
-        if ($size > APP_STORAGE_READ_BUFFER) {
-            for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
-                $response->chunk(
-                    (string) $deviceForFiles->read(
-                        $path,
-                        ($i * MAX_OUTPUT_CHUNK_SIZE),
-                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
-                    ),
-                    (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
-                );
-            }
-        } else {
+        if ($size <= APP_STORAGE_READ_BUFFER) {
             $response->send((string) $deviceForFiles->read($path));
+            return;
+        }
+
+        // One backend read pins the representation, even if an S3 writer replaces
+        // and deletes its path while this response is still being delivered.
+        $remaining = $size;
+        $started = false;
+        try {
+            $deviceForFiles->stream($path, static function (string $chunk) use ($response, &$remaining, &$started): void {
+                $remaining -= \strlen($chunk);
+                if ($remaining < 0) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'File read exceeded its captured size.');
+                }
+                if ($chunk !== '') {
+                    $started = true;
+                    $response->chunk($chunk, false);
+                }
+            });
+            if ($remaining !== 0) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Incomplete file read.');
+            }
+            $response->chunk('', true);
+        } catch (\Throwable $error) {
+            if ($started) {
+                $response->abort();
+            }
+            throw $error;
         }
     }
 }

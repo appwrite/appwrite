@@ -121,12 +121,6 @@ parameters:
 			path: src/Broker/Nats.php
 
 		-
-			message: '#^Parameter \#1 \$messages of method Utopia\\NATS\\JetStream\\JetStream\:\:ackBatch\(\) expects list\<Utopia\\NATS\\JetStream\\JetStreamMessage\>, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Broker/Nats.php
-
-		-
 			message: '#^Cannot cast mixed to float\.$#'
 			identifier: cast.double
 			count: 1

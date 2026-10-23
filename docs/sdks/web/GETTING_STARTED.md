@@ -1,158 +1,131 @@
-## Getting Started
+## Getting started
 
-### Add your Web Platform
+### Add a Web platform
 
-For you to init your SDK and interact with Appwrite services you need to add a web platform to your project. To add a new platform, go to your Appwrite console, choose the project you created in the step before and click the 'Add Platform' button.
+In the Appwrite Console, open your project and under **Add a platform** choose **Web app**. Enter the hostname your app runs on: `localhost` for local development, and your production domain once you deploy. Appwrite only accepts browser requests from hostnames registered as platforms, so a missing hostname shows up as a CORS error.
 
-From the options, choose to add a **Web** platform and add your client app hostname. By adding your hostname to your project platform you are allowing cross-domain communication between your project and the Appwrite API.
+### Initialize the client
 
-### Init your SDK
-
-Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page.
+Copy your endpoint and project ID from your project's **Settings** page.
 
 ```js
-// Init your Web SDK
-const client = new Client();
+import { Client } from 'appwrite';
 
-client
-    .setEndpoint('http://localhost/v1') // Your Appwrite Endpoint
-    .setProject('455x34dfkj') // Your project ID
-;
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
 ```
 
-### Make Your First Request
+For a self-hosted Appwrite, use `https://<HOSTNAME>/v1` as the endpoint.
 
-Once your SDK object is set, access any of the Appwrite services and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
+### Make your first request
 
-```js
-const account = new Account(client);
-
-// Register User
-account.create({
-    userId: ID.unique(),
-    email: "email@example.com",
-    password: "password",
-    name: "Walter O'Brien"
-})
-    .then(function (response) {
-        console.log(response);
-    }, function (error) {
-        console.log(error);
-    });
-
-```
-
-### Full Example
+Create a service from the client and call any of its methods. Every method takes a single object of named parameters and returns a promise. See the [API reference](https://appwrite.io/docs/references) for every service and method.
 
 ```js
-// Init your Web SDK
-const client = new Client();
-
-client
-    .setEndpoint('http://localhost/v1') // Your Appwrite Endpoint
-    .setProject('455x34dfkj')
-;
+import { Account, ID } from 'appwrite';
 
 const account = new Account(client);
 
-// Register User
-account.create({
+const user = await account.create({
     userId: ID.unique(),
-    email: "email@example.com",
-    password: "password",
-    name: "Walter O'Brien"
-})
-    .then(function (response) {
-        console.log(response);
-    }, function (error) {
-        console.log(error);
-    });
+    email: 'email@example.com',
+    password: 'password',
+    name: "Walter O'Brien",
+});
+
+console.log(user);
 ```
 
-### Type Safety with Models
+### Sign in with OAuth
 
-The Appwrite Web SDK provides type safety when working with table rows through generic methods. Methods like `listRows`, `getRow`, and others accept a generic type parameter that allows you to specify your custom model type for full type safety.
+Enable the provider in the Console under **Auth > Settings**, then redirect the user to it. The `success` and `failure` URLs must be on a hostname you registered as a platform.
 
-**TypeScript:**
-```typescript
+```js
+import { Account, OAuthProvider } from 'appwrite';
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Github,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failure',
+});
+```
+
+### Type safety with models
+
+Methods that return rows, such as `listRows` and `getRow`, accept a type parameter for your own row shape:
+
+```ts
+import { TablesDB, type Models } from 'appwrite';
+
 interface Book extends Models.Row {
     name: string;
     author: string;
     releaseYear?: string;
-    category?: string;
     genre?: string[];
     isCheckedOut: boolean;
 }
 
 const tablesDB = new TablesDB(client);
 
-try {
-    const result = await tablesDB.listRows<Book>({
-        databaseId: 'your-database-id',
-        tableId: 'your-table-id'
-    });
-    
-    result.rows.forEach(book => {
-        console.log(`Book: ${book.name} by ${book.author}`); // Now you have full type safety
-    });
-} catch (error) {
-    console.error('Appwrite error:', error);
+const result = await tablesDB.listRows<Book>({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+});
+
+for (const book of result.rows) {
+    console.log(`${book.name} by ${book.author}`);
 }
 ```
 
-**JavaScript (with JSDoc for type hints):**
-```javascript
-/**
- * @typedef {Object} Book
- * @property {string} name
- * @property {string} author
- * @property {string} [releaseYear]
- * @property {string} [category]
- * @property {string[]} [genre]
- * @property {boolean} isCheckedOut
- */
+In JavaScript, the same types are available through JSDoc:
+
+```js
+import { TablesDB } from 'appwrite';
 
 const tablesDB = new TablesDB(client);
 
-try {
-    /** @type {Models.RowList<Book>} */
-    const result = await tablesDB.listRows({
-        databaseId: 'your-database-id',
-        tableId: 'your-table-id'
-    });
-    
-    result.rows.forEach(book => {
-        console.log(`Book: ${book.name} by ${book.author}`); // Type hints available in IDE
-    });
-} catch (error) {
-    console.error('Appwrite error:', error);
-}
-```
+/**
+ * @typedef {import('appwrite').Models.Row & {
+ *     name: string,
+ *     author: string,
+ *     isCheckedOut: boolean,
+ * }} Book
+ */
 
-**Tip**: You can use the `appwrite types` command to automatically generate TypeScript interfaces based on your Appwrite database schema. Learn more about [type generation](https://appwrite.io/docs/products/databases/type-generation).
-
-### Error Handling
-
-The Appwrite Web SDK raises an `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching the exception and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
-
-```javascript
-try {
-    const user = await account.create({
-    userId: ID.unique(),
-    email: "email@example.com",
-    password: "password",
-    name: "Walter O'Brien"
+/** @type {import('appwrite').Models.RowList<Book>} */
+const result = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
 });
-    console.log('User created:', user);
+```
+
+The [Appwrite CLI](https://github.com/appwrite/sdk-for-cli) can generate these interfaces from your database schema with `appwrite types`. See [type generation](https://appwrite.io/docs/products/databases/tablesdb/type-generation).
+
+### Error handling
+
+Failed requests throw an `AppwriteException` with `message`, `code`, `type` and `response` properties.
+
+```js
+import { AppwriteException } from 'appwrite';
+
+try {
+    const user = await account.get();
+    console.log(user);
 } catch (error) {
-    console.error('Appwrite error:', error.message);
+    if (error instanceof AppwriteException) {
+        console.error(error.code, error.type, error.message);
+    }
 }
 ```
+
+The [response codes](https://appwrite.io/docs/apis/response-codes) page lists every error type.
 
 ### Learn more
 
-You can use the following resources to learn more and get help
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-web)
-- 📜 [Appwrite Docs](https://appwrite.io/docs)
-- 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite Web Playground](https://github.com/appwrite/playground-for-web)
+- [Web quick start](https://appwrite.io/docs/quick-starts/web)
+- [Appwrite docs](https://appwrite.io/docs)
+- [Discord community](https://appwrite.io/discord)
+- [Web playground](https://github.com/appwrite/playground-for-web)

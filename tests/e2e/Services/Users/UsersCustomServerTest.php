@@ -240,6 +240,13 @@ final class UsersCustomServerTest extends Scope
             $this->assertArrayNotHasKey('jwt', $response['body']);
         }
 
+        $recoveryCodes = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/recovery-codes', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getNewKey(['users.read']),
+        ]);
+        $this->assertSame(401, $recoveryCodes['headers']['status-code']);
+
         $account = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,

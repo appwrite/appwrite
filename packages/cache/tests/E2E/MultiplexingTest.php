@@ -315,4 +315,26 @@ final class MultiplexingTest extends TestCase
             $this->assertSame($count, $cache->getSize());
         });
     }
+
+    public function testAPurgeTheServerRejectsThrowsInsteadOfReportingNothingToPurge(): void
+    {
+        Services::compose('exec', '-T', 'redis', 'redis-cli', 'SET', 'test:plain-string', 'value');
+
+        try {
+            $this->runCo(function (): void {
+                $cache = $this->makeCache();
+
+                try {
+                    $cache->purge('test:plain-string');
+                    $this->fail('A purge Redis rejected must not read as a purge of a missing key');
+                } catch (\RedisException $error) {
+                    $this->assertStringContainsString('WRONGTYPE', $error->getMessage());
+                }
+
+                $this->assertFalse($cache->purge('test:missing'));
+            });
+        } finally {
+            Services::compose('exec', '-T', 'redis', 'redis-cli', 'DEL', 'test:plain-string');
+        }
+    }
 }
