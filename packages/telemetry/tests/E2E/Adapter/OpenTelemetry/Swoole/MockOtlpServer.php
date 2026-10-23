@@ -31,6 +31,13 @@ class MockOtlpServer
     /** @var array<int, array{payload: string, headers: array<string, string>, timestamp: float}> */
     private array $requests = [];
 
+    /**
+     * Request URIs, with their query strings, that arrived anywhere other than the metrics path.
+     *
+     * @var array<string>
+     */
+    private array $strays = [];
+
     private int $statusCode = 200;
 
     private string $responseBody = '';
@@ -96,6 +103,13 @@ class MockOtlpServer
                 'ssl_key_file' => $this->key,
             ]),
         ]);
+
+        $this->server->handle('/', function (Request $request, Response $response): void {
+            $query = $request->server['query_string'] ?? '';
+            $this->strays[] = ($request->server['request_uri'] ?? '') . ($query === '' ? '' : '?' . $query);
+            $response->status(404);
+            $response->end();
+        });
 
         $this->server->handle('/v1/metrics', function (Request $request, Response $response): void {
             $this->requests[] = [
@@ -193,6 +207,14 @@ class MockOtlpServer
     }
 
     /**
+     * @return array<string>
+     */
+    public function getStrays(): array
+    {
+        return $this->strays;
+    }
+
+    /**
      * Get the number of requests received.
      */
     public function getRequestCount(): int
@@ -216,6 +238,7 @@ class MockOtlpServer
     public function reset(): void
     {
         $this->requests = [];
+        $this->strays = [];
     }
 
     /**

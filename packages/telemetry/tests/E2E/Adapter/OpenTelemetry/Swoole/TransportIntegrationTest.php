@@ -138,13 +138,15 @@ final class TransportIntegrationTest extends TestCase
 
         MockOtlpServer::run(function (MockOtlpServer $server): void {
             $transport = new Swoole(
-                endpoint: $server->getEndpoint(),
+                endpoint: $server->getEndpoint() . '?tenant=collector-tenant',
                 headers: ['Authorization' => 'Bearer collector-token'],
                 timeout: 1.0,
                 certificateAuthority: $this->authority()['path'],
             );
 
             $this->assertRefused($transport);
+            $this->assertSame([], $server->getRequests(), 'The endpoint path and query must not reach an unverified collector.');
+            $this->assertNotEmpty($server->getStrays(), 'The address check must reach the collector to read its certificate.');
             $this->assertNothingExported($server);
         }, $certificate, $key);
     }
@@ -224,6 +226,10 @@ final class TransportIntegrationTest extends TestCase
 
     private function assertNothingExported(MockOtlpServer $server): void
     {
+        foreach ($server->getStrays() as $uri) {
+            $this->assertSame('/', $uri, 'No endpoint path or query may reach an unverified collector.');
+        }
+
         foreach ($server->getRequests() as $request) {
             $this->assertSame('', $request['payload'], 'No export payload may reach an unverified collector.');
             $this->assertArrayNotHasKey('authorization', $request['headers'], 'No credentials may reach an unverified collector.');

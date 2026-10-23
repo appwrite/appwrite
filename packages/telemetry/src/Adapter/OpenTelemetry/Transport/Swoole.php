@@ -248,16 +248,16 @@ class Swoole implements TransportInterface
 
     /**
      * Swoole checks a certificate's DNS names but never its IP addresses, so a
-     * collector addressed by IP is checked here instead: on a HEAD request that
-     * carries neither the headers nor a payload, before the connection carries
-     * an export.
+     * collector addressed by IP is checked here instead: on a HEAD request for the
+     * root that carries none of the endpoint's path, query, headers or payload,
+     * before the connection carries an export.
      *
      * @throws Exception When the collector cannot be reached or its certificate does not name the address
      */
     private function verifyAddress(Client $client, string $address): void
     {
         $client->setMethod('HEAD');
-        $client->execute($this->path);
+        $client->execute('/');
 
         if ($client->getStatusCode() < 0) {
             $errCode = \is_int($client->errCode) ? $client->errCode : 0;
