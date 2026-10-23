@@ -11,6 +11,7 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Services\DocumentsDB;
 use Appwrite\Services\TablesDB;
@@ -55,7 +56,6 @@ use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\AnyOf;
-use Utopia\Validator\Hostname;
 use Utopia\Validator\Identifier;
 use Utopia\Validator\Label;
 
@@ -69,6 +69,7 @@ class Migrations extends Action
     protected ?Device $deviceForFiles;
     protected ?Document $project;
     protected ?PublicHostname $publicHostname = null;
+    protected ?DeploymentHostname $deploymentHostname = null;
 
     protected ?Document $sourceProject = null;
 
@@ -115,6 +116,7 @@ class Migrations extends Action
             ->inject('plan')
             ->inject('authorization')
             ->inject('publicHostname')
+            ->inject('deploymentHostname')
             ->callback($this->action(...));
     }
 
@@ -137,6 +139,7 @@ class Migrations extends Action
         array $plan,
         Authorization $authorization,
         PublicHostname $publicHostname,
+        DeploymentHostname $deploymentHostname,
     ): void {
         $migrationMessage = Migration::fromArray($message->getPayload());
         $this->getDatabasesDB = $getDatabasesDB;
@@ -164,6 +167,7 @@ class Migrations extends Action
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
         $this->publicHostname = $publicHostname;
+        $this->deploymentHostname = $deploymentHostname;
 
         $platform = $migrationMessage->platform ?: Config::getParam('platform', []);
 
@@ -182,6 +186,7 @@ class Migrations extends Action
             $this->dbForPlatform = null;
             $this->project = null;
             $this->publicHostname = null;
+            $this->deploymentHostname = null;
             $this->deviceForMigrations = null;
             $this->deviceForFiles = null;
             $this->plan = [];
@@ -232,6 +237,7 @@ class Migrations extends Action
         /** @var Database|null $projectDB */
         $projectDB = null;
         $useAppwriteApiSource = false;
+        $isDeploymentEndpoint = false;
         $isAppwriteSource = $source === SourceAppwrite::getName();
         $isAppwriteToAppwrite = $isAppwriteSource
             && $destination === DestinationAppwrite::getName();
@@ -246,30 +252,17 @@ class Migrations extends Action
             // Trust DB fast path only when the source URL targets this cluster's host
             // (env-configured or this project's verified custom API domain).
             $sourceHost = parse_url($credentials['endpoint'] ?? '', PHP_URL_HOST);
-            $publicDomain = parse_url('http://' . System::getEnv('_APP_DOMAIN', ''), PHP_URL_HOST) ?: '';
-            $internalHost = parse_url('http://' . System::getEnv('_APP_MIGRATION_HOST', ''), PHP_URL_HOST) ?: '';
+            $isDeploymentEndpoint = $this->deploymentHostname->isValid($sourceHost);
+            $isLocalEndpoint = $isDeploymentEndpoint;
 
-            $allowedHosts = array_filter([
-                $publicDomain,
-                $publicDomain !== '' ? '*.' . $publicDomain : null,
-                $internalHost,
-            ]);
-
-            if (is_string($sourceHost) && !$this->sourceProject->isEmpty()) {
-                $rule = $this->dbForPlatform->findOne('rules', [
+            if (!$isLocalEndpoint && is_string($sourceHost) && !$this->sourceProject->isEmpty()) {
+                $isLocalEndpoint = !$this->dbForPlatform->findOne('rules', [
                     Query::equal('domain', [$sourceHost]),
                     Query::equal('type', ['api']),
                     Query::equal('status', [RULE_STATUS_VERIFIED]),
                     Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
-                ]);
-                if (!$rule->isEmpty()) {
-                    $allowedHosts[] = $sourceHost;
-                }
+                ])->isEmpty();
             }
-
-            $isLocalEndpoint = is_string($sourceHost)
-                && !empty($allowedHosts)
-                && (new Hostname($allowedHosts))->isValid($sourceHost);
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
             $destinationRegion = $this->project->getAttribute('region', 'default');
@@ -342,6 +335,12 @@ class Migrations extends Action
             ),
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
+
+        // This deployment's own hosts may be internal; every other host is held to the
+        // addresses the request was checked against, on each connection the source makes.
+        if (!$isDeploymentEndpoint) {
+            $migrationSource->setDestinations($this->publicHostname->getDestinations());
+        }
 
         $resources = $migration->getAttribute('resources', []);
         $this->sourceReport = $migrationSource->report($resources);

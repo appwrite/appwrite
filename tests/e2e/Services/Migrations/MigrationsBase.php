@@ -337,6 +337,109 @@ trait MigrationsBase
     }
 
     /**
+     * rebinding.webapp.com passes the host check with a public address, then the API and the
+     * migrations worker connect to it on the docker host, as a host that rebinds after the check
+     * would. Port 9501 is the API's own port on the docker host, so the source would answer.
+     * Each connection a source makes must be checked on the address it reaches.
+     */
+    public function testMigrationSourceRebindingToPrivateAddressIsRefused(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+        $endpoint = 'http://rebinding.webapp.com:9501/v1';
+
+        $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', $headers, [
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $endpoint,
+            'projectID' => $this->getProject()['$id'],
+            'key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(400, $report['headers']['status-code'], 'The report reached a private address: ' . \json_encode($report['body']));
+        $this->assertSame('migration_provider_error', $report['body']['type']);
+
+        $migration = $this->performMigrationExpectingFailure([
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $endpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertCount(1, $migration['errors'], \json_encode($migration['errors']));
+        $error = \json_decode($migration['errors'][0], true);
+        $this->assertSame(\CURLE_ABORTED_BY_CALLBACK, $error['code'], 'The worker did not refuse the connection: ' . $migration['errors'][0]);
+        $this->assertSame('Migration failed due to an unexpected error.', $error['message']);
+    }
+
+    /**
+     * private.appwrite.test is a subdomain of this deployment's domain that resolves to a private
+     * address outside the allowed ranges, while the API and the worker reach the API on its fixed
+     * address in the docker network.
+     * This deployment's own hosts may be internal, so the report and the migration both accept it.
+     */
+    public function testMigrationSourceAtPrivateDeploymentHostIsAccepted(): void
+    {
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+        $endpoint = 'http://private.appwrite.test/v1';
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $sourceHeaders, [
+            'userId' => Id::unique(),
+            'email' => \uniqid() . '-private-deployment-host@test.com',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $ruleId = null;
+
+        try {
+            // Router protection only serves the API on platform hostnames and connected API domains.
+            // A rule left by an interrupted run serves the same purpose, so a duplicate is fine.
+            $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $sourceHeaders, [
+                'domain' => 'private.appwrite.test',
+            ]);
+            $this->assertContains($rule['headers']['status-code'], [201, 409], \json_encode($rule['body']));
+            $ruleId = $rule['headers']['status-code'] === 201 ? $rule['body']['$id'] : null;
+
+            $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', $destinationHeaders, [
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $endpoint,
+                'projectID' => $this->getProject()['$id'],
+                'key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertSame(200, $report['headers']['status-code'], \json_encode($report['body']));
+            $this->assertGreaterThanOrEqual(1, $report['body'][Resource::TYPE_USER]);
+
+            $migration = $this->performMigrationSync([
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $endpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertSame(0, $migration['statusCounters'][Resource::TYPE_USER]['error']);
+
+            $migrated = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $destinationHeaders);
+            $this->assertSame(200, $migrated['headers']['status-code']);
+        } finally {
+            if ($ruleId !== null) {
+                $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $ruleId, $sourceHeaders);
+            }
+            $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $destinationHeaders);
+            $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $sourceHeaders);
+        }
+    }
+
+    /**
      * NHost's subdomain and region become labels of the source hostname, and the database
      * name part of its connection string, so each must keep that shape.
      */
