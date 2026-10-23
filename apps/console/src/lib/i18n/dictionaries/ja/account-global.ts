@@ -294,7 +294,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Login with Bitbucket': 'Bitbucket でログイン',
   'Login with GitHub': 'GitHub でログイン',
   'Login with GitLab': 'GitLab でログイン',
-  'Login with Google': 'Google でログイン',
+  'Sign in with Google': 'Google でログイン',
   'New Password': '新しいパスワード',
   'Or continue with': 'または次で続行',
   'Password is required': 'パスワードは必須です',

@@ -14,6 +14,7 @@ use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
@@ -21,9 +22,11 @@ use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
+use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
+use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
@@ -106,12 +109,15 @@ $container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(), new 
         \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
     )
 )), []);
-$container->set('clientForAvatars', fn () => new Client(new CurlAdapter(), new PublicInternet(
+// cURL counts decoded bytes against the size cap and aborts the transfer once it is passed.
+$container->set('clientForAvatars', fn () => (new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
     ...\array_map(
         fn (string $range) => new IPRange($range),
         \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
     )
-)), []);
+)))->withConnectTimeout(5)->withTimeout(15), []);
 
 // Checked before connecting, for hosts a request accepts. Resolves through _APP_DNS_EXTERNAL,
 // falling back to _APP_DNS, never the container's own resolver.
@@ -127,6 +133,11 @@ $container->set('publicHostname', function () {
 }, []);
 
 $container->set('publicURL', fn (PublicHostname $publicHostname) => new PublicURL($publicHostname), ['publicHostname']);
+
+$container->set('deploymentHostname', fn () => new DeploymentHostname(
+    System::getEnv('_APP_DOMAIN', ''),
+    System::getEnv('_APP_MIGRATION_HOST', ''),
+), []);
 
 $container->set('jobs', function () {
     $client = (new Client(new CurlAdapter()))
@@ -162,20 +173,31 @@ $container->set('autogravity', function (Cache $cache) {
     return new AutogravityDetector($client === null ? null : new AutogravityClient($client), $cache);
 }, ['cache']);
 
+$container->set('exiftool', function () {
+    $host = System::getEnv('_APP_EXIFTOOL_HOST', '');
+    $client = $host === ''
+        ? null
+        : (new Client(new SwooleClientAdapter()))
+            ->withBaseUri($host)
+            ->withTimeout(30);
+
+    return new ExiftoolClient($client);
+}, []);
+
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 
 /**
  * A malformed DSN is reported and read as unset rather than thrown: this resolves for every
  * messaging job, so one bad platform variable must not stop a project's push and email.
  */
-$container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
+$container->set('adapterForSMS', function (Telemetry $telemetry, PublicHostname $publicHostname): ?SMSAdapter {
     try {
-        return (new MessagingProvider($telemetry))->internalSMS();
+        return (new MessagingProvider($telemetry, $publicHostname))->internalSMS();
     } catch (\Throwable $error) {
         Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
         return null;
     }
-}, ['telemetry']);
+}, ['telemetry', 'publicHostname']);
 
 $container->set('authorization', fn () => new Authorization(), []);
 
@@ -299,6 +321,11 @@ $container->set('publisherForDatabase', fn (Publisher $publisher) => new Databas
 $container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForMaintenance', fn (Publisher $publisher) => new MaintenancePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_MAINTENANCE_QUEUE_NAME', Event::MAINTENANCE_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublisher(

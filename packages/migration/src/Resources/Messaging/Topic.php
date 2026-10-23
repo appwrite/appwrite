@@ -32,7 +32,7 @@ class Topic extends Resource
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['id'],
             $array['name'] ?? '',
             $array['subscribe'] ?? [],
@@ -40,7 +40,7 @@ class Topic extends Resource
             $array['updatedAt'] ?? '',
             $array['qos'] ?? null,
             $array['expiry'] ?? null,
-        );
+        ))->setDescription(\is_string($array['description'] ?? null) ? $array['description'] : '');
     }
 
     /**
@@ -49,6 +49,7 @@ class Topic extends Resource
     public function jsonSerialize(): array
     {
         return [
+            'description' => $this->description,
             'id' => $this->id,
             'name' => $this->name,
             'subscribe' => $this->subscribe,

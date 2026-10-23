@@ -214,7 +214,7 @@ export function syncOpenAiAdsUser(
         $id?: string
         email?: string | null
         phone?: string | null
-        impersonatorUserId?: string
+        impersonatorUserId?: string | null
       }
     | null
     | undefined,
@@ -360,7 +360,7 @@ export function maybeMeasureOpenAiAdsRegistrationAfterAuth(
         email?: string | null
         phone?: string | null
         emailVerification: boolean
-        impersonatorUserId?: string
+        impersonatorUserId?: string | null
       }
     | null
     | undefined,

@@ -346,7 +346,7 @@ export function QuickDeployView({
           </p>
           <Button asChild>
             <Link
-              to="/projects/$projectId/sites/create/repositories"
+              to="/projects/$projectId/sites/create"
               params={{ projectId: projectId! }}
             >
               {t('Import from Git')}
