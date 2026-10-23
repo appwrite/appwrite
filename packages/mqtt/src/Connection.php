@@ -34,6 +34,9 @@ class Connection
      */
     public array $identity = [];
 
+    /** Set once a CONNECT arrived; a network connection carries exactly one. */
+    public bool $connected = false;
+
     /** Counted as active (accepted CONNECT), for a balanced gauge. */
     public bool $active = false;
 

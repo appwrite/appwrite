@@ -40,7 +40,7 @@ class Update extends Action
                 group: null,
                 name: 'retry',
                 description: '/docs/references/migrations/retry-migration.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,

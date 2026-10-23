@@ -23,13 +23,13 @@ class EnvVar extends Resource
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['id'],
             Func::fromArray($array['func']),
             $array['key'],
             $array['value'],
             (bool) ($array['secret'] ?? false)
-        );
+        ))->setDescription(\is_string($array['description'] ?? null) ? $array['description'] : '');
     }
 
     /**
@@ -38,6 +38,7 @@ class EnvVar extends Resource
     public function jsonSerialize(): array
     {
         return [
+            'description' => $this->description,
             'id' => $this->id,
             'func' => $this->func,
             'key' => $this->key,

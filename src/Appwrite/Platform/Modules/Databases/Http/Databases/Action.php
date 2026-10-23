@@ -88,6 +88,37 @@ class Action extends AppwriteAction
         return !in_array($database->getAttribute('type', ''), $this->getAllowedDatabaseTypes(), true);
     }
 
+    /**
+     * Legacy and TablesDB also match a missing type so list and get agree when
+     * V25 did not backfill a preexisting row.
+     *
+     * @return Query[]
+     */
+    protected function getTransactionTypeQueryFilters(): array
+    {
+        $types = $this->getAllowedDatabaseTypes();
+        $equal = Query::equal('type', $types);
+
+        if (!\in_array(DATABASE_TYPE_LEGACY, $types, true)) {
+            return [$equal];
+        }
+
+        return [Query::or([
+            $equal,
+            Query::isNull('type'),
+        ])];
+    }
+
+    /**
+     * Transactions created before `type` was stored belong to the legacy family.
+     */
+    protected function isTransactionTypeMismatch(Document $transaction): bool
+    {
+        $type = $transaction->getAttribute('type') ?: DATABASE_TYPE_LEGACY;
+
+        return !\in_array($type, $this->getAllowedDatabaseTypes(), true);
+    }
+
     public function setHttpPath(string $path): self
     {
         if (\str_contains($path, '/tablesdb')) {
@@ -197,11 +228,12 @@ class Action extends AppwriteAction
     /**
      * Hash field for a single variation of a cached list response.
      *
-     * Scoped by the collection schema (attributes + indexes), the caller's
-     * authorization roles, the exact query set, and the field type — so users
-     * with different permissions never share entries.
+     * Scoped by the collection schema (attributes + indexes), its permissions
+     * and documentSecurity, the caller's authorization roles, the exact query
+     * set, and the field type — so users with different permissions never
+     * share entries and permission changes take effect immediately.
      *
-     * @param Document $collection Collection document (for schema hash)
+     * @param Document $collection Collection document (for schema and permissions hash)
      * @param array<mixed> $roles Caller authorization roles
      * @param array<Query|string> $queries Queries for this list call
      * @param string $type LIST_CACHE_FIELD_DOCUMENTS, LIST_CACHE_FIELD_TOTAL or LIST_CACHE_FIELD_OPERATIONS
@@ -211,6 +243,8 @@ class Action extends AppwriteAction
         $schemaHash = \md5(
             \json_encode($collection->getAttribute('attributes', []))
             . \json_encode($collection->getAttribute('indexes', []))
+            . \json_encode($collection->getPermissions())
+            . \json_encode($collection->getAttribute('documentSecurity', false))
         );
 
         $serialized = \array_map(

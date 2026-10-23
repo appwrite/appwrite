@@ -642,7 +642,7 @@ export function RepositoryConfigView({
             className="h-8 text-[12px]"
           >
             <Link
-              to="/projects/$projectId/sites/create/repositories"
+              to="/projects/$projectId/sites/create"
               params={{ projectId: projectId! }}
             >
               {t('Change')}
