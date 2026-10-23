@@ -42,6 +42,17 @@ class CheckRunsEntire extends Entire
 }
 
 /**
+ * Entire that hands back the title a comment's discussion would open with.
+ */
+class DiscussionTitleEntire extends Entire
+{
+    public function title(string $comment): string
+    {
+        return $this->commentTitle($comment);
+    }
+}
+
+/**
  * Entire whose token mints are answered in turn from a list of refusal codes,
  * an empty code being a minted token, so the permissions each mint asked for
  * can be read.
@@ -513,11 +524,117 @@ final class EntireTest extends TestCase
         $this->assertSame('all', $events[0]['repositorySelection']);
     }
 
+    /**
+     * A trail delivery as Entire's trail webhook guide captured one from
+     * production, on a trail that tracks a branch.
+     *
+     * @param array<string, array{from: ?string, to: ?string}>|null $changes Absent on trail.opened
+     * @return array<string, mixed>
+     */
+    protected function trailPayload(string $type, ?string $branch = self::HEAD_BRANCH, ?string $headSha = self::COMMIT_HASH, ?array $changes = null): array
+    {
+        $payload = [
+            'repository' => [
+                'id' => self::REPOSITORY_ID,
+                'path' => '/et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
+                'clone_url' => 'https://aws-us-east-2.entire.io/et/' . self::OWNER . '/' . self::REPOSITORY_NAME . '.git',
+                'entire_clone_url' => 'entire://aws-us-east-2.entire.io/et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
+            ],
+            'trail' => [
+                'id' => '01M5AMD98GWFP863SD5B5X0S3Z',
+                'number' => 5,
+                'title' => 'Add a pricing page',
+                'state' => 'open',
+                'branch' => $branch,
+                'base' => 'main',
+                'head_sha' => $headSha,
+                'author' => ['account' => ['id' => '01KZH949AWBF7C3PN2RNM55G1K']],
+                'created_at' => '2026-10-19T17:47:35.569414Z',
+                'updated_at' => '2026-10-19T17:50:55.846321Z',
+            ],
+            'actor' => ['account' => ['id' => '01KZH949AWBF7C3PN2RNM55G1K']],
+        ];
+        if ($changes !== null) {
+            $payload['changes'] = $changes;
+        }
+
+        return [
+            'delivery_id' => 'dlv_01M5AMKCYZC4XF6B4GCSK1A6F9',
+            'plugin_id' => self::PLUGIN,
+            'installation_id' => self::INSTALLATION_ID,
+            'core_url' => 'https://us.auth.entire.io',
+            'api_url' => self::CELL,
+            'event' => [
+                'id' => 'evt_gmX5fRisEZ5euN1SxAO8PA',
+                'type' => $type,
+                'time' => '2026-10-19T17:50:55.846321Z',
+                'payload' => $payload,
+            ],
+        ];
+    }
+
+    public function testGetEventTrailOpened(): void
+    {
+        $events = $this->adapter->getEvents('trail.opened', (string) json_encode($this->trailPayload('trail.opened')));
+
+        $this->assertCount(1, $events);
+        $event = $events[0];
+
+        $this->assertSame('opened', $event['action']);
+        $this->assertSame([], $event['changes']);
+        $this->assertSame(5, $event['pullRequestNumber']);
+        $this->assertSame(self::HEAD_BRANCH, $event['branch']);
+        $this->assertSame(self::COMMIT_HASH, $event['commitHash']);
+        $this->assertSame(self::REPOSITORY_ID, $event['repositoryId']);
+        $this->assertSame(self::REPOSITORY_NAME, $event['repositoryName']);
+        $this->assertSame(self::OWNER, $event['owner']);
+        $this->assertSame(self::INSTALLATION_ID, $event['installationId']);
+        $this->assertSame('dlv_01M5AMKCYZC4XF6B4GCSK1A6F9', $event['deliveryId']);
+        $this->assertSame(self::CELL, $event['apiUrl']);
+        $this->assertFalse($event['external']);
+        $this->assertSame('https://entire.io/et/test-project/test-repo', $event['repositoryUrl']);
+        $this->assertSame('https://entire.io/et/test-project/test-repo/tree/' . self::HEAD_BRANCH, $event['branchUrl']);
+        $this->assertSame('https://entire.io/et/test-project/test-repo/commit/' . self::COMMIT_HASH, $event['headCommitUrl']);
+    }
+
+    public function testGetEventTrailUpdated(): void
+    {
+        // A trail can track no branch and have no head recorded yet
+        $payload = $this->trailPayload('trail.updated', null, null, ['title' => ['from' => 'Pricing', 'to' => 'Add a pricing page']]);
+        $events = $this->adapter->getEvents('trail.updated', (string) json_encode($payload));
+
+        $this->assertCount(1, $events);
+        $this->assertSame('updated', $events[0]['action']);
+        $this->assertSame(['title'], $events[0]['changes']);
+        $this->assertSame('', $events[0]['branch']);
+        $this->assertSame('', $events[0]['branchUrl']);
+        $this->assertSame('', $events[0]['commitHash']);
+        $this->assertSame('', $events[0]['headCommitUrl']);
+
+        $payload = $this->trailPayload('trail.updated', changes: ['branch' => ['from' => null, 'to' => self::HEAD_BRANCH], 'head_sha' => ['from' => null, 'to' => self::COMMIT_HASH]]);
+        $events = $this->adapter->getEvents('trail.updated', (string) json_encode($payload));
+
+        $this->assertSame(['branch', 'head_sha'], $events[0]['changes']);
+        $this->assertSame(self::HEAD_BRANCH, $events[0]['branch']);
+    }
+
+    public function testGetEventTrailLifecycle(): void
+    {
+        foreach (['closed' => ['open', 'closed'], 'reopened' => ['closed', 'open'], 'merged' => ['open', 'merged']] as $action => [$from, $to]) {
+            $payload = $this->trailPayload('trail.' . $action, changes: ['state' => ['from' => $from, 'to' => $to]]);
+            $events = $this->adapter->getEvents('trail.' . $action, (string) json_encode($payload));
+
+            $this->assertSame($action, $events[0]['action']);
+            $this->assertSame(['state'], $events[0]['changes']);
+        }
+    }
+
     public function testGetEventsIgnoresUnknownTypes(): void
     {
-        $payload = $this->refPayload('trail.opened', 'refs/heads/main');
+        // Entire may deliver new event types to the same URL
+        $payload = $this->refPayload('review.submitted', 'refs/heads/main');
 
-        $this->assertSame([], $this->adapter->getEvents('trail.opened', (string) json_encode($payload)));
+        $this->assertSame([], $this->adapter->getEvents('review.submitted', (string) json_encode($payload)));
     }
 
     public function testGetEventsRejectsInvalidPayload(): void
@@ -654,6 +771,16 @@ final class EntireTest extends TestCase
         }
 
         $this->assertSame([Entire::PERMISSIONS], $adapter->requested);
+    }
+
+    public function testDiscussionTitle(): void
+    {
+        $adapter = new DiscussionTitleEntire(new Cache(new None()));
+
+        // A link reference definition renders as nothing, so state kept in one never names the discussion
+        $this->assertSame('Pricing site', $adapter->title("[appwrite]: #eyJidWlsZHMiOltdfQ==\n\n## Pricing site\n\nProject ID: `pricing`"));
+        $this->assertSame('Build ready', $adapter->title("\n**Build ready**"));
+        $this->assertSame('Comment', $adapter->title("[state]: #e30=\n"));
     }
 
     public function testCreateFileRejectsEscapingPath(): void

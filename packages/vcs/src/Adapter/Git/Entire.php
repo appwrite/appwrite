@@ -23,6 +23,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
  * token in ENTIRE_TOKEN - plain HTTPS clones are not served.
  *
  * @see Entire's partner guide "Building an Entire Plugin"
+ * @see Entire's partner guides "Trail webhooks for Entire plugins" and "Commenting on Trails from an Entire plugin"
  * @see https://us.auth.entire.io/api/v1/openapi.json control plane
  * @see https://aws-us-east-2.api.entire.io/api/v1/openapi.json data plane
  */
@@ -35,6 +36,8 @@ class Entire extends Git
     public const EVENT_REF_DELETED = 'ref.deleted';
 
     public const EVENT_INSTALLATION = 'installation';
+
+    public const EVENT_TRAIL = 'trail';
 
     public const CONTENTS_DIRECTORY = 'dir';
 
@@ -789,7 +792,8 @@ class Entire extends Git
      *
      * Entire wraps every event in a delivery envelope whose event.type is
      * authoritative. A ref delivery describes one ref, so it yields one
-     * event; a tag ref yields none, since only branches deploy.
+     * event; a tag ref yields none, since only branches deploy. A trail
+     * delivery describes one trail.
      *
      * @param  string  $event The event type, as getEventType() reads it
      * @param  string  $payload The raw delivery body
@@ -819,6 +823,10 @@ class Entire extends Git
 
         if (str_starts_with($type, self::EVENT_INSTALLATION . '.')) {
             return $this->installationEvents($type, $eventPayload, $delivery);
+        }
+
+        if (str_starts_with($type, self::EVENT_TRAIL . '.')) {
+            return $this->trailEvents($type, $eventPayload, $delivery);
         }
 
         return [];
@@ -898,6 +906,50 @@ class Entire extends Git
             'addedRepositoryIds' => $this->strings($installation, 'added_repository_ids'),
             'removedRepositoryIds' => $this->strings($installation, 'removed_repository_ids'),
             'userName' => '',
+        ]];
+    }
+
+    /**
+     * A trail is Entire's pull request. Its delivery names the trail as the
+     * change left it and, except on opening, the fields that changed: state,
+     * title, branch, base or head_sha. The action is the event type's suffix:
+     * opened, updated, closed, reopened or merged.
+     *
+     * @param array<mixed> $payload
+     * @param array{deliveryId: string, installationId: string, apiUrl: string} $delivery
+     * @return array<array<mixed>>
+     */
+    protected function trailEvents(string $type, array $payload, array $delivery): array
+    {
+        $repository = $this->nested($payload, 'repository');
+        [$owner, $repositoryName] = $this->splitPath($this->text($repository, 'path'));
+        $repositoryUrl = $owner !== '' && $repositoryName !== '' ? $this->getRepositoryUrl($owner, $repositoryName) : '';
+
+        $trail = $this->nested($payload, 'trail');
+        // Empty for a trail without a branch, or one that released it
+        $branch = $this->text($trail, 'branch');
+        // Empty until Entire records the branch's head
+        $commitHash = $this->text($trail, 'head_sha');
+
+        return [[
+            'action' => substr($type, \strlen(self::EVENT_TRAIL . '.')),
+            'changes' => array_keys($this->nested($payload, 'changes')),
+            'branch' => $branch,
+            'branchUrl' => $repositoryUrl !== '' && $branch !== '' ? $this->getBranchUrl($owner, $repositoryName, $branch) : '',
+            'repositoryId' => $this->text($repository, 'id'),
+            'repositoryName' => $repositoryName,
+            'repositoryUrl' => $repositoryUrl,
+            'installationId' => $delivery['installationId'],
+            'deliveryId' => $delivery['deliveryId'],
+            'apiUrl' => $delivery['apiUrl'],
+            'commitHash' => $commitHash,
+            'owner' => $owner,
+            'authorUrl' => '',
+            'authorAvatarUrl' => '',
+            'headCommitUrl' => $repositoryUrl !== '' && $commitHash !== '' ? $this->getCommitUrl($owner, $repositoryName, $commitHash) : '',
+            // Trails never come from a fork
+            'external' => false,
+            'pullRequestNumber' => $this->number($trail, 'number'),
         ]];
     }
 
@@ -1843,9 +1895,10 @@ class Entire extends Git
 
         $statusCode = $this->status($response);
 
-        // A discussion is written by a user principal; a plugin's permissions
-        // (contents, checks) do not reach it, so the refusal is reported as
-        // no comment rather than a failure - check runs still carry the build.
+        // A token without discussions, from a plugin that does not declare
+        // it or an installation not yet updated to it, is refused; that is
+        // reported as no comment rather than a failure, since check runs
+        // still carry the build.
         if ($statusCode === 403) {
             return '';
         }
@@ -1864,11 +1917,17 @@ class Entire extends Git
     }
 
     /**
-     * A discussion needs a title; the comment's first line of text serves.
+     * A discussion is named by its title; the comment's first line of text
+     * serves. A link reference definition renders as nothing, so it never
+     * names one - a consumer may keep state in it.
      */
     protected function commentTitle(string $comment): string
     {
         foreach (explode("\n", $comment) as $line) {
+            if (str_starts_with(ltrim($line), '[') && str_contains($line, ']:')) {
+                continue;
+            }
+
             $line = trim(str_replace(['#', '*', '_', '`', '|', '>'], '', $line));
             if ($line !== '') {
                 return mb_strimwidth($line, 0, 80, '…');
