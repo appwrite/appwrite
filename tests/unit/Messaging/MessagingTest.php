@@ -181,6 +181,35 @@ final class MessagingTest extends TestCase
         $this->assertCount(2, $connection['roles']);
     }
 
+    public function testSubscribeRetainsPresenceHold(): void
+    {
+        $realtime = new Realtime();
+
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-a',
+            [Role::user(Id::custom('123'))->toString()],
+            ['documents'],
+        );
+
+        // A presence write stashes the hold on the connection entry.
+        $hold = ['projectId' => '1', 'userId' => '123', 'presenceId' => 'presence-1'];
+        $realtime->connections[1]['presence'] = $hold;
+
+        // A later subscribe rebuilds the entry and must not drop the stash, or onClose
+        // could never release the worker's count.
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-b',
+            [Role::users()->toString()],
+            ['files'],
+        );
+
+        $this->assertSame($hold, $realtime->connections[1]['presence']);
+    }
+
     public function testUnsubscribeSubscriptionRemovesOnlyOneSubscription(): void
     {
         $realtime = new Realtime();
@@ -660,6 +689,8 @@ final class MessagingTest extends TestCase
             'users.A.sessions.S.delete',
             'users.A.sessions.delete',
             'users.A.delete',
+            // Enabling MFA or verifying a factor can leave other sessions short of factors.
+            'users.A.update.mfa',
         ] as $event) {
             $result = Realtime::fromPayload(
                 event: $event,
@@ -679,7 +710,6 @@ final class MessagingTest extends TestCase
             'users.A.update.prefs',
             'users.A.update.name',
             'users.A.update.avatar',
-            'users.A.update.mfa',
             'users.A.update.mfa.recovery-codes',
             'users.A.create.mfa.recovery-codes',
             'users.A.delete.mfa',
@@ -1284,86 +1314,6 @@ final class MessagingTest extends TestCase
         $this->assertContains(Role::any()->toString(), $result['roles']);
     }
 
-    public function testExtractDeletedPresenceIdReturnsIdForDeleteEvent(): void
-    {
-        $event = [
-            'project' => 'proj',
-            'data' => [
-                'events' => [
-                    'presences.abc.delete',
-                    'presences.*.delete',
-                    'presences.abc',
-                ],
-                'payload' => ['$id' => 'abc'],
-            ],
-        ];
-
-        $this->assertSame('abc', Realtime::extractDeletedPresenceId($event));
-    }
-
-    public function testExtractDeletedPresenceIdRejectsNonDeleteEvents(): void
-    {
-        $this->assertNull(Realtime::extractDeletedPresenceId([
-            'data' => [
-                'events' => ['presences.abc.upsert'],
-                'payload' => ['$id' => 'abc'],
-            ],
-        ]));
-
-        // Unrelated resource that happens to end with `.delete` must not trigger.
-        $this->assertNull(Realtime::extractDeletedPresenceId([
-            'data' => [
-                'events' => ['documents.abc.delete'],
-                'payload' => ['$id' => 'abc'],
-            ],
-        ]));
-
-        // Missing payload ID — the event names look right but we have nothing to remove.
-        $this->assertNull(Realtime::extractDeletedPresenceId([
-            'data' => [
-                'events' => ['presences.abc.delete'],
-                'payload' => [],
-            ],
-        ]));
-    }
-
-    public function testRemovePresenceFromConnectionsScopedToProject(): void
-    {
-        $realtime = new Realtime();
-
-        // Two connections in different projects both holding the same presence ID; only
-        // the matching project should be touched.
-        $realtime->connections[1] = [
-            'projectId' => 'proj-a',
-            'presences' => ['p1' => new Document(['$id' => 'p1']), 'p2' => new Document(['$id' => 'p2'])],
-        ];
-        $realtime->connections[2] = [
-            'projectId' => 'proj-b',
-            'presences' => ['p1' => new Document(['$id' => 'p1'])],
-        ];
-
-        $removed = $realtime->removePresenceFromConnections('proj-a', 'p1');
-
-        $this->assertSame(1, $removed);
-        $this->assertArrayNotHasKey('p1', $realtime->connections[1]['presences']);
-        $this->assertArrayHasKey('p2', $realtime->connections[1]['presences']);
-        $this->assertArrayHasKey('p1', $realtime->connections[2]['presences']);
-    }
-
-    public function testRemovePresenceFromConnectionsNoMatchIsNoOp(): void
-    {
-        $realtime = new Realtime();
-        $realtime->connections[1] = [
-            'projectId' => 'proj-a',
-            'presences' => ['p1' => new Document(['$id' => 'p1'])],
-        ];
-
-        $this->assertSame(0, $realtime->removePresenceFromConnections('proj-a', 'missing'));
-        $this->assertSame(0, $realtime->removePresenceFromConnections('', 'p1'));
-        $this->assertSame(0, $realtime->removePresenceFromConnections('proj-a', ''));
-        $this->assertArrayHasKey('p1', $realtime->connections[1]['presences']);
-    }
-
     public function testFromPayloadTeamCreateSetsPermissionsChangedAndTeamRole(): void
     {
         $teamId = Id::custom('team123');
@@ -1385,6 +1335,49 @@ final class MessagingTest extends TestCase
 
         $this->assertNotEmpty($result['permissionsChanged']);
         $this->assertSame([Role::team('team123')->toString()], $result['roles']);
+    }
+
+    public function testFromPayloadMigrationsReachOnlyProjectReaders(): void
+    {
+        $project = new Document([
+            '$id' => Id::custom('project1'),
+            'teamId' => 'org1',
+            '$permissions' => [
+                Permission::read(Role::team('org1', 'owner')),
+                Permission::read(Role::team('org1', 'developer')),
+                Permission::read(Role::team('org1', 'project-project1-developer')),
+                Permission::update(Role::team('org1', 'owner')),
+            ],
+        ]);
+
+        $result = Realtime::fromPayload(
+            event: 'migrations.migration1.update',
+            payload: new Document(['$id' => Id::custom('migration1')]),
+            project: $project,
+        );
+
+        $this->assertSame('console', $result['projectId']);
+        $this->assertSame([
+            Role::team('org1', 'owner')->toString(),
+            Role::team('org1', 'developer')->toString(),
+            Role::team('org1', 'project-project1-developer')->toString(),
+        ], $result['roles']);
+
+        $realtime = new Realtime();
+        $realtime->subscribe('console', 1, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'billing')->toString()], ['console']);
+        $realtime->subscribe('console', 2, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project2-developer')->toString()], ['console']);
+        $realtime->subscribe('console', 3, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project1-developer')->toString()], ['console']);
+
+        $receivers = $realtime->getSubscribers([
+            'project' => 'console',
+            'roles' => $result['roles'],
+            'data' => [
+                'channels' => $result['channels'],
+                'payload' => ['$id' => 'migration1'],
+            ],
+        ]);
+
+        $this->assertSame([3], \array_keys($receivers));
     }
 
     public function testFromPayloadDocumentSecurityIncludesPayloadAnyRead(): void

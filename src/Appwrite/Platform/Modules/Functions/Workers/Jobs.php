@@ -61,7 +61,7 @@ use Utopia\System\System;
  * no-ops here, where a verified build has nothing left to wait for. Whatever the
  * subclass is waiting on reports back as its own callback on this queue, handled
  * in onCallback(), so the waiting happens between callbacks rather than inside one
- * and nothing holds jobs-deployment:<id> while it is outstanding.
+ * and nothing holds the deployment lock while it is outstanding.
  */
 class Jobs extends Action
 {
@@ -161,9 +161,9 @@ class Jobs extends Action
 
         $failure = null;
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
+        $locks(Deployments::lock($project->getSequence(), $deploymentId), self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
             if ($event->id !== '') {
-                $key = 'jobs-event-' . $event->id;
+                $key = self::key('event', $project, $event->id);
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
                     return; // already processed
                 }
@@ -265,7 +265,7 @@ class Jobs extends Action
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
         if (($update['status'] ?? '') === 'building' && $deployment->getAttribute('status') === 'building') {
-            $this->gitAction('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
+            GitAction::report('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         }
 
         return $deployment;
@@ -361,7 +361,7 @@ class Jobs extends Action
             // skipped), never a failed build.
             $manifest = $artifact->status === 'success' ? $artifact->content : null;
             $files = \is_array($manifest) ? (array) ($manifest['files'] ?? []) : [];
-            $cache->save('jobs-manifest-' . $deployment->getId(), ['files' => \array_values($files)]);
+            $cache->save(self::key('manifest', $project, $deployment->getId()), ['files' => \array_values($files)]);
 
             return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
@@ -383,7 +383,7 @@ class Jobs extends Action
                 return $deployment;
             }
 
-            $cache->save('jobs-output-' . $deployment->getId(), true);
+            $cache->save(self::key('output', $project, $deployment->getId()), true);
 
             return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
@@ -418,7 +418,7 @@ class Jobs extends Action
             'totalSize' => $size + (int) $deployment->getAttribute('buildSize', 0),
         ]));
 
-        if ($cache->load('jobs-complete-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
+        if ($cache->load(self::key('complete', $project, $deployment->getId()), self::DEDUPE_TTL) !== false) {
             $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
         }
 
@@ -482,7 +482,7 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
-        $cache->save('jobs-exit-' . $deployment->getId(), true);
+        $cache->save(self::key('exit', $project, $deployment->getId()), true);
 
         return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
     }
@@ -509,7 +509,7 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        $cache->save('jobs-complete-' . $deployment->getId(), true);
+        $cache->save(self::key('complete', $project, $deployment->getId()), true);
 
         $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
 
@@ -598,15 +598,15 @@ class Jobs extends Action
         $deploymentId = $deployment->getId();
         $isSite = $deployment->getAttribute('resourceType') === 'sites';
 
-        if ($cache->load('jobs-exit-' . $deploymentId, self::DEDUPE_TTL) === false || $cache->load('jobs-complete-' . $deploymentId, self::DEDUPE_TTL) === false) {
+        if ($cache->load(self::key('exit', $project, $deploymentId), self::DEDUPE_TTL) === false || $cache->load(self::key('complete', $project, $deploymentId), self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 
-        if ($deviceForBuilds->getType() !== DeviceType::Local && $cache->load('jobs-output-' . $deploymentId, self::DEDUPE_TTL) === false) {
+        if ($deviceForBuilds->getType() !== DeviceType::Local && $cache->load(self::key('output', $project, $deploymentId), self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 
-        $manifest = $isSite ? $cache->load('jobs-manifest-' . $deploymentId, self::DEDUPE_TTL) : null;
+        $manifest = $isSite ? $cache->load(self::key('manifest', $project, $deploymentId), self::DEDUPE_TTL) : null;
         if ($isSite && $manifest === false) {
             return $deployment;
         }
@@ -619,7 +619,7 @@ class Jobs extends Action
         }
 
         $path = (string) $deployment->getAttribute('buildPath', '');
-        if ($path === '' || ! $deviceForBuilds->exists($path)) {
+        if (! Deployments::isArtifact($deviceForBuilds, $path)) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
@@ -742,15 +742,24 @@ class Jobs extends Action
             $this->updateLatestDeployment($dbForProject, $resource);
         }
 
-        if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
-            $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
-        }
-
+        // The status and the resource's deploymentId commit together, so
+        // executions never reach a deployment that is still building and a
+        // deployment reported ready is already the one they reach. The rules
+        // live in the platform database and are repointed before the commit;
+        // the router keeps serving the active deployment until then.
         if ($applied > 0) {
-            $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
-                Query::equal('$id', [$deployment->getId()]),
-                Query::notEqual('status', 'canceled'),
-            ]);
+            $applied = $dbForProject->withTransaction(function () use ($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus, $success, $terminal): int {
+                $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
+                    Query::equal('$id', [$deployment->getId()]),
+                    Query::notEqual('status', 'canceled'),
+                ]);
+
+                if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
+                    $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+                }
+
+                return $applied;
+            });
             $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         }
 
@@ -783,7 +792,7 @@ class Jobs extends Action
 
         $status = $deployment->getAttribute('status');
         if (\in_array($status, ['ready', 'failed'], true) && ! $resource->isEmpty()) {
-            $this->gitAction($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
+            GitAction::report($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         }
 
         return $deployment;
@@ -835,40 +844,6 @@ class Jobs extends Action
     protected function buildTimeout(Database $dbForPlatform, Document $project): int
     {
         return (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
-    }
-
-    /**
-     * Report a build state to the VCS provider for a VCS deployment
-     * (best-effort; no-op for non-VCS builds).
-     */
-    protected function gitAction(string $status, Document $deployment, Document $project, Database $dbForProject, Database $dbForPlatform, VcsFactory $vcsFactory, array $platform): void
-    {
-        if ($deployment->getAttribute('providerCommitHash', '') === '' && $deployment->getAttribute('providerCommentId', '') === '') {
-            return;
-        }
-
-        try {
-            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
-            $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
-            if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
-                return;
-            }
-
-            GitAction::run(
-                $status,
-                $vcsFactory->fromInstallation($installation),
-                $deployment->getAttribute('providerCommitHash', ''),
-                $deployment->getAttribute('providerRepositoryOwner', ''),
-                $deployment->getAttribute('providerRepositoryName', ''),
-                $project,
-                $resource,
-                $deployment,
-                $dbForPlatform,
-                $platform,
-            );
-        } catch (\Throwable) {
-            // Best-effort — never fails the build.
-        }
     }
 
     /**
@@ -1018,6 +993,11 @@ class Jobs extends Action
             payload: $update->getPayload(),
             platform: $update->getPlatform(),
         ));
+    }
+
+    protected static function key(string $marker, Document $project, string $id): string
+    {
+        return "jobs-{$marker}-{$project->getSequence()}-{$id}";
     }
 
     private static function event(Document $deployment): string

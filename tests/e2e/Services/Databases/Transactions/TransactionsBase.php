@@ -13,7 +13,9 @@ use Utopia\Database\Role;
 
 trait TransactionsBase
 {
+    use StagedReads;
     use SchemaPolling;
+    use StagedDependants;
 
     protected static string $sharedDatabaseId = '';
     protected static string $sharedCollectionId = '';
@@ -2033,6 +2035,99 @@ trait TransactionsBase
         $this->assertEquals($collectionId, $delivery['data'][$this->getContainerIdResponseKey()]);
         $this->assertArrayNotHasKey($this->getOppositeContainerIdResponseKey(), $delivery['data']);
         $this->assertArrayNotHasKey('$collection', $delivery['data']);
+    }
+
+    public function testCommitDeleteEventPayloadUsesStoredRecord(): void
+    {
+        $databaseId = $this->getSharedDatabase();
+        $collectionId = $this->getSharedCollection();
+        $recordId = Id::unique();
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => $recordId,
+            'data' => ['name' => 'Stored name'],
+            'permissions' => [Permission::read(Role::users())],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'delete',
+                    $this->getRecordIdParam() => $recordId,
+                    'data' => [
+                        'name' => 'Staged name',
+                        '$permissions' => [Permission::read(Role::any())],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $staged['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'delete',
+                    $this->getRecordIdParam() => $recordId,
+                    'data' => [],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $staged['headers']['status-code']);
+
+        $committed = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $committed['headers']['status-code']);
+
+        $delivery = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            probe: function (array $request) use ($recordId) {
+                $this->assertStringContainsString($recordId . '.delete', $request['headers']['X-Appwrite-Webhook-Events'] ?? '');
+            }
+        );
+
+        $this->assertEquals($recordId, $delivery['data']['$id']);
+        $this->assertEquals('Stored name', $delivery['data']['name']);
+        $this->assertEquals([Permission::read(Role::users())], $delivery['data']['$permissions']);
     }
 
     /**
@@ -6862,5 +6957,79 @@ trait TransactionsBase
         $this->assertEquals(['z', 'a', 'b', 'c'], $row['body']['list1'], 'arrayPrepend should add element at the beginning');
         $this->assertEquals(['x', 'y', 'z', 'w'], $row['body']['list2'], 'arrayAppend should add element at the end');
         $this->assertEquals(['1', '2', '4', '5'], $row['body']['list3'], 'arrayRemove should remove the element');
+    }
+
+    public function testDistinctReadInATransactionCarriesOnlyTheSelectedAttributes(): void
+    {
+        if (!$this->getSupportForAttributes() || !$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support distinct reads');
+        }
+
+        $databaseId = $this->getSharedDatabase();
+        $collectionId = $this->getSharedCollection();
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $recordIds = [];
+        foreach (['distinct-a', 'distinct-a', 'distinct-b'] as $name) {
+            $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $serverHeaders, [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => ['name' => $name],
+            ]);
+            $this->assertSame(201, $record['headers']['status-code'], \json_encode($record['body']) ?: '');
+            $recordIds[] = $record['body']['$id'];
+        }
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(201, $transaction['headers']['status-code']);
+
+        $transactionId = $transaction['body']['$id'];
+
+        $this->assertDistinctNamesInTransaction($databaseId, $collectionId, $transactionId, $recordIds, ['distinct-a', 'distinct-b']);
+
+        $staged = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $serverHeaders, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['name' => 'distinct-c'],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(201, $staged['headers']['status-code'], \json_encode($staged['body']) ?: '');
+        $recordIds[] = $staged['body']['$id'];
+
+        $this->assertDistinctNamesInTransaction($databaseId, $collectionId, $transactionId, $recordIds, ['distinct-a', 'distinct-b', 'distinct-c']);
+    }
+
+    /**
+     * @param list<string> $recordIds
+     * @param list<string> $expected
+     */
+    private function assertDistinctNamesInTransaction(string $databaseId, string $collectionId, string $transactionId, array $recordIds, array $expected): void
+    {
+        $rows = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$id', $recordIds)->toString(),
+                Query::distinct()->toString(),
+                Query::select(['name'])->toString(),
+            ],
+            'transactionId' => $transactionId,
+        ]);
+
+        $this->assertSame(200, $rows['headers']['status-code'], \json_encode($rows['body']) ?: '');
+        $records = $rows['body'][$this->getRecordResource()];
+        $this->assertCount(\count($expected), $records, \json_encode($records) ?: '');
+        foreach ($records as $record) {
+            $this->assertSame(['name'], \array_keys($record), \json_encode($record) ?: '');
+        }
+        $names = \array_column($records, 'name');
+        \sort($names);
+        $this->assertSame($expected, $names);
     }
 }
