@@ -44,7 +44,7 @@ class Get extends Action
                 group: null,
                 name: 'getNHostReport',
                 description: '/docs/references/migrations/migration-nhost-report.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
