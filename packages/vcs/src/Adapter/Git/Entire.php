@@ -1975,7 +1975,7 @@ class Entire extends Git
      * the check run upsert with its name as the stable key - repeated reports
      * for one name land on one run, in a suite of the same name.
      */
-    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): void
+    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = ''): void
     {
         $repositoryId = $this->repositoryId($owner, $repositoryName);
 
@@ -1983,7 +1983,7 @@ class Entire extends Git
             $repositoryId,
             self::METHOD_POST,
             '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/check-runs',
-            $this->checkRuns($this->branchContaining($repositoryId, $SHA), $state, $name, $title, $summary, $detailsUrl),
+            $this->checkRuns($this->branchContaining($repositoryId, $SHA), $state, $name, $title, $summary, $detailsUrl, $suite),
         );
 
         $statusCode = $this->status($response);
@@ -1993,14 +1993,17 @@ class Entire extends Git
     }
 
     /**
-     * The check run write for one report: a suite and its single run, keyed
-     * by the check's name and both carrying the state.
+     * The check run write for one report: its run, keyed by the check's
+     * name, filed under the named suite or a suite of its own. Several
+     * reports share a suite, so it carries no state: Entire derives it from
+     * every run under it.
      *
      * @return array{branch: string, check_suite: array<string, mixed>, check_runs: list<array<string, mixed>>}
      */
-    protected function checkRuns(string $branch, string $state, string $name, string $title, string $summary, string $detailsUrl): array
+    protected function checkRuns(string $branch, string $state, string $name, string $title, string $summary, string $detailsUrl, string $suite = ''): array
     {
         $key = $name === '' || $name === '0' ? 'default' : $name;
+        $suiteKey = $suite === '' ? $key : $suite;
         $now = $this->rfc3339Now();
         [$status, $conclusion] = self::CHECK_STATES[$state] ?? ['completed', 'failure'];
 
@@ -2012,12 +2015,10 @@ class Entire extends Git
             'external_id' => $key,
             'external_updated_at' => $now,
         ];
-        // A suite reports status and external_updated_at together or not at all
-        $suite = $run;
 
         if ($conclusion !== null) {
-            $run['conclusion'] = $suite['conclusion'] = $conclusion;
-            $run['completed_at'] = $suite['completed_at'] = $now;
+            $run['conclusion'] = $conclusion;
+            $run['completed_at'] = $now;
         }
 
         if ($title !== '') {
@@ -2027,12 +2028,12 @@ class Entire extends Git
         // Entire takes only an https details URL without credentials; a
         // plain-http one (a local console) is left off rather than refused
         if (str_starts_with($detailsUrl, 'https://') && !str_contains(substr($detailsUrl, 8), '@')) {
-            $run['details_url'] = $suite['details_url'] = $detailsUrl;
+            $run['details_url'] = $detailsUrl;
         }
 
         return [
             'branch' => $branch,
-            'check_suite' => $suite,
+            'check_suite' => ['key' => $suiteKey, 'name' => $suiteKey, 'external_id' => $suiteKey],
             'check_runs' => [$run],
         ];
     }
