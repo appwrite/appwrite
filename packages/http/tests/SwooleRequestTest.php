@@ -211,6 +211,162 @@ final class SwooleRequestTest extends TestCase
         $this->assertGreaterThanOrEqual(\strlen($body), $request->getSize(), 'the request size must include the uploaded file');
     }
 
+    /**
+     * A client-supplied `Swoole-Upload-File` marker makes Swoole pin part
+     * metadata to an arbitrary path (swoole/swoole-src#6309); getFiles() must
+     * neutralize every tmp_name it did not generate itself.
+     */
+    public function testSpoofedMultipartMarkerIsNeutralized(): void
+    {
+        $request = new Request($this->spoofedMarkerRequest());
+
+        // The parser itself produced the rogue metadata (that is the Swoole bug);
+        // the adapter must be the layer that un-trusts it.
+        $this->assertSame('/etc/hosts', $request->getSwooleRequest()->files['file']['tmp_name']);
+
+        $file = $request->getFiles('file');
+
+        $this->assertSame('', $file['tmp_name'], 'a spoofed tmp_name outside upload_tmp_dir must be dropped');
+        $this->assertSame(\UPLOAD_ERR_CANT_WRITE, $file['error']);
+        $this->assertSame(0, $file['size']);
+    }
+
+    public function testGenuineMultipartUploadStaysIntact(): void
+    {
+        $boundary = '----audit-boundary';
+        $body = "--{$boundary}\r\n"
+            . "Content-Disposition: form-data; name=\"file\"; filename=\"hello.txt\"\r\n"
+            . "Content-Type: text/plain\r\n\r\n"
+            . "clamation of audit payload\r\n"
+            . "--{$boundary}--\r\n";
+
+        $request = new Request($this->multipartRequest($body, $boundary));
+        $file = $request->getFiles('file');
+
+        $this->assertArrayHasKey('tmp_name', $file);
+        $this->assertMatchesRegularExpression('/^swoole\.upfile\.[A-Za-z0-9]{6}$/', \basename(\strval($file['tmp_name'])), 'Swoole writes genuine uploads as <tmp>/swoole.upfile.XXXXXX');
+        $this->assertSame(0, $file['error']);
+        $this->assertSame(\strlen('clamation of audit payload'), $file['size']);
+    }
+
+    public function testSpoofedMarkerInsideBracketedUploadListIsNeutralized(): void
+    {
+        $boundary = '----audit-boundary';
+        $body = "--{$boundary}\r\n"
+            . "Content-Disposition: form-data; name=\"file[]\"; filename=\"evil.txt\"\r\n"
+            . "Content-Type: text/plain\r\n"
+            . "Swoole-Upload-File: /etc/hosts\r\n\r\n"
+            . "DECOY\r\n"
+            . "--{$boundary}\r\n"
+            . "Content-Disposition: form-data; name=\"file[]\"; filename=\"fine.txt\"\r\n"
+            . "Content-Type: text/plain\r\n\r\n"
+            . "audit-payload\r\n"
+            . "--{$boundary}--\r\n";
+
+        $request = new Request($this->multipartRequest($body, $boundary));
+        $file = $request->getFiles('file');
+
+        $paths = \array_values(\array_map(\strval(...), $file['tmp_name']));
+        $this->assertContains('', $paths, 'the entry pinned to /etc/hosts must be dropped');
+        $this->assertCount(2, $paths);
+
+        $good = \array_values(\array_filter($paths));
+        $this->assertCount(1, $good);
+        $this->assertMatchesRegularExpression('/^swoole\.upfile\.[A-Za-z0-9]{6}$/', \basename($good[0]), 'the honest sibling upload stays usable');
+    }
+
+    public function testMalformedSwooleTempNamesOutsideUploadTmpDirAreNeutralized(): void
+    {
+        $foreign = \sys_get_temp_dir() . '/not-uploads';
+        if (! \is_dir($foreign)) {
+            \mkdir($foreign);
+            \register_shutdown_function(fn () => @\rmdir($foreign));
+        }
+        $planted = \tempnam(\realpath($foreign), 'swoole.upfile.');
+        \register_shutdown_function(fn () => @\unlink($planted));
+
+        $file = new Request($this->entryRequest([
+            'file' => [
+                'name' => 'legit.txt',
+                'type' => 'text/plain',
+                'tmp_name' => $planted,
+                'error' => 0,
+                'size' => 1,
+            ],
+        ]))->getFiles('file');
+
+        $this->assertSame('', $file['tmp_name'], 'right basename outside Swoole temp dirs still came from the client');
+        $this->assertSame(\UPLOAD_ERR_CANT_WRITE, $file['error']);
+    }
+
+    public function testNonexistentUploadPathsAreNeutralized(): void
+    {
+        $file = new Request($this->entryRequest([
+            'file' => [
+                'name' => 'ghost.txt',
+                'type' => 'text/plain',
+                'tmp_name' => \sys_get_temp_dir() . '/swoole.upfile.does-not-exist-1',
+                'error' => 0,
+                'size' => 9,
+            ],
+        ]))->getFiles('file');
+
+        $this->assertSame('', $file['tmp_name']);
+        $this->assertSame(\UPLOAD_ERR_CANT_WRITE, $file['error']);
+    }
+
+    public function testUploadEntriesWithoutTmpNameAreUntouched(): void
+    {
+        $request = new Request($this->entryRequest([
+            'fileid' => ['name' => 'nothing.txt', 'type' => 'text/plain', 'error' => 0, 'size' => 0],
+            'label' => '6adb794ba6c621d4b830',
+        ]));
+
+        $this->assertSame(['name' => 'nothing.txt', 'type' => 'text/plain', 'error' => 0, 'size' => 0], $request->getFiles('fileid'), 'an entry without tmp_name must pass through');
+    }
+
+    /**
+     * @param  array<mixed>  $files
+     */
+    private function entryRequest(array $files): SwooleRequest
+    {
+        $request = SwooleRequest::create(['parse_cookie' => false, 'parse_files' => false]);
+        $request->files = $files;
+
+        return $request;
+    }
+
+    /**
+     * Parses a real multipart request through Swoole's parser (parse_files on).
+     */
+    private function multipartRequest(string $body, string $boundary): SwooleRequest
+    {
+        $request = SwooleRequest::create(['parse_cookie' => false]);
+        $raw = "POST /v1/documents HTTP/1.1\r\n"
+            . "Host: localhost\r\n"
+            . "Content-Type: multipart/form-data; boundary={$boundary}\r\n"
+            . 'Content-Length: ' . \strlen($body) . "\r\n"
+            . "\r\n"
+            . $body;
+
+        $request->parse($raw);
+
+        return $request;
+    }
+
+    private function spoofedMarkerRequest(): SwooleRequest
+    {
+        $boundary = '----audit-boundary';
+        $body = "--{$boundary}\r\n"
+            . "Content-Disposition: form-data; name=\"file\"; filename=\"x.txt\"\r\n"
+            . "Content-Type: text/plain\r\n"
+            . "Swoole-Upload-File: /etc/hosts\r\n\r\n"
+            . "DECOY\r\n"
+            . "--{$boundary}--\r\n";
+
+        return $this->multipartRequest($body, $boundary);
+    }
+
     private function swooleRequest(string $body, string $contentType = 'application/json'): SwooleRequest
     {
         $request = SwooleRequest::create(['parse_cookie' => false, 'parse_files' => false]);
@@ -225,4 +381,5 @@ final class SwooleRequestTest extends TestCase
 
         return $request;
     }
+
 }

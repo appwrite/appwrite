@@ -248,7 +248,120 @@ class Request extends UtopiaRequest
     {
         $key = strtolower($key);
 
-        return $this->swoole->files[$key] ?? [];
+        return $this->sanitizeUploads($this->swoole->files[$key] ?? []);
+    }
+
+    /**
+     * Neutralize upload entries Swoole did not generate itself
+     *
+     * For a genuine multipart upload Swoole writes the body to
+     * `<upload_tmp_dir>/swoole.upfile.XXXXXX` (an mkstemp-issued name) and
+     * reports that path as `tmp_name`. The multipart parser however trusts the
+     * internal `Swoole-Upload-File` marker in part headers and will accept a
+     * client-supplied value as `tmp_name` of a ready upload on any request
+     * (swoole/swoole-src#6309), turning a remote input into a pointer to an
+     * arbitrary server-local file that PHP users treat as a real upload.
+     *
+     * This guard rejects any `tmp_name` outside the temporary directories and
+     * outside the `swoole.upfile.XXXXXX` naming scheme, so a spoofed part
+     * collapses into a plain "could not write" upload instead of a live file.
+     *
+     * @param  array<mixed>  $files
+     * @return array<mixed>
+     */
+    private function sanitizeUploads(array $files): array
+    {
+        if (! isset($files['tmp_name'])) {
+            return $files;
+        }
+
+        $isList = \is_array($files['tmp_name']);
+
+        if ($isList) {
+            $paths = $files['tmp_name'];
+        } else {
+            $paths = [$files['tmp_name']];
+        }
+
+        $rejected = false;
+
+        foreach ($paths as $position => $path) {
+            if (! \is_string($path) || $this->isSwooleTempFile($path)) {
+                continue;
+            }
+
+            $paths[$position] = '';
+            $rejected = true;
+
+            if ($isList) {
+                if (\is_array($files['error'] ?? null)) {
+                    $files['error'][$position] = \UPLOAD_ERR_CANT_WRITE;
+                }
+                if (\is_array($files['size'] ?? null)) {
+                    $files['size'][$position] = 0;
+                }
+            }
+        }
+
+        if ($rejected) {
+            $files['tmp_name'] = $isList ? $paths : \reset($paths);
+            if (! $isList) {
+                $files['error'] = \UPLOAD_ERR_CANT_WRITE;
+                $files['size'] = 0;
+            }
+        }
+
+        return $files;
+    }
+
+    private function isSwooleTempFile(string $path): bool
+    {
+        if (! \preg_match('/^swoole\.upfile\.[A-Za-z0-9]{6}$/', \basename($path))) {
+            return false;
+        }
+
+        $absolute = \realpath($path);
+
+        if ($absolute === false) {
+            return false;
+        }
+
+        foreach ($this->uploadTempDirs() as $dir) {
+            if (\str_starts_with($absolute, $dir . DIRECTORY_SEPARATOR)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Temporary locations Swoole may have used for upload artifacts.
+     *
+     * Swoole resolves its upload directory independently from PHP
+     * (`php_get_temporary_directory` with a `/tmp` fallback), so both PHP's
+     * temporary location and `/tmp` are accepted.
+     *
+     * @return list<string>
+     */
+    private function uploadTempDirs(): array
+    {
+        $candidates = [
+            (string) (\ini_get('upload_tmp_dir') ?: \sys_get_temp_dir()),
+            '/tmp',
+        ];
+
+        $dirs = [];
+
+        foreach ($candidates as $candidate) {
+            $real = \realpath($candidate);
+
+            if (\is_string($real)) {
+                $dirs[$real] = true;
+            }
+        }
+
+        return \array_keys($dirs);
     }
 
     /**
