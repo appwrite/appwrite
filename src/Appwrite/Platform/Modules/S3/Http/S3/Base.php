@@ -34,6 +34,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
+use Utopia\Storage\Exception\NotFoundException;
 use Utopia\System\System;
 
 abstract class Base extends Action
@@ -434,9 +435,9 @@ abstract class Base extends Action
     /**
      * The gateway does not scan objects, so it refuses writes the REST upload would scan.
      */
-    protected function validateAntivirus(Document $bucket, Device $deviceForFiles): void
+    protected function validateAntivirus(Document $bucket, Device $deviceForFiles, int $size): void
     {
-        if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $deviceForFiles->getType() === DeviceType::Local) {
+        if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $size <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === DeviceType::Local) {
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'S3 writes require a bucket with antivirus disabled.');
         }
     }
@@ -725,6 +726,8 @@ abstract class Base extends Action
      */
     protected function putObjectLocked(callable $locks, Database $dbForProject, Document $project, DeletePublisher $publisherForDeletes, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): array
     {
+        $this->validateAntivirus($bucket, $deviceForFiles, \strlen($body));
+
         // Storage permits duplicate names, so lookup and write must share one key-scoped critical section.
         return $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, $key, $body, $contentType, $metadata): array {
             $existing = $this->findObject($dbForProject, $bucket, $key);
@@ -960,6 +963,7 @@ abstract class Base extends Action
         }
 
         $this->validateFileConstraints($bucket, (string) ($upload['name'] ?? $upload['key']), $size);
+        $this->validateAntivirus($bucket, $deviceForFiles, $size);
 
         $etag = \md5($etagBytes) . '-' . \count($selected);
         $key = (string) ($upload['requestedKey'] ?? $upload['key'] ?? '');
@@ -1042,8 +1046,9 @@ abstract class Base extends Action
 
         $key = (string) ($upload['requestedKey'] ?? $upload['key'] ?? '');
         try {
-            // Serialized with completion, which commits the staging path under this lock.
-            $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($cache, $dbForProject, $project, $deviceForFiles, $bucket, $upload, $uploadId): void {
+            // The multipart lock serializes with part uploads, the object lock with completion, which commits the staging path.
+            // Nothing else holds both, so taking them in this order cannot deadlock.
+            $locks($this->multipartLockKey($project, $uploadId), 600, fn () => $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($cache, $dbForProject, $project, $deviceForFiles, $bucket, $upload, $uploadId): void {
                 if (\is_string($cache->load($this->multipartStateKey($project, $uploadId), self::MULTIPART_TTL))) {
                     return;
                 }
@@ -1056,14 +1061,22 @@ abstract class Base extends Action
                 ]));
                 if ($committed->isEmpty()) {
                     try {
-                        $deviceForFiles->abort($path, (string) ($upload['metadata']['device']['uploadId'] ?? ''));
+                        $aborted = $deviceForFiles->abort($path, (string) ($upload['metadata']['device']['uploadId'] ?? ''));
+                    } catch (NotFoundException) {
+                        $aborted = true;
                     } catch (\Throwable $error) {
                         Console::warning('Failed to abort expired S3 multipart upload ' . $uploadId . ': ' . $error->getMessage());
+                        $aborted = false;
+                    }
+
+                    // Keep the state so the next listing retries the abort
+                    if (!$aborted) {
+                        return;
                     }
                 }
 
                 $this->purgeMultipartUpload($cache, $project, $bucket, ['uploadId' => $uploadId]);
-            });
+            }));
         } catch (Contention) {
             // The key is busy; the next listing retries.
         }

@@ -289,6 +289,8 @@ final class S3CustomServerTest extends Scope
         $this->assertSame(200, $head['headers']['status-code']);
     }
 
+    #[Group('antivirus')]
+    #[Group('s3')]
     public function testWriteAntivirusBucket(): void
     {
         $bucketId = $this->setupBucket(['antivirus' => true]);
@@ -297,17 +299,35 @@ final class S3CustomServerTest extends Scope
             && \strtolower(System::getEnv('_APP_STORAGE_DEVICE', 'local')) === 'local';
 
         $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: 'appwrite');
-        $upload = $this->call(Client::METHOD_POST, '/' . $bucketId . '/' . $key, ['uploads' => '']);
+        $uploadId = $this->createMultipartUpload($bucketId, $key);
+        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [
+            1 => $this->uploadPart($bucketId, $key, $uploadId, 1, 'appwrite'),
+        ]);
 
         if ($scanned) {
             /**
              * Test for FAILURE
              */
             $this->assertSame(400, $put['headers']['status-code'], $put['body']);
-            $this->assertSame(400, $upload['headers']['status-code'], $upload['body']);
+            $this->assertSame(400, $complete['headers']['status-code'], $complete['body']);
 
             $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
             $this->assertSame(404, $object['headers']['status-code']);
+
+            /**
+             * Test for SUCCESS - files above the scan limit are not scanned by the REST upload either
+             */
+            $key = Id::unique() . '.bin';
+            $uploadId = $this->createMultipartUpload($bucketId, $key);
+            $etags = [];
+            for ($partNumber = 1; $partNumber * self::PART_SIZE <= self::STREAMED_FILE_SIZE; $partNumber++) {
+                $etags[$partNumber] = $this->uploadPart($bucketId, $key, $uploadId, $partNumber, \str_repeat('a', self::PART_SIZE));
+            }
+            $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, $etags);
+            $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+
+            $head = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $key);
+            $this->assertSame(200, $head['headers']['status-code']);
             return;
         }
 
@@ -315,7 +335,7 @@ final class S3CustomServerTest extends Scope
          * Test for SUCCESS
          */
         $this->assertSame(200, $put['headers']['status-code'], $put['body']);
-        $this->assertSame(200, $upload['headers']['status-code'], $upload['body']);
+        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
     }
 
     #[Group('s3')]
