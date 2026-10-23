@@ -374,15 +374,17 @@ class Migrations extends Action
             ->setTimeout(Target::REQUEST_TIMEOUT);
 
         try {
-            $tablesDB = new TablesDB($client);
-            $tablesDB->list();
+            if (\in_array(Resource::TYPE_DATABASE, $resources, true)) {
+                $tablesDB = new TablesDB($client);
+                $tablesDB->list();
 
-            if (Resource::isSupported([Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX, Resource::TYPE_ROW], $resources)) {
-                $this->probeScope(fn () => $tablesDB->listTables(self::SCOPE_PROBE_ID));
-            }
+                if (Resource::isSupported([Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX, Resource::TYPE_ROW], $resources)) {
+                    $this->probeScope(fn () => $tablesDB->listTables(self::SCOPE_PROBE_ID));
+                }
 
-            if (Resource::isSupported(Resource::TYPE_ROW, $resources)) {
-                $this->probeScope(fn () => $tablesDB->listRows(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID));
+                if (Resource::isSupported(Resource::TYPE_ROW, $resources)) {
+                    $this->probeScope(fn () => $tablesDB->listRows(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID));
+                }
             }
 
             if (\in_array(Resource::TYPE_DATABASE_DOCUMENTSDB, $resources, true)) {
@@ -390,6 +392,7 @@ class Migrations extends Action
                 $documentsDB->list();
                 $this->probeCollectionScopes(
                     fn () => $documentsDB->listCollections(self::SCOPE_PROBE_ID),
+                    fn () => $documentsDB->listIndexes(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID),
                     fn () => $documentsDB->listDocuments(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID),
                     $resources,
                 );
@@ -400,6 +403,7 @@ class Migrations extends Action
                 $vectorsDB->list();
                 $this->probeCollectionScopes(
                     fn () => $vectorsDB->listCollections(self::SCOPE_PROBE_ID),
+                    fn () => $vectorsDB->listIndexes(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID),
                     fn () => $vectorsDB->listDocuments(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID),
                     $resources,
                 );
@@ -418,10 +422,14 @@ class Migrations extends Action
      * @param array<string> $resources
      * @throws AppwriteException
      */
-    private function probeCollectionScopes(callable $listCollections, callable $listDocuments, array $resources): void
+    private function probeCollectionScopes(callable $listCollections, callable $listIndexes, callable $listDocuments, array $resources): void
     {
         if (\array_intersect([Resource::TYPE_COLLECTION, Resource::TYPE_ATTRIBUTE, Resource::TYPE_INDEX, Resource::TYPE_DOCUMENT], $resources) !== []) {
             $this->probeScope($listCollections);
+        }
+
+        if (\in_array(Resource::TYPE_INDEX, $resources, true)) {
+            $this->probeScope($listIndexes);
         }
 
         if (\in_array(Resource::TYPE_DOCUMENT, $resources, true)) {

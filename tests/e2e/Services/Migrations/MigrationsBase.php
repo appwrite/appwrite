@@ -862,15 +862,13 @@ trait MigrationsBase
 
         try {
             $result = $this->performMigrationSync([
-                'resources' => [Resource::TYPE_DATABASE_DOCUMENTSDB, Resource::TYPE_COLLECTION, Resource::TYPE_DOCUMENT],
+                'resources' => [Resource::TYPE_DATABASE_DOCUMENTSDB, Resource::TYPE_COLLECTION, Resource::TYPE_INDEX, Resource::TYPE_DOCUMENT],
                 'endpoint' => $this->webEndpoint,
                 'projectId' => $this->getProject()['$id'],
                 'apiKey' => $this->getNewKey([
-                    'databases.read',
-                    'tables.read',
-                    'rows.read',
                     'documentsdb.read',
                     'documentsdb.collections.read',
+                    'documentsdb.indexes.read',
                     'documentsdb.documents.read',
                 ]),
             ]);
@@ -884,6 +882,28 @@ trait MigrationsBase
             ]);
             $this->assertSame(200, $document['headers']['status-code']);
             $this->assertSame('scoped', $document['body']['secret']);
+        } finally {
+            $this->deleteFromBothProjects('/documentsdb/' . $databaseId);
+        }
+    }
+
+    public function testAppwriteMigrationRejectsDocumentsDBKeyWithoutIndexScope(): void
+    {
+        ['databaseId' => $databaseId] = $this->createSourceDocumentsDBDocument();
+
+        try {
+            $result = $this->performMigrationExpectingFailure([
+                'resources' => [Resource::TYPE_DATABASE_DOCUMENTSDB, Resource::TYPE_COLLECTION, Resource::TYPE_INDEX],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getNewKey(['documentsdb.read', 'documentsdb.collections.read']),
+            ]);
+
+            $this->assertStringContainsString(
+                'The source API key cannot read the requested resources of the source project.',
+                implode("\n", $result['errors']),
+            );
+            $this->assertDestinationMissing('/documentsdb/' . $databaseId);
         } finally {
             $this->deleteFromBothProjects('/documentsdb/' . $databaseId);
         }
