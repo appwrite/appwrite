@@ -2120,7 +2120,7 @@ trait UsersBase
         $tail = '$TmtWSjZ3aE5keWNEdFlhcg$KjIALjgKcbZxSfJh1RkK6/9wqD+WbGVRjzTJ3BIQaBg';
         $accepted = [
             '/users/bcrypt' => ['$2y$04$' . $digest, '$2a$15$' . $digest, '$2b$12$' . $digest, '$2x$10$' . $digest],
-            '/users/argon2' => ['$argon2i$v=19$m=20,t=3,p=2' . $tail, '$argon2id$v=19$m=262144,t=10,p=16' . $tail],
+            '/users/argon2' => ['$argon2i$v=19$m=20,t=3,p=2' . $tail, '$argon2i$v=16$m=65536,t=4,p=1' . $tail, '$argon2id$v=19$m=262144,t=10,p=16' . $tail],
             '/users/phpass' => ['$H$9r387rwferoKN7uwHZqNMu98q3U8RO.', '$P$5r387rwferoKN7uwHZqNMu98q3U8RO.', '$P$Er387rwferoKN7uwHZqNMu98q3U8RO.', '$2a$08$' . $digest],
         ];
 
@@ -2162,6 +2162,8 @@ trait UsersBase
                 '$argon2id$v=19$m=65536,t=4,p=1,x=1' . $tail,
                 '$argon2id$v=19$m=-1,t=4,p=1' . $tail,
                 '$argon2id$m=65536,t=4,p=1' . $tail,
+                '$argon2id$v=garbage$m=65536,t=4,p=1' . $tail,
+                '$argon2id$v=20$m=65536,t=4,p=1' . $tail,
                 '$argon2d$v=19$m=65536,t=4,p=1' . $tail,
                 '$argon2id$v=19$m=65536,t=4,p=1$TmtWSjZ3aE5keWNEdFlhcg$',
                 '$argon2id$v=19$m=65536,t=4,p=1$TmtWSjZ3aE5keWNEdFlhcg$' . \str_repeat('!', 43),

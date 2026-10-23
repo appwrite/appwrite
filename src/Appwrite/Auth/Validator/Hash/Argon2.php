@@ -17,6 +17,9 @@ class Argon2 extends Password
 
     private const array ALGORITHMS = ['argon2i', 'argon2id'];
 
+    // Argon2 1.0 (0x10) and 1.3 (0x13)
+    private const array VERSIONS = ['v=16', 'v=19'];
+
     // Salt and digest are unpadded base64
     private const string ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
@@ -32,7 +35,7 @@ class Argon2 extends Password
         }
 
         $parts = \explode('$', $value);
-        if (\count($parts) !== 6 || $parts[0] !== '' || !\in_array($parts[1], self::ALGORITHMS, true) || !\str_starts_with($parts[2], 'v=')) {
+        if (\count($parts) !== 6 || $parts[0] !== '' || !\in_array($parts[1], self::ALGORITHMS, true) || !\in_array($parts[2], self::VERSIONS, true)) {
             return false;
         }
 
