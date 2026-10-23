@@ -26,14 +26,14 @@ class ProjectVariable extends Resource
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['id'],
             $array['key'],
             $array['value'] ?? '',
             (bool) ($array['secret'] ?? false),
             createdAt: $array['createdAt'] ?? '',
             updatedAt: $array['updatedAt'] ?? '',
-        );
+        ))->setDescription(\is_string($array['description'] ?? null) ? $array['description'] : '');
     }
 
     /**
@@ -42,6 +42,7 @@ class ProjectVariable extends Resource
     public function jsonSerialize(): array
     {
         return [
+            'description' => $this->description,
             'id' => $this->id,
             'key' => $this->key,
             'value' => $this->value,

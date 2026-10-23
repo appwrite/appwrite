@@ -74,6 +74,11 @@ return [
         'description' => 'The breached password service could not be reached, so the password could not be verified. Please try again later.',
         'code' => 503,
     ],
+    Exception::GENERAL_CACHE_UNAVAILABLE => [
+        'name' => Exception::GENERAL_CACHE_UNAVAILABLE,
+        'description' => "The cache could not confirm the request's changes, so they may or may not have been applied. Read the affected resources back before retrying.",
+        'code' => 503,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
@@ -848,6 +853,11 @@ return [
         'description' => 'The order attribute/column had a null value. Cursor pagination requires all documents/rows order attribute/column values are non-null.',
         'code' => 400,
     ],
+    Exception::DATABASE_QUERY_OUT_OF_RANGE => [
+        'name' => Exception::DATABASE_QUERY_OUT_OF_RANGE,
+        'description' => 'The query computed a value outside the range the database can represent. Try narrowing the query or aggregating a different attribute/column.',
+        'code' => 400,
+    ],
 
     /** Collections */
     Exception::COLLECTION_NOT_FOUND => [
@@ -1286,6 +1296,12 @@ return [
         'description' => 'Webhook with the same ID already exists. Try again with a different ID.',
         'code' => 409,
     ],
+    Exception::WEBHOOK_DELIVERY_FAILED => [
+        'name' => Exception::WEBHOOK_DELIVERY_FAILED,
+        'description' => 'One or more webhook deliveries failed.',
+        'code' => 502,
+        'publish' => false,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',
@@ -1500,7 +1516,7 @@ return [
     ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,
-        'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
+        'description' => 'Message with the requested ID has no recipients (topics, users, targets, or emails).',
         'code' => 400,
     ],
     Exception::MESSAGE_ALREADY_SENT => [

@@ -8,6 +8,7 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Adapter\Push\Appwrite as AppwritePush;
 use Appwrite\Messaging\Provider;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Usage\Context as UsageContext;
@@ -88,6 +89,7 @@ class Messaging extends Action
             ->inject('telemetry')
             ->inject('pools')
             ->inject('adapterForSMS')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -98,8 +100,9 @@ class Messaging extends Action
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
      * @param Telemetry $telemetry
-     * @param SMSAdapter|null $adapterForSMS
      * @param Group $pools
+     * @param SMSAdapter|null $adapterForSMS
+     * @param PublicHostname $publicHostname
      * @return void
      * @throws \Exception
      */
@@ -111,11 +114,12 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry,
         Group $pools,
-        ?SMSAdapter $adapterForSMS
+        ?SMSAdapter $adapterForSMS,
+        PublicHostname $publicHostname
     ): void {
         $this->telemetry = $telemetry;
         $this->pools = $pools;
-        $this->provider = new Provider($telemetry);
+        $this->provider = new Provider($telemetry, $publicHostname);
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -134,6 +138,12 @@ class Messaging extends Action
                 $this->sendInternalSMSMessage($message, $project, $recipients, $adapterForSMS);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
+                // The project was deleted after the job was queued; dbForProject would be the platform database.
+                if ($project->isEmpty()) {
+                    Span::add('message.skipped', 'deleted');
+                    break;
+                }
+
                 $messageId = $payload['messageId'];
                 $message = $dbForProject->getDocument('messages', $messageId);
 
@@ -209,6 +219,7 @@ class Messaging extends Action
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
         $userIds = $message->getAttribute('users', []);
+        $emails = $message->getAttribute('data', [])['emails'] ?? [];
         $providerType = $message->getAttribute('providerType');
 
         Span::add('message.provider_type', $providerType);
@@ -251,8 +262,21 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
-        $isWakeupSignalEnabled = $providerType === MESSAGE_TYPE_PUSH
-            && $this->checkAppwritePushEnabled($dbForProject, $default);
+        // Providers a batch actually ran through, for the message search; $providers is only a lookup cache.
+        $used = [];
+
+        // Topics already published over Appwrite push, so a topic is sent once per message, not once per page.
+        $appwriteTopics = [];
+
+        // The enabled Appwrite push provider, whichever provider is the default; empty when there is none.
+        $appwrite = $providerType === MESSAGE_TYPE_PUSH
+            ? $this->getAppwritePushProvider($dbForProject, $default)
+            : new Document();
+        if (!$appwrite->isEmpty()) {
+            $providers[$appwrite->getId()] = $appwrite;
+        }
+
+        $isWakeupSignalEnabled = !$appwrite->isEmpty();
 
         $mqttUsers = [];
         $topicInternalIds = [];
@@ -272,7 +296,9 @@ class Messaging extends Action
             }
         }
 
-        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as [$page, $perUser]) {
+        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $emails, $providerType, $default, $appwrite) as [$page, $topicId]) {
+            $perUser = $topicId === null;
+
             /**
              * @var array<callable> $tasks
              */
@@ -289,12 +315,22 @@ class Messaging extends Action
                 $provider = $this->resolveProvider($dbForProject, $providerId, $providers, $default);
                 $resolvedProviderType = $provider->getAttribute('type');
 
-                $adapter = match ($resolvedProviderType) {
-                    MESSAGE_TYPE_SMS => $this->provider->sms($provider),
-                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider, $dbForProject, $project, $message),
-                    MESSAGE_TYPE_EMAIL => $this->provider->email($provider),
-                    default => throw new \Exception('Provider with the requested ID is of the incorrect type')
-                };
+                try {
+                    $adapter = match ($resolvedProviderType) {
+                        MESSAGE_TYPE_SMS => $this->provider->sms($provider),
+                        MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider, $dbForProject, $project, $message),
+                        MESSAGE_TYPE_EMAIL => $this->provider->email($provider),
+                        default => throw new \Exception('Provider with the requested ID is of the incorrect type')
+                    };
+                } catch (\InvalidArgumentException $error) {
+                    // An SMTP host that is refused or does not resolve fails this provider's recipients, not the whole message.
+                    $hasRecipients = true;
+                    $used[$provider->getId()] = $provider;
+                    $failedTotal += \count($identifiers);
+                    $this->recordError($deliveryErrors, 'Failed sending to targets with error: ' . $error->getMessage());
+
+                    continue;
+                }
 
                 $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
                     && \in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true);
@@ -309,6 +345,11 @@ class Messaging extends Action
                         }
                     }
                     $recipients = \array_keys($userTopics);
+                } elseif (!$perUser && $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
+                    // Appwrite push delivers a topic campaign on the topic's own id; the targets only
+                    // mark that it has MQTT subscribers, so their identifiers are not wire topics.
+                    $recipients = isset($appwriteTopics[$topicId]) ? [] : [$topicId];
+                    $appwriteTopics[$topicId] = true;
                 } elseif ($isWakeProvider && \count($mqttReached) > 0) {
                     $recipients = [];
                     $wakeRecipients = [];
@@ -372,11 +413,13 @@ class Messaging extends Action
             $hasRecipients = true;
 
             /**
-             * @var array<array{delivered: int, recipients: int, errors: array<string>, wake: bool}> $results
+             * @var array<array{delivered: int, recipients: int, errors: array<string>, wake: bool, provider: Document}> $results
              */
             $results = batch($tasks);
 
             foreach ($results as $result) {
+                $used[$result['provider']->getId()] = $result['provider'];
+
                 // Wake-up signals are billed, but they don't count toward the message's delivered/failed
                 // totals — a dead token here shouldn't fail a message that was already delivered over MQTT.
                 if ($result['wake']) {
@@ -411,6 +454,7 @@ class Messaging extends Action
         // not named in the send still gets woken. Topic sends already woke their devices per page above.
         if (\count($mqttUsers) > 0) {
             foreach (batch($this->buildWakeTasks($mqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore)) as $result) {
+                $used[$result['provider']->getId()] = $result['provider'];
                 $wakeSignals += $result['delivered'];
             }
         }
@@ -429,13 +473,13 @@ class Messaging extends Action
 
         $message->removeAttribute('to');
 
-        foreach ($providers as $provider) {
+        foreach ($used as $provider) {
             $message->setAttribute('search', "{$message->getAttribute('search')} {$provider->getAttribute('name')} {$provider->getAttribute('provider')} {$provider->getAttribute('type')}");
         }
 
         Span::add('message.providers', \implode(',', \array_unique(\array_map(
             fn (Document $provider) => $provider->getAttribute('provider'),
-            \array_values($providers)
+            \array_values($used)
         ))));
 
         $message->setAttribute('deliveredTotal', $deliveredTotal);
@@ -462,7 +506,8 @@ class Messaging extends Action
      * @param array<string> $topicIds
      * @param array<string> $userIds
      * @param array<string> $targetIds
-     * @return \Generator<array{0: array<string, array<string, string>>, 1: bool}>
+     * @param array<string> $emails Raw email addresses not backed by an Appwrite user, target, or topic.
+     * @return \Generator<array{0: array<string, array<string, string>>, 1: ?string}> each page with its topic id, or null when user-addressed
      * @throws \Exception
      */
     private function streamRecipients(
@@ -470,13 +515,15 @@ class Messaging extends Action
         array $topicIds,
         array $userIds,
         array $targetIds,
+        array $emails,
         string $providerType,
-        Document $default
+        Document $default,
+        Document $appwrite
     ): \Generator {
         if (\count($topicIds) > 0) {
             $topics = $dbForProject->skipFilters(
                 fn () => $dbForProject->find('topics', [
-                    Query::select(['$sequence']),
+                    Query::select(['$id', '$sequence']),
                     Query::equal('$id', $topicIds),
                     Query::limit(\count($topicIds)),
                 ]),
@@ -533,7 +580,7 @@ class Messaging extends Action
                     unset($targetInternalIds, $targets);
 
                     // Topic campaign: deliver on the topic's own channel, not a per-user topic.
-                    yield [$page, false];
+                    yield [$page, $topic->getId()];
                 } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
             }
         }
@@ -591,12 +638,13 @@ class Messaging extends Action
                 unset($targets);
 
                 // User-addressed: deliver on the reserved per-user topic (Appwrite push).
-                yield [$page, true];
+                yield [$page, null];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
 
             // Appwrite push needs no device target: reach existing users with no registered target on
             // their reserved MQTT topic (users/<userId>), which they subscribe to with their session.
-            if ($default->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
+            // Uses the enabled Appwrite provider even when another push provider is the default.
+            if (!$appwrite->isEmpty()) {
                 $targetless = \array_values(\array_filter(
                     $existingUserIds,
                     fn (string $userId) => !isset($reachedViaTarget[$userId]),
@@ -608,7 +656,7 @@ class Messaging extends Action
                         $identifiers[$userId] = $userId;
                     }
 
-                    yield [[$default->getId() => $identifiers], true];
+                    yield [[$appwrite->getId() => $identifiers], null];
                 }
             }
         }
@@ -642,8 +690,13 @@ class Messaging extends Action
                 unset($targets);
 
                 // User- or target-addressed: deliver on the reserved per-user topic (Appwrite push).
-                yield [$page, true];
+                yield [$page, null];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+        }
+
+        // Raw emails have no backing target or user, so they route straight to the default provider.
+        foreach (\array_chunk(\array_values(\array_unique($emails)), MESSAGE_RECIPIENTS_PAGE_SIZE) as $chunk) {
+            yield [[$default->getId() => \array_fill_keys($chunk, '')], null];
         }
     }
 
@@ -715,18 +768,18 @@ class Messaging extends Action
         return $provider;
     }
 
-    private function checkAppwritePushEnabled(Database $dbForProject, Document $default): bool
+    /** The default provider when it is Appwrite push, else the first enabled one; empty when none is enabled. */
+    private function getAppwritePushProvider(Database $dbForProject, Document $default): Document
     {
         if ($default->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
-            return true;
+            return $default;
         }
 
-        return !$dbForProject->findOne('providers', [
+        return $dbForProject->findOne('providers', [
             Query::equal('provider', [self::APPWRITE_PUSH_PROVIDER]),
             Query::equal('type', [MESSAGE_TYPE_PUSH]),
             Query::equal('enabled', [true]),
-            Query::select(['$id']),
-        ])->isEmpty();
+        ]);
     }
 
     /**
@@ -1010,7 +1063,7 @@ class Messaging extends Action
      *
      * @param array<string> $batch
      * @param array<Attachment> $attachments
-     * @return array{delivered: int, recipients: int, errors: array<string>, wake: bool}
+     * @return array{delivered: int, recipients: int, errors: array<string>, wake: bool, provider: Document}
      */
     private function sendBatch(
         array $batch,
@@ -1058,6 +1111,7 @@ class Messaging extends Action
             'recipients' => $recipients,
             'errors' => $errors,
             'wake' => $wake,
+            'provider' => $provider,
         ];
     }
 
@@ -1346,7 +1400,8 @@ class Messaging extends Action
                 $credentials['authKey'] ?? '',
                 $credentials['authKeyId'] ?? '',
                 $credentials['teamId'] ?? '',
-                $credentials['bundleId'] ?? '',
+                // Earlier provider updates stored a changed bundle ID under `bundle`, leaving `bundleId` on the old one.
+                $credentials['bundle'] ?? $credentials['bundleId'] ?? '',
                 $options['sandbox'] ?? false
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),

@@ -110,9 +110,20 @@ class Hazelcast implements Adapter, Retryable
     /**
      * @param  string  $hash optional
      */
+    /**
+     * @throws \MemcachedException when the server fails the delete, as distinct from a key that is not there
+     */
     public function purge(string $key, string $hash = ''): bool
     {
-        return (bool) $this->execute(fn (): bool => $this->memcached->delete($key));
+        if ($this->execute(fn (): bool => $this->memcached->delete($key))) {
+            return true;
+        }
+
+        if ($this->memcached->getResultCode() !== \Memcached::RES_NOTFOUND) {
+            throw new \MemcachedException('Failed to purge '.$key.': '.$this->memcached->getResultMessage());
+        }
+
+        return false;
     }
 
     /**

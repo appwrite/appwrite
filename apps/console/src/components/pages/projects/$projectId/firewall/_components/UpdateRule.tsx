@@ -131,7 +131,7 @@ export function UpdateRule({
   const canSubmit =
     name.trim().length > 0 &&
     (!needsResourceId || resourceId.trim().length > 0) &&
-    areFirewallConditionsComplete(conditions) &&
+    areFirewallConditionsComplete(conditions, resourceType) &&
     (action !== WafRuleAction.RateLimit ||
       (limit > 0 &&
         interval > 0 &&

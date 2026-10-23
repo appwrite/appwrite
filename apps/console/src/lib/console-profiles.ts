@@ -47,6 +47,11 @@ export type ConsoleProfileFeatures = {
    * still render; only new connect actions are gated.
    */
   extraVcsOAuth: boolean
+  /**
+   * Entire on Git connect. Off until Entire makes plugin installs available to
+   * every Entire account; existing installations still render.
+   */
+  vcsEntire: boolean
   /** Organization compliance (DPA, BAA, SOC 2) */
   compliance: boolean
   /** Organization API keys */
@@ -67,6 +72,8 @@ export type ConsoleProfileFeatures = {
   nativeDbsMongo: boolean
   /** Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
+  /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
+  projectEnvironments: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
   /**
@@ -99,6 +106,12 @@ export type ConsoleProfileFeatures = {
    * Off until that's confirmed.
    */
   analyticsTrafficFilter: boolean
+  /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
+  appwritePush: boolean
+  /** Inbound email (SMTP) trigger card in function Executions settings. */
+  functionEmail: boolean
+  /** Custom inbound email (SMTP) domains on the function Domains tab. */
+  functionEmailDomains: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -121,6 +134,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   accountPasskeys: 'Account passkeys',
   accountApplications: 'Account applications',
   extraVcsOAuth: 'Extra VCS OAuth',
+  vcsEntire: 'Entire Git provider',
   compliance: 'Compliance',
   orgApiKeys: 'Partners keys',
   agent: 'Agent',
@@ -131,6 +145,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   databaseSpecifications: 'Database specifications',
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
+  projectEnvironments: 'Project environments',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
@@ -139,6 +154,9 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   blogDrafts: 'Blog drafts',
   analytics: 'Analytics',
   analyticsTrafficFilter: 'Analytics humans/bots filter',
+  appwritePush: 'Appwrite push',
+  functionEmail: 'Function email trigger',
+  functionEmailDomains: 'Function email domains',
 }
 
 export type ConsoleProfile = {
@@ -173,6 +191,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountPasskeys: true,
       accountApplications: true,
       extraVcsOAuth: false,
+      vcsEntire: false,
       compliance: true,
       orgApiKeys: false,
       agent: false,
@@ -183,6 +202,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: true,
       nativeDbsMongo: false,
       videos: false,
+      projectEnvironments: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -192,6 +212,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       // Off until launch; enable from Debug → Feature flags.
       analytics: false,
       analyticsTrafficFilter: false,
+      appwritePush: false,
+      // Off until launch; enable from Debug → Feature flags.
+      functionEmail: false,
+      functionEmailDomains: false,
     },
   },
   'self-hosted': {
@@ -214,6 +238,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountPasskeys: false,
       accountApplications: false,
       extraVcsOAuth: false,
+      vcsEntire: false,
       compliance: false,
       orgApiKeys: false,
       agent: false,
@@ -224,6 +249,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: false,
       nativeDbsMongo: false,
       videos: false,
+      projectEnvironments: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,
@@ -232,6 +258,9 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       blogDrafts: false,
       analytics: false,
       analyticsTrafficFilter: false,
+      appwritePush: false,
+      functionEmail: false,
+      functionEmailDomains: false,
     },
   },
 }
@@ -507,6 +536,7 @@ function applyCloudOnlyFeatureGates(
       init: false,
       marketing: false,
       multiTenancy: false,
+      projectEnvironments: false,
     }
   }
   return features
@@ -525,8 +555,9 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 /**
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
- * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_DATABASE_PITR_RESTORE,
- * VITE_CONSOLE_BROWSER_ALERTS), applied on top
+ * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_VCS_ENTIRE,
+ * VITE_CONSOLE_DATABASE_PITR_RESTORE,
+ * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -551,11 +582,22 @@ function applyEnvFeatureOverrides(
   if (extraVcsOAuth !== null) {
     next = { ...next, extraVcsOAuth }
   }
+  const vcsEntire = parseEnvFeatureOverride(config.vcsEntire)
+  if (vcsEntire !== null) {
+    next = { ...next, vcsEntire }
+  }
   const databasePitrRestore = parseEnvFeatureOverride(
     config.databasePitrRestore,
   )
   if (databasePitrRestore !== null) {
     next = { ...next, databasePitrRestore }
+  }
+  // Self-hosted has no `/project/environments` and rejects `parentId` in project list queries.
+  const projectEnvironments = parseEnvFeatureOverride(
+    config.projectEnvironments,
+  )
+  if (projectEnvironments !== null && profileId === 'cloud') {
+    next = { ...next, projectEnvironments }
   }
   const browserAlerts = parseEnvFeatureOverride(config.browserAlerts)
   if (browserAlerts !== null) {

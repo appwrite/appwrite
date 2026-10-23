@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -88,16 +89,18 @@ class Create extends Action
             ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
             ->param('replyToEmail', '', new Email(allowEmpty: true), 'Email address to reply to. If not set, defaults to the sender email address.', true)
             ->param('replyToName', '', new Text(128, 0), 'Name of the reply to recipient. If not set, defaults to the sender name.', true)
+            ->param('emails', [], new ArrayList(new Email()), 'List of email addresses to send the message to. Use this to deliver to recipients that are not backed by an Appwrite user, target, or topic.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('publisherForMessaging')
             ->inject('response')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, string $replyToEmail, string $replyToName, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
+    public function action(string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, string $replyToEmail, string $replyToName, ?array $emails, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, Request $request)
     {
         $messageId = $messageId == 'unique()'
             ? Id::unique()
@@ -111,7 +114,7 @@ class Create extends Action
                 : MessageStatus::SCHEDULED;
         }
 
-        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0 && \count($emails) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
@@ -136,6 +139,10 @@ class Create extends Action
         }
 
         if (!empty($attachments)) {
+            if (!\in_array('files.read', $request->getScopes(), true)) {
+                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Attachments require the files.read scope.');
+            }
+
             foreach ($attachments as &$attachment) {
                 [$bucketId, $fileId] = CompoundUID::parse($attachment);
 
@@ -172,6 +179,7 @@ class Create extends Action
                 'cc' => $cc,
                 'bcc' => $bcc,
                 'attachments' => $attachments,
+                'emails' => $emails,
                 'replyToEmail' => $replyToEmail,
                 'replyToName' => $replyToName,
             ],
