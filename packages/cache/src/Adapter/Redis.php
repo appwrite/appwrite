@@ -299,7 +299,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             }
 
             return $this->confirmScript($result, $error);
-        });
+        }, idempotent: false);
     }
 
     protected function leaseEval(string $script, string $key, array $args): mixed
@@ -309,7 +309,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             $result = $this->redis->eval($script, [$key, ...$args], 1);
 
             return $this->confirmScript($result, (string) $this->redis->getLastError());
-        });
+        }, idempotent: false);
     }
 
     /**
@@ -377,10 +377,11 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
     /**
      * Execute a Redis command with retry logic
      *
+     * A script is not idempotent: when its reply is lost Redis may already have run it, so it is never replayed.
      *
      * @throws \RedisException
      */
-    private function execute(callable $callback): mixed
+    private function execute(callable $callback, bool $idempotent = true): mixed
     {
         $attempts = 0;
         $maxAttempts = 1 + $this->maxRetries;
@@ -401,7 +402,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
 
                 $attempts++;
 
-                if ($attempts >= $maxAttempts) {
+                if (! $idempotent || $attempts >= $maxAttempts) {
                     throw $th;
                 }
 
