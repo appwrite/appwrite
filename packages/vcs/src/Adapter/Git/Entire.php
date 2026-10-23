@@ -59,9 +59,26 @@ class Entire extends Git
 
     /**
      * The repository permissions the plugin registers, requested as a whole
-     * so one token covers every selected repository.
+     * so one token covers every selected repository: Entire refuses a token
+     * without a repository that asks for less than the installation holds,
+     * so discussions are asked for even before the plugin uses them.
      */
-    public const PERMISSIONS = ['contents' => 'read', 'checks' => 'write'];
+    public const PERMISSIONS = ['contents' => 'read', 'checks' => 'write', 'discussions' => 'write'];
+
+    /**
+     * What a mint asks for when Entire refuses PERMISSIONS, in order: an
+     * installation not yet updated to a permission, or a plugin that does
+     * not declare it, is refused it.
+     */
+    protected const FALLBACK_PERMISSIONS = [
+        ['contents' => 'read', 'checks' => 'write'],
+        ['contents' => 'read'],
+    ];
+
+    /**
+     * Mint refusals a smaller permission set can get past.
+     */
+    protected const FALLBACK_CODES = ['permission_not_accepted', 'unsupported_permission'];
 
     /**
      * Check run status and conclusion for each state updateCheck() takes.
@@ -244,9 +261,9 @@ class Entire extends Git
      *
      * Signs an EdDSA plugin JWT and exchanges it for an installation access
      * token covering every selected repository with every registered
-     * permission. A plugin registered with fewer permissions than
-     * PERMISSIONS is refused the extra ones, so the mint falls back to
-     * reading contents alone.
+     * permission. Entire refuses a permission the installation has not
+     * accepted and one the plugin does not declare, so the mint falls back
+     * through FALLBACK_PERMISSIONS.
      */
     protected function generateAccessToken(string $privateKey, ?string $appId): void
     {
@@ -257,10 +274,12 @@ class Entire extends Git
         $this->jwtToken = $this->generatePluginJwt($privateKey, $appId);
 
         $path = '/plugins/' . rawurlencode($appId) . '/installations/' . rawurlencode($this->installationId) . '/access-tokens';
-        $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => self::PERMISSIONS]);
+        foreach ([self::PERMISSIONS, ...self::FALLBACK_PERMISSIONS] as $permissions) {
+            $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => $permissions]);
 
-        if ($this->status($response) === 400 && $this->text($this->body($response), 'code') === 'unsupported_permission') {
-            $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => ['contents' => 'read']]);
+            if (!\in_array($this->text($this->body($response), 'code'), self::FALLBACK_CODES, true)) {
+                break;
+            }
         }
 
         $responseBody = $this->body($response);

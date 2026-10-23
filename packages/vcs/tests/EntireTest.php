@@ -2,6 +2,7 @@
 
 namespace Utopia\VCS\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
@@ -37,6 +38,49 @@ class CheckRunsEntire extends Entire
     public function write(string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): array
     {
         return $this->checkRuns('main', $state, $name, $title, $summary, $detailsUrl);
+    }
+}
+
+/**
+ * Entire whose token mints are answered in turn from a list of refusal codes,
+ * an empty code being a minted token, so the permissions each mint asked for
+ * can be read.
+ */
+class MintingEntire extends Entire
+{
+    protected const array STATUSES = [
+        '' => 201,
+        'permission_not_accepted' => 403,
+        'installation_suspended' => 403,
+        'unsupported_permission' => 400,
+    ];
+
+    /**
+     * @var list<array<mixed>>
+     */
+    public array $requested = [];
+
+    /**
+     * @param list<string> $codes What each mint in turn is answered with
+     */
+    public function __construct(private array $codes)
+    {
+        parent::__construct(new Cache(new None()));
+    }
+
+    #[\Override]
+    protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+    {
+        $permissions = \is_array($params['permissions'] ?? null) ? $params['permissions'] : [];
+        $this->requested[] = $permissions;
+        $code = array_shift($this->codes) ?? 'unavailable';
+
+        return [
+            'headers' => ['status-code' => self::STATUSES[$code] ?? 503],
+            'body' => $code === ''
+                ? ['token' => 'token', 'username' => 'x-access-token', 'expires_at' => '2026-10-23T10:00:00Z', 'permissions' => $permissions]
+                : ['code' => $code],
+        ];
     }
 }
 
@@ -565,6 +609,51 @@ final class EntireTest extends TestCase
         $plain = $adapter->write('pending', '', '');
         $this->assertSame('default', $plain['check_runs'][0]['key']);
         $this->assertArrayNotHasKey('output', $plain['check_runs'][0]);
+    }
+
+    /**
+     * @return \Iterator<string, array{list<string>, list<array<string, string>>}>
+     */
+    public static function mints(): \Iterator
+    {
+        $checks = ['contents' => 'read', 'checks' => 'write'];
+        $contents = ['contents' => 'read'];
+        yield 'every permission accepted' => [[''], [Entire::PERMISSIONS]];
+        yield 'installation not yet updated' => [['permission_not_accepted', ''], [Entire::PERMISSIONS, $checks]];
+        yield 'discussions not declared' => [['unsupported_permission', ''], [Entire::PERMISSIONS, $checks]];
+        yield 'contents alone accepted' => [['permission_not_accepted', 'permission_not_accepted', ''], [Entire::PERMISSIONS, $checks, $contents]];
+    }
+
+    /**
+     * @param list<string> $codes
+     * @param list<array<string, string>> $requested
+     */
+    #[DataProvider('mints')]
+    public function testAccessTokenFallsBackToAcceptedPermissions(array $codes, array $requested): void
+    {
+        $adapter = new MintingEntire($codes);
+        $adapter->setIssuer(self::ISSUER);
+
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+
+        $this->assertSame($requested, $adapter->requested);
+    }
+
+    public function testAccessTokenRefusalIsNotRetried(): void
+    {
+        // A suspended installation is refused whatever it asks for
+        $adapter = new MintingEntire(['installation_suspended']);
+        $adapter->setIssuer(self::ISSUER);
+
+        try {
+            $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+            $this->fail('A refused mint must fail');
+        } catch (\Exception $e) {
+            $this->assertSame(403, $e->getCode());
+            $this->assertStringContainsString('installation_suspended', $e->getMessage());
+        }
+
+        $this->assertSame([Entire::PERMISSIONS], $adapter->requested);
     }
 
     public function testCreateFileRejectsEscapingPath(): void
