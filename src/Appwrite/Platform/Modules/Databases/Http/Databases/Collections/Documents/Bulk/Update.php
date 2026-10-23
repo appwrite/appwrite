@@ -216,7 +216,13 @@ class Update extends Action
                     $documents[] = $document;
                 }
             };
-            $modified = $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocuments($collectionTableId, new Document($data), $queries, onNext: $onNext));
+            $modified = $this->withPermissionFence(
+                $dbForProject,
+                $database,
+                $collection,
+                isset($data['$permissions']),
+                fn () => $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocuments($collectionTableId, new Document($data), $queries, onNext: $onNext)),
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (UniqueException $e) {
@@ -229,10 +235,6 @@ class Update extends Action
             throw new Exception($this->getLimitException(), $e->getMessage());
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        if (isset($data['$permissions'])) {
-            $this->purgeListCacheForPermissions($dbForProject, $database, $collection);
         }
 
         foreach ($documents as $document) {

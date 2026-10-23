@@ -6156,6 +6156,32 @@ trait DatabasesBase
                     'commit' => true,
                 ]);
             },
+            'upsert' => fn (): array => $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $containerId, $recordId), $headers, [
+                'data' => ['title' => 'Cached'],
+                'permissions' => [],
+            ]),
+            'bulk upsert' => fn (): array => $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $containerId), $headers, [
+                $this->getRecordResource() => [
+                    ['$id' => $recordId, 'title' => 'Cached', '$permissions' => []],
+                ],
+            ]),
+            'transaction bulk upsert' => function () use ($headers, $databaseId, $containerId, $recordId): array {
+                $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+                $this->assertSame(201, $transaction['headers']['status-code']);
+                $transactionId = $transaction['body']['$id'];
+
+                $staged = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $containerId), $headers, [
+                    $this->getRecordResource() => [
+                        ['$id' => $recordId, 'title' => 'Cached', '$permissions' => []],
+                    ],
+                    'transactionId' => $transactionId,
+                ]);
+                $this->assertSame(200, $staged['headers']['status-code']);
+
+                return $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+                    'commit' => true,
+                ]);
+            },
         ];
 
         foreach ($revocations as $revocation => $revoke) {

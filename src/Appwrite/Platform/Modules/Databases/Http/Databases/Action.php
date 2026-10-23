@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
+use Appwrite\Databases\ListCache;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Adapter;
@@ -261,6 +262,11 @@ class Action extends AppwriteAction
         );
     }
 
+    protected function getListCache(Database $dbForProject, Document $database, string $collectionId): ListCache
+    {
+        return new ListCache($dbForProject->getCache(), $this->getListCacheKey($dbForProject, $database, $collectionId));
+    }
+
     /**
      * Purge every cached list response for a collection.
      *
@@ -268,20 +274,26 @@ class Action extends AppwriteAction
      */
     protected function purgeListCache(Database $dbForProject, Document $database, string $collectionId): bool
     {
-        return $dbForProject->getCache()->purge($this->getListCacheKey($dbForProject, $database, $collectionId));
+        return $this->getListCache($dbForProject, $database, $collectionId)->purge();
     }
 
     /**
-     * Purge a collection's cached list responses after a write set document permissions.
+     * Run a write behind a fence on the collection's cached list responses when it sets document permissions.
      *
-     * Only a collection with document security reads through document permissions, so only its
-     * cached responses can keep serving rows to a caller whose read was revoked.
+     * Only a collection with document security reads through document permissions, so only its cached responses can
+     * keep serving rows to a caller whose read was revoked.
+     *
+     * @template T
+     * @param callable(): T $write
+     * @return T
      */
-    protected function purgeListCacheForPermissions(Database $dbForProject, Document $database, Document $collection): void
+    protected function withPermissionFence(Database $dbForProject, Document $database, Document $collection, bool $setsPermissions, callable $write): mixed
     {
-        if ($collection->getAttribute('documentSecurity', false)) {
-            $this->purgeListCache($dbForProject, $database, $collection->getId());
-        }
+        $caches = $setsPermissions && $collection->getAttribute('documentSecurity', false)
+            ? [$this->getListCache($dbForProject, $database, $collection->getId())]
+            : [];
+
+        return ListCache::fenced($caches, $write);
     }
 
     /**

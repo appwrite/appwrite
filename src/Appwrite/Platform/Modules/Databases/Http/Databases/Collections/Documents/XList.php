@@ -192,59 +192,37 @@ class XList extends Action
                 );
                 $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
             } elseif ((int)$ttl > 0 && $parsed->joins === []) {
-                $cache = $dbForProject->getCache();
-                $cacheKey = $this->getListCacheKey($dbForProject, $database, $collectionId);
+                $listCache = $this->getListCache($dbForProject, $database, $collectionId);
+                $lease = $listCache->lease();
                 $roles = $dbForProject->getAuthorization()->getRoles();
                 $documentsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_DOCUMENTS);
                 $operationsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_OPERATIONS);
 
                 $documentsCacheHit = false;
-                try {
-                    $cachedDocuments = $cache->load($cacheKey, $ttl, $documentsField);
-                } catch (\Throwable) {
-                    $cachedDocuments = null;
-                }
+                $cachedDocuments = $listCache->load($documentsField, $ttl);
 
                 if (\is_array($cachedDocuments)) {
                     $documents = \array_map($hydrate, $cachedDocuments);
                     $documentsCacheHit = true;
-
-                    try {
-                        $cachedOperations = $cache->load($cacheKey, $ttl, $operationsField);
-                    } catch (\Throwable) {
-                        $cachedOperations = null;
-                    }
-                    $this->recordCachedOperations($operations, $documents, $cachedOperations);
+                    $this->recordCachedOperations($operations, $documents, $listCache->load($operationsField, $ttl));
                 } else {
                     $documents = $find();
 
-                    try {
-                        if ($documents !== []) {
-                            $cache->saveMany($cacheKey, [
-                                $documentsField => \array_map(fn (Document $document): array => $document->getArrayCopy(), $documents),
-                                $operationsField => $operations->counts($documents),
-                            ]);
-                        }
-                    } catch (\Throwable) {
+                    if ($documents !== []) {
+                        $listCache->save($documentsField, \array_map(fn (Document $document): array => $document->getArrayCopy(), $documents), $lease);
+                        $listCache->save($operationsField, $operations->counts($documents), $lease);
                     }
                 }
 
                 $total = 0;
                 if ($includeTotal) {
                     $totalField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_TOTAL);
-                    try {
-                        $cachedTotal = $cache->load($cacheKey, $ttl, $totalField);
-                    } catch (\Throwable) {
-                        $cachedTotal = null;
-                    }
+                    $cachedTotal = $listCache->load($totalField, $ttl);
                     if ($cachedTotal !== null && $cachedTotal !== false) {
                         $total = (int) $cachedTotal;
                     } else {
                         $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
-                        try {
-                            $cache->save($cacheKey, (string) $total, $totalField);
-                        } catch (\Throwable) {
-                        }
+                        $listCache->save($totalField, (string) $total, $lease);
                     }
                 }
 

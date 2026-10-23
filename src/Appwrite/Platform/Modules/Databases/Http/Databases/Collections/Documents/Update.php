@@ -277,9 +277,15 @@ class Update extends Action
         $this->validateTimestamps($data, $dbForDatabases);
 
         try {
-            $document = $dbForDatabases->withRequestTimestamp(
-                $requestTimestamp,
-                fn () => $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocument($collectionTableId, $document->getId(), $newDocument))
+            $document = $this->withPermissionFence(
+                $dbForProject,
+                $database,
+                $collection,
+                $callerProvidedPermissions,
+                fn () => $dbForDatabases->withRequestTimestamp(
+                    $requestTimestamp,
+                    fn () => $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocument($collectionTableId, $document->getId(), $newDocument))
+                ),
             );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
@@ -301,10 +307,6 @@ class Update extends Action
             throw $this->unauthorized($e);
         } catch (LimitException $e) {
             throw new Exception($this->getLimitException(), $e->getMessage());
-        }
-
-        if ($callerProvidedPermissions) {
-            $this->purgeListCacheForPermissions($dbForProject, $database, $collection);
         }
 
         $response->dynamic($document, $this->getResponseModel());

@@ -184,17 +184,25 @@ class Upsert extends Action
         $upserted = [];
 
         try {
-            $modified = $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
-                return $dbForDatabases->upsertDocuments(
-                    $collectionTableId,
-                    $documents,
-                    onNext: function (Document $document) use ($plan, &$upserted) {
-                        if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                            $upserted[] = $document;
-                        }
-                    },
-                );
-            });
+            $modified = $this->withPermissionFence(
+                $dbForProject,
+                $database,
+                $collection,
+                \array_any($documents, fn (Document $document): bool => $document->offsetExists('$permissions')),
+                function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
+                    return $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
+                        return $dbForDatabases->upsertDocuments(
+                            $collectionTableId,
+                            $documents,
+                            onNext: function (Document $document) use ($plan, &$upserted) {
+                                if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                                    $upserted[] = $document;
+                                }
+                            },
+                        );
+                    });
+                },
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (UniqueException $e) {
@@ -213,10 +221,6 @@ class Upsert extends Action
             throw new Exception($this->getStructureException(), $e->getMessage());
         } catch (LimitException $e) {
             throw new Exception($this->getLimitException(), $e->getMessage());
-        }
-
-        if (\array_any($documents, fn (Document $document): bool => $document->offsetExists('$permissions'))) {
-            $this->purgeListCacheForPermissions($dbForProject, $database, $collection);
         }
 
         foreach ($upserted as $document) {
