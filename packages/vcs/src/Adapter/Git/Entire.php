@@ -842,6 +842,11 @@ class Entire extends Git
         $repositoryUrl = $owner !== '' && $repositoryName !== '' ? $this->getRepositoryUrl($owner, $repositoryName) : '';
 
         $branch = substr($ref, \strlen('refs/heads/'));
+        // Entire names the default branch by its full ref
+        $defaultBranch = $this->text($repository, 'default_branch');
+        if (str_starts_with($defaultBranch, 'refs/heads/')) {
+            $defaultBranch = substr($defaultBranch, \strlen('refs/heads/'));
+        }
         $deleted = $type === self::EVENT_REF_DELETED;
         $commitHash = $deleted ? '' : $this->text($payload, 'after');
 
@@ -859,7 +864,7 @@ class Entire extends Git
             'installationId' => $delivery['installationId'],
             'deliveryId' => $delivery['deliveryId'],
             'apiUrl' => $delivery['apiUrl'],
-            'defaultBranch' => $this->text($repository, 'default_branch'),
+            'defaultBranch' => $defaultBranch,
             'commitHash' => $commitHash,
             'previousCommitHash' => $this->text($payload, 'before'),
             'forced' => (bool) ($payload['forced'] ?? false),
@@ -1673,6 +1678,24 @@ class Entire extends Git
         }
 
         return $files;
+    }
+
+    /**
+     * The commit two refs last shared, such as where a branch left the
+     * default branch. Each ref is a branch, tag or commit SHA.
+     */
+    public function getMergeBase(string $owner, string $repositoryName, string $commitA, string $commitB): string
+    {
+        $repositoryId = $this->repositoryId($owner, $repositoryName);
+
+        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/git/repos/' . rawurlencode($this->gitRepositoryId($repositoryId)) . '/merge-base', ['commitA' => $commitA, 'commitB' => $commitB]);
+
+        $statusCode = $this->status($response);
+        if ($statusCode >= 400) {
+            throw $this->requestFailed('Failed to find the merge base', $response);
+        }
+
+        return $this->text($this->body($response), 'mergeBaseSHA');
     }
 
     /**
