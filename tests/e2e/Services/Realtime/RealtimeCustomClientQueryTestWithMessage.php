@@ -607,9 +607,21 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertEquals('error', $response['type']);
         $this->assertStringContainsString('queries is allowed per subscription', (string) $response['data']['message']);
 
+        $response = $this->receiveSubscribeMessageResponse([\str_repeat('a', APP_LIMIT_ARRAY_ELEMENT_SIZE + 1)], $headers, []);
+        $this->assertEquals('error', $response['type']);
+        $this->assertStringContainsString('Each channel must be at most', (string) $response['data']['message']);
+
         $client = $this->getWebsocket([], $headers);
 
         try {
+            $client->send(\json_encode([
+                'type' => 'subscribe',
+                'data' => \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS + 1, ['channels' => ['documents']]),
+            ]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertEquals('error', $response['type']);
+            $this->assertStringContainsString('subscriptions is allowed', (string) $response['data']['message']);
+
             $half = \intdiv(APP_LIMIT_REALTIME_SUBSCRIPTIONS, 2) + 1;
             $batch = static fn (string $prefix): array => \array_map(
                 static fn (int $index): array => ['subscriptionId' => $prefix . $index, 'channels' => ['documents']],
