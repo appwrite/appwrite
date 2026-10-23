@@ -4006,6 +4006,8 @@ final class SitesCustomServerTest extends Scope
                 'a_jwt_console=' . $jwt['body']['jwt'],
                 'a_session_console=' . $secret,
                 'a_session_console_legacy=' . $secret,
+                'a_session_' . $this->getProject()['$id'] . '=' . $secret,
+                'a_session_' . $this->getProject()['$id'] . '_legacy=' . $secret,
                 'theme=dark',
             ]);
 

@@ -44,7 +44,7 @@ class Get extends Action
                 group: null,
                 name: 'getNHostReport',
                 description: '/docs/references/migrations/migration-nhost-report.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -77,7 +77,8 @@ class Get extends Action
         Response $response,
         PublicHostname $publicHostname
     ): void {
-        $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, (string) $port);
+        $nhost = (new NHost($subdomain, $region, $adminSecret, $database, $username, $password, (string) $port))
+            ->setDestinations($publicHostname->getDestinations());
 
         try {
             $nhost->setDatabaseAddress($publicHostname->address($nhost->getDatabaseHost()));
