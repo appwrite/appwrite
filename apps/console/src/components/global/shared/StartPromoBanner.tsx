@@ -19,9 +19,11 @@ import {
   START_PROMO_BANNER_ID,
   useDebugConsoleBannerPreviews,
 } from '@/lib/console-banners'
+import { resolveStartPromoBannerContent } from '@/lib/console-banners/start-promo-content'
 import { useStartPromoBannerAudience } from '@/lib/console-banners/use-start-promo-banner-audience'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { useVisitorCountryCode } from '@/hooks/use-visitor-country'
 import { useDismissConsoleBanner } from '@/lib/react-query/hooks'
 import {
   isConsoleBannerDismissed,
@@ -29,8 +31,6 @@ import {
 } from '@/lib/user-prefs-keys'
 
 const START_PROMO_BANNER = getConsoleBannerById(START_PROMO_BANNER_ID)!
-
-const START_PROMO_TAJ_SRC = '/images/console/banners/start-promo-taj.svg'
 
 const START_PROMO_IMAGE_MASK_STYLE = {
   WebkitMaskImage:
@@ -58,6 +58,8 @@ export function StartPromoBanner() {
   const { isPreviewEnabled } = useDebugConsoleBannerPreviews()
   const dismissBanner = useDismissConsoleBanner()
   const audience = useStartPromoBannerAudience()
+  const countryCode = useVisitorCountryCode()
+  const promoContent = resolveStartPromoBannerContent(countryCode)
   const [optimisticDismissed, setOptimisticDismissed] = useState(false)
   const [guestDismissed, setGuestDismissed] = useState(() =>
     isGuestConsoleBannerDismissed(START_PROMO_BANNER_ID),
@@ -151,7 +153,7 @@ export function StartPromoBanner() {
     return () => clearTimeout(timer)
   }, [renderBanner, mountExpanded])
 
-  if (!renderBanner) {
+  if (!renderBanner || !promoContent) {
     return null
   }
 
@@ -167,8 +169,8 @@ export function StartPromoBanner() {
     setGuestDismissed(true)
   }
 
-  const headline = t('Namaste India')
-  const subline = t('Appwrite Start, a plan built for Indian developers.')
+  const headline = t(promoContent.headline)
+  const subline = t(promoContent.subline)
   const ctaLabel = t('Learn more')
 
   return (
@@ -201,7 +203,7 @@ export function StartPromoBanner() {
               className="pointer-events-none absolute inset-y-0 start-0 hidden w-[min(42%,360px)] overflow-hidden sm:block"
             >
               <img
-                src={START_PROMO_TAJ_SRC}
+                src={promoContent.imageSrc}
                 alt=""
                 className="absolute start-[-40px] top-[-92px] h-[360px] w-auto max-w-none opacity-90"
                 style={START_PROMO_IMAGE_MASK_STYLE}

@@ -290,7 +290,7 @@ export function BreakdownPanel({
       : active.id
 
   // Rows with a filterable dimension and a real value become filter toggles.
-  const filterRowProps = (value: string | undefined) => {
+  const filterRowProps = (value: string | null | undefined) => {
     if (!filterAttribute || !value) return {}
     const isActive = isFilterActive(filterAttribute, value)
     return {

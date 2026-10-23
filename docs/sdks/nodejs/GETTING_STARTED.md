@@ -1,158 +1,128 @@
-## Getting Started
+## Getting started
 
-### Init your SDK
+### Initialize the client
 
-Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page and your new API secret Key project API keys section.
+Copy your endpoint and project ID from your project's **Settings** page. Create an API key under **API Keys** in the project sidebar and grant it only the scopes your code needs.
 
 ```js
-const sdk = require('node-appwrite');
+import { Client } from 'node-appwrite';
 
-let client = new sdk.Client();
-
-client
-    .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-    .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
-    .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
-;
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
 ```
 
-### Make Your First Request
+API keys bypass user permissions, so keep them on the server and out of source control. To act as a signed-in user instead, pass their session with `setSession()` or a JWT with `setJWT()`.
 
-Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
+For a self-hosted Appwrite, use `https://<HOSTNAME>/v1` as the endpoint. If it serves a self-signed certificate during development, also call `.setSelfSigned(true)`.
+
+### Make your first request
+
+Create a service from the client and call any of its methods. Every method takes a single object of named parameters and returns a promise. See the [API reference](https://appwrite.io/docs/references) for every service and method.
 
 ```js
-let users = new sdk.Users(client);
+import { ID, Users } from 'node-appwrite';
 
-let promise = users.create({
-    userId: sdk.ID.unique(),
-    email: "email@example.com",
-    phone: "+123456789",
-    password: "password",
-    name: "Walter O'Brien"
+const users = new Users(client);
+
+const user = await users.create({
+    userId: ID.unique(),
+    email: 'email@example.com',
+    phone: '+123456789',
+    password: 'password',
+    name: "Walter O'Brien",
 });
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+console.log(user);
 ```
 
-### Full Example
+### Upload a file
+
+File inputs are built with `InputFile`, imported from `node-appwrite/file`:
+
 ```js
-const sdk = require('node-appwrite');
+import { ID, Storage } from 'node-appwrite';
+import { InputFile } from 'node-appwrite/file';
 
-let client = new sdk.Client();
+const storage = new Storage(client);
 
-client
-    .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-    .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
-    .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
-;
-
-let users = new sdk.Users(client);
-let promise = users.create({
-    userId: sdk.ID.unique(),
-    email: "email@example.com",
-    phone: "+123456789",
-    password: "password",
-    name: "Walter O'Brien"
-});
-
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
+const file = await storage.createFile({
+    bucketId: '<BUCKET_ID>',
+    fileId: ID.unique(),
+    file: InputFile.fromPath('/path/to/file.png', 'file.png'),
 });
 ```
 
-### Type Safety with Models
+### Type safety with models
 
-The Appwrite Node SDK provides type safety when working with table rows through generic methods. Methods like `listRows`, `getRow`, and others accept a generic type parameter that allows you to specify your custom model type for full type safety.
+Methods that return rows, such as `listRows` and `getRow`, accept a type parameter for your own row shape:
 
-**TypeScript:**
-```typescript
+```ts
+import { TablesDB, type Models } from 'node-appwrite';
+
 interface Book extends Models.Row {
     name: string;
     author: string;
     releaseYear?: string;
-    category?: string;
     genre?: string[];
     isCheckedOut: boolean;
 }
 
 const tablesDB = new TablesDB(client);
 
-try {
-    const result = await tablesDB.listRows<Book>({
-        databaseId: 'your-database-id',
-        tableId: 'your-table-id'
-    });
-    
-    result.rows.forEach(book => {
-        console.log(`Book: ${book.name} by ${book.author}`); // Now you have full type safety
-    });
-} catch (error) {
-    console.error('Appwrite error:', error);
+const result = await tablesDB.listRows<Book>({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+});
+
+for (const book of result.rows) {
+    console.log(`${book.name} by ${book.author}`);
 }
 ```
 
-**JavaScript (with JSDoc for type hints):**
-```javascript
-/**
- * @typedef {Object} Book
- * @property {string} name
- * @property {string} author
- * @property {string} [releaseYear]
- * @property {string} [category]
- * @property {string[]} [genre]
- * @property {boolean} isCheckedOut
- */
-
-const tablesDB = new TablesDB(client);
-
-try {
-    /** @type {Models.RowList<Book>} */
-    const result = await tablesDB.listRows({
-        databaseId: 'your-database-id',
-        tableId: 'your-table-id'
-    });
-    
-    result.rows.forEach(book => {
-        console.log(`Book: ${book.name} by ${book.author}`); // Type hints available in IDE
-    });
-} catch (error) {
-    console.error('Appwrite error:', error);
-}
-```
-
-**Tip**: You can use the `appwrite types` command to automatically generate TypeScript interfaces based on your Appwrite database schema. Learn more about [type generation](https://appwrite.io/docs/products/databases/type-generation).
-
-### Error Handling
-
-The Appwrite Node SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+In JavaScript, the same types are available through JSDoc:
 
 ```js
-let users = new sdk.Users(client);
+/**
+ * @typedef {import('node-appwrite').Models.Row & {
+ *     name: string,
+ *     author: string,
+ *     isCheckedOut: boolean,
+ * }} Book
+ */
+
+/** @type {import('node-appwrite').Models.RowList<Book>} */
+const result = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+});
+```
+
+The [Appwrite CLI](https://github.com/appwrite/sdk-for-cli) can generate these interfaces from your database schema with `appwrite types`. See [type generation](https://appwrite.io/docs/products/databases/tablesdb/type-generation).
+
+### Error handling
+
+Failed requests throw an `AppwriteException` with `message`, `code`, `type` and `response` properties.
+
+```js
+import { AppwriteException } from 'node-appwrite';
 
 try {
-    let res = await users.create({
-    userId: sdk.ID.unique(),
-    email: "email@example.com",
-    phone: "+123456789",
-    password: "password",
-    name: "Walter O'Brien"
-});
-} catch(e) {
-    console.log(e.message);
+    const user = await users.get({ userId: '<USER_ID>' });
+    console.log(user);
+} catch (error) {
+    if (error instanceof AppwriteException) {
+        console.error(error.code, error.type, error.message);
+    }
 }
 ```
 
+The [response codes](https://appwrite.io/docs/apis/response-codes) page lists every error type.
+
 ### Learn more
-You can use the following resources to learn more and get help
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
-- 📜 [Appwrite Docs](https://appwrite.io/docs)
-- 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite Node Playground](https://github.com/appwrite/playground-for-node)
+
+- [Node.js quick start](https://appwrite.io/docs/quick-starts/node)
+- [Appwrite docs](https://appwrite.io/docs)
+- [Discord community](https://appwrite.io/discord)
+- [Node.js playground](https://github.com/appwrite/playground-for-node)

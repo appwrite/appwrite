@@ -25,6 +25,23 @@ function stripPageTitleSuffix(title: string): string {
   return title.replace(/\s·\sAppwrite$/u, '').trim() || title
 }
 
+function inferOgImageMimeType(ogImage: string): string | undefined {
+  const path = ogImage.split('?')[0]?.toLowerCase() ?? ''
+  if (path.endsWith('.png') || path.endsWith('/og/image.png') || path.endsWith('/og/init.png')) {
+    return 'image/png'
+  }
+  if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+    return 'image/jpeg'
+  }
+  if (path.endsWith('.webp')) {
+    return 'image/webp'
+  }
+  if (path.endsWith('.avif')) {
+    return 'image/avif'
+  }
+  return undefined
+}
+
 export function getPageMetaTags(options: PageSeoOptions) {
   const siteOrigin = getSeoSiteOrigin(options.siteOrigin)
   const ogImage =
@@ -33,6 +50,7 @@ export function getPageMetaTags(options: PageSeoOptions) {
       options.ogImageParams ?? { title: stripPageTitleSuffix(options.title) },
       siteOrigin,
     )
+  const ogImageType = inferOgImageMimeType(ogImage)
 
   return [
     { title: options.title },
@@ -47,6 +65,10 @@ export function getPageMetaTags(options: PageSeoOptions) {
     { property: 'og:type', content: options.ogType ?? 'website' },
     ...(options.canonical ? [{ property: 'og:url', content: options.canonical }] : []),
     { property: 'og:image', content: ogImage },
+    ...(ogImage.startsWith('https://')
+      ? [{ property: 'og:image:secure_url', content: ogImage }]
+      : []),
+    ...(ogImageType ? [{ property: 'og:image:type', content: ogImageType }] : []),
     { property: 'og:image:width', content: String(options.ogImageWidth ?? OG_IMAGE_WIDTH) },
     { property: 'og:image:height', content: String(options.ogImageHeight ?? OG_IMAGE_HEIGHT) },
     { name: 'twitter:card', content: 'summary_large_image' },

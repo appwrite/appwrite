@@ -276,11 +276,13 @@ async function main() {
     .trimEnd()
   const volumesSection = compose.slice(volumesStart + '\nvolumes:\n'.length)
 
-  const pinImage = (text: string) =>
-    text.replaceAll(
-      '${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}',
-      `appwrite/appwrite:${version}`,
-    )
+  const pinVersion = (text: string) =>
+    text
+      .replaceAll(
+        '${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}',
+        `appwrite/appwrite:${version}`,
+      )
+      .replaceAll('${_APP_VERSION:-}', version)
 
   // The text blocks below preserve the upstream file's comments and formatting
   // for the generated output. Structure (profiles, extends) is read from the
@@ -361,7 +363,7 @@ async function main() {
     }
     return {
       name: s.name,
-      block: pinImage(
+      block: pinVersion(
         stripOmittedServiceEnv(stripProfiles(block, profilesOf(def))),
       ),
     }

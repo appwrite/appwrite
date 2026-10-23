@@ -40,6 +40,10 @@ try {
     exit(1);
 }
 
+if (EncryptionKey::isInsecure(System::getEnv('_APP_EXECUTOR_SECRET'))) {
+    Console::warning('_APP_EXECUTOR_SECRET is the public default "' . EncryptionKey::PLACEHOLDER . '". Set a unique secret.');
+}
+
 $files = new Files();
 $files->load(__DIR__ . '/../public');
 
@@ -193,8 +197,20 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         createDatabase($container, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $container) {
             $authorization = $container->get('authorization');
 
-            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
-                $dbForPlatform->createDocument('buckets', new Document([
+            // Console users upload import files here; everything else goes through file permissions.
+            $defaultBucketPermissions = [
+                Permission::create(Role::users()),
+            ];
+
+            $defaultBucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
+            if (!$defaultBucket->isEmpty() && $defaultBucket->getPermissions() !== $defaultBucketPermissions) {
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('buckets', 'default', new Document([
+                    '$permissions' => $defaultBucketPermissions,
+                ])));
+            }
+
+            if ($defaultBucket->isEmpty()) {
+                $authorization->skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => Id::custom('default'),
                     '$collection' => Id::custom('buckets'),
                     'name' => 'Default',
@@ -205,16 +221,11 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     'encryption' => true,
                     'antivirus' => true,
                     'fileSecurity' => true,
-                    '$permissions' => [
-                        Permission::create(Role::any()),
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
+                    '$permissions' => $defaultBucketPermissions,
                     'search' => 'buckets Default',
-                ]));
+                ])));
 
-                $bucket = $dbForPlatform->getDocument('buckets', 'default');
+                $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
 
                 $files = $collections['buckets']['files'] ?? [];
                 if (empty($files)) {

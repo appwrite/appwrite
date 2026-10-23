@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 use Appwrite\ClamAV\Network;
 use Appwrite\ClamAV\ScanResult;
 use Appwrite\Event\Event;
+use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -14,6 +15,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Filename;
 use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
@@ -21,6 +23,7 @@ use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -62,6 +65,17 @@ class Create extends Action
      * Not part of the public file model.
      */
     private const UPLOADER_ID = 'uploaderId';
+
+    private const METADATA_MIME_TYPES = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/heic',
+        'image/heif',
+        'image/avif',
+        'image/gif',
+        'image/tiff',
+    ];
 
     public static function getName()
     {
@@ -114,6 +128,7 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('authorization')
             ->inject('locks')
+            ->inject('exiftool')
             ->callback($this->action(...));
     }
 
@@ -132,7 +147,8 @@ class Create extends Action
         Device $deviceForFiles,
         Device $deviceForLocal,
         Authorization $authorization,
-        callable $locks
+        callable $locks,
+        ExiftoolClient $exiftool
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -233,6 +249,11 @@ class Create extends Action
             $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
         }
 
+        $filename = new Filename(0, 0);
+        if (!$filename->isValid($fileName)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $filename->getDescription());
+        }
+
         /**
          * Validators
          */
@@ -297,6 +318,11 @@ class Create extends Action
 
                 $this->assertResumeAllowed($bucket, $file, $authorization, $user);
 
+                // The chunk count and size were fixed by the first chunk.
+                if ((int) $file->getAttribute('sizeOriginal', 0) !== $fileSize) {
+                    throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                }
+
                 if ($uploaded === $chunks) {
                     $response
                         ->setStatusCode(Response::STATUS_CODE_OK)
@@ -344,7 +370,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -384,6 +410,19 @@ class Create extends Action
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalize($path, $chunks, $metadata);
+                // Reuse one metadata snapshot instead of separate backend HEADs.
+                $info = $deviceForFiles->getFileInfo($path);
+
+                // A chunk can carry more or fewer bytes than its range announces.
+                if (!empty($contentRange) && $info->size !== $fileSize) {
+                    $removed = $deviceForFiles->delete($path);
+
+                    if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                    }
+
+                    throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                }
 
                 if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === DeviceType::Local) {
                     $antivirus = new Network(
@@ -419,14 +458,20 @@ class Create extends Action
                     }
                 }
 
-                $mimeType = $deviceForFiles->getFileMimeType($path); // Get mime-type before compression and encryption
+                $mimeType = $info->mimeType ?? $deviceForFiles->getFileMimeType($path);
                 $formats = Config::getParam('storage-formats');
 
                 if (\in_array($mimeType, $formats['ambiguous'], true)) {
                     $mimeType = $formats['extensions'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))] ?? $mimeType;
                 }
 
-                $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
+                // Strip before hashing so the signature and sizes describe the file we store.
+                if ($bucket->getAttribute('stripMetadata', false) && $fileSize <= APP_STORAGE_READ_BUFFER && \in_array($mimeType, self::METADATA_MIME_TYPES, true)) {
+                    $fileSize = $this->stripMetadata($exiftool, $deviceForFiles, $path, $mimeType) ?? $fileSize;
+                    $info = $deviceForFiles->getFileInfo($path);
+                }
+
+                $fileHash = $info->etag ?? $deviceForFiles->getFileHash($path); // Before compression and encryption.
                 $data = '';
                 $iv = '';
                 $tag = null;
@@ -466,7 +511,7 @@ class Create extends Action
                     }
                 }
 
-                $sizeActual = $deviceForFiles->getFileSize($path);
+                $sizeActual = !empty($data) ? \strlen($data) : $info->size;
 
                 $openSSLVersion = null;
                 $openSSLCipher = null;
@@ -523,6 +568,7 @@ class Create extends Action
                     $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, new Document([
                         'signature' => $fileHash,
                         'mimeType' => $mimeType,
+                        'sizeOriginal' => $fileSize,
                         'sizeActual' => $sizeActual,
                         'algorithm' => $algorithm,
                         'openSSLVersion' => $openSSLVersion,
@@ -618,6 +664,29 @@ class Create extends Action
      */
     protected function afterCreateSuccess(Document $file)
     {
+    }
+
+    /**
+     * Returns the stripped size, or null when the file is kept as uploaded.
+     */
+    private function stripMetadata(ExiftoolClient $exiftool, Device $deviceForFiles, string $path, string $mimeType): ?int
+    {
+        try {
+            $stripped = $exiftool->strip($deviceForFiles->read($path));
+
+            if (!$deviceForFiles->write($path, new Stream($stripped), $mimeType)) {
+                Console::warning("Image metadata was not removed from {$path}: the stripped file could not be saved.");
+                return null;
+            }
+
+            // Later size checks stat this path again.
+            \clearstatcache(true, $path);
+
+            return \strlen($stripped);
+        } catch (\Throwable $th) {
+            Console::warning("Image metadata was not removed from {$path}: {$th->getMessage()}");
+            return null;
+        }
     }
 
     /**

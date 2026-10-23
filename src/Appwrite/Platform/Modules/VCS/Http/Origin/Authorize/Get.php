@@ -94,13 +94,18 @@ class Get extends Action
 
         $projectId = $project->getId();
 
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        if (empty($signingKey)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+        }
+
         // The callback is public and Origin performs no token exchange, so the
         // state carries an HMAC binding the redirect targets to this project.
         $state = [
             'projectId' => $projectId,
             'success' => $success,
             'failure' => $failure,
-            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $success, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $success, $failure]), $signingKey),
         ];
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
