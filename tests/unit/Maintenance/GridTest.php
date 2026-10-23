@@ -19,6 +19,8 @@ final class GridTest extends TestCase
         yield 'daily after the start time' => ['2026-10-23 14:20:00', 86400, '2026-10-24 12:00:00'];
         yield 'every 8 hours after the start time' => ['2026-10-23 14:20:00', 28800, '2026-10-23 20:00:00'];
         yield 'hourly before the start time' => ['2026-10-23 11:30:00', 3600, '2026-10-23 12:00:00'];
+        yield 'hourly hours before the start time' => ['2026-10-23 10:00:00', 3600, '2026-10-23 11:00:00'];
+        yield 'daily hours before the start time' => ['2026-10-23 05:00:00', 86400, '2026-10-23 12:00:00'];
         yield 'hourly on a run' => ['2026-10-23 15:00:00', 3600, '2026-10-23 16:00:00'];
         yield 'daily on a run' => ['2026-10-23 12:00:00', 86400, '2026-10-24 12:00:00'];
     }
