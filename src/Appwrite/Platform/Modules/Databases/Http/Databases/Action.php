@@ -268,7 +268,7 @@ class Action extends AppwriteAction
     }
 
     /**
-     * Purge every cached list response for a collection.
+     * Purge every cached list response for a collection and change its version.
      *
      * One DEL on the collection's Redis hash, clearing all variations at once.
      */

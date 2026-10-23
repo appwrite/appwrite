@@ -6,11 +6,12 @@ namespace Tests\Unit\Databases;
 
 use Utopia\Cache\Adapter;
 use Utopia\Cache\Adapter\Redis;
+use Utopia\Cache\Feature\Batchable;
 
 /**
  * A Redis cache that can be taken down: while down, every call throws as a lost connection does.
  */
-final class Outage implements Adapter
+final class Outage implements Adapter, Batchable
 {
     public bool $down = false;
 
@@ -61,6 +62,16 @@ final class Outage implements Adapter
     public function getName(?string $key = null): string
     {
         return $this->redis->getName($key);
+    }
+
+    public function loadMany(string $key, array $fields, int $ttl): array
+    {
+        return $this->reach()->loadMany($key, $fields, $ttl);
+    }
+
+    public function saveMany(string $key, array $data, int $ttl = 0): array|false
+    {
+        return $this->reach()->saveMany($key, $data, $ttl);
     }
 
     private function reach(): Redis

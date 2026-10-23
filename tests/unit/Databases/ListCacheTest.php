@@ -57,6 +57,41 @@ final class ListCacheTest extends TestCase
         $this->assertFalse($this->cache->load($this->key, self::TTL, self::FIELD));
     }
 
+    public function testSavesReadWhileVersionIsUnchanged(): void
+    {
+        $listCache = new ListCache($this->cache, $this->key);
+        $version = $listCache->getVersion();
+
+        $listCache->save([self::FIELD => ['row']], $version);
+
+        $this->assertSame(['row'], $this->cache->load($this->key, self::TTL, self::FIELD));
+    }
+
+    public function testReadRacingAPermissionWriteIsNotSaved(): void
+    {
+        $listCache = new ListCache($this->cache, $this->key);
+        $version = $listCache->getVersion();
+
+        ListCache::purged([$listCache], fn (): string => 'stored');
+        $listCache->save([self::FIELD => ['row read before the write']], $version);
+
+        $this->assertFalse($this->cache->load($this->key, self::TTL, self::FIELD), 'A list read before a permission write was cached after it');
+    }
+
+    public function testReadIsNotSavedWhenItsVersionCannotBeRead(): void
+    {
+        $listCache = new ListCache($this->cache, $this->key);
+
+        $this->outage->down = true;
+        $version = $listCache->getVersion();
+        $this->outage->down = false;
+
+        $listCache->save([self::FIELD => ['row']], $version);
+
+        $this->assertNull($version);
+        $this->assertFalse($this->cache->load($this->key, self::TTL, self::FIELD));
+    }
+
     public function testPurgeFailureBeforeTheWriteRefusesIt(): void
     {
         $this->outage->down = true;
