@@ -863,14 +863,21 @@ trait KeysBase
 
     public function testGetKeySecretRequiresWriteScope(): void
     {
-        $key = $this->createKey(Id::unique(), 'Secret Test Key', ['users.read']);
+        // Within the writer's grant: its scopes, and it expires before the writer does
+        $key = $this->createKey(Id::unique(), 'Secret Test Key', ['users.read'], DateTime::addSeconds(new \DateTime(), 300));
         $this->assertSame(201, $key['headers']['status-code']);
         $keyId = $key['body']['$id'];
+
+        $broader = $this->createKey(Id::unique(), 'Broader Secret Test Key', ['users.read', 'users.write'], DateTime::addSeconds(new \DateTime(), 300));
+        $this->assertSame(201, $broader['headers']['status-code']);
+
+        $lasting = $this->createKey(Id::unique(), 'Lasting Secret Test Key', ['users.read']);
+        $this->assertSame(201, $lasting['headers']['status-code']);
 
         $reader = $this->createEphemeralKey(['keys.read'], 900);
         $this->assertSame(201, $reader['headers']['status-code']);
 
-        $writer = $this->createEphemeralKey(['keys.read', 'keys.write'], 900);
+        $writer = $this->createEphemeralKey(['keys.read', 'keys.write', 'users.read'], 900);
         $this->assertSame(201, $writer['headers']['status-code']);
 
         $headers = fn (string $secret) => [
@@ -912,8 +919,26 @@ trait KeysBase
         $this->assertNotEmpty($list['body']['keys']);
         $this->assertSame([''], \array_unique(\array_column($list['body']['keys'], 'secret')));
 
+        // A writer does not read the secret of a key with a scope it lacks, or of one that outlives it
+        foreach ([$broader, $lasting] as $outside) {
+            $get = $this->client->call(Client::METHOD_GET, $this->keysPath() . '/' . $outside['body']['$id'], $headers($writer['body']['secret']));
+
+            $this->assertSame(200, $get['headers']['status-code']);
+            $this->assertSame('', $get['body']['secret']);
+        }
+
+        $list = $this->client->call(Client::METHOD_GET, $this->keysPath(), $headers($writer['body']['secret']));
+        $secrets = \array_column($list['body']['keys'], 'secret', '$id');
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertSame($key['body']['secret'], $secrets[$keyId]);
+        $this->assertSame('', $secrets[$broader['body']['$id']]);
+        $this->assertSame('', $secrets[$lasting['body']['$id']]);
+
         // Cleanup
         $this->deleteKey($keyId);
+        $this->deleteKey($broader['body']['$id']);
+        $this->deleteKey($lasting['body']['$id']);
     }
 
     /**
@@ -1017,6 +1042,18 @@ trait KeysBase
         $this->assertSame(201, $jwt['headers']['status-code']);
 
         $asJWT = array_merge($admin, ['x-appwrite-jwt' => $jwt['body']['jwt']]);
+
+        /**
+         * Test for SUCCESS
+         */
+        // The JWT still reads keys, just not their secrets
+        $get = $this->client->call(Client::METHOD_GET, $this->keysPath() . '/' . $keyId, $asJWT);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('', $get['body']['secret']);
+
+        $list = $this->client->call(Client::METHOD_GET, $this->keysPath(), $asJWT);
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertSame([''], \array_unique(\array_column($list['body']['keys'], 'secret')));
 
         /**
          * Test for FAILURE
