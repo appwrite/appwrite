@@ -2146,7 +2146,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
     name: 'appwrite-exiftool',
     block: `  appwrite-exiftool:
     container_name: appwrite-exiftool
-    image: ghcr.io/appwrite/exiftool:0.1.0
+    image: ghcr.io/appwrite/exiftool:0.1.1
     restart: unless-stopped
     networks:
       - appwrite`,
