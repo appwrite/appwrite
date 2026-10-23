@@ -348,6 +348,9 @@ class Request extends UtopiaRequest
      * part header as a ready temp file (swoole/swoole-src#6309): the path is
      * reported as `tmp_name`, passes `is_uploaded_file()`, and is unlinked when
      * the request is freed. Such paths leave `tmpfiles` and are blanked in `files`.
+     *
+     * Temporary: remove this guard and the uploadMarkers() scan once a released
+     * Swoole ships the upstream fix (swoole/swoole-src#6309) and we require it.
      */
     private function dropSpoofedUploads(): void
     {
