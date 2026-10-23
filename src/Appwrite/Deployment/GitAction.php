@@ -183,8 +183,8 @@ final class GitAction
             $lines[] = "Preview: {$previewUrl}";
         }
 
-        $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
-        $vcs->updateCheck($owner, $repositoryName, $commitHash, $state, $name, $title, '- ' . \implode("\n- ", $lines), $previewUrl !== '' ? $previewUrl : $consoleUrl);
+        // A check is the resource, filed under its project
+        $vcs->updateCheck($owner, $repositoryName, $commitHash, $state, $resource->getAttribute('name'), $title, '- ' . \implode("\n- ", $lines), $previewUrl !== '' ? $previewUrl : $consoleUrl, $project->getAttribute('name'));
     }
 
     /**

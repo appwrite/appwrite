@@ -35,9 +35,9 @@ class CheckRunsEntire extends Entire
     /**
      * @return array{branch: string, check_suite: array<string, mixed>, check_runs: list<array<string, mixed>>}
      */
-    public function write(string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): array
+    public function write(string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = ''): array
     {
-        return $this->checkRuns('main', $state, $name, $title, $summary, $detailsUrl);
+        return $this->checkRuns('main', $state, $name, $title, $summary, $detailsUrl, $suite);
     }
 }
 
@@ -689,10 +689,8 @@ final class EntireTest extends TestCase
         $this->assertSame('Site (Project)', $run['name']);
         $this->assertSame('Site (Project)', $run['external_id']);
         $this->assertSame(['title' => 'Starting...', 'summary' => 'Starting...'], $run['output']);
-        // The suite reports the same state next to its timestamp, and no output
-        $this->assertSame('queued', $queued['check_suite']['status']);
-        $this->assertSame($run['external_updated_at'], $queued['check_suite']['external_updated_at']);
-        $this->assertArrayNotHasKey('output', $queued['check_suite']);
+        // Without a suite the run gets one of its own, which carries no state
+        $this->assertSame(['key' => 'Site (Project)', 'name' => 'Site (Project)', 'external_id' => 'Site (Project)'], $queued['check_suite']);
 
         $this->assertSame('in_progress', $adapter->write('pending', 'check', 'Building...')['check_runs'][0]['status']);
         $this->assertSame('in_progress', $adapter->write('in_progress', 'check', 'Building...')['check_runs'][0]['status']);
@@ -703,8 +701,24 @@ final class EntireTest extends TestCase
             $this->assertSame('completed', $run['status'], $state);
             $this->assertSame($conclusion, $run['conclusion'], $state);
             $this->assertArrayHasKey('completed_at', $run, $state);
-            $this->assertSame($conclusion, $body['check_suite']['conclusion'], $state);
         }
+    }
+
+    public function testCheckRunsShareTheirSuite(): void
+    {
+        $adapter = new CheckRunsEntire(new Cache(new None()));
+
+        $billing = $adapter->write('success', 'Billing', 'Build succeeded.', suite: 'Atlas Production');
+        $hello = $adapter->write('pending', 'Hello', 'Building...', suite: 'Atlas Production');
+
+        // Each resource is a run of its project's suite, whose state Entire derives from its runs
+        $suite = ['key' => 'Atlas Production', 'name' => 'Atlas Production', 'external_id' => 'Atlas Production'];
+        $this->assertSame($suite, $billing['check_suite']);
+        $this->assertSame($suite, $hello['check_suite']);
+        $this->assertSame('Billing', $billing['check_runs'][0]['key']);
+        $this->assertSame('completed', $billing['check_runs'][0]['status']);
+        $this->assertSame('Hello', $hello['check_runs'][0]['name']);
+        $this->assertSame('in_progress', $hello['check_runs'][0]['status']);
     }
 
     public function testCheckRunsOutputAndDetails(): void
@@ -716,7 +730,8 @@ final class EntireTest extends TestCase
         $run = $body['check_runs'][0];
         $this->assertSame(['title' => 'Build succeeded.', 'summary' => $summary], $run['output']);
         $this->assertSame('https://x.example.com', $run['details_url']);
-        $this->assertSame('https://x.example.com', $body['check_suite']['details_url']);
+        // A suite covers several resources, so only the run links to one
+        $this->assertArrayNotHasKey('details_url', $body['check_suite']);
 
         // Only an https URL without credentials reaches Entire
         $this->assertArrayNotHasKey('details_url', $adapter->write('success', 'check', 'Done.', '', 'http://localhost/console')['check_runs'][0]);
