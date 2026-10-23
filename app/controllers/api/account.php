@@ -3493,18 +3493,7 @@ Http::post('/v1/account/tokens/phone')
             Permission::delete(Role::user($recipient->getId())),
         ]);
 
-        // Lock the user like the phone update does, so a token is never issued for a number that just changed
-        $token = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $recipient, $phone, $token) {
-            $current = $dbForProject->getDocument('users', $recipient->getId(), forUpdate: true);
-            if ($current->getAttribute('phone') !== $phone) {
-                throw new Exception(Exception::USER_PHONE_NOT_FOUND);
-            }
-
-            return $dbForProject->createDocument('tokens', $token);
-        }));
-
-        $dbForProject->purgeCachedDocument('users', $recipient->getId());
-
+        $sms = null;
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
@@ -3529,14 +3518,33 @@ Http::post('/v1/account/tokens/phone')
                 ],
             ]);
 
-            $publisherForMessaging->enqueue(new MessagingMessage(
+            $sms = new MessagingMessage(
                 type: MESSAGE_SEND_TYPE_INTERNAL,
                 project: $project,
                 message: $messageDoc,
                 recipients: [$phone],
                 providerType: MESSAGE_TYPE_SMS,
-            ));
+            );
+        }
 
+        // Store the token and queue its SMS under the user lock the phone update takes, so a code is never issued or sent for a number that just changed
+        $token = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $recipient, $phone, $token, $sms, $publisherForMessaging) {
+            $current = $dbForProject->getDocument('users', $recipient->getId(), forUpdate: true);
+            if ($current->getAttribute('phone') !== $phone) {
+                throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+            }
+
+            $token = $dbForProject->createDocument('tokens', $token);
+            if ($sms !== null) {
+                $publisherForMessaging->enqueue($sms);
+            }
+
+            return $token;
+        }));
+
+        $dbForProject->purgeCachedDocument('users', $recipient->getId());
+
+        if ($sendSMS) {
             $countryCode = CallingCode::fromPhoneNumber($phone);
             if (!empty($countryCode)) {
                 $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
@@ -5494,18 +5502,7 @@ Http::post('/v1/account/verifications/phone')
             Permission::delete(Role::user($user->getId())),
         ]);
 
-        // Lock the user like the phone update does, so a token is never issued for a number that just changed
-        $verification = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone, $verification) {
-            $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
-            if ($current->getAttribute('phone') !== $phone) {
-                throw new Exception(Exception::USER_PHONE_NOT_FOUND);
-            }
-
-            return $dbForProject->createDocument('tokens', $verification);
-        });
-
-        $dbForProject->purgeCachedDocument('users', $user->getId());
-
+        $sms = null;
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
@@ -5525,14 +5522,33 @@ Http::post('/v1/account/verifications/phone')
                 ],
             ]);
 
-            $publisherForMessaging->enqueue(new MessagingMessage(
+            $sms = new MessagingMessage(
                 type: MESSAGE_SEND_TYPE_INTERNAL,
                 project: $project,
                 message: $messageDoc,
                 recipients: [$user->getAttribute('phone')],
                 providerType: MESSAGE_TYPE_SMS,
-            ));
+            );
+        }
 
+        // Store the token and queue its SMS under the user lock the phone update takes, so a code is never issued or sent for a number that just changed
+        $verification = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone, $verification, $sms, $publisherForMessaging) {
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+            if ($current->getAttribute('phone') !== $phone) {
+                throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+            }
+
+            $verification = $dbForProject->createDocument('tokens', $verification);
+            if ($sms !== null) {
+                $publisherForMessaging->enqueue($sms);
+            }
+
+            return $verification;
+        });
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        if ($sendSMS) {
             $countryCode = CallingCode::fromPhoneNumber($phone);
             if (!empty($countryCode)) {
                 $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
