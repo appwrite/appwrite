@@ -1450,8 +1450,11 @@ impl rustls::client::danger::ServerCertVerifier for Verified {
     }
 }
 
+/// A DER element's tag, whole encoding, contents, and what follows it.
+type DerElement<'a> = (u8, &'a [u8], &'a [u8], &'a [u8]);
+
 /// One DER element: its whole encoding, its contents, and what follows it.
-fn der_element(input: &[u8]) -> Option<(u8, &[u8], &[u8], &[u8])> {
+fn der_element(input: &[u8]) -> Option<DerElement<'_>> {
     let (&tag, rest) = input.split_first()?;
     let (&first, rest) = rest.split_first()?;
     let (length, rest) = if first < 0x80 {
