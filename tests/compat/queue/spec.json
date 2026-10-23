@@ -91,7 +91,7 @@
       ]
     },
     "message.set": {
-      "doc": "every setter given, then every getter",
+      "doc": "every setter given, then every getter; max_attempts (when given) is set last and reported with isLastAttempt()",
       "covers": [
         "Utopia\\Queue\\Message::setPid",
         "Utopia\\Queue\\Message::setQueue",
@@ -110,7 +110,10 @@
         "Utopia\\Queue\\Message::getReceipt",
         "Utopia\\Queue\\Message::isTerminal",
         "Utopia\\Queue\\Message::setSize",
-        "Utopia\\Queue\\Message::getSize"
+        "Utopia\\Queue\\Message::getSize",
+        "Utopia\\Queue\\Message::setMaxAttempts",
+        "Utopia\\Queue\\Message::getMaxAttempts",
+        "Utopia\\Queue\\Message::isLastAttempt"
       ]
     },
     "message.warn_if_large": {

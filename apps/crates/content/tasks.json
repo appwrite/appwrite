@@ -21,9 +21,9 @@
       "id": "forwarded-trust",
       "title": "http: trust X-Forwarded-Host and -Port only from a trusted proxy",
       "area": "Database 8",
-      "status": "todo",
-      "updated": "2026-10-22T23:26:00Z",
-      "note": "Main's utopia-php/http and Appwrite\\Utopia\\Request honour X-Forwarded-Host and X-Forwarded-Port only when the request comes from a trusted proxy, and then the leftmost value. Rust still always honours them (core context request_hostname, utopia-http Request::hostname and port, account base). Needs the utopia-http conversion with compat cases; the parity diff does not send these headers."
+      "status": "done",
+      "updated": "2026-10-23T02:35:00Z",
+      "note": "Main's utopia-php/http and Appwrite\\Utopia\\Request honour X-Forwarded-Host and X-Forwarded-Port only when the request comes from a trusted proxy, and then the value the nearest proxy wrote (the rightmost). Ported: utopia-http TrustedHeaders gains host and port lists (TrustedHeaders::new(ip, proto, host, port)), Request::hostname and port read them through trusted_value (a port must be digits); appwrite-core's context hostname and Context::forwarded, and account's port(), believe them only from _APP_TRUSTED_PROXIES. Compat: SwooleRequestTest and RequestTest cases, trusted host/port in the request.inspect and trusted.new fuzz."
     },
     {
       "id": "sites-flake",

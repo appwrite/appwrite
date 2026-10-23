@@ -132,7 +132,7 @@ final class Adapter implements Base, Benchmarks
                 isset($a['terminal']) && $m->terminal($a['terminal']);
                 \array_key_exists('size', $a) && $m->setSize($a['size']);
 
-                return Typed::dump([
+                $out = [
                     'pid' => $m->getPid(),
                     'queue' => $m->getQueue(),
                     'timestamp' => $m->getTimestamp(),
@@ -143,7 +143,15 @@ final class Adapter implements Base, Benchmarks
                     'terminal' => $m->isTerminal(),
                     'size' => $m->getSize(),
                     'array' => $m->asArray(),
-                ]);
+                ];
+                // Only when the case sets it, so cases recorded before it existed keep their results.
+                if (\array_key_exists('max_attempts', $a)) {
+                    $m->setMaxAttempts($a['max_attempts']);
+                    $out['max_attempts'] = $m->getMaxAttempts();
+                    $out['last_attempt'] = $m->isLastAttempt();
+                }
+
+                return Typed::dump($out);
             },
             // What warnIfLarge() logs, read back from a scratch error_log file,
             // without the date error_log() prefixes there; null when nothing.
@@ -185,7 +193,7 @@ final class Adapter implements Base, Benchmarks
                 $receive = isset($a['receive']) ? $s->get($a['receive']) : self::connection(['kind' => 'redis'], $s);
                 $commands = isset($a['commands']) ? $s->get($a['commands']) : new Locking(self::connection(['kind' => 'redis'], $s));
 
-                return $s->handle(new Redis($receive, $commands, self::codec($a['codec'] ?? 'json'), $a['reap_after'] ?? 90_000));
+                return $s->handle(new Redis($receive, $commands, self::codec($a['codec'] ?? 'json'), $a['reap_after'] ?? 90_000, $a['reap_max_attempts'] ?? null, $a['reap_max_age'] ?? null));
             },
             'broker.round_trip' => function (array $a, Session $s): array {
                 Clock::fix(1700000000, 'fz');

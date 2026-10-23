@@ -287,6 +287,20 @@ fn publish_error(error: async_nats::jetstream::context::PublishError) -> Error {
     nats_error(class, error)
 }
 
+/// A failed acknowledgement as the PHP NATS client's exception: a
+/// connection that could not send it, a reply that never came, or anything
+/// else.
+fn ack_error(error: async_nats::Error) -> Error {
+    let class = if error.downcast_ref::<async_nats::PublishError>().is_some() {
+        "Utopia\\NATS\\Exception\\ConnectionException"
+    } else if error.downcast_ref::<std::io::Error>().is_some_and(|e| e.kind() == std::io::ErrorKind::TimedOut) {
+        "Utopia\\NATS\\Exception\\TimeoutException"
+    } else {
+        "Utopia\\NATS\\Exception\\JetStreamException"
+    };
+    nats_error(class, error)
+}
+
 /// Whether a failure means the connection is gone: a closed socket, or the
 /// server reporting it stale.
 fn lost_connection(error: &Error) -> bool {
@@ -406,14 +420,18 @@ impl Nats {
     }
 
     /// Runs `publish` again while the server could not take the message yet
-    /// (no stream leader, a closed socket), within a budget. Every attempt is
-    /// whole: a payload keeps its id, so the ones that did land collapse.
-    async fn republishing<T, F, Fut>(&self, mut publish: F) -> Result<T>
+    /// (no stream leader, a closed socket), within a budget: `deadline`, or
+    /// [`PUBLISH_RETRY_BUDGET`] from now. Every attempt is whole: a payload
+    /// keeps its id, so the ones that did land collapse. A lost connection is
+    /// retried only when `reconnect` says the broker could rebuild it.
+    ///
+    /// PHP: `republishing($publish, $reconnect, $deadline)`.
+    async fn republishing<T, F, Fut>(&self, deadline: Option<Instant>, reconnect: bool, mut publish: F) -> Result<T>
     where
         F: FnMut() -> Fut,
         Fut: std::future::Future<Output = Result<T>>,
     {
-        let deadline = Instant::now() + Duration::from_secs_f64(PUBLISH_RETRY_BUDGET);
+        let deadline = deadline.unwrap_or_else(|| Instant::now() + Duration::from_secs_f64(PUBLISH_RETRY_BUDGET));
         let mut republishes = 0;
         loop {
             let error = match publish().await {
@@ -425,7 +443,8 @@ impl Nats {
                 "Utopia\\NATS\\Exception\\TimeoutException",
                 "Utopia\\NATS\\Exception\\ConnectionException",
             ]
-            .contains(class));
+            .contains(class))
+                && (reconnect || !lost_connection(&error));
             let delay = PUBLISH_RETRY_DELAYS.get(republishes).copied();
             republishes += 1;
             match delay {
@@ -463,7 +482,7 @@ impl Nats {
         data: &[u8],
         headers: HeaderMap,
     ) -> Result<jetstream::publish::PublishAck> {
-        self.republishing(|| {
+        self.republishing(None, true, || {
             let headers = headers.clone();
             async move {
                 match queue {
@@ -632,7 +651,11 @@ impl Nats {
                 }
             };
             let mut message = Message::from_envelope(&envelope)?;
-            message.set_attempts((delivered - 1).max(0)).set_sequence(Some(sequence)).set_size(Some(size));
+            message
+                .set_attempts((delivered - 1).max(0))
+                .set_max_attempts(Some(self.config.max_deliver))
+                .set_sequence(Some(sequence))
+                .set_size(Some(size));
             self.state().in_flight.insert(message.pid().as_bytes().to_vec(), delivery);
             messages.push(message);
         }
@@ -698,20 +721,30 @@ impl Nats {
     /// message (id `<pid>.released.<sequence>`) and acked, or NAK'd after
     /// `release_delay` when the stream may evict to make room. Never fails.
     pub async fn release_messages(&self, queue: &Queue, messages: &[Message]) {
+        // One budget for the whole batch, so a stopping worker is not held per message.
+        let deadline = Some(Instant::now() + Duration::from_secs_f64(PUBLISH_RETRY_BUDGET));
         let mut requeue: Option<bool> = None;
         for message in messages {
             let Some(delivery) = self.state().in_flight.remove(message.pid().as_bytes()) else { continue };
             let mut stored = false;
+            // Budget spent: NAK the rest, which waits for no reply.
+            let spent = deadline.is_some_and(|d| Instant::now() >= d);
             let attempt = async {
+                if spent {
+                    return Ok::<_, Error>(false);
+                }
                 if requeue.is_none() {
-                    let js = self.js().await?;
-                    let mut stream = js.get_stream(work_stream(queue)).await.map_err(jetstream_error)?;
-                    let config = &stream.info().await.map_err(jetstream_error)?.config;
                     requeue = Some(
-                        matches!(config.discard, DiscardPolicy::New)
-                            || (config.max_messages == -1
-                                && config.max_bytes == -1
-                                && config.max_messages_per_subject == -1),
+                        self.retrying_command(deadline, || async {
+                            let js = self.js().await?;
+                            let mut stream = js.get_stream(work_stream(queue)).await.map_err(jetstream_error)?;
+                            let config = &stream.info().await.map_err(jetstream_error)?.config;
+                            Ok(matches!(config.discard, DiscardPolicy::New)
+                                || (config.max_messages == -1
+                                    && config.max_bytes == -1
+                                    && config.max_messages_per_subject == -1))
+                        })
+                        .await?,
                     );
                 }
                 if requeue == Some(true) {
@@ -727,8 +760,8 @@ impl Nats {
                     )
                     .await?;
                     stored = true;
-                    delivery.ack().await.map_err(jetstream_error)?;
-                    return Ok::<_, Error>(true);
+                    self.retrying_command(deadline, || async { delivery.ack().await.map_err(ack_error) }).await?;
+                    return Ok(true);
                 }
                 Ok(false)
             };
@@ -743,8 +776,13 @@ impl Nats {
                 }
             }
             let delay = (self.config.release_delay > 0.0).then(|| Duration::from_secs_f64(self.config.release_delay));
-            if let Err(e) = delivery.ack_with(AckKind::Nak(delay)).await {
-                self.report(jetstream_error(e));
+            if let Err(e) = self
+                .retrying_command(deadline, || async {
+                    delivery.ack_with(AckKind::Nak(delay)).await.map_err(ack_error)
+                })
+                .await
+            {
+                self.report(e);
             }
         }
         self.flush_reports();
@@ -756,8 +794,10 @@ impl Nats {
             let state = self.state();
             messages.iter().filter_map(|m| state.in_flight.get(m.pid().as_bytes()).cloned()).collect()
         };
+        let deadline = Some(Instant::now() + Duration::from_secs_f64(PUBLISH_RETRY_BUDGET));
         for d in deliveries {
-            d.ack_with(AckKind::Progress).await.map_err(jetstream_error)?;
+            self.retrying_command(deadline, || async { d.ack_with(AckKind::Progress).await.map_err(ack_error) })
+                .await?;
         }
         Ok(())
     }
@@ -1105,6 +1145,24 @@ impl Nats {
         Ok(())
     }
 
+    /// Runs an acknowledgement with [`Nats::republishing`]'s retries within
+    /// `deadline`, checking the commands connection on every attempt: the
+    /// one failure a close leaves is retried, on a broker that can reconnect.
+    ///
+    /// PHP: `retryingCommand($command, $deadline)`.
+    async fn retrying_command<T, F, Fut>(&self, deadline: Option<Instant>, mut command: F) -> Result<T>
+    where
+        F: FnMut() -> Fut,
+        Fut: std::future::Future<Output = Result<T>>,
+    {
+        let reconnect = matches!(self.source, Source::Url(_));
+        self.republishing(deadline, reconnect, || {
+            let attempt = self.command().map(|()| command());
+            async move { attempt?.await }
+        })
+        .await
+    }
+
     async fn count(&self, read: impl Future<Output = Result<i64>>) -> Result<i64> {
         self.command()?;
         match read.await {
@@ -1180,7 +1238,7 @@ impl Publisher for Nats {
             // so the ones that did land collapse), provisioned only when the
             // stream is missing, for the reasons publish_acked() gives.
             let acks = self
-                .republishing(|| {
+                .republishing(None, true, || {
                     let (subject, prepared) = (&subject, &prepared);
                     self.provisioning_if_absent(queue, move || async move {
                         let js = self.js().await?;
@@ -1260,26 +1318,46 @@ impl Consumer for Nats {
     fn commit<'a>(&'a self, _queue: &'a Queue, message: &'a Message) -> BoxFuture<'a, Result<()>> {
         Box::pin(async move {
             let Some(delivery) = self.state().in_flight.remove(message.pid().as_bytes()) else { return Ok(()) };
-            self.command()?;
-            delivery.double_ack().await.map_err(jetstream_error)
+            // Acks target the reply subject, so one unanswered is sent again.
+            self.retrying_command(None, || async { delivery.double_ack().await.map_err(ack_error) }).await
         })
     }
 
     fn reject<'a>(&'a self, queue: &'a Queue, message: &'a Message) -> BoxFuture<'a, Result<()>> {
         Box::pin(async move {
             let Some(delivery) = self.state().in_flight.remove(message.pid().as_bytes()) else { return Ok(()) };
-            self.command()?;
-            let delivered = delivery.info().map(|i| i.delivered).unwrap_or(1);
-            if message.is_terminal() || delivered >= self.config.max_deliver {
-                let js = self.js().await?;
-                js.publish(dead_subject(queue), delivery.payload.clone())
+            let info = delivery.info().ok();
+            let delivered = info.as_ref().map(|i| i.delivered).unwrap_or(1);
+            // Read up front: the verdict belongs to this delivery.
+            let terminal = message.is_terminal();
+            // One budget for the dead-letter copy and the term together.
+            let deadline = Some(Instant::now() + Duration::from_secs_f64(PUBLISH_RETRY_BUDGET));
+            if terminal || delivered >= self.config.max_deliver {
+                // Its own id, so a retry dedupes against a copy that already landed.
+                let sequence = info.as_ref().map(|i| i.stream_sequence).unwrap_or(0);
+                let id = format!("{}.dead.{sequence}", String::from_utf8_lossy(message.pid().as_bytes()));
+                self.retrying_command(deadline, || async {
+                    let js = self.js().await?;
+                    js.publish_with_headers(
+                        dead_subject(queue),
+                        self.headers(None, Some(&id)),
+                        delivery.payload.clone(),
+                    )
                     .await
-                    .map_err(jetstream_error)?
+                    .map_err(publish_error)?
                     .await
-                    .map_err(jetstream_error)?;
-                return delivery.ack_with(AckKind::Term).await.map_err(jetstream_error);
+                    .map_err(publish_error)
+                })
+                .await?;
+                return self
+                    .retrying_command(deadline, || async { delivery.ack_with(AckKind::Term).await.map_err(ack_error) })
+                    .await;
             }
-            delivery.ack_with(AckKind::Nak(self.backoff_for(delivered))).await.map_err(jetstream_error)
+            let backoff = self.backoff_for(delivered);
+            self.retrying_command(deadline, || async {
+                delivery.ack_with(AckKind::Nak(backoff)).await.map_err(ack_error)
+            })
+            .await
         })
     }
 

@@ -501,27 +501,52 @@ impl Request {
         }
     }
 
-    fn authority(&self) -> String {
-        let host = self.header_line_or("host", "");
-        let host = self.header_line_or("x-forwarded-host", &host);
-        format!("{}://{}", self.protocol(), host)
+    /// The value the nearest proxy wrote to the first of `headers` that
+    /// carries one: the rightmost entry, trimmed (entries left of it may come
+    /// from the client).
+    ///
+    /// PHP: `trustedValue($headers)`.
+    fn trusted_value(&self, headers: &[String]) -> Option<String> {
+        headers.iter().find_map(|header| {
+            let line = self.headers.line(header).unwrap_or_default();
+            let last = line.rsplit(',').next().unwrap_or("");
+            let value = php_std::string::trim(last.as_bytes(), b" \t\n\r\0\x0B");
+            (!value.is_empty()).then(|| String::from_utf8_lossy(value).into_owned())
+        })
     }
 
-    /// The port the client connected to: `X-Forwarded-Port`, else the port of
-    /// the `X-Forwarded-Host` or `Host` header, else `""`.
+    /// The host the client asked for: a trusted forwarded host header when
+    /// one is set, the `Host` header otherwise.
+    ///
+    /// PHP: `getHost()` (private).
+    fn host(&self) -> String {
+        self.trusted_value(self.trusted.host()).unwrap_or_else(|| self.header_line_or("host", ""))
+    }
+
+    fn authority(&self) -> String {
+        format!("{}://{}", self.protocol(), self.host())
+    }
+
+    /// The port the client connected to: a trusted forwarded port header
+    /// naming a number, else the port of the trusted forwarded host or the
+    /// `Host` header, else `""`. Forwarded headers count only when
+    /// [`TrustedHeaders`] names them.
     ///
     /// PHP: `getPort()`.
     pub fn port(&self) -> String {
-        let authority = self.authority();
-        let port = php_std::url::parse_url(authority.as_bytes())
+        if let Some(port) = self.trusted_value(self.trusted.port())
+            && port.bytes().all(|b| b.is_ascii_digit())
+        {
+            return port;
+        }
+        php_std::url::parse_url(self.authority().as_bytes())
             .and_then(|u| u.port())
             .map(|p| p.to_string())
-            .unwrap_or_default();
-        self.header_line_or("x-forwarded-port", &port)
+            .unwrap_or_default()
     }
 
-    /// The lowercased host name of the `X-Forwarded-Host` or `Host` header,
-    /// without the port; `""` when there is none.
+    /// The lowercased host name of the trusted forwarded host or the `Host`
+    /// header, without the port; `""` when there is none.
     ///
     /// PHP: `getHostname()`.
     pub fn hostname(&self) -> String {

@@ -136,13 +136,16 @@ pub fn protocol(ctx: &Context) -> String {
     "http".to_owned()
 }
 
-/// `$request->getPort()`: `X-Forwarded-Port`, else the port of the host
-/// (`''` when it names none).
+/// `$request->getPort()`: a trusted proxy's `X-Forwarded-Port` when it is a
+/// number, else the port of the host it forwarded or of `Host` (`''` when it
+/// names none).
 pub fn port(ctx: &Context) -> String {
-    if let Some(port) = ctx.request.header("x-forwarded-port") {
-        return port.to_owned();
+    if let Some(port) = ctx.forwarded("x-forwarded-port")
+        && port.bytes().all(|b| b.is_ascii_digit())
+    {
+        return port;
     }
-    let host = ctx.request.header("x-forwarded-host").unwrap_or_else(|| ctx.request.header_or_empty("host"));
+    let host = ctx.forwarded("x-forwarded-host").unwrap_or_else(|| ctx.request.header_line_or("host", ""));
     let url = format!("{}://{host}", protocol(ctx));
     php_std::url::parse_url(url.as_bytes()).and_then(|u| u.port()).map(|p| p.to_string()).unwrap_or_default()
 }

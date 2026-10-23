@@ -256,6 +256,22 @@ fn in_range(ip: &IpAddr, range: &str) -> bool {
     }
 }
 
+/// Whether the connection comes from a trusted proxy
+/// (`TrustedProxies::contains`): only then are its forwarded host and port
+/// believed (`Appwrite\Utopia\Request::__construct`).
+pub fn from_proxy(remote: Option<IpAddr>, trusted_proxies: &[String]) -> bool {
+    let remote = remote.unwrap_or(IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED));
+    trusted_proxies.iter().any(|r| in_range(&remote, r))
+}
+
+/// The value the nearest proxy wrote to a forwarded header: its rightmost
+/// entry, trimmed; `None` when missing or empty (`Request::trustedValue`).
+pub fn forwarded(headers: &utopia_http::Headers, name: &str) -> Option<String> {
+    let line = headers.line(name)?;
+    let value = line.rsplit(',').next().unwrap_or("").trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B']);
+    (!value.is_empty()).then(|| value.to_owned())
+}
+
 /// Client IP with trusted proxy handling (`Appwrite\Utopia\Request::getIP`).
 pub fn client_ip(
     remote: IpAddr,
@@ -319,5 +335,19 @@ mod tests {
         assert_eq!(ip, "203.0.113.5");
         let ip = client_ip("8.8.8.8".parse().unwrap(), &h, &["x-forwarded-for".to_owned()], &proxies);
         assert_eq!(ip, "8.8.8.8");
+    }
+
+    #[test]
+    fn forwarded_host_and_port() {
+        let proxies = vec!["10.0.0.0/8".to_owned()];
+        assert!(from_proxy(Some("10.1.2.3".parse().unwrap()), &proxies));
+        assert!(!from_proxy(Some("8.8.8.8".parse().unwrap()), &proxies));
+        assert!(!from_proxy(None, &proxies));
+        let mut h = utopia_http::Headers::new();
+        h.set("x-forwarded-host", "spoofed.example:9000, Example.com:8443 ");
+        h.set("x-forwarded-port", "8443,");
+        assert_eq!(forwarded(&h, "x-forwarded-host").as_deref(), Some("Example.com:8443"));
+        assert_eq!(forwarded(&h, "x-forwarded-port"), None);
+        assert_eq!(forwarded(&h, "x-missing"), None);
     }
 }

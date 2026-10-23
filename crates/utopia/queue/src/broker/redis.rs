@@ -91,6 +91,8 @@ pub struct Redis {
     commands: Arc<dyn Connection>,
     codec: Arc<dyn Codec>,
     reap_after: i64,
+    reap_max_attempts: Option<i64>,
+    reap_max_age: Option<i64>,
     clock: Arc<dyn Clock>,
     closed: AtomicBool,
     settlements: Mutex<HashMap<String, Arc<Buffer<Settlement, i64>>>>,
@@ -108,6 +110,8 @@ impl Redis {
             commands,
             codec: Arc::new(Json),
             reap_after: 90_000,
+            reap_max_attempts: None,
+            reap_max_age: None,
             clock: Arc::new(SystemClock),
             closed: AtomicBool::new(false),
             settlements: Mutex::new(HashMap::new()),
@@ -130,6 +134,36 @@ impl Redis {
     pub fn with_reap_after(mut self, seconds: i64) -> Self {
         self.reap_after = seconds;
         self
+    }
+
+    /// Bounds what [`Redis::maintain`] recovers: claims older than `after`
+    /// seconds without a live heartbeat count as stranded, as with
+    /// [`Redis::with_reap_after`]; those requeued `max_attempts` times, or
+    /// published more than `max_age` seconds ago, are parked on the dead
+    /// queue instead (`None` requeues them unbounded, at any age).
+    ///
+    /// Fails with [`Error::InvalidArgument`] for a `max_attempts` below 1, or
+    /// a `max_age` at or below `after`: every claim the sweep reaches is
+    /// already `after` old, so it would park them all and recover none.
+    ///
+    /// PHP: `new Redis(..., reapAfter: $after, reapMaxAttempts: $maxAttempts, reapMaxAge: $maxAge)`.
+    pub fn with_reap(mut self, after: i64, max_attempts: Option<i64>, max_age: Option<i64>) -> Result<Self> {
+        if max_attempts.is_some_and(|n| n < 1) {
+            return Err(Error::InvalidArgument(
+                "reapMaxAttempts must be at least 1, or null to requeue unbounded".to_owned(),
+            ));
+        }
+        if let Some(age) = max_age
+            && age <= after
+        {
+            return Err(Error::InvalidArgument(format!(
+                "reapMaxAge ({age}) must exceed reapAfter ({after}), or be null to requeue at any age"
+            )));
+        }
+        self.reap_after = after;
+        self.reap_max_attempts = max_attempts;
+        self.reap_max_age = max_age;
+        Ok(self)
     }
 
     /// The clock and id source (tests pin it).
@@ -394,7 +428,15 @@ impl Redis {
                 keys.extend(expired);
                 self.commands.execute(RECOVER, &keys, &[int(REAP_LIMIT)]).await?;
             }
-            self.reap(&queue, self.reap_after, Some(REAP_LIMIT), None, None, Some(REAP_LIMIT * 2)).await?;
+            self.reap(
+                &queue,
+                self.reap_after,
+                Some(REAP_LIMIT),
+                self.reap_max_attempts,
+                self.reap_max_age,
+                Some(REAP_LIMIT * 2),
+            )
+            .await?;
         }
         Ok(())
     }
