@@ -309,7 +309,7 @@ pub(crate) fn pixel_budget() -> u64 {
 /// before its buffers are allocated.
 pub(crate) fn check_pixels(bytes: u64) -> Result<()> {
     if bytes > pixel_budget() {
-        return Err(Error::imagick("cache resources exhausted `' @ error/cache.c/OpenPixelCache/4119"));
+        return Err(Error::imagick("cache resources exhausted `' @ error/cache.c/OpenPixelCache/4044"));
     }
     Ok(())
 }
@@ -319,7 +319,7 @@ pub(crate) fn check_pixels(bytes: u64) -> Result<()> {
 pub(crate) fn check_dimensions(width: u64, height: u64) -> Result<()> {
     if width > MAX_DIMENSION || height > MAX_DIMENSION {
         return Err(Error::imagick(format!(
-            "width or height exceeds limit `' ({width}x{height}) > ({MAX_DIMENSION}x{MAX_DIMENSION}) @ error/cache.c/OpenPixelCache/3805"
+            "width or height exceeds limit `' ({width}x{height}) > ({MAX_DIMENSION}x{MAX_DIMENSION}) @ error/cache.c/OpenPixelCache/3813"
         )));
     }
     check_pixels(canvas_bytes(width, height))

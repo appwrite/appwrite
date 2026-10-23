@@ -155,6 +155,282 @@
       ]
     },
     {
+      "name": "testCropKeepsADerivedSideOfAtLeastOnePixel: landscape, 1px wide",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAQMAAABBkz8dAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAADUExURf8AABniCTcAAAAMSURBVAjXY2BgYAAAAAQAASc0JwoAAAAASUVORK5CYII="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 1,
+            "height": 0,
+            "gravity": "top-left"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 1,
+            "height": 1,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropKeepsADerivedSideOfAtLeastOnePixel: landscape, 1px wide, center",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAQMAAABBkz8dAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAADUExURf8AABniCTcAAAAMSURBVAjXY2BgYAAAAAQAASc0JwoAAAAASUVORK5CYII="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 1,
+            "height": 0,
+            "gravity": "center"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 1,
+            "height": 1,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropKeepsADerivedSideOfAtLeastOnePixel: landscape, 1px high",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAQMAAABBkz8dAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAADUExURf8AABniCTcAAAAMSURBVAjXY2BgYAAAAAQAASc0JwoAAAAASUVORK5CYII="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 0,
+            "height": 1,
+            "gravity": "bottom-right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 3,
+            "height": 1,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropKeepsADerivedSideOfAtLeastOnePixel: portrait, 1px high",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAQMAAADT6d1xAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAADUExURf8AABniCTcAAAALSURBVAjXY2BAAAAADAAB5DTqZgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 0,
+            "height": 1,
+            "gravity": "top-left"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 1,
+            "height": 1,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropKeepsADerivedSideOfAtLeastOnePixel: portrait, 1px high, center",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAQMAAADT6d1xAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAADUExURf8AABniCTcAAAALSURBVAjXY2BAAAAADAAB5DTqZgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 0,
+            "height": 1,
+            "gravity": "center"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 1,
+            "height": 1,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropKeepsADerivedSideOfAtLeastOnePixel: portrait, 1px wide",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAQMAAADT6d1xAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAADUExURf8AABniCTcAAAALSURBVAjXY2BAAAAADAAB5DTqZgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 1,
+            "height": 0,
+            "gravity": "right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 1,
+            "height": 3,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
       "name": "testCropFocalUsesNormalizedCoordinates",
       "steps": [
         {

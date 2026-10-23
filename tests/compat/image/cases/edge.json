@@ -554,7 +554,7 @@
       ]
     },
     {
-      "name": "crop: zero height with a gravity divides by zero",
+      "name": "crop: zero height with a gravity derives a side of at least one pixel",
       "steps": [
         {
           "op": "image.new",
@@ -578,12 +578,7 @@
             "height": 0,
             "gravity": "top"
           },
-          "expect": {
-            "$error": {
-              "class": "DivisionByZeroError",
-              "message": "Division by zero"
-            }
-          }
+          "expect": null
         }
       ]
     },
@@ -713,7 +708,7 @@
           "expect": {
             "$error": {
               "class": "ImagickException",
-              "message": "width or height exceeds limit `' (100000x33333) > (50000x50000) @ error/cache.c/OpenPixelCache/3805"
+              "message": "width or height exceeds limit `' (100000x33333) > (50000x50000) @ error/cache.c/OpenPixelCache/3813"
             }
           }
         }
