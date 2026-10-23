@@ -12,7 +12,9 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Services\DocumentsDB;
 use Appwrite\Services\TablesDB;
+use Appwrite\Services\VectorsDB;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Utopia\Compression\Compression;
@@ -348,9 +350,10 @@ class Migrations extends Action
     }
 
     /**
-     * The database source reads the source project's tables directly, so the submitted
-     * key is never presented to the source API. Probe the source API with it first so
-     * only a key that can read those resources in that project reaches the database.
+     * The database source reads the source project's databases directly, so the submitted
+     * key is never presented to the source API. Probe the source API with it first, once per
+     * requested database family against that family's own API and scopes, so only a key that
+     * can read those resources in that project reaches the database.
      *
      * @param array<string> $resources
      * @throws Exception
@@ -363,24 +366,47 @@ class Migrations extends Action
             return;
         }
 
-        $tablesDB = new TablesDB(
-            (new Client())
-                ->setEndpoint('http://' . System::getEnv('_APP_MIGRATION_HOST') . '/v1')
-                ->setProject($projectId)
-                ->setKey($key)
-                ->setConnectTimeout(Target::CONNECT_TIMEOUT)
-                ->setTimeout(Target::REQUEST_TIMEOUT)
-        );
+        $client = (new Client())
+            ->setEndpoint('http://' . System::getEnv('_APP_MIGRATION_HOST') . '/v1')
+            ->setProject($projectId)
+            ->setKey($key)
+            ->setConnectTimeout(Target::CONNECT_TIMEOUT)
+            ->setTimeout(Target::REQUEST_TIMEOUT);
 
         try {
-            $tablesDB->list();
+            if (\in_array(Resource::TYPE_DATABASE, $resources, true)) {
+                $tablesDB = new TablesDB($client);
+                $tablesDB->list();
 
-            if (Resource::isSupported([Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX, Resource::TYPE_ROW], $resources)) {
-                $this->probeScope(fn () => $tablesDB->listTables(self::SCOPE_PROBE_ID));
+                if (Resource::isSupported([Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX, Resource::TYPE_ROW], $resources)) {
+                    $this->probeScope(fn () => $tablesDB->listTables(self::SCOPE_PROBE_ID));
+                }
+
+                if (Resource::isSupported(Resource::TYPE_ROW, $resources)) {
+                    $this->probeScope(fn () => $tablesDB->listRows(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID));
+                }
             }
 
-            if (Resource::isSupported(Resource::TYPE_ROW, $resources)) {
-                $this->probeScope(fn () => $tablesDB->listRows(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID));
+            if (\in_array(Resource::TYPE_DATABASE_DOCUMENTSDB, $resources, true)) {
+                $documentsDB = new DocumentsDB($client);
+                $documentsDB->list();
+                $this->probeCollectionScopes(
+                    fn () => $documentsDB->listCollections(self::SCOPE_PROBE_ID),
+                    fn () => $documentsDB->listIndexes(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID),
+                    fn () => $documentsDB->listDocuments(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID),
+                    $resources,
+                );
+            }
+
+            if (\in_array(Resource::TYPE_DATABASE_VECTORSDB, $resources, true)) {
+                $vectorsDB = new VectorsDB($client);
+                $vectorsDB->list();
+                $this->probeCollectionScopes(
+                    fn () => $vectorsDB->listCollections(self::SCOPE_PROBE_ID),
+                    fn () => $vectorsDB->listIndexes(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID),
+                    fn () => $vectorsDB->listDocuments(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID),
+                    $resources,
+                );
             }
         } catch (AppwriteException $error) {
             // No status means no response came back, which says nothing about the key.
@@ -389,6 +415,25 @@ class Migrations extends Action
                 : Exception::MIGRATION_SOURCE_UNAUTHORIZED;
 
             throw new Exception($type, previous: $error);
+        }
+    }
+
+    /**
+     * @param array<string> $resources
+     * @throws AppwriteException
+     */
+    private function probeCollectionScopes(callable $listCollections, callable $listIndexes, callable $listDocuments, array $resources): void
+    {
+        if (\array_intersect([Resource::TYPE_COLLECTION, Resource::TYPE_ATTRIBUTE, Resource::TYPE_INDEX, Resource::TYPE_DOCUMENT], $resources) !== []) {
+            $this->probeScope($listCollections);
+        }
+
+        if (\in_array(Resource::TYPE_INDEX, $resources, true)) {
+            $this->probeScope($listIndexes);
+        }
+
+        if (\in_array(Resource::TYPE_DOCUMENT, $resources, true)) {
+            $this->probeScope($listDocuments);
         }
     }
 
