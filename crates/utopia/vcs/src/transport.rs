@@ -128,9 +128,14 @@ impl Response {
 #[derive(Debug)]
 pub(crate) struct Transport {
     pub endpoint: String,
+    /// Whether self-signed certificates are accepted (PHP `$selfSigned`,
+    /// `false` by default: provider certificates are verified).
+    pub self_signed: bool,
     /// Made on the first call: an adapter that only parses webhooks never
-    /// needs them.
-    clients: OnceLock<Clients>,
+    /// needs them. One set verifies certificates, the other does not, so
+    /// toggling `self_signed` after a call takes effect on the next one.
+    verifying: OnceLock<Clients>,
+    trusting: OnceLock<Clients>,
 }
 
 /// The clients of a [`Transport`]: one following redirects, one not.
@@ -141,12 +146,12 @@ struct Clients {
 }
 
 impl Clients {
-    fn new() -> Self {
+    fn new(verify: bool) -> Self {
         let base = Client::new(Http::new())
             .with_user_agent(USER_AGENT)
             .with_path_as_is(true)
             .with_encoding_negotiation(false)
-            .with_ssl_verification(false);
+            .with_ssl_verification(verify);
         let configure = |follow: bool| {
             base.with_follow_redirects(follow, i64::from(utopia_client::redirect::MAX_HOPS))
                 .and_then(|c| c.with_connect_timeout(0.0))
@@ -160,15 +165,20 @@ impl Clients {
 impl Transport {
     /// A transport calling `endpoint` (no trailing slash).
     pub fn new(endpoint: impl Into<String>) -> Self {
-        Transport { endpoint: endpoint.into(), clients: OnceLock::new() }
+        Transport {
+            endpoint: endpoint.into(),
+            self_signed: false,
+            verifying: OnceLock::new(),
+            trusting: OnceLock::new(),
+        }
     }
 
     /// Sends a call and reads its response.
     ///
     /// PHP: `Adapter::call()`: the JSON content type (or the form one a call
     /// asks for), the query of a `GET`, a body for every other method (`{}`
-    /// when there are no parameters), a 15 second timeout, no certificate
-    /// verification, and a JSON response decoded unless asked not to (an
+    /// when there are no parameters), a 15 second timeout, certificate
+    /// verification unless self-signed certificates are accepted, and a JSON response decoded unless asked not to (an
     /// undecodable one fails). A transport failure is an `\Exception` with
     /// the client's message and ` with status code 0`.
     pub async fn call(&self, call: Call) -> Result<Response> {
@@ -210,7 +220,11 @@ impl Transport {
             request = request.body(body);
         }
 
-        let clients = self.clients.get_or_init(Clients::new);
+        let clients = if self.self_signed {
+            self.trusting.get_or_init(|| Clients::new(false))
+        } else {
+            self.verifying.get_or_init(|| Clients::new(true))
+        };
         let client = if call.follow { &clients.following } else { &clients.direct };
         let response = match client.send(request).await {
             Ok(r) => r,
@@ -247,22 +261,6 @@ impl Transport {
         } else {
             Value::Str(Str::from(raw.clone()))
         };
-
-        if status == 500 {
-            // PHP echoes this to its output; a library has none, so it goes to stderr.
-            let params = match &call.params {
-                Params::Array(p) => php::json_encode(p).unwrap_or_default(),
-                Params::None => "[]".to_owned(),
-                Params::Form(_) => "{}".to_owned(),
-            };
-            eprintln!(
-                "Server error({}: {}. Params: {}): {}",
-                call.method.as_str(),
-                call.path,
-                params,
-                php::json_encode(&body).unwrap_or_default()
-            );
-        }
 
         Ok(Response { status, headers, body })
     }

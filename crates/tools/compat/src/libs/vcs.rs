@@ -88,6 +88,7 @@ const METHODS: &[&str] = &[
     "getWebhookClaims",
     "hasAccessToAllRepositories",
     "initializeVariables",
+    "isSelfSigned",
     "isTrustedCore",
     "isTrustedIssuer",
     "listBranches",
@@ -110,6 +111,7 @@ const METHODS: &[&str] = &[
     "searchRepositories",
     "setEndpoint",
     "setIssuer",
+    "setSelfSigned",
     "setRepositoryEndpoint",
     "supportsCommentImages",
     "supportsPublicRepositories",
@@ -223,6 +225,8 @@ pub const OPS: &[&str] = &[
     "vcs.search_repositories",
     "vcs.set_endpoint",
     "vcs.set_issuer",
+    "vcs.set_self_signed",
+    "vcs.is_self_signed",
     "vcs.set_repository_endpoint",
     "vcs.supports_comment_images",
     "vcs.supports_public_repositories",
@@ -717,6 +721,13 @@ async fn invoke(any: &mut Any, method: &str, a: &Map<String, Value>) -> Result<V
         "getFileUrl" => json!(any.git().file_url(owner()?, repo()?, required(a, "reference")?)),
         "getRepositoryCloneUrl" => ok!(any.git().repository_clone_url(owner()?, repo()?).await, |v: String| json!(v)),
         "supportsRepositoryCloneUrl" => json!(any.git().supports_repository_clone_url()),
+        "isSelfSigned" => json!(any.git().is_self_signed()),
+        "setSelfSigned" => {
+            let self_signed =
+                a.get("selfSigned").and_then(Value::as_bool).ok_or_else(|| Fault::new("selfSigned: a bool"))?;
+            any.git_mut().set_self_signed(self_signed);
+            Value::Null
+        }
         "generatePushCommand" => ok!(
             any.git().push_command(owner()?, repo()?, required(a, "directory")?, required(a, "branch")?),
             |c: Command| shell(&c)

@@ -1,0 +1,800 @@
+{
+  "source": "packages/vcs/tests/AdapterTest.php",
+  "cases": [
+    {
+      "name": "testVerifiesCertificatesByDefault bitbucket",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsSelfSignedCertificatesWhenOptedIn bitbucket",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": true
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": false
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testVerifiesCertificatesByDefault entire",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsSelfSignedCertificatesWhenOptedIn entire",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": true
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": false
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testVerifiesCertificatesByDefault forgejo",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "forgejo",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsSelfSignedCertificatesWhenOptedIn forgejo",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "forgejo",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": true
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": false
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testVerifiesCertificatesByDefault gitea",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsSelfSignedCertificatesWhenOptedIn gitea",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": true
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": false
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testVerifiesCertificatesByDefault github",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsSelfSignedCertificatesWhenOptedIn github",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": true
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": false
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testVerifiesCertificatesByDefault gitlab",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsSelfSignedCertificatesWhenOptedIn gitlab",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": true
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": false
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testVerifiesCertificatesByDefault gogs",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsSelfSignedCertificatesWhenOptedIn gogs",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": true
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": false
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testVerifiesCertificatesByDefault origin",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsSelfSignedCertificatesWhenOptedIn origin",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": true
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": false
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "a provider on a self-signed certificate",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/api/v1/repos/acme/site",
+                "body": {
+                  "id": 7,
+                  "name": "site",
+                  "full_name": "acme/site",
+                  "private": false
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea",
+            "cache": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "",
+            "privateKey": "",
+            "accessToken": "test-token-gitea"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "${vcs-tls}/~${ns}/gitea"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "acme",
+            "repositoryName": "site"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "SSL certificate OpenSSL verify result: self-signed certificate (18) with status code 0",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": true
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "acme",
+            "repositoryName": "site"
+          },
+          "expect": {
+            "id": 7,
+            "name": "site",
+            "full_name": "acme/site",
+            "private": false,
+            "pushed_at": ""
+          }
+        },
+        {
+          "op": "vcs.set_self_signed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "selfSigned": false
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "acme",
+            "repositoryName": "site"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "SSL certificate OpenSSL verify result: self-signed certificate (18) with status code 0",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "gitea",
+              "method": "GET",
+              "target": "/api/v1/repos/acme/site",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "token test-token-gitea"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1338,7 +1338,12 @@ fn tls_config(options: &Options) -> Result<rustls::ClientConfig, Error> {
             }
             None => roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned()),
         }
-        builder.with_root_certificates(roots)
+        let roots = Arc::new(roots);
+        match rustls::client::WebPkiServerVerifier::builder_with_provider(roots.clone(), provider.clone()).build() {
+            Ok(verifier) => builder.dangerous().with_custom_certificate_verifier(Arc::new(Verified(verifier))),
+            // No trust anchors at all: every certificate is of an unknown issuer.
+            Err(_) => builder.with_root_certificates(roots),
+        }
     } else {
         builder.dangerous().with_custom_certificate_verifier(Arc::new(Unverified(provider)))
     };
@@ -1363,6 +1368,11 @@ fn tls_config(options: &Options) -> Result<rustls::ClientConfig, Error> {
 fn tls_error(error: &std::io::Error, host: &str) -> Error {
     let inner = error.get_ref().and_then(|e| e.downcast_ref::<rustls::Error>());
     match inner {
+        Some(rustls::Error::InvalidCertificate(rustls::CertificateError::Other(other)))
+            if other.0.downcast_ref::<SelfSigned>().is_some() =>
+        {
+            Error::Tls("SSL certificate OpenSSL verify result: self-signed certificate (18)".into())
+        }
         Some(rustls::Error::InvalidCertificate(rustls::CertificateError::UnknownIssuer)) => {
             Error::Tls("SSL certificate OpenSSL verify result: unable to get local issuer certificate (20)".into())
         }
@@ -1375,6 +1385,109 @@ fn tls_error(error: &std::io::Error, host: &str) -> Error {
         Some(other) => Error::Tls(format!("TLS connect error: {other}")),
         None => Error::Tls(format!("TLS connect error: {error}")),
     }
+}
+
+/// A server certificate that is its own issuer and not trusted: OpenSSL's
+/// `X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT`, which webpki reports as an
+/// unknown issuer.
+#[derive(Debug)]
+struct SelfSigned;
+
+impl std::fmt::Display for SelfSigned {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("self-signed certificate")
+    }
+}
+
+impl std::error::Error for SelfSigned {}
+
+/// webpki's verification, telling a lone self-signed certificate from one of
+/// an unknown issuer as OpenSSL does.
+#[derive(Debug)]
+struct Verified(Arc<rustls::client::WebPkiServerVerifier>);
+
+impl rustls::client::danger::ServerCertVerifier for Verified {
+    fn verify_server_cert(
+        &self,
+        end_entity: &rustls::pki_types::CertificateDer<'_>,
+        intermediates: &[rustls::pki_types::CertificateDer<'_>],
+        server_name: &rustls::pki_types::ServerName<'_>,
+        ocsp_response: &[u8],
+        now: rustls::pki_types::UnixTime,
+    ) -> Result<rustls::client::danger::ServerCertVerified, rustls::Error> {
+        match self.0.verify_server_cert(end_entity, intermediates, server_name, ocsp_response, now) {
+            // webpki: an unknown issuer, or (a CA certificate as the leaf,
+            // as `openssl req -x509` makes) CaUsedAsEndEntity.
+            Err(rustls::Error::InvalidCertificate(
+                rustls::CertificateError::UnknownIssuer | rustls::CertificateError::Other(_),
+            )) if intermediates.is_empty() && self_issued(end_entity) => Err(rustls::Error::InvalidCertificate(
+                rustls::CertificateError::Other(rustls::OtherError(Arc::new(SelfSigned))),
+            )),
+            other => other,
+        }
+    }
+
+    fn verify_tls12_signature(
+        &self,
+        message: &[u8],
+        cert: &rustls::pki_types::CertificateDer<'_>,
+        dss: &rustls::DigitallySignedStruct,
+    ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+        self.0.verify_tls12_signature(message, cert, dss)
+    }
+
+    fn verify_tls13_signature(
+        &self,
+        message: &[u8],
+        cert: &rustls::pki_types::CertificateDer<'_>,
+        dss: &rustls::DigitallySignedStruct,
+    ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+        self.0.verify_tls13_signature(message, cert, dss)
+    }
+
+    fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {
+        self.0.supported_verify_schemes()
+    }
+}
+
+/// One DER element: its whole encoding, its contents, and what follows it.
+fn der_element(input: &[u8]) -> Option<(u8, &[u8], &[u8], &[u8])> {
+    let (&tag, rest) = input.split_first()?;
+    let (&first, rest) = rest.split_first()?;
+    let (length, rest) = if first < 0x80 {
+        (usize::from(first), rest)
+    } else {
+        let count = usize::from(first & 0x7f);
+        if count == 0 || count > 4 || rest.len() < count {
+            return None;
+        }
+        (rest[..count].iter().fold(0usize, |n, b| (n << 8) | usize::from(*b)), &rest[count..])
+    };
+    if rest.len() < length {
+        return None;
+    }
+    let header = input.len() - rest.len();
+    Some((tag, &input[..header + length], &rest[..length], &rest[length..]))
+}
+
+/// Whether a DER certificate names itself as its issuer (the issuer and
+/// subject names of its `TBSCertificate` are the same bytes).
+fn self_issued(cert: &[u8]) -> bool {
+    let names = || -> Option<bool> {
+        let (_, _, certificate, _) = der_element(cert)?;
+        let (_, _, tbs, _) = der_element(certificate)?;
+        let (tag, _, _, mut rest) = der_element(tbs)?;
+        if tag == 0xa0 {
+            // [0] version, then the serial number
+            rest = der_element(rest)?.3;
+        }
+        let rest = der_element(rest)?.3; // the signature algorithm
+        let (_, issuer, _, rest) = der_element(rest)?;
+        let rest = der_element(rest)?.3; // the validity
+        let (_, subject, _, _) = der_element(rest)?;
+        Some(issuer == subject)
+    };
+    names().unwrap_or(false)
 }
 
 /// Accepts any certificate (verification off), still checking handshake
