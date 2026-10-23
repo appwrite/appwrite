@@ -393,11 +393,9 @@ class State
             $usage->addMetric(METRIC_USERS_PRESENCE, -\count($presences));
 
             foreach ($presences as $presence) {
-                $presence->removeAttribute('$collection');
-                $presence->removeAttribute('$tenant');
-                $presence->removeAttribute('hostname');
-                $presence->removeAttribute('permissionsHash');
-                $presence->removeAttribute('userInternalId');
+                foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+                    $presence->removeAttribute($attribute);
+                }
 
                 $queueForRealtime
                     ->reset()
