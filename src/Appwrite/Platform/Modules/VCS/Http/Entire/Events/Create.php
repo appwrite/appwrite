@@ -149,6 +149,7 @@ class Create extends Action
             foreach ($parsedPayloads as $parsedPayload) {
                 match (true) {
                     \str_starts_with($event, 'ref.') => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                    \str_starts_with($event, Entire::EVENT_TRAIL . '.') => $this->handleTrailEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                     \str_starts_with($event, Entire::EVENT_INSTALLATION . '.') => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
                     default => null,
                 };
@@ -490,9 +491,10 @@ class Create extends Action
             }
         }
 
-        // Entire delivers no trail events, so a push onto a branch that has
-        // an open trail reports on it from here. Trails never come from a
-        // fork, so none is ever external.
+        // A push onto a branch that has an open trail reports on the trail
+        // too, and comments on one that has no comment yet, such as a trail
+        // that opened before its repository was connected. Trails never come
+        // from a fork, so none is ever external.
         $providerPullRequestId = '';
         try {
             $trail = $vcs->getPullRequestFromBranch($providerRepositoryOwner, $providerRepositoryName, $providerBranch);
@@ -553,5 +555,110 @@ class Create extends Action
         if (!empty($errors)) {
             throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
         }
+    }
+
+    /**
+     * A trail can open on a branch that already exists, so no push may
+     * follow it. Opening or reopening a trail, or giving it a branch, reports
+     * on it the way a pull request event does on GitHub: its comment lists
+     * each resource with the deployment of the trail's head, which updates
+     * the comment as it builds. A head move arrives as a push as well, and
+     * handlePushEvent() reports it.
+     */
+    private function handleTrailEvent(
+        array $parsedPayload,
+        VcsFactory $vcsFactory,
+        Database $dbForPlatform,
+        Authorization $authorization,
+        Bus $bus,
+        callable $getProjectDB,
+        array $platform,
+        callable $deploymentsFactory,
+    ) {
+        $action = $parsedPayload['action'] ?? '';
+        $changes = $parsedPayload['changes'] ?? [];
+        $providerBranch = $parsedPayload['branch'] ?? '';
+        $providerBranchUrl = $parsedPayload['branchUrl'] ?? '';
+        $providerRepositoryId = $parsedPayload['repositoryId'] ?? '';
+        $providerRepositoryName = $parsedPayload['repositoryName'] ?? '';
+        $providerInstallationId = $parsedPayload['installationId'] ?? '';
+        $providerRepositoryUrl = $parsedPayload['repositoryUrl'] ?? '';
+        $providerPullRequestId = \strval($parsedPayload['pullRequestNumber'] ?? '');
+        $providerCommitHash = $parsedPayload['commitHash'] ?? '';
+        $providerRepositoryOwner = $parsedPayload['owner'] ?? '';
+        $providerCommitUrl = $parsedPayload['headCommitUrl'] ?? '';
+
+        Span::add('vcs.entire.event.repo.id', $providerRepositoryId);
+        Span::add('vcs.entire.event.repo.name', $providerRepositoryName);
+        Span::add('vcs.entire.event.branch', $providerBranch);
+        Span::add('vcs.entire.event.installation.id', $providerInstallationId);
+        Span::add('vcs.entire.event.trail.number', $providerPullRequestId);
+
+        if (!\in_array($action, ['opened', 'reopened'], true) && !\in_array('branch', $changes, true)) {
+            return;
+        }
+
+        // A trail without a branch has no deployment to report
+        if ($providerBranch === '' || empty($parsedPayload['pullRequestNumber'])) {
+            return;
+        }
+
+        // Every region gets the delivery, so a region reports only its own projects
+        $repositories = \array_values(\array_filter(
+            $this->findRepositories($providerRepositoryId, [], $dbForPlatform, $authorization),
+            function (Document $repository) use ($dbForPlatform, $authorization) {
+                $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
+
+                return !$project->isEmpty() && $this->isProjectInCurrentRegion($project);
+            }
+        ));
+
+        // A delivery for a repository nothing deploys from needs no token
+        if (empty($repositories)) {
+            return;
+        }
+
+        /** @var Entire $vcs */
+        $vcs = $vcsFactory->fromInstallation(new Document([
+            'provider' => 'entire',
+            'providerInstallationId' => $providerInstallationId,
+        ]));
+
+        // The delivery names the cell serving the repository
+        $vcs->setRepositoryEndpoint($providerRepositoryId, $parsedPayload['apiUrl'] ?? '');
+
+        // A trail can open before Entire records its head; its branch has one
+        $providerCommitAuthorName = '';
+        $providerCommitMessage = '';
+        try {
+            $commit = $providerCommitHash === ''
+                ? $vcs->getLatestCommit($providerRepositoryOwner, $providerRepositoryName, $providerBranch)
+                : $vcs->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
+            $providerCommitHash = $providerCommitHash ?: ($commit['commitHash'] ?? '');
+            $providerCommitUrl = $providerCommitUrl ?: ($commit['commitUrl'] ?? '');
+            $providerCommitAuthorName = $commit['commitAuthor'] ?? '';
+            $providerCommitMessage = $commit['commitMessage'] ?? '';
+        } catch (\Throwable $e) {
+            Console::warning("Failed to fetch the head of trail #{$providerPullRequestId}: " . $e->getMessage());
+        }
+
+        if ($providerCommitHash === '') {
+            return;
+        }
+
+        try {
+            $files = $vcs->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, (int) $providerPullRequestId);
+        } catch (\Throwable $e) {
+            // Without affected files, path triggers can't filter, so resources are listed on the trail whatever paths they watch.
+            Console::warning("Failed to fetch files of trail #{$providerPullRequestId}: " . $e->getMessage());
+            $files = [];
+        }
+        $providerAffectedFiles = [
+            ...\array_column($files, 'filename'),
+            // Only renamed files carry a previous filename; skip missing values from other file changes.
+            ...\array_filter(\array_column($files, 'previous_filename')),
+        ];
+
+        $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, '', $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
     }
 }
