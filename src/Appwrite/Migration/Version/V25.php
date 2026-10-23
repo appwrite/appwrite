@@ -489,8 +489,9 @@ class V25 extends Migration
                     $this->createCollection($id);
                     // Ledger rows are bound to their topic instance. Rows written before the
                     // binding keep a null topicInternalId and are never replayed; the age-based
-                    // prune removes them. A failure other than an existing attribute or index
-                    // propagates, since publishing needs the attribute.
+                    // prune removes them. NULLs are distinct under the unique index, so they never
+                    // block a publish. A failure other than an existing attribute or index
+                    // propagates, since publishing needs the attribute and the instance-scoped index.
                     try {
                         $this->createAttributeFromCollection($this->dbForProject, $id, 'topicInternalId');
                     } catch (Duplicate) {
@@ -502,6 +503,14 @@ class V25 extends Migration
                     try {
                         $this->dbForProject->deleteIndex($id, '_key_topic_sequence');
                     } catch (NotFound) {
+                    }
+                    try {
+                        $this->dbForProject->deleteIndex($id, '_key_message_topic');
+                    } catch (NotFound) {
+                    }
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_message_topicInternalId');
+                    } catch (Duplicate) {
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;

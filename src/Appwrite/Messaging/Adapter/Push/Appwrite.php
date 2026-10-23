@@ -145,11 +145,13 @@ class Appwrite extends PushAdapter
      * (getDocument FOR UPDATE). A concurrent attempt for the same message blocks on that
      * lock, then re-reads the ledger row this transaction committed rather than racing a
      * second increment — so the topic sequence can't advance without a matching row, and
-     * two attempts can't open a gap. The unique index on (messageId, topic) remains as a
-     * correctness backstop.
+     * two attempts can't open a gap. The unique index on (messageId, topicInternalId) remains
+     * as a correctness backstop.
      *
      * Rows are bound to the locked topic's internal id, so a topic deleted and recreated under
-     * the same id never shares a ledger, or a deduplication key, with its predecessor.
+     * the same id never shares a ledger, or a deduplication key, with its predecessor. Rows
+     * written before that binding have a null topicInternalId, which the unique index treats
+     * as distinct, so they never block a publish.
      */
     private function persist(string $topic, string $payload): int
     {
