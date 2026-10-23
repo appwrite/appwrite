@@ -6,6 +6,7 @@ use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Maintenance\Grid;
 use DateInterval;
 use DateTime;
 use Utopia\Console\Console;
@@ -49,7 +50,7 @@ class Maintenance extends Action
 
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-        $next = self::next($now, $jobInitTime, $interval);
+        $next = new Grid($jobInitTime, $interval)->next($now);
         $delay = $next->getTimestamp() - $now->getTimestamp();
 
         $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
@@ -104,19 +105,6 @@ class Maintenance extends Action
         } elseif ($type === 'trigger') {
             $action();
         }
-    }
-
-    /**
-     * The first run after $now on the grid of today's $start plus whole intervals, so a restart waits at most one
-     * interval instead of until the next start time.
-     */
-    public static function next(\DateTime $now, string $start, int $interval): \DateTime
-    {
-        $anchor = new \DateTime($now->format("Y-m-d $start"), $now->getTimezone());
-        $elapsed = $now->getTimestamp() - $anchor->getTimestamp();
-        $steps = (int) \floor($elapsed / $interval) + 1;
-
-        return $anchor->setTimestamp($anchor->getTimestamp() + $steps * $interval);
     }
 
     private function notifyDeleteConnections(DeletePublisher $publisherForDeletes): void

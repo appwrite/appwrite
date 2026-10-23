@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Platform\Tasks;
+namespace Tests\Unit\Maintenance;
 
-use Appwrite\Platform\Tasks\Maintenance;
+use Appwrite\Maintenance\Grid;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-final class MaintenanceTest extends TestCase
+final class GridTest extends TestCase
 {
     /**
      * @return \Iterator<string, array{string, int, string}>
@@ -28,7 +28,7 @@ final class MaintenanceTest extends TestCase
     {
         $now = new \DateTime($now, new \DateTimeZone('UTC'));
 
-        $next = Maintenance::next($now, '12:00', $interval);
+        $next = new Grid('12:00', $interval)->next($now);
         $delay = $next->getTimestamp() - $now->getTimestamp();
 
         $this->assertSame($expected, $next->format('Y-m-d H:i:s'));
