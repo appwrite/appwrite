@@ -198,6 +198,11 @@ trait Deployment
 
                     $commentStatus = $existingDeployment->getAttribute('status', 'waiting');
 
+                    // This pass deploys nothing, so the comment links the deployment the push made
+                    if (!$existingDeployment->isEmpty()) {
+                        $deploymentId = $existingDeployment->getId();
+                    }
+
                     if ($resource->getCollection() === 'sites' && !$existingDeployment->isEmpty()) {
                         $previewRule = $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
                             Query::equal('projectInternalId', [$project->getSequence()]),
@@ -247,7 +252,7 @@ trait Deployment
                         if ($lockAcquired) {
                             // Wrap in try/finally to ensure lock file gets deleted
                             try {
-                                $comment = new Comment($platform);
+                                $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
 
@@ -259,7 +264,7 @@ trait Deployment
                             }
                         }
                     } else {
-                        $comment = new Comment($platform);
+                        $comment = new Comment($platform, $vcs->supportsCommentImages());
                         $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
                         $latestCommentId = \strval($vcs->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
@@ -320,7 +325,7 @@ trait Deployment
                         if ($lockAcquired) {
                             // Wrap in try/finally to ensure lock file gets deleted
                             try {
-                                $comment = new Comment($platform);
+                                $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
@@ -572,7 +577,7 @@ trait Deployment
                             $previewUrl = GitAction::previewUrl($rule);
 
                             if (!empty($previewUrl)) {
-                                $comment = new Comment($platform);
+                                $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
                                 $vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
