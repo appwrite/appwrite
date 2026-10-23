@@ -10,6 +10,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -18,6 +19,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Platform\Action;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Presence extends Action
@@ -28,8 +30,8 @@ class Presence extends Action
             ->desc('Upsert a presence document for the authenticated user')
             ->label(Dispatcher::LABEL_MESSAGE_TYPE, 'presence')
             ->param('status', '', new Text(2048), 'Presence status')
-            ->param('presenceId', 'unique()', new Text(36), 'Presence document ID', true)
-            ->param('metadata', null, new JSONObject(), 'Optional metadata payload', true, [], true)
+            ->param('presenceId', CustomId::UNIQUE, new CustomId(), 'Presence document ID', true)
+            ->param('metadata', null, new Nullable(new JSONObject()), 'Optional metadata payload', true)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('connectionId')
             ->inject('realtime')
@@ -90,7 +92,7 @@ class Presence extends Action
 
         $presenceDocument = new Document($presenceData);
         $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
-        if ($presenceId !== 'unique()') {
+        if ($presenceId !== CustomId::UNIQUE) {
             $presenceDocument->setAttribute('$id', $presenceId);
         }
 
