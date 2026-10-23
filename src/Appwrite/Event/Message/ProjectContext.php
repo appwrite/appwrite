@@ -13,6 +13,7 @@ final readonly class ProjectContext
         public string $teamInternalId = '',
         public string $createdAt = '',
         public string $region = '',
+        public string $database = '',
     ) {
     }
 
@@ -25,6 +26,7 @@ final readonly class ProjectContext
             teamInternalId: (string) $project->getAttribute('teamInternalId', ''),
             createdAt: (string) $project->getCreatedAt(),
             region: (string) $project->getAttribute('region', ''),
+            database: (string) $project->getAttribute('database', ''),
         );
     }
 
@@ -37,6 +39,7 @@ final readonly class ProjectContext
             teamInternalId: (string) ($project['teamInternalId'] ?? ''),
             createdAt: (string) ($project['$createdAt'] ?? ''),
             region: (string) ($project['region'] ?? ''),
+            database: (string) ($project['database'] ?? ''),
         );
     }
 
@@ -52,13 +55,14 @@ final readonly class ProjectContext
 
     public function toArray(): array
     {
-        return [
+        return \array_filter([
             '$id' => $this->id,
             '$sequence' => $this->sequence,
             'teamId' => $this->teamId,
             'teamInternalId' => $this->teamInternalId,
             '$createdAt' => $this->createdAt,
             'region' => $this->region,
-        ];
+            'database' => $this->database,
+        ], static fn (string $value): bool => $value !== '');
     }
 }

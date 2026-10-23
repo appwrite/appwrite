@@ -461,7 +461,7 @@ import io.appwrite.Client
 val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<PROJECT_ID>")                  // Your project ID
-    .setKey('98fd4...a2ad2');                    // Your secret API key
+    .setKey("98fd4...a2ad2");                    // Your secret API key
 
 val tablesDB = TablesDB(client)
 
@@ -476,7 +476,7 @@ import Appwrite
 let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<PROJECT_ID>")                  // Your project ID
-    .setKey('98fd4...a2ad2');                    // Your secret API key
+    .setKey("98fd4...a2ad2");                    // Your secret API key
 
 let tablesDB = TablesDB(client)
 
@@ -493,7 +493,7 @@ using Appwrite.Models;
 var client = new Client()
     .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<PROJECT_ID>")                  // Your project ID
-    .SetKey('98fd4...a2ad2');                    // Your secret API key
+    .SetKey("98fd4...a2ad2");                    // Your secret API key
 
 var tablesDB = new TablesDB(client);
 

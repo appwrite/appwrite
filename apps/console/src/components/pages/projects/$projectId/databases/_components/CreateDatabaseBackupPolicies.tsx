@@ -73,7 +73,7 @@ type CreateDatabaseBackupPoliciesProps = {
    * supports database backups, an upgrade warning is shown. Omit while the
    * plan is still loading. Ignored when the profile disables `databaseBackups`.
    */
-  planBackupsEnabled?: boolean
+  planBackupsEnabled?: boolean | null
   /**
    * Plan `backupPolicies` cap. Same convention as databases/functions/buckets:
    * `0` = unlimited; `> 0` = hard cap. Pro (`1`) is daily-only.

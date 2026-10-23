@@ -82,9 +82,9 @@ void main() async {
 
     try {
         final documents = await documentsDB.listDocuments(
-            '<DATABASE_ID>',
-            '<COLLECTION_ID>',
-            [
+            databaseId: '<DATABASE_ID>',
+            collectionId: '<COLLECTION_ID>',
+            queries: [
                 Query.equal('title', ['Avatar', 'Lord of the Rings']),
                 Query.greaterThan('year', 1999)
             ]
@@ -127,7 +127,7 @@ import io.appwrite.services.DocumentsDB
 suspend fun main() {
     val client = Client(applicationContext)
         .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-        .setProject('<PROJECT_ID>');
+        .setProject("<PROJECT_ID>");
 
     val documentsDB = DocumentsDB(client)
 
@@ -152,8 +152,8 @@ import (
     "fmt"
     "log"
 
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/query"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/query"
 )
 
 func main() {
@@ -1638,14 +1638,14 @@ Query.notContains("name", "Tom")
 ```
 ```client-apple
 // For arrays
-Query.notContains("ingredients", value: ['apple', 'banana'])
+Query.notContains("ingredients", value: ["apple", "banana"])
 
 // For strings
 Query.notContains("name", value: "Tom")
 ```
 ```client-android-kotlin
 // For arrays
-Query.notContains("ingredients", ['apple', 'banana'])
+Query.notContains("ingredients", ["apple", "banana"])
 
 // For strings
 Query.notContains("name", "Tom")
@@ -1715,7 +1715,7 @@ Query.notContains("name", "Tom")
 ```
 ```server-swift
 // For arrays
-Query.notContains("ingredients", value: ['apple', 'banana'])
+Query.notContains("ingredients", value: ["apple", "banana"])
 
 // For strings
 Query.notContains("name", value: "Tom")
@@ -3300,9 +3300,9 @@ const results = await documentsDB.listDocuments({
 ```
 ```client-flutter
 final results = await documentsDB.listDocuments(
-    '<DATABASE_ID>',
-    '<COLLECTION_ID>',
-    [
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
         Query.or([
             Query.and([
                 Query.equal('category', ['books']),

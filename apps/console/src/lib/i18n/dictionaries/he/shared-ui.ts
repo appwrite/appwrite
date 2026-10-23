@@ -298,6 +298,16 @@ export const heSharedUiDictionary: Record<string, string> = {
   Integer: 'מספר שלם',
   'Invalid JSON format': 'פורמט JSON לא תקין',
   'Invalid format': 'פורמט לא תקין',
+
+  // Custom ID field (IdInput)
+  'Invalid ID format': 'פורמט מזהה לא תקין',
+  'ID is too long': 'המזהה ארוך מדי',
+  'Allowed characters: letters and numbers only':
+    'תווים מותרים: אותיות וספרות בלבד',
+  'Allowed characters: lowercase letters, numbers, non-leading hyphen':
+    'תווים מותרים: אותיות קטנות, ספרות ומקף שאינו בתחילת המזהה',
+  'Allowed characters: alphanumeric, non-leading hyphen, underscore, period':
+    'תווים מותרים: אותיות וספרות, מקף שאינו בתחילת המזהה, קו תחתון ונקודה',
   'Join 24k+ developers': 'הצטרפו ליותר מ-24 אלף מפתחים',
   'Skip for now': 'דילוג לעכשיו',
   'Help other Appwriters on Discord and grow with the community.':

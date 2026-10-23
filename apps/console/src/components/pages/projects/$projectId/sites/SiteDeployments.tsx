@@ -106,7 +106,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import { getVcsProvider, isEntireRepositoryUrl } from '@/lib/vcs/providers'
 import {
   SITE_SCREENSHOTS_BUCKET_ID,
   SITE_SCREENSHOT_CARD_WIDTH,
@@ -155,6 +155,10 @@ function detectVcsProvider(
     }
     if (url.includes('cursor.com')) {
       const { label, Icon } = getVcsProvider('origin')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (isEntireRepositoryUrl(url)) {
+      const { label, Icon } = getVcsProvider('entire')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
@@ -1715,8 +1719,11 @@ export function SiteDeploymentsView() {
                                         toast.success(
                                           t('Deployment rebuild started'),
                                         )
-                                      } catch {
-                                        toast.error(t('Failed to redeploy'))
+                                      } catch (error) {
+                                        toast.error(
+                                          (error instanceof Error && error.message) ||
+                                            t('Failed to redeploy'),
+                                        )
                                       }
                                     }}
                                   >
