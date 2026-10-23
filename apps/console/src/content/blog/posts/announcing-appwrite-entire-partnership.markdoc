@@ -25,17 +25,15 @@ faqs:
     answer: "Entire is available as a Git provider on [Appwrite Cloud](/sign-in). The self-hosted Appwrite Console does not offer new Entire connections yet."
 ---
 
-Not long ago, building a feature meant hours in your editor. Today, it often starts with a sentence. You describe what you want, a coding agent writes the change, and by the time you've read through the diff, the next commit is already waiting. Software development has become agentic.
+Before coding agents, every feature was written by hand. Turning an idea into working code took hours, often days, and everything around it moved at the same pace: contributions arrived a few at a time, and pull requests waited their turn in review.
 
-That changes where the time goes. Writing code is no longer the slow part. The slow part is everything after it: understanding why a change was made, and finding out whether it works once it's running.
+Coding agents have changed that pace. Developers now delegate whole features to an agent and review what comes back, and a single session can produce a steady stream of commits and pull requests. Keeping up takes better tools: ones that explain why each change was made, and show whether it works as soon as it's pushed.
 
-Today, we're announcing a partnership between Appwrite and Entire to close that gap. As part of it, **Entire joins Appwrite's Git providers**, so a push to an Entire repository can build and deploy Appwrite Sites and Functions.
-
-It's a collaboration between two companies that build in the open. Appwrite and Entire both believe that as agents write more of the code, developers should still have tools they can read, extend, and run on their own terms.
+Today, we're announcing a partnership between Appwrite and Entire to bring those tools together. As part of it, **Entire joins Appwrite's deployment providers**, so a push to an Entire repository can build and deploy Appwrite Sites and Functions.
 
 # Why Appwrite and Entire are partnering
 
-Every change an agent pushes raises two questions: how did this get written, and does it work? Entire answers the first. Appwrite answers the second.
+Every change an agent pushes raises two questions: how did this get written, and does it work? Entire answers the first, and Appwrite answers the second.
 
 Entire is the Git forge built for agents. It hosts repositories on its own network, in regions close to your team, and keeps the agent session behind each change next to the code. Every commit an agent makes becomes a checkpoint that pairs the change with the conversation that produced it. Work is organized into **trails**, Entire's unit of work, which follow one branch from the first intent to shipped code.
 
@@ -43,13 +41,13 @@ Teams don't have to move their code to start using it, either. Entire can mirror
 
 Appwrite is an open-source developer platform with authentication, databases, storage, serverless functions, realtime, messaging, and web hosting in one place. [Sites](/docs/products/sites) and [Functions](/docs/products/functions) deploy straight from Git: a push becomes a build, and a build becomes a live site or API.
 
-Connect the two and the loop closes. An agent pushes to Entire, Appwrite builds and deploys the commit, and the result goes back to Entire as a check run on that commit. The same commit now holds both how the change was written and whether it works.
+Together, Entire and Appwrite cover the whole path from an agent's commit to a running app. Entire keeps the code and the reasoning behind every change. Appwrite builds that code into sites and APIs, backed by authentication, databases, and storage in the same project, and reports each result back to the commit that triggered it. For teams building with agents, that means one workflow from the first prompt to production, where every change can be traced, verified, and shipped.
 
-# Entire is now a Git provider for Sites and Functions
+# Entire is now a deployment provider for Sites and Functions
 
-Connect an Entire project to your Appwrite project, pick a repository, and every push builds and deploys. Here's what that includes on **Appwrite Cloud**:
+You can connect an Entire project to your Appwrite project, pick a repository, and every push builds and deploys. Here's what that includes on **Appwrite Cloud**:
 
-- **Connect once per Entire project.** Connect Entire from the Appwrite Console, approve the installation on entire.io, and choose which of the project's repositories Appwrite can see.
+- **Connect each Entire project separately.** Connect Entire from the Appwrite Console and approve the installation on entire.io. You can give Appwrite access to all of the project's repositories, including ones you add later, or only the ones you select. You can change that selection whenever you need to.
 - **Push to deploy.** Commits to your production branch build and activate. Commits to any other branch build without activating, and Sites get a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open.
 - **Build results on Entire.** Appwrite reports every build back to Entire as a check run on the commit. The check moves from starting to building to succeeded or failed, and its summary links to the deployment in the Console and, for Sites, to the running preview.
 - **The same build controls.** [Branch and path filters](/blog/post/announcing-git-deployment-triggers), root directories, install and build commands, and environment variables work exactly as they do for any Git-connected Site or Function.
@@ -58,28 +56,17 @@ Connect an Entire project to your Appwrite project, pick a repository, and every
 
 **Ready to get started?** Our [guide to deploying from Entire](/blog/post/deploy-from-entire-to-appwrite) walks through creating an Entire repository, connecting it to Appwrite, and shipping a site and a function from it.
 
-# Open source on both sides
-
-Both companies build in the open, and that carries through to this collaboration.
-
-Appwrite has been open source from the start. You can run the same platform on Appwrite Cloud or on your own infrastructure, read how it builds and serves your code, and contribute back. The adapter that talks to Entire is no exception: it ships in `utopia-php/vcs`, Appwrite's MIT-licensed library for Git providers, next to every other provider Appwrite supports.
-
-Entire opens the parts of its platform that run on your machine. Its CLI, which captures agent sessions and links them to your commits, is open source under the MIT license, and the Agent Integration Protocol lets anyone add support for an agent Entire doesn't cover yet.
-
-So the tools you run locally and the integration between the two platforms are both open for you to read.
-
 # How both communities benefit
 
-For the **Appwrite community**, this partnership means a Git home designed around agent work. If your team builds with coding agents, Entire keeps the reasoning behind each change attached to the code, and Appwrite keeps deploying it the way it always has. Nothing about your Sites, Functions, or build settings changes because the code lives on Entire.
+For the **Appwrite community**, this partnership brings a Git home built for agent work, without a migration. Entire connects alongside the Git providers your project already uses, so you can move a single Site or Function to an Entire repository and keep its domains, environment variables, and build settings as they are. What you gain is context: each deployment links to its commit on Entire, where the agent session that produced the change sits next to the code. When a build fails or a release misbehaves, you can see why the change was made, not just what changed.
 
-For the **Entire community**, this partnership opens a complete backend and hosting layer. Code on Entire can become a production site, a preview for every branch, or an API endpoint without a separate deploy script, and the result shows up as a check run next to the commit. When an app needs more than hosting, [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), and [Realtime](/docs/apis/realtime) are already in the same Appwrite project.
-
-Both communities get a push that ends in a running deployment, with the result recorded on the commit. When agents push faster than anyone can check out branches by hand, that matters: a reviewer can open the preview a branch produced instead of pulling it and running it locally.
+For the **Entire community**, this partnership opens a complete backend, not just hosting. Code on Entire can become a production site or an API endpoint without a separate deploy script, and when the app needs more, [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), and [Realtime](/docs/apis/realtime) are already in the same Appwrite project.
 
 # Deploying from Entire on Appwrite Cloud
 
-Entire is available as a Git provider on Appwrite Cloud today. Connect your Entire project from the Console, pick a repository, and push.
+Entire is available as a deployment provider on Appwrite Cloud today. Connect your Entire project from the Console, pick a repository, and push.
 
 - [Deploy from Entire to Appwrite](/blog/post/deploy-from-entire-to-appwrite) walks through the full setup, from creating the repository to branch previews and path filters.
 - [Deploy Sites from Git](/docs/products/sites/deploy-from-git) and [Deploy Functions from Git](/docs/products/functions/deploy-from-git) cover build triggers, build commands, and root directories.
-- [Sign up for Appwrite Cloud](/sign-in) to connect your first Entire project.
+- [Sign up for Entire](https://entire.com/login) to create a project and your first repository.
+- [Sign up for Appwrite Cloud](/sign-up) to connect your first Entire project.
