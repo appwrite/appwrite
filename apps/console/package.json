@@ -166,7 +166,7 @@
     "use-sync-external-store": "^1.6.0",
     "@tanstack/react-store": "^0.11.2",
     "@tanstack/store": "^0.11.2",
-    "dompurify": "^3.4.16",
+    "dompurify": "^3.4.17",
     "sharp": "^0.35.5"
   },
   "pnpm": {
@@ -175,7 +175,7 @@
       "react-dom": "19.1.1",
       "@tanstack/react-store": "^0.11.2",
       "@tanstack/store": "^0.11.2",
-      "dompurify": "^3.4.16",
+      "dompurify": "^3.4.17",
       "sharp": "^0.35.5"
     }
   },
