@@ -532,6 +532,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Identity ID': 'ID 連携 ID',
   'If file security is disabled, users can access files': 'ファイルセキュリティが無効な場合、ユーザーはファイルにアクセスできます',
   'If you reduce the limit, users who are currently logged in will be logged out of the application.': '上限を下げると、現在ログイン中のユーザーはアプリケーションからログアウトされます。',
+  'Image metadata': '画像メタデータ',
+  'Image metadata setting has been updated': '画像メタデータ設定を更新しました',
   'Image transformations': '画像変換',
   'Image transformations setting has been updated': '画像変換設定を更新しました',
   'Impersonation capability': 'なりすまし機能',
@@ -829,6 +831,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Remove': '削除',
   'Remove authenticator': '認証アプリを削除',
   'Remove from team': 'チームから削除',
+  'Remove metadata from uploaded images': 'アップロードされた画像からメタデータを削除',
+  "Remove metadata such as location, device, and capture time from images uploaded to this bucket. The color profile and orientation are kept. For file size above 20MB metadata is not removed even if it's enabled. This change will only apply to new files uploaded after the update.": 'このバケットにアップロードされる画像から、位置情報、デバイス、撮影日時などのメタデータを削除します。カラープロファイルと向きは保持されます。20MB を超えるファイルは有効でもメタデータは削除されません。この変更は更新後にアップロードされる新しいファイルにのみ適用されます。',
   'Remove mock phone number': 'モック電話番号を削除',
   'Remove private key': '秘密鍵を削除',
   'Remove this membership. The user will lose access to this team. This action cannot be undone.': 'このメンバーシップを削除します。ユーザーはこのチームへのアクセスを失います。この操作は元に戻せません。',
@@ -1294,6 +1298,20 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Password not checked against known data breaches':
     'パスワードは既知のデータ漏洩と照合されていません',
   'breached password': '漏洩したパスワード',
+
+  // Periodic password change (rotation) policy
+  'Periodic password change': 'パスワードの定期変更',
+  'Require users to set a new password once the one they have reaches the maximum age. An email/password sign-in with a password past that age is refused until the user resets it through password recovery. Sign-ins with other methods are not affected.':
+    '使用中のパスワードが最大有効期間に達したユーザーに、新しいパスワードの設定を求めます。その期間を過ぎたパスワードでのメール/パスワードによるサインインは、ユーザーがパスワードリカバリーでリセットするまで拒否されます。他の方法でのサインインには影響しません。',
+  'Require a periodic password change': 'パスワードの定期変更を必須にする',
+  'Maximum password age': 'パスワードの最大有効期間',
+  'Between 1 day and 10 years': '1日から10年の間',
+  'Minimum is 1 day': '最小は1日です',
+  'Maximum is 10 years': '最大は10年です',
+  'Updated periodic password change policy':
+    'パスワード定期変更ポリシーを更新しました',
+  'Failed to update periodic password change policy':
+    'パスワード定期変更ポリシーの更新に失敗しました',
 
   // Passkey relying party policy and auth method
   Passkey: 'パスキー',
