@@ -653,6 +653,24 @@ ZONE,
         $this->assertSame($record->rdata, $roundTripCaa->rdata);
     }
 
+    public function testImportDropsDuplicateRecords(): void
+    {
+        $contents = \sprintf(
+            <<<'ZONE'
+$ORIGIN example.com.
+%s
+@ 3600 IN CAA 0 issue "letsencrypt.org"
+example.com. 300 IN CAA 0 issue "letsencrypt.org"
+ZONE,
+            self::DEFAULT_SOA,
+        );
+
+        $zone = File::import($contents);
+
+        $this->assertCount(1, $zone->records);
+        $this->assertSame(3600, $zone->records[0]->ttl);
+    }
+
     public function testImportCaaMissingQuotedValueFails(): void
     {
         $this->expectException(ImportException::class);
