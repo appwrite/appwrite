@@ -476,18 +476,32 @@ class Create extends Action
             return;
         }
 
+        // A new branch has no previous tip, so what it changes is what it
+        // holds beyond where it left the default branch
+        $providerBaseCommitHash = $providerPreviousCommitHash;
+        if ($providerBranchCreated || \trim($providerBaseCommitHash, '0') === '') {
+            $providerBaseCommitHash = '';
+            $providerDefaultBranch = $parsedPayload['defaultBranch'] ?? '';
+            if ($providerDefaultBranch !== '' && $providerDefaultBranch !== $providerBranch) {
+                try {
+                    $providerBaseCommitHash = $vcs->getMergeBase($providerRepositoryOwner, $providerRepositoryName, $providerDefaultBranch, $providerCommitHash);
+                } catch (\Throwable $e) {
+                    Console::warning("Failed to find where '{$providerBranch}' left '{$providerDefaultBranch}': " . $e->getMessage());
+                }
+            }
+        }
+
         $providerAffectedFiles = [];
-        // A new branch has no previous tip to compare against
-        if (!$providerBranchCreated && !empty($providerPreviousCommitHash) && \trim($providerPreviousCommitHash, '0') !== '') {
+        if ($providerBaseCommitHash !== '') {
             try {
-                $files = $vcs->compareFiles($providerRepositoryOwner, $providerRepositoryName, $providerPreviousCommitHash, $providerCommitHash);
+                $files = $vcs->compareFiles($providerRepositoryOwner, $providerRepositoryName, $providerBaseCommitHash, $providerCommitHash);
                 $providerAffectedFiles = [
                     ...\array_column($files, 'filename'),
                     // Only renamed files carry a previous filename; skip missing values from other file changes.
                     ...\array_filter(\array_column($files, 'previous_filename')),
                 ];
             } catch (\Throwable $e) {
-                Console::warning("Failed to compare '{$providerPreviousCommitHash}' with '{$providerCommitHash}': " . $e->getMessage());
+                Console::warning("Failed to compare '{$providerBaseCommitHash}' with '{$providerCommitHash}': " . $e->getMessage());
             }
         }
 

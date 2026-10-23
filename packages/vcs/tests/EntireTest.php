@@ -96,6 +96,47 @@ class MintingEntire extends Entire
 }
 
 /**
+ * Entire whose repository is already resolved and whose data-plane calls are
+ * recorded and answered with one fixed response, so a request's shape and
+ * the reading of its answer can be checked.
+ */
+class DataCallsEntire extends Entire
+{
+    /**
+     * @var list<array{method: string, path: string, params: array<mixed>}>
+     */
+    public array $calls = [];
+
+    /**
+     * @param array<mixed> $answer The body every call is answered with
+     */
+    public function __construct(private readonly int $status, private readonly array $answer)
+    {
+        parent::__construct(new Cache(new None()));
+    }
+
+    #[\Override]
+    protected function repositoryId(string $owner, string $repositoryName): string
+    {
+        return 'repo_' . $repositoryName;
+    }
+
+    #[\Override]
+    protected function gitRepositoryId(string $repositoryId): string
+    {
+        return 'regional_' . $repositoryId;
+    }
+
+    #[\Override]
+    protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true): array
+    {
+        $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params];
+
+        return ['headers' => ['status-code' => $this->status], 'body' => $this->answer];
+    }
+}
+
+/**
  * Exercises everything Entire can prove without credentials: delivery token
  * verification and delivery parsing, which never touch the network. The
  * live half of the shared adapter suite cannot run at all - see
@@ -416,7 +457,7 @@ final class EntireTest extends TestCase
                     'repository' => [
                         'id' => self::REPOSITORY_ID,
                         'path' => 'et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
-                        'default_branch' => 'main',
+                        'default_branch' => 'refs/heads/main',
                         'clone_url' => 'https://aws-us-east-2.entire.io/et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
                         'entire_clone_url' => 'entire://aws-us-east-2.entire.io/et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
                     ],
@@ -450,6 +491,7 @@ final class EntireTest extends TestCase
         $this->assertSame(self::CELL, $event['apiUrl']);
         $this->assertSame(self::COMMIT_HASH, $event['commitHash']);
         $this->assertSame(self::PREVIOUS_COMMIT_HASH, $event['previousCommitHash']);
+        // Entire names the default branch by its full ref; consumers get its name
         $this->assertSame('main', $event['defaultBranch']);
         $this->assertSame('github:alice', $event['headCommitAuthorName']);
         $this->assertFalse($event['branchCreated']);
@@ -475,6 +517,21 @@ final class EntireTest extends TestCase
         $this->assertTrue($deleted[0]['branchDeleted']);
         $this->assertSame('', $deleted[0]['commitHash']);
         $this->assertSame('', $deleted[0]['headCommitUrl']);
+    }
+
+    public function testGetMergeBase(): void
+    {
+        $adapter = new DataCallsEntire(200, ['mergeBaseSHA' => self::PREVIOUS_COMMIT_HASH, 'resolvedSHAs' => [self::PREVIOUS_COMMIT_HASH, self::COMMIT_HASH]]);
+
+        $this->assertSame(self::PREVIOUS_COMMIT_HASH, $adapter->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH));
+        $this->assertSame([[
+            'method' => 'GET',
+            'path' => '/git/repos/regional_repo_test-repo/merge-base',
+            'params' => ['commitA' => 'main', 'commitB' => self::COMMIT_HASH],
+        ]], $adapter->calls);
+
+        $this->expectException(\Exception::class);
+        new DataCallsEntire(404, ['code' => 'not_found'])->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH);
     }
 
     public function testGetEventIgnoresTags(): void
