@@ -27,6 +27,8 @@ services:
     dns:
       - 127.0.0.11
       - 172.16.238.100
+    extra_hosts:
+      - rebinding.webapp.com:host-gateway
     entrypoint:
       - php
       - -e
@@ -78,6 +80,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./packages:/usr/src/code/packages
+    extra_hosts:
+      - rebinding.webapp.com:host-gateway
     depends_on:
       - request-catcher-sms
       - request-catcher-webhook
@@ -285,6 +289,8 @@ services:
       - ./src:/usr/src/code/src
       - ./packages:/usr/src/code/packages
       - ./tests:/usr/src/code/tests
+    extra_hosts:
+      - rebinding.webapp.com:host-gateway
   appwrite-task-maintenance:
     build:
       context: .

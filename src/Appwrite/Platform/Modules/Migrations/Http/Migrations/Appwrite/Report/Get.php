@@ -13,7 +13,9 @@ use Utopia\Database\Document;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -76,6 +78,9 @@ class Get extends Action
 
         try {
             $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
+            if (!$this->isDeploymentHost(\parse_url($endpoint, PHP_URL_HOST) ?: '')) {
+                $appwrite->setDestinations($publicHostname->getDestinations());
+            }
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(
@@ -87,5 +92,22 @@ class Get extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
+    }
+
+    /**
+     * Whether the host is one this deployment is configured to serve on, which may be internal.
+     */
+    private function isDeploymentHost(string $host): bool
+    {
+        $domain = \parse_url('http://' . System::getEnv('_APP_DOMAIN', ''), PHP_URL_HOST) ?: '';
+        $internal = \parse_url('http://' . System::getEnv('_APP_MIGRATION_HOST', ''), PHP_URL_HOST) ?: '';
+
+        $hosts = \array_values(\array_filter([
+            $domain,
+            $domain !== '' ? '*.' . $domain : '',
+            $internal,
+        ]));
+
+        return $hosts !== [] && (new Hostname($hosts))->isValid($host);
     }
 }

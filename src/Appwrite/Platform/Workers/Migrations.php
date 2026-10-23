@@ -230,6 +230,7 @@ class Migrations extends Action
         /** @var Database|null $projectDB */
         $projectDB = null;
         $useAppwriteApiSource = false;
+        $isDeploymentEndpoint = false;
         $isAppwriteSource = $source === SourceAppwrite::getName();
         $isAppwriteToAppwrite = $isAppwriteSource
             && $destination === DestinationAppwrite::getName();
@@ -252,6 +253,10 @@ class Migrations extends Action
                 $publicDomain !== '' ? '*.' . $publicDomain : null,
                 $internalHost,
             ]);
+
+            $isDeploymentEndpoint = is_string($sourceHost)
+                && !empty($allowedHosts)
+                && (new Hostname($allowedHosts))->isValid($sourceHost);
 
             if (is_string($sourceHost) && !$this->sourceProject->isEmpty()) {
                 $rule = $this->dbForPlatform->findOne('rules', [
@@ -340,6 +345,12 @@ class Migrations extends Action
             ),
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
+
+        // This deployment's own hosts may be internal; every other host is held to the
+        // addresses the request was checked against, on each connection the source makes.
+        if (!$isDeploymentEndpoint) {
+            $migrationSource->setDestinations($this->publicHostname->getDestinations());
+        }
 
         $resources = $migration->getAttribute('resources', []);
         $this->sourceReport = $migrationSource->report($resources);

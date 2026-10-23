@@ -337,6 +337,39 @@ trait MigrationsBase
     }
 
     /**
+     * rebinding.webapp.com passes the host check with a public address, then the API and the
+     * migrations worker connect to it on the docker host, as a host that rebinds after the check
+     * would. Port 9501 is the API's own port on the docker host, so the source would answer.
+     * Each connection a source makes must be checked on the address it reaches.
+     */
+    public function testMigrationSourceRebindingToPrivateAddressIsRefused(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+        $endpoint = 'http://rebinding.webapp.com:9501/v1';
+
+        $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', $headers, [
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $endpoint,
+            'projectID' => $this->getProject()['$id'],
+            'key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(400, $report['headers']['status-code'], 'The report reached a private address: ' . \json_encode($report['body']));
+        $this->assertSame('migration_provider_error', $report['body']['type']);
+
+        $migration = $this->performMigrationExpectingFailure([
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $endpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertNotEmpty($migration['errors']);
+    }
+
+    /**
      * NHost's subdomain and region become labels of the source hostname, and the database
      * name part of its connection string, so each must keep that shape.
      */
