@@ -883,7 +883,7 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         }
         "resp.parse" => {
             let buffer = a.bytes("buffer")?;
-            let mut offset = a.opt_i64("offset")?.unwrap_or(0) as usize;
+            let mut offset = a.opt_i64("offset")?.unwrap_or(0);
             match resp::parse(&buffer, &mut offset) {
                 Ok(Some(reply)) => Outcome::Ok(json!({ "value": reply_json(&reply), "offset": offset })),
                 Ok(None) => Outcome::Ok(json!({ "value": { "$incomplete": true }, "offset": offset })),

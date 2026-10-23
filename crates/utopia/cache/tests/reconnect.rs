@@ -39,7 +39,7 @@ async fn server(drops: usize, answer: fn(&[u8]) -> Vec<u8>, framed: bool) -> (u1
                             let mut offset = 0;
                             match resp::parse(&buffer, &mut offset) {
                                 Ok(Some(Reply::Array(args))) => {
-                                    buffer.drain(..offset);
+                                    buffer.drain(..offset as usize);
                                     args.iter().filter_map(Reply::as_bytes).collect::<Vec<_>>().join(&b' ')
                                 }
                                 _ => break,

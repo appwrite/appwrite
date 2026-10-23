@@ -381,7 +381,7 @@ async fn handshake(
     loop {
         let mut offset = 0;
         if let Some(reply) = resp::parse(buffer, &mut offset)? {
-            buffer.drain(..offset);
+            buffer.drain(..resp::consumed(buffer, offset));
             return resp::unwrap(reply);
         }
         let mut chunk = [0u8; 4096];
@@ -406,7 +406,7 @@ async fn read(shared: Arc<Shared>, connection: Arc<Connection>, mut reader: Owne
                     return;
                 }
             };
-            buffer.drain(..offset);
+            buffer.drain(..resp::consumed(&buffer, offset));
             if !shared.is_current(&connection) {
                 return;
             }
