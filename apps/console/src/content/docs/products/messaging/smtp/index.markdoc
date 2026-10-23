@@ -189,7 +189,7 @@ using Appwrite.Enums;
 using Appwrite.Enums;
 
 var client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<PROJECT_ID>") // Your project ID
     .SetKey("<API_KEY>"); // Your secret API key
 
@@ -519,7 +519,7 @@ using Appwrite.Models;
 using Appwrite.Enums;
 
 var client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<PROJECT_ID>") // Your project ID
     .SetKey("<API_KEY>"); // Your secret API key
 

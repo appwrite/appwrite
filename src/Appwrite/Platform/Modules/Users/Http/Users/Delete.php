@@ -9,6 +9,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\SDK\AuthType;
@@ -17,7 +18,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -56,17 +59,19 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('publisherForDeletes')
+            ->inject('mqtt')
             ->inject('queueForRealtime')
             ->inject('usage')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Realtime $queueForRealtime, Context $usage): void
+    public function action(string $userId, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Mqtt $mqtt, Realtime $queueForRealtime, Context $usage): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -74,23 +79,27 @@ class Delete extends Action
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        // clone user object to send to workers
-        $clone = clone $user;
-
         $dbForProject->deleteDocument('users', $userId);
+
+        try {
+            $mqtt->revoke($project->getId(), $user->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
+
         DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
         DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
-        (new PresenceState())->deleteForUser($dbForProject, $queueForEvents->getProject(), $clone, $queueForRealtime, $usage);
+        (new PresenceState())->deleteForUser($dbForProject, $project, $user, $queueForRealtime, $usage);
 
         $publisherForDeletes->enqueue(new DeleteMessage(
-            project: $queueForEvents->getProject(),
+            project: $project,
             type: DELETE_TYPE_DOCUMENT,
-            document: $clone,
+            document: $user,
         ));
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setPayload($response->output($clone, Response::MODEL_USER));
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->noContent();
     }

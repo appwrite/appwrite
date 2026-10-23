@@ -135,11 +135,11 @@ export function BuyDomainWizard({
 
         setCheckoutSelection({
           domain,
-          price: quote.price,
+          price: quote.price ?? undefined,
           periodYears:
             typeof quote.periodYears === 'number' ? quote.periodYears : 1,
           premium: quote.premium,
-          renewalPrice: quote.renewalPrice,
+          renewalPrice: quote.renewalPrice ?? undefined,
           renewalPeriodYears: quote.renewalPeriodYears,
         })
         setStage('checkout')

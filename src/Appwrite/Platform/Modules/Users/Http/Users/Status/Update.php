@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Users\Http\Users\Status;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\SDK\AuthType;
@@ -12,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -52,17 +54,19 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('status', null, new Boolean(true), 'User Status. To activate the user pass `true` and to block the user pass `false`.')
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('mqtt')
             ->inject('queueForRealtime')
             ->inject('usage')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, bool $status, Response $response, Database $dbForProject, Event $queueForEvents, Realtime $queueForRealtime, Context $usage): void
+    public function action(string $userId, bool $status, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Mqtt $mqtt, Realtime $queueForRealtime, Context $usage): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -70,10 +74,16 @@ class Update extends Action
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => (bool) $status]));
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => $status]));
 
-        if (!$status) {
-            (new PresenceState())->deleteForUser($dbForProject, $queueForEvents->getProject(), $user, $queueForRealtime, $usage);
+        if ($status === false) {
+            try {
+                $mqtt->revoke($project->getId(), $user->getId());
+            } catch (\Throwable $error) {
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+            }
+
+            (new PresenceState())->deleteForUser($dbForProject, $project, $user, $queueForRealtime, $usage);
         }
 
         $queueForEvents

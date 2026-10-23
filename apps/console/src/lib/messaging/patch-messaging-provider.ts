@@ -32,6 +32,18 @@ function optNum(v: unknown): number | undefined {
   return Number.isNaN(n) ? undefined : n
 }
 
+/**
+ * Like `optNum`, but preserves an explicit `null` so the API clears the stored
+ * value. The Appwrite push options (QoS, expiry) use `null` as their reset
+ * representation; the SDK forwards `null` and omits only `undefined`.
+ */
+function optNumOrNull(v: unknown): number | null | undefined {
+  if (v === null) return null
+  if (v === undefined || v === '') return undefined
+  const n = typeof v === 'number' ? v : Number(v)
+  return Number.isFinite(n) ? n : undefined
+}
+
 function parseServiceAccountJson(raw: unknown): object | undefined {
   if (raw == null || raw === '') return undefined
   if (typeof raw === 'object' && !Array.isArray(raw)) return raw as object
@@ -128,6 +140,8 @@ function dispatchIdentityOnly(
       return messaging.updateFCMProvider(identity)
     case 'apns':
       return messaging.updateAPNSProvider(identity)
+    case 'appwrite':
+      return messaging.updateAppwriteProvider(identity)
     default:
       throw new Error(
         `Unsupported messaging provider for update: ${provider.provider}`,
@@ -280,6 +294,16 @@ function dispatchWithMerged(
         teamId: optStr(merged.teamId),
         bundleId: optStr(merged.bundleId),
         sandbox: optBool(merged.sandbox),
+      })
+    case 'appwrite':
+      return messaging.updateAppwriteProvider({
+        providerId,
+        name,
+        enabled,
+        // `null` clears the option back to the subscriber's choice; the SDK
+        // typings only model `number | undefined` but forward `null` at runtime.
+        qos: optNumOrNull(merged.qos) as number | undefined,
+        expiry: optNumOrNull(merged.expiry) as number | undefined,
       })
     default:
       throw new Error(

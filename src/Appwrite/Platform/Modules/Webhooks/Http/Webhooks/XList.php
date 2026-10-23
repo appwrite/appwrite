@@ -111,7 +111,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         try {
             $webhooks = $authorization->skip(fn () => $dbForPlatform->find('webhooks', $queries));

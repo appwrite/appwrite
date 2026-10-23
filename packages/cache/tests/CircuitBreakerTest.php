@@ -11,6 +11,7 @@ use Utopia\Cache\Adapter\CircuitBreaker;
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\Cache\Exception\Unavailable;
 use Utopia\Cache\Feature;
 use Utopia\CircuitBreaker\CircuitBreaker as UtopiaCircuitBreaker;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -38,10 +39,75 @@ final class CircuitBreakerTest extends TestCase
         $this->assertFalse($this->failingCache()->save('key', 'value'));
         $this->assertFalse($this->failingCache()->touch('key'));
         $this->assertSame([], $this->failingCache()->list('key'));
-        $this->assertFalse($this->failingCache()->purge('key'));
         $this->assertFalse($this->failingCache()->flush());
         $this->assertFalse($this->failingCache()->ping());
         $this->assertSame(0, $this->failingCache()->getSize());
+    }
+
+    public function testAFailedPurgeThrowsInsteadOfReportingNothingToPurge(): void
+    {
+        $cache = $this->failingCache();
+
+        try {
+            $cache->purge('key');
+            $this->fail('A purge the adapter failed must not read as a purge of a missing key');
+        } catch (Unavailable $error) {
+            $this->assertInstanceOf(RuntimeException::class, $error->getPrevious());
+            $this->assertSame('Cache failed.', $error->getPrevious()->getMessage());
+        }
+    }
+
+    public function testAFailedPurgeCountsTowardsOpeningTheCircuit(): void
+    {
+        $breaker = new UtopiaCircuitBreaker(minimumThroughput: 1);
+        $cache = new CircuitBreaker(new FailingAdapter(), $breaker);
+
+        try {
+            $cache->purge('key');
+        } catch (Unavailable) {
+        }
+
+        $this->assertTrue($breaker->isOpen());
+    }
+
+    public function testAPurgeWhileTheCircuitIsOpenThrowsWithoutReachingTheAdapter(): void
+    {
+        $adapter = new CountingFailingAdapter();
+        $breaker = new UtopiaCircuitBreaker(timeout: 3600);
+        $breaker->trip();
+        $cache = new CircuitBreaker($adapter, $breaker);
+
+        $this->expectException(Unavailable::class);
+
+        try {
+            $cache->purge('key');
+        } finally {
+            $this->assertSame(0, $adapter->purges);
+        }
+    }
+
+    public function testOtherOperationsKeepTheirFallbacksWhileTheCircuitIsOpen(): void
+    {
+        $breaker = new UtopiaCircuitBreaker(timeout: 3600);
+        $breaker->trip();
+        $cache = new CircuitBreaker(new Memory(), $breaker);
+
+        $this->assertFalse($cache->load('key', 60));
+        $this->assertFalse($cache->save('key', 'value'));
+        $this->assertFalse($cache->saveWithLease('key', 'value', 'key', '0'));
+        $this->assertFalse($cache->touch('key'));
+        $this->assertSame([], $cache->list('key'));
+        $this->assertSame('0', $cache->getGeneration('key'));
+        $this->assertFalse($cache->flush());
+        $this->assertFalse($cache->ping());
+        $this->assertSame(0, $cache->getSize());
+    }
+
+    public function testPurgingAMissingKeyStillReturnsFalse(): void
+    {
+        $cache = new CircuitBreaker(new Memory(), new UtopiaCircuitBreaker());
+
+        $this->assertFalse($cache->purge('missing'));
     }
 
     public function testBreakerShortCircuitsAfterFailure(): void
@@ -158,6 +224,15 @@ class FailingAdapter implements Adapter
 class CountingFailingAdapter extends FailingAdapter
 {
     public int $loads = 0;
+
+    public int $purges = 0;
+
+    public function purge(string $key, string $hash = ''): bool
+    {
+        $this->purges++;
+
+        return parent::purge($key, $hash);
+    }
 
     public function load(string $key, int $ttl, string $hash = ''): mixed
     {

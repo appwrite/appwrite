@@ -173,8 +173,13 @@ final class Release
         $this->out($this->sh('gh pr create -R ' . self::REPOSITORY . ' --base ' . escapeshellarg($branch) . ' --head ' . escapeshellarg($work)
             . ' --title ' . escapeshellarg($this->title($version)) . ' --body-file ' . escapeshellarg($draft)));
 
+        // A minor's X.Y.x starts at main, so GitHub refuses the merge-back PR
+        // until the prep PR lands on it.
+        $ahead = $this->sh('git rev-list --count ' . escapeshellarg("origin/main..origin/{$branch}"));
         $open = $this->sh('gh pr list -R ' . self::REPOSITORY . ' --base main --head ' . escapeshellarg($branch) . " --json number --jq '.[0].number // empty'");
-        if ($open === '') {
+        if ($ahead === '0') {
+            $this->out("{$branch} has no commits main lacks yet; open the {$branch} → main PR after the prep PR merges");
+        } elseif ($open === '') {
             $this->out($this->sh('gh pr create -R ' . self::REPOSITORY . ' --base main --head ' . escapeshellarg($branch)
                 . ' --title ' . escapeshellarg("chore: merge {$branch} into main after {$version}")
                 . ' --body ' . escapeshellarg("Release test record for {$version}. Gate results and the tested SHA go here; merge after the release is published. See docs/releases.md.")));
