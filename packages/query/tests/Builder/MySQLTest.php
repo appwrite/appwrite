@@ -11732,8 +11732,45 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
+        $this->assertSame('SELECT * FROM `articles` WHERE (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)', $result->query);
+        $this->assertSame(['+exact +phrase', '(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)'], $result->bindings);
+    }
+
+    public function testCompileSearchExprExactMatchRequiresOnlyIndexedWords(): void
+    {
+        $result = new Builder()
+            ->from('users')
+            ->filterSearch('search', '"users.service@updated.com"')
+            ->build();
+        $this->assertBindingCount($result);
+
+        $this->assertSame([
+            '+users +service +updated',
+            '(^|[^[:alnum:]_])users[^[:alnum:]_]+service[^[:alnum:]_]+updated[^[:alnum:]_]+com([^[:alnum:]_]|$)',
+        ], $result->bindings);
+    }
+
+    public function testCompileSearchExprExactMatchOfUnindexedWordsKeepsPhrase(): void
+    {
+        $result = new Builder()
+            ->from('articles')
+            ->filterSearch('title', '"to be"')
+            ->build();
+        $this->assertBindingCount($result);
+
         $this->assertSame('SELECT * FROM `articles` WHERE MATCH(`title`) AGAINST(? IN BOOLEAN MODE)', $result->query);
-        $this->assertSame(['"exact phrase"'], $result->bindings);
+        $this->assertSame(['"to be"'], $result->bindings);
+    }
+
+    public function testCompileNotSearchExprExactMatch(): void
+    {
+        $result = new Builder()
+            ->from('articles')
+            ->filterNotSearch('title', '"exact phrase"')
+            ->build();
+        $this->assertBindingCount($result);
+
+        $this->assertSame('SELECT * FROM `articles` WHERE NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)', $result->query);
     }
 
     public function testConflictClauseWithRawSets(): void
@@ -14428,7 +14465,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('"exact phrase"', $result->bindings[0]);
+        $this->assertSame('+exact +phrase', $result->bindings[0]);
         /** @var string $firstBinding */
         $firstBinding = $result->bindings[0];
         $this->assertStringNotContainsString('*', $firstBinding);
@@ -14453,7 +14490,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame(['"hello world"'], $result->bindings);
+        $this->assertSame(['+hello +world', '(^|[^[:alnum:]_])hello[^[:alnum:]_]+world([^[:alnum:]_]|$)'], $result->bindings);
     }
 
     public function testUpsertSelectWithFilteredSource(): void
