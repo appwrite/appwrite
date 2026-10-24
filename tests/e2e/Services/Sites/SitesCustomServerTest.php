@@ -2722,6 +2722,58 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testPreviewCookies(): void
+    {
+        $siteId = '';
+
+        try {
+            $siteId = $this->setupSite([
+                'siteId' => ID::unique(),
+                'name' => 'SSR preview cookies',
+                'framework' => 'astro',
+                'adapter' => 'ssr',
+                'buildRuntime' => 'node-22',
+                'outputDirectory' => './dist',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm ci',
+                'fallbackFile' => '',
+            ]);
+
+            $deploymentId = $this->setupDeployment($siteId, [
+                'code' => $this->packageSite('astro'),
+                'activate' => 'true',
+            ]);
+
+            // The site's own domain needs no preview authorization, so no console session is created here:
+            // testPreviewDomain blocks the root user while tests in this class run in parallel.
+            $this->assertNotEmpty($deploymentId);
+            $domain = $this->setupSiteDomain($siteId);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $domain);
+
+            $secret = 'session-secret';
+            $cookie = \implode('; ', [
+                'a_jwt_console=preview-jwt',
+                'a_session_console=' . $secret,
+                'a_session_console_legacy=' . $secret,
+                'theme=dark',
+            ]);
+
+            $this->assertEventually(function () use ($proxyClient, $cookie) {
+                $response = $proxyClient->call(Client::METHOD_GET, '/cookie-header', [
+                    'cookie' => $cookie,
+                ], followRedirects: false);
+                $this->assertSame(200, $response['headers']['status-code']);
+                $this->assertSame('theme=dark', $response['body']['cookie']);
+            });
+        } finally {
+            if ($siteId !== '') {
+                $this->cleanupSite($siteId);
+            }
+        }
+    }
+
     public function testInvalidSSRSource(): void
     {
         $siteId = $this->setupSite([

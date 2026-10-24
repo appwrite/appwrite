@@ -234,7 +234,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         if ($isPreview && $requirePreview) {
             $cookie = $request->getCookie(COOKIE_NAME_PREVIEW, '');
             $authorized = false;
-            $user = new Document();
+            $user = new DBUser();
 
             // Security checks to mark authorized true
             if (!empty($cookie)) {
@@ -250,29 +250,28 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $userExists = false;
                 $userId = $payload['userId'] ?? '';
                 if (!empty($userId)) {
-                    $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
+                    $user = new DBUser($authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId))->getArrayCopy());
                     if (!$user->isEmpty() && $user->getAttribute('status', false)) {
                         $userExists = true;
                     }
                 }
 
-                $sessionExists = false;
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                if (!empty($jwtSessionId) && !empty($user->find('$id', $jwtSessionId, 'sessions'))) {
-                    $sessionExists = true;
-                }
+                $sessionActive = !empty($jwtSessionId) && $user->sessionActive($jwtSessionId);
 
                 $membershipExists = false;
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && !$user->isEmpty()) {
                     $teamId = $project->getAttribute('teamId', '');
-                    $membership = $user->find('teamId', $teamId, 'memberships');
-                    if (!empty($membership)) {
-                        $membershipExists = true;
+                    foreach ($user->getAttribute('memberships', []) as $membership) {
+                        if ($membership->getAttribute('teamId') === $teamId && $membership->getAttribute('confirm', false) === true) {
+                            $membershipExists = true;
+                            break;
+                        }
                     }
                 }
 
-                if ($userExists && $sessionExists && $membershipExists) {
+                if ($userExists && $sessionActive && $membershipExists) {
                     $authorized = true;
                 }
             }
@@ -299,7 +298,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         // collapse to single-line strings for the function/site header map below.
         $requestHeaders = \array_map(
             static fn (array $values) => \implode(', ', $values),
-            $request->getHeaders()
+            $request->getHeadersWithoutCookies([COOKIE_NAME_PREVIEW, 'a_session_console', 'a_session_console_legacy'])
         );
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
