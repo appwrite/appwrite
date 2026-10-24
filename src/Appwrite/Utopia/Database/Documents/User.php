@@ -199,7 +199,8 @@ class User extends Document
 
     /**
      * Revoke every way into the account other than its email address: password,
-     * sessions, tokens, MFA factors, passkeys, identities, phone and push targets.
+     * sessions, tokens, MFA factors, passkeys, identities, account keys, pending
+     * invites, phone and push targets.
      *
      * Used when the verified owner of the email claims an account that was
      * registered with it but never verified, so nobody else keeps access.
@@ -242,6 +243,12 @@ class User extends Document
                     Query::equal('userInternalId', [$sequence]),
                 ]);
             }
+
+            // A pending invite may have gone to the phone cleared here, so it must not prove the account any more
+            $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                Query::equal('userInternalId', [$sequence]),
+                Query::equal('confirm', [false]),
+            ]);
 
             // Console accounts also hold account API keys, stored alongside the users they belong to
             if (!$dbForProject->getCollection('keys')->isEmpty()) {
