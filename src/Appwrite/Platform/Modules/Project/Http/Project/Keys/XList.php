@@ -125,10 +125,11 @@ class XList extends Base
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        // Secrets are only for callers that could have created the keys: a key whose grant covers them. A JWT never sees them.
+        // Secrets are only for callers that could have created the keys: write access, never through a JWT, and for a key only when its grant covers them.
         foreach ($keys as $key) {
             if (
-                $request->getHeaderLine('x-appwrite-jwt', '') !== ''
+                !\in_array('keys.write', $request->getScopes(), true)
+                || $request->getHeaderLine('x-appwrite-jwt', '') !== ''
                 || ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $key->getAttribute('scopes', []), $key->getAttribute('expire')))
             ) {
                 $key->setAttribute('secret', '');

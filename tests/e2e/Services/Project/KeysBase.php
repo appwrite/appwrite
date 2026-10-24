@@ -1058,6 +1058,32 @@ trait KeysBase
         $this->assertSame(403, $widened['headers']['status-code']);
         $this->assertSame('key_creation_denied', $widened['body']['type']);
 
+        // A key without keys.write never reads secrets, even of keys within its grant
+        $reader = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
+            'keyId' => ID::unique(),
+            'name' => 'Reader',
+            'scopes' => ['keys.read', 'users.read'],
+        ]);
+        $this->assertSame(201, $reader['headers']['status-code']);
+
+        $narrow = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
+            'keyId' => ID::unique(),
+            'name' => 'Narrow',
+            'scopes' => ['users.read'],
+        ]);
+        $this->assertSame(201, $narrow['headers']['status-code']);
+
+        $read = $this->client->call(Client::METHOD_GET, '/project/keys/' . $narrow['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $reader['body']['secret'],
+        ]);
+        $this->assertSame(200, $read['headers']['status-code']);
+        $this->assertSame('', $read['body']['secret']);
+
+        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $reader['body']['$id'], $projectHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $narrow['body']['$id'], $projectHeaders);
+
         // A JWT cannot create keys at all
         $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', $consoleHeaders);
         $this->assertSame(201, $jwt['headers']['status-code']);

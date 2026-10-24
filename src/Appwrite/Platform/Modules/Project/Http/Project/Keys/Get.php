@@ -75,9 +75,10 @@ class Get extends Base
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        // Secrets are only for callers that could have created the key: a key whose grant covers it. A JWT never sees them.
+        // Secrets are only for callers that could have created the key: write access, never through a JWT, and for a key only when its grant covers it.
         if (
-            $request->getHeaderLine('x-appwrite-jwt', '') !== ''
+            !\in_array('keys.write', $request->getScopes(), true)
+            || $request->getHeaderLine('x-appwrite-jwt', '') !== ''
             || ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $key->getAttribute('scopes', []), $key->getAttribute('expire')))
         ) {
             $key->setAttribute('secret', '');
