@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Id;
+use Utopia\Database\Helpers\ID;
 
 final class ProjectCustomServerTest extends Scope
 {
@@ -24,7 +24,7 @@ final class ProjectCustomServerTest extends Scope
         ], $this->getHeaders());
 
         $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', $projectHeaders, [
-            'webhookId' => Id::unique(),
+            'webhookId' => ID::unique(),
             'name' => 'Legacy Format Webhook',
             'events' => ['teams.*'],
             'url' => 'http://request-catcher-webhook:5000/',

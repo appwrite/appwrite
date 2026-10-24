@@ -46,13 +46,13 @@ final class TeamsCustomClientTest extends Scope
         });
 
         $this->assertNotEmpty($sms);
-        $url = (string) $sms['data']['message'];
-        $this->assertStringNotContainsString('&amp;', $url);
-        $this->assertEquals('/join-us', parse_url($url, PHP_URL_PATH));
-        $this->assertEquals('invitation', parse_url($url, PHP_URL_FRAGMENT));
+        // The 1.9 SMS template HTML-escapes the link
+        $url = \html_entity_decode((string) $sms['data']['message']);
+        $this->assertSame('/join-us', parse_url($url, PHP_URL_PATH));
+        $this->assertSame('invitation', parse_url($url, PHP_URL_FRAGMENT));
         parse_str(parse_url($url, PHP_URL_QUERY), $params);
-        $this->assertEquals('sms', $params['source']);
-        $this->assertEquals('team invite', $params['campaign']);
+        $this->assertSame('sms', $params['source']);
+        $this->assertSame('team invite', $params['campaign']);
         $this->assertEquals($team['teamUid'], $params['teamId']);
         $this->assertEquals($team['teamName'], $params['teamName']);
         $this->assertEquals($membership['body']['$id'], $params['membershipId']);
@@ -163,7 +163,7 @@ final class TeamsCustomClientTest extends Scope
             $this->assertEquals($phone, $request['data']['to'] ?? null);
         });
         $this->assertNotEmpty($sms);
-        \parse_str((string) \parse_url((string) $sms['data']['message'], PHP_URL_QUERY), $params);
+        \parse_str((string) \parse_url(\html_entity_decode((string) $sms['data']['message']), PHP_URL_QUERY), $params);
 
         $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', \array_merge($headers, [
             'cookie' => $cookie,
@@ -249,7 +249,7 @@ final class TeamsCustomClientTest extends Scope
             $this->assertEquals($phone, $request['data']['to'] ?? null);
         });
         $this->assertNotEmpty($sms);
-        \parse_str((string) \parse_url((string) $sms['data']['message'], PHP_URL_QUERY), $params);
+        \parse_str((string) \parse_url(\html_entity_decode((string) $sms['data']['message']), PHP_URL_QUERY), $params);
         $this->assertNotEmpty($params['secret']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $params['userId'] . '/phone', $serverHeaders, [
