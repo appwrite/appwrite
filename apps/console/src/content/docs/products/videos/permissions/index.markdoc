@@ -1,0 +1,102 @@
+---
+layout: article
+title: Permissions
+description: Learn how Appwrite Videos controls who can watch a stream with per-video permissions, and which scopes manage videos and encoding profiles.
+---
+
+Appwrite Videos has two kinds of access: who can **watch** a stream, and who can **manage** videos, renditions, captions, and profiles.
+
+# Playback {% #playback %}
+
+Each video has its own [permissions](/docs/advanced/security/permissions). Manifest, segment, caption, timeline, and thumbnail requests check the video's **read** permission.
+
+The source file's permissions in Storage are checked only when the video is created: whoever creates it must be able to read the file. After that, playback never looks at the file, so the source can stay private while its stream is public.
+
+| Goal | Grant Read on the video to |
+|------|----------------------------|
+| Public video on a website or in an app | `Role.any()` |
+| Members-only video | `Role.users()`, or one user with `Role.user('<USER_ID>')` |
+| Video for one team or role | `Role.team('<TEAM_ID>')`, or a team role such as `Role.team('<TEAM_ID>', 'editor')` |
+
+Visitors who are not signed in can play a stream that grants Read to `Role.any()` or `Role.guests()`, but cannot read its details or list videos. Load the video's name and duration from your own database, or from your backend, when you show a public video.
+
+## Default permissions {% #default-permissions %}
+
+When you create a video without `permissions`:
+
+- **With an API key or from the Console**, the video has no permissions. Only API keys and members of your Console project can read it, and it does not play anywhere else.
+- **With a user session**, the user who created it gets read, update, and delete permissions.
+
+## Set permissions on create {% #set-permissions-on-create %}
+
+Pass `permissions` when you create the video. For example, to share a recording with one team:
+
+```js
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+await videos.create({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    permissions: [
+        sdk.Permission.read(sdk.Role.team('<TEAM_ID>'))
+    ]
+});
+```
+
+Signed-in users can also create videos from a client SDK, from files they can read. They can only grant permissions to roles they belong to.
+
+## Change access later {% #change-access-later %}
+
+Update the video's permissions with `videos.update()`. The new list replaces the old one, and `name` is required, so pass the current name to keep it:
+
+```js
+await videos.update({
+    videoId: '<VIDEO_ID>',
+    name: '<VIDEO_NAME>',
+    permissions: [
+        sdk.Permission.read(sdk.Role.users())
+    ]
+});
+```
+
+## Common setups {% #common-setups %}
+
+| App | Setup |
+|-----|-------|
+| Marketing site or public course preview | Grant **Read** to `Role.any()` on each video |
+| Paid course or members area | Grant **Read** to the users or team who bought access, and update the video's permissions as people buy |
+| Team workspace, such as internal recordings | Grant **Read** to the team, or to a team role such as `editor` |
+| User uploads shown only to the uploader | Let the user create the video from their own session. They get access by default |
+
+## Private playback {% #private-playback %}
+
+For a video that is not readable by `Role.any()`, every manifest and segment request must carry the viewer's Appwrite session, the same as a private file download. Test private playback while signed in as a viewer, not only from the Console. A `401` or `404` on the manifest usually means the request reached Appwrite without a session that can read the video.
+
+## Renditions and captions {% #renditions-and-captions %}
+
+Renditions and captions have no permissions of their own. Anyone who can read the video can read them, and creating, changing, or deleting them requires **update** permission on the video.
+
+# Managing videos {% #managing-videos %}
+
+API keys and Console sessions manage videos through scopes:
+
+| Scope | Allows |
+|-------|--------|
+| `videos.read` | List and read videos, renditions, captions, and codecs |
+| `videos.write` | Create, update, and delete videos, renditions, and captions |
+| `videos.play` | Load manifests, segments, captions, timelines, and thumbnails. Visitors who are not signed in have only this scope |
+| `project.profiles.read` | List and read [encoding profiles](/docs/products/videos/profiles) |
+| `project.profiles.write` | Create, update, and delete encoding profiles |
+
+Encoding profiles are project settings, so only API keys and the Console can manage them, not client SDKs.
+
+Use an API key with these scopes from a [server SDK](/docs/sdks#server). API keys skip video permissions, so they can read and change every video. On Appwrite Cloud with [organization roles](/docs/advanced/security/roles) enabled, members manage videos according to their role.
+
+Give each key only what it needs. A backend that only checks whether renditions are ready needs `videos.read`. A [function that creates videos on upload](/docs/products/videos/videos#automate-with-functions) needs `videos.write`. Never ship an API key in a client app; let viewers stream with their own session instead.

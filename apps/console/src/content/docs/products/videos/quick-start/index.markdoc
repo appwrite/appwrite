@@ -1,0 +1,99 @@
+---
+layout: article
+title: Start with Videos
+description: Create your first Appwrite video from a Storage file, encode an adaptive ladder, and play the stream in a browser.
+difficulty: beginner
+readtime: 5
+---
+
+In this quick start you create a video from a file, encode it into a few renditions, and play the stream with a web player.
+
+# Create encoding profiles {% #create-encoding-profiles %}
+
+New projects have no [encoding profiles](/docs/products/videos/profiles), so create a small ladder first. You only do this once per project.
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io) and open a project.
+2. Open **Videos** in the sidebar and select **Encoding profiles**.
+3. Click **Create profile**, choose the **360p** preset, and click **Create**.
+4. Repeat for the **720p** and **1080p** presets.
+
+# Create a video {% #create-a-video %}
+
+1. Select **Videos** and click **Create video**.
+2. Choose a source:
+   - **Upload**: Drop an MP4, MOV, WebM, MKV, or audio file and pick a **Destination bucket**. If the project has no buckets yet, click **Create Videos bucket**. The uploaded file is stored in that bucket and stays there.
+   - **Storage**: Choose a file that is already in a bucket. Nothing is copied.
+   - **Demo**: Import an open movie to explore Videos without a file of your own.
+3. Optionally enter a **Name**. It defaults to the file name.
+4. Under **Profiles**, keep the selection or change it. Every profile that would not upscale the source is selected for you. Profiles larger than the source are marked **Upscale**, since upscaling adds size without adding detail.
+5. Keep the output at **CMAF**, the default. CMAF encodes once and serves both an HLS and a DASH manifest. To pick HLS or DASH instead, open **Advanced settings**.
+6. Click **Create video**.
+
+Video creation continues in the background, so you can close the wizard while the file uploads and encodes.
+
+# Watch it encode {% #watch-it-encode %}
+
+Open the video and select **Renditions**. Each rendition moves from **Queued** to **Ready**, with a progress percentage while it encodes.
+
+The video page shows a player as soon as one rendition is ready.
+
+# Allow playback {% #allow-playback %}
+
+A video created in the Console has no permissions yet, so it only plays inside the Console. To play it from a public page, grant **Read** to **Any** on the video with a [server SDK](/docs/sdks#server):
+
+```js
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+await videos.update({
+    videoId: '<VIDEO_ID>',
+    name: '<VIDEO_NAME>', // required, pass the current name to keep it
+    permissions: [sdk.Permission.read(sdk.Role.any())]
+});
+```
+
+The source file in Storage can stay private. Playback checks the video's permissions, not the file's. See [Permissions](/docs/products/videos/permissions) to keep videos private to signed-in users or teams.
+
+# Play the stream {% #play-the-stream %}
+
+Select **Install** on the video page. Pick a platform, player, and format, then copy the install steps and code. For a web page with [hls.js](https://github.com/video-dev/hls.js):
+
+```sh
+npm install hls.js
+```
+
+```js
+import Hls from 'hls.js'
+
+const video = document.getElementById('player')
+const src =
+  'https://<REGION>.cloud.appwrite.io/v1/videos/<VIDEO_ID>/outputs/cmaf/master.m3u8?project=<PROJECT_ID>'
+
+if (Hls.isSupported()) {
+  const hls = new Hls()
+  hls.loadSource(src)
+  hls.attachMedia(video)
+} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+  // Safari plays HLS natively
+  video.src = src
+}
+```
+
+```html
+<video id="player" controls playsinline></video>
+<script type="module" src="/main.js"></script>
+```
+
+The player loads the master manifest and picks the best rendition for the viewer's connection.
+
+# Next steps {% #next-steps %}
+
+- [Play a video in your app](/docs/products/videos/play) covers Shaka Player, Video.js, AVPlayer, ExoPlayer, Flutter, and React Native.
+- [Captions](/docs/products/videos/captions) adds subtitle tracks in more languages.
+- [Permissions](/docs/products/videos/permissions) covers private videos for signed-in users and teams.
