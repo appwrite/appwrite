@@ -2,6 +2,7 @@
 
 namespace Utopia\VCS\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
@@ -34,9 +35,105 @@ class CheckRunsEntire extends Entire
     /**
      * @return array{branch: string, check_suite: array<string, mixed>, check_runs: list<array<string, mixed>>}
      */
-    public function write(string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): array
+    public function write(string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = ''): array
     {
-        return $this->checkRuns('main', $state, $name, $title, $summary, $detailsUrl);
+        return $this->checkRuns('main', $state, $name, $title, $summary, $detailsUrl, $suite);
+    }
+}
+
+/**
+ * Entire that hands back the title a comment's discussion would open with.
+ */
+class DiscussionTitleEntire extends Entire
+{
+    public function title(string $comment): string
+    {
+        return $this->commentTitle($comment);
+    }
+}
+
+/**
+ * Entire whose token mints are answered in turn from a list of refusal codes,
+ * an empty code being a minted token, so the permissions each mint asked for
+ * can be read.
+ */
+class MintingEntire extends Entire
+{
+    protected const array STATUSES = [
+        '' => 201,
+        'permission_not_accepted' => 403,
+        'installation_suspended' => 403,
+        'unsupported_permission' => 400,
+    ];
+
+    /**
+     * @var list<array<mixed>>
+     */
+    public array $requested = [];
+
+    /**
+     * @param list<string> $codes What each mint in turn is answered with
+     */
+    public function __construct(private array $codes)
+    {
+        parent::__construct(new Cache(new None()));
+    }
+
+    #[\Override]
+    protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+    {
+        $permissions = \is_array($params['permissions'] ?? null) ? $params['permissions'] : [];
+        $this->requested[] = $permissions;
+        $code = array_shift($this->codes) ?? 'unavailable';
+
+        return [
+            'headers' => ['status-code' => self::STATUSES[$code] ?? 503],
+            'body' => $code === ''
+                ? ['token' => 'token', 'username' => 'x-access-token', 'expires_at' => '2026-10-23T10:00:00Z', 'permissions' => $permissions]
+                : ['code' => $code],
+        ];
+    }
+}
+
+/**
+ * Entire whose repository is already resolved and whose data-plane calls are
+ * recorded and answered in turn from a script, so the requests an operation
+ * makes and its reading of their answers can be checked.
+ */
+class DataCallsEntire extends Entire
+{
+    /**
+     * @var list<array{method: string, path: string, params: array<mixed>}>
+     */
+    public array $calls = [];
+
+    /**
+     * @param list<array{int, array<mixed>}> $answers The status and body each call in turn is answered with
+     */
+    public function __construct(private array $answers)
+    {
+        parent::__construct(new Cache(new None()));
+    }
+
+    #[\Override]
+    protected function repositoryId(string $owner, string $repositoryName): string
+    {
+        return 'repo_' . $repositoryName;
+    }
+
+    #[\Override]
+    protected function gitRepositoryId(string $repositoryId): string
+    {
+        return 'regional_' . $repositoryId;
+    }
+
+    #[\Override]
+    protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true): array
+    {
+        $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params];
+        [$status, $body] = array_shift($this->answers) ?? [200, []];
+
+        return ['headers' => ['status-code' => $status], 'body' => $body];
     }
 }
 
@@ -361,7 +458,7 @@ final class EntireTest extends TestCase
                     'repository' => [
                         'id' => self::REPOSITORY_ID,
                         'path' => 'et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
-                        'default_branch' => 'main',
+                        'default_branch' => 'refs/heads/main',
                         'clone_url' => 'https://aws-us-east-2.entire.io/et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
                         'entire_clone_url' => 'entire://aws-us-east-2.entire.io/et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
                     ],
@@ -395,6 +492,7 @@ final class EntireTest extends TestCase
         $this->assertSame(self::CELL, $event['apiUrl']);
         $this->assertSame(self::COMMIT_HASH, $event['commitHash']);
         $this->assertSame(self::PREVIOUS_COMMIT_HASH, $event['previousCommitHash']);
+        // Entire names the default branch by its full ref; consumers get its name
         $this->assertSame('main', $event['defaultBranch']);
         $this->assertSame('github:alice', $event['headCommitAuthorName']);
         $this->assertFalse($event['branchCreated']);
@@ -420,6 +518,21 @@ final class EntireTest extends TestCase
         $this->assertTrue($deleted[0]['branchDeleted']);
         $this->assertSame('', $deleted[0]['commitHash']);
         $this->assertSame('', $deleted[0]['headCommitUrl']);
+    }
+
+    public function testGetMergeBase(): void
+    {
+        $adapter = new DataCallsEntire([[200, ['mergeBaseSHA' => self::PREVIOUS_COMMIT_HASH, 'resolvedSHAs' => [self::PREVIOUS_COMMIT_HASH, self::COMMIT_HASH]]]]);
+
+        $this->assertSame(self::PREVIOUS_COMMIT_HASH, $adapter->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH));
+        $this->assertSame([[
+            'method' => 'GET',
+            'path' => '/git/repos/regional_repo_test-repo/merge-base',
+            'params' => ['commitA' => 'main', 'commitB' => self::COMMIT_HASH],
+        ]], $adapter->calls);
+
+        $this->expectException(\Exception::class);
+        new DataCallsEntire([[404, ['code' => 'not_found']]])->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH);
     }
 
     public function testGetEventIgnoresTags(): void
@@ -469,11 +582,117 @@ final class EntireTest extends TestCase
         $this->assertSame('all', $events[0]['repositorySelection']);
     }
 
+    /**
+     * A trail delivery as Entire's trail webhook guide captured one from
+     * production, on a trail that tracks a branch.
+     *
+     * @param array<string, array{from: ?string, to: ?string}>|null $changes Absent on trail.opened
+     * @return array<string, mixed>
+     */
+    protected function trailPayload(string $type, ?string $branch = self::HEAD_BRANCH, ?string $headSha = self::COMMIT_HASH, ?array $changes = null): array
+    {
+        $payload = [
+            'repository' => [
+                'id' => self::REPOSITORY_ID,
+                'path' => '/et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
+                'clone_url' => 'https://aws-us-east-2.entire.io/et/' . self::OWNER . '/' . self::REPOSITORY_NAME . '.git',
+                'entire_clone_url' => 'entire://aws-us-east-2.entire.io/et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
+            ],
+            'trail' => [
+                'id' => '01M5AMD98GWFP863SD5B5X0S3Z',
+                'number' => 5,
+                'title' => 'Add a pricing page',
+                'state' => 'open',
+                'branch' => $branch,
+                'base' => 'main',
+                'head_sha' => $headSha,
+                'author' => ['account' => ['id' => '01KZH949AWBF7C3PN2RNM55G1K']],
+                'created_at' => '2026-10-19T17:47:35.569414Z',
+                'updated_at' => '2026-10-19T17:50:55.846321Z',
+            ],
+            'actor' => ['account' => ['id' => '01KZH949AWBF7C3PN2RNM55G1K']],
+        ];
+        if ($changes !== null) {
+            $payload['changes'] = $changes;
+        }
+
+        return [
+            'delivery_id' => 'dlv_01M5AMKCYZC4XF6B4GCSK1A6F9',
+            'plugin_id' => self::PLUGIN,
+            'installation_id' => self::INSTALLATION_ID,
+            'core_url' => 'https://us.auth.entire.io',
+            'api_url' => self::CELL,
+            'event' => [
+                'id' => 'evt_gmX5fRisEZ5euN1SxAO8PA',
+                'type' => $type,
+                'time' => '2026-10-19T17:50:55.846321Z',
+                'payload' => $payload,
+            ],
+        ];
+    }
+
+    public function testGetEventTrailOpened(): void
+    {
+        $events = $this->adapter->getEvents('trail.opened', (string) json_encode($this->trailPayload('trail.opened')));
+
+        $this->assertCount(1, $events);
+        $event = $events[0];
+
+        $this->assertSame('opened', $event['action']);
+        $this->assertSame([], $event['changes']);
+        $this->assertSame(5, $event['pullRequestNumber']);
+        $this->assertSame(self::HEAD_BRANCH, $event['branch']);
+        $this->assertSame(self::COMMIT_HASH, $event['commitHash']);
+        $this->assertSame(self::REPOSITORY_ID, $event['repositoryId']);
+        $this->assertSame(self::REPOSITORY_NAME, $event['repositoryName']);
+        $this->assertSame(self::OWNER, $event['owner']);
+        $this->assertSame(self::INSTALLATION_ID, $event['installationId']);
+        $this->assertSame('dlv_01M5AMKCYZC4XF6B4GCSK1A6F9', $event['deliveryId']);
+        $this->assertSame(self::CELL, $event['apiUrl']);
+        $this->assertFalse($event['external']);
+        $this->assertSame('https://entire.io/et/test-project/test-repo', $event['repositoryUrl']);
+        $this->assertSame('https://entire.io/et/test-project/test-repo/tree/' . self::HEAD_BRANCH, $event['branchUrl']);
+        $this->assertSame('https://entire.io/et/test-project/test-repo/commit/' . self::COMMIT_HASH, $event['headCommitUrl']);
+    }
+
+    public function testGetEventTrailUpdated(): void
+    {
+        // A trail can track no branch and have no head recorded yet
+        $payload = $this->trailPayload('trail.updated', null, null, ['title' => ['from' => 'Pricing', 'to' => 'Add a pricing page']]);
+        $events = $this->adapter->getEvents('trail.updated', (string) json_encode($payload));
+
+        $this->assertCount(1, $events);
+        $this->assertSame('updated', $events[0]['action']);
+        $this->assertSame(['title'], $events[0]['changes']);
+        $this->assertSame('', $events[0]['branch']);
+        $this->assertSame('', $events[0]['branchUrl']);
+        $this->assertSame('', $events[0]['commitHash']);
+        $this->assertSame('', $events[0]['headCommitUrl']);
+
+        $payload = $this->trailPayload('trail.updated', changes: ['branch' => ['from' => null, 'to' => self::HEAD_BRANCH], 'head_sha' => ['from' => null, 'to' => self::COMMIT_HASH]]);
+        $events = $this->adapter->getEvents('trail.updated', (string) json_encode($payload));
+
+        $this->assertSame(['branch', 'head_sha'], $events[0]['changes']);
+        $this->assertSame(self::HEAD_BRANCH, $events[0]['branch']);
+    }
+
+    public function testGetEventTrailLifecycle(): void
+    {
+        foreach (['closed' => ['open', 'closed'], 'reopened' => ['closed', 'open'], 'merged' => ['open', 'merged']] as $action => [$from, $to]) {
+            $payload = $this->trailPayload('trail.' . $action, changes: ['state' => ['from' => $from, 'to' => $to]]);
+            $events = $this->adapter->getEvents('trail.' . $action, (string) json_encode($payload));
+
+            $this->assertSame($action, $events[0]['action']);
+            $this->assertSame(['state'], $events[0]['changes']);
+        }
+    }
+
     public function testGetEventsIgnoresUnknownTypes(): void
     {
-        $payload = $this->refPayload('trail.opened', 'refs/heads/main');
+        // Entire may deliver new event types to the same URL
+        $payload = $this->refPayload('review.submitted', 'refs/heads/main');
 
-        $this->assertSame([], $this->adapter->getEvents('trail.opened', (string) json_encode($payload)));
+        $this->assertSame([], $this->adapter->getEvents('review.submitted', (string) json_encode($payload)));
     }
 
     public function testGetEventsRejectsInvalidPayload(): void
@@ -528,10 +747,14 @@ final class EntireTest extends TestCase
         $this->assertSame('Site (Project)', $run['name']);
         $this->assertSame('Site (Project)', $run['external_id']);
         $this->assertSame(['title' => 'Starting...', 'summary' => 'Starting...'], $run['output']);
-        // The suite reports the same state next to its timestamp, and no output
-        $this->assertSame('queued', $queued['check_suite']['status']);
-        $this->assertSame($run['external_updated_at'], $queued['check_suite']['external_updated_at']);
-        $this->assertArrayNotHasKey('output', $queued['check_suite']);
+        // Without a suite the run gets one of its own, which carries the run's state and no output
+        $this->assertSame([
+            'key' => 'Site (Project)',
+            'name' => 'Site (Project)',
+            'external_id' => 'Site (Project)',
+            'external_updated_at' => $run['external_updated_at'],
+            'status' => 'queued',
+        ], $queued['check_suite']);
 
         $this->assertSame('in_progress', $adapter->write('pending', 'check', 'Building...')['check_runs'][0]['status']);
         $this->assertSame('in_progress', $adapter->write('in_progress', 'check', 'Building...')['check_runs'][0]['status']);
@@ -546,6 +769,81 @@ final class EntireTest extends TestCase
         }
     }
 
+    public function testCheckRunsShareTheirSuite(): void
+    {
+        $adapter = new CheckRunsEntire(new Cache(new None()));
+
+        $billing = $adapter->write('success', 'Billing', 'Build succeeded.', suite: 'Atlas Production');
+        $hello = $adapter->write('pending', 'Hello', 'Building...', suite: 'Atlas Production');
+
+        // Each resource is a run of its project's suite, which updateCheck() states once the run landed
+        $suite = ['key' => 'Atlas Production', 'name' => 'Atlas Production', 'external_id' => 'Atlas Production'];
+        $this->assertSame($suite, $billing['check_suite']);
+        $this->assertSame($suite, $hello['check_suite']);
+        $this->assertSame('Billing', $billing['check_runs'][0]['key']);
+        $this->assertSame('completed', $billing['check_runs'][0]['status']);
+        $this->assertSame('Hello', $hello['check_runs'][0]['name']);
+        $this->assertSame('in_progress', $hello['check_runs'][0]['status']);
+    }
+
+    public function testSharedSuiteIsStatedFromEveryRun(): void
+    {
+        $runs = [
+            ['suite_key' => 'Atlas Production', 'key' => 'Billing', 'status' => 'in_progress', 'conclusion' => null],
+            ['suite_key' => 'Atlas Production', 'key' => 'Hello', 'status' => 'completed', 'conclusion' => 'failure'],
+            ['suite_key' => 'Atlas Staging', 'key' => 'Billing (staging)', 'status' => 'in_progress', 'conclusion' => null],
+        ];
+        $adapter = new DataCallsEntire([
+            [200, [self::COMMIT_HASH => ['refs/heads/' . self::HEAD_BRANCH]]],
+            [200, []],
+            [200, ['check_runs' => $runs]],
+            [200, []],
+        ]);
+
+        $adapter->updateCheck(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'success', 'Billing', 'Build succeeded.', suite: 'Atlas Production');
+
+        // The run lands, the commit's runs are read, and the suite is written alone
+        $path = '/repos/repo_test-repo/commits/' . self::COMMIT_HASH . '/check-runs';
+        $this->assertSame(['POST', 'POST', 'GET', 'POST'], array_column($adapter->calls, 'method'));
+        $this->assertSame([$path, $path, $path], array_column(\array_slice($adapter->calls, 1), 'path'));
+        $this->assertNull($this->param($adapter, 1, 'check_suite', 'status'));
+        $this->assertSame('completed', $this->param($adapter, 1, 'check_runs', 0, 'status'));
+
+        // Billing now succeeded, but Hello failed, so the suite did; the
+        // staging run is another suite's
+        $this->assertSame(self::HEAD_BRANCH, $this->param($adapter, 3, 'branch'));
+        $this->assertSame([], $this->param($adapter, 3, 'check_runs'));
+        $this->assertSame('Atlas Production', $this->param($adapter, 3, 'check_suite', 'key'));
+        $this->assertSame('completed', $this->param($adapter, 3, 'check_suite', 'status'));
+        $this->assertSame('failure', $this->param($adapter, 3, 'check_suite', 'conclusion'));
+        $this->assertSame($this->param($adapter, 3, 'check_suite', 'external_updated_at'), $this->param($adapter, 3, 'check_suite', 'completed_at'));
+
+        // A run still building keeps the suite running
+        $adapter = new DataCallsEntire([
+            [200, [self::COMMIT_HASH => ['refs/heads/' . self::HEAD_BRANCH]]],
+            [200, []],
+            [200, ['check_runs' => $runs]],
+            [200, []],
+        ]);
+        $adapter->updateCheck(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'success', 'Hello', 'Build succeeded.', suite: 'Atlas Production');
+        $this->assertSame('in_progress', $this->param($adapter, 3, 'check_suite', 'status'));
+        $this->assertNull($this->param($adapter, 3, 'check_suite', 'conclusion'));
+    }
+
+    /**
+     * The value at a path in a recorded call's parameters, or null where
+     * the path leads nowhere.
+     */
+    protected function param(DataCallsEntire $adapter, int $call, string|int ...$path): mixed
+    {
+        $value = $adapter->calls[$call]['params'];
+        foreach ($path as $key) {
+            $value = \is_array($value) ? $value[$key] ?? null : null;
+        }
+
+        return $value;
+    }
+
     public function testCheckRunsOutputAndDetails(): void
     {
         $adapter = new CheckRunsEntire(new Cache(new None()));
@@ -555,7 +853,8 @@ final class EntireTest extends TestCase
         $run = $body['check_runs'][0];
         $this->assertSame(['title' => 'Build succeeded.', 'summary' => $summary], $run['output']);
         $this->assertSame('https://x.example.com', $run['details_url']);
-        $this->assertSame('https://x.example.com', $body['check_suite']['details_url']);
+        // A suite covers several resources, so only the run links to one
+        $this->assertArrayNotHasKey('details_url', $body['check_suite']);
 
         // Only an https URL without credentials reaches Entire
         $this->assertArrayNotHasKey('details_url', $adapter->write('success', 'check', 'Done.', '', 'http://localhost/console')['check_runs'][0]);
@@ -565,6 +864,61 @@ final class EntireTest extends TestCase
         $plain = $adapter->write('pending', '', '');
         $this->assertSame('default', $plain['check_runs'][0]['key']);
         $this->assertArrayNotHasKey('output', $plain['check_runs'][0]);
+    }
+
+    /**
+     * @return \Iterator<string, array{list<string>, list<array<string, string>>}>
+     */
+    public static function mints(): \Iterator
+    {
+        $checks = ['contents' => 'read', 'checks' => 'write'];
+        $contents = ['contents' => 'read'];
+        yield 'every permission accepted' => [[''], [Entire::PERMISSIONS]];
+        yield 'installation not yet updated' => [['permission_not_accepted', ''], [Entire::PERMISSIONS, $checks]];
+        yield 'discussions not declared' => [['unsupported_permission', ''], [Entire::PERMISSIONS, $checks]];
+        yield 'contents alone accepted' => [['permission_not_accepted', 'permission_not_accepted', ''], [Entire::PERMISSIONS, $checks, $contents]];
+    }
+
+    /**
+     * @param list<string> $codes
+     * @param list<array<string, string>> $requested
+     */
+    #[DataProvider('mints')]
+    public function testAccessTokenFallsBackToAcceptedPermissions(array $codes, array $requested): void
+    {
+        $adapter = new MintingEntire($codes);
+        $adapter->setIssuer(self::ISSUER);
+
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+
+        $this->assertSame($requested, $adapter->requested);
+    }
+
+    public function testAccessTokenRefusalIsNotRetried(): void
+    {
+        // A suspended installation is refused whatever it asks for
+        $adapter = new MintingEntire(['installation_suspended']);
+        $adapter->setIssuer(self::ISSUER);
+
+        try {
+            $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+            $this->fail('A refused mint must fail');
+        } catch (\Exception $e) {
+            $this->assertSame(403, $e->getCode());
+            $this->assertStringContainsString('installation_suspended', $e->getMessage());
+        }
+
+        $this->assertSame([Entire::PERMISSIONS], $adapter->requested);
+    }
+
+    public function testDiscussionTitle(): void
+    {
+        $adapter = new DiscussionTitleEntire(new Cache(new None()));
+
+        // A link reference definition renders as nothing, so state kept in one never names the discussion
+        $this->assertSame('Pricing site', $adapter->title("[appwrite]: #eyJidWlsZHMiOltdfQ==\n\n## Pricing site\n\nProject ID: `pricing`"));
+        $this->assertSame('Build ready', $adapter->title("\n**Build ready**"));
+        $this->assertSame('Comment', $adapter->title("[state]: #e30=\n"));
     }
 
     public function testCreateFileRejectsEscapingPath(): void

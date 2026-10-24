@@ -23,6 +23,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
  * token in ENTIRE_TOKEN - plain HTTPS clones are not served.
  *
  * @see Entire's partner guide "Building an Entire Plugin"
+ * @see Entire's partner guides "Trail webhooks for Entire plugins" and "Commenting on Trails from an Entire plugin"
  * @see https://us.auth.entire.io/api/v1/openapi.json control plane
  * @see https://aws-us-east-2.api.entire.io/api/v1/openapi.json data plane
  */
@@ -35,6 +36,8 @@ class Entire extends Git
     public const EVENT_REF_DELETED = 'ref.deleted';
 
     public const EVENT_INSTALLATION = 'installation';
+
+    public const EVENT_TRAIL = 'trail';
 
     public const CONTENTS_DIRECTORY = 'dir';
 
@@ -59,9 +62,31 @@ class Entire extends Git
 
     /**
      * The repository permissions the plugin registers, requested as a whole
-     * so one token covers every selected repository.
+     * so one token covers every selected repository: Entire refuses a token
+     * without a repository that asks for less than the installation holds,
+     * so discussions are asked for even before the plugin uses them.
      */
-    public const PERMISSIONS = ['contents' => 'read', 'checks' => 'write'];
+    public const PERMISSIONS = ['contents' => 'read', 'checks' => 'write', 'discussions' => 'write'];
+
+    /**
+     * What a mint asks for when Entire refuses PERMISSIONS, in order: an
+     * installation not yet updated to a permission, or a plugin that does
+     * not declare it, is refused it.
+     */
+    protected const FALLBACK_PERMISSIONS = [
+        ['contents' => 'read', 'checks' => 'write'],
+        ['contents' => 'read'],
+    ];
+
+    /**
+     * Mint refusals a smaller permission set can get past.
+     */
+    protected const FALLBACK_CODES = ['permission_not_accepted', 'unsupported_permission'];
+
+    /**
+     * The conclusions a suite takes from its runs, worst first.
+     */
+    private const array SUITE_CONCLUSIONS = ['failure', 'timed_out', 'action_required', 'cancelled', 'neutral', 'skipped', 'success'];
 
     /**
      * Check run status and conclusion for each state updateCheck() takes.
@@ -244,9 +269,9 @@ class Entire extends Git
      *
      * Signs an EdDSA plugin JWT and exchanges it for an installation access
      * token covering every selected repository with every registered
-     * permission. A plugin registered with fewer permissions than
-     * PERMISSIONS is refused the extra ones, so the mint falls back to
-     * reading contents alone.
+     * permission. Entire refuses a permission the installation has not
+     * accepted and one the plugin does not declare, so the mint falls back
+     * through FALLBACK_PERMISSIONS.
      */
     protected function generateAccessToken(string $privateKey, ?string $appId): void
     {
@@ -257,10 +282,12 @@ class Entire extends Git
         $this->jwtToken = $this->generatePluginJwt($privateKey, $appId);
 
         $path = '/plugins/' . rawurlencode($appId) . '/installations/' . rawurlencode($this->installationId) . '/access-tokens';
-        $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => self::PERMISSIONS]);
+        foreach ([self::PERMISSIONS, ...self::FALLBACK_PERMISSIONS] as $permissions) {
+            $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => $permissions]);
 
-        if ($this->status($response) === 400 && $this->text($this->body($response), 'code') === 'unsupported_permission') {
-            $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => ['contents' => 'read']]);
+            if (!\in_array($this->text($this->body($response), 'code'), self::FALLBACK_CODES, true)) {
+                break;
+            }
         }
 
         $responseBody = $this->body($response);
@@ -770,7 +797,8 @@ class Entire extends Git
      *
      * Entire wraps every event in a delivery envelope whose event.type is
      * authoritative. A ref delivery describes one ref, so it yields one
-     * event; a tag ref yields none, since only branches deploy.
+     * event; a tag ref yields none, since only branches deploy. A trail
+     * delivery describes one trail.
      *
      * @param  string  $event The event type, as getEventType() reads it
      * @param  string  $payload The raw delivery body
@@ -802,6 +830,10 @@ class Entire extends Git
             return $this->installationEvents($type, $eventPayload, $delivery);
         }
 
+        if (str_starts_with($type, self::EVENT_TRAIL . '.')) {
+            return $this->trailEvents($type, $eventPayload, $delivery);
+        }
+
         return [];
     }
 
@@ -823,6 +855,11 @@ class Entire extends Git
         $repositoryUrl = $owner !== '' && $repositoryName !== '' ? $this->getRepositoryUrl($owner, $repositoryName) : '';
 
         $branch = substr($ref, \strlen('refs/heads/'));
+        // Entire names the default branch by its full ref
+        $defaultBranch = $this->text($repository, 'default_branch');
+        if (str_starts_with($defaultBranch, 'refs/heads/')) {
+            $defaultBranch = substr($defaultBranch, \strlen('refs/heads/'));
+        }
         $deleted = $type === self::EVENT_REF_DELETED;
         $commitHash = $deleted ? '' : $this->text($payload, 'after');
 
@@ -840,7 +877,7 @@ class Entire extends Git
             'installationId' => $delivery['installationId'],
             'deliveryId' => $delivery['deliveryId'],
             'apiUrl' => $delivery['apiUrl'],
-            'defaultBranch' => $this->text($repository, 'default_branch'),
+            'defaultBranch' => $defaultBranch,
             'commitHash' => $commitHash,
             'previousCommitHash' => $this->text($payload, 'before'),
             'forced' => (bool) ($payload['forced'] ?? false),
@@ -879,6 +916,50 @@ class Entire extends Git
             'addedRepositoryIds' => $this->strings($installation, 'added_repository_ids'),
             'removedRepositoryIds' => $this->strings($installation, 'removed_repository_ids'),
             'userName' => '',
+        ]];
+    }
+
+    /**
+     * A trail is Entire's pull request. Its delivery names the trail as the
+     * change left it and, except on opening, the fields that changed: state,
+     * title, branch, base or head_sha. The action is the event type's suffix:
+     * opened, updated, closed, reopened or merged.
+     *
+     * @param array<mixed> $payload
+     * @param array{deliveryId: string, installationId: string, apiUrl: string} $delivery
+     * @return array<array<mixed>>
+     */
+    protected function trailEvents(string $type, array $payload, array $delivery): array
+    {
+        $repository = $this->nested($payload, 'repository');
+        [$owner, $repositoryName] = $this->splitPath($this->text($repository, 'path'));
+        $repositoryUrl = $owner !== '' && $repositoryName !== '' ? $this->getRepositoryUrl($owner, $repositoryName) : '';
+
+        $trail = $this->nested($payload, 'trail');
+        // Empty for a trail without a branch, or one that released it
+        $branch = $this->text($trail, 'branch');
+        // Empty until Entire records the branch's head
+        $commitHash = $this->text($trail, 'head_sha');
+
+        return [[
+            'action' => substr($type, \strlen(self::EVENT_TRAIL . '.')),
+            'changes' => array_keys($this->nested($payload, 'changes')),
+            'branch' => $branch,
+            'branchUrl' => $repositoryUrl !== '' && $branch !== '' ? $this->getBranchUrl($owner, $repositoryName, $branch) : '',
+            'repositoryId' => $this->text($repository, 'id'),
+            'repositoryName' => $repositoryName,
+            'repositoryUrl' => $repositoryUrl,
+            'installationId' => $delivery['installationId'],
+            'deliveryId' => $delivery['deliveryId'],
+            'apiUrl' => $delivery['apiUrl'],
+            'commitHash' => $commitHash,
+            'owner' => $owner,
+            'authorUrl' => '',
+            'authorAvatarUrl' => '',
+            'headCommitUrl' => $repositoryUrl !== '' && $commitHash !== '' ? $this->getCommitUrl($owner, $repositoryName, $commitHash) : '',
+            // Trails never come from a fork
+            'external' => false,
+            'pullRequestNumber' => $this->number($trail, 'number'),
         ]];
     }
 
@@ -1657,6 +1738,24 @@ class Entire extends Git
     }
 
     /**
+     * The commit two refs last shared, such as where a branch left the
+     * default branch. Each ref is a branch, tag or commit SHA.
+     */
+    public function getMergeBase(string $owner, string $repositoryName, string $commitA, string $commitB): string
+    {
+        $repositoryId = $this->repositoryId($owner, $repositoryName);
+
+        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/git/repos/' . rawurlencode($this->gitRepositoryId($repositoryId)) . '/merge-base', ['commitA' => $commitA, 'commitB' => $commitB]);
+
+        $statusCode = $this->status($response);
+        if ($statusCode >= 400) {
+            throw $this->requestFailed('Failed to find the merge base', $response);
+        }
+
+        return $this->text($this->body($response), 'mergeBaseSHA');
+    }
+
+    /**
      * Get latest opened pull request with specific head branch
      *
      * @return array<mixed>
@@ -1824,9 +1923,10 @@ class Entire extends Git
 
         $statusCode = $this->status($response);
 
-        // A discussion is written by a user principal; a plugin's permissions
-        // (contents, checks) do not reach it, so the refusal is reported as
-        // no comment rather than a failure - check runs still carry the build.
+        // A token without discussions, from a plugin that does not declare
+        // it or an installation not yet updated to it, is refused; that is
+        // reported as no comment rather than a failure, since check runs
+        // still carry the build.
         if ($statusCode === 403) {
             return '';
         }
@@ -1845,11 +1945,17 @@ class Entire extends Git
     }
 
     /**
-     * A discussion needs a title; the comment's first line of text serves.
+     * A discussion is named by its title; the comment's first line of text
+     * serves. A link reference definition renders as nothing, so it never
+     * names one - a consumer may keep state in it.
      */
     protected function commentTitle(string $comment): string
     {
         foreach (explode("\n", $comment) as $line) {
+            if (str_starts_with(ltrim($line), '[') && str_contains($line, ']:')) {
+                continue;
+            }
+
             $line = trim(str_replace(['#', '*', '_', '`', '|', '>'], '', $line));
             if ($line !== '') {
                 return mb_strimwidth($line, 0, 80, '…');
@@ -1956,32 +2062,98 @@ class Entire extends Git
      * the check run upsert with its name as the stable key - repeated reports
      * for one name land on one run, in a suite of the same name.
      */
-    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): void
+    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = ''): void
     {
         $repositoryId = $this->repositoryId($owner, $repositoryName);
+        $path = '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/check-runs';
 
-        $response = $this->dataCall(
-            $repositoryId,
-            self::METHOD_POST,
-            '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/check-runs',
-            $this->checkRuns($this->branchContaining($repositoryId, $SHA), $state, $name, $title, $summary, $detailsUrl),
-        );
+        $write = $this->checkRuns($this->branchContaining($repositoryId, $SHA), $state, $name, $title, $summary, $detailsUrl, $suite);
+        $this->writeCheckRuns($repositoryId, $path, $write);
 
-        $statusCode = $this->status($response);
-        if ($statusCode >= 400) {
+        if ($suite === '') {
+            return;
+        }
+
+        // Entire evaluates a trail's gate as a write lands, which can be
+        // before it derives the suite's state from its runs, and nothing
+        // evaluates the gate again. A shared suite is therefore stated from
+        // every run under it, read after this run landed: of reports that
+        // finish together, the last to read has seen them all, and Entire
+        // keeps the newest suite state.
+        $readAt = $this->rfc3339Now();
+        $response = $this->dataCall($repositoryId, self::METHOD_GET, $path);
+        if ($this->status($response) >= 400) {
+            throw $this->requestFailed('Failed to list check runs', $response);
+        }
+
+        $runs = [];
+        foreach ($this->nested($this->body($response), 'check_runs') as $run) {
+            if (\is_array($run) && $this->text($run, 'suite_key') === $suite) {
+                $runs[$this->text($run, 'key')] = $run;
+            }
+        }
+        $run = $write['check_runs'][0];
+        $runs[$this->text($run, 'key')] = $run;
+
+        $this->writeCheckRuns($repositoryId, $path, [
+            'branch' => $write['branch'],
+            'check_suite' => [...$write['check_suite'], ...$this->suiteState($runs, $readAt)],
+            'check_runs' => [],
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $write
+     */
+    protected function writeCheckRuns(string $repositoryId, string $path, array $write): void
+    {
+        $response = $this->dataCall($repositoryId, self::METHOD_POST, $path, $write);
+
+        if ($this->status($response) >= 400) {
             throw $this->requestFailed('Failed to update commit status', $response);
         }
     }
 
     /**
-     * The check run write for one report: a suite and its single run, keyed
-     * by the check's name and both carrying the state.
+     * A suite's state from its runs: queued or running while any run is,
+     * otherwise completed with the worst conclusion among them.
+     *
+     * @param array<array<mixed>> $runs
+     * @return array<string, string>
+     */
+    protected function suiteState(array $runs, string $at): array
+    {
+        $state = ['external_updated_at' => $at];
+
+        $statuses = array_map(fn (array $run): string => $this->text($run, 'status'), $runs);
+        if (array_diff($statuses, ['completed']) !== []) {
+            return [...$state, 'status' => array_diff($statuses, ['queued']) === [] ? 'queued' : 'in_progress'];
+        }
+
+        $conclusions = array_map(fn (array $run): string => $this->text($run, 'conclusion'), $runs);
+        $conclusion = 'neutral';
+        foreach (self::SUITE_CONCLUSIONS as $candidate) {
+            if (\in_array($candidate, $conclusions, true)) {
+                $conclusion = $candidate;
+                break;
+            }
+        }
+
+        return [...$state, 'status' => 'completed', 'conclusion' => $conclusion, 'completed_at' => $at];
+    }
+
+    /**
+     * The check run write for one report: its run, keyed by the check's
+     * name, filed under the named suite or a suite of its own. A suite of
+     * its own carries the run's state; a shared one is stated afterwards
+     * from all its runs, see updateCheck().
      *
      * @return array{branch: string, check_suite: array<string, mixed>, check_runs: list<array<string, mixed>>}
      */
-    protected function checkRuns(string $branch, string $state, string $name, string $title, string $summary, string $detailsUrl): array
+    protected function checkRuns(string $branch, string $state, string $name, string $title, string $summary, string $detailsUrl, string $suite = ''): array
     {
         $key = $name === '' || $name === '0' ? 'default' : $name;
+        $suiteKey = $suite === '' ? $key : $suite;
         $now = $this->rfc3339Now();
         [$status, $conclusion] = self::CHECK_STATES[$state] ?? ['completed', 'failure'];
 
@@ -1993,12 +2165,10 @@ class Entire extends Git
             'external_id' => $key,
             'external_updated_at' => $now,
         ];
-        // A suite reports status and external_updated_at together or not at all
-        $suite = $run;
 
         if ($conclusion !== null) {
-            $run['conclusion'] = $suite['conclusion'] = $conclusion;
-            $run['completed_at'] = $suite['completed_at'] = $now;
+            $run['conclusion'] = $conclusion;
+            $run['completed_at'] = $now;
         }
 
         if ($title !== '') {
@@ -2008,12 +2178,17 @@ class Entire extends Git
         // Entire takes only an https details URL without credentials; a
         // plain-http one (a local console) is left off rather than refused
         if (str_starts_with($detailsUrl, 'https://') && !str_contains(substr($detailsUrl, 8), '@')) {
-            $run['details_url'] = $suite['details_url'] = $detailsUrl;
+            $run['details_url'] = $detailsUrl;
+        }
+
+        $checkSuite = ['key' => $suiteKey, 'name' => $suiteKey, 'external_id' => $suiteKey];
+        if ($suite === '') {
+            $checkSuite = [...$checkSuite, ...$this->suiteState([$run], $now)];
         }
 
         return [
             'branch' => $branch,
-            'check_suite' => $suite,
+            'check_suite' => $checkSuite,
             'check_runs' => [$run],
         ];
     }

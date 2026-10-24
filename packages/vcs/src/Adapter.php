@@ -327,12 +327,15 @@ abstract class Adapter
      * state can be one of: queued, pending, success, failure, error, cancelled
      *
      * A provider with plain commit statuses carries the title as the status
-     * description and drops the summary; queued is pending there. A provider
-     * with check runs overrides this to carry the summary and a conclusion.
+     * description and drops the summary; queued is pending there, and the
+     * suite joins the name as "Site (Project)". A provider with check runs
+     * overrides this to carry the summary and a conclusion, and files the
+     * run under its suite.
      */
-    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): void
+    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = ''): void
     {
-        $this->updateCommitStatus($repositoryName, $SHA, $owner, $state === 'queued' ? 'pending' : $state, $title, $detailsUrl, $name);
+        $context = $suite === '' ? $name : "{$name} ({$suite})";
+        $this->updateCommitStatus($repositoryName, $SHA, $owner, $state === 'queued' ? 'pending' : $state, $title, $detailsUrl, $context);
     }
 
     /**
