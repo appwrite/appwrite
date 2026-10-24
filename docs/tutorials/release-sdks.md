@@ -6,7 +6,7 @@ This document is part of the Appwrite contributors' guide. Before you continue r
 
 ### Agenda
 
-This tutorial will cover how to properly release one or multiple Appwrite SDKs. The SDK release process involves updating the SDK generator, configuring Docker secrets, and running the release script.
+This tutorial will cover how to properly release one or multiple Appwrite SDKs. The SDK release process involves updating the SDK generator, authenticating the release environment, and running the release script.
 
 ### Prerequisites
 
@@ -145,7 +145,7 @@ SDK configurations are defined in the following files:
 If you encounter authentication problems:
 - **GitHub token** - Verify your token has the correct permissions (repo access, workflow permissions)
 - **SSH keys** - Ensure your SSH keys are properly configured in `~/.ssh/` and added to your GitHub account
-- **Git configuration** - Check that the Git email in the Dockerfile matches your GitHub account
+- **Git configuration** - Configure Git's name and email in the release environment before committing
 
 ### Common Issues
 
@@ -158,9 +158,9 @@ If you encounter authentication problems:
 Congrats! You've successfully learned how to release Appwrite SDKs. Remember to:
 
 1. Update SDK generator and run `composer update`
-2. Configure Docker secrets (GitHub token and SSH keys)
+2. Authenticate GitHub CLI and SSH in the release environment
 3. Update specs for both latest and stable versions
-4. Update changelogs and bump versions in `platforms.php`
+4. Update changelogs and bump versions in `app/config/sdks.php`
 5. Run the SDK script and create PRs
 6. (Maintainers only) Create GitHub releases after PR approval
 

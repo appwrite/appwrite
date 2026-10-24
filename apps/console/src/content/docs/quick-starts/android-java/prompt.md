@@ -93,17 +93,21 @@ public class AppwriteHelper {
     }
 
     public void login(String email, String password, final AuthCallback<Session> callback) {
-        account.createEmailPasswordSession(
-            email,
-            password,
-            new CoroutineCallback<>((result, error) -> {
-                if (error != null) {
-                    callback.onError(error);
-                    return;
-                }
-                callback.onSuccess(result);
-            })
-        );
+        try {
+            account.createEmailPasswordSession(
+                email,
+                password,
+                new CoroutineCallback<>((result, error) -> {
+                    if (error != null) {
+                        callback.onError(error);
+                        return;
+                    }
+                    callback.onSuccess(result);
+                })
+            );
+        } catch (AppwriteException e) {
+            callback.onError(e);
+        }
     }
 
     public void register(String email, String password, final AuthCallback<User<Map<String, Object>>> callback) {
@@ -126,16 +130,20 @@ public class AppwriteHelper {
     }
 
     public void logout(final AuthCallback<Object> callback) {
-        account.deleteSession(
-            "current",
-            new CoroutineCallback<>((result, error) -> {
-                if (error != null) {
-                    callback.onError(error);
-                    return;
-                }
-                callback.onSuccess(result);
-            })
-        );
+        try {
+            account.deleteSession(
+                "current",
+                new CoroutineCallback<>((result, error) -> {
+                    if (error != null) {
+                        callback.onError(error);
+                        return;
+                    }
+                    callback.onSuccess(result);
+                })
+            );
+        } catch (AppwriteException e) {
+            callback.onError(e);
+        }
     }
 }
 ```
