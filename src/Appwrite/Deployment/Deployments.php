@@ -748,13 +748,19 @@ readonly class Deployments
      * Removes the deployment's directory on the builds device: the artifact,
      * the staged source and anything else the build left there. On the local
      * device the build can write the directory, so it is removed only when it
-     * is not reached through a symbolic link.
+     * is not reached through a symbolic link. True once nothing is left there.
      */
     public static function deleteBuildDirectory(Device $deviceForBuilds, string $deploymentId): bool
     {
         $directory = $deviceForBuilds->getPath($deploymentId);
-        if ($deviceForBuilds->getType() === DeviceType::Local && \realpath($directory) !== $directory) {
-            return false;
+        if ($deviceForBuilds->getType() === DeviceType::Local) {
+            if (!\file_exists($directory) && !\is_link($directory)) {
+                return true;
+            }
+
+            if (\realpath($directory) !== $directory) {
+                return false;
+            }
         }
 
         return $deviceForBuilds->deletePath($deploymentId);

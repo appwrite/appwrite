@@ -4,13 +4,27 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Modules\Functions\Workers;
 
+use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Realtime;
+use Appwrite\Event\Webhook;
 use Appwrite\Platform\Modules\Functions\Workers\Jobs;
+use Appwrite\Usage\Context as UsageContext;
+use Appwrite\Vcs\Factory as VcsFactory;
+use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use PHPUnit\Framework\TestCase;
 use Utopia\Bus\Bus;
+use Utopia\Cache\Adapter\Memory;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Query\Method;
+use Utopia\Queue\Message;
+use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 
 final class ActivateRulesTest extends TestCase
 {
@@ -132,6 +146,67 @@ final class ActivateRulesTest extends TestCase
             $deployment,
             $bus ?? $this->createStub(Bus::class),
         );
+    }
+
+    public function testFailedBuildCleanupOfADeletedDeploymentIsRetried(): void
+    {
+        $attempts = 0;
+        $deviceForBuilds = $this->createStub(Device::class);
+        $deviceForBuilds->method('getType')->willReturn(DeviceType::S3);
+        $deviceForBuilds->method('getPath')->willReturnArgument(0);
+        $deviceForBuilds->method('deletePath')->willReturnCallback(static function () use (&$attempts): bool {
+            $attempts++;
+            if ($attempts === 1) {
+                throw new \RuntimeException('Storage unavailable');
+            }
+
+            return true;
+        });
+
+        // The deployment was deleted while it built.
+        $dbForProject = $this->createStub(Database::class);
+        $dbForProject->method('getDocument')->willReturn(new Document());
+
+        $cache = new Cache(new Memory());
+        $message = new Message([
+            'pid' => 'pid',
+            'queue' => 'jobs',
+            'timestamp' => \time(),
+            'payload' => ['id' => 'event-1', 'event' => CallbackEvent::Complete->value, 'data' => ['meta' => ['deploymentId' => 'deleted']]],
+        ]);
+        $deliver = fn () => (new Jobs())->action(
+            $message,
+            new Document(['$id' => 'project-1', '$sequence' => '7']),
+            $dbForProject,
+            $this->createStub(Database::class),
+            $this->createStub(Realtime::class),
+            $this->createStub(Event::class),
+            $this->createStub(Webhook::class),
+            $this->createStub(FunctionPublisher::class),
+            $this->createStub(ScreenshotPublisher::class),
+            $this->createStub(UsagePublisher::class),
+            $this->createStub(UsageContext::class),
+            $deviceForBuilds,
+            $this->createStub(Device::class),
+            $this->createStub(Device::class),
+            $this->createStub(VcsFactory::class),
+            $cache,
+            static fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $callback(),
+            [],
+            [],
+            $this->createStub(Bus::class),
+        );
+
+        try {
+            $deliver();
+            $this->fail('A failed cleanup must fail the callback so it is redelivered');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Storage unavailable', $error->getMessage());
+        }
+
+        $deliver();
+
+        $this->assertSame(2, $attempts, 'The redelivered callback was skipped as already processed');
     }
 
     private function activateBranchRule(Database $dbForPlatform, string $deploymentBranch, string $installationId = 'inst-1'): void
