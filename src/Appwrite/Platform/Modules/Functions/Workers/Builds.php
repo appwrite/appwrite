@@ -12,7 +12,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Platform\Modules\Compute\Base as ComputeBase;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\VCS\Adapter\Git\GitHub;
@@ -1099,12 +1099,7 @@ class Builds extends Action
                 // VCS branch
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (! empty($branchName)) {
-                    $domain = (new BranchDomainFilter())->apply([
-                        'branch' => $branchName,
-                        'resourceId' => $resource->getId(),
-                        'projectId' => $project->getId(),
-                        'sitesDomain' => $platform['sitesDomain'],
-                    ]);
+                    $domain = ComputeBase::branchDomain($project, $resource, $branchName, $platform['sitesDomain'], $dbForPlatform);
                     $ruleId = md5($domain);
 
                     try {
@@ -1128,10 +1123,14 @@ class Builds extends Action
                             'region' => $project->getAttribute('region'),
                         ]));
                     } catch (Duplicate $err) {
-                        $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
-                            'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getSequence(),
-                        ]));
+                        if (ComputeBase::ownsBranchRule($dbForPlatform->getDocument('rules', $ruleId), $project, $resource, $branchName)) {
+                            $dbForPlatform->updateDocument('rules', $ruleId, new Document([
+                                'deploymentId' => $deployment->getId(),
+                                'deploymentInternalId' => $deployment->getSequence(),
+                            ]));
+                        } else {
+                            Console::warning("Skipping branch preview rule: {$domain} is held by another resource.");
+                        }
                     }
 
                     $queries = [

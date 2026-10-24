@@ -6,7 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
-use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Platform\Modules\Compute\Base as ComputeBase;
 use Appwrite\Vcs\Comment;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -424,12 +424,7 @@ trait Deployment
 
                     // VCS branch preview
                     if (!empty($providerBranch)) {
-                        $domain = (new BranchDomainFilter())->apply([
-                            'branch' => $providerBranch,
-                            'resourceId' => $resource->getId(),
-                            'projectId' => $project->getId(),
-                            'sitesDomain' => $sitesDomain,
-                        ]);
+                        $domain = $authorization->skip(fn () => ComputeBase::branchDomain($project, $resource, $providerBranch, $sitesDomain, $dbForPlatform));
                         $ruleId = md5($domain);
                         try {
                             $authorization->skip(
