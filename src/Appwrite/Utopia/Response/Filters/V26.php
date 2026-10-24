@@ -2,7 +2,9 @@
 
 namespace Appwrite\Utopia\Response\Filters;
 
+use Appwrite\Auth\Key;
 use Appwrite\Network\Platform;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 use Utopia\Config\Config;
@@ -11,6 +13,12 @@ use Utopia\Database\Document;
 // Convert 1.9.5 Data format to 1.9.4 format
 class V26 extends Filter
 {
+    public function __construct(
+        private readonly Request $request,
+        private readonly ?Key $apiKey = null,
+    ) {
+    }
+
     public function parse(array $content, string $model): array
     {
         return match ($model) {
@@ -139,8 +147,9 @@ class V26 extends Filter
             'events' => $webhook->getAttribute('events', []),
             'tls' => $webhook->getAttribute('security', true),
             'authUsername' => $webhook->getAttribute('httpUser', ''),
-            'authPassword' => $webhook->getAttribute('httpPass', ''),
-            'secret' => $webhook->getAttribute('signatureKey', ''),
+            // Write-only, matching the current webhook model
+            'authPassword' => '',
+            'secret' => '',
             'enabled' => $webhook->getAttribute('enabled', true),
             'logs' => $webhook->getAttribute('logs', ''),
             'attempts' => $webhook->getAttribute('attempts', 0),
@@ -156,10 +165,28 @@ class V26 extends Filter
             'name' => $key->getAttribute('name', ''),
             'expire' => $key->getAttribute('expire', ''),
             'scopes' => $key->getAttribute('scopes', []),
-            'secret' => $key->getAttribute('secret', ''),
+            'secret' => $this->maySeeSecret($key) ? $key->getAttribute('secret', '') : '',
             'accessedAt' => $key->getAttribute('accessedAt', ''),
             'sdks' => $key->getAttribute('sdks', []),
         ];
+    }
+
+    /**
+     * Secrets are only for callers that could have created the key: write access, never through a JWT,
+     * and for a key caller only when its grant covers the key.
+     */
+    private function maySeeSecret(Document $key): bool
+    {
+        if (\array_intersect(['organization.projects.keys.write', 'keys.write'], $this->request->getScopes()) === []) {
+            return false;
+        }
+
+        if ($this->request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            return false;
+        }
+
+        return $this->apiKey === null
+            || $this->apiKey->mayCreate(API_KEY_STANDARD, $key->getAttribute('scopes', []), $key->getAttribute('expire') ?: null);
     }
 
     private function expandAuthMethods(array &$content): void

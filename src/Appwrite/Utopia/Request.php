@@ -258,6 +258,11 @@ class Request extends UtopiaRequest
     private ?Authorization $authorization = null;
     private ?User $user = null;
 
+    /**
+     * @var array<string> Scopes the caller holds, set once the request is authorized
+     */
+    private array $scopes = [];
+
     public function setAuthorization(Authorization $authorization): void
     {
         $this->authorization = $authorization;
@@ -266,6 +271,22 @@ class Request extends UtopiaRequest
     public function setUser(User $user): void
     {
         $this->user = $user;
+    }
+
+    /**
+     * @param array<string> $scopes
+     */
+    public function setScopes(array $scopes): void
+    {
+        $this->scopes = $scopes;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function getScopes(): array
+    {
+        return $this->scopes;
     }
 
     /**

@@ -88,6 +88,7 @@ Http::init()
     ->groups(['api'])
     ->inject('route')
     ->inject('request')
+    ->inject('response')
     ->inject('dbForPlatform')
     ->inject('dbForProject')
     ->inject('auditContext')
@@ -99,7 +100,7 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
+    ->action(function (Route $route, Request $request, Response $response, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
 
         /**
          * Handle user authentication and session validation.
@@ -165,6 +166,10 @@ Http::init()
         $scopes = $roles[$role]['scopes'];
 
         // Step 5: API Key Authentication
+        if ($request->getHeaderLine('x-appwrite-key') !== '' && $apiKey === null) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
         if (! empty($apiKey)) {
             // Check if key is expired
             if ($apiKey->isExpired()) {
@@ -351,13 +356,19 @@ Http::init()
         // before impersonation starts, and keep that access while impersonating.
         if (
             !$user->isEmpty()
+            && !\in_array('users.read', $scopes, true)
             && (
                 $user->getAttribute('impersonator', false)
                 || $user->getAttribute('impersonatorUserId')
             )
         ) {
             $scopes[] = 'users.read';
-            $scopes = \array_unique($scopes);
+            $response->setHideCredentials(true);
+        }
+
+        // Impersonators act as the target user but never see that user's stored credentials
+        if (!empty($user->getAttribute('impersonatorUserId'))) {
+            $response->setHideCredentials(true);
         }
 
         $authorization->addRole($role);
@@ -445,6 +456,7 @@ Http::init()
         if (empty(\array_intersect($allowed, $scopes))) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
+        $request->setScopes($scopes);
 
         // Step 10: Check if user is blocked
         if ($user->getAttribute('status') === false) { // Account is blocked
