@@ -2,11 +2,84 @@
 
 namespace Tests\E2E\Services\Realtime;
 
+use Appwrite\Tests\Async\Exceptions\Critical;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
+use WebSocket\TimeoutException;
 
 trait RealtimeBase
 {
+    /**
+     * Receive websocket frames until one matches, skipping unrelated frames.
+     *
+     * @param callable(array): bool $match
+     */
+    private function receiveUntilEvent(
+        WebSocketClient $client,
+        callable $match,
+        int $timeoutMs = 60000,
+        int $pollMs = 50
+    ): array {
+        $matched = [];
+        $lastMessage = [];
+
+        try {
+            $this->assertEventually(function () use ($client, $match, &$matched, &$lastMessage): void {
+                try {
+                    $frame = $client->receive();
+                } catch (TimeoutException) {
+                    throw new \Exception('No websocket frame received within read timeout.');
+                } catch (ConnectionException $e) {
+                    throw new Critical('WebSocket connection closed while waiting for expected frame: ' . $e->getMessage());
+                }
+
+                $message = \json_decode($frame, true);
+                if (\is_array($message)) {
+                    $lastMessage = $message;
+                }
+
+                if (!\is_array($message) || !$match($message)) {
+                    throw new \Exception('Websocket frame did not match expected event.');
+                }
+
+                $matched = $message;
+            }, $timeoutMs, $pollMs);
+        } catch (Critical $e) {
+            $this->fail($e->getMessage() . ' Last frame: ' . \json_encode($lastMessage));
+        } catch (\Exception) {
+            $this->fail('Timed out waiting for expected websocket frame. Last frame: ' . \json_encode($lastMessage));
+        }
+
+        return $matched;
+    }
+
+    /**
+     * Receive websocket frames until the server closes the socket.
+     *
+     * @return array<int, array>
+     */
+    private function receiveUntilClosed(WebSocketClient $client, int $maxFrames = 10): array
+    {
+        $frames = [];
+
+        while ($client->isConnected() && \count($frames) < $maxFrames) {
+            try {
+                $frame = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                $this->fail('Timed out waiting for the server to close the socket. Frames: ' . \json_encode($frames));
+            } catch (ConnectionException) {
+                // Socket closed by the server
+                break;
+            }
+
+            $frames[] = \is_array($frame) ? $frame : ['raw' => $frame];
+        }
+
+        $this->assertFalse($client->isConnected(), 'Server did not close the socket. Frames: ' . \json_encode($frames));
+
+        return $frames;
+    }
+
     private function getWebsocket(
         array $channels = [],
         array $headers = [],

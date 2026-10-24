@@ -42,6 +42,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
@@ -869,6 +870,44 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $user = $connectionContainer->get('user'); /** @var User $user */
         $logUser = $user;
 
+        // As over HTTP, admin mode needs project access and grants admin roles, never console identity roles.
+        $adminRoles = null;
+        if ($connectionContainer->get('mode') === APP_MODE_ADMIN && $project->getId() !== 'console' && !$user->isEmpty()) {
+            $membershipRoles = [];
+            foreach ($user->getAttribute('memberships', []) as $membership) {
+                if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $project->getAttribute('teamId')) {
+                    $membershipRoles = $membership->getAttribute('roles', []);
+                    break;
+                }
+            }
+
+            if (empty($membershipRoles)) {
+                throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+            }
+
+            $projectAuthorization = new Authorization();
+            foreach ($user->getRoles($projectAuthorization) as $role) {
+                $projectAuthorization->addRole($role);
+            }
+            if (!$projectAuthorization->isValid(new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ)))) {
+                throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
+            }
+
+            $adminRoles = [];
+            foreach ($membershipRoles as $membershipRole) {
+                if (!\str_starts_with($membershipRole, 'project-')) {
+                    $adminRoles[] = $membershipRole;
+                } elseif (\substr($membershipRole, 0, (int) \strrpos($membershipRole, '-')) === 'project-' . $project->getId()) {
+                    $adminRoles[] = \substr($membershipRole, \strrpos($membershipRole, '-') + 1);
+                }
+            }
+            $adminRoles = \array_values(\array_unique($adminRoles));
+
+            foreach ($adminRoles as $role) {
+                $authorization->addRole($role);
+            }
+        }
+
         $apis = $project->getAttribute('apis', []);
         // Websocket is what to check, but realtime is checked too for backwards compatibility
         $websocketEnabled = $apis['websocket'] ?? $apis['realtime'] ?? true;
@@ -893,7 +932,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $timelimit = $timelimit('url:{url},ip:{ip}', 128, 60);
         $timelimit
             ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getURI());
+            ->setParam('{url}', '/v1/realtime');
 
         $abuse = new Abuse($timelimit);
 
@@ -917,9 +956,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
-        $roles = $user->getRoles($authorization);
+        $roles = $adminRoles ?? $user->getRoles($authorization);
+        // A console user is no user of this project.
+        $subscriberId = $adminRoles === null ? $user->getId() : '';
 
-        $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
+        $channels = Realtime::convertChannels($request->getQuery('channels', []), $subscriberId);
         $channelCount = \count($channels);
 
         $updateStats = static function (string $projectId, ?string $teamId) use ($register, $stats): void {
@@ -954,7 +995,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
                 ]
             ]);
 
-            $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $user->getId());
+            $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $subscriberId);
             $realtime->connections[$connection]['authorization'] = $authorization;
             $updateStats($project->getId(), $project->getAttribute('teamId'));
             $server->send([$connection], $connectedPayloadJson);
@@ -992,7 +1033,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
                 $roles,
                 $subscription['channels'],
                 $subscription['queries'],
-                $user->getId()
+                $subscriberId
             );
 
             $mapping[$index] = $subscriptionId;
@@ -1158,9 +1199,11 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = getTimelimit('url:{url},connection:{connection}', 32, 60);
+        // Connection ids are only unique within a container, so the key carries the container too.
+        $timeLimit = getTimelimit('project:{project},container:{container},connection:{connection}', 32, 60);
 
         $timeLimit
+            ->setParam('{project}', (string) $projectId)
             ->setParam('{connection}', $connection)
             ->setParam('{container}', $containerId);
 

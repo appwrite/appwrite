@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\VectorsDB\Embeddings\Text;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action as CreateDocumentAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -9,10 +10,12 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
 use Utopia\Agents\Agent;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -82,11 +85,19 @@ class Create extends CreateDocumentAction
             ->inject('usage')
             ->inject('log')
             ->inject('logger')
+            ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage, Log $log, ?Logger $logger): void
+    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage, Log $log, ?Logger $logger, Authorization $authorization, User $user): void
     {
+        // Embedding generation is backed compute with no per-resource gate, so a guest who
+        // knows a public project ID must not be able to drive it.
+        if ($user->isEmpty() && !$user->isKey($authorization->getRoles())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
         $adapter = $embeddingAgent->getAdapter();
         $adapter->setModel($model);
         $dimension = $adapter->getEmbeddingDimension();

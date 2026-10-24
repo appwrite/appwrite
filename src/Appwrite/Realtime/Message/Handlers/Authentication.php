@@ -59,11 +59,17 @@ class Authentication extends Action
         $proofForToken = new Token();
         $proofForToken->setHash(new Sha());
 
-        if (
-            empty($user->getId())
-            || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
-        ) {
+        $sessionId = empty($user->getId()) ? false : $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        if (!$sessionId) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
+        }
+
+        if ($user->getAttribute('status') === false) {
+            throw new Exception(Exception::USER_BLOCKED);
+        }
+
+        if (!$user->sessionFactorsMet($sessionId)) {
+            throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
         }
 
         $roles = $user->getRoles($database->getAuthorization());

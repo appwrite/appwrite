@@ -341,6 +341,96 @@ final class ProjectsConsoleClientTest extends Scope
     }
 
     #[Group('projectsCRUD')]
+    public function testTransferProjectTeamRequiresOwnership(): void
+    {
+        $sourceTeamId = ID::unique();
+        $projectId = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Transfer Source Project',
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ], $sourceTeamId);
+
+        $foreignTeam = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Foreign Team',
+        ]);
+        $this->assertSame(201, $foreignTeam['headers']['status-code']);
+        $foreignTeamId = $foreignTeam['body']['$id'];
+
+        $email = 'transfer-' . ID::unique() . '@localhost.test';
+        ['membershipId' => $membershipId] = $this->setupUserMembership([
+            'teamId' => $sourceTeamId,
+            'email' => $email,
+            'name' => 'Transfer User',
+            'roles' => ['owner'],
+        ]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session['cookies']['a_session_' . $this->getProject()['$id']],
+        ];
+
+        $ownTeam = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+            'teamId' => ID::unique(),
+            'name' => 'Own Team',
+        ]);
+        $this->assertSame(201, $ownTeam['headers']['status-code']);
+        $ownTeamId = $ownTeam['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+            'teamId' => $foreignTeamId,
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        foreach ([['developer'], ['project-' . $projectId . '-developer'], ['project-' . $projectId . '-owner']] as $roles) {
+            $this->updateMembershipRole($sourceTeamId, $membershipId, $roles);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+                'teamId' => $ownTeamId,
+            ]);
+            $this->assertSame(401, $response['headers']['status-code'], 'Roles: ' . \implode(',', $roles));
+            $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+        }
+
+        $project = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame($sourceTeamId, $project['body']['teamId']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->updateMembershipRole($sourceTeamId, $membershipId, ['owner']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+            'teamId' => $ownTeamId,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($ownTeamId, $response['body']['teamId']);
+    }
+
+    #[Group('projectsCRUD')]
     public function testListProject(): void
     {
         $data = $this->setupProjectData();
@@ -7446,6 +7536,174 @@ final class ProjectsConsoleClientTest extends Scope
                 $this->assertContains($projectId, $returnedProjectIds);
             }
         }
+    }
+
+    #[Group('projectsCRUD')]
+    public function testProjectSpecificPermissionsPrefixCollision(): void
+    {
+        // Two projects whose IDs are prefix siblings: 'A' is a string prefix of 'B'. A
+        // project-scoped role for B ("project-{B}-owner") must grant access to B only. The
+        // admin-role match keys off an exact 'project-{projectId}-' boundary; a prefix-only
+        // check (str_starts_with 'project-' . $projectIdA) would have leaked B's grant onto A.
+        $teamId = ID::unique();
+        $base = 'pfx' . \substr(\bin2hex(\random_bytes(5)), 0, 8);
+        $projectIdA = $base;
+        $projectIdB = $base . '2';
+
+        $this->setupProject(['projectId' => $projectIdA, 'name' => 'Prefix A'], $teamId);
+        $this->setupProject(['projectId' => $projectIdB, 'name' => 'Prefix B'], $teamId, false);
+
+        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        [ 'membershipId' => $membershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => 'Prefix User',
+            'roles' => ['owner'],
+        ]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $testUserEmail,
+            'password' => 'password',
+        ]);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        // Grant a role on project B only. The member must see B and never the prefix sibling A.
+        $this->updateMembershipRole($teamId, $membershipId, ["project-$projectIdB-owner"]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $returnedProjectIds = \array_column($response['body']['projects'], '$id');
+        $this->assertContains($projectIdB, $returnedProjectIds);
+        $this->assertNotContains($projectIdA, $returnedProjectIds);
+
+        // The member can read project B directly, but not the prefix-sibling A.
+        $getB = $this->client->call(Client::METHOD_GET, '/projects/' . $projectIdB, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+        $this->assertEquals(200, $getB['headers']['status-code']);
+
+        $getA = $this->client->call(Client::METHOD_GET, '/projects/' . $projectIdA, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+        $this->assertNotEquals(200, $getA['headers']['status-code']);
+    }
+
+    #[Group('projectsCRUD')]
+    public function testProjectSpecificPermissionsForOrganizationProjects(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Organization Project A',
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Organization Project B',
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ], $teamId, false);
+
+        $email = 'test-' . ID::unique() . '@localhost.test';
+        ['membershipId' => $membershipId] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $email,
+            'name' => 'Project Member',
+            'roles' => ['owner'],
+        ]);
+        $this->updateMembershipRole($teamId, $membershipId, ["project-$projectIdA-developer"]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $cookie = 'a_session_' . $this->getProject()['$id'] . '=' . $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        $consoleHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ];
+        $adminHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => $projectIdA,
+            'x-appwrite-mode' => 'admin',
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        foreach ([$consoleHeaders, $adminHeaders] as $headers) {
+            $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdA, $headers);
+            $this->assertSame(200, $project['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . $projectIdA, $headers, [
+                'name' => 'Organization Project A',
+            ]);
+            $this->assertSame(200, $project['headers']['status-code']);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([$consoleHeaders, $adminHeaders] as $headers) {
+            $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdB, $headers);
+            $this->assertContains($project['headers']['status-code'], [401, 404]);
+
+            $project = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . $projectIdB, $headers, [
+                'name' => 'Renamed',
+            ]);
+            $this->assertSame(401, $project['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_DELETE, '/organization/projects/' . $projectIdB, $headers);
+            $this->assertSame(401, $project['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_POST, '/organization/projects', $headers, [
+                'projectId' => ID::unique(),
+                'name' => 'New Project',
+                'region' => System::getEnv('_APP_REGION', 'default'),
+            ]);
+            $this->assertSame(401, $project['headers']['status-code']);
+
+            $projects = $this->client->call(Client::METHOD_GET, '/organization/projects', $headers);
+            $this->assertSame(200, $projects['headers']['status-code']);
+            $projectIds = \array_column($projects['body']['projects'], '$id');
+            $this->assertContains($projectIdA, $projectIds);
+            $this->assertNotContains($projectIdB, $projectIds);
+        }
+
+        $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdB, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], $this->getHeaders()));
+        $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame('Organization Project B', $project['body']['name']);
     }
 
     #[Group('ciIgnore')]

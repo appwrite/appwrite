@@ -13,6 +13,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
+use Appwrite\GraphQL\ResolverLock;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
@@ -60,6 +61,8 @@ use Utopia\Validator\WhiteList;
  */
 return function (Container $context): void {
     $context->set('utopia:graphql', fn ($utopia) => $utopia, ['utopia']);
+
+    $context->set('resolverLock', fn (): ResolverLock => new ResolverLock(), []);
 
     $context->set('log', fn () => new Log(), []);
 
@@ -832,7 +835,13 @@ return function (Container $context): void {
             $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
             $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
-            return $complexity * $limit;
+            // Anything past the cap fails the query either way; capping keeps the sum an int.
+            $over = (int) System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250) + 1;
+            if (!\is_int($limit) || $limit < 1 || $limit >= $over) {
+                return $over;
+            }
+
+            return \min($complexity * $limit, $over);
         };
 
         $attributes = function (int $limit, int $offset) use ($dbForProject, $authorization) {

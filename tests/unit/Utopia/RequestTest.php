@@ -8,6 +8,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filter;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Request as SwooleRequest;
 use Tests\Unit\Utopia\Request\Filters\First;
@@ -464,5 +465,36 @@ final class RequestTest extends TestCase
         );
 
         return $request;
+    }
+
+    #[DataProvider('contentRangeCases')]
+    public function testGetContentRangeChunk(string $contentRange, ?int $start, int $chunk): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['content-range' => $contentRange];
+        $request = new Request($swoole);
+
+        $this->assertSame($start, $request->getContentRangeStart());
+        $this->assertSame($chunk, $request->getContentRangeChunk(5242880));
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string, 1: ?int, 2: int}>
+     */
+    public static function contentRangeCases(): \Iterator
+    {
+        yield 'first chunk' => ['bytes 0-5242879/12582912', 0, 0];
+        yield 'second chunk' => ['bytes 5242880-10485759/12582912', 5242880, 1];
+        yield 'last chunk shorter than the rest' => ['bytes 10485760-12582911/12582912', 10485760, 2];
+        yield 'short range inside a chunk' => ['bytes 5242881-5242881/12582912', 5242881, 1];
+        yield 'end equal to size' => ['bytes 0-10/10', 0, 0];
+        yield 'bounds at the integer limit' => ['bytes 9223372036854775807-9223372036854775807/9223372036854775807', null, 0];
+        yield 'bounds past the integer limit' => ['bytes 0-99999999999999999999/99999999999999999999', null, 0];
+        yield 'size past the integer limit' => ['bytes 0-9/99999999999999999999', null, 0];
+        yield 'start after end' => ['bytes 10-5/20', null, 0];
+        yield 'end past size' => ['bytes 0-20/10', null, 0];
+        yield 'negative start' => ['bytes -1-5/10', null, 0];
+        yield 'missing size' => ['bytes 0-5', null, 0];
+        yield 'missing unit' => ['0-5/10', null, 0];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Documents;
 
+use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Deletes\Targets;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
@@ -195,6 +196,29 @@ class User extends Document
 
         return $session->isSet('expire')
             && DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now());
+    }
+
+    /**
+     * Number of factors a session of the user must hold: two once MFA is enabled and the
+     * user has a verified second factor, otherwise one.
+     */
+    public function getMinimumFactors(): int
+    {
+        $hasMoreFactors = $this->getAttribute('emailVerification', false)
+            || $this->getAttribute('phoneVerification', false)
+            || (TOTP::getAuthenticatorFromUser($this)?->getAttribute('verified') ?? false);
+
+        return ($this->getAttribute('mfa', false) && $hasMoreFactors) ? 2 : 1;
+    }
+
+    /**
+     * Check that a session of the user holds every factor its MFA settings require.
+     */
+    public function sessionFactorsMet(string $sessionId): bool
+    {
+        $session = $this->find('$id', $sessionId, 'sessions');
+
+        return $session instanceof Document && \count($session->getAttribute('factors', [])) >= $this->getMinimumFactors();
     }
 
     /**

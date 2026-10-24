@@ -409,6 +409,32 @@ final class PresenceRealtimeClientTest extends Scope
                 fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
                     && ($frame['data']['payload']['$id'] ?? null) === $presenceId
             );
+
+            $client->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => 'invalid id!',
+                    'status' => 'online',
+                ],
+            ]));
+            $invalidId = $this->receiveErrorMessage($client);
+            $this->assertStringContainsString('presenceId: ', (string) ($invalidId['data']['message'] ?? ''));
+
+            $client->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => $presenceId,
+                    'status' => 'online',
+                    'metadata' => 123,
+                ],
+            ]));
+            $invalidMetadata = $this->receiveErrorMessage($client);
+            $this->assertStringContainsString('metadata: Value must be a valid JSON', (string) ($invalidMetadata['data']['message'] ?? ''));
+            $this->assertQuietFor(
+                $client,
+                fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
+                    && ($frame['data']['payload']['$id'] ?? null) === $presenceId
+            );
         } finally {
             $client->close();
         }

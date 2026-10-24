@@ -134,7 +134,10 @@ class Upsert extends Action
 
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
 
-        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+        // Whether the caller supplied permissions. Inherited permissions (from an existing
+        // document) may legitimately name roles the caller does not hold, so the grant
+        // role-check below must run only on supplied permissions — matching Update.
+        $callerProvidedPermissions = !\is_null($permissions);
 
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
@@ -161,7 +164,7 @@ class Upsert extends Action
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
-        if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
+        if (!$isAPIKey && !$isPrivilegedUser && $callerProvidedPermissions) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);

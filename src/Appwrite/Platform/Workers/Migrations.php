@@ -470,7 +470,7 @@ class Migrations extends Action
     {
         $queueForRealtime
             ->setProject($project)
-            ->setSubscribers(['console', $project->getId()])
+            ->setSubscribers(['console'])
             ->setEvent('migrations.[migrationId].update')
             ->setParam('migrationId', $migration->getId())
             ->setPayload($migration->getArrayCopy(), sensitive: ['credentials'])

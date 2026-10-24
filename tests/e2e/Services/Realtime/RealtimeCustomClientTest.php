@@ -769,6 +769,201 @@ final class RealtimeCustomClientTest extends Scope
         self::$user[$projectId]['sessionId'] = $refreshedSession['body']['$id'];
     }
 
+    public function testConnectionRequiresAllFactors(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'factors@localhost.test';
+        $password = 'password';
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $client = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        // Minted before any session exists, so it carries no session whose factors could count.
+        $sessionless = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server);
+        $this->assertSame(201, $sessionless['headers']['status-code']);
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $server, [
+            'emailVerification' => true,
+        ]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/mfa', $server, [
+            'mfa' => true,
+        ]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        // A password session still owes its second factor.
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $client, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $secret = $session['cookies']['a_session_' . $projectId];
+        $cookie = 'a_session_' . $projectId . '=' . $secret;
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', array_merge($client, ['cookie' => $cookie]));
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        $bound = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server, [
+            'sessionId' => $session['body']['$id'],
+        ]);
+        $this->assertSame(201, $bound['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $authenticated = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $sessionless['body']['jwt'],
+        ]);
+        $response = json_decode($authenticated->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertSame($userId, $response['data']['user']['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        $pending = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookie,
+        ]);
+        $response = json_decode($pending->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+
+        $pendingJwt = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $bound['body']['jwt'],
+        ]);
+        $response = json_decode($pendingJwt->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+
+        $name = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/name', $server, [
+            'name' => 'Factors ' . $userId,
+        ]);
+        $this->assertSame(200, $name['headers']['status-code']);
+
+        $this->receiveUntilEvent($authenticated, fn (array $message): bool => \in_array("users.{$userId}.update.name", $message['data']['events'] ?? [], true));
+
+        foreach ([$pending, $pendingJwt] as $guest) {
+            try {
+                $guest->receive();
+                $this->fail('A session missing a factor received an account event');
+            } catch (TimeoutException) {
+                // No event reached the connection
+            }
+        }
+
+        $pending->send(\json_encode([
+            'type' => 'authentication',
+            'data' => ['session' => $secret],
+        ]));
+        $response = json_decode($pending->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(401, $response['data']['code']);
+
+        $authenticated->close();
+        $pending->close();
+        $pendingJwt->close();
+    }
+
+    public function testBlockedUserConnectsAsGuest(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'blocked@localhost.test';
+        $password = 'password';
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $secret = $session['cookies']['a_session_' . $projectId];
+        $cookie = 'a_session_' . $projectId . '=' . $secret;
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookie,
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertSame($userId, $response['data']['user']['$id']);
+        $client->close();
+
+        $status = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/status', $server, [
+            'status' => false,
+        ]);
+        $this->assertSame(200, $status['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookie,
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => ['session' => $secret],
+        ]));
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(403, $response['data']['code']);
+        $client->close();
+
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+        $client->close();
+    }
+
     public function testChannelDatabase()
     {
         $user = $this->getUser();
