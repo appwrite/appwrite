@@ -171,25 +171,7 @@ class Jobs extends Action
             }
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            if ($deployment->isEmpty()) {
-                // Deleted mid-build: the deletes worker has already cleared the
-                // build directory, so output written after it is removed here.
-                if (CallbackEvent::tryFrom($event->event) !== CallbackEvent::Log) {
-                    try {
-                        if (!Deployments::deleteBuildDirectory($deviceForBuilds, $deploymentId)) {
-                            throw new \RuntimeException("Failed to delete the build directory of deleted deployment {$deploymentId}");
-                        }
-                    } catch (\Throwable $error) {
-                        // A redelivery has to retry the cleanup, not skip it as processed.
-                        if ($event->id !== '') {
-                            $cache->purge(self::key('event', $project, $event->id));
-                        }
-                        throw $error;
-                    }
-                }
-                return;
-            }
-            if ($deployment->getAttribute('status') === 'canceled') {
+            if ($deployment->isEmpty() || $deployment->getAttribute('status') === 'canceled') {
                 return;
             }
 
@@ -252,6 +234,15 @@ class Jobs extends Action
 
         if ($failure !== null) {
             throw $failure;
+        }
+
+        // Deleted mid-build: the deletes worker has already cleared the build
+        // directory, so output written after it is removed here. Outside the
+        // callback's dedupe, so a redelivery after a failed cleanup tries again.
+        if (CallbackEvent::tryFrom($event->event) !== CallbackEvent::Log
+            && $dbForProject->getDocument('deployments', $deploymentId)->isEmpty()
+            && !Deployments::deleteBuildDirectory($deviceForBuilds, $deploymentId)) {
+            throw new \RuntimeException("Failed to delete the build directory of deleted deployment {$deploymentId}");
         }
     }
 
