@@ -379,6 +379,8 @@ class Response extends SwooleResponse
      */
     protected bool $showSensitive = false;
 
+    protected bool $hideCredentials = false;
+
     /**
      * @var array<string, Model>
      */
@@ -599,6 +601,10 @@ class Response extends SwooleResponse
                 }
             }
 
+            if ($rule['credential'] && $this->hideCredentials) {
+                $data->setAttribute($key, $rule['default'] ?? '');
+            }
+
             $output[$key] = $data[$key];
         }
 
@@ -784,5 +790,10 @@ class Response extends SwooleResponse
     public function setUser(DBUser $user): void
     {
         $this->user = $user;
+    }
+
+    public function setHideCredentials(bool $hideCredentials): void
+    {
+        $this->hideCredentials = $hideCredentials;
     }
 }

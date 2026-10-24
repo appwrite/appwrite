@@ -1224,10 +1224,9 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertCount(2, $response['body']['webhooks'][0]['events']);
         $this->assertTrue($response['body']['webhooks'][0]['tls']);
         $this->assertEquals('username', $response['body']['webhooks'][0]['authUsername']);
-        $this->assertEquals('password', $response['body']['webhooks'][0]['authPassword']);
+        $this->assertSame('', $response['body']['webhooks'][0]['authPassword']); // Write only
         $this->assertTrue($response['body']['webhooks'][0]['enabled']);
-        $this->assertIsString($response['body']['webhooks'][0]['secret']);
-        $this->assertNotEmpty($response['body']['webhooks'][0]['secret']);
+        $this->assertSame('', $response['body']['webhooks'][0]['secret']); // Only on create and rotation
         $this->assertIsString($response['body']['webhooks'][0]['$createdAt']);
         $this->assertNotEmpty($response['body']['webhooks'][0]['$createdAt']);
         $this->assertNotFalse(\strtotime($response['body']['webhooks'][0]['$createdAt']));

@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Project;
 
 use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 
@@ -666,6 +667,7 @@ trait SMTPBase
             senderEmail: 'sender@example.com',
             host: 'localhost',
             port: 12345,
+            password: 'password',
             enabled: true,
         );
 
@@ -748,6 +750,7 @@ trait SMTPBase
             senderEmail: 'sender@example.com',
             host: 'localhost',
             port: 12345,
+            password: 'password',
             enabled: false,
         );
 
@@ -939,6 +942,7 @@ trait SMTPBase
             senderEmail: 'sender@example.com',
             host: 'localhost',
             port: 12345,
+            password: 'password',
             enabled: true,
         );
 
@@ -954,6 +958,7 @@ trait SMTPBase
             senderEmail: 'sender@example.com',
             host: 'localhost',
             port: 12345,
+            password: 'password',
             enabled: false,
         );
 
@@ -968,6 +973,7 @@ trait SMTPBase
             senderEmail: 'sender@example.com',
             host: 'maildev',
             port: 1025,
+            password: 'password',
             enabled: false,
         );
     }
@@ -990,6 +996,7 @@ trait SMTPBase
             senderEmail: 'sender@example.com',
             host: 'localhost',
             port: 12345,
+            password: 'password',
         );
 
         $this->assertSame(200, $response['headers']['status-code']);
@@ -1001,6 +1008,7 @@ trait SMTPBase
             senderEmail: 'sender@example.com',
             host: 'maildev',
             port: 1025,
+            password: 'password',
             enabled: false,
         );
     }
@@ -1029,6 +1037,70 @@ trait SMTPBase
 
         // Cleanup
         $this->updateSMTP(enabled: false);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function passwordProvider(): iterable
+    {
+        yield 'ordinary password' => ['password'];
+        yield 'zero password' => ['0'];
+    }
+
+    #[DataProvider('passwordProvider')]
+    public function testUpdateSMTPServerChangeRequiresPassword(string $password): void
+    {
+        $response = $this->updateSMTP(password: $password, enabled: false);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([['host' => 'localhost'], ['port' => 2525], ['secure' => 'tls']] as $change) {
+            $response = $this->updateSMTP(
+                host: $change['host'] ?? null,
+                port: $change['port'] ?? null,
+                secure: $change['secure'] ?? null,
+                enabled: false,
+            );
+
+            $this->assertSame(400, $response['headers']['status-code'], \json_encode($change));
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+        }
+
+        $project = $this->updateSMTP(enabled: false);
+        $this->assertSame('maildev', $project['body']['smtpHost']);
+        $this->assertSame(1025, $project['body']['smtpPort']);
+        $this->assertSame('', $project['body']['smtpSecure']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->updateSMTP(
+            senderName: 'Same Server',
+            host: 'maildev',
+            port: 1025,
+            enabled: false,
+        );
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('Same Server', $response['body']['smtpSenderName']);
+
+        $response = $this->updateSMTP(
+            host: 'localhost',
+            password: 'password',
+            enabled: false,
+        );
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('localhost', $response['body']['smtpHost']);
+
+        $this->updateSMTP(password: '', enabled: false);
+        $response = $this->updateSMTP(
+            host: 'maildev',
+            enabled: false,
+        );
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('maildev', $response['body']['smtpHost']);
     }
 
     // Create SMTP test tests

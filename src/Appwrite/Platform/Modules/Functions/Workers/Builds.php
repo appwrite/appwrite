@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
@@ -682,7 +683,9 @@ class Builds extends Action
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0);
 
             $apiKey = $jwtObj->encode([
+                Key::PURPOSE_CLAIM => Key::PURPOSE,
                 'projectId' => $project->getId(),
+                'projectSequence' => $project->getSequence(),
                 'scopes' => $resource->getAttribute('scopes', []),
             ]);
 

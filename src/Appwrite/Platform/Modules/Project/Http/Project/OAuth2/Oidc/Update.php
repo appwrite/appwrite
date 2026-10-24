@@ -197,6 +197,13 @@ class Update extends Base
             $existing = \json_decode($storedRaw, true) ?: [];
         }
 
+        $this->requireSecretOnEndpointChange($clientSecret, $existing, [
+            'wellKnownEndpoint' => $wellKnownURL,
+            'authorizationEndpoint' => $authorizationURL,
+            'tokenEndpoint' => $tokenURL,
+            'userInfoEndpoint' => $userInfoURL,
+        ]);
+
         $merged = [
             'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
             'wellKnownEndpoint' => $wellKnownURL ?? ($existing['wellKnownEndpoint'] ?? ''),

@@ -3,6 +3,9 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
+use Appwrite\Auth\Validator\Hash\Argon2 as Argon2Validator;
+use Appwrite\Auth\Validator\Hash\Bcrypt as BcryptValidator;
+use Appwrite\Auth\Validator\Hash\PHPass as PHPassValidator;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
@@ -72,7 +75,6 @@ use Utopia\Validator\AllOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -325,7 +327,7 @@ Http::post('/v1/users/bcrypt')
     ))
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', new Password(), 'User password hashed using Bcrypt.')
+    ->param('password', '', new BcryptValidator(), 'User password hashed using Bcrypt.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -402,7 +404,7 @@ Http::post('/v1/users/argon2')
     ))
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', new Password(), 'User password hashed using Argon2.')
+    ->param('password', '', new Argon2Validator(), 'User password hashed using Argon2.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -482,7 +484,7 @@ Http::post('/v1/users/phpass')
     ))
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', new Password(), 'User password hashed using PHPass.')
+    ->param('password', '', new PHPassValidator(), 'User password hashed using PHPass.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -522,10 +524,10 @@ Http::post('/v1/users/scrypt')
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Scrypt.')
     ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.')
-    ->param('passwordCpu', 8, new Integer(), 'Optional CPU cost used to hash password.')
-    ->param('passwordMemory', 14, new Integer(), 'Optional memory cost used to hash password.')
-    ->param('passwordParallel', 1, new Integer(), 'Optional parallelization cost used to hash password.')
-    ->param('passwordLength', 64, new Integer(), 'Optional hash length used to hash password.')
+    ->param('passwordCpu', 8, new Range(2, 65536), 'Optional CPU cost used to hash password. Must be a power of two, at most 65536.')
+    ->param('passwordMemory', 14, new Range(1, 16), 'Optional memory cost used to hash password. Maximum is 16.')
+    ->param('passwordParallel', 1, new Range(1, 4), 'Optional parallelization cost used to hash password. Maximum is 4.')
+    ->param('passwordLength', 64, new Range(16, 128), 'Optional hash length used to hash password. Must be between 16 and 128.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -534,12 +536,17 @@ Http::post('/v1/users/scrypt')
     ->inject('plan')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $scrypt = new Scrypt();
-        $scrypt
-            ->setSalt($passwordSalt)
-            ->setCpuCost($passwordCpu)
-            ->setMemoryCost($passwordMemory)
-            ->setParallelCost($passwordParallel)
-            ->setLength($passwordLength);
+
+        try {
+            $scrypt
+                ->setSalt($passwordSalt)
+                ->setCpuCost($passwordCpu)
+                ->setMemoryCost($passwordMemory)
+                ->setParallelCost($passwordParallel)
+                ->setLength($passwordLength);
+        } catch (\InvalidArgumentException $error) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error->getMessage());
+        }
 
         $user = createUser($scrypt, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
 
@@ -1469,8 +1476,20 @@ Http::patch('/v1/users/:userId/password')
                 'password' => $user->getAttribute('password'),
                 'passwordUpdate' => $user->getAttribute('passwordUpdate'),
             ]));
+
+            if ($project->getAttribute('auths', default: [])['invalidateSessions'] ?? false) {
+                foreach ($user->getAttribute('sessions', []) as $session) {
+                    /** @var Document $session */
+                    $dbForProject->deleteDocument('sessions', $session->getId());
+                }
+            }
+
+            $dbForProject->purgeCachedDocument('users', $user->getId());
+
             $queueForEvents->setParam('userId', $user->getId());
             $response->dynamic($user, Response::MODEL_USER);
+
+            return;
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
@@ -1582,8 +1601,6 @@ Http::patch('/v1/users/:userId/email')
             }
         }
 
-        $oldEmail = $user->getAttribute('email');
-
         $emailMetadata = [
             'emailCanonical' => null,
             'emailIsCanonical' => null,
@@ -1632,40 +1649,73 @@ Http::patch('/v1/users/:userId/email')
         ;
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'email' => $user->getAttribute('email'),
-                'emailVerification' => $user->getAttribute('emailVerification'),
-                'emailCanonical' => $user->getAttribute('emailCanonical'),
-                'emailIsCanonical' => $user->getAttribute('emailIsCanonical'),
-                'emailIsCorporate' => $user->getAttribute('emailIsCorporate'),
-                'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
-                'emailIsFree' => $user->getAttribute('emailIsFree'),
-            ]));
-            $oldTarget = $user->find('identifier', $oldEmail, 'targets');
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $user, $email) {
+                $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                if (\strlen($email) !== 0) {
-                    $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $email]));
-                    $oldTarget->setAttribute('identifier', $email);
+                $lockedEmail = $current->getAttribute('email');
+
+                $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+                    'email' => $user->getAttribute('email'),
+                    'emailVerification' => $user->getAttribute('emailVerification'),
+                    'emailCanonical' => $user->getAttribute('emailCanonical'),
+                    'emailIsCanonical' => $user->getAttribute('emailIsCanonical'),
+                    'emailIsCorporate' => $user->getAttribute('emailIsCorporate'),
+                    'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
+                    'emailIsFree' => $user->getAttribute('emailIsFree'),
+                ]));
+                $oldTarget = $user->find('identifier', $lockedEmail, 'targets');
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    if (\strlen($email) !== 0) {
+                        $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $email]));
+                        $oldTarget->setAttribute('identifier', $email);
+                    } else {
+                        $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    }
                 } else {
-                    $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    if (\strlen($email) !== 0) {
+                        $target = $dbForProject->createDocument('targets', new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($user->getId())),
+                                Permission::update(Role::user($user->getId())),
+                                Permission::delete(Role::user($user->getId())),
+                            ],
+                            'userId' => $user->getId(),
+                            'userInternalId' => $user->getSequence(),
+                            'providerType' => 'email',
+                            'identifier' => $email,
+                        ]));
+                        $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                    }
                 }
-            } else {
-                if (\strlen($email) !== 0) {
-                    $target = $dbForProject->createDocument('targets', new Document([
-                        '$permissions' => [
-                            Permission::read(Role::user($user->getId())),
-                            Permission::update(Role::user($user->getId())),
-                            Permission::delete(Role::user($user->getId())),
-                        ],
-                        'userId' => $user->getId(),
-                        'userInternalId' => $user->getSequence(),
-                        'providerType' => 'email',
-                        'identifier' => $email,
-                    ]));
-                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+
+                $sequence = $user->getSequence();
+                if ($lockedEmail !== $email && $sequence !== '' && $sequence !== null) {
+                    $dbForProject->deleteDocuments('tokens', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [
+                            TOKEN_TYPE_RECOVERY,
+                            TOKEN_TYPE_VERIFICATION,
+                            TOKEN_TYPE_MAGIC_URL,
+                            TOKEN_TYPE_EMAIL,
+                        ]),
+                    ]);
+                    $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::EMAIL]),
+                    ]);
+                    // A pending invite was sent to the old address, so it must not prove the new one
+                    $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('confirm', [false]),
+                    ]);
                 }
-            }
+
+                return $user;
+            });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
@@ -1709,8 +1759,6 @@ Http::patch('/v1/users/:userId/phone')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $oldPhone = $user->getAttribute('phone');
-
         // Store null instead of empty string so unique constraint allows multiple users without phone
         $phoneValue = $number !== '' ? $number : null;
 
@@ -1730,35 +1778,63 @@ Http::patch('/v1/users/:userId/phone')
         }
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'phone' => $phoneValue,
-                'phoneVerification' => $user->getAttribute('phoneVerification'),
-            ]));
-            $oldTarget = $user->find('identifier', $oldPhone, 'targets');
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $user, $number, $phoneValue) {
+                $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                if ($number !== '') {
-                    $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $number]));
-                    $oldTarget->setAttribute('identifier', $number);
+                $lockedPhone = $current->getAttribute('phone');
+
+                $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+                    'phone' => $phoneValue,
+                    'phoneVerification' => $user->getAttribute('phoneVerification'),
+                ]));
+                $oldTarget = $user->find('identifier', $lockedPhone, 'targets');
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    if ($number !== '') {
+                        $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $number]));
+                        $oldTarget->setAttribute('identifier', $number);
+                    } else {
+                        $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    }
                 } else {
-                    $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    if ($number !== '') {
+                        $target = $dbForProject->createDocument('targets', new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($user->getId())),
+                                Permission::update(Role::user($user->getId())),
+                                Permission::delete(Role::user($user->getId())),
+                            ],
+                            'userId' => $user->getId(),
+                            'userInternalId' => $user->getSequence(),
+                            'providerType' => 'sms',
+                            'identifier' => $number,
+                        ]));
+                        $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                    }
                 }
-            } else {
-                if ($number !== '') {
-                    $target = $dbForProject->createDocument('targets', new Document([
-                        '$permissions' => [
-                            Permission::read(Role::user($user->getId())),
-                            Permission::update(Role::user($user->getId())),
-                            Permission::delete(Role::user($user->getId())),
-                        ],
-                        'userId' => $user->getId(),
-                        'userInternalId' => $user->getSequence(),
-                        'providerType' => 'sms',
-                        'identifier' => $number,
-                    ]));
-                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+
+                $sequence = $user->getSequence();
+                if ($lockedPhone !== $phoneValue && $sequence !== '' && $sequence !== null) {
+                    $dbForProject->deleteDocuments('tokens', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [TOKEN_TYPE_PHONE]),
+                    ]);
+                    $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::PHONE]),
+                    ]);
+                    // A pending invite was sent to the old number, so it must not prove the new one
+                    $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('confirm', [false]),
+                    ]);
                 }
-            }
+
+                return $user;
+            });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
@@ -2084,7 +2160,7 @@ Http::get('/v1/users/:userId/mfa/factors')
 Http::get('/v1/users/:userId/mfa/recovery-codes')
     ->desc('Get MFA recovery codes')
     ->groups(['api', 'users'])
-    ->label('scope', 'users.read')
+    ->label('scope', 'users.write')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk', [
         new Method(
@@ -2792,7 +2868,12 @@ Http::post('/v1/users/:userId/jwts')
     ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject) {
+    ->inject('request')
+    ->action(function (string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject, Request $request) {
+        // A JWT can't mint the next one and outlive itself
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::USER_JWT_CREATION_DENIED);
+        }
 
         $user = $dbForProject->getDocument('users', $userId);
 

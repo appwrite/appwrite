@@ -394,7 +394,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $jwtExpiry = $resource->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $jwtKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'scopes' => $resource->getAttribute('scopes', [])
         ]);
         $headers['x-appwrite-key'] = API_KEY_EPHEMERAL . '_' . $jwtKey;
@@ -938,7 +940,7 @@ Http::init()
         $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
             if (version_compare($responseFormat, '1.9.5', '<')) {
-                $response->addFilter(new ResponseV26());
+                $response->addFilter(new ResponseV26($request, $apiKey));
             }
             if (version_compare($responseFormat, '1.9.4', '<')) {
                 $response->addFilter(new ResponseV25());
@@ -1004,7 +1006,8 @@ Http::init()
     ->inject('cors')
     ->inject('devKey')
     ->inject('originValidator')
-    ->action(function (Request $request, Response $response, Cors $cors, Document $devKey, Validator $originValidator) {
+    ->inject('apiKey')
+    ->action(function (Request $request, Response $response, Cors $cors, Document $devKey, Validator $originValidator, ?Key $apiKey) {
         // CORS headers
         foreach ($cors->headers($request->getOrigin()) as $name => $value) {
             $response->addHeader($name, $value);
@@ -1022,7 +1025,10 @@ Http::init()
 
         // Application level CSRF protection
         $origin = $request->getOrigin();
-        if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeaderLine('x-appwrite-key'))) {
+        $authenticatedByKey = $apiKey !== null
+            && $apiKey->getRole() === DBUser::ROLE_KEYS
+            && ! $apiKey->isExpired();
+        if (empty($origin) || !$devKey->isEmpty() || $authenticatedByKey) {
             return;
         }
         $route = $request->getRoute();
