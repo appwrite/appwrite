@@ -15,6 +15,10 @@ class Argon2 extends Password
 
     public const int THREADS_MAX = 16;
 
+    public const int SALT_MIN = 8;
+
+    public const int TAG_MIN = 4;
+
     private const array ALGORITHMS = ['argon2i', 'argon2id'];
 
     // Argon2 1.0 (0x10) and 1.3 (0x13)
@@ -39,8 +43,13 @@ class Argon2 extends Password
             return false;
         }
 
-        foreach ([$parts[4], $parts[5]] as $encoded) {
+        // Argon2 needs a salt of at least 8 bytes and a tag of at least 4, or the hash can never be verified
+        foreach ([[$parts[4], self::SALT_MIN], [$parts[5], self::TAG_MIN]] as [$encoded, $minimum]) {
             if ($encoded === '' || \strspn($encoded, self::ALPHABET) !== \strlen($encoded) || \strlen($encoded) % 4 === 1) {
+                return false;
+            }
+
+            if (\intdiv(\strlen($encoded) * 3, 4) < $minimum) {
                 return false;
             }
         }
@@ -62,6 +71,10 @@ class Argon2 extends Password
             }
         }
 
-        return true;
+        // Argon2 needs at least 8 KiB of memory per lane, or the hash can never be verified
+        $memory = (int) \substr($costs[0], 2);
+        $threads = (int) \substr($costs[2], 2);
+
+        return $memory >= 8 * $threads;
     }
 }
