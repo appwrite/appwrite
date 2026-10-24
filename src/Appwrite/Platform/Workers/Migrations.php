@@ -53,6 +53,7 @@ use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\Text;
 
 class Migrations extends Action
 {
@@ -90,6 +91,33 @@ class Migrations extends Action
     public static function getName(): string
     {
         return 'migrations';
+    }
+
+    /**
+     * NHost's subdomain and region become labels of the source hostname, and the
+     * database name part of its connection string. Migrations created before the
+     * API validated these parts are checked here too.
+     *
+     * @param array<string, mixed> $credentials
+     */
+    private function nhost(array $credentials): NHost
+    {
+        $label = new Text(63, 1, [...Text::ALPHABET_LOWER, ...Text::NUMBERS, '-']);
+        $database = new Text(63, 1, [...Text::ALPHABET_LOWER, ...Text::ALPHABET_UPPER, ...Text::NUMBERS, '_', '-']);
+
+        if (!$label->isValid($credentials['subdomain']) || !$label->isValid($credentials['region']) || !$database->isValid($credentials['database'])) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'NHost subdomain, region or database name is invalid.');
+        }
+
+        return new NHost(
+            $credentials['subdomain'],
+            $credentials['region'],
+            $credentials['adminSecret'],
+            $credentials['database'],
+            $credentials['username'],
+            $credentials['password'],
+            $credentials['port'],
+        );
     }
 
     /**
@@ -285,15 +313,7 @@ class Migrations extends Action
                 $credentials['password'],
                 $credentials['port'],
             ),
-            NHost::getName() => new NHost(
-                $credentials['subdomain'],
-                $credentials['region'],
-                $credentials['adminSecret'],
-                $credentials['database'],
-                $credentials['username'],
-                $credentials['password'],
-                $credentials['port'],
-            ),
+            NHost::getName() => $this->nhost($credentials),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
                 $credentials['endpoint'],
