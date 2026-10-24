@@ -2,6 +2,14 @@ import type { Models } from '@appwrite.io/console'
 
 const GLOBAL_CACHE_KEY = '__vibesConsoleAccountCache'
 
+/** Window event fired when a cached account is set or cleared. */
+export const CONSOLE_ACCOUNT_CHANGE_EVENT = 'consoleAccountChange'
+
+function notifyConsoleAccountChange(): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(CONSOLE_ACCOUNT_CHANGE_EVENT))
+}
+
 type ConsoleAccountGlobalCache = {
   resolved: Map<number, Models.User>
   inflight: Map<number, Promise<Models.User>>
@@ -33,6 +41,7 @@ export function setConsoleAccountCache(
   revision: number,
 ): void {
   getGlobalCache().resolved.set(revision, account)
+  notifyConsoleAccountChange()
 }
 
 export function getConsoleAccountUnauthenticatedError(
@@ -63,11 +72,12 @@ export function clearConsoleAccountCache(revision?: number): void {
     cache.resolved.clear()
     cache.inflight.clear()
     cache.unauthenticated.clear()
-    return
+  } else {
+    cache.resolved.delete(revision)
+    cache.inflight.delete(revision)
+    cache.unauthenticated.delete(revision)
   }
-  cache.resolved.delete(revision)
-  cache.inflight.delete(revision)
-  cache.unauthenticated.delete(revision)
+  notifyConsoleAccountChange()
 }
 
 export function getConsoleAccountInflight(

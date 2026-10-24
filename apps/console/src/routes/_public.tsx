@@ -6,6 +6,13 @@ import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-va
 
 export const Route = createFileRoute('/_public')({
   ssr: false,
+  // Child routes guard on feature flags in `beforeLoad`, which runs before any
+  // loader. Account labels switch flags on, so the account must load first.
+  beforeLoad: async ({ context, location }) => {
+    if (typeof window === 'undefined') return
+    if (isOptionalAuthPage(location.pathname)) return
+    await ensureConsoleAccountQueryData(context.queryClient)
+  },
   loader: async ({ context, location }) => {
     if (typeof window !== 'undefined') {
       const { queryClient } = context
