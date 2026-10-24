@@ -1,0 +1,34 @@
+---
+layout: changelog
+title: Announcing Appwrite 2.6.2 for self-hosted deployments
+date: 2026-10-24
+cover: /images/changelog/2026-10-24.avif
+tags: security, auth, databases, realtime, infrastructure
+---
+
+Appwrite 2.6.2 is now available for self-hosting. This is a security release for the 2.6 line. We strongly recommend upgrading your instance to apply these fixes.
+
+This release includes:
+
+- A patched Brotli library for [CVE-2026-111497](https://github.com/appwrite/appwrite/pull/14765), an out-of-bounds write in the Brotli decoder that Appwrite's outbound HTTP client could reach when fetching avatar images and favicons
+- API keys and JWTs that stay within their grant: a key can't create or change a key with scopes it doesn't hold or an expiry later than its own, a JWT can't manage keys, account keys work only from the Console, and ephemeral keys are bound to their project
+- Realtime connections that apply the same session checks as HTTP, and GraphQL requests that keep the caller's identity across every field
+- Project SMTP, messaging SMTP providers, migration sources and certificate checks that refuse private and reserved hosts unless you list them in `_APP_ALLOWED_INTERNAL_ADDRESSES`
+- A new `_APP_MEMORY_LIMIT` variable, defaulting to `512M`, that sets the PHP memory limit of every Appwrite process
+- Appwrite Console 1.2.108, with the DOMPurify sanitization fixes
+
+From 2.6.0 or 2.6.1, the upgrade only replaces the images and the migration has nothing to change. Some fixes tighten defaults a self-hosted install may rely on, such as refusing an empty or placeholder `_APP_JOBS_SECRET`, so read the [upgrade notes](/docs/advanced/self-hosting/production/updates#upgrading-to-latest) before you upgrade.
+
+For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/2.6.2) on GitHub.
+
+{% arrow_link href="/docs/advanced/self-hosting/installation" %}
+Install Appwrite 2.6.2
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/self-hosting/production/updates#upgrading-to-latest" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.6.2" %}
+View the release notes on GitHub
+{% /arrow_link %}
