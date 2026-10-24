@@ -159,7 +159,7 @@
         "utopia-php/database": "^8.3.14",
         "mustangostang/spyc": "0.6.*",
         "dragonmantank/cron-expression": "3.4.*",
-        "chillerlan/php-qrcode": "4.3.*",
+        "chillerlan/php-qrcode": "6.0.*",
         "adhocore/jwt": "1.1.*",
         "spomky-labs/otphp": "11.*",
         "webonyx/graphql-php": "15.32.*",
