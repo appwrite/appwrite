@@ -1,3 +1,37 @@
+# Version 1.9.10
+
+## What's Changed
+
+### Notable changes
+
+* Security release for the 1.9 line. It backports the auth, API key, database, realtime, GraphQL, storage, VCS, functions, migrations and messaging hardening shipped in 2.6.2.
+* Update the base image to `appwrite/base:1.4.6`, which requires `brotli-libs` 1.2.1 and fixes the Brotli decoder out-of-bounds write ([CVE-2026-111497](https://github.com/appwrite/docker-base/pull/128)). libcurl and the Swoole client decode `br` responses from URLs users control, such as avatar and favicon fetches, webhooks and migration sources.
+* Upgrading from 1.9.9 reuses migration V25 and introduces no schema changes. Several fixes tighten defaults; see **Upgrade notes**.
+
+### Fixes
+
+* **Auth and accounts:** authenticate API keys before skipping Origin checks ([#14910](https://github.com/appwrite/appwrite/pull/14910), backports #14352), allow admin mode only from console origins (#14813), clear email-bound tokens and invites when the email or phone changes (#14347, #14819), revoke prior credentials when OAuth links an unverified account (#14801), rate limit token sign-ins per account (#14880), compare MFA codes in constant time (#14762).
+* **Keys and users:** hold keys and JWTs to their original grant (#14888), keep write-only secrets on their endpoint and bind ephemeral keys to their project and purpose (#14795, #14825), keep key and webhook secrets out of the 1.9.4 response format (#14815), hide credentials from impersonators (#14818), require `users.write` to read MFA recovery codes (#14872), bound imported password hash costs (#14825), gate development-only routes on `_APP_ENV=development` (#14824).
+* **Databases:** enforce permissions when staging transaction operations, and rate limit guest transaction writes ([#14913](https://github.com/appwrite/appwrite/pull/14913), backports #14754, #14762), gate increment/decrement and fix upsert permissions (#14755), scope the list cache to collection permissions and gate inline encryption (#14791).
+* **Organizations and projects:** accept only keys and console sessions on organization routes (#14779), evaluate project roles against the project in the path (#14787), require owner on both organizations to transfer a project (#14780).
+* **Realtime and GraphQL:** require project access for admin mode connections (#14790), apply the HTTP session rules to realtime connections (#14803), send migration events only to project readers (#14805), validate presence messages like the HTTP endpoint (#14829), keep the caller's identity across GraphQL fields (#14820), cost invalid list limits at the complexity cap (#14821).
+* **Storage and platform:** validate file names and build `Content-Disposition` per RFC 6266 (#14789), refuse reads of incomplete uploads (#14876), keep the platform default bucket private (#14814), cap avatar remote fetches and rate limit image and favicon requests (#14788), key rate limits on the route path and keep them on out-of-range `Content-Range` (#14785, #14816), drop client-named Swoole uploads and never call request values as code ([#14909](https://github.com/appwrite/appwrite/pull/14909), backports #14897, #14792), strip control characters from webhook headers (#14806).
+* **VCS, functions and sites:** verify the GitHub webhook signature before fan-out, verify installation access, and sign and expire installation state ([#14911](https://github.com/appwrite/appwrite/pull/14911), backports #14771, #14783, #14793), verify GitHub API certificates (#14802), confine repository root directories (#14808), bind branch preview rules to their project (#14786), validate reserved execution headers case-insensitively (#14185), keep session cookies and the fallback session header out of function and site requests (#14874, #14823).
+* **Migrations and messaging:** keep migration, certificate check and SMTP connections on public addresses (#14794, #14870, #14811), validate NHost source hosts (#14798), check DocumentsDB and VectorsDB source key scopes (#14868), stop returning secret messaging provider credentials (#14875), require `files.read` to attach files to emails (#14827), escape the redirect in email templates (#14822), never fall back to the platform database for a missing project (#14812).
+
+### Upgrade notes
+
+* New optional variable `_APP_ALLOWED_INTERNAL_ADDRESSES`: project SMTP, messaging SMTP providers and migration sources on a private or reserved address must be listed here.
+* Ephemeral keys minted before the upgrade are refused until reissued, and an invalid `X-Appwrite-Key` now returns `401` instead of running the request as a guest.
+* Changing an SMTP host, port or `secure` flag, or an OAuth provider endpoint, requires sending the secret again.
+* Sites and functions whose stored root directory contains `..` fail to build until the directory is changed to a path inside the repository.
+* Mock routes and the time-travel task require `_APP_ENV=development`.
+
+### Miscellaneous
+
+* Retain Console 8.7.37 for compatibility with the 1.9 server APIs.
+* Update release metadata and installation examples for 1.9.10.
+
 # Version 1.9.9
 
 ## What's Changed
