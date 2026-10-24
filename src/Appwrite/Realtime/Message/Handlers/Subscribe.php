@@ -133,6 +133,29 @@ class Subscribe extends Action
             }
         }
 
+        // Checked against the whole batch right before any state changes, with no yield in
+        // between, so a rejected batch applies nothing and concurrent frames cannot both pass.
+        $subscriptionIds = \array_keys($realtime->getSubscriptionMetadata($connectionId));
+        $channels = $realtime->connections[$connectionId]['channels'] ?? [];
+        foreach ($parsedPayloads as $parsedPayload) {
+            $subscriptionIds[] = $parsedPayload['subscriptionId'];
+            $channels = [...$channels, ...$parsedPayload['convertedChannels']];
+        }
+
+        if (\count(\array_unique($subscriptionIds)) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+            throw new Exception(
+                Exception::REALTIME_POLICY_VIOLATION,
+                'Too many subscriptions. A connection can have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.'
+            );
+        }
+
+        if (\count(\array_unique($channels)) > APP_LIMIT_REALTIME_CHANNELS) {
+            throw new Exception(
+                Exception::REALTIME_POLICY_VIOLATION,
+                'Too many channels. A connection can subscribe to at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels.'
+            );
+        }
+
         foreach ($parsedPayloads as $parsedPayload) {
             $realtime->subscribe(
                 $projectId,
