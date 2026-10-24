@@ -162,6 +162,10 @@ return function (Container $container): void {
         return new Authorization();
     }, []);
 
+    $container->set('mode', function (Request $request, Document $project) use ($getMode): string {
+        return $getMode($request, $project);
+    }, ['request', 'project']);
+
     $container->set('project', function (Request $request, Document $console, Authorization $authorization) use ($getProjectId, $getDbForPlatform) {
         $projectId = $getProjectId($request);
 
@@ -174,20 +178,24 @@ return function (Container $container): void {
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     }, ['request', 'console', 'authorization']);
 
-    $container->set('originValidator', function (array $platform, Request $request, Document $project, array $servers, Authorization $authorization) use ($findDevKey, $findRule) {
-        $devKey = $findDevKey($request, $project, $servers, $authorization);
+    $container->set('originValidator', function (array $platform, Request $request, Document $project, array $servers, Authorization $authorization, string $mode) use ($findDevKey, $findRule) {
+        // A dev key loosens origins for the project's own clients, never for a console session in admin mode
+        $devKey = $mode === APP_MODE_ADMIN ? new Document([]) : $findDevKey($request, $project, $servers, $authorization);
 
         if (!$devKey->isEmpty()) {
             return new URL();
         }
 
         $allowedHostnames = [...($platform['hostnames'] ?? [])];
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
+        /* Admin mode carries the console session, so only console hosts may use it */
+        if (!$project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $allowedHostnames = [...$allowedHostnames, ...Platform::getHostnames($project->getAttribute('platforms', []))];
         }
 
         $rule = $findRule($request, $project, $authorization);
-        if (!$rule->isEmpty() && !empty($rule->getAttribute('domain', ''))) {
+        $trustedProjects = \array_filter(\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')));
+        $ruleAllowed = $mode !== APP_MODE_ADMIN || \in_array($rule->getAttribute('projectId', ''), $trustedProjects, true);
+        if (!$rule->isEmpty() && !empty($rule->getAttribute('domain', '')) && $ruleAllowed) {
             $allowedHostnames[] = $rule->getAttribute('domain', '');
         }
 
@@ -200,14 +208,14 @@ return function (Container $container): void {
         }
 
         $allowedSchemes = [...($platform['schemas'] ?? [])];
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
+        if (!$project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $allowedSchemes[] = 'exp';
             $allowedSchemes[] = 'appwrite-callback-' . $project->getId();
             $allowedSchemes = [...$allowedSchemes, ...Platform::getSchemes($project->getAttribute('platforms', []))];
         }
 
         return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes));
-    }, ['platform', 'request', 'project', 'servers', 'authorization']);
+    }, ['platform', 'request', 'project', 'servers', 'authorization', 'mode']);
 
     $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
         $mode = $getMode($request, $project);
