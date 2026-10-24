@@ -15,6 +15,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
+use Appwrite\Utopia\VCS\Adapter\Git\GitHub;
 use Appwrite\Vcs\Comment;
 use Exception;
 use Executor\Exception\Timeout as ExecutorTimeout;
@@ -42,7 +43,6 @@ use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Builds extends Action
 {
