@@ -452,7 +452,7 @@ return [
             [
                 'name' => '_APP_MEMORY_LIMIT',
                 'description' => 'PHP memory limit of each Appwrite process, including the API, Realtime, workers and tasks. Accepts any PHP memory_limit value, such as \'2G\', or \'-1\' for no limit. Raise it when a Realtime container holds thousands of connections. By default, set to \'512M\'.',
-                'introduction' => '2.5.1',
+                'introduction' => '2.6.2',
                 'default' => '512M',
                 'required' => false,
                 'question' => '',
