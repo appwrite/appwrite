@@ -11,6 +11,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -135,6 +136,11 @@ class Create extends Action
 
         if (empty($port)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP port must be configured on the project to send a test email.');
+        }
+
+        $hostname = new Host();
+        if (!$hostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
         }
 
         // Fallback to sender details when reply-to is not explicitly configured

@@ -2,13 +2,15 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Messaging\Adapter\Email\SMTP;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
 use Exception;
 use Swoole\Runtime;
+use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
-use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
@@ -145,11 +147,26 @@ class Mails extends Action
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
+        if (!empty($smtp)) {
+            // The host is checked again before every send, covering configurations saved before it was checked on save
+            $host = new Host(resolved: false);
+            if (!$host->isValid($smtp['host'] ?? '')) {
+                Span::add('mail.status', 'skipped');
+                Span::add('mail.error', 'host');
+                Span::add('mail.error.message', $host->getDescription());
+
+                Console::warning('Mail skipped, project SMTP host refused: project=' . $project->getId() . ' host=' . ($smtp['host'] ?? '') . ' reason=' . $host->getDescription());
+
+                return;
+            }
+        }
+
         /** @var EmailAdapter $adapter */
         $adapter = empty($smtp)
             ? $register->get('smtp')
             : new SMTP(
-                host: $smtp['host'],
+                // Dial the addresses just checked, so DNS cannot answer differently
+                servers: (new Host())->pinned($smtp['host']),
                 port: (int) $smtp['port'],
                 username: $smtp['username'] ?? '',
                 password: $smtp['password'] ?? '',

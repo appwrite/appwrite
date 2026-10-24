@@ -673,6 +673,74 @@ trait SMTPBase
         $this->assertSame('project_smtp_config_invalid', $response['body']['type']);
     }
 
+    public function testUpdateSMTPPrivateHost(): void
+    {
+        // Outside the dev allowlist of internal addresses
+        $response = $this->updateSMTP(
+            senderName: 'Test',
+            senderEmail: 'sender@example.com',
+            host: '169.254.169.254',
+            port: 25,
+            enabled: true,
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('project_smtp_config_invalid', $response['body']['type']);
+        $this->assertStringContainsString('private or reserved', $response['body']['message']);
+
+        // Without an explicit enable the configuration is stored, not enabled
+        $response = $this->updateSMTP(
+            senderName: 'Test',
+            senderEmail: 'sender@example.com',
+            host: '169.254.169.254',
+            port: 25,
+        );
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(false, $response['body']['smtpEnabled']);
+
+        // Cleanup
+        $this->updateSMTP(enabled: false);
+    }
+
+    public function testUpdateSMTPRefusedCredentialsDoNotEchoServer(): void
+    {
+        $response = $this->updateSMTP(
+            senderName: 'Test',
+            senderEmail: 'sender@example.com',
+            host: 'maildev',
+            port: 1025,
+            username: 'user',
+            password: 'password',
+            secure: 'ssl',
+            enabled: true,
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('project_smtp_config_invalid', $response['body']['type']);
+        $this->assertStringStartsWith('Could not connect to SMTP server maildev:1025', $response['body']['message']);
+    }
+
+    public function testCreateSMTPTestPrivateHost(): void
+    {
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $response = $this->client->call(Client::METHOD_POST, '/project/smtp/tests', $headers, [
+            'emails' => ['recipient@example.com'],
+            'senderName' => 'Sender',
+            'senderEmail' => 'sender@example.com',
+            'host' => '169.254.169.254',
+            'port' => 25,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('private or reserved', $response['body']['message']);
+    }
+
     public function testUpdateSMTPInvalidConnectionDisabled(): void
     {
         $response = $this->updateSMTP(

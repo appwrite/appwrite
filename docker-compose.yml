@@ -77,6 +77,7 @@ services:
       - ${_APP_DB_HOST:-mongodb}
       - appwrite-embedding
     environment:
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
@@ -742,6 +743,7 @@ services:
       - redis
       - ${_APP_DB_HOST:-mariadb}
     environment:
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
@@ -786,6 +788,7 @@ services:
     depends_on:
       - redis
     environment:
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1

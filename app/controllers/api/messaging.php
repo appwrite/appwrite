@@ -18,6 +18,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
@@ -472,6 +473,12 @@ Http::post('/v1/messaging/providers/smtp')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $host, int $port, string $username, string $password, string $encryption, bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        // Workers check the host again before every send; one that does not resolve yet is kept.
+        $hostname = new Host(resolved: false);
+        if ($host !== '' && !$hostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        }
+
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [
@@ -1823,6 +1830,12 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        // Workers check the host again before every send; one that does not resolve yet is kept.
+        $hostname = new Host(resolved: false);
+        if ($host !== '' && !$hostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        }
+
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {

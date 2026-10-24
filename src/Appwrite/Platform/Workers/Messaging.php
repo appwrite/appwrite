@@ -4,7 +4,9 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Messaging\Adapter\Email\SMTP;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Usage\Context as UsageContext;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
@@ -23,7 +25,6 @@ use Utopia\Messaging\Adapter\Email\Mailgun;
 use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Email\SES;
-use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
@@ -196,12 +197,23 @@ class Messaging extends Action
                 $provider = $this->resolveProvider($dbForProject, $providerId, $providers, $default);
                 $resolvedProviderType = $provider->getAttribute('type');
 
-                $adapter = match ($resolvedProviderType) {
-                    MESSAGE_TYPE_SMS => $this->getSmsAdapter($provider),
-                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider),
-                    MESSAGE_TYPE_EMAIL => $this->getEmailAdapter($provider),
-                    default => throw new \Exception('Provider with the requested ID is of the incorrect type')
-                };
+                try {
+                    $adapter = match ($resolvedProviderType) {
+                        MESSAGE_TYPE_SMS => $this->getSmsAdapter($provider),
+                        MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider),
+                        MESSAGE_TYPE_EMAIL => $this->getEmailAdapter($provider),
+                        default => throw new \Exception('Provider with the requested ID is of the incorrect type')
+                    };
+                } catch (\InvalidArgumentException $error) {
+                    // An SMTP host that is refused fails this provider's recipients, not the whole message.
+                    $hasRecipients = true;
+                    $failedTotal += \count($identifiers);
+                    if (\count($deliveryErrors) < MESSAGE_DELIVERY_ERRORS_LIMIT) {
+                        $deliveryErrors[] = 'Failed sending to targets with error: ' . $error->getMessage();
+                    }
+
+                    continue;
+                }
 
                 $batches = \array_chunk(
                     \array_keys($identifiers),
@@ -916,7 +928,9 @@ class Messaging extends Action
         $adapter = match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(
-                $credentials['host'] ??  '',
+                // The host is checked again before every send, covering providers saved before it was checked
+                // on save, and dialled on the addresses just checked, so DNS cannot answer differently
+                (new Host())->pinned($credentials['host'] ?? ''),
                 $credentials['port'] ?? 25,
                 $credentials['username'] ?? '',
                 $credentials['password'] ?? '',

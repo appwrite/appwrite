@@ -23,6 +23,18 @@ final class PublicHostnameTest extends TestCase
         $this->assertFalse($validator->isValid([]));
     }
 
+    public function testAddressesAreEmptyForAHostThatDoesNotResolveYet(): void
+    {
+        $hostname = new FixedHostname();
+
+        $this->assertSame([], $hostname->addresses('nowhere.example.com'));
+        $this->assertSame(['93.184.215.14'], $hostname->addresses('example.com'));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('10.0.0.1');
+        $hostname->addresses('rebind.example.com');
+    }
+
     #[DataProvider('privateIpv4Addresses')]
     public function testRejectsPrivateIpv4Literals(string $ip): void
     {

@@ -577,6 +577,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_ALLOWED_INTERNAL_ADDRESSES',
+                'description' => 'Comma-separated hostnames, IP addresses and CIDR ranges (for example 10.0.0.0/8 or fd00::/8) that a project\'s SMTP server (project SMTP and messaging SMTP providers) may use even though they are private or reserved. Every other private or reserved address is refused. Set it to reach an internal mail relay. Empty by default, which allows public SMTP servers only.',
+                'introduction' => '1.9.10',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
