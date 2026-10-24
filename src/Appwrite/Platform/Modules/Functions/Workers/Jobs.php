@@ -171,7 +171,15 @@ class Jobs extends Action
             }
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            if ($deployment->isEmpty() || $deployment->getAttribute('status') === 'canceled') {
+            if ($deployment->isEmpty()) {
+                // Deleted mid-build: the deletes worker has already cleared the
+                // build directory, so output written after it is removed here.
+                if (CallbackEvent::tryFrom($event->event) !== CallbackEvent::Log) {
+                    Deployments::deleteBuildDirectory($deviceForBuilds, $deploymentId);
+                }
+                return;
+            }
+            if ($deployment->getAttribute('status') === 'canceled') {
                 return;
             }
 
