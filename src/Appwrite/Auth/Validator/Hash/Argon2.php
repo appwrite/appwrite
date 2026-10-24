@@ -62,6 +62,10 @@ class Argon2 extends Password
             }
         }
 
-        return true;
+        // Argon2 needs at least 8 KiB of memory per lane, or the hash can never be verified
+        $memory = (int) \substr($costs[0], 2);
+        $threads = (int) \substr($costs[2], 2);
+
+        return $memory >= 8 * $threads;
     }
 }

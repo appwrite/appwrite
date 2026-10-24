@@ -1667,6 +1667,7 @@ trait UsersBase
                 '$argon2id$v=19$m=1024,t=64,p=1' . $tail,
                 '$argon2id$v=19$m=262145,t=4,p=1' . $tail,
                 '$argon2id$v=19$m=65536,t=4,p=17' . $tail,
+                '$argon2id$v=19$m=64,t=1,p=16' . $tail,
                 '$argon2id$v=19$m=65536,t=0,p=1' . $tail,
                 '$argon2id$v=19$t=4,m=65536,p=1' . $tail,
                 '$argon2id$v=19$m=65536,t=4,p=1,x=1' . $tail,

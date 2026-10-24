@@ -232,6 +232,14 @@ class User extends Document
                 ]);
             }
 
+            // Console accounts also hold account API keys, stored alongside the users they belong to
+            if (!$dbForProject->getCollection('keys')->isEmpty()) {
+                $dbForProject->deleteDocuments('keys', [
+                    Query::equal('resourceType', ['users']),
+                    Query::equal('resourceInternalId', [$sequence]),
+                ]);
+            }
+
             Targets::delete($dbForProject, Query::and([
                 Query::equal('userInternalId', [$sequence]),
                 Query::notEqual('providerType', MESSAGE_TYPE_EMAIL),
@@ -246,6 +254,7 @@ class User extends Document
             ->setAttribute('tokens', [])
             ->setAttribute('challenges', [])
             ->setAttribute('authenticators', [])
+            ->setAttribute('keys', [])
             ->setAttribute('targets', []);
     }
 }
