@@ -2178,6 +2178,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Verify your SMTP configuration by sending a test email to one or more recipients.':
     '1 人以上の受信者にテストメールを送信して、SMTP 設定を検証してください。',
   'View full list in Logs': 'ログで完全なリストを表示',
+  'What does this webhook notify?': 'この Webhook は何を通知しますか?',
   'Webhook ID': 'Webhook ID',
   'Webhook created': 'Webhook を作成しました',
   'Webhook created. Secret ready to copy.':
@@ -2356,7 +2357,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to update provider settings': 'プロバイダー設定の更新に失敗しました',
   'Failed to update provider status':
     'プロバイダーステータスの更新に失敗しました',
-  'Failed to update topic name': 'トピック名の更新に失敗しました',
+  'Failed to update topic': 'トピックの更新に失敗しました',
   'From Email': '送信元メール',
   'From Name': '送信者名',
   'HTML mode': 'HTML モード',
@@ -2555,8 +2556,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Topic deleted': 'トピックを削除しました',
   'Topic deleted successfully': 'トピックを削除しました',
   'Topic name': 'トピック名',
-  'Topic name updated successfully': 'トピック名を更新しました',
   'Topic not found': 'トピックが見つかりません',
+  'Topic updated successfully': 'トピックを更新しました',
+  'Who subscribes to this topic?': 'このトピックの購読者は誰ですか?',
   'Subscriber not found': 'サブスクライバーが見つかりません',
   'Topics group subscribers for email, SMS, or push.':
     'トピックはメール、SMS、プッシュ用にサブスクライバーをグループ化します。',

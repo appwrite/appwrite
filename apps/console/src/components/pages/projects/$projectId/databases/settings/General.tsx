@@ -29,8 +29,14 @@ export function View() {
     {
       id: 'name',
       search: {
-        title: 'Name',
-        keywords: ['rename', 'display', 'database name'],
+        title: 'Name and description',
+        keywords: [
+          'rename',
+          'display',
+          'database name',
+          'description',
+          'about',
+        ],
       },
       node: <DatabaseNameCard {...cardProps} />,
     },

@@ -8,8 +8,8 @@ export const SITE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'general',
-    title: 'Name',
-    keywords: ['rename', 'display', 'site name'],
+    title: 'Name and description',
+    keywords: ['rename', 'display', 'site name', 'description', 'about'],
   },
   {
     sectionId: 'general',

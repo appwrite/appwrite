@@ -3,8 +3,8 @@ import type { SettingsCardIndexEntry } from '@/lib/settings-search'
 export const DATABASE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   {
     sectionId: 'general',
-    title: 'Name',
-    keywords: ['rename', 'display', 'database name'],
+    title: 'Name and description',
+    keywords: ['rename', 'display', 'database name', 'description', 'about'],
   },
   {
     sectionId: 'general',

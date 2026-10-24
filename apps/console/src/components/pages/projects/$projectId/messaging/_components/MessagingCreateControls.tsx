@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ChevronDown, Mail, Phone, Bell, Plus } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ID } from '@appwrite.io/console'
+import { ID, Messaging } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { DescriptionField } from '@/components/global/shared/DescriptionField'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +27,10 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  normalizeDescription,
+  withDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
@@ -58,6 +63,7 @@ export function MessagingCreateControls({
   const queryClient = useQueryClient()
   const [topicDialogOpen, setTopicDialogOpen] = useState(false)
   const [topicName, setTopicName] = useState('')
+  const [topicDescription, setTopicDescription] = useState('')
 
   const createDraftEmail = useMutation({
     mutationFn: async () => {
@@ -143,8 +149,12 @@ export function MessagingCreateControls({
   const createTopicMutation = useMutation({
     mutationFn: async (name: string) => {
       if (!projectId) throw new Error('Missing project')
-      const projectSdk = sdk.forProject(projectId)
-      return projectSdk.messaging.createTopic({
+      // Sent through `withDescription`: the pinned SDK drops `description`.
+      return withDescription(
+        projectId,
+        normalizeDescription(topicDescription),
+        Messaging,
+      ).createTopic({
         topicId: ID.unique(),
         name: name.trim(),
       })
@@ -154,6 +164,7 @@ export function MessagingCreateControls({
       toast.success(t('Topic created'))
       setTopicDialogOpen(false)
       setTopicName('')
+      setTopicDescription('')
       navigate({
         to: '/projects/$projectId/messaging/topics/$topicId',
         params: { projectId: projectId!, topicId: topic.$id },
@@ -258,6 +269,13 @@ export function MessagingCreateControls({
                   }}
                 />
               </div>
+              <DescriptionField
+                id="create-topic-description"
+                value={topicDescription}
+                onChange={setTopicDescription}
+                placeholder={t('Who subscribes to this topic?')}
+                disabled={createTopicMutation.isPending}
+              />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
