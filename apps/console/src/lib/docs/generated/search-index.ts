@@ -2377,7 +2377,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/verify-user",
     "title": "Verify user",
     "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
-    "excerpt": "User verification in Appwrite allows you to verify user email addresses and phone numbers. Users don't need to be verified to log in, but you can restrict resource access to verified users only using permissions. Verify email To verify a user's email, first ensure the user is logged in so that the verification email can be sent to the user who created the account. Then, send the verification email specifying a redirect URL. The verification secrets will be appended as…",
+    "excerpt": "User verification in Appwrite allows you to verify user email addresses and phone numbers. Users don't need to be verified to log in, but you can restrict resource access to verified users only using permissions. Verify email You can verify a user's email with a link or with a code. A link suits web apps, because the user opens it and lands on a verification page in your app. A code suits mobile apps, desktop apps, and any app without…",
     "breadcrumbs": [
       "Auth",
       "Guides",
@@ -3571,6 +3571,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/databases/tablesdb/aggregations",
+    "title": "Aggregations",
+    "description": "Count, sum, average, and group TablesDB rows on the server, filter groups with having, list distinct values, and aggregate across joined tables.",
+    "excerpt": "**Aggregations** compute values over many rows on the server and return only the result: how many orders were paid, the revenue per country, the average rating of a product. Your app downloads a handful of numbers instead of every row. Aggregations are queries. You pass them to in the array, and combine them with filters, grouping, and joins. Aggregations work in TablesDB on SQL databases. They are not available in DocumentsDB, or on self-hosted installations that use MongoDB. On self-hosted…",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Aggregations"
+    ]
+  },
+  {
     "slug": "products/databases/tablesdb/ai-suggestions",
     "title": "AI suggestions",
     "description": "Use AI suggestions to automatically generate database schemas. Learn how to create tables with recommended columns and indexes based on your table name and context.",
@@ -3656,6 +3667,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Databases",
       "Concepts",
       "Geo queries"
+    ]
+  },
+  {
+    "slug": "products/databases/tablesdb/joins",
+    "title": "Joins",
+    "description": "Combine rows from several tables in one TablesDB query with inner, left, right, full outer, and cross joins, then select, filter, and sort the joined columns.",
+    "excerpt": "A **join** reads rows from two or more tables in a single request, matching rows on columns you choose. List orders with their customers' names, or customers with each of their orders, without fetching related rows one request at a time. Joins are queries. You pass them to in the array, next to your filters, ordering, and pagination. Joins work in TablesDB on SQL databases. They are not available in DocumentsDB, or on self-hosted installations that use MongoDB. On self-hosted…",
+    "breadcrumbs": [
+      "Databases",
+      "Concepts",
+      "Joins"
     ]
   },
   {
@@ -3849,7 +3871,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/tablesdb/queries",
     "title": "Queries",
     "description": "Harness the power of querying with Appwrite tablesDB. Discover various query options, filtering, sorting, and advanced querying techniques.",
-    "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through the parameter as an array of query strings, which can be generated using the class. Each query method is logically separated via operations.…",
+    "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Queries can also join tables and aggregate rows, for example to list orders with their customers' names, or to sum revenue per status. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through…",
     "breadcrumbs": [
       "Databases",
       "Concepts",

@@ -6,6 +6,8 @@ description: Harness the power of querying with Appwrite tablesDB. Discover vari
 
 Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries.
 
+Queries can also [join tables](/docs/products/databases/tablesdb/joins) and [aggregate rows](/docs/products/databases/tablesdb/aggregations), for example to list orders with their customers' names, or to sum revenue per status.
+
 # Query class {% #query-class %}
 
 Appwrite SDKs provide a `Query` class to help you build queries. The `Query` class has methods for each type of supported query operation.
