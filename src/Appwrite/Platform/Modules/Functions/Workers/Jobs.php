@@ -235,6 +235,15 @@ class Jobs extends Action
         if ($failure !== null) {
             throw $failure;
         }
+
+        // Deleted mid-build: the deletes worker has already cleared the build
+        // directory, so output written after it is removed here. Outside the
+        // callback's dedupe, so a redelivery after a failed cleanup tries again.
+        if (CallbackEvent::tryFrom($event->event) !== CallbackEvent::Log
+            && $dbForProject->getDocument('deployments', $deploymentId)->isEmpty()
+            && !Deployments::deleteBuildDirectory($deviceForBuilds, $deploymentId)) {
+            throw new \RuntimeException("Failed to delete the build directory of deleted deployment {$deploymentId}");
+        }
     }
 
     protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, JobLog $log, VcsFactory $vcsFactory, array $platform): Document
