@@ -322,7 +322,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 23
+    "readingTimeMinutes": 24
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -497,7 +497,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "apis",
@@ -532,7 +532,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Authentication",
     "description": "Learn how authentication works with Appwrite Realtime subscriptions and how to handle session-based access.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "apis/realtime/channels",
@@ -588,7 +588,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Response codes",
     "description": "Understand Appwrite platform response codes and error handling. Learn to interpret HTTP status codes, error types, and implement best practices for handling errors gracefully.",
     "layout": "article",
-    "readingTimeMinutes": 19
+    "readingTimeMinutes": 20
   },
   {
     "slug": "apis/rest",
@@ -1190,7 +1190,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Email and password login",
     "description": "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/auth/email-policies",
@@ -1537,7 +1537,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Verify user",
     "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/avatars",
@@ -3399,7 +3399,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Buckets",
     "description": "Organize and manage your files effectively with Appwrite Storage Buckets. Explore how to create, configure, and use storage buckets for seamless file organization.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/storage/file-tokens",
@@ -3826,7 +3826,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Appwrite MCP server",
     "description": "Enable LLMs and code-generation tools to interact with your Appwrite project and documentation",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 8
   },
   {
     "slug": "tooling/ai/persistent-agents-with-realtime",
