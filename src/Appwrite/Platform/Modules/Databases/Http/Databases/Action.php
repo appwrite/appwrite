@@ -197,11 +197,12 @@ class Action extends AppwriteAction
     /**
      * Hash field for a single variation of a cached list response.
      *
-     * Scoped by the collection schema (attributes + indexes), the caller's
-     * authorization roles, the exact query set, and the field type — so users
-     * with different permissions never share entries.
+     * Scoped by the collection schema (attributes + indexes), its permissions
+     * and documentSecurity, the caller's authorization roles, the exact query
+     * set, and the field type — so users with different permissions never
+     * share entries and permission changes take effect immediately.
      *
-     * @param Document $collection Collection document (for schema hash)
+     * @param Document $collection Collection document (for schema and permissions hash)
      * @param array<mixed> $roles Caller authorization roles
      * @param array<Query|string> $queries Queries for this list call
      * @param string $type LIST_CACHE_FIELD_DOCUMENTS, LIST_CACHE_FIELD_TOTAL or LIST_CACHE_FIELD_OPERATIONS
@@ -211,6 +212,8 @@ class Action extends AppwriteAction
         $schemaHash = \md5(
             \json_encode($collection->getAttribute('attributes', []))
             . \json_encode($collection->getAttribute('indexes', []))
+            . \json_encode($collection->getPermissions())
+            . \json_encode($collection->getAttribute('documentSecurity', false))
         );
 
         $serialized = \array_map(

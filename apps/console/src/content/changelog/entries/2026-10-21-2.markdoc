@@ -1,0 +1,15 @@
+---
+layout: changelog
+title: Self-hosted Appwrite 2.6.1 and 1.9.9 move to PHP 8.5.12
+date: 2026-10-21
+tags: security, infrastructure
+---
+
+Appwrite 2.6.1 and 1.9.9 are precautionary maintenance releases that move the runtime to PHP 8.5.12.
+
+PHP 8.5.12 fixes [CVE-2026-109618](https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w) and [CVE-2026-109619](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp) ("PHP2Shell"). Appwrite is not affected by either vulnerability, because it serves requests through Swoole rather than PHP's web SAPIs (mod_php, PHP-FPM, CGI). These releases keep the runtime on the patched PHP version anyway.
+
+- **2.x installations:** upgrade to [Appwrite 2.6.1](https://github.com/appwrite/appwrite/releases/tag/2.6.1) using the [latest upgrade instructions](/docs/advanced/self-hosting/production/updates#upgrading-to-latest).
+- **1.9 installations:** upgrade to [Appwrite 1.9.9](https://github.com/appwrite/appwrite/releases/tag/1.9.9) using the [1.9 upgrade instructions](/docs/advanced/self-hosting/production/updates#upgrading-1-9).
+
+Neither release changes the database schema or the Console version. From 2.6.0 or 1.9.8, upgrading only replaces the images; the migration has nothing to change.

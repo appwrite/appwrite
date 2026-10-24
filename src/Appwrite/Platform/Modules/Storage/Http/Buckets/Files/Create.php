@@ -15,6 +15,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Filename;
 use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
@@ -246,6 +247,11 @@ class Create extends Action
 
             $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
             $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
+        }
+
+        $filename = new Filename(0, 0);
+        if (!$filename->isValid($fileName)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $filename->getDescription());
         }
 
         /**

@@ -21,6 +21,7 @@ use Utopia\Database\PermissionType;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Query\Schema\ColumnType;
@@ -123,7 +124,7 @@ class Create extends Action
             );
         }
 
-        $databases = $collections = $staged = [];
+        $databases = $collections = $dbsForDatabases = $staged = [];
         foreach ($operations as $operation) {
             if (!$isAPIKey && !$isPrivilegedUser && \in_array($operation['action'], [
                 'bulkCreate',
@@ -177,24 +178,16 @@ class Create extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid action: ' . $operation['action']);
                 }
 
-                // For individual operations, enforce permissions unless using API key/admin
-                if (!$isAPIKey && !$isPrivilegedUser) {
-                    $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-                    $exists = $document !== null && !$document->isEmpty();
+                // Normalize supplied permissions for every caller: validate the shape and
+                // expand aggregates (write → update+delete) so the staged document carries the
+                // same permissions the direct document endpoints persist, whoever stages it.
+                // The commit handler writes staged data verbatim, so aggregates must be
+                // expanded here rather than relying on a later pass.
+                if (isset($operation['data']['$permissions'])) {
+                    $permissions = $this->normalizePermissions($operation['data']['$permissions']);
 
-                    if ($operation['action'] === 'delete') {
-                        $permissions = $collection->getPermissionsByType(PermissionType::Delete);
-                        if ($collection->getAttribute('documentSecurity', false) && $exists) {
-                            $permissions = [...$permissions, ...$document->getPermissionsByType(PermissionType::Delete)];
-                        }
-                        if (!$authorization->isValid(new Input(PermissionType::Delete, $permissions))) {
-                            throw new Exception(Exception::USER_UNAUTHORIZED);
-                        }
-                    }
-
-                    // Users can only set permissions for roles they have
-                    if (isset($operation['data']['$permissions'])) {
-                        $permissions = $operation['data']['$permissions'];
+                    // Non-privileged callers may only grant roles they hold.
+                    if (!$isAPIKey && !$isPrivilegedUser) {
                         $roles = $authorization->getRoles();
                         foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                             foreach ($permissions as $permission) {
@@ -214,8 +207,26 @@ class Create extends Action
                         }
                     }
 
+                    $operation['data']['$permissions'] = $permissions;
+                }
+
+                // For individual operations, enforce permissions unless using API key/admin
+                if (!$isAPIKey && !$isPrivilegedUser) {
+                    $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+                    $exists = $document !== null && !$document->isEmpty();
+
+                    if ($operation['action'] === 'delete') {
+                        $permissions = $collection->getPermissionsByType(PermissionType::Delete);
+                        if ($collection->getAttribute('documentSecurity', false) && $exists) {
+                            $permissions = [...$permissions, ...$document->getPermissionsByType(PermissionType::Delete)];
+                        }
+                        if (!$authorization->isValid(new Input(PermissionType::Delete, $permissions))) {
+                            throw new Exception(Exception::USER_UNAUTHORIZED);
+                        }
+                    }
+
                     if ($operation['action'] !== 'delete') {
-                        $dbForDatabases = $getDatabasesDB($database);
+                        $dbForDatabases = $dbsForDatabases[$database->getId()] ??= $getDatabasesDB($database);
                         $data = \is_array($operation['data'] ?? null) ? $operation['data'] : [];
                         $creates = $operation['action'] === 'create' || ($operation['action'] === 'upsert' && !$exists);
 
@@ -235,6 +246,19 @@ class Create extends Action
                             $operation[$this->getGroupId()],
                         );
                     }
+                }
+            } else {
+                // Bulk operations are API-key/admin only, but their per-document permissions
+                // still need aggregates expanded so the committed rows match what the direct
+                // bulk endpoints persist (the commit handler writes the staged data verbatim).
+                if (\in_array($operation['action'], ['bulkCreate', 'bulkUpsert']) && \is_array($operation['data'] ?? null)) {
+                    foreach ($operation['data'] as $index => $document) {
+                        if (\is_array($document) && isset($document['$permissions'])) {
+                            $operation['data'][$index]['$permissions'] = $this->normalizePermissions($document['$permissions']);
+                        }
+                    }
+                } elseif ($operation['action'] === 'bulkUpdate' && isset($operation['data']['data']['$permissions'])) {
+                    $operation['data']['data']['$permissions'] = $this->normalizePermissions($operation['data']['data']['$permissions']);
                 }
             }
 
@@ -262,5 +286,37 @@ class Create extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    /**
+     * Validate a permissions value and expand aggregates (write → update + delete) so the
+     * staged document carries the same permissions the direct document endpoints persist.
+     * A non-array value is rejected as a bad request rather than raising a type error.
+     *
+     * @param mixed $permissions
+     * @return array<string>
+     * @throws Exception
+     */
+    private function normalizePermissions(mixed $permissions): array
+    {
+        if (!\is_array($permissions)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Permissions must be an array of permission strings.');
+        }
+
+        $validator = new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
+            PermissionType::Write,
+        ]);
+        if (!$validator->isValid($permissions)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+        }
+
+        return Permission::aggregate($permissions, [
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
+        ]) ?? [];
     }
 }

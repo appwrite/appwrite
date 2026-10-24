@@ -63,6 +63,9 @@ class Update extends Action
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: 'transactions',
@@ -266,7 +269,7 @@ class Update extends Action
                         $collection = $collections[$collectionId];
 
                         if (\in_array($action, ['increment', 'decrement'], true) && \is_array($data)) {
-                            $currentAttribute = $this->getAttributeNameFromData($data);
+                            $currentAttribute = TransactionState::attributeOf($data, $this->getAttributeKey());
                             $currentChange = $data['value'] ?? 1;
                         }
 
@@ -274,12 +277,10 @@ class Update extends Action
                             $data = $this->parseOperators($data, $collection);
                         }
 
-                        if ($action === 'delete' && $documentId && empty($data)) {
+                        if ($action === 'delete' && $documentId) {
                             $doc = $dbForDatabases->getDocument($collectionId, $documentId);
-                            if (!$doc->isEmpty()) {
-                                $operation['data'] = $doc->getArrayCopy();
-                                $data = $operation['data'];
-                            }
+                            $operation['data'] = $doc->isEmpty() ? [] : $doc->getArrayCopy();
+                            $data = $operation['data'];
                         }
 
                         if (!\in_array($action, ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
@@ -842,28 +843,6 @@ class Update extends Action
     }
 
     /**
-     * Get the attribute/column name from data, with fallback for cross-API compatibility
-     *
-     * @param array $data The operation data
-     * @return string The attribute/column name
-     */
-    private function getAttributeNameFromData(array $data): string
-    {
-        $expectedKey = $this->getAttributeKey();
-        if (isset($data[$expectedKey])) {
-            return $data[$expectedKey];
-        }
-
-        // Try the opposite key for cross-API compatibility
-        $fallbackKey = $expectedKey === 'attribute' ? 'column' : 'attribute';
-        if (isset($data[$fallbackKey])) {
-            return $data[$fallbackKey];
-        }
-
-        return '';
-    }
-
-    /**
      * Handle increment operation
      *
      * @param Database $dbForDatabases
@@ -885,7 +864,7 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
-        $attribute = $this->getAttributeNameFromData($data);
+        $attribute = TransactionState::attributeOf($data, $this->getAttributeKey());
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['max'] ?? null);
@@ -919,7 +898,7 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
-        $attribute = $this->getAttributeNameFromData($data);
+        $attribute = TransactionState::attributeOf($data, $this->getAttributeKey());
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['min'] ?? null);
