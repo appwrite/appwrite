@@ -272,13 +272,17 @@ class User extends Document
             return false;
         }
 
+        // Only console accounts carry account keys; a project user has no such attribute to write back
+        if ($user->isSet('keys')) {
+            $user->setAttribute('keys', []);
+        }
+
         $user
             ->setAttributes($attributes)
             ->setAttribute('sessions', [])
             ->setAttribute('tokens', [])
             ->setAttribute('challenges', [])
             ->setAttribute('authenticators', [])
-            ->setAttribute('keys', [])
             ->setAttribute('targets', []);
 
         return true;
