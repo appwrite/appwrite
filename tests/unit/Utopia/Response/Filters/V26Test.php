@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Utopia\Response\Filters;
 
+use Appwrite\Auth\Key;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V26;
@@ -33,6 +35,38 @@ final class V26Test extends TestCase
         $content = $this->parse(['projects.read', 'organization.projects.keys.write']);
 
         $this->assertSame('standard_secret', $content['keys'][0]['secret']);
+    }
+
+    public function testOmitsKeySecretBeyondTheCallingKeysGrant(): void
+    {
+        $caller = new Key('project', '', '', API_KEY_STANDARD, User::ROLE_KEYS, ['project.read', 'keys.write'], 'Caller');
+
+        $content = $this->parse(['project.read', 'keys.write'], $caller);
+
+        $this->assertSame('', $content['keys'][0]['secret']);
+    }
+
+    public function testKeepsKeySecretWithinTheCallingKeysGrant(): void
+    {
+        $caller = new Key('project', '', '', API_KEY_STANDARD, User::ROLE_KEYS, ['project.read', 'keys.write', 'users.read'], 'Caller');
+
+        $content = $this->parse(['project.read', 'keys.write'], $caller);
+
+        $this->assertSame('standard_secret', $content['keys'][0]['secret']);
+    }
+
+    public function testOmitsKeySecretForJWTCallers(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['x-appwrite-jwt' => 'jwt'];
+        $request = new Request($swoole);
+        $request->setScopes(['project.read', 'keys.write']);
+        $filter = new V26($request);
+        $filter->setRawContent($this->project());
+
+        $content = $filter->parse(['$id' => 'project'], Response::MODEL_PROJECT);
+
+        $this->assertSame('', $content['keys'][0]['secret']);
     }
 
     public function testOmitsWebhookCredentials(): void
@@ -68,11 +102,11 @@ final class V26Test extends TestCase
      * @param array<string> $scopes
      * @return array<string, mixed>
      */
-    private function parse(array $scopes): array
+    private function parse(array $scopes, ?Key $apiKey = null): array
     {
         $request = new Request(new SwooleRequest());
         $request->setScopes($scopes);
-        $filter = new V26($request);
+        $filter = new V26($request, $apiKey);
         $filter->setRawContent($this->project());
 
         return $filter->parse(['$id' => 'project'], Response::MODEL_PROJECT);
@@ -86,6 +120,7 @@ final class V26Test extends TestCase
                 new Document([
                     '$id' => 'key',
                     'name' => 'Key',
+                    'scopes' => ['users.read'],
                     'secret' => 'standard_secret',
                 ]),
             ],
