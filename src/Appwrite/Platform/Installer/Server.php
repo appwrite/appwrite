@@ -37,8 +37,11 @@ class Server
     public const string STATUS_ERROR = 'error';
 
     public const string CSRF_COOKIE = 'appwrite-installer-csrf';
+    public const string SESSION_COOKIE = 'appwrite-installer-session';
+    public const int SESSION_TTL_SECONDS = 86400;
 
     private static ?Secret $secret = null;
+    private static array $sessions = [];
 
     public const array INSTALLER_CSP = [
         "default-src 'self'",
@@ -132,6 +135,49 @@ class Server
     public static function secret(): Secret
     {
         return self::$secret ??= new Secret('');
+    }
+
+    /**
+     * @return array{token: string, expiresAt: int}
+     */
+    public static function createSession(): array
+    {
+        self::removeExpiredSessions();
+
+        $token = bin2hex(random_bytes(32));
+        $expiresAt = time() + self::SESSION_TTL_SECONDS;
+        self::$sessions[hash('sha256', $token)] = $expiresAt;
+
+        return ['token' => $token, 'expiresAt' => $expiresAt];
+    }
+
+    public static function hasSession(string $token): bool
+    {
+        self::removeExpiredSessions();
+
+        return $token !== '' && isset(self::$sessions[hash('sha256', $token)]);
+    }
+
+    public static function removeSession(string $token): void
+    {
+        if ($token !== '') {
+            unset(self::$sessions[hash('sha256', $token)]);
+        }
+    }
+
+    public static function clearSessions(): void
+    {
+        self::$sessions = [];
+    }
+
+    private static function removeExpiredSessions(): void
+    {
+        $now = time();
+        foreach (self::$sessions as $token => $expiresAt) {
+            if ($expiresAt <= $now) {
+                unset(self::$sessions[$token]);
+            }
+        }
     }
 
     private function printInstallerSecret(): void
