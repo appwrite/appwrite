@@ -534,6 +534,36 @@ final class AbuseTest extends Scope
         }
     }
 
+    #[Group('abuseEnabled')]
+    public function testAbuseGetAvatarImage(): void
+    {
+        $this->assertAvatarFetchLimited('/avatars/image');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseGetAvatarFavicon(): void
+    {
+        $this->assertAvatarFetchLimited('/avatars/favicon');
+    }
+
+    private function assertAvatarFetchLimited(string $path): void
+    {
+        $max = 60;
+        $headers = [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
+        ];
+
+        $this->startCountingInOneWindow(60);
+        for ($i = 0; $i < $max; $i++) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, ['url' => 'http://127.0.0.1/?request=' . $i]);
+            $this->assertNotSame(429, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, $path, $headers, ['url' => 'http://127.0.0.1/?request=' . $max]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A guest fetching past the limit is throttled');
+    }
+
     /**
      * @param array<string, mixed> $params
      */

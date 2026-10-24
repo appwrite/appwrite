@@ -10,6 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Fetch\Adapter\Curl;
 use Appwrite\Utopia\Response;
 use Utopia\Domains\Domain;
 use Utopia\Fetch\Client;
@@ -36,6 +37,9 @@ class Get extends Action
             ->desc('Get image from URL')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
+            ->label('abuse-key', 'url:{url},ip:{ip}')
+            ->label('abuse-limit', 60)
+            ->label('abuse-time', 60)
             ->label('cache', true)
             ->label('cache.resource', 'avatar/image')
             ->label('sdk', new Method(
@@ -86,7 +90,7 @@ class Get extends Action
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $hostnameValidator->getDescription());
         }
 
-        $client = new Client();
+        $client = new Client(new Curl(APP_STORAGE_READ_BUFFER));
         try {
             $res = $client
                 ->setAllowRedirects(false)

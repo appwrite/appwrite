@@ -11,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\URL\URL as URLParse;
+use Appwrite\Utopia\Fetch\Adapter\Curl;
 use Appwrite\Utopia\Response;
 use DOMDocument;
 use DOMElement;
@@ -45,6 +46,9 @@ class Get extends Action
             ->desc('Get favicon')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
+            ->label('abuse-key', 'url:{url},ip:{ip}')
+            ->label('abuse-limit', 60)
+            ->label('abuse-time', 60)
             ->label('cache', true)
             ->label('cache.resource', 'avatar/favicon')
             ->label('sdk', new Method(
@@ -250,7 +254,7 @@ class Get extends Action
         for ($hop = 0; $hop <= self::MAX_REDIRECTS; $hop++) {
             self::assertSafeUrl($url);
 
-            $client = $adapter !== null ? new Client($adapter) : new Client();
+            $client = new Client($adapter ?? new Curl(APP_STORAGE_READ_BUFFER));
             $response = $client
                 ->setAllowRedirects(false)
                 ->setUserAgent($userAgent)
