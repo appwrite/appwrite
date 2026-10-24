@@ -42,10 +42,12 @@ jobs:
             snippets: react-native
             template: ''
             config_file: .env
-            create: npx -y create-expo-app@latest "$APP_DIR" --template blank-typescript --no-install
+            # The default template: an Expo Router app with its screens in
+            # src/app, which is the layout the snippet targets.
+            create: npx -y create-expo-app@latest "$APP_DIR" --no-install
             configure: jq --arg id "$APP_ID" '.expo.android.package = $id' app.json > app.json.tmp && mv app.json.tmp app.json
             # react-native-appwrite hard-pins expo-file-system 18.*.*, so npm
-            # nests a second copy next to the Expo SDK 54 app's 19.x. Expo
+            # nests a second copy next to the Expo app's own version. Expo
             # autolinking then mixes both versions' native code and the app
             # dies at launch with NoClassDefFoundError on
             # FilePermissionModule (removed in 19). Override it to the app's
