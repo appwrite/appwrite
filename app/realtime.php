@@ -893,7 +893,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $timelimit = $timelimit('url:{url},ip:{ip}', 128, 60);
         $timelimit
             ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getURI());
+            ->setParam('{url}', '/v1/realtime');
 
         $abuse = new Abuse($timelimit);
 

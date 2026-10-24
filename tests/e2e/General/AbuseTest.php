@@ -21,6 +21,8 @@ final class AbuseTest extends Scope
     use ProjectCustom;
     use SideNone;
 
+    private const int ACCOUNT_CREATE_PERIOD = 3600;
+
     private const int COUNTING_SECONDS = 20;
 
     protected function setUp(): void
@@ -616,6 +618,47 @@ final class AbuseTest extends Scope
             $this->assertSame(400, $response['headers']['status-code'], $contentRange);
             $this->assertSame('storage_invalid_content_range', $response['body']['type'], $contentRange);
         }
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseLimitIgnoresHost(): void
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+        ];
+
+        $this->startCountingInOneWindow(self::ACCOUNT_CREATE_PERIOD);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+                'userId' => ID::unique(),
+                'email' => 'host.' . \bin2hex(\random_bytes(8)) . '@example.com',
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            ...$headers,
+            'host' => 'abuse-' . \bin2hex(\random_bytes(4)) . '.example.com',
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'host.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'Changing the Host header must not reset the limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            ...$headers,
+            'x-forwarded-host' => 'abuse-' . \bin2hex(\random_bytes(4)) . '.example.com',
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'host.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'Changing the forwarded host must not reset the limit');
     }
 
     /**
