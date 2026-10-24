@@ -1881,7 +1881,18 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $user->setAttribute('status', true);
 
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        // Written under the row lock an email change takes: an address changed since this sign-in read the user is kept, with its own verification
+        $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user) {
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+            $currentEmail = \strtolower((string) $current->getAttribute('email'));
+            if ($currentEmail !== '' && $currentEmail !== \strtolower((string) $user->getAttribute('email'))) {
+                foreach (['email', 'emailVerification', 'emailCanonical', 'emailIsCanonical', 'emailIsCorporate', 'emailIsDisposable', 'emailIsFree'] as $attribute) {
+                    $user->setAttribute($attribute, $current->getAttribute($attribute));
+                }
+            }
+
+            $dbForProject->updateDocument('users', $user->getId(), $user);
+        });
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
