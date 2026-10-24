@@ -263,10 +263,13 @@ return function (Container $container): void {
             }
         }
 
+        $sessionId = $user?->sessionVerify($store->getProperty('secret', ''), $proofForToken) ?? false;
+        // A session still owing a factor authenticates nobody, as over HTTP.
         if (
             !$user
             || $user->isEmpty()
-            || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            || !$sessionId
+            || !$user->sessionFactorsMet($sessionId)
         ) {
             $user = new User([]);
         }
@@ -297,7 +300,7 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId) && !$user->sessionActive($jwtSessionId)) {
+            if (!empty($jwtSessionId) && (!$user->sessionActive($jwtSessionId) || !$user->sessionFactorsMet($jwtSessionId))) {
                 $user = new User([]);
             }
         }
@@ -343,6 +346,11 @@ return function (Container $container): void {
         $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
         $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
 
+        // A blocked user is refused over HTTP, so here it connects as a guest and cannot impersonate.
+        if ($user->getAttribute('status') === false) {
+            $user = new User([]);
+        }
+
         if (!$user->isEmpty() && $user->getAttribute('impersonator', false)) {
             $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
             $targetUser = null;
@@ -368,6 +376,11 @@ return function (Container $container): void {
                 $user->setAttribute('impersonatorUserEmail', $impersonator->getAttribute('email', ''));
                 $user->setAttribute('impersonatorAccessedAt', $impersonator->getAttribute('accessedAt', 0));
             }
+        }
+
+        // A blocked user is refused over HTTP, so here it connects as a guest.
+        if ($user->getAttribute('status') === false) {
+            $user = new User([]);
         }
 
         $dbForPlatform->setMetadata('user', $user->getId());

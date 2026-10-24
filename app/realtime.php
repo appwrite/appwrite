@@ -1158,9 +1158,11 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = getTimelimit('url:{url},connection:{connection}', 32, 60);
+        // Connection ids are only unique within a container, so the key carries the container too.
+        $timeLimit = getTimelimit('project:{project},container:{container},connection:{connection}', 32, 60);
 
         $timeLimit
+            ->setParam('{project}', (string) $projectId)
             ->setParam('{connection}', $connection)
             ->setParam('{container}', $containerId);
 

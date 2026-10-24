@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Utopia\Database\Documents;
 
+use Appwrite\Auth\MFA\Type;
 use Appwrite\Utopia\Database\Documents\User;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Proofs\Token;
@@ -126,6 +127,44 @@ final class UserTest extends TestCase
         $this->assertFalse($user->sessionActive('expired'));
         $this->assertFalse($user->sessionActive('missing-expire'));
         $this->assertFalse($user->sessionActive('missing'));
+    }
+
+    public function testGetMinimumFactors(): void
+    {
+        $this->assertSame(1, (new User(['mfa' => false, 'emailVerification' => true]))->getMinimumFactors());
+        $this->assertSame(1, (new User(['mfa' => true]))->getMinimumFactors());
+        $this->assertSame(2, (new User(['mfa' => true, 'emailVerification' => true]))->getMinimumFactors());
+        $this->assertSame(2, (new User(['mfa' => true, 'phoneVerification' => true]))->getMinimumFactors());
+        $this->assertSame(1, (new User([
+            'mfa' => true,
+            'authenticators' => [new Document(['type' => Type::TOTP, 'verified' => false])],
+        ]))->getMinimumFactors());
+        $this->assertSame(2, (new User([
+            'mfa' => true,
+            'authenticators' => [new Document(['type' => Type::TOTP, 'verified' => true])],
+        ]))->getMinimumFactors());
+    }
+
+    public function testSessionFactorsMet(): void
+    {
+        $user = new User([
+            '$id' => ID::custom('user1'),
+            'mfa' => true,
+            'emailVerification' => true,
+            'sessions' => [
+                new Document(['$id' => ID::custom('pending'), 'factors' => ['password']]),
+                new Document(['$id' => ID::custom('complete'), 'factors' => ['password', Type::EMAIL]]),
+                new Document(['$id' => ID::custom('none')]),
+            ],
+        ]);
+
+        $this->assertFalse($user->sessionFactorsMet('pending'));
+        $this->assertTrue($user->sessionFactorsMet('complete'));
+        $this->assertFalse($user->sessionFactorsMet('none'));
+        $this->assertFalse($user->sessionFactorsMet('missing'));
+
+        $user->setAttribute('mfa', false);
+        $this->assertTrue($user->sessionFactorsMet('pending'));
     }
 
     public function testTokenVerify(): void
