@@ -9,6 +9,8 @@ A vulnerability in Brotli, the compression format most of the web uses, can let 
 
 **Appwrite Cloud** is patched, and you don't need to do anything. Functions and sites on Node.js 22, 24 and 26 and on Bun 1.4 run patched runtimes without a redeploy. The Appwrite firewall also blocks Brotli attack requests to functions and sites.
 
+As a precaution, we're also turning off Brotli compression on Appwrite Cloud, which may increase your bandwidth usage. We'll work with our partners to bring it back.
+
 **Self-hosted Appwrite** decompresses Brotli responses when it fetches URLs that you or your users provide, such as avatar images, favicons, webhooks and migration sources. Upgrade to a release with the fixed decoder:
 
 - **2.x installations:** upgrade to [Appwrite 2.6.2](https://github.com/appwrite/appwrite/releases/tag/2.6.2) using the [latest upgrade instructions](/docs/advanced/self-hosting/production/updates#upgrading-to-latest).
