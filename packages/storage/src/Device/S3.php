@@ -259,7 +259,7 @@ class S3 extends Device
     /**
      * @param  UploadMetadata  $metadata
      */
-    protected function uploadChunk(StreamInterface $data, string $path, int $chunk, int $chunks, array &$metadata): int
+    public function uploadChunk(StreamInterface $data, string $path, int $chunk, int $chunks, array &$metadata): int
     {
         $contentType = $metadata['content_type'] ?? '';
 

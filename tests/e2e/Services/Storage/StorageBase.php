@@ -2467,6 +2467,7 @@ trait StorageBase
             $this->assertEquals($chunksTotal, $uploadedFile['body']['chunksUploaded']);
 
             // A late retry must return the completed file without writing or finalizing again.
+            file_put_contents($requests[0]['chunkPath'], str_repeat('x', $chunkSize));
             $retry = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge(
                 $requests[0]['headers'],
                 ['content-type' => 'multipart/form-data']

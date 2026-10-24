@@ -127,9 +127,7 @@ $register->set('pools', function () {
             'multiple' => false,
             'schemes' => ['redis'],
         ],
-        // Abuse gets its own pool rather than sharing 'lock': lock leases are
-        // held for the whole guarded callback, which for storage chunk uploads
-        // spans the transfer. Rate limit checks must not queue behind those.
+        // Rate limiting has a separate connection budget from distributed locks.
         'abuse' => [
             'type' => 'abuse',
             'dsns' => $fallbackForRedis,
@@ -216,15 +214,9 @@ $register->set('pools', function () {
                 },
             };
 
-            // PubSub workers hold one long-lived subscribed connection and also need
-            // spare capacity for publishes from the same process.
-            // A lock lease is held for as long as the work it guards, so every
-            // concurrent request that takes a lock needs its own connection. The
-            // size above is derived from the MySQL connection budget and floored by
-            // a worker-only setting, which leaves the API server with one: the
-            // second concurrent lock taker then fails to get a connection to wait
-            // with and 500s, instead of queueing on the lock it was willing to wait
-            // out. The pool creates connections on demand, so this is a ceiling.
+            // PubSub needs spare capacity beside its subscribed connection.
+            // Distributed locks borrow connections per command; this ceiling
+            // allows concurrent acquisitions without tying it to the DB budget.
             $connectionPoolSize = match ($type) {
                 'pubsub' => max(2, $poolSize),
                 'lock' => max(32, $poolSize),

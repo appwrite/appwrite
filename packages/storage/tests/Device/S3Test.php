@@ -436,6 +436,31 @@ final class S3Test extends TestCase
         return new Response(500, body: new Stream($body))->withHeader('content-type', 'application/xml');
     }
 
+    public function testExplicitChunksDoNotPublishUntilFinalized(): void
+    {
+        $client = new ScriptedClient([
+            $this->xml('<InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>'),
+            new Response(200)->withHeader('etag', '"etag-2"'),
+            new Response(200)->withHeader('etag', '"etag-1"'),
+            $this->xml('<CompleteMultipartUploadResult><ETag>"etag-final"</ETag></CompleteMultipartUploadResult>'),
+        ]);
+        $device = $this->device($client);
+        $metadata = [];
+        $device->prepare('/root/object.bin', 'application/octet-stream', 2, $metadata);
+        $device->uploadChunk(new Stream('second'), '/root/object.bin', 2, 2, $metadata);
+        $device->uploadChunk(new Stream('first'), '/root/object.bin', 1, 2, $metadata);
+        $this->assertSame(['POST', 'PUT', 'PUT'], array_map(fn (RequestInterface $request): string => $request->getMethod(), $client->requests));
+        $this->assertSame('second', (string) $client->requests[1]->getBody());
+        $this->assertSame('first', (string) $client->requests[2]->getBody());
+        $device->finalize('/root/object.bin', 2, $metadata);
+        $this->assertCount(4, $client->requests);
+        $completion = (string) $client->requests[3]->getBody();
+        $this->assertStringContainsString('<PartNumber>1</PartNumber>', $completion);
+        $this->assertStringContainsString('<ETag>"etag-1"</ETag>', $completion);
+        $this->assertStringContainsString('<PartNumber>2</PartNumber>', $completion);
+        $this->assertStringContainsString('<ETag>"etag-2"</ETag>', $completion);
+    }
+
     public function testMultipartUploadSurvivesInternalErrors(): void
     {
         $client = new ScriptedClient([

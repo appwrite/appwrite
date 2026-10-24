@@ -1031,4 +1031,25 @@ final class LocalTest extends TestCase
 
         $this->object->delete($path);
     }
+    public function testExplicitChunksLeaveThePublishedFileUntilFinalization(): void
+    {
+        $root = sys_get_temp_dir() . '/storage-chunks-' . bin2hex(random_bytes(8));
+        $device = new Local($root);
+        $path = $device->getPath('object.bin');
+        $metadata = [];
+        try {
+            $device->write($path, new Stream('original'), 'application/octet-stream');
+            $device->prepare($path, 'application/octet-stream', 2, $metadata);
+            $device->uploadChunk(new Stream('second'), $path, 2, 2, $metadata);
+            $device->uploadChunk(new Stream('first'), $path, 1, 2, $metadata);
+            $this->assertSame('original', (string) $device->read($path));
+            $device->finalize($path, 2, $metadata);
+            $this->assertSame('firstsecond', (string) $device->read($path));
+        } finally {
+            $device->abort($path);
+            if (is_dir($root)) {
+                rmdir($root);
+            }
+        }
+    }
 }
