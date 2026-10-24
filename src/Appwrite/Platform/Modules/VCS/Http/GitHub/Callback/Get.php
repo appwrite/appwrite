@@ -6,11 +6,15 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\State;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -46,6 +50,8 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
+            ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -58,37 +64,90 @@ class Get extends Action
         Document $project,
         Response $response,
         Database $dbForPlatform,
-        array $platform
+        array $platform,
+        Document $user,
+        Authorization $authorization
     ) {
         if (empty($state)) {
             $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.';
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
         }
 
-        $state = \json_decode($state, true);
-        $redirectFailure = $state['failure'] ?? '';
-        $projectId = $state['projectId'] ?? '';
+        // This endpoint is public -- without verifying the signature the
+        // Authorize action put in state, anyone could pass an arbitrary
+        // projectId here and attach an installation to another project.
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
 
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            $this->failure($response, $redirectFailure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
-            return;
+        if (empty($signingKey)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
         }
+
+        $state = State::verify($state, $signingKey);
+
+        if ($state === null) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
+
+        $projectId = $state->projectId;
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         $region = $project->getAttribute('region', 'default');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $platform['consoleHostname'] ?? '';
+        $settings = $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations";
 
-        $defaultState = [
-            'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-            'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-        ];
+        $redirectSuccess = $state->success ?: $settings;
+        $redirectFailure = $state->failure ?: $settings;
 
-        $state = \array_merge($defaultState, $state ?? []);
+        if ($state->isExpired()) {
+            $this->failure($response, $redirectFailure, 'The installation request has expired. Please restart the installation from the Appwrite Console.');
+            return;
+        }
 
-        $redirectSuccess = $state['success'] ?? '';
-        $redirectFailure = $state['failure'] ?? '';
+        if ($user->isEmpty() || $user->getId() !== $state->userId) {
+            $this->failure($response, $redirectFailure, 'The installation was started by a different Appwrite account. Please sign in with that account, or restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        // Each state completes one installation; ids are capped at 36 characters
+        try {
+            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                '$id' => 'vcs-state-' . \substr(\hash('sha256', $state->nonce), 0, 26),
+            ])));
+        } catch (Duplicate) {
+            $this->failure($response, $redirectFailure, 'This installation request was already used. Please restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        if ($project->isEmpty()) {
+            $this->failure($response, $state->failure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
+            return;
+        }
+
+        // The state proves who started the flow; access to the project may have been revoked since,
+        // so the user's current roles in the project's team must still grant the scope /authorize requires.
+        $teamId = $project->getAttribute('teamId', '');
+        $roles = Config::getParam('roles', []);
+        $scopes = [];
+        foreach ($user->getAttribute('memberships', []) as $membership) {
+            if ($membership->getAttribute('teamId') !== $teamId || $membership->getAttribute('confirm', false) !== true) {
+                continue;
+            }
+
+            foreach ($membership->getAttribute('roles', []) as $role) {
+                if (\str_starts_with($role, 'project-') && !\str_starts_with($role, 'project-' . $projectId . '-')) {
+                    continue;
+                }
+
+                $role = \str_starts_with($role, 'project-') ? \substr($role, \strrpos($role, '-') + 1) : $role;
+                $scopes = \array_merge($scopes, $roles[$role]['scopes'] ?? []);
+            }
+        }
+
+        if (!\in_array('vcs.read', $scopes, true)) {
+            $this->failure($response, $redirectFailure, 'Your Appwrite account no longer has access to this project. Please restart the installation from the Appwrite Console.');
+            return;
+        }
 
         // Create / Update installation
         if (!empty($providerInstallationId)) {

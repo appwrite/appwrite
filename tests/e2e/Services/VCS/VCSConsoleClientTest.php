@@ -114,13 +114,7 @@ final class VCSConsoleClientTest extends Scope
     public function testGitHubCallbackRejectsUnverifiedInstallation(): void
     {
         $projectId = $this->getProject()['$id'];
-        $success = 'http://localhost/console/project-' . $projectId . '/success';
         $failure = 'http://localhost/console/project-' . $projectId . '/failure';
-        $state = (string) \json_encode([
-            'projectId' => $projectId,
-            'success' => $success,
-            'failure' => $failure,
-        ]);
         $before = $this->countGitHubInstallationsHelper($projectId);
 
         /**
@@ -131,13 +125,118 @@ final class VCSConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'installation_id' => $this->providerInstallationId,
             'setup_action' => 'install',
-            'state' => $state,
+            'state' => $this->buildGitHubState($projectId, $failure),
         ], true, false);
 
         $this->assertSame(301, $missingCode['headers']['status-code']);
         $this->assertStringStartsWith($failure . '?error=', (string) $missingCode['headers']['location']);
+        $this->assertStringContainsString('authorization code', \urldecode((string) $missingCode['headers']['location']));
 
         $this->assertSame($before, $this->countGitHubInstallationsHelper($projectId));
+    }
+
+    public function testGitHubCallbackRejectsUnboundState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $failure = 'http://localhost/console/project-' . $projectId . '/failure';
+
+        /**
+         * Test for FAILURE
+         */
+        $otherUser = $this->callGitHubCallbackHelper($this->buildGitHubState($projectId, $failure, 'user-' . \uniqid()));
+
+        $this->assertSame(301, $otherUser['headers']['status-code']);
+        $this->assertStringStartsWith($failure . '?error=', (string) $otherUser['headers']['location']);
+        $this->assertStringContainsString('different Appwrite account', \urldecode((string) $otherUser['headers']['location']));
+
+        $expired = $this->callGitHubCallbackHelper($this->buildGitHubState($projectId, $failure, expire: \time() - 60));
+
+        $this->assertSame(301, $expired['headers']['status-code']);
+        $this->assertStringContainsString('expired', \urldecode((string) $expired['headers']['location']));
+
+        $state = $this->buildGitHubState($projectId, $failure);
+        $first = $this->callGitHubCallbackHelper($state);
+
+        $this->assertSame(301, $first['headers']['status-code']);
+        $this->assertStringContainsString('organization owners', \urldecode((string) $first['headers']['location']));
+
+        $replay = $this->callGitHubCallbackHelper($state);
+
+        $this->assertSame(301, $replay['headers']['status-code']);
+        $this->assertStringContainsString('already used', \urldecode((string) $replay['headers']['location']));
+
+        // A console account outside the project's team cannot complete an installation for it
+        $email = \uniqid() . 'outsider@appwrite.io';
+        $outsider = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $outsider['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $outside = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $session['cookies']['a_session_console'],
+        ], [
+            'setup_action' => 'request',
+            'state' => $this->buildGitHubState($projectId, $failure, $outsider['body']['$id']),
+        ], true, false);
+
+        $this->assertSame(301, $outside['headers']['status-code']);
+        $this->assertStringContainsString('no longer has access', \urldecode((string) $outside['headers']['location']));
+
+        $unsigned = $this->callGitHubCallbackHelper((string) \json_encode([
+            'projectId' => $projectId,
+            'success' => $failure,
+            'failure' => $failure,
+        ]));
+
+        $this->assertSame(400, $unsigned['headers']['status-code']);
+    }
+
+    private function buildGitHubState(string $projectId, string $failure, ?string $userId = null, ?int $expire = null): string
+    {
+        $userId ??= $this->getRoot()['$id'];
+        $expire ??= \time() + 600;
+        $nonce = \bin2hex(\random_bytes(16));
+
+        return (string) \json_encode([
+            'projectId' => $projectId,
+            'userId' => $userId,
+            'success' => $failure,
+            'failure' => $failure,
+            'expire' => $expire,
+            'nonce' => $nonce,
+            'signature' => \hash_hmac('sha256', (string) \json_encode([$projectId, $userId, $failure, $failure, $expire, $nonce]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function callGitHubCallbackHelper(string $state): array
+    {
+        // No installation id: the setup_action=request path, which needs no GitHub call
+        return $this->client->call(Client::METHOD_GET, '/vcs/github/callback', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'setup_action' => 'request',
+            'state' => $state,
+        ], true, false);
     }
 
     private function countGitHubInstallationsHelper(string $projectId): int
