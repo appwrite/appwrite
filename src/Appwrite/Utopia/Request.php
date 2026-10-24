@@ -13,6 +13,8 @@ use Utopia\System\System;
 
 class Request extends UtopiaRequest
 {
+    private const string UPLOAD_MARKER = 'swoole-upload-file';
+
     /**
      * @var array<Filter>
      */
@@ -26,6 +28,8 @@ class Request extends UtopiaRequest
         $this->setTrustedIpHeaders(explode(',', $trustedHeaders));
 
         parent::__construct($request);
+
+        $this->dropSpoofedUploads();
     }
 
     /**
@@ -37,7 +41,12 @@ class Request extends UtopiaRequest
             return $this->filteredParams;
         }
 
-        $parameters = parent::getParams();
+        // The framework resolves a callable argument by calling it, so a request value such as
+        // ["Class", "method"] never reaches a route; only defaults the route registers are resolved.
+        $parameters = \array_filter(
+            parent::getParams(),
+            fn (mixed $value): bool => \is_string($value) || !\is_callable($value),
+        );
 
         if (!$this->hasFilters() || !$this->hasRoute()) {
             return $parameters;
@@ -278,5 +287,127 @@ class Request extends UtopiaRequest
     public function getScopes(): array
     {
         return $this->scopes;
+    }
+
+    /**
+     * Drop upload paths named by the client
+     *
+     * Swoole's multipart parser accepts a client-supplied `Swoole-Upload-File`
+     * part header as a ready temp file (swoole/swoole-src#6309): the path is
+     * reported as `tmp_name`, passes `is_uploaded_file()`, and is unlinked when
+     * the request is freed. Such paths leave `tmpfiles` and are blanked in `files`.
+     *
+     * Temporary: remove this guard and the uploadMarkers() scan once a released
+     * Swoole ships the upstream fix (swoole/swoole-src#6309) and we require it.
+     */
+    private function dropSpoofedUploads(): void
+    {
+        $tmpfiles = $this->swoole->tmpfiles;
+
+        if (! \is_array($tmpfiles) || $tmpfiles === []) {
+            return;
+        }
+
+        $markers = $this->uploadMarkers();
+        $spoofed = \array_values(\array_filter($tmpfiles, fn (mixed $path): bool => \is_string($path) && \in_array(\trim($path), $markers, true)));
+
+        if ($spoofed === []) {
+            return;
+        }
+
+        $this->swoole->tmpfiles = \array_values(\array_filter($tmpfiles, fn (mixed $path): bool => ! \in_array($path, $spoofed, true)));
+
+        $files = $this->swoole->files;
+
+        if (! \is_array($files)) {
+            return;
+        }
+
+        foreach ($files as $key => $entry) {
+            if (! \is_array($entry) || ! isset($entry['tmp_name'])) {
+                continue;
+            }
+
+            [$entry['tmp_name'], $entry['error'], $entry['size']] = $this->dropPaths($entry['tmp_name'], $entry['error'] ?? null, $entry['size'] ?? null, $spoofed);
+            $files[$key] = $entry;
+        }
+
+        $this->swoole->files = $files;
+    }
+
+    /**
+     * Walk `tmp_name` with its parallel `error` and `size` trees, which nest
+     * for bracketed field names such as `file[]` or `file[0][part]`.
+     *
+     * @param  list<string>  $spoofed
+     * @return array{mixed, mixed, mixed}
+     */
+    private function dropPaths(mixed $path, mixed $error, mixed $size, array $spoofed): array
+    {
+        if (\is_string($path)) {
+            if (\in_array($path, $spoofed, true)) {
+                return ['', \UPLOAD_ERR_CANT_WRITE, 0];
+            }
+
+            return [$path, $error, $size];
+        }
+
+        if (! \is_array($path)) {
+            return [$path, $error, $size];
+        }
+
+        foreach ($path as $position => $child) {
+            [$path[$position], $childError, $childSize] = $this->dropPaths(
+                $child,
+                \is_array($error) ? $error[$position] ?? null : null,
+                \is_array($size) ? $size[$position] ?? null : null,
+                $spoofed,
+            );
+
+            if (\is_array($error)) {
+                $error[$position] = $childError;
+            }
+
+            if (\is_array($size)) {
+                $size[$position] = $childSize;
+            }
+        }
+
+        return [$path, $error, $size];
+    }
+
+    /**
+     * Paths named by `Swoole-Upload-File` part headers, which Swoole matches
+     * case-insensitively at the start of a header line.
+     *
+     * @return list<string>
+     */
+    private function uploadMarkers(): array
+    {
+        $body = $this->swoole->rawContent();
+
+        if (! \is_string($body)) {
+            return [];
+        }
+
+        $markers = [];
+        $offset = 0;
+
+        while (($position = \stripos($body, self::UPLOAD_MARKER, $offset)) !== false) {
+            $offset = $position + \strlen(self::UPLOAD_MARKER);
+
+            if ($position === 0 || $body[$position - 1] !== "\n") {
+                continue;
+            }
+
+            $end = \strpos($body, "\n", $offset);
+            $line = \ltrim(\substr($body, $offset, $end === false ? null : $end - $offset), " \t");
+
+            if (\str_starts_with($line, ':')) {
+                $markers[] = \trim(\substr($line, 1));
+            }
+        }
+
+        return $markers;
     }
 }

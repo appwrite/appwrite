@@ -16,6 +16,7 @@ use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Utopia\VCS\Adapter\Git\GitHub;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
@@ -44,7 +45,6 @@ use Utopia\Storage\Storage;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
-use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
 global $register;
 global $container;
@@ -342,7 +342,7 @@ $container->set('servers', function () {
 
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
 
-$container->set('gitHub', fn (Cache $cache) => new VcsGitHub($cache), ['cache']);
+$container->set('gitHub', fn (Cache $cache) => new GitHub($cache), ['cache']);
 
 $container->set('plan', fn () => []);
 
