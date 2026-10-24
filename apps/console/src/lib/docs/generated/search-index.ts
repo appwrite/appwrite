@@ -2377,7 +2377,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/verify-user",
     "title": "Verify user",
     "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
-    "excerpt": "User verification in Appwrite allows you to verify user email addresses and phone numbers. Users don't need to be verified to log in, but you can restrict resource access to verified users only using permissions. Verify email To verify a user's email, first ensure the user is logged in so that the verification email can be sent to the user who created the account. Then, send the verification email specifying a redirect URL. The verification secrets will be appended as…",
+    "excerpt": "User verification in Appwrite allows you to verify user email addresses and phone numbers. Users don't need to be verified to log in, but you can restrict resource access to verified users only using permissions. Verify email You can verify a user's email with a link or with a code. A link suits web apps, because the user opens it and lands on a verification page in your app. A code suits mobile apps, desktop apps, and any app without…",
     "breadcrumbs": [
       "Auth",
       "Guides",
