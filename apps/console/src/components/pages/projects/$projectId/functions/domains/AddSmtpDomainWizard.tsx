@@ -58,9 +58,11 @@ export function AddSmtpDomainWizard() {
   const [verificationError, setVerificationError] =
     useState<DomainVerificationError | null>(null)
   const [rule, setRule] = useState<SmtpProxyRule | null>(null)
+  const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/functions/${functionId}/domains`
   const isPending =
+    registering ||
     createMutation.isPending ||
     verifyMutation.isPending ||
     deleteMutation.isPending
@@ -91,6 +93,7 @@ export function AddSmtpDomainWizard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isPending) return
     const d = domain.trim().toLowerCase()
     setError('')
     if (!d) {
@@ -105,14 +108,17 @@ export function AddSmtpDomainWizard() {
       return
     }
 
+    setRegistering(true)
     try {
       await ensureApexDomainInOrganization(project?.teamId ?? '', d)
     } catch (err: unknown) {
       const e = err as { type?: string }
       if (e?.type !== 'domain_already_exists') {
-        toast.error(t('Failed to register domain'))
+        toast.error(getErrorMessage(err, 'Failed to register domain'))
         return
       }
+    } finally {
+      setRegistering(false)
     }
 
     try {

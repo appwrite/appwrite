@@ -505,6 +505,8 @@ function RootInitialLoadCoordinator({
     })
     animation.onfinish = () => {
       if (cancelled) return
+      animation.commitStyles()
+      animation.cancel()
       shellRevealedRef.current = true
       setShellRevealed(true)
     }
