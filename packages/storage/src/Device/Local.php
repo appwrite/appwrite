@@ -479,8 +479,7 @@ class Local extends Device
      */
     public function delete(string $path, bool $recursive = false): bool
     {
-        // A symbolic link is unlinked, never followed into what it points at.
-        if ($recursive && is_dir($path) && ! is_link($path)) {
+        if (is_dir($path) && $recursive) {
             $entries = scandir($path);
 
             if ($entries === false) {
@@ -523,7 +522,7 @@ class Local extends Device
         $files = $this->scanDirectory($path);
 
         foreach ($files as $file) {
-            if (is_dir($file) && ! is_link($file)) {
+            if (is_dir($file)) {
                 $this->deletePath(substr_replace($file, '', 0, \strlen($this->getRoot() . DIRECTORY_SEPARATOR)));
             } else {
                 $this->delete($file, true);
