@@ -1787,6 +1787,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             Query::equal('provider', [$provider]),
             Query::equal('providerUid', [$oauth2ID]),
         ]);
+        $createdIdentity = null;
         if ($identity->isEmpty()) {
             // Before creating the identity, check if the email is already associated with another user
             $userId = $user->getId();
@@ -1799,7 +1800,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
 
-            $dbForProject->createDocument('identities', new Document([
+            $createdIdentity = $dbForProject->createDocument('identities', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -1881,18 +1882,27 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $user->setAttribute('status', true);
 
-        // Written under the row lock an email change takes: an address changed since this sign-in read the user is kept, with its own verification
-        $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user) {
+        // Written under the row lock an email change takes: if the address changed since this sign-in read the user, the sign-in proves
+        // nothing about the account any more, so the identity it linked is dropped and the callback fails
+        $persisted = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $createdIdentity): bool {
             $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
             $currentEmail = \strtolower((string) $current->getAttribute('email'));
             if ($currentEmail !== '' && $currentEmail !== \strtolower((string) $user->getAttribute('email'))) {
-                foreach (['email', 'emailVerification', 'emailCanonical', 'emailIsCanonical', 'emailIsCorporate', 'emailIsDisposable', 'emailIsFree'] as $attribute) {
-                    $user->setAttribute($attribute, $current->getAttribute($attribute));
+                if ($createdIdentity !== null) {
+                    $authorization->skip(fn () => $dbForProject->deleteDocument('identities', $createdIdentity->getId()));
                 }
+
+                return false;
             }
 
             $dbForProject->updateDocument('users', $user->getId(), $user);
+
+            return true;
         });
+
+        if (!$persisted) {
+            $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+        }
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
