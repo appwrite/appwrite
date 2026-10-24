@@ -20,7 +20,7 @@ final class OutputTest extends TestCase
         $root = \sys_get_temp_dir() . '/output-' . \bin2hex(\random_bytes(8));
         \mkdir($root);
         $root = \realpath($root);
-        self::assertNotFalse($root);
+        $this->assertNotFalse($root);
         $this->root = $root;
         $this->device = new Local($root);
     }
@@ -38,15 +38,15 @@ final class OutputTest extends TestCase
         $path = $this->device->getPath('output.tar.gz');
         \file_put_contents($path, 'build output');
 
-        self::assertTrue(Output::wait($this->device, $path, 0));
+        $this->assertTrue(Output::wait($this->device, $path, 0));
     }
 
     public function testMissingOutputReturnsAfterTheGracePeriod(): void
     {
         $path = $this->device->getPath('missing.tar.gz');
 
-        self::assertFalse(Output::wait($this->device, $path, 0.01));
-        self::assertFileDoesNotExist($path);
+        $this->assertFalse(Output::wait($this->device, $path, 0.01));
+        $this->assertFileDoesNotExist($path);
     }
 
     public function testAcceptsOutputThatAppearsDuringTheGracePeriod(): void
@@ -57,11 +57,11 @@ final class OutputTest extends TestCase
             [],
             $pipes,
         );
-        self::assertIsResource($process);
+        $this->assertIsResource($process);
 
         try {
-            self::assertTrue(Output::wait($this->device, $path, 5));
-            self::assertSame('build output', \file_get_contents($path));
+            $this->assertTrue(Output::wait($this->device, $path, 5));
+            $this->assertSame('build output', \file_get_contents($path));
         } finally {
             \proc_close($process);
         }
@@ -74,8 +74,8 @@ final class OutputTest extends TestCase
         \file_put_contents($target, 'build output');
         \symlink($target, $link);
 
-        self::assertFalse(Output::wait($this->device, $link, 0));
-        self::assertSame('build output', \file_get_contents($target));
+        $this->assertFalse(Output::wait($this->device, $link, 0));
+        $this->assertSame('build output', \file_get_contents($target));
     }
 
     public function testStorageFailureIsNotReportedAsMissingOutput(): void
