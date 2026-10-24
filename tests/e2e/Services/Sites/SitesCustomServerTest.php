@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
@@ -1964,6 +1965,64 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringContainsString("Page not found", (string) $response['body']); // Title
         $this->assertStringContainsString("Go to homepage", (string) $response['body']); // Button
         $this->assertStringNotContainsString("Powered by", (string) $response['body']); // Brand
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testRootDirectoryMustStayInsideRepository(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Root directory test',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'providerRootDirectory' => '/sites/starter',
+        ]);
+
+        $this->assertSame(201, $site['headers']['status-code']);
+        $this->assertSame('/sites/starter', $site['body']['providerRootDirectory']);
+
+        $siteId = $site['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['..', '../other', 'sites/../../storage', '/../etc'] as $rootDirectory) {
+            $deployment = $this->createTemplateDeployment($siteId, [
+                'repository' => 'templates-for-sites',
+                'owner' => 'appwrite',
+                'rootDirectory' => $rootDirectory,
+                'type' => 'branch',
+                'reference' => 'main',
+                'activate' => true,
+            ]);
+            $this->assertSame(400, $deployment['headers']['status-code'], $rootDirectory);
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $deployment['body']['type']);
+
+            $created = $this->createSite([
+                'siteId' => ID::unique(),
+                'name' => 'Root directory test',
+                'framework' => 'other',
+                'buildRuntime' => 'node-22',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $created['headers']['status-code'], $rootDirectory);
+
+            $updated = $this->updateSite([
+                '$id' => $siteId,
+                'name' => 'Root directory test',
+                'framework' => 'other',
+                'buildRuntime' => 'node-22',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $updated['headers']['status-code'], $rootDirectory);
+        }
+
+        $site = $this->getSite($siteId);
+        $this->assertSame('/sites/starter', $site['body']['providerRootDirectory']);
 
         $this->cleanupSite($siteId);
     }

@@ -497,6 +497,7 @@ class OpenAPI3 extends Format
                 switch ($class) {
                     case \Utopia\Database\Validator\UID::class:
                     case \Utopia\Validator\Text::class:
+                    case \Appwrite\Vcs\Validator\Directory::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;

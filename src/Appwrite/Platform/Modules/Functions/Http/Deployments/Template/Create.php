@@ -12,6 +12,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Validator\Directory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -68,7 +69,7 @@ class Create extends Base
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('repository', '', new Text(128, 0), 'Repository name of the template.')
             ->param('owner', '', new Text(128, 0), 'The name of the owner of the template.')
-            ->param('rootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.')
+            ->param('rootDirectory', '', new Directory(), 'Path to function code in the template repo.')
             ->param('type', '', new WhiteList(['commit', 'branch', 'tag']), 'Type for the reference provided. Can be commit, branch, or tag', enum: new Enum(name: 'TemplateReferenceType'))
             ->param('reference', '', new Text(128, 0), 'Reference value, can be a commit hash, branch name, or release tag')
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
