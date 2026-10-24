@@ -4984,7 +4984,7 @@ final class AccountCustomClientTest extends Scope
         $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', $inviterHeaders, [
             'email' => $email,
             'roles' => ['member'],
-            'url' => 'http://localhost/join',
+            'url' => 'http://localhost/join-us',
         ]);
         $this->assertEquals(201, $membership['headers']['status-code']);
         $this->assertFalse($membership['body']['confirm']);
