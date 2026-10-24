@@ -683,6 +683,8 @@ trait SMTPBase
             senderEmail: 'sender@example.com',
             host: '169.254.169.254',
             port: 25,
+            // A stored password is only reused for the server it was set for
+            password: 'password',
             enabled: true,
         );
 
@@ -696,6 +698,8 @@ trait SMTPBase
             senderEmail: 'sender@example.com',
             host: '169.254.169.254',
             port: 25,
+            // A stored password is only reused for the server it was set for
+            password: 'password',
         );
 
         $this->assertSame(200, $response['headers']['status-code']);
