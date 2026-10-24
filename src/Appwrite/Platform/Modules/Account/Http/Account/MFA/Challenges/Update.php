@@ -140,7 +140,14 @@ class Update extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $dbForProject->deleteDocument('challenges', $challengeId);
+        // Claim the challenge under the user row lock an address change takes, which deletes challenges sent to the old address
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $challengeId) {
+            $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+
+            if (!$dbForProject->deleteDocument('challenges', $challengeId)) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
+        });
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $factors = $session->getAttribute('factors', []);

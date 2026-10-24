@@ -57,6 +57,7 @@ class Identity extends Model
                 'description' => 'Identity Provider Access Token.',
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
+                'credential' => true,
             ])
             ->addRule('providerAccessTokenExpiry', [
                 'type' => self::TYPE_DATETIME,
@@ -69,6 +70,7 @@ class Identity extends Model
                 'description' => 'Identity Provider Refresh Token.',
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
+                'credential' => true,
             ])
         ;
     }

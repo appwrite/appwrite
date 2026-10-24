@@ -3,11 +3,15 @@
 namespace Appwrite\Utopia\Database\Documents;
 
 use Appwrite\Auth\MFA\Type\TOTP;
+use Appwrite\Deletes\Targets;
+use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Roles;
 
 class User extends Document
@@ -215,5 +219,96 @@ class User extends Document
         $session = $this->find('$id', $sessionId, 'sessions');
 
         return $session instanceof Document && \count($session->getAttribute('factors', [])) >= $this->getMinimumFactors();
+    }
+
+    /**
+     * Revoke every way into the account other than its email address: password,
+     * sessions, tokens, MFA factors, passkeys, identities, account keys, pending
+     * invites, phone and push targets.
+     *
+     * Used when the verified owner of the email claims an account that was
+     * registered with it but never verified, so nobody else keeps access.
+     * Persists the revocation in one transaction under the user row lock an email
+     * change takes, and mirrors it on `$user`. Returns false, changing nothing,
+     * when the account no longer holds `$email` unverified.
+     */
+    public static function revokeCredentials(Database $dbForProject, Document $user, string $email): bool
+    {
+        $sequence = $user->getSequence();
+        if ($sequence === '' || $sequence === null || $user->getAttribute('status') === false) {
+            return true;
+        }
+
+        $hash = new Argon2();
+        $attributes = [
+            'password' => null,
+            'hash' => $hash->getName(),
+            'hashOptions' => $hash->getOptions(),
+            'passwordHistory' => [],
+            'passwordUpdate' => null,
+            'phone' => null,
+            'phoneVerification' => false,
+            'mfa' => false,
+            'mfaRecoveryCodes' => [],
+        ];
+
+        $revoked = $dbForProject->withTransaction(function () use ($dbForProject, $user, $email, $sequence, $attributes): bool {
+            $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+            if (
+                $current->isEmpty()
+                || $current->getAttribute('emailVerification', false)
+                || \strtolower((string) $current->getAttribute('email')) !== \strtolower($email)
+            ) {
+                return false;
+            }
+
+            foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
+                $dbForProject->deleteDocuments($collection, [
+                    Query::equal('userInternalId', [$sequence]),
+                ]);
+            }
+
+            // A pending invite may have gone to the phone cleared here, so it must not prove the account any more
+            $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                Query::equal('userInternalId', [$sequence]),
+                Query::equal('confirm', [false]),
+            ]);
+
+            // Console accounts also hold account API keys, stored alongside the users they belong to
+            if (!$dbForProject->getCollection('keys')->isEmpty()) {
+                $dbForProject->deleteDocuments('keys', [
+                    Query::equal('resourceType', ['users']),
+                    Query::equal('resourceInternalId', [$sequence]),
+                ]);
+            }
+
+            Targets::delete($dbForProject, Query::and([
+                Query::equal('userInternalId', [$sequence]),
+                Query::notEqual('providerType', MESSAGE_TYPE_EMAIL),
+            ]));
+
+            $dbForProject->updateDocument('users', $user->getId(), new Document($attributes));
+
+            return true;
+        });
+
+        if (!$revoked) {
+            return false;
+        }
+
+        // Only console accounts carry account keys; a project user has no such attribute to write back
+        if ($user->isSet('keys')) {
+            $user->setAttribute('keys', []);
+        }
+
+        $user
+            ->setAttributes($attributes)
+            ->setAttribute('sessions', [])
+            ->setAttribute('tokens', [])
+            ->setAttribute('challenges', [])
+            ->setAttribute('authenticators', [])
+            ->setAttribute('targets', []);
+
+        return true;
     }
 }
