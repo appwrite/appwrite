@@ -127,7 +127,7 @@
     "hls.js": "^1.7.3",
     "html-to-image": "^1.11.13",
     "input-otp": "^1.4.2",
-    "js-yaml": "^4.2.0",
+    "js-yaml": "^5.4.3",
     "lucide-react": "^0.544.0",
     "maplibre-gl": "^6.13.0",
     "mediabunny": "^1.55.3",
