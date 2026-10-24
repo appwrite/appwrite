@@ -421,7 +421,44 @@ class DetectorTest extends TestCase
         $this->assertSame('tanstack-start', $detectedFramework->getName());
         $this->assertSame('npm install', $detectedFramework->getInstallCommand());
         $this->assertSame('npm run build', $detectedFramework->getBuildCommand());
-        $this->assertSame('./.output', $detectedFramework->getOutputDirectory());
+        $this->assertSame('./dist', $detectedFramework->getOutputDirectory());
+    }
+
+    /**
+     * @param array<string, array<string, string>> $manifest
+     */
+    #[DataProvider('tanStackStartOutputDirectoryDataProvider')]
+    public function testTanStackStartOutputDirectory(array $manifest, string $outputDirectory): void
+    {
+        $detector = new Framework('npm');
+
+        $detector
+            ->addOption(new Nuxt())
+            ->addOption(new Analog())
+            ->addOption(new TanStackStart());
+
+        $detector->addInput(json_encode($manifest, JSON_UNESCAPED_SLASHES) ?: '', Framework::INPUT_PACKAGES);
+
+        $detectedFramework = $detector->detect();
+
+        $this->assertNotNull($detectedFramework);
+        $this->assertSame('tanstack-start', $detectedFramework->getName());
+        $this->assertSame($outputDirectory, $detectedFramework->getOutputDirectory());
+    }
+
+    /**
+     * @return array<string, array{array<string, array<string, string>>, string}>
+     */
+    public static function tanStackStartOutputDirectoryDataProvider(): array
+    {
+        return [
+            'no deployment adapter' => [['dependencies' => ['@tanstack/react-start' => '^1.169.1']], './dist'],
+            'nitro' => [['dependencies' => ['@tanstack/react-start' => '^1.169.1', 'nitro' => '3.0.260610-beta']], './.output'],
+            'nitro in devDependencies' => [['dependencies' => ['@tanstack/react-start' => '^1.169.1'], 'devDependencies' => ['nitro' => '3.0.260610-beta']], './.output'],
+            'nitropack' => [['dependencies' => ['@tanstack/react-start' => '^1.168.0', 'nitropack' => '^2.12.0']], './.output'],
+            'nitro v2 vite plugin' => [['dependencies' => ['@tanstack/react-start' => '^1.168.0', '@tanstack/nitro-v2-vite-plugin' => '^1.154.0']], './.output'],
+            'solid start without adapter' => [['dependencies' => ['@tanstack/solid-start' => '^1.169.1']], './dist'],
+        ];
     }
 
     /**
