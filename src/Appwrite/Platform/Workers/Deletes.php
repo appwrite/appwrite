@@ -1756,6 +1756,8 @@ class Deletes extends Action
         try {
             if (Deployments::deleteBuildDirectory($device, $deploymentId)) {
                 Console::success('Deleted build directory: ' . $directory);
+            } else {
+                Console::error('Failed to delete build directory: ' . $directory);
             }
         } catch (Throwable $th) {
             Console::error('Failed to delete build directory: ' . $directory);

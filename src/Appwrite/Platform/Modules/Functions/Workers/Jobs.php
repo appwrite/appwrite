@@ -175,7 +175,17 @@ class Jobs extends Action
                 // Deleted mid-build: the deletes worker has already cleared the
                 // build directory, so output written after it is removed here.
                 if (CallbackEvent::tryFrom($event->event) !== CallbackEvent::Log) {
-                    Deployments::deleteBuildDirectory($deviceForBuilds, $deploymentId);
+                    try {
+                        if (!Deployments::deleteBuildDirectory($deviceForBuilds, $deploymentId)) {
+                            throw new \RuntimeException("Failed to delete the build directory of deleted deployment {$deploymentId}");
+                        }
+                    } catch (\Throwable $error) {
+                        // A redelivery has to retry the cleanup, not skip it as processed.
+                        if ($event->id !== '') {
+                            $cache->purge(self::key('event', $project, $event->id));
+                        }
+                        throw $error;
+                    }
                 }
                 return;
             }
