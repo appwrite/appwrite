@@ -728,6 +728,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       # One slot at a time: each job re-checks the deletes backlog before every block.
       - _APP_WORKER_MAX_COROUTINES=1
