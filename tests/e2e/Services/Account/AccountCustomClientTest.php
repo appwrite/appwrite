@@ -4957,6 +4957,44 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $existingSession = $response['cookies'][$sessionCookieKey];
 
+        // Someone else invites the address while the account is still unverified
+        $inviterEmail = 'inviter.' . \uniqid() . '@localhost.test';
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => ID::unique(),
+            'email' => $inviterEmail,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $inviterEmail,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $inviterHeaders = \array_merge($headers, [
+            'cookie' => $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey],
+        ]);
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $inviterHeaders, [
+            'teamId' => ID::unique(),
+            'name' => 'Claimed Invites',
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', $inviterHeaders, [
+            'email' => $email,
+            'roles' => ['member'],
+            'url' => 'http://localhost/join',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+        $this->assertFalse($membership['body']['confirm']);
+
+        $invite = $this->getLastEmailByAddress($email, function ($mail) {
+            $this->assertStringContainsString('Invitation', (string) $mail['subject']);
+        });
+        $inviteParams = $this->extractQueryParamsFromEmailLink($invite['html']);
+        $this->assertNotEmpty($inviteParams['secret'] ?? '');
+
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -4991,6 +5029,13 @@ final class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
         $this->assertEquals(401, $login['headers']['status-code']);
+
+        // The invite sent before the claim no longer proves the account
+        $accept = $this->client->call(Client::METHOD_PATCH, '/teams/' . $team['body']['$id'] . '/memberships/' . $membership['body']['$id'] . '/status', $headers, [
+            'userId' => $existingUserId,
+            'secret' => $inviteParams['secret'],
+        ]);
+        $this->assertEquals(401, $accept['headers']['status-code']);
     }
 
     public function testImpersonationHidesProviderCredentials(): void
