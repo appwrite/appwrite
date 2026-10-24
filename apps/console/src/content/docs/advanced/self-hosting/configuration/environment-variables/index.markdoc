@@ -64,6 +64,10 @@ Appwrite uses a Redis server for managing cache, queues and scheduled tasks. The
 | `_APP_REDIS_PORT`          | Redis server TCP port. Default value is: `6379`.                                                      |
 | `_APP_REDIS_USER`          | Redis server user. This is an optional variable. Default value is an empty string.   |
 | `_APP_REDIS_PASS`          | Redis server password. This is an optional variable. Default value is an empty string.|
+| `_APP_REDIS_QUEUE_HOST`    | **version >= 2.6.0** Hostname of a separate Redis server for queues. This is an optional variable. When empty, queues use the main Redis server set by `_APP_REDIS_HOST` and the other `_APP_REDIS_QUEUE_*` variables are ignored. Use a dedicated instance with `maxmemory-policy noeviction` in production so a queue backlog never evicts the cache and queued jobs are never evicted. Default value is an empty string. |
+| `_APP_REDIS_QUEUE_PORT`    | **version >= 2.6.0** TCP port of the separate Redis server for queues. Only used when `_APP_REDIS_QUEUE_HOST` is set. Default value is: `6379`. |
+| `_APP_REDIS_QUEUE_USER`    | **version >= 2.6.0** User of the separate Redis server for queues. Only used when `_APP_REDIS_QUEUE_HOST` is set. This is an optional variable. Default value is an empty string. |
+| `_APP_REDIS_QUEUE_PASS`    | **version >= 2.6.0** Password of the separate Redis server for queues. Only used when `_APP_REDIS_QUEUE_HOST` is set. This is an optional variable. Default value is an empty string. |
 
 # MQTT {% #mqtt %}
 **version >= 2.3.0** Appwrite runs an MQTT broker, the `appwrite-mqtt` container, that delivers push notifications to devices. Traefik terminates TLS for MQTT (mqtts) and MQTT over WebSocket (wss) and forwards both to the broker.
