@@ -26,6 +26,9 @@ class V25 extends Migration
         Console::info('Migrating collections');
         $this->migrateCollections();
 
+        Console::info('Syncing collections');
+        $this->syncCollections();
+
         Console::info('Migrating documents');
         $this->forEachDocument($this->migrateDocument(...));
     }
