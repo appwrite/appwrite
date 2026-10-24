@@ -2762,12 +2762,14 @@ final class SitesCustomServerTest extends Scope
                 'theme=dark',
             ]);
 
-            $this->assertEventually(function () use ($proxyClient, $cookie) {
+            $this->assertEventually(function () use ($proxyClient, $cookie, $secret) {
                 $response = $proxyClient->call(Client::METHOD_GET, '/cookie-header', [
                     'cookie' => $cookie,
+                    'x-fallback-cookies' => \json_encode(['a_session_console' => $secret]),
                 ], followRedirects: false);
                 $this->assertSame(200, $response['headers']['status-code']);
                 $this->assertSame('theme=dark', $response['body']['cookie']);
+                $this->assertNull($response['body']['fallbackCookies']);
             });
         } finally {
             if ($siteId !== '') {

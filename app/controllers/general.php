@@ -308,6 +308,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             static fn (array $values) => \implode(', ', $values),
             $request->getHeadersWithoutCookies($strippedCookies)
         );
+        // Clients without cookie support send their session in this header instead.
+        unset($requestHeaders['x-fallback-cookies']);
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
             if ($type === 'function') {
