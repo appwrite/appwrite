@@ -217,7 +217,7 @@ return [
             ],
             [
                 'name' => '_APP_DNS_EXTERNAL',
-                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source or an avatar URL before Appwrite fetches it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
+                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source, an avatar URL or a project\'s SMTP server before Appwrite connects to it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
                 'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
@@ -226,7 +226,7 @@ return [
             ],
             [
                 'name' => '_APP_ALLOWED_INTERNAL_ADDRESSES',
-                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
+                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars) or connecting to a project\'s SMTP server (project SMTP and messaging SMTP providers). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
                 'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
@@ -445,6 +445,15 @@ return [
                 'description' => 'Internal Worker per core for the API and Executor containers. Can be configured to optimize performance. Realtime ignores this and runs a single worker per container; use _APP_WORKERS_NUM to override.',
                 'introduction' => '0.13.0',
                 'default' => 6,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MEMORY_LIMIT',
+                'description' => 'PHP memory limit of each Appwrite process, including the API, Realtime, workers and tasks. Accepts any PHP memory_limit value, such as \'2G\', or \'-1\' for no limit. Raise it when a Realtime container holds thousands of connections. By default, set to \'512M\'.',
+                'introduction' => '2.6.2',
+                'default' => '512M',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1353,7 +1362,7 @@ return [
                 'default' => 'your-secret-key',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => 'token'
             ],
             [
                 'name' => '_APP_EXECUTOR_HOST',
@@ -1395,12 +1404,12 @@ return [
             ],
             [
                 'name' => '_APP_JOBS_SECRET',
-                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. Make sure to change this.',
+                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. The installer generates a unique value. `/v1/jobs/event` rejects signatures when this is empty or the public `your-secret-key` placeholder. **Keep it a secret**.',
                 'introduction' => '1.9.0',
-                'default' => 'your-secret-key',
+                'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => 'token'
             ],
             [
                 'name' => '_APP_JOBS_ENDPOINT',
@@ -1781,7 +1790,7 @@ return [
             [
                 'name' => '_APP_VCS_ENTIRE_PLUGIN',
                 'description' => 'Entire plugin slug, as registered with Entire. It names the plugin in Entire\'s API and is the audience of the webhook tokens Entire signs for it.',
-                'introduction' => '2.1.0',
+                'introduction' => '2.6.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -1790,7 +1799,7 @@ return [
             [
                 'name' => '_APP_VCS_ENTIRE_PRIVATE_KEY',
                 'description' => 'Entire plugin private key: the Ed25519 key whose public half is registered on the plugin, as a PKCS#8 PEM.',
-                'introduction' => '2.1.0',
+                'introduction' => '2.6.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -1799,7 +1808,7 @@ return [
             [
                 'name' => '_APP_VCS_ENTIRE_ISSUER',
                 'description' => 'Issuer registered on the Entire plugin: the iss claim of the JWTs Appwrite signs for it and the audience of the install receipts Entire signs back. Usually this server\'s public URL.',
-                'introduction' => '2.1.0',
+                'introduction' => '2.6.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -1808,7 +1817,7 @@ return [
             [
                 'name' => '_APP_VCS_ENTIRE_ENDPOINT',
                 'description' => 'URL of the Entire core (control plane) Appwrite talks to. Any core serves any installation; defaults to https://us.auth.entire.io when unset, set it to a nearer jurisdiction such as https://eu.auth.entire.io.',
-                'introduction' => '2.1.0',
+                'introduction' => '2.6.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -1834,6 +1843,15 @@ return [
                 'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_QUEUE_NAME',
+                'description' => 'Queue used for scheduled maintenance slices. Set the same value on the maintenance scheduler and workers. Defaults to v1-maintenance.',
+                'introduction' => '2.6.0',
+                'default' => 'v1-maintenance',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

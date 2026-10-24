@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Download;
 
+use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Token;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -126,8 +127,8 @@ class Get extends Action
             default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid deployment download type.'),
         };
 
-        // Not every storage device reports an empty path as missing.
-        if ($path === '' || !$device->exists($path)) {
+        // Builds can write the builds volume, so links and paths outside the device are refused.
+        if (!Deployments::isArtifact($device, $path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 

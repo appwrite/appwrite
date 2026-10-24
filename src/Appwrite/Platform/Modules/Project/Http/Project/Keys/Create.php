@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -79,6 +80,7 @@ class Create extends Base
             ->inject('project')
             ->inject('authorization')
             ->inject('apiKey')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -94,9 +96,20 @@ class Create extends Base
         Document $project,
         Authorization $authorization,
         ?Key $apiKey,
+        Request $request,
     ) {
+        // A JWT stands in for its session for a few minutes; a key it left behind would outlive it
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         // Dynamic supported for backwards compatibility
         if ($apiKey !== null && \in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_EPHEMERAL, 'dynamic'], true)) {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
+        // A key hands out no more than it holds: no broader scopes and no later expiry
+        if ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $scopes, $expire)) {
             throw new Exception(Exception::KEY_CREATION_DENIED);
         }
 

@@ -1,5 +1,56 @@
 # Change Log
 
+## 27.0.0
+
+This release updates the HTTP dependency requirements and raises the minimum supported Python version.
+
+* **Breaking:** Python 3.9 is no longer supported. Upgrade to Python 3.10 or later before installing this release.
+* **Security:** required `requests>=2.34.2,<3` and `urllib3>=2.8.0,<3` to exclude older dependency versions with known advisories. Update application dependency pins or constraints that prevent these versions from being installed.
+* **Compatibility:** service methods, models, and response format `2.5.0` are unchanged from SDK 26.0.0. The SDK continues to target Appwrite 2.5.x.
+
+To upgrade, activate a Python 3.10+ environment and run:
+
+```sh
+python -m pip install --upgrade "appwrite==27.0.0"
+```
+
+## 26.0.0
+
+* Breaking: `tables_db`, `documents_db` and `vectors_db` `create` and `update` take `description` before `specification`
+* Breaking: `functions.update` takes `description` before `email_enabled`
+* Added: `create_query` on `databases`, `documents_db` and `tables_db` to send list queries in the request body
+* Added: `account.list_memberships`
+* Added: optional `description` on create and update for databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, variables, topics, webhooks and keys
+* Added: `description` on the matching models
+* Added: `total` on list methods in `activities`, `backups`, `domains`, `mongo`, `mysql` and `postgresql`
+* Added: `emails` on `messaging.create_email` and `messaging.update_email`
+* Added: `deny_list` on `project.update_password_dictionary_policy`, `update_password_personal_data_policy` and their policy models
+* Added: `BillingPlan.functions_allow_cron`
+* Added: `strip_metadata` on `storage.create_bucket`, `update_bucket` and the `Bucket` model
+* Updated: package classifiers list Python 3.13
+
+## 25.0.0
+
+* Breaking: requests send `X-Appwrite-Response-Format: 2.5.0`; responses follow the 2.5 shapes
+* Breaking: removed `account.list_logs`, `users.list_logs` and the `Log`/`LogList` models
+* Breaking: removed `organization.create_key`, `get_key`, `list_keys`, `update_key` and `delete_key`, and `OrganizationKeyScopes`; use `organization.list_project_keys`, `get_project_key`, `update_project_key` and `delete_project_key` instead
+* Breaking: removed `Client.set_dev_key`, the `DevKey` model and `Project.dev_keys`
+* Breaking: removed `BillingPlanGroup.STARTER`; use `BillingPlanGroup.FREE`
+* Breaking: `list_specifications` returns each specification's prices and overage rates on the row itself. Removed the list-level `pricing` field and the `DedicatedDatabaseSpecificationPricing` model
+* Breaking: removed `Block` fields `reason`, `project_name`, `region`, `organization_name`, `organization_id` and `billing_plan`
+* Breaking: OAuth2 `resource` params now take `List[str]`
+* Breaking: `project.update_o_auth2_kakao` takes `enabled` before `prompt`
+* Breaking: `BackupRestoration.options` is now a dict
+* Breaking: some response fields became `Optional`, such as `BillingPlan.usage` and `DedicatedDatabase.engine`
+* Added: `Topic` helper to build MQTT topics for push messages
+* Added: `mongo`, `mysql` and `postgresql` `promote_restoration`, `restore_mode`, `target_name` and `auto_promote` on `create_restoration`, and `DedicatedDatabaseRestoration.restore_mode`
+* Added: `proxy.create_smtp_rule`, the `ProxyRuleProtocol` enum and `ProxyRule.protocol`
+* Added: `email_enabled` on `functions.update` and `Function`, and `ExecutionTrigger.EMAIL`
+* Added: `Query` aggregates (`count`, `count_distinct`, `sum`, `avg`, `min`, `max` and more), `group_by`, `having`, `distinct`, joins, `relationship`, `covers`, `spatial_equals` and `page`
+* Added: `Query.builder()` to chain queries; `build()` returns the query list
+* Updated: missing response fields fall back to their documented defaults
+* Fixed: map fields missing from a response default to `{}` instead of `[]`
+
 ## 24.4.0
 
 * Added: `domains` service to manage domains, DNS records, email presets, prices, transfer status and zones

@@ -14,6 +14,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\Validator\Headers;
 use Appwrite\Geo\Geo;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
@@ -222,6 +223,15 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $authorization->skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', ''))) :
             $authorization->skip(fn () => $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', '')));
 
+        // The builds worker repoints manual rules before the deployment turns
+        // ready and becomes the resource's active one; serve the active one until then.
+        if ($rule->getAttribute('trigger', '') === 'manual' && $deployment->getAttribute('status') !== 'ready') {
+            $active = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $resource->getAttribute('deploymentId', '')));
+            if ($active->getAttribute('status') === 'ready') {
+                $deployment = $active;
+            }
+        }
+
         $isPreview = $type === 'function' ? false : ($rule->getAttribute('trigger', '') !== 'manual');
 
         $path = ($swooleRequest->server['request_uri'] ?? '/');
@@ -247,7 +257,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         if ($isPreview && $requirePreview) {
             $cookie = $request->getCookie(COOKIE_NAME_PREVIEW, '');
             $authorized = false;
-            $user = new Document();
+            $user = new DBUser();
 
             // Security checks to mark authorized true
             if (!empty($cookie)) {
@@ -263,26 +273,24 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $userExists = false;
                 $userId = $payload['userId'] ?? '';
                 if (!empty($userId)) {
+                    /** @var DBUser $user */
                     $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
                     if (!$user->isEmpty() && $user->getAttribute('status', false)) {
                         $userExists = true;
                     }
                 }
 
-                $sessionExists = false;
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                if (!empty($jwtSessionId) && \array_any($user->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $jwtSessionId)) {
-                    $sessionExists = true;
-                }
+                $sessionActive = !empty($jwtSessionId) && $user->sessionActive($jwtSessionId);
 
                 $membershipExists = false;
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && !$user->isEmpty()) {
                     $teamId = $project->getAttribute('teamId', '');
-                    $membershipExists = \array_any($user->getAttribute('memberships', []), static fn (Document $membership): bool => $membership->getAttribute('teamId') === $teamId);
+                    $membershipExists = \array_any($user->getAttribute('memberships', []), static fn (Document $membership): bool => $membership->getAttribute('teamId') === $teamId && $membership->getAttribute('confirm', false) === true);
                 }
 
-                if ($userExists && $sessionExists && $membershipExists) {
+                if ($userExists && $sessionActive && $membershipExists) {
                     $authorized = true;
                 }
             }
@@ -306,9 +314,17 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         // getHeaders() follows PSR-7 and returns each header as a list of values;
         // collapse to single-line strings for the function/site header map below.
+        // Session cookies may be scoped to a parent of the functions/sites domain; never forward them to user code.
+        $strippedCookies = [COOKIE_NAME_PREVIEW];
+        foreach (\array_keys($request->getCookieParams()) as $name) {
+            if (\str_starts_with((string) $name, 'a_session_')) {
+                $strippedCookies[] = $name;
+            }
+        }
+
         $requestHeaders = \array_map(
             static fn (array $values) => \implode(', ', $values),
-            $request->getHeaders()
+            $request->getHeadersWithoutCookies($strippedCookies)
         );
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
@@ -383,7 +399,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         $executionId = Id::unique();
 
-        $headers = \array_merge([], $requestHeaders);
+        $headers = Headers::stripReserved($requestHeaders);
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-country-code'] = '';
@@ -395,7 +411,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $jwtExpiry = $resource->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $jwtKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'scopes' => Deployments::scopes($resource)
         ]);
         $headers['x-appwrite-key'] = API_KEY_EPHEMERAL . '_' . $jwtKey;
@@ -1006,7 +1024,7 @@ Http::init()
                 $response->addFilter(new ResponseV27());
             }
             if (version_compare($responseFormat, '1.9.5', '<')) {
-                $response->addFilter(new ResponseV26());
+                $response->addFilter(new ResponseV26($request));
             }
             if (version_compare($responseFormat, '1.9.4', '<')) {
                 $response->addFilter(new ResponseV25());
@@ -1071,7 +1089,8 @@ Http::init()
     ->inject('response')
     ->inject('cors')
     ->inject('originValidator')
-    ->action(function (Request $request, Response $response, Cors $cors, Validator $originValidator) {
+    ->inject('apiKey')
+    ->action(function (Request $request, Response $response, Cors $cors, Validator $originValidator, ?Key $apiKey) {
         // CORS headers
         foreach ($cors->headers($request->getOrigin()) as $name => $value) {
             $response->addHeader($name, $value);
@@ -1089,7 +1108,10 @@ Http::init()
 
         // Application level CSRF protection
         $origin = $request->getOrigin();
-        if (empty($origin) || !empty($request->getHeaderLine('x-appwrite-key'))) {
+        $authenticatedByKey = $apiKey !== null
+            && $apiKey->getRole() === DBUser::ROLE_KEYS
+            && ! $apiKey->isExpired();
+        if (empty($origin) || $authenticatedByKey) {
             return;
         }
         $route = $request->getRoute();
@@ -1298,6 +1320,9 @@ Http::error()
                 break;
             case Utopia\Database\Exception\Timeout::class:
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
+                break;
+            case Utopia\Cache\Exception\Unavailable::class:
+                $error = new AppwriteException(AppwriteException::GENERAL_CACHE_UNAVAILABLE, previous: $error);
                 break;
             case Utopia\Database\Exception\Structure::class:
                 $error = new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $message, previous: $error);

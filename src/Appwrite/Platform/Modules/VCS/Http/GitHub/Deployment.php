@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Deployment\GitAction;
 use Appwrite\Extend\Exception;
-use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Platform\Modules\Compute\Base as ComputeBase;
 use Appwrite\Vcs\Comment;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
@@ -471,12 +471,7 @@ trait Deployment
                     $branchDomain = null;
                     if (!empty($providerBranch)) {
                         try {
-                            $branchDomain = (new BranchDomainFilter())->apply([
-                                'branch' => $providerBranch,
-                                'resourceId' => $resource->getId(),
-                                'projectId' => $project->getId(),
-                                'sitesDomain' => $sitesDomain,
-                            ]);
+                            $branchDomain = $authorization->skip(fn () => ComputeBase::branchDomain($project, $resource, $providerBranch, $sitesDomain, $dbForPlatform));
                         } catch (\InvalidArgumentException $error) {
                             // Deploy without a branch preview rather than store an unreachable rule
                             Console::warning('Skipping branch preview rule: ' . $error->getMessage());

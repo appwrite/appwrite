@@ -100,7 +100,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.5.0';
+const APP_VERSION_STABLE = '2.6.2';
 const APP_READINESS_MARKER = '/tmp/.appwrite-ready';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -356,6 +356,8 @@ const MESSAGE_TYPE_PUSH = 'push';
 // Message providers
 const MESSAGE_PROVIDER_APPWRITE = 'appwrite';
 const APP_PUSH_LEDGER_RETENTION = 60 * 60 * 24 * 7;
+const APP_MQTT_SESSION_RECHECK = 60; // Seconds between checks of the session an MQTT connection runs on
+const APP_PUSH_IMAGE_TOKEN_DURATION = 60 * 60 * 24 * 15;
 // Notification types
 const NOTIFICATION_TYPE_EMAIL = MESSAGE_TYPE_EMAIL;
 const NOTIFICATION_TYPE_SMS = MESSAGE_TYPE_SMS;

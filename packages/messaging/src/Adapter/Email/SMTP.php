@@ -17,6 +17,7 @@ use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message as SmtpMessage;
 use Utopia\SMTP\Outcome;
 use Utopia\SMTP\Timeouts;
+use Utopia\SMTP\Tls;
 use Utopia\SMTP\Transport\Native;
 
 class SMTP extends EmailAdapter
@@ -38,6 +39,7 @@ class SMTP extends EmailAdapter
      * @param int $timelimit SMTP command timelimit in seconds.
      * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. Keep it under the server's idle timeout: a session the server closed inside the threshold fails its send without a retry. 0 probes before every reuse.
      * @param int $restartThreshold Messages a kept session carries before it is replaced. 0 disables.
+     * @param array<string, string> $addresses Host => address to dial it on, as each host appears in $host (e.g. "smtp1.example.com" => "203.0.113.10", "[2001:db8::1]" for IPv6), so the connection lands on an address the caller checked. The certificate is still verified against the host. A host not listed is dialled by name.
      */
     public function __construct(
         private readonly string $host,
@@ -52,6 +54,7 @@ class SMTP extends EmailAdapter
         private readonly int $timelimit = 30,
         private readonly int $pingThreshold = 30,
         private readonly int $restartThreshold = 100,
+        private readonly array $addresses = [],
     ) {
         parent::__construct();
         if (!\in_array($this->smtpSecure, ['', 'ssl', 'tls'])) {
@@ -179,7 +182,7 @@ class SMTP extends EmailAdapter
 
         foreach ($this->hosts() as [$host, $port, $encryption]) {
             $client = new Client(
-                new Native($host, $port),
+                isset($this->addresses[$host]) ? new Native($this->addresses[$host], $port, new Tls(peerName: \trim($host, '[]'))) : new Native($host, $port),
                 gethostname() ?: 'localhost',
                 $this->authenticators(),
                 $encryption,

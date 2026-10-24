@@ -551,7 +551,7 @@
       "storage_antivirus": "disabled",
       "compose_profiles": "",
       "wait": "executor",
-      "services": ["Functions", "Webhooks"]
+      "services": ["Functions", "Storage", "Webhooks"]
     }
   ]
 }

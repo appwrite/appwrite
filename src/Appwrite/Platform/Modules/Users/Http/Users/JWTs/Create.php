@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\KeywordId;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -53,11 +54,17 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject, Document $project): void
+    public function action(string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject, Document $project, Request $request): void
     {
+        // As on the account JWT route: a JWT can't mint the next one and outlive itself
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::USER_JWT_CREATION_DENIED);
+        }
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {

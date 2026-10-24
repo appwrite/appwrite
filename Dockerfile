@@ -16,7 +16,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.2.5 AS base
+FROM appwrite/base:2.2.7 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -43,6 +43,7 @@ COPY ./src /usr/src/code/src
 COPY ./packages /usr/src/code/packages
 COPY ./dev /usr/src/code/dev
 COPY ./docker/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
+COPY ./docker/php.ini /usr/local/etc/php/conf.d/zz-php.ini
 COPY ./mongo-init.js /usr/src/code/mongo-init.js
 COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 COPY ./clickhouse-config.xml /usr/src/code/clickhouse-config.xml
@@ -130,7 +131,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.2.5-xdebug AS xdebug
+FROM appwrite/base:2.2.7-xdebug AS xdebug
 
 FROM base AS development
 
@@ -140,7 +141,7 @@ RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/l
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.2.5 ships without XDebug, so it cannot reach production or
+# appwrite/base:2.2.7 ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.
