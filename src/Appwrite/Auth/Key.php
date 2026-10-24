@@ -155,6 +155,11 @@ class Key
         Document $user,
         string $key
     ): Key {
+        // An empty secret would match a stored key whose secret is empty
+        if ($key === '') {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
         if (\str_contains($key, '_')) {
             [$type, $secret] = \explode('_', $key, 2);
         } else {

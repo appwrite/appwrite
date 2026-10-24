@@ -284,8 +284,8 @@ final class OAuth2ProviderTest extends TestCase
             'auth0',
             Auth0Update::class,
             ['clientSecret' => 'old-secret', 'auth0Domain' => 'old.us.auth0.com'],
-            [null, null, 'new.us.auth0.com', false],
-            ['clientSecret' => 'old-secret', 'auth0Domain' => 'new.us.auth0.com'],
+            [null, 'new-secret', 'new.us.auth0.com', false],
+            ['clientSecret' => 'new-secret', 'auth0Domain' => 'new.us.auth0.com'],
             ['clientId' => 'seed-id', 'clientSecret' => '', 'endpoint' => 'new.us.auth0.com'],
         ];
         yield 'authentik client only' => [
@@ -308,16 +308,16 @@ final class OAuth2ProviderTest extends TestCase
             'gitlab',
             GitlabUpdate::class,
             ['clientSecret' => 'old-secret', 'endpoint' => 'https://old.gitlab.example'],
-            [null, null, 'https://new.gitlab.example', false],
-            ['clientSecret' => 'old-secret', 'endpoint' => 'https://new.gitlab.example'],
+            [null, 'new-secret', 'https://new.gitlab.example', false],
+            ['clientSecret' => 'new-secret', 'endpoint' => 'https://new.gitlab.example'],
             ['applicationId' => 'seed-id', 'endpoint' => 'https://new.gitlab.example'],
         ];
         yield 'keycloak realm only' => [
             'keycloak',
             KeycloakUpdate::class,
             ['clientSecret' => 'old-secret', 'keycloakDomain' => 'keycloak.example.com', 'keycloakRealm' => 'old-realm'],
-            [null, null, null, 'new-realm', false],
-            ['clientSecret' => 'old-secret', 'keycloakDomain' => 'keycloak.example.com', 'keycloakRealm' => 'new-realm'],
+            [null, 'new-secret', null, 'new-realm', false],
+            ['clientSecret' => 'new-secret', 'keycloakDomain' => 'keycloak.example.com', 'keycloakRealm' => 'new-realm'],
             ['clientId' => 'seed-id', 'endpoint' => 'keycloak.example.com', 'realmName' => 'new-realm'],
         ];
         yield 'microsoft tenant only' => [
@@ -332,8 +332,8 @@ final class OAuth2ProviderTest extends TestCase
             'okta',
             OktaUpdate::class,
             ['clientSecret' => 'old-secret', 'oktaDomain' => 'trial-6400025.okta.com', 'authorizationServerId' => 'old-server'],
-            [null, null, null, 'new-server', false],
-            ['clientSecret' => 'old-secret', 'oktaDomain' => 'trial-6400025.okta.com', 'authorizationServerId' => 'new-server'],
+            [null, 'new-secret', null, 'new-server', false],
+            ['clientSecret' => 'new-secret', 'oktaDomain' => 'trial-6400025.okta.com', 'authorizationServerId' => 'new-server'],
             ['clientId' => 'seed-id', 'domain' => 'trial-6400025.okta.com', 'authorizationServerId' => 'new-server'],
         ];
     }
@@ -412,7 +412,7 @@ final class OAuth2ProviderTest extends TestCase
             ]),
             [
                 null,
-                null,
+                'oidc-secret',
                 '',
                 'https://idp.example/oauth2/authorize',
                 'https://idp.example/oauth2/token',
