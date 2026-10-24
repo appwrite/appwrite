@@ -958,6 +958,99 @@ trait MigrationsBase
         }
     }
 
+    public function testAppwriteMigrationRejectsTablesDBKeyForDocumentsDB(): void
+    {
+        $this->assertSourceFamilyRequiresItsScopes('documentsdb', Resource::TYPE_DATABASE_DOCUMENTSDB);
+    }
+
+    public function testAppwriteMigrationRejectsTablesDBKeyForVectorsDB(): void
+    {
+        $this->assertSourceFamilyRequiresItsScopes('vectorsdb', Resource::TYPE_DATABASE_VECTORSDB);
+    }
+
+    public function testAppwriteMigrationAcceptsDocumentsDBScopedKey(): void
+    {
+        $databaseId = $this->createSourceFamilyDatabase('documentsdb');
+
+        try {
+            $result = $this->performMigrationSync([
+                'resources' => [Resource::TYPE_DATABASE_DOCUMENTSDB, Resource::TYPE_COLLECTION, Resource::TYPE_DOCUMENT],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getNewKey(['databases.read', 'collections.read', 'documents.read']),
+            ]);
+
+            $this->assertSame('completed', $result['status']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $databaseId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getDestinationProject()['$id'],
+                'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code'], 'The source database was not copied with a source API key that can read it.');
+        } finally {
+            $this->deleteSourceFamilyDatabase('documentsdb', $databaseId);
+        }
+    }
+
+    /**
+     * A key scoped to TablesDB must not read another database family, whose source is read directly.
+     */
+    private function assertSourceFamilyRequiresItsScopes(string $api, string $type): void
+    {
+        $databaseId = $this->createSourceFamilyDatabase($api);
+
+        try {
+            $result = $this->performMigrationExpectingFailure([
+                'resources' => [$type, Resource::TYPE_COLLECTION, Resource::TYPE_DOCUMENT],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getNewKey(['databases.read', 'tables.read', 'rows.read']),
+            ]);
+
+            $this->assertStringContainsString(
+                'The source API key cannot read the requested resources of the source project.',
+                \implode("\n", $result['errors']),
+            );
+
+            $response = $this->client->call(Client::METHOD_GET, '/' . $api . '/' . $databaseId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getDestinationProject()['$id'],
+                'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+            ]);
+            $this->assertSame(404, $response['headers']['status-code'], 'The source database was copied without a source API key that can read it.');
+        } finally {
+            $this->deleteSourceFamilyDatabase($api, $databaseId);
+        }
+    }
+
+    private function createSourceFamilyDatabase(string $api): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/' . $api, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Source Scope Regression',
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        return $response['body']['$id'];
+    }
+
+    private function deleteSourceFamilyDatabase(string $api, string $databaseId): void
+    {
+        foreach ([$this->getProject(), $this->getDestinationProject()] as $project) {
+            $this->client->call(Client::METHOD_DELETE, '/' . $api . '/' . $databaseId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ]);
+        }
+    }
+
     private function createSourceDatabase(): string
     {
         $response = $this->client->call(Client::METHOD_POST, '/databases', [

@@ -368,9 +368,10 @@ class Migrations extends Action
     }
 
     /**
-     * The database source reads the source project's tables directly, so the submitted
-     * key is never presented to the source API. Probe the source API with it first so
-     * only a key that can read those resources in that project reaches the database.
+     * The database source reads the source project's databases directly, so the submitted
+     * key is never presented to the source API. Probe the source API with it first, once per
+     * requested database family against that family's own API and scopes, so only a key that
+     * can read those resources in that project reaches the database.
      *
      * @param array<string> $resources
      * @throws Exception
@@ -403,6 +404,28 @@ class Migrations extends Action
 
             if (Resource::isSupported(Resource::TYPE_ROW, $resources)) {
                 $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/tablesdb/{$probe}/tables/{$probe}/rows", $headers));
+            }
+
+            // DocumentsDB and VectorsDB are read directly too, so the key must pass each family's own API
+
+            foreach ([Resource::TYPE_DATABASE_DOCUMENTSDB => 'documentsdb', Resource::TYPE_DATABASE_VECTORSDB => 'vectorsdb'] as $type => $api) {
+                if (!\in_array($type, $resources, true)) {
+                    continue;
+                }
+
+                $client->call(Client::METHOD_GET, "/{$api}", $headers);
+
+                if (\array_intersect([Resource::TYPE_COLLECTION, Resource::TYPE_ATTRIBUTE, Resource::TYPE_INDEX, Resource::TYPE_DOCUMENT], $resources) !== []) {
+                    $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/{$api}/{$probe}/collections", $headers));
+                }
+
+                if (\in_array(Resource::TYPE_INDEX, $resources, true)) {
+                    $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/{$api}/{$probe}/collections/{$probe}/indexes", $headers));
+                }
+
+                if (\in_array(Resource::TYPE_DOCUMENT, $resources, true)) {
+                    $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/{$api}/{$probe}/collections/{$probe}/documents", $headers));
+                }
             }
         } catch (AppwriteException $error) {
             throw new Exception(Exception::MIGRATION_SOURCE_UNAUTHORIZED, previous: $error);
