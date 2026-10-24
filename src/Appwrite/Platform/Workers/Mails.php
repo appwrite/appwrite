@@ -2,8 +2,10 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SMTP\Breaker;
 use Appwrite\SMTP\Refusal;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
 use Exception;
 use Utopia\Console\Console;
@@ -24,7 +26,9 @@ class Mails extends Action
 {
     protected int $previewMaxLen = 150;
 
-    protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
+    // Zero-width non-joiner + no-break space only: spam filters such as rspamd treat these as
+    // preview padding, while direction marks (U+200E, U+200F) count as hidden text (HIDDEN_TEXT).
+    protected string $whitespaceCodes = '&#x200C;&nbsp;';
 
 
     public static function getName(): string
@@ -43,6 +47,7 @@ class Mails extends Action
             ->inject('project')
             ->inject('register')
             ->inject('telemetry')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -59,10 +64,11 @@ class Mails extends Action
      * @param Document $project
      * @param Registry $register
      * @param Telemetry $telemetry
+     * @param PublicHostname $publicHostname
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Registry $register, Telemetry $telemetry): void
+    public function action(Message $message, Document $project, Registry $register, Telemetry $telemetry, PublicHostname $publicHostname): void
     {
         $payload = $message->getPayload();
 
@@ -108,8 +114,7 @@ class Mails extends Action
         $bodyTemplate = Template::fromFile($bodyTemplate);
         $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            // TODO: hotfix for redirect param
-            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
+            $bodyTemplate->setParam('{{' . $key . '}}', $value);
         }
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
@@ -125,9 +130,10 @@ class Mails extends Action
             // render() will return the subject in <p> tags, so use strip_tags() to remove them
             $preview = \strip_tags($previewTemplate->render());
 
-            $previewLen = strlen($preview);
+            // Pad up to previewMaxLen characters; each padding unit is two characters
+            $previewLen = \mb_strlen($preview);
             if ($previewLen < $this->previewMaxLen) {
-                $previewWhitespace =  str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+                $previewWhitespace = \str_repeat($this->whitespaceCodes, \intdiv($this->previewMaxLen - $previewLen, 2));
             }
         }
 
@@ -159,22 +165,19 @@ class Mails extends Action
 
                 return;
             }
-        }
 
-        // A pooled adapter belongs to this send alone; a project's own SMTP is
-        // dialled for it and closed after.
-        $adapter = empty($smtp) ? null : new SMTP(
-            host: $smtp['host'],
-            port: (int) $smtp['port'],
-            username: $smtp['username'] ?? '',
-            password: $smtp['password'] ?? '',
-            smtpSecure: $smtp['secure'] ?? '',
-            smtpAutoTLS: false,
-            xMailer: 'Appwrite Mailer',
-            timeout: 10,
-            keepAlive: false,
-            timelimit: 30,
-        );
+            // A host that does not resolve yet is retried below; one that reaches a private address never can be.
+            $host = new Host($publicHostname, resolved: false);
+            if (!$host->isValid($smtp['host'])) {
+                Span::add('mail.status', 'skipped');
+                Span::add('mail.error', 'host');
+                Span::add('mail.error.message', $host->getDescription());
+
+                Console::warning('Mail skipped, project SMTP host refused: project=' . $project->getId() . ' host=' . $smtp['host'] . ' reason=' . $host->getDescription());
+
+                return;
+            }
+        }
 
         // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
@@ -230,6 +233,22 @@ class Mails extends Action
                 headers: $payload['headers'] ?? [],
             );
             $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+
+            // A pooled adapter belongs to this send alone; a project's own SMTP is
+            // dialled for it, on the addresses just checked, and closed after.
+            $adapter = empty($smtp) ? null : new SMTP(
+                host: $smtp['host'],
+                port: (int) $smtp['port'],
+                username: $smtp['username'] ?? '',
+                password: $smtp['password'] ?? '',
+                smtpSecure: $smtp['secure'] ?? '',
+                smtpAutoTLS: false,
+                xMailer: 'Appwrite Mailer',
+                timeout: 10,
+                keepAlive: false,
+                timelimit: 30,
+                addresses: new Host($publicHostname)->addresses($smtp['host']),
+            );
 
             $send = static function (EmailAdapter $adapter) use ($emailMessage, $telemetry): array {
                 $adapter->setTelemetry($telemetry);

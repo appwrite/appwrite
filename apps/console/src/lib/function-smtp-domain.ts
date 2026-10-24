@@ -16,8 +16,12 @@ export type SmtpProxyRule = Models.ProxyRule & {
 
 export type SmtpDnsRecord = {
   type: 'MX' | 'TXT'
+  /** Host relative to the registrable domain, as DNS providers expect it. */
   name: string
   value: string
+  ttl: number
+  /** MX preference; Cloud only checks the target, so any value works. */
+  priority?: number
 }
 
 /** Absolute TXT hostname Cloud checks during SMTP verification. */
@@ -26,14 +30,16 @@ export function getSmtpTxtHost(domain: string): string {
 }
 
 /**
- * DNS provider "Name" for the MX record. Apex domains use `@`; otherwise the
- * full hostname (matches how HTTP domain verification labels CNAME names).
+ * DNS provider "Name" for a domain: `@` for an apex domain, otherwise the
+ * labels in front of the registrable domain (`mail` for `mail.example.com`).
+ * Providers append the zone themselves, so a full hostname here would end up
+ * as `mail.example.com.example.com`.
  */
-export function getSmtpMxRecordName(domain: string): string {
+export function getSmtpRecordName(domain: string): string {
   const normalized = domain.trim().toLowerCase()
   const apex = getApexDomain(normalized)
-  if (apex && apex === normalized) return '@'
-  return normalized
+  if (!apex || apex === normalized) return '@'
+  return normalized.slice(0, -(apex.length + 1))
 }
 
 /**
@@ -72,21 +78,25 @@ export function getSmtpDnsRecords(params: {
   const projectId = params.projectId.trim()
   const mxTarget = params.mxTarget.trim()
   if (!domain || !projectId) return []
+  const name = getSmtpRecordName(domain)
 
   return [
     ...(mxTarget
       ? [
           {
             type: 'MX' as const,
-            name: getSmtpMxRecordName(domain),
+            name,
             value: mxTarget,
+            ttl: 3600,
+            priority: 10,
           },
         ]
       : []),
     {
       type: 'TXT',
-      name: getSmtpTxtHost(domain),
+      name: name === '@' ? '_appwrite' : `_appwrite.${name}`,
       value: projectId,
+      ttl: 3600,
     },
   ]
 }
