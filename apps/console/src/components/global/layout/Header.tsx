@@ -138,6 +138,9 @@ import {
 } from '@/components/pages/marketing/MarketingSolutionsNavMenu'
 import { MarketingGitHubStarsLink } from '@/components/pages/marketing/MarketingGitHubStarsLink'
 import { useI18n } from '@/lib/i18n'
+import { useT } from '@/lib/i18n/translate'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
+import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
 
 type MarketingHeaderNavItem = {
   label: string
@@ -537,7 +540,10 @@ export function ConsoleHeader({
   const showNotifications =
     features.notifications && !showMarketingNav && !preLaunch
   const showConnectAndCreate = canShowConnectSection(access, features)
-  const canCreateProjectFlag = canCreateProject(access, features)
+  const t = useT()
+  const zeroAccount = useIsZeroAccount()
+  const canCreateProjectFlag =
+    canCreateProject(access, features) && !zeroAccount
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
   const canCreateUserFlag = canCreateUser(access, features)
   const canCreateBucketFlag = canCreateBucket(access, features)
@@ -968,7 +974,13 @@ export function ConsoleHeader({
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{headerCopy.permissions.createProjects}</p>
+                            <p>
+                              {zeroAccount
+                                ? t(
+                                    'Claim this project to create more projects',
+                                  )
+                                : headerCopy.permissions.createProjects}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       ) : (
@@ -997,7 +1009,23 @@ export function ConsoleHeader({
                           <span>{headerCopy.createMenu.newProject}</span>
                         </DropdownMenuItem>
                       )}
-                      {supportsMultiTenancy && (
+                      {supportsMultiTenancy && zeroAccount && (
+                        <ClaimToUnlock
+                          locked
+                          reason={t(
+                            'Claim this project to create organizations',
+                          )}
+                        >
+                          <DropdownMenuItem
+                            disabled
+                            className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                          >
+                            <Building2 className="h-4 w-4" />
+                            <span>{headerCopy.createMenu.newOrganization}</span>
+                          </DropdownMenuItem>
+                        </ClaimToUnlock>
+                      )}
+                      {supportsMultiTenancy && !zeroAccount && (
                         <DropdownMenuItem
                           {...analyticsAttrs('create-organization')}
                           onClick={() => {

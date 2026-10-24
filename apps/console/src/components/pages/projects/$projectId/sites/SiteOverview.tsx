@@ -61,7 +61,7 @@ import {
 import { mergeActiveDeploymentForCard } from '@/lib/sites/deployment-screenshots'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
-import { domainUrl } from '@/lib/domains/url'
+import { useDomainUrl } from '@/hooks/use-domain-url'
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
   const minutes = Math.floor(seconds / 60)
@@ -71,6 +71,7 @@ function formatDuration(seconds: number): string {
 
 export function SiteOverviewView() {
   const t = useT()
+  const domainUrl = useDomainUrl()
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const { data: site, isLoading: siteLoading } = useProjectSite(

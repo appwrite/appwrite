@@ -269,8 +269,7 @@
     "TS2339: Property '$id' does not exist on type '{}'.": 2,
     "TS2339: Property 'email' does not exist on type '{}'.": 2,
     "TS2345: Argument of type '{ prefs: { [x: string]: unknown; }; }' is not assignable to parameter of type 'User<{ [key: string]: any; [__default]: true; }>'.": 1,
-    "TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Pick<User<{ [key: string]: any; [__default]: true; }>, \"prefs\"> | null | undefined'.": 1,
-    "TS6133: 'CanonicalPlanId' is declared but its value is never read.": 1
+    "TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Pick<User<{ [key: string]: any; [__default]: true; }>, \"prefs\"> | null | undefined'.": 1
   },
   "src/components/pages/organizations/$orgId/overview/_components/ProjectListRequestsChart.tsx": {
     "TS2339: Property 'coordinate' does not exist on type 'Omit<Props<number, string>, PropertiesReadFromContext> & { active?: boolean | undefined; includeHidden?: boolean | undefined; allowEscapeViewBox?: AllowInDimension | undefined; animationDuration?: number | undefined; animationEasing?: AnimationTiming | undefined; content?: ContentType<number, string> | undefined; cursor?: CursorDefinition | undefined; filterNull?: boolean | undefined; defaultIndex?: number | TooltipIndex | undefined; isAnimationActive?: boolean | undefined; offset?: number | undefined; payloadUniqBy?: UniqueOption<Payload<number, string>> | undefined; portal?: HTMLElement | null | undefined; position?: Partial<Coordinate> | undefined; reverseDirection?: AllowInDimension | undefined; shared?: boolean | undefined; trigger?: TooltipTrigger | undefined; useTranslate3d?: boolean | undefined; wrapperStyle?: CSSProperties | undefined; axisId?: AxisId | undefined; } & { disabled?: boolean | undefined; portalContainerRef?: RefObject<HTMLDivElement | null> | undefined; }'.": 1,

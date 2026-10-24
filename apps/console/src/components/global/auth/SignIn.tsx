@@ -36,6 +36,7 @@ import {
 import { DEFAULT_CONSOLE_OAUTH_LOGIN } from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { BitbucketIcon, GitHubIcon, GitLabIcon } from '@/lib/vcs/providers'
 
 // Google's standard four-color "G"; its branding rules forbid a monochrome one.
@@ -283,6 +284,9 @@ interface SignInProps {
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
   /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */
   preview?: boolean
+  /** Shows "Start without an account", which opens a claimable project without signup. */
+  onStartWithoutAccount?: () => void
+  isStartingWithoutAccount?: boolean
 }
 
 export function SignIn({
@@ -295,6 +299,8 @@ export function SignIn({
   onPasskeySignIn,
   redirect,
   preview = false,
+  onStartWithoutAccount,
+  isStartingWithoutAccount = false,
 }: SignInProps) {
   const t = useT()
   const { isDebugModeOpen } = useDebugMode()
@@ -364,7 +370,7 @@ export function SignIn({
     onSubmit(data)
   }
 
-  const formBusy = isLoading || isCreatingDemo
+  const formBusy = isLoading || isCreatingDemo || isStartingWithoutAccount
   const showPasskeyButton = mode === 'sign-in' && !!onPasskeySignIn
 
   const handleCreateDemoUser = async () => {
@@ -670,26 +676,43 @@ export function SignIn({
             </Button>
           </div>
 
-          <AuthFlowDescription className="text-center">
-            {mode === 'sign-in'
-              ? t("Don't have an account?")
-              : t('Already have an account?')}{' '}
-            <Link
-              to={
-                preview
-                  ? mode === 'sign-in'
-                    ? '/debug/sign-up-preview'
-                    : '/debug/sign-in-preview'
-                  : mode === 'sign-in'
-                    ? '/sign-up'
-                    : '/sign-in'
-              }
-              search={!preview && redirect ? { redirect } : undefined}
-              className="link-neutral"
-            >
-              {mode === 'sign-in' ? t('Sign up') : t('Sign in')}
-            </Link>
-          </AuthFlowDescription>
+          <div className="space-y-2">
+            <AuthFlowDescription className="text-center">
+              {mode === 'sign-in'
+                ? t("Don't have an account?")
+                : t('Already have an account?')}{' '}
+              <Link
+                to={
+                  preview
+                    ? mode === 'sign-in'
+                      ? '/debug/sign-up-preview'
+                      : '/debug/sign-in-preview'
+                    : mode === 'sign-in'
+                      ? '/sign-up'
+                      : '/sign-in'
+                }
+                search={!preview && redirect ? { redirect } : undefined}
+                className="link-neutral"
+              >
+                {mode === 'sign-in' ? t('Sign up') : t('Sign in')}
+              </Link>
+            </AuthFlowDescription>
+
+            {onStartWithoutAccount && (
+              <AuthFlowDescription className="text-center">
+                {t('Just exploring?')}{' '}
+                <button
+                  type="button"
+                  className="link-neutral disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={onStartWithoutAccount}
+                  disabled={!!oauthLoading || formBusy}
+                  {...analyticsAttrs('zero-start')}
+                >
+                  {t('Start without an account')}
+                </button>
+              </AuthFlowDescription>
+            )}
+          </div>
         </form>
       </Form>
       {isDebugModeOpen ? (
