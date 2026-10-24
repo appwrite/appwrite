@@ -1,0 +1,789 @@
+{
+  "source": "packages/queue/tests/ServerJobsTest.php",
+  "cases": [
+    {
+      "name": "job registers independent coroutine caps",
+      "op": "server.configure",
+      "args": {
+        "jobs": [
+          {
+            "queue": "v1-functions",
+            "coroutines": 8
+          },
+          {
+            "queue": "database_db_main",
+            "coroutines": 1
+          }
+        ]
+      },
+      "expect": {
+        "jobs": [
+          [
+            "v1-functions",
+            8,
+            8
+          ],
+          [
+            "database_db_main",
+            1,
+            1
+          ]
+        ],
+        "registered": [
+          "v1-functions",
+          "database_db_main"
+        ],
+        "unregistered": [
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "omitted coroutine cap defaults to one",
+      "op": "server.configure",
+      "args": {
+        "jobs": [
+          {
+            "queue": "v1-mails"
+          }
+        ]
+      },
+      "expect": {
+        "jobs": [
+          [
+            "v1-mails",
+            1,
+            1
+          ]
+        ],
+        "registered": [
+          "v1-mails"
+        ],
+        "unregistered": [
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "a cap below one is one",
+      "op": "server.configure",
+      "args": {
+        "jobs": [
+          {
+            "queue": "v1-mails",
+            "coroutines": 0
+          }
+        ]
+      },
+      "expect": {
+        "jobs": [
+          [
+            "v1-mails",
+            1,
+            1
+          ]
+        ],
+        "registered": [
+          "v1-mails"
+        ],
+        "unregistered": [
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "empty queue name is rejected",
+      "op": "server.configure",
+      "args": {
+        "jobs": [
+          {
+            "queue": ""
+          }
+        ]
+      },
+      "expect": {
+        "jobs": [
+          {
+            "$error": {
+              "class": "Exception",
+              "message": "Queue name is required"
+            }
+          }
+        ],
+        "registered": [],
+        "unregistered": [
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "start requires at least one job",
+      "op": "server.configure",
+      "args": {
+        "jobs": [],
+        "start": true
+      },
+      "expect": {
+        "jobs": [],
+        "registered": [],
+        "unregistered": [
+          1,
+          1
+        ],
+        "start": {
+          "$error": {
+            "class": "Exception",
+            "message": "At least one job() must be registered before start()"
+          }
+        }
+      }
+    },
+    {
+      "name": "start drives consume from jobs",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": []
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.configure",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "v1-functions",
+                "coroutines": 8
+              }
+            ],
+            "start": true
+          },
+          "expect": {
+            "jobs": [
+              [
+                "v1-functions",
+                8,
+                8
+              ]
+            ],
+            "registered": [
+              "v1-functions"
+            ],
+            "unregistered": [
+              1,
+              1
+            ],
+            "start": "ok"
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "start with multiple jobs on a factory",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": []
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.configure",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "shared": false,
+            "jobs": [
+              {
+                "queue": "database_db_main"
+              },
+              {
+                "queue": "v1-functions",
+                "coroutines": 8
+              }
+            ],
+            "start": true
+          },
+          "expect": {
+            "jobs": [
+              [
+                "database_db_main",
+                1,
+                1
+              ],
+              [
+                "v1-functions",
+                8,
+                8
+              ]
+            ],
+            "registered": [
+              "database_db_main",
+              "v1-functions"
+            ],
+            "unregistered": [
+              1,
+              1
+            ],
+            "start": "ok"
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "start with multiple jobs rejects a shared consumer",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": []
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.configure",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "database_db_main"
+              },
+              {
+                "queue": "v1-functions",
+                "coroutines": 8
+              }
+            ],
+            "start": true
+          },
+          "expect": {
+            "jobs": [
+              [
+                "database_db_main",
+                1,
+                1
+              ],
+              [
+                "v1-functions",
+                8,
+                8
+              ]
+            ],
+            "registered": [
+              "database_db_main",
+              "v1-functions"
+            ],
+            "unregistered": [
+              1,
+              1
+            ],
+            "start": {
+              "$error": {
+                "class": "Exception",
+                "message": "Multi-queue workers must pass a callable factory to the Adapter constructor (or Server::consumer()) — a shared Consumer cannot be used across concurrent receive loops"
+              }
+            }
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "start refuses concurrency on an exclusive consumer",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "exclusive": true
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.configure",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "v1-functions",
+                "coroutines": 8
+              }
+            ],
+            "start": true
+          },
+          "expect": {
+            "jobs": [
+              [
+                "v1-functions",
+                8,
+                8
+              ]
+            ],
+            "registered": [
+              "v1-functions"
+            ],
+            "unregistered": [
+              1,
+              1
+            ],
+            "start": {
+              "$error": {
+                "class": "Exception",
+                "message": "Queue 'v1-functions' is registered with job('v1-functions', 8), but its consumer Tests\\Compat\\Queue\\MemoryExclusive drives a single socket that only one coroutine may read at a time. Use one coroutine with prefetch 1 and add replicas for throughput."
+              }
+            }
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "start refuses prefetch on an exclusive consumer",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "exclusive": true
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.configure",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "v1-functions",
+                "coroutines": 1,
+                "prefetch": 2
+              }
+            ],
+            "start": true
+          },
+          "expect": {
+            "jobs": [
+              [
+                "v1-functions",
+                1,
+                2
+              ]
+            ],
+            "registered": [
+              "v1-functions"
+            ],
+            "unregistered": [
+              1,
+              1
+            ],
+            "start": {
+              "$error": {
+                "class": "Exception",
+                "message": "Queue 'v1-functions' is registered with job('v1-functions', 1), but its consumer Tests\\Compat\\Queue\\MemoryExclusive drives a single socket that only one coroutine may read at a time. Use one coroutine with prefetch 1 and add replicas for throughput."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "start accepts one coroutine on an exclusive consumer",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "exclusive": true
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.configure",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "v1-functions"
+              }
+            ],
+            "start": true
+          },
+          "expect": {
+            "jobs": [
+              [
+                "v1-functions",
+                1,
+                1
+              ]
+            ],
+            "registered": [
+              "v1-functions"
+            ],
+            "unregistered": [
+              1,
+              1
+            ],
+            "start": "ok"
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "start refuses a coroutine cap at the in-flight ceiling",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "ceiling": 8
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.configure",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "v1-functions",
+                "coroutines": 8
+              }
+            ],
+            "start": true
+          },
+          "expect": {
+            "jobs": [
+              [
+                "v1-functions",
+                8,
+                8
+              ]
+            ],
+            "registered": [
+              "v1-functions"
+            ],
+            "unregistered": [
+              1,
+              1
+            ],
+            "start": {
+              "$error": {
+                "class": "Exception",
+                "message": "Queue 'v1-functions' is registered with job('v1-functions', 8), but its consumer Tests\\Compat\\Queue\\MemoryBounded holds at most 8 message(s) in flight. Waiting retries also count toward this ceiling, so filling it with local deliveries can stop further delivery. Raise the in-flight ceiling (Broker\\Nats: maxAckPending) above 8, or lower the prefetch limit."
+              }
+            }
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "start accepts a coroutine cap below the in-flight ceiling",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "ceiling": 16
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.configure",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "v1-functions",
+                "coroutines": 8
+              }
+            ],
+            "start": true
+          },
+          "expect": {
+            "jobs": [
+              [
+                "v1-functions",
+                8,
+                8
+              ]
+            ],
+            "registered": [
+              "v1-functions"
+            ],
+            "unregistered": [
+              1,
+              1
+            ],
+            "start": "ok"
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "start keeps concurrency on a consumer without the marker",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": []
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.configure",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "v1-functions",
+                "coroutines": 8
+              }
+            ],
+            "start": true
+          },
+          "expect": {
+            "jobs": [
+              [
+                "v1-functions",
+                8,
+                8
+              ]
+            ],
+            "registered": [
+              "v1-functions"
+            ],
+            "unregistered": [
+              1,
+              1
+            ],
+            "start": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "name": "prefetch defaults to coroutines",
+      "op": "server.configure",
+      "args": {
+        "jobs": [
+          {
+            "queue": "a"
+          },
+          {
+            "queue": "b",
+            "coroutines": 4
+          }
+        ]
+      },
+      "expect": {
+        "jobs": [
+          [
+            "a",
+            1,
+            1
+          ],
+          [
+            "b",
+            4,
+            4
+          ]
+        ],
+        "registered": [
+          "a",
+          "b"
+        ],
+        "unregistered": [
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "prefetch below coroutines is rejected before registering the job",
+      "op": "server.configure",
+      "args": {
+        "jobs": [
+          {
+            "queue": "invalid",
+            "coroutines": 4,
+            "prefetch": 0
+          },
+          {
+            "queue": "invalid",
+            "coroutines": 4,
+            "prefetch": 1
+          },
+          {
+            "queue": "invalid",
+            "coroutines": 4,
+            "prefetch": 3
+          },
+          {
+            "queue": "valid",
+            "coroutines": 4,
+            "prefetch": 9
+          }
+        ]
+      },
+      "expect": {
+        "jobs": [
+          {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Prefetch must be at least the number of coroutines"
+            }
+          },
+          {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Prefetch must be at least the number of coroutines"
+            }
+          },
+          {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Prefetch must be at least the number of coroutines"
+            }
+          },
+          [
+            "valid",
+            4,
+            9
+          ]
+        ],
+        "registered": [
+          "valid"
+        ],
+        "unregistered": [
+          1,
+          1
+        ]
+      }
+    }
+  ]
+}

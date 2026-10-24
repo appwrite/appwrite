@@ -1,0 +1,1199 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "time limit (pool): one runtime's hits count for the other",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:ip:{ip}",
+            "limit": 3,
+            "seconds": 3600
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_param",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "name": "{ip}",
+            "value": "203.0.113.7"
+          },
+          "bind": "ai",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:ip:{ip}",
+            "limit": 3,
+            "seconds": 3600
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_param",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "name": "{ip}",
+            "value": "203.0.113.7"
+          },
+          "bind": "bi",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "ai"
+            },
+            "now": 1699999985
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700002800
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "ai"
+            },
+            "now": 1699999985
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 1,
+            "reset": 1700002800
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "bi"
+            },
+            "now": 1699999985
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700002800
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "bi"
+            },
+            "now": 1699999985
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700002800
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "bi"
+            },
+            "now": 1699999985
+          },
+          "side": "b",
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700002800
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "ai"
+            },
+            "now": 1699999985
+          },
+          "side": "a",
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700002800
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "bi"
+            },
+            "now": 1699999985
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "ai"
+            },
+            "now": 1699999985
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700002800
+          }
+        }
+      ],
+      "state": [
+        "redis@abuse-redis-shared"
+      ],
+      "interop": true
+    },
+    {
+      "name": "time limit (redis): one runtime's hits count for the other",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}:ip:{ip}",
+            "limit": 3,
+            "seconds": 3600
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_param",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "name": "{ip}",
+            "value": "203.0.113.7"
+          },
+          "bind": "ai",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}:ip:{ip}",
+            "limit": 3,
+            "seconds": 3600
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_param",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "name": "{ip}",
+            "value": "203.0.113.7"
+          },
+          "bind": "bi",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "ai"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "ai"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "bi"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "bi"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "bi"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "b",
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "ai"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "a",
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "bi"
+            }
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "ai"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": "<masked>"
+          }
+        }
+      ],
+      "state": [],
+      "interop": true
+    },
+    {
+      "name": "time limit: a counter reset by one runtime is zero for the other",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:🔑 ключ",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1699999980
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:🔑 ключ",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "now": 1699999980
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "now": 1699999980
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1699999980
+          },
+          "side": "a",
+          "expect": {
+            "limited": true,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        }
+      ],
+      "state": [
+        "redis@abuse-redis-shared"
+      ],
+      "interop": true
+    },
+    {
+      "name": "sliding window: buckets written by one runtime weigh for the other",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "sliding_window",
+            "store": "pool",
+            "key": "${ns}:sw",
+            "limit": 4,
+            "window": 60,
+            "ttl": 120
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "sliding_window",
+            "store": "pool",
+            "key": "${ns}:sw",
+            "limit": 4,
+            "window": 60,
+            "ttl": 120
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1699999980
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 3,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1699999981
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 2,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1699999982
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 1,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "now": 1700000047
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 1,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "now": 1700000047
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 1,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "now": 1700000060
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 0,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000060
+          },
+          "side": "a",
+          "expect": {
+            "limited": true,
+            "limit": 4,
+            "remaining": 0,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "now": 1700000060
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000060
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 3,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000060
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 3,
+            "reset": 1700000100
+          }
+        }
+      ],
+      "state": [
+        "redis@abuse-redis-shared"
+      ],
+      "interop": true
+    },
+    {
+      "name": "sliding window (redis): the real clock",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "sliding_window",
+            "store": "redis",
+            "key": "${ns}:swr",
+            "limit": 2,
+            "window": 3600,
+            "ttl": 7200
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "sliding_window",
+            "store": "redis",
+            "key": "${ns}:swr",
+            "limit": 2,
+            "window": 3600,
+            "ttl": 7200
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "a",
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "b",
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ],
+      "state": [],
+      "interop": true
+    },
+    {
+      "name": "token bucket: a balance written by one runtime refills for the other",
+      "steps": [
+        {
+          "op": "redis.clear",
+          "args": {
+            "service": "abuse-redis-shared"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "token_bucket",
+            "store": "pool",
+            "key": "${ns}:tb",
+            "tokens": 3,
+            "refill_rate": 0.5
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "token_bucket",
+            "store": "pool",
+            "key": "${ns}:tb",
+            "tokens": 3,
+            "refill_rate": 0.5
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000000.25
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700000003
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000000.5
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 1,
+            "reset": 1700000005
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "now": 1700000000.75
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700000007
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "now": 1700000000.8
+          },
+          "side": "b",
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700000007
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000001.9
+          },
+          "side": "a",
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700000007
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000003.1234567
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700000009
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "now": 1700000004.0
+          },
+          "side": "b",
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700000009
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            }
+          },
+          "side": "b",
+          "expect": {
+            "abuse__${ns}:tb": {
+              "tokens": "0.43675005435943",
+              "last_refill": "1700000003.1235"
+            }
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "side": "a",
+          "expect": {
+            "abuse__${ns}:tb": {
+              "tokens": "0.43675005435943",
+              "last_refill": "1700000003.1235"
+            }
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "now": 1700000004.0
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000004.0
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700000004
+          }
+        }
+      ],
+      "state": [
+        "redis@abuse-redis-shared"
+      ],
+      "interop": true
+    },
+    {
+      "name": "token bucket (redis): the real clock",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "token_bucket",
+            "store": "redis",
+            "key": "${ns}:tbr",
+            "tokens": 2,
+            "refill_rate": 0.001
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "service": "abuse-redis-shared",
+            "algo": "token_bucket",
+            "store": "redis",
+            "key": "${ns}:tbr",
+            "tokens": 2,
+            "refill_rate": 0.001
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "b",
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "a",
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            }
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "side": "a",
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        }
+      ],
+      "state": [],
+      "interop": true
+    }
+  ]
+}

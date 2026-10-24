@@ -1,0 +1,3481 @@
+{
+  "source": "packages/span/tests/Exporter/SentryTest.php",
+  "cases": [
+    {
+      "name": "testConstructorParsesDsn",
+      "steps": [
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "https://publickey@sentry.io/123456"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testConstructorThrowsOnInvalidDsn",
+      "steps": [
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "http:///invalid"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid Sentry DSN"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testConstructorThrowsOnEmptyDsn",
+      "steps": [
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Sentry DSN is required"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testConstructorThrowsOnDsnMissingPublicKey",
+      "steps": [
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "https://sentry.io/123"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid Sentry DSN: must include public key, host, and project ID"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testConstructorThrowsOnDsnMissingProjectId",
+      "steps": [
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "https://key@sentry.io"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid Sentry DSN: must include public key, host, and project ID"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testConstructorHandlesDsnWithPort",
+      "steps": [
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "https://publickey@sentry.example.com:9000/123"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testConstructorHandlesHttpDsn",
+      "steps": [
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "http://publickey@localhost/123"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testConstructorDefaultsToUtopiaClient",
+      "steps": [
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "https://publickey@sentry.io/123456"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testExportDoesNotThrowWithValidSpan",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "action",
+                  "value": "test"
+                },
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "info"
+                }
+              ]
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testExportHandlesSpanWithParentId",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.parent_id",
+                  "value": "abc123def456"
+                },
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "info"
+                }
+              ]
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testExportHandlesSpanWithError",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test error",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "unknown",
+                "message": "Test error",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Test error",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExportUsesInjectedPsr18Client",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://publickey@sentry.example.com:9000/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "test",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test error",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.example.com:9000/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=publickey",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://publickey@sentry.example.com:9000/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "test",
+                "message": "Test error",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Test error",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExportHandlesSpanWithAllAttributes",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "action",
+                  "value": "http.request"
+                },
+                {
+                  "key": "user.id",
+                  "value": "123"
+                },
+                {
+                  "key": "request.method",
+                  "value": "POST"
+                },
+                {
+                  "key": "response.status",
+                  "value": 200
+                },
+                {
+                  "key": "span.parent_id",
+                  "value": "parent123"
+                },
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "info"
+                }
+              ],
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "info",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "unknown",
+                "message": "Test",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331",
+                    "parent_span_id": "parent123"
+                  },
+                  "runtime": "<masked>",
+                  "custom": {
+                    "action": "http.request",
+                    "user.id": "123",
+                    "request.method": "POST",
+                    "response.status": 200
+                  }
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Test",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExportHandlesHttpConventionAttributes",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "http.url",
+                  "value": "https://api.example.com/users"
+                },
+                {
+                  "key": "http.method",
+                  "value": "POST"
+                },
+                {
+                  "key": "http.query",
+                  "value": "page=1&limit=10"
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": 201
+                },
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "http.request",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Request failed",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "http.request",
+                "message": "Request failed",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>",
+                  "response": {
+                    "status_code": 201
+                  }
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Request failed",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                },
+                "request": {
+                  "url": "https://api.example.com/users",
+                  "method": "POST",
+                  "query_string": "page=1&limit=10"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSampleSkipsInfoLevelSpans",
+      "steps": [
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "sentry",
+            "options": {
+              "dsn": "https://key@sentry.io/123"
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "info"
+                }
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSampleSendsWarningLevelSpans",
+      "steps": [
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "sentry",
+            "options": {
+              "dsn": "https://key@sentry.io/123"
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "warn"
+                }
+              ],
+              "error": {
+                "class": "RuntimeException",
+                "message": "Heads up",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testSampleSendsErrorLevelSpans",
+      "steps": [
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "sentry",
+            "options": {
+              "dsn": "https://key@sentry.io/123"
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "error": {
+                "class": "RuntimeException",
+                "message": "Boom",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testSampleSkipsDowngradedErrorSpans",
+      "steps": [
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "sentry",
+            "options": {
+              "dsn": "https://key@sentry.io/123"
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "info"
+                }
+              ],
+              "error": {
+                "class": "RuntimeException",
+                "message": "Handled",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSampleComposesCustomSamplerWithLevelFilter",
+      "steps": [
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "sentry",
+            "options": {
+              "dsn": "https://key@sentry.io/123",
+              "sampler": {
+                "kind": "action",
+                "action": "keep"
+              }
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "level",
+                  "value": "warn"
+                }
+              ],
+              "action": "keep",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "sentry",
+            "options": {
+              "dsn": "https://key@sentry.io/123",
+              "sampler": {
+                "kind": "action",
+                "action": "keep"
+              }
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "level",
+                  "value": "warn"
+                }
+              ],
+              "action": "drop",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testExportWithClassifier",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "classifier": {
+              "prefixes": [
+                [
+                  "tenant.",
+                  "tag"
+                ],
+                [
+                  "user.",
+                  "context"
+                ]
+              ],
+              "default": "extra"
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "tenant.id",
+                  "value": "acme-corp"
+                },
+                {
+                  "key": "user.id",
+                  "value": "12345"
+                },
+                {
+                  "key": "user.email",
+                  "value": "test@example.com"
+                },
+                {
+                  "key": "debug.info",
+                  "value": "some debug data"
+                },
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "api.request",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test error",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "api.request",
+                "message": "Test error",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>",
+                  "custom": {
+                    "user.id": "12345",
+                    "user.email": "test@example.com"
+                  }
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Test error",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                },
+                "tags": {
+                  "tenant.id": "acme-corp"
+                },
+                "extra": {
+                  "debug.info": "some debug data"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEnvelopeContainsChainedExceptions",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "test",
+              "error": {
+                "class": "RuntimeException",
+                "message": "outer",
+                "file": "/app/src/Test.php",
+                "line": 10,
+                "trace": [
+                  {
+                    "file": "/app/src/Worker.php",
+                    "line": 12,
+                    "function": "run",
+                    "class": "App\\Worker",
+                    "type": "->"
+                  }
+                ],
+                "previous": {
+                  "class": "InvalidArgumentException",
+                  "message": "middle",
+                  "file": "/app/src/Test.php",
+                  "line": 10,
+                  "trace": [
+                    {
+                      "file": "/app/src/Worker.php",
+                      "line": 12,
+                      "function": "run",
+                      "class": "App\\Worker",
+                      "type": "->"
+                    },
+                    {
+                      "file": "/app/vendor/lib/Kernel.php",
+                      "line": 40,
+                      "function": "handle",
+                      "class": "Kernel",
+                      "type": "::"
+                    }
+                  ],
+                  "previous": {
+                    "class": "LogicException",
+                    "message": "root cause",
+                    "file": "/app/src/Test.php",
+                    "line": 10,
+                    "trace": [
+                      {
+                        "file": "/app/src/Worker.php",
+                        "line": 12,
+                        "function": "run",
+                        "class": "App\\Worker",
+                        "type": "->"
+                      },
+                      {
+                        "file": "/app/vendor/lib/Kernel.php",
+                        "line": 40,
+                        "function": "handle",
+                        "class": "Kernel",
+                        "type": "::"
+                      },
+                      {
+                        "function": "{closure}"
+                      },
+                      {
+                        "file": "/app/public/index.php",
+                        "line": 3,
+                        "function": "main"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "test",
+                "message": "outer",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "LogicException",
+                      "value": "root cause",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/public/index.php",
+                            "lineno": 3,
+                            "in_app": true,
+                            "function": "main"
+                          },
+                          {
+                            "filename": "/app/vendor/lib/Kernel.php",
+                            "lineno": 40,
+                            "in_app": false,
+                            "function": "Kernel::handle"
+                          },
+                          {
+                            "filename": "/app/src/Worker.php",
+                            "lineno": 12,
+                            "in_app": true,
+                            "function": "App\\Worker->run"
+                          },
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true,
+                            "function": "App\\Worker->run"
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 2,
+                        "parent_id": 1,
+                        "source": "__previous__"
+                      }
+                    },
+                    {
+                      "type": "InvalidArgumentException",
+                      "value": "middle",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/vendor/lib/Kernel.php",
+                            "lineno": 40,
+                            "in_app": false,
+                            "function": "Kernel::handle"
+                          },
+                          {
+                            "filename": "/app/src/Worker.php",
+                            "lineno": 12,
+                            "in_app": true,
+                            "function": "App\\Worker->run"
+                          },
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true,
+                            "function": "App\\Worker->run"
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 1,
+                        "parent_id": 0,
+                        "source": "__previous__"
+                      }
+                    },
+                    {
+                      "type": "RuntimeException",
+                      "value": "outer",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Worker.php",
+                            "lineno": 12,
+                            "in_app": true,
+                            "function": "App\\Worker->run"
+                          },
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true,
+                            "function": "App\\Worker->run"
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 0
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEnvelopeSingleExceptionHasNoChainIds",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "test",
+              "error": {
+                "class": "RuntimeException",
+                "message": "alone",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "test",
+                "message": "alone",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "alone",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEnvelopeMechanismHandledReflectsLevel",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "test",
+              "error": {
+                "class": "RuntimeException",
+                "message": "caught",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "test",
+                "message": "caught",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "caught",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "fatal"
+                }
+              ],
+              "action": "test",
+              "error": {
+                "class": "RuntimeException",
+                "message": "crashed",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "fatal",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "test",
+                "message": "crashed",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "crashed",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": false
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEnvelopeMechanismHandledAttributeOverridesLevel",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.handled",
+                  "value": false
+                },
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "test",
+              "error": {
+                "class": "RuntimeException",
+                "message": "escaped",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "test",
+                "message": "escaped",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "escaped",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": false
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.handled",
+                  "value": true
+                },
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "fatal"
+                }
+              ],
+              "action": "test",
+              "error": {
+                "class": "RuntimeException",
+                "message": "caught but fatal",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "fatal",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "test",
+                "message": "caught but fatal",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "caught but fatal",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEnvelopeIncludesExceptionModule",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "test",
+              "error": {
+                "class": "Tests\\Compat\\Span\\NamespacedException",
+                "message": "namespaced",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "test",
+                "message": "namespaced",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "Tests\\Compat\\Span\\NamespacedException",
+                      "value": "namespaced",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      },
+                      "module": "Tests\\Compat\\Span"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "test",
+              "error": {
+                "class": "RuntimeException",
+                "message": "global",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "test",
+                "message": "global",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "global",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEnvelopeFramesCarryFunctionNames",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "test",
+              "error": {
+                "class": "RuntimeException",
+                "message": "thrown here",
+                "file": "/app/src/Test.php",
+                "line": 10,
+                "trace": [
+                  {
+                    "file": "/app/src/Worker.php",
+                    "line": 12,
+                    "function": "run",
+                    "class": "App\\Worker",
+                    "type": "->"
+                  },
+                  {
+                    "file": "/app/vendor/lib/Kernel.php",
+                    "line": 40,
+                    "function": "handle",
+                    "class": "Kernel",
+                    "type": "::"
+                  },
+                  {
+                    "function": "{closure}"
+                  },
+                  {
+                    "file": "/app/public/index.php",
+                    "line": 3,
+                    "function": "main"
+                  }
+                ]
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "test",
+                "message": "thrown here",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "thrown here",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/public/index.php",
+                            "lineno": 3,
+                            "in_app": true,
+                            "function": "main"
+                          },
+                          {
+                            "filename": "/app/vendor/lib/Kernel.php",
+                            "lineno": 40,
+                            "in_app": false,
+                            "function": "Kernel::handle"
+                          },
+                          {
+                            "filename": "/app/src/Worker.php",
+                            "lineno": 12,
+                            "in_app": true,
+                            "function": "App\\Worker->run"
+                          },
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true,
+                            "function": "App\\Worker->run"
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEnvelopeCapsExceptionChainDepth",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "test",
+              "error": {
+                "class": "RuntimeException",
+                "message": "level 14",
+                "file": "/app/src/Test.php",
+                "line": 10,
+                "previous": {
+                  "class": "RuntimeException",
+                  "message": "level 13",
+                  "file": "/app/src/Test.php",
+                  "line": 10,
+                  "previous": {
+                    "class": "RuntimeException",
+                    "message": "level 12",
+                    "file": "/app/src/Test.php",
+                    "line": 10,
+                    "previous": {
+                      "class": "RuntimeException",
+                      "message": "level 11",
+                      "file": "/app/src/Test.php",
+                      "line": 10,
+                      "previous": {
+                        "class": "RuntimeException",
+                        "message": "level 10",
+                        "file": "/app/src/Test.php",
+                        "line": 10,
+                        "previous": {
+                          "class": "RuntimeException",
+                          "message": "level 9",
+                          "file": "/app/src/Test.php",
+                          "line": 10,
+                          "previous": {
+                            "class": "RuntimeException",
+                            "message": "level 8",
+                            "file": "/app/src/Test.php",
+                            "line": 10,
+                            "previous": {
+                              "class": "RuntimeException",
+                              "message": "level 7",
+                              "file": "/app/src/Test.php",
+                              "line": 10,
+                              "previous": {
+                                "class": "RuntimeException",
+                                "message": "level 6",
+                                "file": "/app/src/Test.php",
+                                "line": 10,
+                                "previous": {
+                                  "class": "RuntimeException",
+                                  "message": "level 5",
+                                  "file": "/app/src/Test.php",
+                                  "line": 10,
+                                  "previous": {
+                                    "class": "RuntimeException",
+                                    "message": "level 4",
+                                    "file": "/app/src/Test.php",
+                                    "line": 10,
+                                    "previous": {
+                                      "class": "RuntimeException",
+                                      "message": "level 3",
+                                      "file": "/app/src/Test.php",
+                                      "line": 10,
+                                      "previous": {
+                                        "class": "RuntimeException",
+                                        "message": "level 2",
+                                        "file": "/app/src/Test.php",
+                                        "line": 10,
+                                        "previous": {
+                                          "class": "RuntimeException",
+                                          "message": "level 1",
+                                          "file": "/app/src/Test.php",
+                                          "line": 10,
+                                          "previous": {
+                                            "class": "RuntimeException",
+                                            "message": "level 0",
+                                            "file": "/app/src/Test.php",
+                                            "line": 10
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "test",
+                "message": "level 14",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "level 5",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 9,
+                        "parent_id": 8,
+                        "source": "__previous__"
+                      }
+                    },
+                    {
+                      "type": "RuntimeException",
+                      "value": "level 6",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 8,
+                        "parent_id": 7,
+                        "source": "__previous__"
+                      }
+                    },
+                    {
+                      "type": "RuntimeException",
+                      "value": "level 7",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 7,
+                        "parent_id": 6,
+                        "source": "__previous__"
+                      }
+                    },
+                    {
+                      "type": "RuntimeException",
+                      "value": "level 8",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 6,
+                        "parent_id": 5,
+                        "source": "__previous__"
+                      }
+                    },
+                    {
+                      "type": "RuntimeException",
+                      "value": "level 9",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 5,
+                        "parent_id": 4,
+                        "source": "__previous__"
+                      }
+                    },
+                    {
+                      "type": "RuntimeException",
+                      "value": "level 10",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 4,
+                        "parent_id": 3,
+                        "source": "__previous__"
+                      }
+                    },
+                    {
+                      "type": "RuntimeException",
+                      "value": "level 11",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 3,
+                        "parent_id": 2,
+                        "source": "__previous__"
+                      }
+                    },
+                    {
+                      "type": "RuntimeException",
+                      "value": "level 12",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 2,
+                        "parent_id": 1,
+                        "source": "__previous__"
+                      }
+                    },
+                    {
+                      "type": "RuntimeException",
+                      "value": "level 13",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 1,
+                        "parent_id": 0,
+                        "source": "__previous__"
+                      }
+                    },
+                    {
+                      "type": "RuntimeException",
+                      "value": "level 14",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true,
+                        "exception_id": 0
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "everything",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "classifier": {
+              "prefixes": [
+                [
+                  "tenant.",
+                  "tag"
+                ],
+                [
+                  "x",
+                  "extra"
+                ]
+              ],
+              "default": "context"
+            },
+            "environment": "production",
+            "release": "1.2.3",
+            "server_name": "host-1",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "tenant.id",
+                  "value": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": "201"
+                },
+                {
+                  "key": "x",
+                  "value": 1.5
+                },
+                {
+                  "key": "level",
+                  "value": "warn"
+                }
+              ],
+              "action": "full",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10,
+                "code": 3
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "warning",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "full",
+                "message": "Test",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Test",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                },
+                "tags": {
+                  "tenant.id": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+                },
+                "extra": {
+                  "x": 1.5
+                },
+                "environment": "production",
+                "release": "1.2.3",
+                "server_name": "host-1"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "no level",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                }
+              ],
+              "action": "bare",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/123/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key@sentry.io/123"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "bare",
+                "message": "Test",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Test",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "unencodable message",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "bin",
+              "error": {
+                "class": "RuntimeException",
+                "message": {
+                  "$bytes": "/w=="
+                },
+                "file": "f",
+                "line": 1
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "unencodable tag cut",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key@sentry.io/123",
+            "classifier": {
+              "prefixes": [
+                [
+                  "tenant.",
+                  "tag"
+                ]
+              ],
+              "default": "context"
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "tenant.id",
+                  "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaé"
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "cut",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "dsn shapes",
+      "steps": [
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "//key@host/1"
+          },
+          "expect": true
+        },
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "https://key:secret@host:9000/42/"
+          },
+          "expect": true
+        },
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "key@host/1"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid Sentry DSN: must include public key, host, and project ID"
+            }
+          }
+        },
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "https://@h/1"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid Sentry DSN: must include public key, host, and project ID"
+            }
+          }
+        },
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "https://k@h/"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid Sentry DSN: must include public key, host, and project ID"
+            }
+          }
+        },
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "https://k@h//"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid Sentry DSN: must include public key, host, and project ID"
+            }
+          }
+        },
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "mailto:k@h/1"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid Sentry DSN: must include public key, host, and project ID"
+            }
+          }
+        },
+        {
+          "op": "sentry.new",
+          "args": {
+            "dsn": "https://k@h:65536/1"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid Sentry DSN"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "endpoint shapes",
+      "steps": [
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "//key@host/1",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "e",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://host/api/1/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "//key@host/1"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "e",
+                "message": "Test",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Test",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://key:secret@host:9000/42/",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "e",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://host:9000/api/42//envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=key",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://key:secret@host:9000/42/"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "e",
+                "message": "Test",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Test",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "http://k@h:80/a/b",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "e",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "http://h/api/a/b/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=k",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "http://k@h:80/a/b"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "e",
+                "message": "Test",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Test",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "HTTPS://K@Sentry.IO:443/7",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "e",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://sentry.io/api/7/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=K",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "HTTPS://K@Sentry.IO:443/7"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "e",
+                "message": "Test",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Test",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "sentry.export",
+          "args": {
+            "dsn": "https://k@h/a%zz/b c",
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "error"
+                }
+              ],
+              "action": "e",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              "/envelope/0/sent_at",
+              "/envelope/2/contexts/runtime",
+              "/envelope/2/sdk/version"
+            ],
+            "reason": "send time, runtime and library version"
+          },
+          "expect": {
+            "method": "POST",
+            "uri": "https://h/api/a%25zz/b%20c/envelope/",
+            "content_type": "application/x-sentry-envelope",
+            "auth": "Sentry sentry_version=7, sentry_key=k",
+            "envelope": [
+              {
+                "event_id": "0af7651916cd43dd8448eb211c80319c",
+                "sent_at": "<masked>",
+                "dsn": "https://k@h/a%zz/b c"
+              },
+              {
+                "type": "event",
+                "content_type": "application/json"
+              },
+              {
+                "level": "error",
+                "platform": "php",
+                "sdk": {
+                  "name": "utopia-php/span",
+                  "version": "<masked>"
+                },
+                "start_timestamp": 1700000000.25,
+                "timestamp": 1700000000.5,
+                "transaction": "e",
+                "message": "Test",
+                "contexts": {
+                  "trace": {
+                    "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                    "span_id": "b7ad6b7169203331"
+                  },
+                  "runtime": "<masked>"
+                },
+                "exception": {
+                  "values": [
+                    {
+                      "type": "RuntimeException",
+                      "value": "Test",
+                      "stacktrace": {
+                        "frames": [
+                          {
+                            "filename": "/app/src/Test.php",
+                            "lineno": 10,
+                            "in_app": true
+                          }
+                        ]
+                      },
+                      "mechanism": {
+                        "type": "generic",
+                        "handled": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

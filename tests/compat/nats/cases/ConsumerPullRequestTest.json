@@ -1,0 +1,546 @@
+{
+  "source": "packages/nats/tests/ConsumerPullRequestTest.php",
+  "cases": [
+    {
+      "name": "a no_wait pull request carries no expiry",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\nPING\r\nSUB _INBOX.* 1\r\nPUB $JS.API.CONSUMER.MSG.NEXT.STREAM.durable _INBOX.* 26\r\n{\"batch\":1,\"no_wait\":true}\r\nUNSUB 1\r\n"
+        }
+      ]
+    },
+    {
+      "name": "a waiting pull request still carries an expiry",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\nPING\r\nSUB _INBOX.* 1\r\nPUB $JS.API.CONSUMER.MSG.NEXT.STREAM.durable _INBOX.* 30\r\n{\"batch\":1,\"expires\":18000000}\r\nUNSUB 1\r\n"
+        }
+      ]
+    },
+    {
+      "name": "batch size and max bytes survive the no_wait path",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 7,
+            "timeout": 0.02,
+            "no_wait": true,
+            "max_bytes": 4096
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\nPING\r\nSUB _INBOX.* 1\r\nPUB $JS.API.CONSUMER.MSG.NEXT.STREAM.durable _INBOX.* 43\r\n{\"batch\":7,\"no_wait\":true,\"max_bytes\":4096}\r\nUNSUB 1\r\n"
+        }
+      ]
+    },
+    {
+      "name": "a no-responders status is not returned as a message",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "HMSG _INBOX.scripted 1 30 30\r\nNATS/1.0 503 No Responders\r\n\r\n\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unrecognised status is not returned as a message",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "HMSG _INBOX.scripted 1 30 30\r\nNATS/1.0 599 Something New\r\n\r\n\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a no-messages status ends the fetch without a message",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "HMSG _INBOX.scripted 1 28 28\r\nNATS/1.0 404 No Messages\r\n\r\n\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.02,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a flow control status is acknowledged and does not end the fetch",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "HMSG _INBOX.scripted 1 _FC.reply 36 36\r\nNATS/1.0 100 FlowControl Request\r\n\r\n\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 5\r\nhello\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.5,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 1,
+            "listed": 1,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "hello",
+                "headers": null,
+                "reply": false
+              }
+            ]
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB _FC.reply"
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "a message without a status is still delivered",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 7\r\npayload\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.5,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 1,
+            "listed": 1,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "payload",
+                "headers": null,
+                "reply": false
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

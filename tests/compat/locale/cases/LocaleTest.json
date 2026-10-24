@@ -1,0 +1,2531 @@
+{
+  "source": "packages/locale/tests/LocaleTest.php",
+  "cases": [
+    {
+      "name": "texts",
+      "steps": [
+        {
+          "op": "locale.reset",
+          "expect": null
+        },
+        {
+          "op": "locale.exceptions",
+          "args": {
+            "on": false
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "en-US",
+            "translations": {
+              "hello": "Hello",
+              "world": "World",
+              "helloPlaceholder": "Hello {{name}} {{surname}}!",
+              "numericPlaceholder": "We have {{usersAmount}} users registered.",
+              "multiplePlaceholders": "Lets repeat: {{word}}, {{word}}, {{word}}"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "he-IL",
+            "translations": {
+              "hello": "שלום"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "hi-IN",
+            "path": "tests/compat/locale/fixtures/hi-IN.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.list",
+          "expect": [
+            "en-US",
+            "he-IL",
+            "hi-IN"
+          ]
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "en-US"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "hello"
+          },
+          "expect": "Hello"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "world"
+          },
+          "expect": "World"
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "hello": "Hello",
+            "world": "World",
+            "helloPlaceholder": "Hello {{name}} {{surname}}!",
+            "numericPlaceholder": "We have {{usersAmount}} users registered.",
+            "multiplePlaceholders": "Lets repeat: {{word}}, {{word}}, {{word}}"
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "hi-IN"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "hello"
+          },
+          "expect": "Namaste"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "world"
+          },
+          "expect": "Duniya"
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "hello": "Namaste",
+            "world": "Duniya"
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "he-IL"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "hello"
+          },
+          "expect": "שלום"
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "hello": "שלום"
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en-US"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "helloPlaceholder",
+            "placeholders": {
+              "name": "Matej",
+              "surname": "Bačo"
+            }
+          },
+          "expect": "Hello Matej Bačo!"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "helloPlaceholder",
+            "placeholders": {
+              "name": "Matej"
+            }
+          },
+          "expect": "Hello Matej {{surname}}!"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "helloPlaceholder"
+          },
+          "expect": "Hello {{name}} {{surname}}!"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "numericPlaceholder",
+            "placeholders": {
+              "usersAmount": 12
+            }
+          },
+          "expect": "We have 12 users registered."
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "multiplePlaceholders",
+            "placeholders": {
+              "word": "Appwrite"
+            }
+          },
+          "expect": "Lets repeat: Appwrite, Appwrite, Appwrite"
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "he-IL"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.exceptions",
+          "args": {
+            "on": true
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "world"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Key named \"world\" not found"
+            }
+          }
+        },
+        {
+          "op": "locale.state",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "default": "he-IL",
+            "fallback": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "fallback",
+      "steps": [
+        {
+          "op": "locale.reset",
+          "expect": null
+        },
+        {
+          "op": "locale.exceptions",
+          "args": {
+            "on": false
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "en-US",
+            "translations": {
+              "hello": "Hello",
+              "world": "World",
+              "helloPlaceholder": "Hello {{name}} {{surname}}!",
+              "numericPlaceholder": "We have {{usersAmount}} users registered.",
+              "multiplePlaceholders": "Lets repeat: {{word}}, {{word}}, {{word}}"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "he-IL",
+            "translations": {
+              "hello": "שלום"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "hi-IN",
+            "path": "tests/compat/locale/fixtures/hi-IN.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.list",
+          "expect": [
+            "en-US",
+            "he-IL",
+            "hi-IN"
+          ]
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "he-IL"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "hello"
+          },
+          "expect": "שלום"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "world"
+          },
+          "expect": "{{world}}"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "missing"
+          },
+          "expect": "{{missing}}"
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en-US"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "hello"
+          },
+          "expect": "שלום"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "world"
+          },
+          "expect": "World"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "missing"
+          },
+          "expect": "{{missing}}"
+        },
+        {
+          "op": "locale.state",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "default": "he-IL",
+            "fallback": "en-US"
+          }
+        },
+        {
+          "op": "locale.exceptions",
+          "args": {
+            "on": true
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Key named \"missing\" not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "getText default",
+      "steps": [
+        {
+          "op": "locale.reset",
+          "expect": null
+        },
+        {
+          "op": "locale.exceptions",
+          "args": {
+            "on": false
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "en-US",
+            "translations": {
+              "hello": "Hello",
+              "world": "World",
+              "helloPlaceholder": "Hello {{name}} {{surname}}!",
+              "numericPlaceholder": "We have {{usersAmount}} users registered.",
+              "multiplePlaceholders": "Lets repeat: {{word}}, {{word}}, {{word}}"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "he-IL",
+            "translations": {
+              "hello": "שלום"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "hi-IN",
+            "path": "tests/compat/locale/fixtures/hi-IN.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.list",
+          "expect": [
+            "en-US",
+            "he-IL",
+            "hi-IN"
+          ]
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "en-US"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "hello"
+          },
+          "expect": "Hello"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "missing"
+          },
+          "expect": "{{missing}}"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "missing",
+            "default": "A custom text"
+          },
+          "expect": "A custom text"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "missing",
+            "default": null
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "missing",
+            "placeholders": {
+              "name": "Matej"
+            },
+            "default": "Sorry {{name}}, missing text"
+          },
+          "expect": "Sorry Matej, missing text"
+        }
+      ]
+    },
+    {
+      "name": "unknown locales throw while exceptions are on",
+      "steps": [
+        {
+          "op": "locale.reset",
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "en",
+            "translations": {
+              "a": "A"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "fr"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Locale not found"
+            }
+          }
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "en"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "fr"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Locale not found"
+            }
+          }
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "fr"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Locale not found"
+            }
+          }
+        },
+        {
+          "op": "locale.state",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "default": "en",
+            "fallback": null
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Key named \"b\" not found"
+            }
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b",
+            "default": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Key named \"b\" not found"
+            }
+          }
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "x",
+            "path": "tests/compat/locale/fixtures/does-not-exist.json"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Translation file not found."
+            }
+          }
+        },
+        {
+          "op": "languages.list",
+          "expect": [
+            "en"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown default with exceptions off is a TypeError",
+      "steps": [
+        {
+          "op": "locale.reset",
+          "expect": null
+        },
+        {
+          "op": "locale.exceptions",
+          "args": {
+            "on": false
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "en",
+            "translations": {
+              "a": "A"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "fr"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "de"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.state",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "default": "fr",
+            "fallback": "de"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, null given"
+            }
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, null returned"
+            }
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": "A"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": "{{b}}"
+        }
+      ]
+    },
+    {
+      "name": "translation files PHP cannot use",
+      "steps": [
+        {
+          "op": "locale.reset",
+          "expect": null
+        },
+        {
+          "op": "locale.exceptions",
+          "args": {
+            "on": false
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "en",
+            "translations": {
+              "a": "A"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "f-invalid",
+            "path": "tests/compat/locale/fixtures/invalid.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "f-invalid"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, null given"
+            }
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, null returned"
+            }
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "f-invalid"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": "A"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": "{{b}}"
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "f-int",
+            "path": "tests/compat/locale/fixtures/int.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "f-int"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, int given"
+            }
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, int returned"
+            }
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "f-int"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, int given"
+            }
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, int given"
+            }
+          }
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "f-float",
+            "path": "tests/compat/locale/fixtures/float.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "f-float"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, float given"
+            }
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, float returned"
+            }
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "f-float"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, float given"
+            }
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, float given"
+            }
+          }
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "f-true",
+            "path": "tests/compat/locale/fixtures/true.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "f-true"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, true given"
+            }
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, true returned"
+            }
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "f-true"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, true given"
+            }
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, true given"
+            }
+          }
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "f-string",
+            "path": "tests/compat/locale/fixtures/string.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "f-string"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, string given"
+            }
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, string returned"
+            }
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "f-string"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, string given"
+            }
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, string given"
+            }
+          }
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "f-null",
+            "path": "tests/compat/locale/fixtures/null.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "f-null"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, null given"
+            }
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, null returned"
+            }
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "f-null"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": "A"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": "{{b}}"
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "f-empty",
+            "path": "tests/compat/locale/fixtures/empty.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "f-empty"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, null given"
+            }
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, null returned"
+            }
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "f-empty"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": "A"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": "{{b}}"
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "f-surrogate",
+            "path": "tests/compat/locale/fixtures/surrogate.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "f-surrogate"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, null given"
+            }
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, null returned"
+            }
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "f-surrogate"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": "A"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": "{{b}}"
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "f-does-not-exist",
+            "path": "tests/compat/locale/fixtures/does-not-exist.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "f-does-not-exist"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, null given"
+            }
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, null returned"
+            }
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "f-does-not-exist"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": "A"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": "{{b}}"
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "f-",
+            "path": "tests/compat/locale/fixtures/"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "f-"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_key_exists(): Argument #2 ($array) must be of type array, null given"
+            }
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, null returned"
+            }
+          }
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "f-"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": "A"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": "{{b}}"
+        },
+        {
+          "op": "languages.list",
+          "expect": [
+            "en",
+            "f-invalid",
+            "f-int",
+            "f-float",
+            "f-true",
+            "f-string",
+            "f-null",
+            "f-empty",
+            "f-surrogate",
+            "f-does-not-exist",
+            "f-"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "translation file keys and escapes",
+      "steps": [
+        {
+          "op": "locale.reset",
+          "expect": null
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "keys",
+            "path": "tests/compat/locale/fixtures/keys.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "list",
+            "path": "tests/compat/locale/fixtures/list.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "escapes",
+            "path": "tests/compat/locale/fixtures/escapes.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_json",
+          "args": {
+            "name": "empty-object",
+            "path": "tests/compat/locale/fixtures/object-empty.json"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "keys"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "1": "one",
+            "0": "zero",
+            "-1": "minus",
+            "01": "padded",
+            "": "blank",
+            "a": "y"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "1"
+          },
+          "expect": "one"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "01"
+          },
+          "expect": "padded"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": ""
+          },
+          "expect": "blank"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a"
+          },
+          "expect": "y"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "-1"
+          },
+          "expect": "minus"
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "list"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": [
+            "zero",
+            "one"
+          ]
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "0"
+          },
+          "expect": "zero"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "1"
+          },
+          "expect": "one"
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "escapes"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "hello": "Hello é\u0000 {{name}}",
+            "world": "😀"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "hello",
+            "placeholders": {
+              "name": "x"
+            }
+          },
+          "expect": "Hello é\u0000 x"
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "empty-object"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "languages.list",
+          "expect": [
+            "keys",
+            "list",
+            "escapes",
+            "empty-object"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "replacing a language keeps its position",
+      "steps": [
+        {
+          "op": "locale.reset",
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "a",
+            "translations": {
+              "k": "1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "1",
+            "translations": {
+              "k": "2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "b",
+            "translations": [
+              "x"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "a",
+            "translations": {
+              "k": "3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.list",
+          "expect": [
+            "a",
+            1,
+            "b"
+          ]
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "a"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "k"
+          },
+          "expect": "3"
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "1"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "k"
+          },
+          "expect": "2"
+        },
+        {
+          "op": "locale.set_default",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "b"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.translations",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            }
+          },
+          "expect": [
+            "x"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "language named empty string is the implicit fallback",
+      "steps": [
+        {
+          "op": "locale.reset",
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "en",
+            "translations": {
+              "a": "A"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "",
+            "translations": {
+              "b": "from empty"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "en"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": "from empty"
+        },
+        {
+          "op": "locale.set_fallback",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "name": "en"
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "b"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Key named \"b\" not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "placeholders replace in turn",
+      "steps": [
+        {
+          "op": "locale.reset",
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "en",
+            "translations": {
+              "t": "{{a}} {{b}} {{a}}",
+              "n": "{{{{a}}}}"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "en"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "t",
+            "placeholders": {
+              "a": "{{b}}",
+              "b": "B"
+            }
+          },
+          "expect": "B B B"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "t",
+            "placeholders": {
+              "b": "{{a}}",
+              "a": "A"
+            }
+          },
+          "expect": "A A A"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "n",
+            "placeholders": {
+              "a": "a"
+            }
+          },
+          "expect": "{{a}}"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "t",
+            "placeholders": {
+              "a": 1.5,
+              "b": true
+            }
+          },
+          "expect": "1.5 1 1.5"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "t",
+            "placeholders": {
+              "a": false,
+              "b": null
+            }
+          },
+          "expect": "  "
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "t",
+            "placeholders": [
+              "zero",
+              "one"
+            ]
+          },
+          "expect": "{{a}} {{b}} {{a}}"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "t",
+            "placeholders": {
+              "": "empty",
+              "a": ""
+            }
+          },
+          "expect": " {{b}} "
+        }
+      ]
+    },
+    {
+      "name": "default dynamic key literal",
+      "steps": [
+        {
+          "op": "locale.reset",
+          "expect": null
+        },
+        {
+          "op": "locale.exceptions",
+          "args": {
+            "on": false
+          },
+          "expect": null
+        },
+        {
+          "op": "languages.set_array",
+          "args": {
+            "name": "en",
+            "translations": {
+              "a": "A"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "locale.new",
+          "args": {
+            "default": "en"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "missing",
+            "default": "[[defaultDynamicKey]]"
+          },
+          "expect": "{{missing}}"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "missing",
+            "default": ""
+          },
+          "expect": ""
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "missing",
+            "default": "{{name}}",
+            "placeholders": {
+              "name": "N"
+            }
+          },
+          "expect": "N"
+        },
+        {
+          "op": "locale.text",
+          "args": {
+            "locale": {
+              "$ref": "l"
+            },
+            "key": "a",
+            "default": null
+          },
+          "expect": "A"
+        }
+      ]
+    },
+    {
+      "name": "lookup with fallback and placeholders",
+      "op": "locale.lookup",
+      "args": {
+        "exceptions": false,
+        "languages": {
+          "en": {
+            "hello": "Hello {{name}}",
+            "0": "zero"
+          },
+          "he": {
+            "hello": "שלום"
+          }
+        },
+        "language": "he",
+        "fallback": "en",
+        "key": "0",
+        "placeholders": {
+          "name": "x"
+        }
+      },
+      "expect": "zero"
+    },
+    {
+      "name": "lookup missing key with exceptions",
+      "op": "locale.lookup",
+      "args": {
+        "exceptions": true,
+        "languages": {
+          "en": {
+            "hello": "Hello {{name}}",
+            "0": "zero"
+          },
+          "he": {
+            "hello": "שלום"
+          }
+        },
+        "language": "he",
+        "fallback": "en",
+        "key": "nope"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Key named \"nope\" not found"
+        }
+      }
+    },
+    {
+      "name": "lookup unknown locale with exceptions",
+      "op": "locale.lookup",
+      "args": {
+        "exceptions": true,
+        "languages": {
+          "en": {
+            "hello": "Hello {{name}}",
+            "0": "zero"
+          },
+          "he": {
+            "hello": "שלום"
+          }
+        },
+        "language": "fr",
+        "key": "hello"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Locale not found"
+        }
+      }
+    },
+    {
+      "name": "lookup unknown fallback with exceptions",
+      "op": "locale.lookup",
+      "args": {
+        "exceptions": true,
+        "languages": {
+          "en": {
+            "hello": "Hello {{name}}",
+            "0": "zero"
+          },
+          "he": {
+            "hello": "שלום"
+          }
+        },
+        "language": "en",
+        "fallback": "fr",
+        "key": "hello"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Locale not found"
+        }
+      }
+    },
+    {
+      "name": "lookup null default",
+      "op": "locale.lookup",
+      "args": {
+        "exceptions": false,
+        "languages": {
+          "en": {
+            "hello": "Hello {{name}}",
+            "0": "zero"
+          },
+          "he": {
+            "hello": "שלום"
+          }
+        },
+        "language": "he",
+        "key": "nope",
+        "default": null
+      },
+      "expect": null
+    }
+  ]
+}

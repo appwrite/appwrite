@@ -1,0 +1,272 @@
+{
+  "source": "packages/mqtt/tests/E2E/WebSocketAdapterTest.php",
+  "cases": [
+    {
+      "name": "testV5SessionOverWebSocket",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "ws-client",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "test"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "connect",
+          "expect": "\u0010-\u0000\u0004MQTT\u0005\u0002\u0000<\u0017\u0015\u0000\u0004test&\u0000\tprojectId\u0000\u0002p1\u0000\tws-client"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "sensors/+/temp"
+            ],
+            "qos": 1
+          },
+          "bind": "subscribe",
+          "expect": {
+            "$bytes": "ghQAAQAADnNlbnNvcnMvKy90ZW1wAQ=="
+          }
+        },
+        {
+          "op": "packet.ping",
+          "args": {},
+          "bind": "ping",
+          "expect": [
+            {
+              "$bytes": "wAA="
+            },
+            {
+              "$bytes": "0AA="
+            }
+          ]
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "fixture",
+            "steps": [
+              {
+                "ws_connect": "w"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$ref": "connect"
+                }
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$ref": "subscribe"
+                }
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$ref": "ping",
+                  "path": "/0"
+                }
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_close": "w"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "upgraded": true,
+              "protocol": null
+            },
+            true,
+            " \u001a\u0000\u0000\u0017\u0015\u0000\u0004test&\u0000\tprojectId\u0000\u0002p1",
+            true,
+            {
+              "$bytes": "kAQAAQAB"
+            },
+            true,
+            {
+              "$bytes": "0AA="
+            },
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the mqtt subprotocol is echoed; several packets in one message and one packet over two messages are reassembled; WebSocket and TCP clients share subscriptions",
+      "steps": [
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "tcp",
+            "keep_alive": 60,
+            "clean_session": true
+          },
+          "bind": "connect3",
+          "expect": "\u0010\u000f\u0000\u0004MQTT\u0004\u0002\u0000<\u0000\u0003tcp"
+        },
+        {
+          "op": "v3.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "a/#"
+            ],
+            "qos": 0
+          },
+          "bind": "subscribe3",
+          "expect": {
+            "$bytes": "gggAAQADYS8jAA=="
+          }
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "a/b",
+            "payload": "from ws",
+            "qos": 0,
+            "packet_id": 0,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "k",
+                      "v"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "publish",
+          "expect": "0\u0014\u0000\u0003a/b\u0007&\u0000\u0001k\u0000\u0001vfrom ws"
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "fixture",
+            "steps": [
+              {
+                "ws_connect": "w",
+                "protocol": "mqtt"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$bytes": "EA8ABE1RVFQFAgA8AAACd3PAAA=="
+                }
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$bytes": "wA=="
+                }
+              },
+              {
+                "ws_send": "w",
+                "data": "\u0000"
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "connect": "t"
+              },
+              {
+                "send": "t",
+                "data": {
+                  "$ref": "connect3"
+                }
+              },
+              {
+                "receive": "t"
+              },
+              {
+                "send": "t",
+                "data": {
+                  "$ref": "subscribe3"
+                }
+              },
+              {
+                "receive": "t"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$ref": "publish"
+                }
+              },
+              {
+                "receive": "t"
+              },
+              {
+                "ws_close": "w"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "upgraded": true,
+              "protocol": "mqtt"
+            },
+            true,
+            " \u0006\u0000\u0000\u0003\u0015\u0000\u0000",
+            {
+              "$bytes": "0AA="
+            },
+            true,
+            true,
+            {
+              "$bytes": "0AA="
+            },
+            null,
+            null,
+            " \u0002\u0000\u0000",
+            null,
+            {
+              "$bytes": "kAMAAQE="
+            },
+            true,
+            "0\f\u0000\u0003a/bfrom ws",
+            null
+          ]
+        }
+      ]
+    }
+  ]
+}

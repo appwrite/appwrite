@@ -1,0 +1,916 @@
+{
+  "source": "packages/vcs/tests/OriginTest.php",
+  "cases": [
+    {
+      "name": "testValidateWebhookEvent",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "whd_0123456789.1755500000.{\"deliveryId\":\"whd_0123456789\"}",
+            "signature": "v1ed,r08NwE17dbqZtBj5sibswBcPPCxMHnL6Wx+XRqpYZU/MlAtjYkcHoCk339SoJf4fF9TS5GHtWtpJJvxehqHSAQ==",
+            "signatureKey": "5FN95waEOTwmsHaaPgb77WmRPsp4dH4bB6DCu1QMaoQ="
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "whd_0123456789.1755500000.{\"deliveryId\":\"whd_0123456789\"}",
+            "signature": "not-the-signature",
+            "signatureKey": "5FN95waEOTwmsHaaPgb77WmRPsp4dH4bB6DCu1QMaoQ="
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "whd_0123456789.1755500000.{\"deliveryId\":\"whd_0123456789\"}",
+            "signature": "v1ed,t/HvJQM0kFjzD9423v0P3hjoLJAnst+JX4GZ7+QLFZl1C3UHFJN3dwm+Rn7jbDhLyIXT9l25y6tx9UYsEImzDA==",
+            "signatureKey": "5FN95waEOTwmsHaaPgb77WmRPsp4dH4bB6DCu1QMaoQ="
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "whd_0123456789.1755500000.{\"deliveryId\":\"whd_0123456789\"}tampered",
+            "signature": "v1ed,r08NwE17dbqZtBj5sibswBcPPCxMHnL6Wx+XRqpYZU/MlAtjYkcHoCk339SoJf4fF9TS5GHtWtpJJvxehqHSAQ==",
+            "signatureKey": "5FN95waEOTwmsHaaPgb77WmRPsp4dH4bB6DCu1QMaoQ="
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "whd_0123456789.1755500000.{\"deliveryId\":\"whd_0123456789\"}",
+            "signature": "v1ed,t/HvJQM0kFjzD9423v0P3hjoLJAnst+JX4GZ7+QLFZl1C3UHFJN3dwm+Rn7jbDhLyIXT9l25y6tx9UYsEImzDA== v1ed,r08NwE17dbqZtBj5sibswBcPPCxMHnL6Wx+XRqpYZU/MlAtjYkcHoCk339SoJf4fF9TS5GHtWtpJJvxehqHSAQ==",
+            "signatureKey": "5FN95waEOTwmsHaaPgb77WmRPsp4dH4bB6DCu1QMaoQ="
+          },
+          "expect": true
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testValidateWebhookEventAcceptsPemPublicKey",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "whd_0123456789.1755500000.{\"deliveryId\":\"whd_0123456789\"}",
+            "signature": "v1ed,cIZleYKu8eOiBVqcgBB2bwvV1YMhSxH+EPgTmQ+MxYcQ8CfRk5vRU4Ef2GLzLqp1mNN12Ep3HqvjsaQtYx2nCQ==",
+            "signatureKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/kGOA/Yf13Um+kM/HJcm3nUj/ybFN5c9uLG6JK3UijA=\n-----END PUBLIC KEY-----"
+          },
+          "expect": true
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetInstallUrl",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_install_url",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "appId": "app_0123456789",
+            "scopes": [
+              "repository:contents:read",
+              "repository:checks:write"
+            ],
+            "redirectUri": "https://appwrite.test/v1/vcs/origin/callback",
+            "state": "{\"projectId\":\"p1\"}"
+          },
+          "expect": "https://cursor.com/codebase/apps/install?client_id=app_0123456789&scope=repository%3Acontents%3Aread+repository%3Achecks%3Awrite&redirect_uri=https%3A%2F%2Fappwrite.test%2Fv1%2Fvcs%2Forigin%2Fcallback&state=%7B%22projectId%22%3A%22p1%22%7D"
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetInstallUrlWithoutScopesReadsAppMetadata",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_install_url",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "appId": "app_0123456789"
+          },
+          "expect": "https://cursor.com/codebase/apps/install?client_id=app_0123456789&source=app-metadata"
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testVerifyReceipt",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testVerifyReceiptRejections",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetSigningKeys",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPush",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repository.pushed",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"repository.pushed\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}},\"refUpdates\":[{\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def4567890def4567890def4567890def4567890\",\"created\":false,\"deleted\":false,\"forced\":false,\"headCommit\":{\"sha\":\"def4567890def4567890def4567890def4567890\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"committer\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"message\":\"Test commit message\"}}],\"refUpdatesCount\":1,\"pushedAt\":\"2026-08-18T10:00:00Z\",\"pusher\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}}}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/main",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushBranchLifecycle",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repository.pushed",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"repository.pushed\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}},\"refUpdates\":[{\"ref\":\"refs\\/heads\\/new-branch\",\"before\":\"0000000000000000000000000000000000000000\",\"after\":\"def4567890def4567890def4567890def4567890\",\"created\":true,\"deleted\":false,\"forced\":false,\"headCommit\":{\"sha\":\"def4567890def4567890def4567890def4567890\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"committer\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"message\":\"Test commit message\"}}],\"refUpdatesCount\":1,\"pushedAt\":\"2026-08-18T10:00:00Z\",\"pusher\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}}}}"
+          },
+          "expect": [
+            {
+              "branchCreated": true,
+              "branchDeleted": false,
+              "branch": "new-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/new-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repository.pushed",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"repository.pushed\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}},\"refUpdates\":[{\"ref\":\"refs\\/heads\\/old-branch\",\"before\":\"abc123\",\"after\":\"0000000000000000000000000000000000000000\",\"created\":false,\"deleted\":true,\"forced\":false,\"headCommit\":null}],\"refUpdatesCount\":1,\"pushedAt\":\"2026-08-18T10:00:00Z\",\"pusher\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}}}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": true,
+              "branch": "old-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/old-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "0000000000000000000000000000000000000000",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitAuthorName": "",
+              "headCommitAuthorEmail": "",
+              "headCommitMessage": "",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/0000000000000000000000000000000000000000",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushWithMultipleRefUpdates",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repository.pushed",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"repository.pushed\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}},\"refUpdates\":[{\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def4567890def4567890def4567890def4567890\",\"created\":false,\"deleted\":false,\"forced\":false,\"headCommit\":{\"sha\":\"def4567890def4567890def4567890def4567890\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"committer\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"message\":\"Test commit message\"}},{\"ref\":\"refs\\/heads\\/feature-branch\",\"before\":\"abc123\",\"after\":\"def4567890def4567890def4567890def4567890\",\"created\":false,\"deleted\":false,\"forced\":false,\"headCommit\":{\"sha\":\"def4567890def4567890def4567890def4567890\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"committer\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"message\":\"Test commit message\"}}],\"refUpdatesCount\":2,\"pushedAt\":\"2026-08-18T10:00:00Z\",\"pusher\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}}}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/main",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            },
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "feature-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequest",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.created",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.created\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequestMapsLifecycleActions",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.created",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.created\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.head_ref.pushed",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.head_ref.pushed\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "synchronize"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.base_ref.updated",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.base_ref.updated\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "edited"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.metadata.updated",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.metadata.updated\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "edited"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.closed",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.closed\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "closed"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.merged",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.merged\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "closed"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.reopened",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.reopened\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "reopened"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.published",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.published\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "https://cursor.com/codebase/test-owner/test-repo/tree/feature-branch",
+              "repositoryId": "repo_0123456789",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://cursor.com/codebase/test-owner/test-repo",
+              "installationId": "i_0123456789",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitUrl": "https://cursor.com/codebase/test-owner/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "ready_for_review"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.comment.created",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.comment.created\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
+          },
+          "expect": []
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventInstallation",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "installation.deleted",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"installation.deleted\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"installation\":{\"id\":\"i_0123456789\",\"target\":{\"slug\":\"test-workspace\",\"id\":\"ns_0123456789\"},\"repoSelectionMode\":\"all\"},\"app\":{\"id\":\"app_0123456789\",\"slug\":\"test-app\"}}}}"
+          },
+          "expect": [
+            {
+              "action": "deleted",
+              "installationId": "i_0123456789",
+              "userName": "test-workspace"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventsRejectsInvalidPayload",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repository.pushed",
+            "payload": "not json"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid payload.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testCreateFileRejectsEscapingPath",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "filepath": "../escape.txt",
+            "content": "content"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path escapes the repository: ../escape.txt",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testCreateFileRejectsEmptyPath",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "filepath": "./.",
+            "content": "content"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path names no file: ./.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

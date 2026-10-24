@@ -1,0 +1,127 @@
+{
+  "source": "packages/storage/tests/Validator/FileSizeTest.php",
+  "cases": [
+    {
+      "name": "values",
+      "steps": [
+        {
+          "op": "file_size.validate",
+          "args": {
+            "max": 1000,
+            "value": 1001
+          },
+          "expect": {
+            "valid": false,
+            "description": "File size can't be bigger than 1000",
+            "type": "integer",
+            "array": false
+          }
+        },
+        {
+          "op": "file_size.validate",
+          "args": {
+            "max": 1000,
+            "value": 1000
+          },
+          "expect": {
+            "valid": true,
+            "description": "File size can't be bigger than 1000",
+            "type": "integer",
+            "array": false
+          }
+        },
+        {
+          "op": "file_size.validate",
+          "args": {
+            "max": 1000,
+            "value": 999
+          },
+          "expect": {
+            "valid": true,
+            "description": "File size can't be bigger than 1000",
+            "type": "integer",
+            "array": false
+          }
+        },
+        {
+          "op": "file_size.validate",
+          "args": {
+            "max": 1000,
+            "value": 0
+          },
+          "expect": {
+            "valid": true,
+            "description": "File size can't be bigger than 1000",
+            "type": "integer",
+            "array": false
+          }
+        },
+        {
+          "op": "file_size.validate",
+          "args": {
+            "max": 1000,
+            "value": -5
+          },
+          "expect": {
+            "valid": true,
+            "description": "File size can't be bigger than 1000",
+            "type": "integer",
+            "array": false
+          }
+        },
+        {
+          "op": "file_size.validate",
+          "args": {
+            "max": 1000,
+            "value": 999.0
+          },
+          "expect": {
+            "valid": false,
+            "description": "File size can't be bigger than 1000",
+            "type": "integer",
+            "array": false
+          }
+        },
+        {
+          "op": "file_size.validate",
+          "args": {
+            "max": 1000,
+            "value": "999"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File size can't be bigger than 1000",
+            "type": "integer",
+            "array": false
+          }
+        },
+        {
+          "op": "file_size.validate",
+          "args": {
+            "max": 1000,
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "File size can't be bigger than 1000",
+            "type": "integer",
+            "array": false
+          }
+        },
+        {
+          "op": "file_size.validate",
+          "args": {
+            "max": 1000,
+            "value": true
+          },
+          "expect": {
+            "valid": false,
+            "description": "File size can't be bigger than 1000",
+            "type": "integer",
+            "array": false
+          }
+        }
+      ]
+    }
+  ]
+}

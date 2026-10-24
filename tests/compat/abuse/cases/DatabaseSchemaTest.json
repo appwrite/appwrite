@@ -1,0 +1,661 @@
+{
+  "source": "packages/abuse/tests/DatabaseSchemaTest.php",
+  "cases": [
+    {
+      "name": "schema attributes",
+      "op": "database.attributes",
+      "args": {},
+      "state": [],
+      "expect": [
+        {
+          "$id": "key",
+          "key": "key",
+          "type": "string",
+          "size": 255,
+          "required": true,
+          "default": null,
+          "signed": true,
+          "array": false,
+          "format": null,
+          "formatOptions": [],
+          "filters": []
+        },
+        {
+          "$id": "time",
+          "key": "time",
+          "type": "datetime",
+          "size": 0,
+          "required": true,
+          "default": null,
+          "signed": false,
+          "array": false,
+          "format": null,
+          "formatOptions": [],
+          "filters": [
+            "datetime"
+          ]
+        },
+        {
+          "$id": "count",
+          "key": "count",
+          "type": "integer",
+          "size": 8,
+          "required": true,
+          "default": null,
+          "signed": false,
+          "array": false,
+          "format": null,
+          "formatOptions": [],
+          "filters": []
+        }
+      ]
+    },
+    {
+      "name": "schema indexes",
+      "op": "database.indexes",
+      "args": {},
+      "state": [],
+      "expect": [
+        {
+          "$id": "unique1",
+          "key": "unique1",
+          "type": "unique",
+          "attributes": [
+            "key",
+            "time"
+          ],
+          "lengths": [],
+          "orders": []
+        },
+        {
+          "$id": "index2",
+          "key": "index2",
+          "type": "key",
+          "attributes": [
+            "time"
+          ],
+          "lengths": [],
+          "orders": []
+        }
+      ]
+    },
+    {
+      "name": "counts hits per key across requests",
+      "state": [],
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "setup",
+            "limit": 1,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "setup",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.setup",
+          "args": {
+            "handle": {
+              "$ref": "setup"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "login",
+            "limit": 2,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "login",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 2000000000
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 2000000000
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 2000000000
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 2000000000
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "signup",
+            "limit": 2,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "signup",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "signup"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 2000000000
+          }
+        }
+      ]
+    },
+    {
+      "name": "an earlier window does not count towards the current one",
+      "state": [],
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "setup",
+            "limit": 1,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "setup",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.setup",
+          "args": {
+            "handle": {
+              "$ref": "setup"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "login",
+            "limit": 2,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "login",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 2000000000
+          }
+        },
+        {
+          "op": "database.store",
+          "args": {
+            "database": {
+              "$ref": "db"
+            },
+            "key": "login",
+            "time": 0,
+            "count": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 2000000000
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 2000000000
+          }
+        }
+      ]
+    },
+    {
+      "name": "one row per key and window",
+      "state": [],
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "setup",
+            "limit": 1,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "setup",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.setup",
+          "args": {
+            "handle": {
+              "$ref": "setup"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "login",
+            "limit": 5,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "login",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 4,
+            "reset": 2000000000
+          }
+        },
+        {
+          "op": "database.windows",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            },
+            "key": "login"
+          },
+          "expect": [
+            1000000000
+          ]
+        },
+        {
+          "op": "database.store",
+          "args": {
+            "database": {
+              "$ref": "db"
+            },
+            "key": "login",
+            "time": 0,
+            "count": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "database.store",
+          "args": {
+            "database": {
+              "$ref": "db"
+            },
+            "key": "signup",
+            "time": 1000000000,
+            "count": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "database.store",
+          "args": {
+            "database": {
+              "$ref": "db"
+            },
+            "key": "login",
+            "time": 1000000000,
+            "count": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "cleanup removes only earlier windows",
+      "state": [],
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "setup",
+            "limit": 1,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "setup",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.setup",
+          "args": {
+            "handle": {
+              "$ref": "setup"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "login",
+            "limit": 5,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "login",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 4,
+            "reset": 2000000000
+          }
+        },
+        {
+          "op": "database.store",
+          "args": {
+            "database": {
+              "$ref": "db"
+            },
+            "key": "login",
+            "time": 0,
+            "count": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.cleanup",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            },
+            "timestamp": 1000000000
+          },
+          "expect": true
+        },
+        {
+          "op": "database.windows",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            },
+            "key": "login"
+          },
+          "expect": [
+            1000000000
+          ]
+        }
+      ]
+    },
+    {
+      "name": "setup again keeps existing counts",
+      "state": [],
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "setup",
+            "limit": 1,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "setup",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.setup",
+          "args": {
+            "handle": {
+              "$ref": "setup"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "login",
+            "limit": 1,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "login",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 2000000000
+          }
+        },
+        {
+          "op": "database.setup",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 2000000000
+          }
+        }
+      ]
+    }
+  ]
+}

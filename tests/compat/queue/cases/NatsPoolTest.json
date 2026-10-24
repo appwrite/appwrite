@@ -1,0 +1,96 @@
+{
+  "source": "packages/queue/tests/E2E/NatsPoolTest.php",
+  "cases": [
+    {
+      "name": "an idle publisher survives repeated maintenance",
+      "state": [],
+      "steps": [
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 2.0,
+            "max_deliver": 3
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "task": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "task": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "failed": false
+          },
+          "expect": 2
+        },
+        {
+          "op": "nats.delete",
+          "args": {
+            "queues": [
+              "${ns}-jobs"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

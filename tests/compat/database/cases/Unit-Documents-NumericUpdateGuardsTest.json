@@ -1,0 +1,3386 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/NumericUpdateGuardsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "NumericUpdateGuardsTest::testAFloatIncreasePastTheMaximumIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o983"
+          },
+          "bind": "s1682",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o983"
+              },
+              "cache": "none"
+            },
+            "as": "o984"
+          },
+          "bind": "s1683",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "numeric"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "numeric_u000000000042"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o985"
+          },
+          "bind": "s1687",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratio"
+            },
+            "as": "o986"
+          },
+          "bind": "s1688",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratio",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "share",
+              "signed": false
+            },
+            "as": "o987"
+          },
+          "bind": "s1689",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "share",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o988"
+          },
+          "bind": "s1690",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o988"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o989"
+          },
+          "bind": "s1692",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o989"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o990"
+          },
+          "bind": "s1694",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o990"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "ledgers",
+              "attributes": [
+                {
+                  "$obj": "o985"
+                },
+                {
+                  "$obj": "o986"
+                },
+                {
+                  "$obj": "o987"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o991"
+          },
+          "bind": "s1696",
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o991"
+              }
+            },
+            "as": "o992"
+          },
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ledger",
+                "ratio": 1.7976931348623157e+308
+              }
+            },
+            "as": "o993"
+          },
+          "bind": "s1698",
+          "expect": {
+            "$document": {
+              "$id": "ledger",
+              "ratio": 1.7976931348623157e+308
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "ledgers",
+              "document": {
+                "$obj": "o993"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ledger",
+              "ratio": 1.7976931348623157e+308,
+              "$collection": "ledgers",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "count": null,
+              "share": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "ratio",
+              "value": 1.7976931348623157e+308
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Attribute value exceeds maximum limit: 1.7976931348623E+308"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger"
+            },
+            "as": "o994"
+          },
+          "bind": "s1701",
+          "expect": {
+            "$document": {
+              "ratio": 1.7976931348623157e+308,
+              "$sequence": "1",
+              "$id": "ledger",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "ledgers",
+              "count": null,
+              "share": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o994"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "ratio"
+            }
+          },
+          "expect": 1.7976931348623157e+308
+        }
+      ]
+    },
+    {
+      "name": "NumericUpdateGuardsTest::testAFloatDecreasePastTheMinimumIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o995"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o995"
+              },
+              "cache": "none"
+            },
+            "as": "o996"
+          },
+          "bind": "s1704",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o996"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "numeric"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o996"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "numeric_u000000000043"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o996"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o997"
+          },
+          "bind": "s1708",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratio"
+            },
+            "as": "o998"
+          },
+          "bind": "s1709",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratio",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "share",
+              "signed": false
+            },
+            "as": "o999"
+          },
+          "bind": "s1710",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "share",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1000"
+          },
+          "bind": "s1711",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1000"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1001"
+          },
+          "bind": "s1713",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1001"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1002"
+          },
+          "bind": "s1715",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1002"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "ledgers",
+              "attributes": [
+                {
+                  "$obj": "o997"
+                },
+                {
+                  "$obj": "o998"
+                },
+                {
+                  "$obj": "o999"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o1003"
+          },
+          "bind": "s1717",
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o996"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1003"
+              }
+            },
+            "as": "o1004"
+          },
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ledger",
+                "share": 0.5,
+                "ratio": -1.7976931348623157e+308
+              }
+            },
+            "as": "o1005"
+          },
+          "bind": "s1719",
+          "expect": {
+            "$document": {
+              "$id": "ledger",
+              "share": 0.5,
+              "ratio": -1.7976931348623157e+308
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o996"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "ledgers",
+              "document": {
+                "$obj": "o1005"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ledger",
+              "share": 0.5,
+              "ratio": -1.7976931348623157e+308,
+              "$collection": "ledgers",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "count": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o996"
+            },
+            "method": "decreaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "share",
+              "value": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Attribute value exceeds minimum limit: 0"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o996"
+            },
+            "method": "decreaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "ratio",
+              "value": 1.7976931348623157e+308
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Attribute value exceeds minimum limit: -1.7976931348623E+308"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o996"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger"
+            },
+            "as": "o1006"
+          },
+          "bind": "s1723",
+          "expect": {
+            "$document": {
+              "share": 0.5,
+              "ratio": -1.7976931348623157e+308,
+              "$sequence": "1",
+              "$id": "ledger",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "ledgers",
+              "count": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1006"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "share"
+            }
+          },
+          "expect": 0.5
+        }
+      ]
+    },
+    {
+      "name": "NumericUpdateGuardsTest::testAnIntegerStringChangeIsCheckedAsAnInteger",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1007"
+          },
+          "bind": "s1725",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1007"
+              },
+              "cache": "none"
+            },
+            "as": "o1008"
+          },
+          "bind": "s1726",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "numeric"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "numeric_u000000000044"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o1009"
+          },
+          "bind": "s1730",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratio"
+            },
+            "as": "o1010"
+          },
+          "bind": "s1731",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratio",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "share",
+              "signed": false
+            },
+            "as": "o1011"
+          },
+          "bind": "s1732",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "share",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1012"
+          },
+          "bind": "s1733",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1012"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1013"
+          },
+          "bind": "s1735",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1013"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1014"
+          },
+          "bind": "s1737",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1014"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "ledgers",
+              "attributes": [
+                {
+                  "$obj": "o1009"
+                },
+                {
+                  "$obj": "o1010"
+                },
+                {
+                  "$obj": "o1011"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o1015"
+          },
+          "bind": "s1739",
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1015"
+              }
+            },
+            "as": "o1016"
+          },
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ledger",
+                "count": 10
+              }
+            },
+            "as": "o1017"
+          },
+          "bind": "s1741",
+          "expect": {
+            "$document": {
+              "$id": "ledger",
+              "count": 10
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "ledgers",
+              "document": {
+                "$obj": "o1017"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ledger",
+              "count": 10,
+              "$collection": "ledgers",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "ratio": null,
+              "share": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "count",
+              "value": "5"
+            },
+            "as": "o1018"
+          },
+          "bind": "s1743",
+          "expect": {
+            "$document": {
+              "count": 15,
+              "$sequence": "1",
+              "$id": "ledger",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "ledgers",
+              "ratio": null,
+              "share": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1018"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "count"
+            }
+          },
+          "expect": 15
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "decreaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "count",
+              "value": "3"
+            },
+            "as": "o1019"
+          },
+          "bind": "s1745",
+          "expect": {
+            "$document": {
+              "count": 12,
+              "$sequence": "1",
+              "$id": "ledger",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "ledgers",
+              "ratio": null,
+              "share": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1019"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "count"
+            }
+          },
+          "expect": 12
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "count",
+              "value": "0"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Type",
+              "message": "Value must be numeric and greater than 0"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "decreaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "count",
+              "value": "0"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Type",
+              "message": "Value must be numeric and greater than 0"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "count",
+              "value": "-4"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Type",
+              "message": "Value must be numeric and greater than 0"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "decreaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "count",
+              "value": "-4"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Type",
+              "message": "Value must be numeric and greater than 0"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger"
+            },
+            "as": "o1020"
+          },
+          "bind": "s1751",
+          "expect": {
+            "$document": {
+              "count": 12,
+              "$sequence": "1",
+              "$id": "ledger",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "ledgers",
+              "ratio": null,
+              "share": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1020"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "count"
+            }
+          },
+          "expect": 12
+        }
+      ]
+    },
+    {
+      "name": "NumericUpdateGuardsTest::testAnUnknownAttributeOrDocumentIsNotFound",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1021"
+          },
+          "bind": "s1753",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1021"
+              },
+              "cache": "none"
+            },
+            "as": "o1022"
+          },
+          "bind": "s1754",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1022"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "numeric"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1022"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "numeric_u000000000045"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1022"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o1023"
+          },
+          "bind": "s1758",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratio"
+            },
+            "as": "o1024"
+          },
+          "bind": "s1759",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratio",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "share",
+              "signed": false
+            },
+            "as": "o1025"
+          },
+          "bind": "s1760",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "share",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1026"
+          },
+          "bind": "s1761",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1026"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1027"
+          },
+          "bind": "s1763",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1027"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1028"
+          },
+          "bind": "s1765",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1028"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "ledgers",
+              "attributes": [
+                {
+                  "$obj": "o1023"
+                },
+                {
+                  "$obj": "o1024"
+                },
+                {
+                  "$obj": "o1025"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o1029"
+          },
+          "bind": "s1767",
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1022"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1029"
+              }
+            },
+            "as": "o1030"
+          },
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ledger",
+                "count": 10
+              }
+            },
+            "as": "o1031"
+          },
+          "bind": "s1769",
+          "expect": {
+            "$document": {
+              "$id": "ledger",
+              "count": 10
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1022"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "ledgers",
+              "document": {
+                "$obj": "o1031"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ledger",
+              "count": 10,
+              "$collection": "ledgers",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "ratio": null,
+              "share": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1022"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "missing"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1022"
+            },
+            "method": "decreaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "missing"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1022"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "missing",
+              "attribute": "count"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Document not found"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1022"
+            },
+            "method": "decreaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "missing",
+              "attribute": "count"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Document not found"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1032"
+          },
+          "bind": "s1775",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1033"
+          },
+          "bind": "s1776",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1033"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1032"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1034"
+          },
+          "bind": "s1779",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1035"
+          },
+          "bind": "s1780",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1035"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1036"
+          },
+          "bind": "s1782",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1036"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1034"
+              },
+              "cache": "none"
+            },
+            "as": "o1037"
+          },
+          "bind": "s1784",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1037"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1032"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1037"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "numeric"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1037"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "numeric_u000000000046"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1037"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o1038"
+          },
+          "bind": "s1789",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratio"
+            },
+            "as": "o1039"
+          },
+          "bind": "s1790",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratio",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "share",
+              "signed": false
+            },
+            "as": "o1040"
+          },
+          "bind": "s1791",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "share",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "ledgers",
+              "attributes": [
+                {
+                  "$obj": "o1038"
+                },
+                {
+                  "$obj": "o1039"
+                },
+                {
+                  "$obj": "o1040"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o1041"
+          },
+          "bind": "s1792",
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1037"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1041"
+              }
+            },
+            "as": "o1042"
+          },
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1037"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "missing",
+              "attribute": "count"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Document not found"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1037"
+            },
+            "method": "decreaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "missing",
+              "attribute": "count"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Document not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "NumericUpdateGuardsTest::testIncreasingAndDecreasingNeedUpdatePermission",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1043"
+          },
+          "bind": "s1796",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1044"
+          },
+          "bind": "s1797",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1044"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1043"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1045"
+          },
+          "bind": "s1800",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1046"
+          },
+          "bind": "s1801",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1046"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1047"
+          },
+          "bind": "s1803",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1047"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1045"
+              },
+              "cache": "none"
+            },
+            "as": "o1048"
+          },
+          "bind": "s1805",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1048"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1043"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1048"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "numeric"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1048"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "numeric_u000000000047"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1048"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o1049"
+          },
+          "bind": "s1810",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratio"
+            },
+            "as": "o1050"
+          },
+          "bind": "s1811",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratio",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "share",
+              "signed": false
+            },
+            "as": "o1051"
+          },
+          "bind": "s1812",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "share",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "ledgers",
+              "attributes": [
+                {
+                  "$obj": "o1049"
+                },
+                {
+                  "$obj": "o1050"
+                },
+                {
+                  "$obj": "o1051"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o1052"
+          },
+          "bind": "s1813",
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1048"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1052"
+              }
+            },
+            "as": "o1053"
+          },
+          "expect": {
+            "$document": {
+              "$id": "ledgers",
+              "name": "ledgers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "share",
+                    "key": "share",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ledger",
+                "count": 10
+              }
+            },
+            "as": "o1054"
+          },
+          "bind": "s1815",
+          "expect": {
+            "$document": {
+              "$id": "ledger",
+              "count": 10
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1048"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "ledgers",
+              "document": {
+                "$obj": "o1054"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ledger",
+              "count": 10,
+              "$collection": "ledgers",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "ratio": null,
+              "share": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1048"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "count"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1048"
+            },
+            "method": "decreaseDocumentAttribute",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger",
+              "attribute": "count"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1048"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "ledgers",
+              "id": "ledger"
+            },
+            "as": "o1055"
+          },
+          "bind": "s1819",
+          "expect": {
+            "$document": {
+              "count": 10,
+              "$sequence": "1",
+              "$id": "ledger",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "ledgers",
+              "ratio": null,
+              "share": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1055"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "count"
+            }
+          },
+          "expect": 10
+        }
+      ]
+    }
+  ]
+}

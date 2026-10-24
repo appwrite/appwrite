@@ -1,0 +1,69 @@
+{
+  "source": "queue",
+  "cases": [
+    {
+      "name": "a queue in the default namespace",
+      "op": "queue.new",
+      "args": {
+        "name": "mails"
+      },
+      "expect": [
+        "mails",
+        "utopia-queue",
+        0
+      ]
+    },
+    {
+      "name": "a queue with every field",
+      "op": "queue.new",
+      "args": {
+        "name": "mails",
+        "namespace": "{tenant}",
+        "job_ttl": 3600
+      },
+      "expect": [
+        "mails",
+        "{tenant}",
+        3600
+      ]
+    },
+    {
+      "name": "an empty name is refused",
+      "op": "queue.new",
+      "args": {
+        "name": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cannot create queue with empty name."
+        }
+      }
+    },
+    {
+      "name": "the name 0 is refused",
+      "op": "queue.new",
+      "args": {
+        "name": "0"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cannot create queue with empty name."
+        }
+      }
+    },
+    {
+      "name": "a name of spaces is allowed",
+      "op": "queue.new",
+      "args": {
+        "name": " "
+      },
+      "expect": [
+        " ",
+        "utopia-queue",
+        0
+      ]
+    }
+  ]
+}

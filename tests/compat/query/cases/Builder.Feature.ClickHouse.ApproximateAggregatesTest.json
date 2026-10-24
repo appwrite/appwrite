@@ -1,0 +1,307 @@
+{
+  "source": "packages/query/tests/Builder/Feature/ClickHouse/ApproximateAggregatesTest.php",
+  "cases": [
+    {
+      "name": "testQuantilesEmitsMultipleLevels",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "quantiles",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                0.25,
+                0.5,
+                0.75
+              ],
+              "value"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT quantiles(0.25, 0.5, 0.75)(`value`) FROM `events`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT quantiles(0.25, 0.5, 0.75)(`value`) FROM `events`",
+        [],
+        [],
+        "SELECT quantiles(0.25, 0.5, 0.75)(`value`) FROM `events`",
+        "SELECT quantiles(0.25, 0.5, 0.75)(`value`) FROM `events`"
+      ]
+    },
+    {
+      "name": "testQuantilesWithAlias",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "quantiles",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                0.25,
+                0.5,
+                0.75
+              ],
+              "value",
+              "qs"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT quantiles(0.25, 0.5, 0.75)(`value`) AS `qs` FROM `events`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT quantiles(0.25, 0.5, 0.75)(`value`) AS `qs` FROM `events`",
+        [],
+        [],
+        "SELECT quantiles(0.25, 0.5, 0.75)(`value`) AS `qs` FROM `events`",
+        "SELECT quantiles(0.25, 0.5, 0.75)(`value`) AS `qs` FROM `events`"
+      ]
+    },
+    {
+      "name": "testQuantilesRejectsEmptyLevels",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "quantiles",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [],
+              "value"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "quantiles() requires at least one level."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testQuantilesRejectsOutOfRangeLevels",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "quantiles",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                0.5,
+                1.5
+              ],
+              "value"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "quantiles() levels must be in the range [0, 1]."
+          },
+          "id": 2
+        }
+      ]
+    }
+  ]
+}

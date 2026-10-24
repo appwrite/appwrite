@@ -1,0 +1,980 @@
+{
+  "source": "packages/telemetry/tests/E2E/Adapter/OpenTelemetry/Swoole/TransportIntegrationTest.php",
+  "cases": [
+    {
+      "name": "sends the payload to the collector",
+      "op": "transport.exchange",
+      "args": {
+        "script": [
+          {
+            "status": 200,
+            "body": "OK"
+          }
+        ],
+        "sends": [
+          "test-metric-payload-data"
+        ]
+      },
+      "expect": {
+        "results": [
+          "OK"
+        ],
+        "requests": [
+          {
+            "payload": "test-metric-payload-data",
+            "headers": [
+              [
+                "content-length",
+                "24"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "retries once when the pooled connection is reset mid request",
+      "op": "transport.exchange",
+      "args": {
+        "script": [
+          {
+            "status": 200,
+            "body": "OK"
+          },
+          {
+            "reset": true
+          },
+          {
+            "status": 200,
+            "body": "OK"
+          }
+        ],
+        "sends": [
+          "first",
+          "second"
+        ]
+      },
+      "expect": {
+        "results": [
+          "OK",
+          "OK"
+        ],
+        "requests": [
+          {
+            "payload": "first",
+            "headers": [
+              [
+                "content-length",
+                "5"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "second",
+            "headers": [
+              [
+                "content-length",
+                "6"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "second",
+            "headers": [
+              [
+                "content-length",
+                "6"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "does not retry when the collector is too slow to answer",
+      "op": "transport.exchange",
+      "args": {
+        "script": [
+          {
+            "status": 200,
+            "body": "OK"
+          },
+          {
+            "hang_ms": 1000
+          }
+        ],
+        "sends": [
+          "first",
+          "second"
+        ],
+        "timeout": 0.3
+      },
+      "expect": {
+        "results": [
+          "OK",
+          {
+            "$error": {
+              "class": "Utopia\\Telemetry\\Exception",
+              "message": "OTLP connection failed: Operation timed out (code: 110)"
+            }
+          }
+        ],
+        "requests": [
+          {
+            "payload": "first",
+            "headers": [
+              [
+                "content-length",
+                "5"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "second",
+            "headers": [
+              [
+                "content-length",
+                "6"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "custom headers",
+      "op": "transport.exchange",
+      "args": {
+        "sends": [
+          "payload"
+        ],
+        "headers": [
+          [
+            "Authorization",
+            "Bearer test-token"
+          ],
+          [
+            "X-Custom-Header",
+            "custom-value"
+          ]
+        ]
+      },
+      "expect": {
+        "results": [
+          ""
+        ],
+        "requests": [
+          {
+            "payload": "payload",
+            "headers": [
+              [
+                "authorization",
+                "Bearer test-token"
+              ],
+              [
+                "content-length",
+                "7"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ],
+              [
+                "x-custom-header",
+                "custom-value"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "server error",
+      "op": "transport.exchange",
+      "args": {
+        "script": [
+          {
+            "status": 500,
+            "body": "Internal Server Error"
+          }
+        ],
+        "sends": [
+          "payload"
+        ]
+      },
+      "expect": {
+        "results": [
+          {
+            "$error": {
+              "class": "Utopia\\Telemetry\\Exception",
+              "message": "OTLP export failed with status 500: Internal Server Error"
+            }
+          }
+        ],
+        "requests": [
+          {
+            "payload": "payload",
+            "headers": [
+              [
+                "content-length",
+                "7"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "client error keeps the connection",
+      "op": "transport.exchange",
+      "args": {
+        "script": [
+          {
+            "status": 400,
+            "body": "bad"
+          },
+          {
+            "status": 200,
+            "body": "OK"
+          }
+        ],
+        "sends": [
+          "a",
+          "b"
+        ]
+      },
+      "expect": {
+        "results": [
+          {
+            "$error": {
+              "class": "Utopia\\Telemetry\\Exception",
+              "message": "OTLP export failed with status 400: bad"
+            }
+          },
+          "OK"
+        ],
+        "requests": [
+          {
+            "payload": "a",
+            "headers": [
+              [
+                "content-length",
+                "1"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "b",
+            "headers": [
+              [
+                "content-length",
+                "1"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "multiple sequential sends",
+      "op": "transport.exchange",
+      "args": {
+        "sends": [
+          "payload-0",
+          "payload-1",
+          "payload-2",
+          "payload-3",
+          "payload-4",
+          "payload-5",
+          "payload-6",
+          "payload-7",
+          "payload-8",
+          "payload-9"
+        ],
+        "pool_size": 2
+      },
+      "expect": {
+        "results": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "requests": [
+          {
+            "payload": "payload-0",
+            "headers": [
+              [
+                "content-length",
+                "9"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "payload-1",
+            "headers": [
+              [
+                "content-length",
+                "9"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "payload-2",
+            "headers": [
+              [
+                "content-length",
+                "9"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "payload-3",
+            "headers": [
+              [
+                "content-length",
+                "9"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "payload-4",
+            "headers": [
+              [
+                "content-length",
+                "9"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "payload-5",
+            "headers": [
+              [
+                "content-length",
+                "9"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "payload-6",
+            "headers": [
+              [
+                "content-length",
+                "9"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "payload-7",
+            "headers": [
+              [
+                "content-length",
+                "9"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "payload-8",
+            "headers": [
+              [
+                "content-length",
+                "9"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "payload-9",
+            "headers": [
+              [
+                "content-length",
+                "9"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "concurrent sends",
+      "op": "transport.exchange",
+      "args": {
+        "script": [
+          {
+            "status": 200,
+            "body": "",
+            "delay_ms": 10
+          }
+        ],
+        "sends": [
+          "c-00",
+          "c-01",
+          "c-02",
+          "c-03",
+          "c-04",
+          "c-05",
+          "c-06",
+          "c-07",
+          "c-08",
+          "c-09",
+          "c-10",
+          "c-11",
+          "c-12",
+          "c-13",
+          "c-14",
+          "c-15",
+          "c-16",
+          "c-17",
+          "c-18",
+          "c-19"
+        ],
+        "pool_size": 4,
+        "concurrent": true
+      },
+      "expect": {
+        "results": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "requests": [
+          {
+            "payload": "c-00",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-01",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-02",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-03",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-04",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-05",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-06",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-07",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-08",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-09",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-10",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-11",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-12",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-13",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-14",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-15",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-16",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-17",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-18",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "c-19",
+            "headers": [
+              [
+                "content-length",
+                "4"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "json content type",
+      "op": "transport.exchange",
+      "args": {
+        "sends": [
+          "{\"metrics\":[]}"
+        ],
+        "content_type": "application/json"
+      },
+      "expect": {
+        "results": [
+          ""
+        ],
+        "requests": [
+          {
+            "payload": "{\"metrics\":[]}",
+            "headers": [
+              [
+                "content-length",
+                "14"
+              ],
+              [
+                "content-type",
+                "application/json"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "connection refused",
+      "op": "transport.exchange",
+      "args": {
+        "endpoint": "http://127.0.0.1:19999/v1/metrics",
+        "sends": [
+          "payload"
+        ],
+        "timeout": 0.5
+      },
+      "mask": {
+        "paths": [
+          "/results/0/$error/message"
+        ],
+        "reason": "the message quotes the OS error number, which differs between Linux (111, where PHP runs) and a macOS host (61)"
+      },
+      "expect": {
+        "results": [
+          {
+            "$error": {
+              "class": "Utopia\\Telemetry\\Exception",
+              "message": "<masked>"
+            }
+          }
+        ],
+        "requests": []
+      }
+    },
+    {
+      "name": "keep-alive connection reuse",
+      "op": "transport.exchange",
+      "args": {
+        "sends": [
+          "k-0",
+          "k-1",
+          "k-2",
+          "k-3",
+          "k-4"
+        ],
+        "pool_size": 1
+      },
+      "expect": {
+        "results": [
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "requests": [
+          {
+            "payload": "k-0",
+            "headers": [
+              [
+                "content-length",
+                "3"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "k-1",
+            "headers": [
+              [
+                "content-length",
+                "3"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "k-2",
+            "headers": [
+              [
+                "content-length",
+                "3"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "k-3",
+            "headers": [
+              [
+                "content-length",
+                "3"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "k-4",
+            "headers": [
+              [
+                "content-length",
+                "3"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "large payload",
+      "op": "transport.exchange",
+      "args": {
+        "sends": [
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ]
+      },
+      "expect": {
+        "results": [
+          ""
+        ],
+        "requests": [
+          {
+            "payload": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "headers": [
+              [
+                "content-length",
+                "512"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

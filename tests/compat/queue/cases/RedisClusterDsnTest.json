@@ -1,0 +1,402 @@
+{
+  "source": "packages/queue/tests/E2E/RedisClusterDsnTest.php",
+  "cases": [
+    {
+      "name": "a DSN with seeds and ports reaches the cluster",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "cluster-dsn",
+            "dsn": "redis-cluster://[{cluster}]"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPush",
+            "args": [
+              "{${ns}}.dsn-test",
+              "payload"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPop",
+            "args": [
+              "{${ns}}.dsn-test",
+              1
+            ]
+          },
+          "expect": "payload"
+        }
+      ]
+    },
+    {
+      "name": "a DSN without seeds is refused",
+      "op": "connection.new",
+      "args": {
+        "kind": "cluster-dsn",
+        "dsn": "redis-cluster://[;]"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Redis cluster DSN names no seed hosts."
+        }
+      }
+    },
+    {
+      "name": "every command on a cluster connection",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "cluster"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "ping"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "{${ns}}.dsn-test",
+              "v"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "{${ns}}.dsn-test"
+            ]
+          },
+          "expect": "v"
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "setNotExists",
+            "args": [
+              "{${ns}}.dsn-test",
+              "w",
+              10
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "remove",
+            "args": [
+              "{${ns}}.dsn-test"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "increment",
+            "args": [
+              "{${ns}}.dsn-testn"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "incrementBy",
+            "args": [
+              "{${ns}}.dsn-testn",
+              4
+            ]
+          },
+          "expect": 5
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "decrement",
+            "args": [
+              "{${ns}}.dsn-testn"
+            ]
+          },
+          "expect": 4
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPushMany",
+            "args": [
+              "{${ns}}.dsn-testl",
+              [
+                "a",
+                "b",
+                "c"
+              ]
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPushArray",
+            "args": [
+              "{${ns}}.dsn-testl",
+              {
+                "x": 1
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listSize",
+            "args": [
+              "{${ns}}.dsn-testl"
+            ]
+          },
+          "expect": 4
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listRange",
+            "args": [
+              "{${ns}}.dsn-testl",
+              10,
+              0
+            ]
+          },
+          "expect": [
+            "c",
+            "b",
+            "a",
+            "{\"x\":1}"
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopArray",
+            "args": [
+              "{${ns}}.dsn-testl",
+              1
+            ]
+          },
+          "expect": {
+            "$array": [
+              [
+                "x",
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopMany",
+            "args": [
+              "{${ns}}.dsn-testl",
+              2,
+              1
+            ]
+          },
+          "expect": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopLeftPush",
+            "args": [
+              "{${ns}}.dsn-testl",
+              "{${ns}}.dsn-testd",
+              1
+            ]
+          },
+          "expect": "c"
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listRemove",
+            "args": [
+              "{${ns}}.dsn-testd",
+              "a"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPop",
+            "args": [
+              "{${ns}}.dsn-testl",
+              1
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return {KEYS[1], ARGV[1]}",
+              [
+                "{${ns}}.dsn-test"
+              ],
+              [
+                "x"
+              ]
+            ]
+          },
+          "expect": [
+            "{${ns}}.dsn-test",
+            "x"
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return 1",
+              [
+                "{${ns}}.dsn-test",
+                "${ns}.untagged"
+              ],
+              []
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Atomic Redis queue operations require a shared hash tag in the queue namespace, for example {utopia-queue}. Migrate existing keys before changing the namespace."
+            }
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "remove",
+            "args": [
+              "{${ns}}.dsn-testn"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "close"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

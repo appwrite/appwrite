@@ -1,0 +1,6323 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/FiniteTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FiniteTest::testAcceptsAFiniteNumber#zero",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4689"
+          },
+          "bind": "s8364",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4689"
+            },
+            "method": "isValid",
+            "args": {
+              "value": 0.0
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4690"
+          },
+          "bind": "s8366",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4691"
+          },
+          "bind": "s8367",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4690"
+                },
+                {
+                  "$obj": "o4691"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4692"
+          },
+          "bind": "s8368",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                0.0
+              ]
+            },
+            "as": "o4693"
+          },
+          "bind": "s8369",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                0.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4692"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4693"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4694"
+          },
+          "bind": "s8371",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4695"
+          },
+          "bind": "s8372",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4694"
+                },
+                {
+                  "$obj": "o4695"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4696"
+          },
+          "bind": "s8373",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": 0.0,
+              "end": 0.0
+            },
+            "as": "o4697"
+          },
+          "bind": "s8374",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                0.0,
+                0.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4696"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4697"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testAcceptsAFiniteNumber#integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4698"
+          },
+          "bind": "s8376",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4698"
+            },
+            "method": "isValid",
+            "args": {
+              "value": 5
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4699"
+          },
+          "bind": "s8378",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4700"
+          },
+          "bind": "s8379",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4699"
+                },
+                {
+                  "$obj": "o4700"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4701"
+          },
+          "bind": "s8380",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                5
+              ]
+            },
+            "as": "o4702"
+          },
+          "bind": "s8381",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4701"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4702"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4703"
+          },
+          "bind": "s8383",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4704"
+          },
+          "bind": "s8384",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4703"
+                },
+                {
+                  "$obj": "o4704"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4705"
+          },
+          "bind": "s8385",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": 5,
+              "end": 5
+            },
+            "as": "o4706"
+          },
+          "bind": "s8386",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                5,
+                5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4705"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4706"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testAcceptsAFiniteNumber#fraction",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4707"
+          },
+          "bind": "s8388",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4707"
+            },
+            "method": "isValid",
+            "args": {
+              "value": 0.30000000000000004
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4708"
+          },
+          "bind": "s8390",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4709"
+          },
+          "bind": "s8391",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4708"
+                },
+                {
+                  "$obj": "o4709"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4710"
+          },
+          "bind": "s8392",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                0.30000000000000004
+              ]
+            },
+            "as": "o4711"
+          },
+          "bind": "s8393",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                0.30000000000000004
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4710"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4711"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4712"
+          },
+          "bind": "s8395",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4713"
+          },
+          "bind": "s8396",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4712"
+                },
+                {
+                  "$obj": "o4713"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4714"
+          },
+          "bind": "s8397",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": 0.30000000000000004,
+              "end": 0.30000000000000004
+            },
+            "as": "o4715"
+          },
+          "bind": "s8398",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                0.30000000000000004,
+                0.30000000000000004
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4714"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4715"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testAcceptsAFiniteNumber#denormal",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4716"
+          },
+          "bind": "s8400",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4716"
+            },
+            "method": "isValid",
+            "args": {
+              "value": 5e-324
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4717"
+          },
+          "bind": "s8402",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4718"
+          },
+          "bind": "s8403",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4717"
+                },
+                {
+                  "$obj": "o4718"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4719"
+          },
+          "bind": "s8404",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                5e-324
+              ]
+            },
+            "as": "o4720"
+          },
+          "bind": "s8405",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                5e-324
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4719"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4720"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4721"
+          },
+          "bind": "s8407",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4722"
+          },
+          "bind": "s8408",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4721"
+                },
+                {
+                  "$obj": "o4722"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4723"
+          },
+          "bind": "s8409",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": 5e-324,
+              "end": 5e-324
+            },
+            "as": "o4724"
+          },
+          "bind": "s8410",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                5e-324,
+                5e-324
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4723"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4724"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testAcceptsAFiniteNumber#negative denormal",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4725"
+          },
+          "bind": "s8412",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4725"
+            },
+            "method": "isValid",
+            "args": {
+              "value": -5e-324
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4726"
+          },
+          "bind": "s8414",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4727"
+          },
+          "bind": "s8415",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4726"
+                },
+                {
+                  "$obj": "o4727"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4728"
+          },
+          "bind": "s8416",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                -5e-324
+              ]
+            },
+            "as": "o4729"
+          },
+          "bind": "s8417",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                -5e-324
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4728"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4729"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4730"
+          },
+          "bind": "s8419",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4731"
+          },
+          "bind": "s8420",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4730"
+                },
+                {
+                  "$obj": "o4731"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4732"
+          },
+          "bind": "s8421",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": -5e-324,
+              "end": -5e-324
+            },
+            "as": "o4733"
+          },
+          "bind": "s8422",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                -5e-324,
+                -5e-324
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4732"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4733"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testAcceptsAFiniteNumber#maximum",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4734"
+          },
+          "bind": "s8424",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4734"
+            },
+            "method": "isValid",
+            "args": {
+              "value": 1.7976931348623157e+308
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4735"
+          },
+          "bind": "s8426",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4736"
+          },
+          "bind": "s8427",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4735"
+                },
+                {
+                  "$obj": "o4736"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4737"
+          },
+          "bind": "s8428",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                1.7976931348623157e+308
+              ]
+            },
+            "as": "o4738"
+          },
+          "bind": "s8429",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                1.7976931348623157e+308
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4737"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4738"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4739"
+          },
+          "bind": "s8431",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4740"
+          },
+          "bind": "s8432",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4739"
+                },
+                {
+                  "$obj": "o4740"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4741"
+          },
+          "bind": "s8433",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": 1.7976931348623157e+308,
+              "end": 1.7976931348623157e+308
+            },
+            "as": "o4742"
+          },
+          "bind": "s8434",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                1.7976931348623157e+308,
+                1.7976931348623157e+308
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4741"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4742"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testAcceptsAFiniteNumber#minimum",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4743"
+          },
+          "bind": "s8436",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4743"
+            },
+            "method": "isValid",
+            "args": {
+              "value": -1.7976931348623157e+308
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4744"
+          },
+          "bind": "s8438",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4745"
+          },
+          "bind": "s8439",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4744"
+                },
+                {
+                  "$obj": "o4745"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4746"
+          },
+          "bind": "s8440",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                -1.7976931348623157e+308
+              ]
+            },
+            "as": "o4747"
+          },
+          "bind": "s8441",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                -1.7976931348623157e+308
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4746"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4747"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4748"
+          },
+          "bind": "s8443",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4749"
+          },
+          "bind": "s8444",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4748"
+                },
+                {
+                  "$obj": "o4749"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4750"
+          },
+          "bind": "s8445",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": -1.7976931348623157e+308,
+              "end": -1.7976931348623157e+308
+            },
+            "as": "o4751"
+          },
+          "bind": "s8446",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                -1.7976931348623157e+308,
+                -1.7976931348623157e+308
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4750"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4751"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testRejectsANonFiniteNumber#infinity",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4752"
+          },
+          "bind": "s8448",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4752"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$float": "INF"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            },
+            "as": "o4753"
+          },
+          "bind": "s8450",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notEqual",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "INF"
+              }
+            },
+            "as": "o4754"
+          },
+          "bind": "s8451",
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "lessThan",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "INF"
+              }
+            },
+            "as": "o4755"
+          },
+          "bind": "s8452",
+          "expect": {
+            "$query": {
+              "method": "lessThan",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "greaterThanEqual",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "INF"
+              }
+            },
+            "as": "o4756"
+          },
+          "bind": "s8453",
+          "expect": {
+            "$query": {
+              "method": "greaterThanEqual",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": 0,
+              "end": {
+                "$float": "INF"
+              }
+            },
+            "as": "o4757"
+          },
+          "bind": "s8454",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                0,
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "fa",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            },
+            "as": "o4758"
+          },
+          "bind": "s8455",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "fa",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4759"
+          },
+          "bind": "s8456",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4760"
+          },
+          "bind": "s8457",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4759"
+                },
+                {
+                  "$obj": "o4760"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4761"
+          },
+          "bind": "s8458",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4761"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4753"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4753"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4761"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4762"
+          },
+          "bind": "s8462",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4763"
+          },
+          "bind": "s8463",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4762"
+                },
+                {
+                  "$obj": "o4763"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4764"
+          },
+          "bind": "s8464",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4764"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4754"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4754"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::NotEqual"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4764"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4765"
+          },
+          "bind": "s8468",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4766"
+          },
+          "bind": "s8469",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4765"
+                },
+                {
+                  "$obj": "o4766"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4767"
+          },
+          "bind": "s8470",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4767"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4755"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4755"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::LessThan"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4767"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4768"
+          },
+          "bind": "s8474",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4769"
+          },
+          "bind": "s8475",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4768"
+                },
+                {
+                  "$obj": "o4769"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4770"
+          },
+          "bind": "s8476",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4770"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4756"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4756"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::GreaterThanEqual"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4770"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4771"
+          },
+          "bind": "s8480",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4772"
+          },
+          "bind": "s8481",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4771"
+                },
+                {
+                  "$obj": "o4772"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4773"
+          },
+          "bind": "s8482",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4773"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4757"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4757"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Between"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4773"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4774"
+          },
+          "bind": "s8486",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4775"
+          },
+          "bind": "s8487",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4774"
+                },
+                {
+                  "$obj": "o4775"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4776"
+          },
+          "bind": "s8488",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4776"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4758"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4758"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4776"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"fa\""
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testRejectsANonFiniteNumber#negative infinity",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4777"
+          },
+          "bind": "s8492",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4777"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$float": "-INF"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            },
+            "as": "o4778"
+          },
+          "bind": "s8494",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notEqual",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o4779"
+          },
+          "bind": "s8495",
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "lessThan",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o4780"
+          },
+          "bind": "s8496",
+          "expect": {
+            "$query": {
+              "method": "lessThan",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "greaterThanEqual",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o4781"
+          },
+          "bind": "s8497",
+          "expect": {
+            "$query": {
+              "method": "greaterThanEqual",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": 0,
+              "end": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o4782"
+          },
+          "bind": "s8498",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                0,
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "fa",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            },
+            "as": "o4783"
+          },
+          "bind": "s8499",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "fa",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4784"
+          },
+          "bind": "s8500",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4785"
+          },
+          "bind": "s8501",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4784"
+                },
+                {
+                  "$obj": "o4785"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4786"
+          },
+          "bind": "s8502",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4786"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4778"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4778"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4786"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4787"
+          },
+          "bind": "s8506",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4788"
+          },
+          "bind": "s8507",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4787"
+                },
+                {
+                  "$obj": "o4788"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4789"
+          },
+          "bind": "s8508",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4789"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4779"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4779"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::NotEqual"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4789"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4790"
+          },
+          "bind": "s8512",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4791"
+          },
+          "bind": "s8513",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4790"
+                },
+                {
+                  "$obj": "o4791"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4792"
+          },
+          "bind": "s8514",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4792"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4780"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4780"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::LessThan"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4792"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4793"
+          },
+          "bind": "s8518",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4794"
+          },
+          "bind": "s8519",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4793"
+                },
+                {
+                  "$obj": "o4794"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4795"
+          },
+          "bind": "s8520",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4795"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4781"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4781"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::GreaterThanEqual"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4795"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4796"
+          },
+          "bind": "s8524",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4797"
+          },
+          "bind": "s8525",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4796"
+                },
+                {
+                  "$obj": "o4797"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4798"
+          },
+          "bind": "s8526",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4798"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4782"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4782"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Between"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4798"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4799"
+          },
+          "bind": "s8530",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4800"
+          },
+          "bind": "s8531",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4799"
+                },
+                {
+                  "$obj": "o4800"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4801"
+          },
+          "bind": "s8532",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4801"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4783"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4783"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4801"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"fa\""
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testRejectsANonFiniteNumber#not a number",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4802"
+          },
+          "bind": "s8536",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4802"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$float": "NAN"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            },
+            "as": "o4803"
+          },
+          "bind": "s8538",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notEqual",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "NAN"
+              }
+            },
+            "as": "o4804"
+          },
+          "bind": "s8539",
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "lessThan",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "NAN"
+              }
+            },
+            "as": "o4805"
+          },
+          "bind": "s8540",
+          "expect": {
+            "$query": {
+              "method": "lessThan",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "greaterThanEqual",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "NAN"
+              }
+            },
+            "as": "o4806"
+          },
+          "bind": "s8541",
+          "expect": {
+            "$query": {
+              "method": "greaterThanEqual",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": 0,
+              "end": {
+                "$float": "NAN"
+              }
+            },
+            "as": "o4807"
+          },
+          "bind": "s8542",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                0,
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "fa",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            },
+            "as": "o4808"
+          },
+          "bind": "s8543",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "fa",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4809"
+          },
+          "bind": "s8544",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4810"
+          },
+          "bind": "s8545",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4809"
+                },
+                {
+                  "$obj": "o4810"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4811"
+          },
+          "bind": "s8546",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4811"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4803"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4803"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4811"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4812"
+          },
+          "bind": "s8550",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4813"
+          },
+          "bind": "s8551",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4812"
+                },
+                {
+                  "$obj": "o4813"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4814"
+          },
+          "bind": "s8552",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4814"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4804"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4804"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::NotEqual"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4814"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4815"
+          },
+          "bind": "s8556",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4816"
+          },
+          "bind": "s8557",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4815"
+                },
+                {
+                  "$obj": "o4816"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4817"
+          },
+          "bind": "s8558",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4817"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4805"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4805"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::LessThan"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4817"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4818"
+          },
+          "bind": "s8562",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4819"
+          },
+          "bind": "s8563",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4818"
+                },
+                {
+                  "$obj": "o4819"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4820"
+          },
+          "bind": "s8564",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4820"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4806"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4806"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::GreaterThanEqual"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4820"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4821"
+          },
+          "bind": "s8568",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4822"
+          },
+          "bind": "s8569",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4821"
+                },
+                {
+                  "$obj": "o4822"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4823"
+          },
+          "bind": "s8570",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4823"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4807"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4807"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Between"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4823"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4824"
+          },
+          "bind": "s8574",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4825"
+          },
+          "bind": "s8575",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4824"
+                },
+                {
+                  "$obj": "o4825"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4826"
+          },
+          "bind": "s8576",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4826"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4808"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4808"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4826"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"fa\""
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testRejectsANonFiniteNumber#overflowing literal",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4827"
+          },
+          "bind": "s8580",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4827"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$float": "INF"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            },
+            "as": "o4828"
+          },
+          "bind": "s8582",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notEqual",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "INF"
+              }
+            },
+            "as": "o4829"
+          },
+          "bind": "s8583",
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "lessThan",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "INF"
+              }
+            },
+            "as": "o4830"
+          },
+          "bind": "s8584",
+          "expect": {
+            "$query": {
+              "method": "lessThan",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "greaterThanEqual",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "INF"
+              }
+            },
+            "as": "o4831"
+          },
+          "bind": "s8585",
+          "expect": {
+            "$query": {
+              "method": "greaterThanEqual",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": 0,
+              "end": {
+                "$float": "INF"
+              }
+            },
+            "as": "o4832"
+          },
+          "bind": "s8586",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                0,
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "fa",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            },
+            "as": "o4833"
+          },
+          "bind": "s8587",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "fa",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4834"
+          },
+          "bind": "s8588",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4835"
+          },
+          "bind": "s8589",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4834"
+                },
+                {
+                  "$obj": "o4835"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4836"
+          },
+          "bind": "s8590",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4836"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4828"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4828"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4836"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4837"
+          },
+          "bind": "s8594",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4838"
+          },
+          "bind": "s8595",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4837"
+                },
+                {
+                  "$obj": "o4838"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4839"
+          },
+          "bind": "s8596",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4839"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4829"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4829"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::NotEqual"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4839"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4840"
+          },
+          "bind": "s8600",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4841"
+          },
+          "bind": "s8601",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4840"
+                },
+                {
+                  "$obj": "o4841"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4842"
+          },
+          "bind": "s8602",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4842"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4830"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4830"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::LessThan"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4842"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4843"
+          },
+          "bind": "s8606",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4844"
+          },
+          "bind": "s8607",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4843"
+                },
+                {
+                  "$obj": "o4844"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4845"
+          },
+          "bind": "s8608",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4845"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4831"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4831"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::GreaterThanEqual"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4845"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4846"
+          },
+          "bind": "s8612",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4847"
+          },
+          "bind": "s8613",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4846"
+                },
+                {
+                  "$obj": "o4847"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4848"
+          },
+          "bind": "s8614",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4848"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4832"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4832"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Between"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4848"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4849"
+          },
+          "bind": "s8618",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4850"
+          },
+          "bind": "s8619",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4849"
+                },
+                {
+                  "$obj": "o4850"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4851"
+          },
+          "bind": "s8620",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4851"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4833"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4833"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4851"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"fa\""
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testRejectsANonFiniteNumber#negative overflowing literal",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {},
+            "as": "o4852"
+          },
+          "bind": "s8624",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4852"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$float": "-INF"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            },
+            "as": "o4853"
+          },
+          "bind": "s8626",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notEqual",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o4854"
+          },
+          "bind": "s8627",
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "lessThan",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o4855"
+          },
+          "bind": "s8628",
+          "expect": {
+            "$query": {
+              "method": "lessThan",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "greaterThanEqual",
+            "args": {
+              "attribute": "f",
+              "value": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o4856"
+          },
+          "bind": "s8629",
+          "expect": {
+            "$query": {
+              "method": "greaterThanEqual",
+              "attribute": "f",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "f",
+              "start": 0,
+              "end": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o4857"
+          },
+          "bind": "s8630",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "f",
+              "values": [
+                0,
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "fa",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            },
+            "as": "o4858"
+          },
+          "bind": "s8631",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "fa",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4859"
+          },
+          "bind": "s8632",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4860"
+          },
+          "bind": "s8633",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4859"
+                },
+                {
+                  "$obj": "o4860"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4861"
+          },
+          "bind": "s8634",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4861"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4853"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4853"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4861"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4862"
+          },
+          "bind": "s8638",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4863"
+          },
+          "bind": "s8639",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4862"
+                },
+                {
+                  "$obj": "o4863"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4864"
+          },
+          "bind": "s8640",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4864"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4854"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4854"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::NotEqual"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4864"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4865"
+          },
+          "bind": "s8644",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4866"
+          },
+          "bind": "s8645",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4865"
+                },
+                {
+                  "$obj": "o4866"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4867"
+          },
+          "bind": "s8646",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4867"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4855"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4855"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::LessThan"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4867"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4868"
+          },
+          "bind": "s8650",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4869"
+          },
+          "bind": "s8651",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4868"
+                },
+                {
+                  "$obj": "o4869"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4870"
+          },
+          "bind": "s8652",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4870"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4856"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4856"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::GreaterThanEqual"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4870"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4871"
+          },
+          "bind": "s8656",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4872"
+          },
+          "bind": "s8657",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4871"
+                },
+                {
+                  "$obj": "o4872"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4873"
+          },
+          "bind": "s8658",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4873"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4857"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4857"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Between"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4873"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"f\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "f",
+                "key": "f",
+                "type": "double",
+                "array": false
+              }
+            },
+            "as": "o4874"
+          },
+          "bind": "s8662",
+          "expect": {
+            "$document": {
+              "$id": "f",
+              "key": "f",
+              "type": "double",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fa",
+                "key": "fa",
+                "type": "double",
+                "array": true
+              }
+            },
+            "as": "o4875"
+          },
+          "bind": "s8663",
+          "expect": {
+            "$document": {
+              "$id": "fa",
+              "key": "fa",
+              "type": "double",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4874"
+                },
+                {
+                  "$obj": "o4875"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4876"
+          },
+          "bind": "s8664",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4876"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4858"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4858"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4876"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query value is invalid for attribute \"fa\""
+        }
+      ]
+    },
+    {
+      "name": "FiniteTest::testLooseRejectsAnOverflowingString",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {
+              "loose": true
+            },
+            "as": "o4877"
+          },
+          "bind": "s8668",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4877"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "1e300"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {
+              "loose": true
+            },
+            "as": "o4878"
+          },
+          "bind": "s8670",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4878"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "1e400"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Finite",
+            "args": {
+              "loose": true
+            },
+            "as": "o4879"
+          },
+          "bind": "s8672",
+          "expect": {
+            "$value": "Validator\\Finite",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4879"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "-1e400"
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

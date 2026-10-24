@@ -1,0 +1,155 @@
+{
+  "lib": "schedule",
+  "environment": {
+    "date": "2026-10-18T14:22:53Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "cron_parse",
+      "description": "Parse a cron expression with lists, ranges, steps and names",
+      "php": {
+        "ns": 9513.157235421166,
+        "min": 8014.77667386609,
+        "max": 17633.585313174946,
+        "samples": 15,
+        "calls": 2315,
+        "cpu": 10323.167746580273,
+        "peak": 45152.0,
+        "retained": 0.010827933765298775,
+        "rss": 107823104.0
+      },
+      "rust": {
+        "ns": 1696.3442081520864,
+        "min": 1607.7009827613983,
+        "max": 2156.664491702916,
+        "samples": 15,
+        "calls": 12414,
+        "cpu": 1745.5690564416518,
+        "rss": 27254784.0,
+        "allocations": 36.000059073089524,
+        "bytes": 1241.0150851189517,
+        "peak": 1650.0,
+        "retained": 0.008882444551850062
+      },
+      "speedup": 5.608034731220222,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "cron_day",
+      "description": "List a day of */5 cron occurrences (288)",
+      "php": {
+        "ns": 1580666.6,
+        "min": 1037233.4,
+        "max": 2566333.4,
+        "samples": 15,
+        "calls": 5,
+        "cpu": 1592173.3333333333,
+        "peak": 106536.0,
+        "retained": 5.013333333333334,
+        "rss": 107823104.0
+      },
+      "rust": {
+        "ns": 99797.32608695653,
+        "min": 90701.99456521739,
+        "max": 109439.76630434782,
+        "samples": 15,
+        "calls": 184,
+        "cpu": 101261.35217391304,
+        "rss": 27648000.0,
+        "allocations": 1786.0039855072464,
+        "bytes": 250135.0177536232,
+        "peak": 123759.0,
+        "retained": 0.5992753623188406
+      },
+      "speedup": 15.83876704895596,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "interval_day",
+      "description": "List a day of one-minute interval occurrences (1440)",
+      "php": {
+        "ns": 998655.6842105263,
+        "min": 973359.6315789474,
+        "max": 1080293.8421052631,
+        "samples": 15,
+        "calls": 19,
+        "cpu": 1009477.1929824562,
+        "peak": 499040.0,
+        "retained": 1.3192982456140352,
+        "rss": 107823104.0
+      },
+      "rust": {
+        "ns": 495147.54054054053,
+        "min": 487304.0540540541,
+        "max": 529906.5405405406,
+        "samples": 15,
+        "calls": 37,
+        "cpu": 498841.8126126126,
+        "rss": 27648000.0,
+        "allocations": 12974.01981981982,
+        "bytes": 1117505.0612612613,
+        "peak": 495889.0,
+        "retained": 2.9801801801801804
+      },
+      "speedup": 2.016885074538224,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "tick",
+      "description": "Tick and commit a minute over 1000 minutely schedules (1000 occurrences)",
+      "php": {
+        "ns": 1605102.6153846155,
+        "min": 1500512.8461538462,
+        "max": 2968852.6153846155,
+        "samples": 15,
+        "calls": 13,
+        "cpu": 1656051.282051282,
+        "peak": 719440.0,
+        "retained": 1.9282051282051282,
+        "rss": 107823104.0
+      },
+      "rust": {
+        "ns": 589345.5882352941,
+        "min": 569539.2058823529,
+        "max": 627683.8235294118,
+        "samples": 15,
+        "calls": 34,
+        "cpu": 592245.7490196078,
+        "rss": 30806016.0,
+        "allocations": 13057.021568627451,
+        "bytes": 2208086.5078431373,
+        "peak": 735371.0,
+        "retained": 3.243137254901961
+      },
+      "speedup": 2.7235337761513607,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

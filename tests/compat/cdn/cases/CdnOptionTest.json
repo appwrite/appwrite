@@ -1,0 +1,358 @@
+{
+  "source": "packages/cdn/tests/Extend/CdnOptionTest.php",
+  "cases": [
+    {
+      "name": "exposes its state typed",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "log",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "a",
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "provider": "fastly",
+            "edge": true
+          },
+          "bind": "edge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.read",
+          "args": {
+            "option": {
+              "$ref": "edge"
+            },
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "provider": "fastly",
+            "edge": true,
+            "adapter": true
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "provider": "cloudflare"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.read",
+          "args": {
+            "option": {
+              "$ref": "cf"
+            },
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "provider": "cloudflare",
+            "edge": false,
+            "adapter": true
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "b",
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.read",
+          "args": {
+            "option": {
+              "$ref": "cf"
+            },
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "provider": "cloudflare",
+            "edge": false,
+            "adapter": false
+          }
+        },
+        {
+          "op": "constants",
+          "args": {},
+          "expect": {
+            "cloudflare": {
+              "PATHS_PER_PURGE": 30,
+              "KEYS_PER_PURGE": 30
+            },
+            "fastly": {
+              "KEYS_PER_PURGE": 256
+            },
+            "option": {
+              "ADAPTER": "adapter",
+              "PROVIDER": "provider",
+              "EDGE": "edge",
+              "PROVIDER_FASTLY": "fastly",
+              "PROVIDER_CLOUDFLARE": "cloudflare"
+            },
+            "status": [
+              "pending",
+              "processing",
+              "issued",
+              "renewing",
+              "failed",
+              "blocked",
+              "unknown"
+            ],
+            "fastly_tls": {
+              "CHALLENGE_MANAGED_DNS": "managed-dns"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "filters on typed accessors instead of state keys",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "log",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "a",
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "provider": "fastly",
+            "edge": true
+          },
+          "bind": "edge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "provider": "fastly"
+          },
+          "bind": "run",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "provider": "cloudflare"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.filter",
+          "args": {
+            "options": [
+              {
+                "$ref": "edge"
+              },
+              {
+                "$ref": "run"
+              },
+              {
+                "$ref": "cf"
+              }
+            ],
+            "filters": [
+              {
+                "edge": false
+              }
+            ]
+          },
+          "expect": {
+            "filtered": [
+              1,
+              2
+            ],
+            "run": 1
+          }
+        },
+        {
+          "op": "option.filter",
+          "args": {
+            "options": [
+              {
+                "$ref": "edge"
+              },
+              {
+                "$ref": "run"
+              },
+              {
+                "$ref": "cf"
+              }
+            ],
+            "filters": [
+              {
+                "edge": false
+              },
+              {
+                "provider": "cloudflare"
+              }
+            ]
+          },
+          "expect": {
+            "filtered": [
+              2
+            ],
+            "run": 2
+          }
+        },
+        {
+          "op": "option.filter",
+          "args": {
+            "options": [
+              {
+                "$ref": "edge"
+              },
+              {
+                "$ref": "run"
+              },
+              {
+                "$ref": "cf"
+              }
+            ],
+            "filters": [
+              {
+                "provider": "none"
+              }
+            ]
+          },
+          "expect": {
+            "filtered": [],
+            "run": null
+          }
+        },
+        {
+          "op": "option.filter",
+          "args": {
+            "options": [
+              {
+                "$ref": "edge"
+              },
+              {
+                "$ref": "run"
+              },
+              {
+                "$ref": "cf"
+              }
+            ],
+            "filters": []
+          },
+          "expect": {
+            "filtered": [
+              0,
+              1,
+              2
+            ],
+            "run": 0
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "provider": "my-cdn",
+            "edge": false
+          },
+          "bind": "own",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.read",
+          "args": {
+            "option": {
+              "$ref": "own"
+            },
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "provider": "my-cdn",
+            "edge": false,
+            "adapter": true
+          }
+        }
+      ]
+    }
+  ]
+}

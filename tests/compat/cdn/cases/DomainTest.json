@@ -1,0 +1,331 @@
+{
+  "source": "packages/cdn/tests/DomainTest.php",
+  "cases": [
+    {
+      "name": "folds APP.Example.CoM",
+      "op": "domain.validate",
+      "args": {
+        "domain": "APP.Example.CoM"
+      },
+      "expect": "app.example.com"
+    },
+    {
+      "name": "folds app.example.com",
+      "op": "domain.validate",
+      "args": {
+        "domain": "app.example.com"
+      },
+      "expect": "app.example.com"
+    },
+    {
+      "name": "rejects empty",
+      "op": "domain.validate",
+      "args": {
+        "domain": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "rejects scheme",
+      "op": "domain.validate",
+      "args": {
+        "domain": "https://app.example.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "rejects port",
+      "op": "domain.validate",
+      "args": {
+        "domain": "app.example.com:443"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "rejects path",
+      "op": "domain.validate",
+      "args": {
+        "domain": "app.example.com/certs"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "rejects trailing slash",
+      "op": "domain.validate",
+      "args": {
+        "domain": "app.example.com/"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "rejects underscore",
+      "op": "domain.validate",
+      "args": {
+        "domain": "app_example.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "edge 'example.com.'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "example.com."
+      },
+      "expect": "example.com."
+    },
+    {
+      "name": "edge '-example.com'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "-example.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "edge 'example-.com'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "example-.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "edge 'a.b'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "a.b"
+      },
+      "expect": "a.b"
+    },
+    {
+      "name": "edge 'localhost'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "localhost"
+      },
+      "expect": "localhost"
+    },
+    {
+      "name": "edge '127.0.0.1'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "127.0.0.1"
+      },
+      "expect": "127.0.0.1"
+    },
+    {
+      "name": "edge 'ex ample.com'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "ex ample.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "edge 'xn--p1ai'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "xn--p1ai"
+      },
+      "expect": "xn--p1ai"
+    },
+    {
+      "name": "edge 'рф'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "рф"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "edge 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+      },
+      "expect": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+    },
+    {
+      "name": "edge 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "edge 'a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "edge '.'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "."
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "edge 'ÉXAMPLE.com'",
+      "op": "domain.validate",
+      "args": {
+        "domain": "ÉXAMPLE.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+        }
+      }
+    },
+    {
+      "name": "paths []",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": []
+      },
+      "expect": []
+    },
+    {
+      "name": "paths [\"/\"]",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/"
+        ]
+      },
+      "expect": [
+        "/"
+      ]
+    },
+    {
+      "name": "paths [\"/a\", \"/b?x=1\"]",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/a",
+          "/b?x=1"
+        ]
+      },
+      "expect": [
+        "/a",
+        "/b?x=1"
+      ]
+    },
+    {
+      "name": "paths [\"relative\"]",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "relative"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Every cache path must be a string beginning with \"/\"."
+        }
+      }
+    },
+    {
+      "name": "paths [\"/a\", \"b\"]",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/a",
+          "b"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Every cache path must be a string beginning with \"/\"."
+        }
+      }
+    },
+    {
+      "name": "paths [\"\"]",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          ""
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Every cache path must be a string beginning with \"/\"."
+        }
+      }
+    }
+  ]
+}

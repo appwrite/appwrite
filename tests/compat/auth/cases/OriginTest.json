@@ -1,0 +1,221 @@
+{
+  "source": "packages/auth/tests/Passkeys/OriginTest.php",
+  "cases": [
+    {
+      "name": "normalize",
+      "steps": [
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://example.com"
+          },
+          "expect": "https://example.com"
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://example.com/"
+          },
+          "expect": "https://example.com"
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://app.example.com:443"
+          },
+          "expect": "https://app.example.com"
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://example.com:8443"
+          },
+          "expect": "https://example.com:8443"
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "http://example.com"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://evil.com"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://notexample.com"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://example.com/login"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://user:pass@example.com"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://example.com?next=1"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://example.com#"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://EXAMPLE.com"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "example.com"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "localhost",
+            "origin": "http://localhost:3000"
+          },
+          "expect": "http://localhost:3000"
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "localhost",
+            "origin": "http://localhost:80"
+          },
+          "expect": "http://localhost"
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "localhost",
+            "origin": "https://localhost"
+          },
+          "expect": "https://localhost"
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "localhost",
+            "origin": "http://127.0.0.1:3000"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "HTTPS://example.com"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://example.com?"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://example.com:0"
+          },
+          "expect": "https://example.com:0"
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "localhost",
+            "origin": "http://app.localhost"
+          },
+          "expect": null
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://example.com:443/"
+          },
+          "expect": "https://example.com"
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "example.com",
+            "origin": "https://a.b.example.com"
+          },
+          "expect": "https://a.b.example.com"
+        },
+        {
+          "op": "passkeys.origin_normalize",
+          "args": {
+            "rp_id": "",
+            "origin": "https://x"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "description",
+      "steps": [
+        {
+          "op": "passkeys.origin_description",
+          "args": {
+            "rp_id": "example.com"
+          },
+          "expect": "Origin must be an HTTPS URL without a path, such as \"https://example.com\", on \"example.com\" or one of its subdomains. HTTP is only allowed when the relying party ID is \"localhost\"."
+        },
+        {
+          "op": "passkeys.origin_description",
+          "args": {
+            "rp_id": "localhost"
+          },
+          "expect": "Origin must be an HTTPS URL without a path, such as \"https://localhost\", on \"localhost\" or one of its subdomains. HTTP is only allowed when the relying party ID is \"localhost\"."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "source": "fuzz",
+  "cases": [
+    {
+      "name": "resp.parse {\"buffer\":\"$-9\\r\\n\"}",
+      "op": "resp.parse",
+      "args": {
+        "buffer": "$-9\r\n"
+      },
+      "expect": {
+        "value": "",
+        "offset": -2
+      }
+    },
+    {
+      "name": "resp.parse {\"buffer\":\"*2\\r\\n$-16\\r\\n:7\\r\\n\"}",
+      "op": "resp.parse",
+      "args": {
+        "buffer": "*2\r\n$-16\r\n:7\r\n"
+      },
+      "expect": {
+        "value": [
+          "",
+          7
+        ],
+        "offset": 14
+      }
+    }
+  ]
+}

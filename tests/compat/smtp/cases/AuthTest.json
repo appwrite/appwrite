@@ -1,0 +1,105 @@
+{
+  "source": "packages/smtp/tests/AuthTest.php",
+  "cases": [
+    {
+      "name": "plain sends both credentials at once",
+      "op": "auth.exchange",
+      "args": {
+        "mechanism": "plain",
+        "username": "jane",
+        "secret": "secret",
+        "challenges": [
+          "",
+          "again"
+        ]
+      },
+      "expect": {
+        "mechanism": "PLAIN",
+        "initial": "\u0000jane\u0000secret",
+        "responses": [
+          "\u0000jane\u0000secret",
+          "\u0000jane\u0000secret"
+        ]
+      }
+    },
+    {
+      "name": "login waits to be asked",
+      "op": "auth.exchange",
+      "args": {
+        "mechanism": "login",
+        "username": "jane",
+        "secret": "secret",
+        "challenges": [
+          "Username:",
+          "Password:"
+        ]
+      },
+      "expect": {
+        "mechanism": "LOGIN",
+        "initial": null,
+        "responses": [
+          "jane",
+          "secret"
+        ]
+      }
+    },
+    {
+      "name": "login carries nothing between exchanges",
+      "op": "auth.exchange",
+      "args": {
+        "mechanism": "login",
+        "username": "jane",
+        "secret": "secret",
+        "challenges": [
+          "Username:",
+          "Password:",
+          "Username:",
+          "Password:"
+        ]
+      },
+      "expect": {
+        "mechanism": "LOGIN",
+        "initial": null,
+        "responses": [
+          "jane",
+          "secret",
+          "secret",
+          "secret"
+        ]
+      }
+    },
+    {
+      "name": "xoauth2 carries a bearer token",
+      "op": "auth.exchange",
+      "args": {
+        "mechanism": "xoauth2",
+        "username": "jane@example.test",
+        "secret": "token-value"
+      },
+      "expect": {
+        "mechanism": "XOAUTH2",
+        "initial": "user=jane@example.test\u0001auth=Bearer token-value\u0001\u0001",
+        "responses": []
+      }
+    },
+    {
+      "name": "xoauth2 ends the exchange on a challenge",
+      "op": "auth.exchange",
+      "args": {
+        "mechanism": "xoauth2",
+        "username": "jane@example.test",
+        "secret": "token",
+        "challenges": [
+          "{\"status\":\"401\"}"
+        ]
+      },
+      "expect": {
+        "mechanism": "XOAUTH2",
+        "initial": "user=jane@example.test\u0001auth=Bearer token\u0001\u0001",
+        "responses": [
+          ""
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,2887 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/UniqueViolationTest.php"
+  ],
+  "cases": [
+    {
+      "name": "UniqueViolationTest::testMemoryDocumentIdConflictIsDuplicate",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o951"
+          },
+          "bind": "s1943",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o951"
+              },
+              "cache": "none"
+            },
+            "as": "o952"
+          },
+          "bind": "s1944",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o952"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "unique_violation"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o952"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "unique_violation"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o953"
+          },
+          "bind": "s1947",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o952"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o953"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o952"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "slug",
+              "size": 128
+            },
+            "as": "o954"
+          },
+          "bind": "s1950",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "slug",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "slug_unique",
+              "attributes": [
+                "slug"
+              ],
+              "lengths": [
+                128
+              ]
+            },
+            "as": "o955"
+          },
+          "bind": "s1951",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "slug_unique",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "slug"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o956"
+          },
+          "bind": "s1952",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o956"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o957"
+          },
+          "bind": "s1954",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o957"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o958"
+          },
+          "bind": "s1956",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o958"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "movies",
+              "attributes": [
+                {
+                  "$obj": "o954"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o955"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o959"
+          },
+          "bind": "s1958",
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug_unique",
+                    "key": "slug_unique",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [
+                      128
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o952"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o959"
+              }
+            },
+            "as": "o960"
+          },
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug_unique",
+                    "key": "slug_unique",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o961"
+          },
+          "bind": "s1960",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o961"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-1",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "prefix_uid_suffix"
+              }
+            },
+            "as": "o962"
+          },
+          "bind": "s1962",
+          "expect": {
+            "$document": {
+              "$id": "movie-1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "prefix_uid_suffix"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o963"
+          },
+          "bind": "s1963",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o963"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-2",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "frozen"
+              }
+            },
+            "as": "o964"
+          },
+          "bind": "s1965",
+          "expect": {
+            "$document": {
+              "$id": "movie-2",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "frozen"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o952"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": "movies",
+              "documents": [
+                {
+                  "$obj": "o962"
+                },
+                {
+                  "$obj": "o964"
+                }
+              ]
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o965"
+          },
+          "bind": "s1967",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o965"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-1",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "sequel"
+              }
+            },
+            "as": "o966"
+          },
+          "bind": "s1969",
+          "expect": {
+            "$document": {
+              "$id": "movie-1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "sequel"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o952"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "movies",
+              "document": {
+                "$obj": "o966"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "UniqueViolationTest::testMemoryUniqueIndexConflictWithUidInValueIsUnique",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o967"
+          },
+          "bind": "s1971",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o967"
+              },
+              "cache": "none"
+            },
+            "as": "o968"
+          },
+          "bind": "s1972",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o968"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "unique_violation"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o968"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "unique_violation"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o969"
+          },
+          "bind": "s1975",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o968"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o969"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o968"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "slug",
+              "size": 128
+            },
+            "as": "o970"
+          },
+          "bind": "s1978",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "slug",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "slug_unique",
+              "attributes": [
+                "slug"
+              ],
+              "lengths": [
+                128
+              ]
+            },
+            "as": "o971"
+          },
+          "bind": "s1979",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "slug_unique",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "slug"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o972"
+          },
+          "bind": "s1980",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o972"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o973"
+          },
+          "bind": "s1982",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o973"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o974"
+          },
+          "bind": "s1984",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o974"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "movies",
+              "attributes": [
+                {
+                  "$obj": "o970"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o971"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o975"
+          },
+          "bind": "s1986",
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug_unique",
+                    "key": "slug_unique",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [
+                      128
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o968"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o975"
+              }
+            },
+            "as": "o976"
+          },
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug_unique",
+                    "key": "slug_unique",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o977"
+          },
+          "bind": "s1988",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o977"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-1",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "prefix_uid_suffix"
+              }
+            },
+            "as": "o978"
+          },
+          "bind": "s1990",
+          "expect": {
+            "$document": {
+              "$id": "movie-1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "prefix_uid_suffix"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o979"
+          },
+          "bind": "s1991",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o979"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-2",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "frozen"
+              }
+            },
+            "as": "o980"
+          },
+          "bind": "s1993",
+          "expect": {
+            "$document": {
+              "$id": "movie-2",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "frozen"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o968"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": "movies",
+              "documents": [
+                {
+                  "$obj": "o978"
+                },
+                {
+                  "$obj": "o980"
+                }
+              ]
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o981"
+          },
+          "bind": "s1995",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o981"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-3",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "prefix_uid_suffix"
+              }
+            },
+            "as": "o982"
+          },
+          "bind": "s1997",
+          "expect": {
+            "$document": {
+              "$id": "movie-3",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "prefix_uid_suffix"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o968"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "movies",
+              "document": {
+                "$obj": "o982"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "UniqueViolationTest::testMemoryUniqueIndexConflictOnUpdateIsUnique",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o983"
+          },
+          "bind": "s1999",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o983"
+              },
+              "cache": "none"
+            },
+            "as": "o984"
+          },
+          "bind": "s2000",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "unique_violation"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "unique_violation"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o985"
+          },
+          "bind": "s2003",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o985"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "slug",
+              "size": 128
+            },
+            "as": "o986"
+          },
+          "bind": "s2006",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "slug",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "slug_unique",
+              "attributes": [
+                "slug"
+              ],
+              "lengths": [
+                128
+              ]
+            },
+            "as": "o987"
+          },
+          "bind": "s2007",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "slug_unique",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "slug"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o988"
+          },
+          "bind": "s2008",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o988"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o989"
+          },
+          "bind": "s2010",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o989"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o990"
+          },
+          "bind": "s2012",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o990"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "movies",
+              "attributes": [
+                {
+                  "$obj": "o986"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o987"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o991"
+          },
+          "bind": "s2014",
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug_unique",
+                    "key": "slug_unique",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [
+                      128
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o991"
+              }
+            },
+            "as": "o992"
+          },
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug_unique",
+                    "key": "slug_unique",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o993"
+          },
+          "bind": "s2016",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o993"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-1",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "prefix_uid_suffix"
+              }
+            },
+            "as": "o994"
+          },
+          "bind": "s2018",
+          "expect": {
+            "$document": {
+              "$id": "movie-1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "prefix_uid_suffix"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o995"
+          },
+          "bind": "s2019",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o995"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-2",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "frozen"
+              }
+            },
+            "as": "o996"
+          },
+          "bind": "s2021",
+          "expect": {
+            "$document": {
+              "$id": "movie-2",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "frozen"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": "movies",
+              "documents": [
+                {
+                  "$obj": "o994"
+                },
+                {
+                  "$obj": "o996"
+                }
+              ]
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "slug": "prefix_uid_suffix"
+              }
+            },
+            "as": "o997"
+          },
+          "bind": "s2023",
+          "expect": {
+            "$document": {
+              "slug": "prefix_uid_suffix"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "movies",
+              "id": "movie-2",
+              "document": {
+                "$obj": "o997"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "UniqueViolationTest::testMemoryBatchUpdateConflictWithStoredRowIsUnique",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o998"
+          },
+          "bind": "s2025",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o998"
+              },
+              "cache": "none"
+            },
+            "as": "o999"
+          },
+          "bind": "s2026",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o999"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "unique_violation"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o999"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "unique_violation"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1000"
+          },
+          "bind": "s2029",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o999"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1000"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o999"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "slug",
+              "size": 128
+            },
+            "as": "o1001"
+          },
+          "bind": "s2032",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "slug",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "slug_unique",
+              "attributes": [
+                "slug"
+              ],
+              "lengths": [
+                128
+              ]
+            },
+            "as": "o1002"
+          },
+          "bind": "s2033",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "slug_unique",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "slug"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1003"
+          },
+          "bind": "s2034",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1003"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1004"
+          },
+          "bind": "s2036",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1004"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1005"
+          },
+          "bind": "s2038",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1005"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "movies",
+              "attributes": [
+                {
+                  "$obj": "o1001"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o1002"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o1006"
+          },
+          "bind": "s2040",
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug_unique",
+                    "key": "slug_unique",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [
+                      128
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o999"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1006"
+              }
+            },
+            "as": "o1007"
+          },
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug_unique",
+                    "key": "slug_unique",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1008"
+          },
+          "bind": "s2042",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1008"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-1",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "prefix_uid_suffix"
+              }
+            },
+            "as": "o1009"
+          },
+          "bind": "s2044",
+          "expect": {
+            "$document": {
+              "$id": "movie-1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "prefix_uid_suffix"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1010"
+          },
+          "bind": "s2045",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1010"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-2",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "frozen"
+              }
+            },
+            "as": "o1011"
+          },
+          "bind": "s2047",
+          "expect": {
+            "$document": {
+              "$id": "movie-2",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "frozen"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o999"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": "movies",
+              "documents": [
+                {
+                  "$obj": "o1009"
+                },
+                {
+                  "$obj": "o1011"
+                }
+              ]
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "slug": "prefix_uid_suffix"
+              }
+            },
+            "as": "o1012"
+          },
+          "bind": "s2049",
+          "expect": {
+            "$document": {
+              "slug": "prefix_uid_suffix"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$id",
+              "values": [
+                "movie-2"
+              ]
+            },
+            "as": "o1013"
+          },
+          "bind": "s2050",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$id",
+              "values": [
+                "movie-2"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o999"
+            },
+            "method": "updateDocuments",
+            "args": {
+              "collection": "movies",
+              "updates": {
+                "$obj": "o1012"
+              },
+              "queries": [
+                {
+                  "$obj": "o1013"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "UniqueViolationTest::testMemoryBatchUpdateConflictBetweenUpdatedRowsIsUnique",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1014"
+          },
+          "bind": "s2052",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1014"
+              },
+              "cache": "none"
+            },
+            "as": "o1015"
+          },
+          "bind": "s2053",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1015"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "unique_violation"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1015"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "unique_violation"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1016"
+          },
+          "bind": "s2056",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1015"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1016"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1015"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "slug",
+              "size": 128
+            },
+            "as": "o1017"
+          },
+          "bind": "s2059",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "slug",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "slug_unique",
+              "attributes": [
+                "slug"
+              ],
+              "lengths": [
+                128
+              ]
+            },
+            "as": "o1018"
+          },
+          "bind": "s2060",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "slug_unique",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "slug"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1019"
+          },
+          "bind": "s2061",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1019"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1020"
+          },
+          "bind": "s2063",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1020"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1021"
+          },
+          "bind": "s2065",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1021"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "movies",
+              "attributes": [
+                {
+                  "$obj": "o1017"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o1018"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o1022"
+          },
+          "bind": "s2067",
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug_unique",
+                    "key": "slug_unique",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [
+                      128
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1015"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1022"
+              }
+            },
+            "as": "o1023"
+          },
+          "expect": {
+            "$document": {
+              "$id": "movies",
+              "name": "movies",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug_unique",
+                    "key": "slug_unique",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1024"
+          },
+          "bind": "s2069",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1024"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-1",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "prefix_uid_suffix"
+              }
+            },
+            "as": "o1025"
+          },
+          "bind": "s2071",
+          "expect": {
+            "$document": {
+              "$id": "movie-1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "prefix_uid_suffix"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1026"
+          },
+          "bind": "s2072",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1026"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie-2",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "slug": "frozen"
+              }
+            },
+            "as": "o1027"
+          },
+          "bind": "s2074",
+          "expect": {
+            "$document": {
+              "$id": "movie-2",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "slug": "frozen"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1015"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": "movies",
+              "documents": [
+                {
+                  "$obj": "o1025"
+                },
+                {
+                  "$obj": "o1027"
+                }
+              ]
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "slug": "sequel"
+              }
+            },
+            "as": "o1028"
+          },
+          "bind": "s2076",
+          "expect": {
+            "$document": {
+              "slug": "sequel"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1015"
+            },
+            "method": "updateDocuments",
+            "args": {
+              "collection": "movies",
+              "updates": {
+                "$obj": "o1028"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

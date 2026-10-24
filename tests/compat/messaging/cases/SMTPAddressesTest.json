@@ -1,0 +1,293 @@
+{
+  "source": "packages/messaging/tests/Adapter/Email/SMTPAddressesTest.php",
+  "cases": [
+    {
+      "name": "a host with an address is dialled on it",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.example.test ESMTP",
+              "250-smtp.example.test\r\n250 8BITMIME",
+              "250 2.1.0 Ok",
+              "250 2.1.5 Ok",
+              "354 End data with <CR><LF>.<CR><LF>",
+              "250 2.0.0 Ok",
+              "221 2.0.0 Bye"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "smtp.example.invalid:{port0}",
+              "timeout": 2,
+              "timelimit": 2,
+              "addresses": {
+                "smtp.example.invalid": "127.0.0.1"
+              }
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Subject",
+              "content": "Content",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "MAIL FROM:<sender@example.test>",
+            "RCPT TO:<to@example.test>",
+            "DATA",
+            "QUIT"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a host without an address is dialled by name",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.example.test ESMTP",
+              "250-smtp.example.test\r\n250 8BITMIME",
+              "250 2.1.0 Ok",
+              "250 2.1.5 Ok",
+              "354 End data with <CR><LF>.<CR><LF>",
+              "250 2.0.0 Ok",
+              "221 2.0.0 Bye"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "127.0.0.1:{closed}",
+              "timeout": 2,
+              "timelimit": 2,
+              "addresses": {
+                "smtp.example.invalid": "127.0.0.1"
+              }
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Subject",
+              "content": "Content",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "failure",
+                  "error": "No SMTP host answered: 127.0.0.1:{closed} (Cannot reach 127.0.0.1:{closed}: Connection refused)",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "a bracketed host is looked up as written, and its address dialled",
+      "steps": [
+        {
+          "op": "smtp_server.new",
+          "args": {
+            "replies": [
+              "220 smtp.example.test ESMTP",
+              "250-smtp.example.test\r\n250 8BITMIME",
+              "250 2.1.0 Ok",
+              "250 2.1.5 Ok",
+              "354 End data with <CR><LF>.<CR><LF>",
+              "250 2.0.0 Ok",
+              "221 2.0.0 Bye"
+            ]
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "smtp",
+            "args": {
+              "host": "[smtp.example.invalid]:{port0};smtp.example.invalid:{port0}",
+              "timeout": 2,
+              "timelimit": 2,
+              "addresses": {
+                "[smtp.example.invalid]": "127.0.0.1"
+              }
+            },
+            "servers": [
+              {
+                "$ref": "s0"
+              }
+            ],
+            "transport": "none"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "to@example.test",
+                  "name": "To"
+                }
+              ],
+              "subject": "Subject",
+              "content": "Content",
+              "from_name": "Sender",
+              "from_email": "sender@example.test"
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "to@example.test",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "smtp_server.commands",
+          "args": {
+            "server": {
+              "$ref": "s0"
+            }
+          },
+          "expect": [
+            "EHLO <host>",
+            "MAIL FROM:<sender@example.test>",
+            "RCPT TO:<to@example.test>",
+            "DATA",
+            "QUIT"
+          ]
+        }
+      ]
+    }
+  ]
+}

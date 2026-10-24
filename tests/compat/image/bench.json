@@ -1,0 +1,155 @@
+{
+  "lib": "image",
+  "environment": {
+    "date": "2026-10-18T14:20:35Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "decode",
+      "description": "Decode a 1837x1920 JPEG",
+      "php": {
+        "ns": 12211084.0,
+        "min": 12003791.0,
+        "max": 13601958.0,
+        "samples": 15,
+        "calls": 1,
+        "cpu": 12319333.333333334,
+        "peak": 3008.0,
+        "retained": 25.066666666666666,
+        "rss": 152043520.0
+      },
+      "rust": {
+        "ns": 9365062.5,
+        "min": 8838021.0,
+        "max": 13339000.0,
+        "samples": 15,
+        "calls": 2,
+        "cpu": 10264679.166666666,
+        "rss": 50290688.0,
+        "allocations": 1564.3666666666666,
+        "bytes": 26222380.633333333,
+        "peak": 24689376.0,
+        "retained": 55.13333333333333
+      },
+      "speedup": 1.3038977582904545,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "preview_jpeg",
+      "description": "Decode a 1837x1920 JPEG, crop it to 400x400 and encode a JPEG at 80",
+      "php": {
+        "ns": 51894834.0,
+        "min": 49046833.0,
+        "max": 65670583.0,
+        "samples": 15,
+        "calls": 1,
+        "cpu": 52927800.0,
+        "peak": 61312.0,
+        "retained": 25.066666666666666,
+        "rss": 178806784.0
+      },
+      "rust": {
+        "ns": 15949000.0,
+        "min": 15101666.0,
+        "max": 16892917.0,
+        "samples": 15,
+        "calls": 1,
+        "cpu": 15911847.2,
+        "rss": 62619648.0,
+        "allocations": 2414.733333333333,
+        "bytes": 31462130.266666666,
+        "peak": 24689376.0,
+        "retained": 110.26666666666667
+      },
+      "speedup": 3.2537986080632013,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "preview_gravity",
+      "description": "Decode a 1837x1920 JPEG, crop its top 400x200 and encode a PNG",
+      "php": {
+        "ns": 56616292.0,
+        "min": 53555541.0,
+        "max": 59181042.0,
+        "samples": 15,
+        "calls": 1,
+        "cpu": 56201400.0,
+        "peak": 90712.0,
+        "retained": 25.066666666666666,
+        "rss": 178806784.0
+      },
+      "rust": {
+        "ns": 9895625.0,
+        "min": 9459500.0,
+        "max": 10536396.0,
+        "samples": 15,
+        "calls": 2,
+        "cpu": 9827194.433333334,
+        "rss": 68554752.0,
+        "allocations": 2415.366666666667,
+        "bytes": 31172230.633333333,
+        "peak": 24689376.0,
+        "retained": 55.13333333333333
+      },
+      "speedup": 5.721345746226237,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "png_output",
+      "description": "Encode a 400x400 image as PNG at quality 90",
+      "php": {
+        "ns": 46980292.0,
+        "min": 45715292.0,
+        "max": 49199084.0,
+        "samples": 15,
+        "calls": 1,
+        "cpu": 47211466.666666664,
+        "peak": 225656.0,
+        "retained": 25.066666666666666,
+        "rss": 178806784.0
+      },
+      "rust": {
+        "ns": 625312.5,
+        "min": 600444.9642857143,
+        "max": 682392.8571428572,
+        "samples": 15,
+        "calls": 28,
+        "cpu": 632341.0666666667,
+        "rss": 68554752.0,
+        "allocations": 24.026190476190475,
+        "bytes": 2118611.688095238,
+        "peak": 1427230.0,
+        "retained": 3.9380952380952383
+      },
+      "speedup": 75.13090174912544,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

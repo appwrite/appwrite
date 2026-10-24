@@ -1,0 +1,947 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/CreateCollectionRaceTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CreateCollectionRaceTest::testCreateCollectionDoesNotDropUncommittedPeerTable",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o964"
+          },
+          "bind": "s1765",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o964"
+              },
+              "cache": "memory"
+            },
+            "as": "o965"
+          },
+          "bind": "s1766",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o965"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o965"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "create_race_u000000000049"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o965"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o966"
+          },
+          "bind": "s1769",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o967"
+          },
+          "bind": "s1770",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o967"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o966"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o965"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 128
+            },
+            "as": "o968"
+          },
+          "bind": "s1774",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o964"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "preCommitCreate",
+              "attributes": [
+                {
+                  "$obj": "o968"
+                }
+              ],
+              "indexes": []
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o968"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o969"
+          },
+          "bind": "s1776",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o970"
+          },
+          "bind": "s1777",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o970"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o971"
+          },
+          "bind": "s1779",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o971"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o972"
+          },
+          "bind": "s1781",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o972"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o973"
+          },
+          "bind": "s1783",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o973"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "preCommitCreate",
+                "$collection": "_metadata",
+                "name": "preCommitCreate",
+                "attributes": [
+                  {
+                    "$obj": "o969"
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            },
+            "as": "o974"
+          },
+          "bind": "s1785",
+          "expect": {
+            "$document": {
+              "$id": "preCommitCreate",
+              "$collection": "_metadata",
+              "name": "preCommitCreate",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "written"
+            }
+          },
+          "expect": "written"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o975"
+          },
+          "bind": "s1787",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o975"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "written",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "peer"
+              }
+            },
+            "as": "o976"
+          },
+          "bind": "s1789",
+          "expect": {
+            "$document": {
+              "$id": "written",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "peer"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o964"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o974"
+              },
+              "document": {
+                "$obj": "o976"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "written",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "peer",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o977"
+          },
+          "bind": "s1791",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o977"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o978"
+          },
+          "bind": "s1793",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o978"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "preCommitCreate",
+              "attributes": [
+                {
+                  "$obj": "o968"
+                }
+              ],
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "as": "o979"
+          },
+          "bind": "s1795",
+          "expect": {
+            "$document": {
+              "$id": "preCommitCreate",
+              "name": "preCommitCreate",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o965"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o979"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection preCommitCreate already exists"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o964"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o974"
+              },
+              "id": "written"
+            },
+            "as": "o980"
+          },
+          "bind": "s1797",
+          "expect": {
+            "$document": {
+              "name": "peer",
+              "$id": "written",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o980"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "peer"
+        }
+      ]
+    },
+    {
+      "name": "CreateCollectionRaceTest::testCreateCollectionStillReportsDuplicateWhenCachePurgeFails",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o981"
+          },
+          "bind": "s1799",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o981"
+              },
+              "cache": "memory"
+            },
+            "as": "o982"
+          },
+          "bind": "s1800",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o982"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o982"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "create_race_purge_u000000000050"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o982"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o983"
+          },
+          "bind": "s1803",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o984"
+          },
+          "bind": "s1804",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o983"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o982"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 128
+            },
+            "as": "o985"
+          },
+          "bind": "s1808",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o981"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "preCommitCreatePurgeFail",
+              "attributes": [
+                {
+                  "$obj": "o985"
+                }
+              ],
+              "indexes": []
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o986"
+          },
+          "bind": "s1810",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o986"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o987"
+          },
+          "bind": "s1812",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o987"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "preCommitCreatePurgeFail",
+              "attributes": [
+                {
+                  "$obj": "o985"
+                }
+              ],
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "as": "o988"
+          },
+          "bind": "s1814",
+          "expect": {
+            "$document": {
+              "$id": "preCommitCreatePurgeFail",
+              "name": "preCommitCreatePurgeFail",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o982"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o988"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection preCommitCreatePurgeFail already exists"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

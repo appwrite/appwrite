@@ -1,0 +1,406 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "a registration started by one runtime completes in the other, and its record signs in on both",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "side": "a",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost:3000"
+            ]
+          },
+          "bind": "ca",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.ceremony",
+          "side": "b",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost:3000"
+            ]
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "side": "a",
+          "args": {
+            "ceremony": {
+              "$ref": "ca"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "localhost",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "side": "a",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "side": "b",
+          "args": {
+            "ceremony": {
+              "$ref": "cb"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "side": "a",
+          "args": {
+            "ceremony": {
+              "$ref": "ca"
+            }
+          },
+          "bind": "au",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "side": "a",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "counter": 1,
+            "user_handle": {
+              "$ref": "ch",
+              "path": "/options/user/id"
+            }
+          },
+          "bind": "acred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MdAAAAAQ",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "side": "b",
+          "args": {
+            "ceremony": {
+              "$ref": "cb"
+            },
+            "state": {
+              "$ref": "au",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "acred"
+            },
+            "record": {
+              "$ref": "reg",
+              "path": "/record"
+            }
+          },
+          "bind": "signed",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 1,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "side": "b",
+          "args": {
+            "ceremony": {
+              "$ref": "cb"
+            }
+          },
+          "bind": "au2",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "side": "b",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au2",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "counter": 2,
+            "user_handle": {
+              "$ref": "ch",
+              "path": "/options/user/id"
+            }
+          },
+          "bind": "acred2",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MdAAAAAg",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "side": "a",
+          "args": {
+            "ceremony": {
+              "$ref": "ca"
+            },
+            "state": {
+              "$ref": "au2",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "acred2"
+            },
+            "record": {
+              "$ref": "signed",
+              "path": "/record"
+            }
+          },
+          "bind": "signed2",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 2,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "side": "a",
+          "args": {
+            "ceremony": {
+              "$ref": "ca"
+            },
+            "credential": {
+              "$ref": "acred2"
+            }
+          },
+          "expect": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57"
+        },
+        {
+          "op": "passkeys.register",
+          "side": "b",
+          "args": {
+            "ceremony": {
+              "$ref": "cb"
+            },
+            "name": "user@example.com",
+            "display_name": "User",
+            "records": [
+              {
+                "$ref": "signed2",
+                "path": "/record"
+              }
+            ]
+          },
+          "bind": "ch3",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "localhost",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": [
+                {
+                  "type": "public-key",
+                  "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+                  "transports": [
+                    "internal"
+                  ]
+                }
+              ]
+            },
+            "state": "<masked>"
+          }
+        }
+      ],
+      "interop": true
+    }
+  ]
+}

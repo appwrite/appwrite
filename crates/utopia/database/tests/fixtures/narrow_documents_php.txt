@@ -1,0 +1,304 @@
+no queries|11|ok
+no queries|10|ok
+no queries|01|ok
+no queries|00|ok
+equal string|11|ok
+equal string|10|ok
+equal string|01|ok
+equal string|00|ok
+equal string with a number|11|Invalid query: Query value is invalid for attribute "title"
+equal string with a number|10|Invalid query: Query value is invalid for attribute "title"
+equal string with a number|01|Invalid query: Query value is invalid for attribute "title"
+equal string with a number|00|Invalid query: Query value is invalid for attribute "title"
+equal too many values|11|Invalid query: Query on attribute has greater than 3 values: title
+equal too many values|10|Invalid query: Query on attribute has greater than 3 values: title
+equal too many values|01|Invalid query: Query on attribute has greater than 3 values: title
+equal too many values|00|Invalid query: Query on attribute has greater than 3 values: title
+equal no values|11|Invalid query: Equal queries require at least one value.
+equal no values|10|Invalid query: Equal queries require at least one value.
+equal no values|01|Invalid query: Equal queries require at least one value.
+equal no values|00|Invalid query: Equal queries require at least one value.
+equal integer|11|ok
+equal integer|10|ok
+equal integer|01|ok
+equal integer|00|ok
+equal integer with a string|11|Invalid query: Query value is invalid for attribute "count"
+equal integer with a string|10|Invalid query: Query value is invalid for attribute "count"
+equal integer with a string|01|Invalid query: Query value is invalid for attribute "count"
+equal integer with a string|00|Invalid query: Query value is invalid for attribute "count"
+integer over 32 bits|11|Invalid query: Query value is invalid for attribute "count"
+integer over 32 bits|10|Invalid query: Query value is invalid for attribute "count"
+integer over 32 bits|01|Invalid query: Query value is invalid for attribute "count"
+integer over 32 bits|00|Invalid query: Query value is invalid for attribute "count"
+big integer column over 32 bits|11|ok
+big integer column over 32 bits|10|ok
+big integer column over 32 bits|01|ok
+big integer column over 32 bits|00|ok
+unsigned below zero|11|Invalid query: Query value is invalid for attribute "unsigned"
+unsigned below zero|10|Invalid query: Query value is invalid for attribute "unsigned"
+unsigned below zero|01|Invalid query: Query value is invalid for attribute "unsigned"
+unsigned below zero|00|Invalid query: Query value is invalid for attribute "unsigned"
+bigint signed|11|ok
+bigint signed|10|ok
+bigint signed|01|ok
+bigint signed|00|ok
+bigint unsigned|11|ok
+bigint unsigned|10|ok
+bigint unsigned|01|ok
+bigint unsigned|00|ok
+float|11|ok
+float|10|ok
+float|01|ok
+float|00|ok
+float with a string|11|Invalid query: Query value is invalid for attribute "price"
+float with a string|10|Invalid query: Query value is invalid for attribute "price"
+float with a string|01|Invalid query: Query value is invalid for attribute "price"
+float with a string|00|Invalid query: Query value is invalid for attribute "price"
+boolean|11|ok
+boolean|10|ok
+boolean|01|ok
+boolean|00|ok
+boolean with a string|11|Invalid query: Query value is invalid for attribute "active"
+boolean with a string|10|Invalid query: Query value is invalid for attribute "active"
+boolean with a string|01|Invalid query: Query value is invalid for attribute "active"
+boolean with a string|00|Invalid query: Query value is invalid for attribute "active"
+datetime|11|ok
+datetime|10|ok
+datetime|01|ok
+datetime|00|ok
+datetime out of range|11|Invalid query: Query value is invalid for attribute "published"
+datetime out of range|10|Invalid query: Query value is invalid for attribute "published"
+datetime out of range|01|Invalid query: Query value is invalid for attribute "published"
+datetime out of range|00|Invalid query: Query value is invalid for attribute "published"
+datetime not a date|11|Invalid query: Query value is invalid for attribute "published"
+datetime not a date|10|Invalid query: Query value is invalid for attribute "published"
+datetime not a date|01|Invalid query: Query value is invalid for attribute "published"
+datetime not a date|00|Invalid query: Query value is invalid for attribute "published"
+between|11|ok
+between|10|ok
+between|01|ok
+between|00|ok
+between one value|11|Invalid query: Between queries require exactly two values.
+between one value|10|Invalid query: Between queries require exactly two values.
+between one value|01|Invalid query: Between queries require exactly two values.
+between one value|00|Invalid query: Between queries require exactly two values.
+not between|11|ok
+not between|10|ok
+not between|01|ok
+not between|00|ok
+single value with two|11|Invalid query: LessThan queries require exactly one value.
+single value with two|10|Invalid query: LessThan queries require exactly one value.
+single value with two|01|Invalid query: LessThan queries require exactly one value.
+single value with two|00|Invalid query: LessThan queries require exactly one value.
+starts with|11|ok
+starts with|10|ok
+starts with|01|ok
+starts with|00|ok
+not starts with|11|ok
+not starts with|10|ok
+not starts with|01|ok
+not starts with|00|ok
+ends with|11|ok
+ends with|10|ok
+ends with|01|ok
+ends with|00|ok
+not ends with|11|ok
+not ends with|10|ok
+not ends with|01|ok
+not ends with|00|ok
+regex|11|ok
+regex|10|ok
+regex|01|ok
+regex|00|ok
+contains on an array|11|ok
+contains on an array|10|ok
+contains on an array|01|ok
+contains on an array|00|ok
+contains on a string|11|ok
+contains on a string|10|ok
+contains on a string|01|ok
+contains on a string|00|ok
+contains on an integer|11|Invalid query: Cannot query contains on attribute "count" because it is not an array, string, or object.
+contains on an integer|10|Invalid query: Cannot query contains on attribute "count" because it is not an array, string, or object.
+contains on an integer|01|Invalid query: Cannot query contains on attribute "count" because it is not an array, string, or object.
+contains on an integer|00|Invalid query: Cannot query contains on attribute "count" because it is not an array, string, or object.
+contains no values|11|Invalid query: Contains queries require at least one value.
+contains no values|10|Invalid query: Contains queries require at least one value.
+contains no values|01|Invalid query: Contains queries require at least one value.
+contains no values|00|Invalid query: Contains queries require at least one value.
+contains any|11|ok
+contains any|10|ok
+contains any|01|ok
+contains any|00|ok
+contains all|11|ok
+contains all|10|ok
+contains all|01|ok
+contains all|00|ok
+not contains|11|ok
+not contains|10|ok
+not contains|01|ok
+not contains|00|ok
+equal on an array|11|Invalid query: Cannot query equal on attribute "tags" because it is an array.
+equal on an array|10|Invalid query: Cannot query equal on attribute "tags" because it is an array.
+equal on an array|01|Invalid query: Cannot query equal on attribute "tags" because it is an array.
+equal on an array|00|Invalid query: Cannot query equal on attribute "tags" because it is an array.
+is null|11|ok
+is null|10|ok
+is null|01|ok
+is null|00|ok
+is not null on an array|11|ok
+is not null on an array|10|ok
+is not null on an array|01|ok
+is not null on an array|00|ok
+not equal|11|ok
+not equal|10|ok
+not equal|01|ok
+not equal|00|ok
+encrypted|11|Invalid query: Cannot query encrypted attribute: secret
+encrypted|10|Invalid query: Cannot query encrypted attribute: secret
+encrypted|01|Invalid query: Cannot query encrypted attribute: secret
+encrypted|00|Invalid query: Cannot query encrypted attribute: secret
+missing attribute|11|Invalid query: Attribute not found in schema: missing
+missing attribute|10|Invalid query: Attribute not found in schema: missing
+missing attribute|01|ok
+missing attribute|00|ok
+empty attribute|11|Invalid query: Attribute not found in schema: 
+empty attribute|10|Invalid query: Attribute not found in schema: 
+empty attribute|01|ok
+empty attribute|00|ok
+virtual one to one child|11|Invalid query: Cannot query on virtual relationship attribute
+virtual one to one child|10|Invalid query: Cannot query on virtual relationship attribute
+virtual one to one child|01|Invalid query: Cannot query on virtual relationship attribute
+virtual one to one child|00|Invalid query: Cannot query on virtual relationship attribute
+virtual one to many parent|11|Invalid query: Cannot query on virtual relationship attribute
+virtual one to many parent|10|Invalid query: Cannot query on virtual relationship attribute
+virtual one to many parent|01|Invalid query: Cannot query on virtual relationship attribute
+virtual one to many parent|00|Invalid query: Cannot query on virtual relationship attribute
+virtual many to one child|11|Invalid query: Cannot query on virtual relationship attribute
+virtual many to one child|10|Invalid query: Cannot query on virtual relationship attribute
+virtual many to one child|01|Invalid query: Cannot query on virtual relationship attribute
+virtual many to one child|00|Invalid query: Cannot query on virtual relationship attribute
+many to many|11|Invalid query: Cannot query on virtual relationship attribute
+many to many|10|Invalid query: Cannot query on virtual relationship attribute
+many to many|01|Invalid query: Cannot query on virtual relationship attribute
+many to many|00|Invalid query: Cannot query on virtual relationship attribute
+many to one parent|11|ok
+many to one parent|10|ok
+many to one parent|01|ok
+many to one parent|00|ok
+object containment|11|ok
+object containment|10|ok
+object containment|01|ok
+object containment|00|ok
+object mixed list|11|Invalid query: Invalid object query structure for attribute "meta"
+object mixed list|10|Invalid query: Invalid object query structure for attribute "meta"
+object mixed list|01|Invalid query: Invalid object query structure for attribute "meta"
+object mixed list|00|Invalid query: Invalid object query structure for attribute "meta"
+point with equal|11|ok
+point with equal|10|ok
+point with equal|01|ok
+point with equal|00|ok
+point not an array|11|Invalid query: Spatial data must be an array
+point not an array|10|Invalid query: Spatial data must be an array
+point not an array|01|Invalid query: Spatial data must be an array
+point not an array|00|Invalid query: Spatial data must be an array
+vector with equal|11|ok
+vector with equal|10|ok
+vector with equal|01|ok
+vector with equal|00|ok
+id|11|ok
+id|10|ok
+id|01|ok
+id|00|ok
+sequence|11|ok
+sequence|10|ok
+sequence|01|ok
+sequence|00|ok
+sequence not a number|11|Invalid query: Query value is invalid for attribute "$sequence"
+sequence not a number|10|Invalid query: Query value is invalid for attribute "$sequence"
+sequence not a number|01|Invalid query: Query value is invalid for attribute "$sequence"
+sequence not a number|00|Invalid query: Query value is invalid for attribute "$sequence"
+created at|11|ok
+created at|10|ok
+created at|01|ok
+created at|00|ok
+updated at not a date|11|Invalid query: Query value is invalid for attribute "$updatedAt"
+updated at not a date|10|Invalid query: Query value is invalid for attribute "$updatedAt"
+updated at not a date|01|Invalid query: Query value is invalid for attribute "$updatedAt"
+updated at not a date|00|Invalid query: Query value is invalid for attribute "$updatedAt"
+permissions are not an attribute|11|Invalid query: Attribute not found in schema: $permissions
+permissions are not an attribute|10|Invalid query: Attribute not found in schema: $permissions
+permissions are not an attribute|01|ok
+permissions are not an attribute|00|ok
+duplicated key, last definition wins|11|Invalid query: Query value is invalid for attribute "dup"
+duplicated key, last definition wins|10|Invalid query: Query value is invalid for attribute "dup"
+duplicated key, last definition wins|01|Invalid query: Query value is invalid for attribute "dup"
+duplicated key, last definition wins|00|Invalid query: Query value is invalid for attribute "dup"
+duplicated key with a number|11|ok
+duplicated key with a number|10|ok
+duplicated key with a number|01|ok
+duplicated key with a number|00|ok
+limit|11|ok
+limit|10|ok
+limit|01|ok
+limit|00|ok
+limit zero|11|Invalid query: Invalid limit: Value must be a valid range between 1 and 9,223,372,036,854,775,807
+limit zero|10|Invalid query: Invalid limit: Value must be a valid range between 1 and 9,223,372,036,854,775,807
+limit zero|01|Invalid query: Invalid limit: Value must be a valid range between 1 and 9,223,372,036,854,775,807
+limit zero|00|Invalid query: Invalid limit: Value must be a valid range between 1 and 9,223,372,036,854,775,807
+offset|11|ok
+offset|10|ok
+offset|01|ok
+offset|00|ok
+offset below zero|11|Invalid query: Invalid offset: Value must be a valid range between 0 and 9,223,372,036,854,775,807
+offset below zero|10|Invalid query: Invalid offset: Value must be a valid range between 0 and 9,223,372,036,854,775,807
+offset below zero|01|Invalid query: Invalid offset: Value must be a valid range between 0 and 9,223,372,036,854,775,807
+offset below zero|00|Invalid query: Invalid offset: Value must be a valid range between 0 and 9,223,372,036,854,775,807
+cursor after|11|ok
+cursor after|10|ok
+cursor after|01|ok
+cursor after|00|ok
+cursor before an id|11|ok
+cursor before an id|10|ok
+cursor before an id|01|ok
+cursor before an id|00|ok
+cursor too long|11|Invalid query: Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore
+cursor too long|10|Invalid query: Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore
+cursor too long|01|Invalid query: Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore
+cursor too long|00|Invalid query: Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore
+order asc|11|ok
+order asc|10|ok
+order asc|01|ok
+order asc|00|ok
+order desc on a missing attribute|11|Invalid query: Attribute not found in schema: missing
+order desc on a missing attribute|10|Invalid query: Attribute not found in schema: missing
+order desc on a missing attribute|01|ok
+order desc on a missing attribute|00|ok
+order asc on an internal attribute|11|ok
+order asc on an internal attribute|10|ok
+order asc on an internal attribute|01|ok
+order asc on an internal attribute|00|ok
+order on an empty attribute|11|ok
+order on an empty attribute|10|ok
+order on an empty attribute|01|ok
+order on an empty attribute|00|ok
+order random|11|ok
+order random|10|Invalid query: Random order is not supported by this adapter
+order random|01|ok
+order random|00|Invalid query: Random order is not supported by this adapter
+a page|11|ok
+a page|10|ok
+a page|01|ok
+a page|00|ok
+the first refusal is the reported one|11|Invalid query: Attribute not found in schema: missing
+the first refusal is the reported one|10|Invalid query: Attribute not found in schema: missing
+the first refusal is the reported one|01|Invalid query: Query value is invalid for attribute "count"
+the first refusal is the reported one|00|Invalid query: Query value is invalid for attribute "count"
+a refusal after an order|11|Invalid query: Query value is invalid for attribute "active"
+a refusal after an order|10|Invalid query: Query value is invalid for attribute "active"
+a refusal after an order|01|Invalid query: Query value is invalid for attribute "active"
+a refusal after an order|00|Invalid query: Query value is invalid for attribute "active"
+cursor page|11|ok
+cursor page|10|ok
+cursor page|01|ok
+cursor page|00|ok

@@ -1,0 +1,4726 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/MetadataCacheTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/PoolTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MetadataCacheTests::testCreateAttributeIsVisibleToTheNextRead",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metacreateattr626b1bf0",
+                "name": "metacreateattr626b1bf0",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metacreateattr626b1bf0",
+              "name": "metacreateattr626b1bf0",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metacreateattr626b1bf0",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metacreateattr626b1bf0",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metacreateattr626b1bf0",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metacreateattr626b1bf0"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "metacreateattr626b1bf0",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "nickname",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "nickname",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metacreateattr626b1bf0"
+          },
+          "expect": {
+            "$document": {
+              "name": "metacreateattr626b1bf0",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "nickname",
+                    "key": "nickname",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metacreateattr626b1bf0",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metacreateattr626b1bf0",
+            "document": {
+              "$document": {
+                "$id": "after",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "after",
+                "nickname": "nick"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "after",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "after",
+              "nickname": "nick",
+              "$collection": "metacreateattr626b1bf0",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metacreateattr626b1bf0",
+            "id": "after"
+          },
+          "expect": {
+            "$document": {
+              "name": "after",
+              "nickname": "nick",
+              "$sequence": "2",
+              "$id": "after",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "metacreateattr626b1bf0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MetadataCacheTests::testDeleteAttributeIsVisibleToTheNextRead",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metadelattr626bdffa",
+                "name": "metadelattr626bdffa",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metadelattr626bdffa",
+              "name": "metadelattr626bdffa",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metadelattr626bdffa",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metadelattr626bdffa",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metadelattr626bdffa",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metadelattr626bdffa"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "metadelattr626bdffa",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "doomed",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "doomed",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metadelattr626bdffa"
+          },
+          "expect": {
+            "$document": {
+              "name": "metadelattr626bdffa",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "doomed",
+                    "key": "doomed",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metadelattr626bdffa",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metadelattr626bdffa",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "doomed": null,
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metadelattr626bdffa"
+            }
+          }
+        },
+        {
+          "op": "database.delete_attribute",
+          "args": {
+            "collection": "metadelattr626bdffa",
+            "key": "doomed"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metadelattr626bdffa"
+          },
+          "expect": {
+            "$document": {
+              "name": "metadelattr626bdffa",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metadelattr626bdffa",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metadelattr626bdffa",
+            "document": {
+              "$document": {
+                "$id": "orphan",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "orphan",
+                "doomed": "value"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"doomed\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MetadataCacheTests::testUpdateAttributeIsVisibleToTheNextRead",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::AttributeResizing"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metaupdattr626c832e",
+                "name": "metaupdattr626c832e",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metaupdattr626c832e",
+              "name": "metaupdattr626c832e",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metaupdattr626c832e",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metaupdattr626c832e",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metaupdattr626c832e",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metaupdattr626c832e"
+            }
+          }
+        },
+        {
+          "op": "database.update_attribute",
+          "args": {
+            "collection": "metaupdattr626c832e",
+            "key": "name",
+            "update": {
+              "$value": "Attribute\\Update",
+              "fields": {
+                "type": null,
+                "size": 2048,
+                "required": null,
+                "default": {
+                  "$enum": "Unchanged::Value"
+                },
+                "signed": null,
+                "array": null,
+                "format": {
+                  "$enum": "Unchanged::Value"
+                },
+                "filters": null,
+                "key": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 2048,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metaupdattr626c832e"
+          },
+          "expect": {
+            "$document": {
+              "name": "metaupdattr626c832e",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metaupdattr626c832e",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metaupdattr626c832e",
+            "document": {
+              "$document": {
+                "$id": "long",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "long",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "$collection": "metaupdattr626c832e",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metaupdattr626c832e",
+            "id": "long"
+          },
+          "expect": {
+            "$document": {
+              "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "$sequence": "2",
+              "$id": "long",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "metaupdattr626c832e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MetadataCacheTests::testRenameAttributeIsVisibleToTheNextRead",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metarenattr626d1068",
+                "name": "metarenattr626d1068",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metarenattr626d1068",
+              "name": "metarenattr626d1068",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metarenattr626d1068",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metarenattr626d1068",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metarenattr626d1068",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metarenattr626d1068"
+            }
+          }
+        },
+        {
+          "op": "database.rename_attribute",
+          "args": {
+            "collection": "metarenattr626d1068",
+            "old": "name",
+            "new": "label"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metarenattr626d1068"
+          },
+          "expect": {
+            "$document": {
+              "name": "metarenattr626d1068",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "label",
+                    "key": "label",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metarenattr626d1068",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metarenattr626d1068",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "label": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metarenattr626d1068"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MetadataCacheTests::testCreateIndexIsVisibleToTheNextRead",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metacreateidx626d873c",
+                "name": "metacreateidx626d873c",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metacreateidx626d873c",
+              "name": "metacreateidx626d873c",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metacreateidx626d873c",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metacreateidx626d873c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metacreateidx626d873c",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metacreateidx626d873c"
+            }
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "metacreateidx626d873c",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "byName",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [
+                  128
+                ],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "byName",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metacreateidx626d873c"
+          },
+          "expect": {
+            "$document": {
+              "name": "metacreateidx626d873c",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "byName",
+                    "key": "byName",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metacreateidx626d873c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MetadataCacheTests::testDeleteIndexIsVisibleToTheNextRead",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metadelidx626e0214",
+                "name": "metadelidx626e0214",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metadelidx626e0214",
+              "name": "metadelidx626e0214",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metadelidx626e0214",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metadelidx626e0214",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metadelidx626e0214",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metadelidx626e0214"
+            }
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "metadelidx626e0214",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "byName",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [
+                  128
+                ],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "byName",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metadelidx626e0214"
+          },
+          "expect": {
+            "$document": {
+              "name": "metadelidx626e0214",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "byName",
+                    "key": "byName",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metadelidx626e0214",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metadelidx626e0214",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metadelidx626e0214"
+            }
+          }
+        },
+        {
+          "op": "database.delete_index",
+          "args": {
+            "collection": "metadelidx626e0214",
+            "key": "byName"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metadelidx626e0214"
+          },
+          "expect": {
+            "$document": {
+              "name": "metadelidx626e0214",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metadelidx626e0214",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MetadataCacheTests::testUpdateCollectionIsVisibleToTheNextRead",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metaupdcoll626eb94c",
+                "name": "metaupdcoll626eb94c",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metaupdcoll626eb94c",
+              "name": "metaupdcoll626eb94c",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metaupdcoll626eb94c",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metaupdcoll626eb94c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metaupdcoll626eb94c",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metaupdcoll626eb94c"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metaupdcoll626eb94c"
+          },
+          "expect": {
+            "$document": {
+              "name": "metaupdcoll626eb94c",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metaupdcoll626eb94c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.update_collection",
+          "args": {
+            "collection": "metaupdcoll626eb94c",
+            "update": {
+              "$value": "Collection\\Update",
+              "fields": {
+                "permissions": [
+                  "read(\"any\")"
+                ],
+                "documentSecurity": true
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "metaupdcoll626eb94c",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "metaupdcoll626eb94c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metaupdcoll626eb94c"
+          },
+          "expect": {
+            "$document": {
+              "name": "metaupdcoll626eb94c",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "metaupdcoll626eb94c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MetadataCacheTests::testDeleteCollectionIsVisibleToTheNextRead",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metadelcoll626f1b6d",
+                "name": "metadelcoll626f1b6d",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metadelcoll626f1b6d",
+              "name": "metadelcoll626f1b6d",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metadelcoll626f1b6d",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metadelcoll626f1b6d",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metadelcoll626f1b6d",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metadelcoll626f1b6d"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "metadelcoll626f1b6d"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.find_collection",
+          "args": {
+            "collection": "metadelcoll626f1b6d"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metadelcoll626f1b6d",
+            "id": "warm"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MetadataCacheTests::testCreateRelationshipIsVisibleToTheNextRead",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metarelparent6270563b",
+                "name": "metarelparent6270563b",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metarelparent6270563b",
+              "name": "metarelparent6270563b",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metarelparent6270563b",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metarelparent6270563b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metarelparent6270563b",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metarelparent6270563b"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metarelchild6270932a",
+                "name": "metarelchild6270932a",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metarelchild6270932a",
+              "name": "metarelchild6270932a",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metarelchild6270932a",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metarelchild6270932a",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metarelchild6270932a",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metarelchild6270932a"
+            }
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "metarelparent6270563b",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "metarelchild6270932a",
+                "type": {
+                  "$enum": "RelationshipType::OneToOne"
+                },
+                "twoWay": false,
+                "key": "child",
+                "twoWayKey": null,
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "metarelchild6270932a",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "child",
+              "twoWayKey": "metarelparent6270563b",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metarelparent6270563b"
+          },
+          "expect": {
+            "$document": {
+              "name": "metarelparent6270563b",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "child",
+                    "key": "child",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "metarelchild6270932a",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "metarelparent6270563b",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_child",
+                    "key": "_index_child",
+                    "type": "unique",
+                    "attributes": [
+                      "child"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metarelparent6270563b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metarelparent6270563b",
+            "document": {
+              "$document": {
+                "$id": "linked",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "linked",
+                "child": {
+                  "$id": "linkedchild",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "name": "linkedchild"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "linked",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "linked",
+              "$collection": "metarelparent6270563b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "child": {
+                "$document": {
+                  "name": "linkedchild",
+                  "$id": "linkedchild",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "metarelchild6270932a"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metarelparent6270563b",
+            "id": "linked"
+          },
+          "expect": {
+            "$document": {
+              "name": "linked",
+              "$sequence": "2",
+              "$id": "linked",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "metarelparent6270563b",
+              "child": {
+                "$document": {
+                  "name": "linkedchild",
+                  "$id": "linkedchild",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "metarelchild6270932a"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MetadataCacheTests::testDeleteRelationshipIsVisibleToTheNextRead",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metaunrelparent62712276",
+                "name": "metaunrelparent62712276",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metaunrelparent62712276",
+              "name": "metaunrelparent62712276",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metaunrelparent62712276",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metaunrelparent62712276",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metaunrelparent62712276",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metaunrelparent62712276"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metaunrelchild627155f6",
+                "name": "metaunrelchild627155f6",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metaunrelchild627155f6",
+              "name": "metaunrelchild627155f6",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metaunrelchild627155f6",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metaunrelchild627155f6",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metaunrelchild627155f6",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metaunrelchild627155f6"
+            }
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "metaunrelparent62712276",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "metaunrelchild627155f6",
+                "type": {
+                  "$enum": "RelationshipType::OneToOne"
+                },
+                "twoWay": true,
+                "key": "child",
+                "twoWayKey": "parent",
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "metaunrelchild627155f6",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "child",
+              "twoWayKey": "parent",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metaunrelparent62712276",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metaunrelparent62712276",
+              "child": null
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metaunrelchild627155f6",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metaunrelchild627155f6",
+              "parent": null
+            }
+          }
+        },
+        {
+          "op": "database.delete_relationship",
+          "args": {
+            "collection": "metaunrelparent62712276",
+            "key": "child"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metaunrelparent62712276"
+          },
+          "expect": {
+            "$document": {
+              "name": "metaunrelparent62712276",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metaunrelparent62712276",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metaunrelchild627155f6"
+          },
+          "expect": {
+            "$document": {
+              "name": "metaunrelchild627155f6",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "metaunrelchild627155f6",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MetadataCacheTests::testCollectionDefinitionsAreScopedToTheirDatabase",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Schemas"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}_scopedone62728858"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "scoped",
+                "name": "scoped",
+                "attributes": [
+                  {
+                    "$id": "first",
+                    "key": "first",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "scoped",
+              "name": "scoped",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "key": "first",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}_scopedtwo62728858"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "scoped",
+                "name": "scoped",
+                "attributes": [
+                  {
+                    "$id": "second",
+                    "key": "second",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "scoped",
+              "name": "scoped",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "second",
+                    "key": "second",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "scoped"
+          },
+          "expect": {
+            "$document": {
+              "name": "scoped",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "second",
+                    "key": "second",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "scoped",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}_scopedone62728858"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "scoped"
+          },
+          "expect": {
+            "$document": {
+              "name": "scoped",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "key": "first",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "scoped",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "scoped",
+            "document": {
+              "$document": {
+                "$id": "row",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "first": "value"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "row",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "first": "value",
+              "$collection": "scoped",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "scoped",
+            "id": "row"
+          },
+          "expect": {
+            "$document": {
+              "first": "value",
+              "$sequence": "1",
+              "$id": "row",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "scoped"
+            }
+          }
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_scopedone62728858"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete",
+          "args": {
+            "database": "${ns}_scopedone62728858"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_scopedtwo62728858"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete",
+          "args": {
+            "database": "${ns}_scopedtwo62728858"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "MetadataCacheTests::testRolledBackCollectionUpdateNeverReachesTheNextRead",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getNamespace",
+            "args": {}
+          },
+          "expect": "compat"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "delegate",
+            "args": {
+              "method": "setNamespace",
+              "arguments": [
+                "compat"
+              ]
+            }
+          },
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "metarollback62733b32",
+                "name": "metarollback62733b32",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metarollback62733b32",
+              "name": "metarollback62733b32",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metarollback62733b32",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metarollback62733b32",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metarollback62733b32",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
+              "$sequence": "1",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metarollback62733b32"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.update_collection",
+                  "args": {
+                    "collection": "metarollback62733b32",
+                    "update": {
+                      "$value": "Collection\\Update",
+                      "fields": {
+                        "permissions": [
+                          "read(\"any\")"
+                        ],
+                        "documentSecurity": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.get_collection",
+                  "args": {
+                    "collection": "metarollback62733b32"
+                  }
+                },
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "RuntimeException",
+                    "message": "rollback"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "rollback"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metarollback62733b32"
+          },
+          "expect": {
+            "$document": {
+              "name": "metarollback62733b32",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metarollback62733b32",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.update_collection",
+          "args": {
+            "collection": "metarollback62733b32",
+            "update": {
+              "$value": "Collection\\Update",
+              "fields": {
+                "permissions": [
+                  "read(\"any\")"
+                ],
+                "documentSecurity": true
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "metarollback62733b32",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "metarollback62733b32",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metarollback62733b32"
+          },
+          "expect": {
+            "$document": {
+              "name": "metarollback62733b32",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "metarollback62733b32",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        }
+      ]
+    }
+  ]
+}

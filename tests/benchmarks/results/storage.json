@@ -1,0 +1,519 @@
+{
+  "service": "storage",
+  "file": "tests/benchmarks/results/storage.json",
+  "workload": {
+    "script": "tests/benchmarks/api/storage.js",
+    "duration": "60s",
+    "hashing": false,
+    "error_budget": 0.01,
+    "seed": 200,
+    "run": "storage-20261012-031037"
+  },
+  "environment": {
+    "date": "2026-10-12T02:12:59Z",
+    "commit": "56fe0fad6c",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.6,
+      "requests": 3034,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 18.462,
+        "p50": 4.583,
+        "p90": 31.04,
+        "p95": 111.012,
+        "p99": 334.189,
+        "max": 427.896
+      },
+      "cpu_ms_per_request": 12.535,
+      "db_cpu_ms_per_request": 5.646,
+      "memory_mib": {
+        "baseline": 3809.3,
+        "avg": 4052.7,
+        "peak": 4240.4
+      },
+      "endpoints": {
+        "storage.buckets.list": {
+          "route": "GET /v1/storage/buckets",
+          "count": 111,
+          "rps": 1.85,
+          "avg": 4.324,
+          "p50": 3.984,
+          "p90": 4.878,
+          "p95": 5.358,
+          "p99": 7.193,
+          "max": 31.765
+        },
+        "storage.buckets.get": {
+          "route": "GET /v1/storage/buckets/:bucketId",
+          "count": 232,
+          "rps": 3.87,
+          "avg": 3.253,
+          "p50": 2.967,
+          "p90": 3.797,
+          "p95": 4.234,
+          "p99": 10.052,
+          "max": 21.537
+        },
+        "storage.buckets.create": {
+          "route": "POST /v1/storage/buckets",
+          "count": 31,
+          "rps": 0.52,
+          "avg": 14.157,
+          "p50": 12.326,
+          "p90": 18.993,
+          "p95": 20.552,
+          "p99": 31.125,
+          "max": 35.35
+        },
+        "storage.buckets.update": {
+          "route": "PUT /v1/storage/buckets/:bucketId",
+          "count": 71,
+          "rps": 1.18,
+          "avg": 10.283,
+          "p50": 7.21,
+          "p90": 9.62,
+          "p95": 10.498,
+          "p99": 80.363,
+          "max": 175.925
+        },
+        "storage.buckets.delete": {
+          "route": "DELETE /v1/storage/buckets/:bucketId",
+          "count": 25,
+          "rps": 0.42,
+          "avg": 4.012,
+          "p50": 3.773,
+          "p90": 5.405,
+          "p95": 6.219,
+          "p99": 6.731,
+          "max": 6.839
+        },
+        "storage.files.list": {
+          "route": "GET /v1/storage/buckets/:bucketId/files",
+          "count": 273,
+          "rps": 4.55,
+          "avg": 5.559,
+          "p50": 5.238,
+          "p90": 6.588,
+          "p95": 7.599,
+          "p99": 14.098,
+          "max": 25.719
+        },
+        "storage.files.get": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId",
+          "count": 427,
+          "rps": 7.12,
+          "avg": 3.757,
+          "p50": 3.351,
+          "p90": 4.359,
+          "p95": 5.061,
+          "p99": 12.17,
+          "max": 48.406
+        },
+        "storage.files.create": {
+          "route": "POST /v1/storage/buckets/:bucketId/files",
+          "note": "a 47 KB or 132 KB image",
+          "count": 131,
+          "rps": 2.18,
+          "avg": 13.475,
+          "p50": 12.282,
+          "p90": 15.281,
+          "p95": 18.026,
+          "p99": 28.636,
+          "max": 145.566
+        },
+        "storage.files.create.photo": {
+          "route": "POST /v1/storage/buckets/:bucketId/files",
+          "note": "a 600 KB JPEG",
+          "count": 93,
+          "rps": 1.55,
+          "avg": 33.396,
+          "p50": 31.11,
+          "p90": 35.511,
+          "p95": 44.972,
+          "p99": 76.427,
+          "max": 146.013
+        },
+        "storage.files.create.chunked": {
+          "route": "POST /v1/storage/buckets/:bucketId/files",
+          "note": "a 10 MiB file in two 5 MiB chunks; each chunk is a sample",
+          "count": 68,
+          "rps": 1.13,
+          "avg": 238.16,
+          "p50": 243.987,
+          "p90": 385.791,
+          "p95": 392.78,
+          "p99": 406.792,
+          "max": 427.896
+        },
+        "storage.files.update": {
+          "route": "PUT /v1/storage/buckets/:bucketId/files/:fileId",
+          "count": 83,
+          "rps": 1.38,
+          "avg": 7.537,
+          "p50": 5.521,
+          "p90": 8.473,
+          "p95": 11.761,
+          "p99": 41.805,
+          "max": 96.738
+        },
+        "storage.files.delete": {
+          "route": "DELETE /v1/storage/buckets/:bucketId/files/:fileId",
+          "count": 63,
+          "rps": 1.05,
+          "avg": 5.042,
+          "p50": 4.843,
+          "p90": 6.419,
+          "p95": 7.38,
+          "p99": 8.249,
+          "max": 8.871
+        },
+        "storage.files.download": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/download",
+          "note": "a 47 KB or 132 KB image",
+          "count": 222,
+          "rps": 3.7,
+          "avg": 5.1,
+          "p50": 4.849,
+          "p90": 6.325,
+          "p95": 7.22,
+          "p99": 8.762,
+          "max": 14.27
+        },
+        "storage.files.download.blob": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/download",
+          "note": "a 1 MiB file",
+          "count": 103,
+          "rps": 1.72,
+          "avg": 15.89,
+          "p50": 15.331,
+          "p90": 18.538,
+          "p95": 19.983,
+          "p99": 27.727,
+          "max": 41.626
+        },
+        "storage.files.view": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/view",
+          "note": "a 47 KB or 132 KB image",
+          "count": 362,
+          "rps": 6.03,
+          "avg": 5.013,
+          "p50": 4.783,
+          "p90": 6.168,
+          "p95": 7.468,
+          "p99": 10.087,
+          "max": 17.435
+        },
+        "storage.files.preview": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/preview",
+          "note": "a few common sizes: after the first request of each, served from the preview cache",
+          "count": 545,
+          "rps": 9.08,
+          "avg": 5.717,
+          "p50": 3.864,
+          "p90": 5.799,
+          "p95": 20.896,
+          "p99": 45.793,
+          "max": 54.57
+        },
+        "storage.files.preview.render": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/preview",
+          "note": "a 600 KB JPEG resized, rounded and converted to WebP with unique parameters: rendered on every request (no cache hit)",
+          "count": 161,
+          "rps": 2.68,
+          "avg": 127.82,
+          "p50": 124.971,
+          "p90": 176.799,
+          "p95": 192.101,
+          "p99": 220.448,
+          "max": 258.348
+        },
+        "storage.files.push.get": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/push",
+          "note": "measured on its unauthorized path: the JWT is minted by the messaging worker for push attachments, signed with the server key",
+          "count": 33,
+          "rps": 0.55,
+          "avg": 3.009,
+          "p50": 2.698,
+          "p90": 3.451,
+          "p95": 4.547,
+          "p99": 7.855,
+          "max": 9.093
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 422.2,
+      "requests": 25331,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 107.784,
+        "p50": 47.586,
+        "p90": 208.11,
+        "p95": 482.838,
+        "p99": 978.575,
+        "max": 36918.176
+      },
+      "cpu_ms_per_request": 23.964,
+      "db_cpu_ms_per_request": 2.791,
+      "memory_mib": {
+        "baseline": 4185.1,
+        "avg": 4931.9,
+        "peak": 5379.1
+      },
+      "endpoints": {
+        "storage.buckets.list": {
+          "route": "GET /v1/storage/buckets",
+          "count": 857,
+          "rps": 14.28,
+          "avg": 45.597,
+          "p50": 38.687,
+          "p90": 80.029,
+          "p95": 96.525,
+          "p99": 140.532,
+          "max": 268.391
+        },
+        "storage.buckets.get": {
+          "route": "GET /v1/storage/buckets/:bucketId",
+          "count": 1785,
+          "rps": 29.75,
+          "avg": 35.197,
+          "p50": 29.043,
+          "p90": 64.361,
+          "p95": 79.342,
+          "p99": 129.446,
+          "max": 284.057
+        },
+        "storage.buckets.create": {
+          "route": "POST /v1/storage/buckets",
+          "count": 301,
+          "rps": 5.02,
+          "avg": 163.552,
+          "p50": 143.053,
+          "p90": 256.364,
+          "p95": 302.372,
+          "p99": 419.682,
+          "max": 564.82
+        },
+        "storage.buckets.update": {
+          "route": "PUT /v1/storage/buckets/:bucketId",
+          "count": 580,
+          "rps": 9.67,
+          "avg": 92.088,
+          "p50": 81.479,
+          "p90": 158.713,
+          "p95": 190.754,
+          "p99": 242.994,
+          "max": 277.908
+        },
+        "storage.buckets.delete": {
+          "route": "DELETE /v1/storage/buckets/:bucketId",
+          "count": 317,
+          "rps": 5.28,
+          "avg": 53.329,
+          "p50": 43.632,
+          "p90": 96.236,
+          "p95": 116.74,
+          "p99": 163.682,
+          "max": 236.438
+        },
+        "storage.files.list": {
+          "route": "GET /v1/storage/buckets/:bucketId/files",
+          "count": 2275,
+          "rps": 37.92,
+          "avg": 57.016,
+          "p50": 49.873,
+          "p90": 97.808,
+          "p95": 119.99,
+          "p99": 178.604,
+          "max": 540.598
+        },
+        "storage.files.get": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId",
+          "count": 3559,
+          "rps": 59.32,
+          "avg": 37.723,
+          "p50": 31.309,
+          "p90": 69.255,
+          "p95": 85.812,
+          "p99": 133.969,
+          "max": 311.79
+        },
+        "storage.files.create": {
+          "route": "POST /v1/storage/buckets/:bucketId/files",
+          "note": "a 47 KB or 132 KB image",
+          "count": 1162,
+          "rps": 19.37,
+          "avg": 107.305,
+          "p50": 96.108,
+          "p90": 174.703,
+          "p95": 209.582,
+          "p99": 282.222,
+          "max": 1309.795
+        },
+        "storage.files.create.photo": {
+          "route": "POST /v1/storage/buckets/:bucketId/files",
+          "note": "a 600 KB JPEG",
+          "count": 594,
+          "rps": 9.9,
+          "avg": 216.876,
+          "p50": 197.973,
+          "p90": 338.49,
+          "p95": 394.819,
+          "p99": 531.248,
+          "max": 1700.067
+        },
+        "storage.files.create.chunked": {
+          "route": "POST /v1/storage/buckets/:bucketId/files",
+          "note": "a 10 MiB file in two 5 MiB chunks; each chunk is a sample",
+          "count": 546,
+          "rps": 9.1,
+          "avg": 1003.391,
+          "p50": 767.322,
+          "p90": 1347.23,
+          "p95": 1578.473,
+          "p99": 2195.415,
+          "max": 36918.176
+        },
+        "storage.files.update": {
+          "route": "PUT /v1/storage/buckets/:bucketId/files/:fileId",
+          "count": 930,
+          "rps": 15.5,
+          "avg": 64.863,
+          "p50": 56.423,
+          "p90": 113.042,
+          "p95": 138.803,
+          "p99": 189.861,
+          "max": 293.28
+        },
+        "storage.files.delete": {
+          "route": "DELETE /v1/storage/buckets/:bucketId/files/:fileId",
+          "count": 584,
+          "rps": 9.73,
+          "avg": 76.488,
+          "p50": 66.814,
+          "p90": 133.711,
+          "p95": 159.113,
+          "p99": 214.364,
+          "max": 317.969
+        },
+        "storage.files.download": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/download",
+          "note": "a 47 KB or 132 KB image",
+          "count": 1746,
+          "rps": 29.1,
+          "avg": 48.588,
+          "p50": 41.608,
+          "p90": 88.208,
+          "p95": 108.702,
+          "p99": 171.426,
+          "max": 314.385
+        },
+        "storage.files.download.blob": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/download",
+          "note": "a 1 MiB file",
+          "count": 889,
+          "rps": 14.82,
+          "avg": 99.05,
+          "p50": 89.822,
+          "p90": 161.099,
+          "p95": 186.347,
+          "p99": 241.729,
+          "max": 413.394
+        },
+        "storage.files.view": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/view",
+          "note": "a 47 KB or 132 KB image",
+          "count": 2978,
+          "rps": 49.63,
+          "avg": 48.646,
+          "p50": 40.977,
+          "p90": 86.489,
+          "p95": 107.126,
+          "p99": 176.287,
+          "max": 438.602
+        },
+        "storage.files.preview": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/preview",
+          "note": "a few common sizes: after the first request of each, served from the preview cache",
+          "count": 4447,
+          "rps": 74.12,
+          "avg": 45.34,
+          "p50": 36.401,
+          "p90": 82.449,
+          "p95": 104.764,
+          "p99": 192.207,
+          "max": 501.44
+        },
+        "storage.files.preview.render": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/preview",
+          "note": "a 600 KB JPEG resized, rounded and converted to WebP with unique parameters: rendered on every request (no cache hit)",
+          "count": 1466,
+          "rps": 24.43,
+          "avg": 552.688,
+          "p50": 504.517,
+          "p90": 892.632,
+          "p95": 1019.897,
+          "p99": 1338.509,
+          "max": 1728.449
+        },
+        "storage.files.push.get": {
+          "route": "GET /v1/storage/buckets/:bucketId/files/:fileId/push",
+          "note": "measured on its unauthorized path: the JWT is minted by the messaging worker for push attachments, signed with the server key",
+          "count": 315,
+          "rps": 5.25,
+          "avg": 28.199,
+          "p50": 21.526,
+          "p90": 50.861,
+          "p95": 73.033,
+          "p99": 115.35,
+          "max": 292.295
+        }
+      }
+    }
+  ]
+}

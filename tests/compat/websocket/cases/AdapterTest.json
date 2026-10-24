@@ -1,0 +1,484 @@
+{
+  "source": "packages/websocket/tests/E2E/AdapterTest.php",
+  "cases": [
+    {
+      "name": "testSwoole",
+      "op": "e2e.run",
+      "args": {
+        "steps": [
+          {
+            "connect": "c"
+          },
+          {
+            "send": "c",
+            "data": "ping"
+          },
+          {
+            "receive": "c"
+          },
+          {
+            "connected": "c"
+          },
+          {
+            "connect": "a"
+          },
+          {
+            "connect": "b"
+          },
+          {
+            "send": "a",
+            "data": "ping"
+          },
+          {
+            "receive": "a"
+          },
+          {
+            "send": "b",
+            "data": "pong"
+          },
+          {
+            "receive": "b"
+          },
+          {
+            "send": "a",
+            "data": "broadcast"
+          },
+          {
+            "receive": "c"
+          },
+          {
+            "receive": "a"
+          },
+          {
+            "receive": "b"
+          },
+          {
+            "send": "b",
+            "data": "broadcast"
+          },
+          {
+            "receive": "c"
+          },
+          {
+            "receive": "a"
+          },
+          {
+            "receive": "b"
+          },
+          {
+            "close": "a"
+          },
+          {
+            "close": "b"
+          },
+          {
+            "send": "c",
+            "data": "disconnect"
+          },
+          {
+            "receive": "c"
+          },
+          {
+            "close": "c"
+          },
+          {
+            "connected": "c"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        "pong",
+        true,
+        null,
+        null,
+        null,
+        "pong",
+        null,
+        "ping",
+        null,
+        "broadcast",
+        "broadcast",
+        "broadcast",
+        null,
+        "broadcast",
+        "broadcast",
+        "broadcast",
+        null,
+        null,
+        null,
+        "disconnect",
+        null,
+        false
+      ]
+    },
+    {
+      "name": "testWorkerman (the same scenario: Workerman is not installed in the PHP runtime, so both sides run it on their network adapter)",
+      "op": "e2e.run",
+      "args": {
+        "steps": [
+          {
+            "connect": "c"
+          },
+          {
+            "send": "c",
+            "data": "ping"
+          },
+          {
+            "receive": "c"
+          },
+          {
+            "connected": "c"
+          },
+          {
+            "connect": "a"
+          },
+          {
+            "connect": "b"
+          },
+          {
+            "send": "a",
+            "data": "ping"
+          },
+          {
+            "receive": "a"
+          },
+          {
+            "send": "b",
+            "data": "pong"
+          },
+          {
+            "receive": "b"
+          },
+          {
+            "send": "a",
+            "data": "broadcast"
+          },
+          {
+            "receive": "c"
+          },
+          {
+            "receive": "a"
+          },
+          {
+            "receive": "b"
+          },
+          {
+            "close": "a"
+          },
+          {
+            "close": "b"
+          },
+          {
+            "send": "c",
+            "data": "disconnect"
+          },
+          {
+            "receive": "c"
+          },
+          {
+            "close": "c"
+          },
+          {
+            "connected": "c"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        "pong",
+        true,
+        null,
+        null,
+        null,
+        "pong",
+        null,
+        "ping",
+        null,
+        "broadcast",
+        "broadcast",
+        "broadcast",
+        null,
+        null,
+        null,
+        "disconnect",
+        null,
+        false
+      ]
+    },
+    {
+      "name": "testSwooleTimesOutStalledSends",
+      "op": "e2e.run",
+      "args": {
+        "send_timeout": 1.0,
+        "steps": [
+          {
+            "slow": "s"
+          },
+          {
+            "connect": "h"
+          },
+          {
+            "batch": "s",
+            "count": 300,
+            "size": 65536
+          },
+          {
+            "wait_batches": 1
+          },
+          {
+            "probe": "s"
+          },
+          {
+            "send": "h",
+            "data": "ping"
+          },
+          {
+            "receive": "h"
+          },
+          {
+            "http": "/info"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        null,
+        null,
+        true,
+        "disconnected",
+        null,
+        "pong",
+        {
+          "status": 200,
+          "body": "{\"connections\":1,\"batches_sent\":1}"
+        }
+      ]
+    },
+    {
+      "name": "testSwooleReleasesSendsAfterPeerClose",
+      "op": "e2e.run",
+      "args": {
+        "send_timeout": 1.0,
+        "steps": [
+          {
+            "slow": "s"
+          },
+          {
+            "connect": "h"
+          },
+          {
+            "batch": "s",
+            "count": 300,
+            "size": 65536
+          },
+          {
+            "wait_batches": 1
+          },
+          {
+            "drop": "s"
+          },
+          {
+            "connect": "r"
+          },
+          {
+            "send": "r",
+            "data": "ping"
+          },
+          {
+            "receive": "r"
+          },
+          {
+            "send": "h",
+            "data": "ping"
+          },
+          {
+            "receive": "h"
+          },
+          {
+            "send": "r",
+            "data": "ping"
+          },
+          {
+            "receive": "r"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        null,
+        null,
+        true,
+        null,
+        null,
+        null,
+        "pong",
+        null,
+        "pong",
+        null,
+        "pong"
+      ]
+    },
+    {
+      "name": "testSwooleRecoversFromBriefStall",
+      "op": "e2e.run",
+      "args": {
+        "send_timeout": 1.0,
+        "steps": [
+          {
+            "connect": "c"
+          },
+          {
+            "batch": "c",
+            "count": 300,
+            "size": 65536
+          },
+          {
+            "wait_batches": 1
+          },
+          {
+            "drain": "c",
+            "count": 300,
+            "size": 65536
+          },
+          {
+            "send": "c",
+            "data": "ping"
+          },
+          {
+            "receive": "c"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        true,
+        true,
+        null,
+        "pong"
+      ]
+    },
+    {
+      "name": "plain HTTP requests on the WebSocket port",
+      "op": "e2e.run",
+      "args": {
+        "steps": [
+          {
+            "http": "/health"
+          },
+          {
+            "http": "/info"
+          },
+          {
+            "connect": "a"
+          },
+          {
+            "connect": "b"
+          },
+          {
+            "send": "a",
+            "data": "ping"
+          },
+          {
+            "receive": "a"
+          },
+          {
+            "send": "b",
+            "data": "ping"
+          },
+          {
+            "receive": "b"
+          },
+          {
+            "http": "/info"
+          },
+          {
+            "http": "/nope"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "status": 200,
+          "body": "{\"status\":\"ok\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"connections\":0,\"batches_sent\":0}"
+        },
+        null,
+        null,
+        null,
+        "pong",
+        null,
+        "pong",
+        {
+          "status": 200,
+          "body": "{\"connections\":2,\"batches_sent\":0}"
+        },
+        {
+          "status": 404,
+          "body": "Not Found"
+        }
+      ]
+    },
+    {
+      "name": "a client closed by the server (no close frame): receive returns the last message, then nothing, then the client closes",
+      "op": "e2e.run",
+      "args": {
+        "steps": [
+          {
+            "connect": "a"
+          },
+          {
+            "send": "a",
+            "data": "disconnect"
+          },
+          {
+            "receive": "a"
+          },
+          {
+            "receive": "a"
+          },
+          {
+            "connected": "a"
+          },
+          {
+            "send": "a",
+            "data": "ping"
+          },
+          {
+            "receive": "a"
+          },
+          {
+            "connected": "a"
+          },
+          {
+            "send": "a",
+            "data": "ping"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        "disconnect",
+        null,
+        true,
+        {
+          "error": "RuntimeException",
+          "message": "Failed to send data: 5001 - Client no connection"
+        },
+        null,
+        false,
+        {
+          "error": "RuntimeException",
+          "message": "Not connected to WebSocket server"
+        }
+      ]
+    }
+  ]
+}

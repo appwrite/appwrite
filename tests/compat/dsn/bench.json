@@ -1,0 +1,93 @@
+{
+  "lib": "dsn",
+  "environment": {
+    "date": "2026-10-18T14:20:13Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse",
+      "description": "Parse a Redis connection string with credentials, a path and three parameters",
+      "php": {
+        "ns": 488.49450232870794,
+        "min": 462.19950064819704,
+        "max": 612.2191146108416,
+        "samples": 15,
+        "calls": 41654,
+        "cpu": 525.48454730238,
+        "peak": 3008.0,
+        "retained": 0.0006017829420143724,
+        "rss": 107642880.0
+      },
+      "rust": {
+        "ns": 177.93469879518074,
+        "min": 172.08687193217312,
+        "max": 217.17090584560464,
+        "samples": 15,
+        "calls": 112050,
+        "cpu": 185.2522927264614,
+        "rss": 22032384.0,
+        "allocations": 6.000006544697308,
+        "bytes": 60.00167127770341,
+        "peak": 1650.0,
+        "retained": 0.0009840844860925183
+      },
+      "speedup": 2.74535830074948,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "param",
+      "description": "Read one query parameter of a parsed connection string",
+      "php": {
+        "ns": 37.46034021586995,
+        "min": 36.91511580091071,
+        "max": 57.142392300814514,
+        "samples": 15,
+        "calls": 530134,
+        "cpu": 38.47593250008489,
+        "peak": 3008.0,
+        "retained": 0.00004728364275195831,
+        "rss": 107642880.0
+      },
+      "rust": {
+        "ns": 6.514598315710937,
+        "min": 6.140290603906678,
+        "max": 6.774240236956986,
+        "samples": 15,
+        "calls": 2943319,
+        "cpu": 6.478227062713896,
+        "rss": 22163456.0,
+        "allocations": 2.4915183618674474e-7,
+        "bytes": 0.00006362431889532418,
+        "peak": 1650.0,
+        "retained": 0.00003746337609571598
+      },
+      "speedup": 5.75021488669972,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

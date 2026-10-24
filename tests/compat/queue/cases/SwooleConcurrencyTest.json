@@ -1,0 +1,335 @@
+{
+  "source": "packages/queue/tests/SwooleConcurrencyTest.php",
+  "cases": [
+    {
+      "name": "processes up to the configured coroutines at once",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p01",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p02",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p03",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p04",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p05",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p06",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p07",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p08",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p09",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.consume",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "queue": {
+              "name": "work",
+              "namespace": "${ns}"
+            },
+            "coroutines": 3,
+            "stop_after": 9,
+            "hold_ms": 50,
+            "sort": true
+          },
+          "expect": {
+            "handled": [
+              "p01",
+              "p02",
+              "p03",
+              "p04",
+              "p05",
+              "p06",
+              "p07",
+              "p08",
+              "p09"
+            ],
+            "succeeded": [
+              "p01",
+              "p02",
+              "p03",
+              "p04",
+              "p05",
+              "p06",
+              "p07",
+              "p08",
+              "p09"
+            ],
+            "errors": [],
+            "max": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "one coroutine never overlaps",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p01",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p02",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p03",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p04",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p05",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.consume",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "queue": {
+              "name": "work",
+              "namespace": "${ns}"
+            },
+            "coroutines": 1,
+            "stop_after": 5,
+            "hold_ms": 5
+          },
+          "expect": {
+            "handled": [
+              "p01",
+              "p02",
+              "p03",
+              "p04",
+              "p05"
+            ],
+            "succeeded": [
+              "p01",
+              "p02",
+              "p03",
+              "p04",
+              "p05"
+            ],
+            "errors": [],
+            "max": 1
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p01",
+            "receive:1",
+            "commit:p02",
+            "receive:1",
+            "commit:p03",
+            "receive:1",
+            "commit:p04",
+            "receive:1",
+            "commit:p05"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed handler is rejected and the loop goes on",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p01",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p02",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p03",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.consume",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "queue": {
+              "name": "work",
+              "namespace": "${ns}"
+            },
+            "coroutines": 1,
+            "stop_after": 3,
+            "fail": [
+              "p02"
+            ]
+          },
+          "expect": {
+            "handled": [
+              "p01",
+              "p02",
+              "p03"
+            ],
+            "succeeded": [
+              "p01",
+              "p03"
+            ],
+            "errors": [
+              [
+                "p02",
+                "boom"
+              ]
+            ],
+            "max": 1
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p01",
+            "receive:1",
+            "reject:p02:retry",
+            "receive:1",
+            "commit:p03"
+          ]
+        }
+      ]
+    }
+  ]
+}

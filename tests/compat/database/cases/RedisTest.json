@@ -1,0 +1,128 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/RedisTest.php"
+  ],
+  "cases": [
+    {
+      "name": "RedisTest::testReadsDropAStoredNonStringPermission",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "lenientReads",
+                "name": "lenientReads",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "lenientReads",
+              "name": "lenientReads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "lenientReads",
+            "document": {
+              "$document": {
+                "$id": "u0000000000000000001",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "title": "stored"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000001",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "title": "stored",
+              "$collection": "lenientReads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

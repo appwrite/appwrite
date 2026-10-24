@@ -1,0 +1,2839 @@
+{
+  "source": "openssl key inputs",
+  "cases": [
+    {
+      "name": "an secp384r1 private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDAsrHbs0fga/sy4hybG\nitBvOy/n1HWq7oZiq/lBhj1vw4E3tib9PYkiq1ulC8jmKr2hZANiAASee0LlQa53\n0rZohan26TgNinftnUpxcmLooI1dEPWN3rBF2P5K70RT29N0LBlJOTE5hFwOA8wA\niujn8YXLV1hlMlS9rFM0nXVT+vLFJPjiPT17Sq/5Rl1o3pSRWIBUrZw=\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an secp521r1 private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIBz574U+veEShJcpmV\nP/1tvGyj9Bhc1RM5vml5TAU2Xam89aH5suI4ZHVu8rf6JchOL91HD5FFSINqHitf\nykdly1+hgYkDgYYABAAI1MkWGNJovx5wEK6AoYpo7rmqsP5oOHeSPBWySELfR52f\ndt1xB9qT9AwkAjKojhQGbhjkFJHvnE5FFkpPXsiJOQCZXfsXM7t2e5Qj8cPPUI6e\nTi1EVjTvAKH5eSoAMmZE6bZ7y5mleve6x9lSNyXy/FHdAwQmyE3sZjCuN6Spb2t5\nCQ==\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an secp256k1 private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMIGEAgEAMBAGByqGSM49AgEGBSuBBAAKBG0wawIBAQQgqVm5GGkqlSIubC7CIEUs\n5ZrEi/OwUmlOeTD2/LchNZ2hRANCAAS7s20AOAirZ3R6r6UM9/+S4xeeCQ33xx1g\nyxOGf2iqaJIbPN8AYmftk6c+OuGSRka9eQOAvtkNjNYvD1CFO549\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an brainpoolP256r1 private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMIGIAgEAMBQGByqGSM49AgEGCSskAwMCCAEBBwRtMGsCAQEEIEjvkYbWD9zy+mzm\n2FWUEJEeVnXshynSDIASLSMBSN1KoUQDQgAEOb1ESOFyOnvy91+dYiPfdqxDr40q\nEGb8t/MECkfiq7OU9zdqarizsh7bv3EmhKYxoh1vE0dGkDipjjvPrMrDew==\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an brainpoolP512t1 private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMIHsAgEAMBQGByqGSM49AgEGCSskAwMCCAEBDgSB0DCBzQIBAQRAf4494afJfXsI\nvjBGcwOj+dE3kw5eGUv3cUFLeKvvXfSRl4AhyZc/I0iOkhj3Am/373NoTa7Kl+3/\n7fgfq/PhaqGBhQOBggAEAAXknqQsUOnhRvvXh1IYMCw6B3cQAcHdG8a91bMkKbxx\n2VV/WEnc48LXQlgRqS9li20b/gM0uentNfUI78KrwR3ZGpBOjHSHin+gMUaqeKLn\nlx/bovL307SUHutrybnsCu51HDo7T8HyQU8IT5cRaKhPfqkM9fRouzfYiil2tX4=\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an secp112r1 private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nME4CAQAwEAYHKoZIzj0CAQYFK4EEAAYENzA1AgEBBA4myRsWu8T6pEQUAr5BwqEg\nAx4ABNl+shK96/mo3BLgGANrxuDaJPt/Hvy6K4cV78Y=\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an prime192v1 private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMG8CAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQEEVTBTAgEBBBi26eEWdtSjVqjcASye\nRfnMah2cBzP9V+yhNAMyAAR3kMkYFWnAnL/UcWBbOoPHdzPB43DzQvyQF2V2A7a7\nUyq4YaA4zC3xBF4Wf5OV6b4=\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an secp224r1 private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMHgCAQAwEAYHKoZIzj0CAQYFK4EEACEEYTBfAgEBBBxTCzKK2I0AdEr2mLYjdaez\noDALaD2bzw/lM2eToTwDOgAEWCyfukxG98+nJMPWTQrAZznG+TniuvrAskUbYiyC\nAhZVFwa8q/PUCyAAYrApjL26DiFnPKy5Ai0=\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an wap-wsg-idm-ecid-wtls6 private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nME4CAQAwEAYHKoZIzj0CAQYFZysBBAYENzA1AgEBBA4t2hVnUbAnGWCpVHG4NKEg\nAx4ABM18DTScGZb5B8be3D0PgZB3OCP4XSl+T+ZIykI=\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an sec1-secp384r1 private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN EC PRIVATE KEY-----\nMIGkAgEBBDCKYlm16kJ7UWb37HXJ58yKymKDFO2gNyIIAnmIXR2LWwh5aRc5lqyY\nfIK9d2QVcn2gBwYFK4EEACKhZANiAASA6k20cQD1NZxejLhRszokm6r8snq+dWTx\n1mYznw3TgdRnjAXMwkuOmPaTcShEvNrEUgaO2HbSiXBwjr5e1cX+Iec/8HFakbFe\nkPYGV5zZPEU3BqDS0FxZHQ9QZnrZOqQ=\n-----END EC PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an explicit-prime256v1 private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN EC PRIVATE KEY-----\nMIIBaAIBAQQgnG4LLk243XtGTI4Hnq1COqVnFyCExX+O8zDSqHVwsvuggfowgfcC\nAQEwLAYHKoZIzj0BAQIhAP////8AAAABAAAAAAAAAAAAAAAA////////////////\nMFsEIP////8AAAABAAAAAAAAAAAAAAAA///////////////8BCBaxjXYqjqT57Pr\nvVV2mIa8ZR0GsMxTsPY7zjw+J9JgSwMVAMSdNgiG5wSTamZ44ROdJreBn36QBEEE\naxfR8uEsQkf4vOblY6RA8ncDfYEt6zOg9KE5RdiYwpZP40Li/hp/m47n60p8D54W\nK84zV2sxXs7LtkBoN79R9QIhAP////8AAAAA//////////+85vqtpxeehPO5ysL8\nYyVRAgEBoUQDQgAESC9FSd4QJ/BeqWa7spUVeVtE8Oich+2gw3AIY+o+6EiyAIKd\n6a6ock6PN2ifCeT23RlUa+VupPSwk7ITnshkaw==\n-----END EC PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an rsa-pss private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMIICdQIBADALBgkqhkiG9w0BAQoEggJhMIICXQIBAAKBgQCkpQ0BK0UTXR7/gPM2\ng6v03FmvDvsOmqn8Zs0TFZ3ObjHrD7s+od3AeRBTDuzT/yWrCRc+Jd6AeMj1OACt\n3Y61wjLse2mRlbHn1bxEUu7iSc8cKUTBrBo5wljhYiQh1NjbvX+kGXd4UHOLgwIy\nYaIkdKiDhq+XskTWk07UUer9/wIDAQABAoGAESS+feirgKCpoaEjsgFz3kMzc27z\n5Ullecqaf+o4TE5dFETHEnZ4SJpSgNOFBW4D1hNUQDxhNq9c/WufZnszaL7RUXKk\n528/SACm2aMzLFIvMwFabF4npdrvl9YQpvv0US9lF8kjylMbSeOcqeFLpBIdUeG2\nqX3iRGfjPYpkGoECQQDT1dEoDxvQs+UajTXX5CxpOwK8i6Q3nnDEwDYlL/O7srId\ngXNMdrIJh/cs0Xvnzr1XS8KXDnYfvx1xNmmqMyMZAkEAxviOuNrVDRGL4yR3cduc\nKpNN7KtlKU23fKRE/GkJT6WFBX9Fkz8RpdjI5gAwGZTG77E8nuCiwJlx7LASgnEk\n1wJBAKc/tq45F430qpsHCI7WoNXIeIWiftpG5uQAmf9MV9RG5ufyz7R8Nl7eEaI6\nFujTSpyEvTMEgPDZtIYxHsX5L+kCQQCNRkzoOhDOH6hIlkrtH/ZJUKAirCu+4Pyo\nVmbZJadD0w2ZMp3vB/f63ur+TCHa+AUsiZa2ZF+LCyiV2wq5baavAkAR1pmwwH6W\n1NteNEDihjmGtI77syl14TO9tUTCSfazhjUxLPEICdpfOcw6XAaXFZ3MkBLHAuLj\nQe8VMlRQMnKZ\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an dsa private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMIIBWwIBADCCATMGByqGSM44BAEwggEmAoGBAOZUg7jtY4xLQq9PJF//XpEUwpm/\ndp0M7ufwdnjjz/7vb0hgUbGTtr4PFw7Gq+jAtMPFi+/1hzkIIEc4gFtSup4b5eDD\noS8TuCdFXOtbuSlIxW8dG0XENbu7e1j3W3JvSzLhZ6XuFWVLLw1tdxMplJYeOOpg\nJaXDBVAmpqU0TGNjAh0AzkIGE5V4npJ8NUHu9Ms1mDXdEFqsFhrjGs1ipQKBgBoo\nyZGBv8vCEXgR2Dbi5MnJKPiDqkICrEyAy226Emnwv4u8xp7Tu3oT23vAYzoi8cyo\nysJmQ8PfjzCl8GoEC372qUoa7JPqUYoiMgHjBlir3w9C+8W4qBnY2DRiZNWPNxqq\nulFBetdRxZvScTEAQRSpqOlrbaPvY+oB9j7nfzXNBB8CHQDMY8shXxEIoM5Aeq/U\n0+3TpIHEOLp1HDNBgcFi\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an dsa-traditional private key signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN DSA PRIVATE KEY-----\nMIIBywIBAAKBgQDTrw4di+FelYiIyCTdtd38PQaJ9t3XVaCKcQhS2jfDIsOlSWq5\nnU8/GCto2wh2/rerDLw36ZAbsLIAdbsK09s2tlnRT1aOCTwBJdyAW/iGq9BCZZRR\ng1ms3YnKzIqjEGWyBobGEaeJ5QoaoN8HP3FPs+ZtNszIBEOQpaCMeF8hYQIdAIIe\n9J0lLX3h7yCELKAmhxzWAPpYOXfNeZauyNUCgYBSmwRLztcIFYDrDbW/RTx2TGuX\nI88CAKCMsIP8YkQtVnmiPSsGQMqp9MGNvdC8KlGZn6V6RZJUebU81Gf6rUQWzkbO\ns8wqeKKIJbhrMe08USyEvAbT53zPFJLMrfFg7l1URPtLJSNvqxi/ohg3XJybUezg\ngP/J2XuxRe8klylGXQKBgQCSyGU4+QJmlkJhsMfWwq6trTEfiCjCl3n3fH0rQgnr\n0t9LAtzTGvVdhjzKjhRF91ipt1088HAONYrHphFoQaGPxxg7yiKpFLw5lvAgHWQW\nkDTVk/dUznjYUV2kqqCZ8s32zGNwtjG5YhYj92jmBsb024AP/Jw8qBlTDBWQG38+\nbQIcBRUBgjgUC5tmq14gKM8HV+vAsg/7LzZqWDh/Og==\n-----END DSA PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an SM2 private key cannot sign RS256",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBG0wawIBAQQg2Q81n3noovTZ6qD/\nqDcB8Xg7yxhffVcamMLKB9Azal2hRANCAARlQgMM7jQTUF9j8fMpXBLFSFPRkr3D\n3fZhxqsIWBApQWkVyOb2e4LnxpAlU6MqvVi4ipFtLbcIE3iGjn3gNv6l\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to sign the token"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an ed25519 private key cannot sign RS256",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIPM6LA37d5MQEAV7Y6iC+3sQJ9v5szuikA8fwCQ3Ey6q\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to sign the token"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an ed448 private key cannot sign RS256",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMEcCAQAwBQYDK2VxBDsEOaVCXTEHoJutlbFC2gegADFPgx9FSr3//HcmRiy59j33\n1iYsF2HQ9o4y3++H9h0El+1yEi1lp9s5yg==\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to sign the token"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an x25519 private key cannot sign RS256",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VuBCIEICit53nkxvCKuR48TzKcDRKbT0T7XkNtED1MLAO5+Jd1\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to sign the token"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an EC key after an unrelated PEM block signs",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "-----BEGIN CERTIFICATE-----\nMIIDcDCCAligAwIBAgIBATANBgkqhkiG9w0BAQUFADBRMQowCAYDVQQDDAF4MQsw\nCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJu\nZXQgV2lkZ2l0cyBQdHkgTHRkMB4XDTI2MTAwOTE5MzQ0M1oXDTI2MTAxMDE5MzQ0\nM1owUTEKMAgGA1UEAwwBeDELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3Rh\ndGUxITAfBgNVBAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDCCASIwDQYJKoZI\nhvcNAQEBBQADggEPADCCAQoCggEBAM6dTmQarBJl3YDfxRxZ7N4G+Lvd3Q17sk16\nkDDXjZVGkK9V46GMn37b4FwdyhUP0VqdaS0IojkWWAhGdqyWKhhQZ9oj0+610vdx\nzNRyuS7FmBlCi7xFr+dOB16uS2mB3wyHGJF5nKQrbF8YaTcVVsoLypV5/6lJOjcv\nlsMirFmssLMpRqOtj2BpbTpUkM3Detzmzdg9HPYFLv2nEAuaXAVNvObz/VZhivlm\nKpyVJ67v2VUCcmZ7Jjp5Oa+sTcbl6i3Io5oLdEhzbB/yQNTBVG/8S43NmB5M7Fa8\ncZoOVquleHZJ9BZ3z99OYoTDaqmP1UaPWRYYC8uH2ShV/22NGicCAwEAAaNTMFEw\nHQYDVR0OBBYEFPUZV4YqkR8rRO6kWY5e4ujhfyJDMB8GA1UdIwQYMBaAFPUZV4Yq\nkR8rRO6kWY5e4ujhfyJDMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQEFBQAD\nggEBALnjv13SPJ6GJuZmznE75FDwhyFW6Sa6ooUFPvcCnf3bb1IWY22c4dkhufoB\n+CXbHwylCt40WtyKztqpWR5GgAtVSOS6ohJwR3Wk+ufQIscul+PVS7+iZIHNhbM2\nFwOk5+/IvDW+fpkDzR3Rt3g00A2PcMZNcMOyEoF+qjzNPVISNPpUS9pHGX6RQx7l\niz1BcvfrS+xGLAKfCWjh65aTT62gi9w/di1U4khCdXmLG2G+8xDMhxJANbhdEK15\n/FxEg1/rx0tMYyHJwWYRJ/DM0BiTkXj8NnMu7ICzySIqItoaSg8bIV7Xvn22AyUi\nMZchdU9GBAPO5ruOqcpAK/JmAxg=\n-----END CERTIFICATE-----\n-----BEGIN PRIVATE KEY-----\nMIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIBz574U+veEShJcpmV\nP/1tvGyj9Bhc1RM5vml5TAU2Xam89aH5suI4ZHVu8rf6JchOL91HD5FFSINqHitf\nykdly1+hgYkDgYYABAAI1MkWGNJovx5wEK6AoYpo7rmqsP5oOHeSPBWySELfR52f\ndt1xB9qT9AwkAjKojhQGbhjkFJHvnE5FFkpPXsiJOQCZXfsXM7t2e5Qj8cPPUI6e\nTi1EVjTvAKH5eSoAMmZE6bZ7y5mleve6x9lSNyXy/FHdAwQmyE3sZjCuN6Spb2t5\nCQ==\n-----END PRIVATE KEY-----\n",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "k"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA and DSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "at+jwt",
+              "alg": "RS256",
+              "kid": "k"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": [
+                "aud"
+              ],
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700003600,
+              "iat": 1700000000,
+              "jti": "j",
+              "auth_time": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "fixture signatures with other curves",
+      "steps": [
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "RS256",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDAsrHbs0fga/sy4hybG\nitBvOy/n1HWq7oZiq/lBhj1vw4E3tib9PYkiq1ulC8jmKr2hZANiAASee0LlQa53\n0rZohan26TgNinftnUpxcmLooI1dEPWN3rBF2P5K70RT29N0LBlJOTE5hFwOA8wA\niujn8YXLV1hlMlS9rFM0nXVT+vLFJPjiPT17Sq/5Rl1o3pSRWIBUrZw=\n-----END PRIVATE KEY-----\n",
+            "header": {
+              "alg": "RS256"
+            },
+            "claims": {
+              "a": 1
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "keys read from file:// paths",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/cert.pem",
+            "content": "-----BEGIN CERTIFICATE-----\nMIIDcDCCAligAwIBAgIBATANBgkqhkiG9w0BAQUFADBRMQowCAYDVQQDDAF4MQsw\nCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJu\nZXQgV2lkZ2l0cyBQdHkgTHRkMB4XDTI2MTAwOTE5MzQ0M1oXDTI2MTAxMDE5MzQ0\nM1owUTEKMAgGA1UEAwwBeDELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3Rh\ndGUxITAfBgNVBAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDCCASIwDQYJKoZI\nhvcNAQEBBQADggEPADCCAQoCggEBAM6dTmQarBJl3YDfxRxZ7N4G+Lvd3Q17sk16\nkDDXjZVGkK9V46GMn37b4FwdyhUP0VqdaS0IojkWWAhGdqyWKhhQZ9oj0+610vdx\nzNRyuS7FmBlCi7xFr+dOB16uS2mB3wyHGJF5nKQrbF8YaTcVVsoLypV5/6lJOjcv\nlsMirFmssLMpRqOtj2BpbTpUkM3Detzmzdg9HPYFLv2nEAuaXAVNvObz/VZhivlm\nKpyVJ67v2VUCcmZ7Jjp5Oa+sTcbl6i3Io5oLdEhzbB/yQNTBVG/8S43NmB5M7Fa8\ncZoOVquleHZJ9BZ3z99OYoTDaqmP1UaPWRYYC8uH2ShV/22NGicCAwEAAaNTMFEw\nHQYDVR0OBBYEFPUZV4YqkR8rRO6kWY5e4ujhfyJDMB8GA1UdIwQYMBaAFPUZV4Yq\nkR8rRO6kWY5e4ujhfyJDMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQEFBQAD\nggEBALnjv13SPJ6GJuZmznE75FDwhyFW6Sa6ooUFPvcCnf3bb1IWY22c4dkhufoB\n+CXbHwylCt40WtyKztqpWR5GgAtVSOS6ohJwR3Wk+ufQIscul+PVS7+iZIHNhbM2\nFwOk5+/IvDW+fpkDzR3Rt3g00A2PcMZNcMOyEoF+qjzNPVISNPpUS9pHGX6RQx7l\niz1BcvfrS+xGLAKfCWjh65aTT62gi9w/di1U4khCdXmLG2G+8xDMhxJANbhdEK15\n/FxEg1/rx0tMYyHJwWYRJ/DM0BiTkXj8NnMu7ICzySIqItoaSg8bIV7Xvn22AyUi\nMZchdU9GBAPO5ruOqcpAK/JmAxg=\n-----END CERTIFICATE-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file:///tmp/compat-fs/${ns}/keys/private.pem",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.key_id",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+        },
+        {
+          "op": "issuer.public_jwk",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": {
+            "kty": "RSA",
+            "use": "sig",
+            "alg": "RS256",
+            "kid": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e",
+            "n": "zp1OZBqsEmXdgN_FHFns3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ_RWp1pLQiiORZYCEZ2rJYqGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVWygvKlXn_qUk6Ny-WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu_acQC5pcBU285vP9VmGK-WYqnJUnru_ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH_JA1MFUb_xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY_VRo9ZFhgLy4fZKFX_bY0aJw",
+            "e": "AQAB"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjhlMDc4MjgyZTBiMjk4Y2VmYmJhZTk4ZWFmMmUwNmJhZTJlZjY3MTA1ZTc4Y2IyMmNlMzFjNGM4OGI2OWZmMWUifQ.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOlsiYXVkIl0sInN1YiI6InUiLCJjbGllbnRfaWQiOiJjIiwiZXhwIjoxNzAwMDAzNjAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoiLCJhdXRoX3RpbWUiOjEwMDB9.PeYDoleqUwmUxkK_mC167pugwWAVbC89-QZcuypJq6qx-dBEV9Hen_7audNODzwQBAFcjX-zUJ_F5wU3-iUa2K8o5NcJaTe6T9m1F6nfLRKcBq1hvgE8YLsF1GirehNg_YMlrk98lkhCxanEHjl8yij7q2Rg_OIkdIu-aK9NftLaem7lDnx9z8Wp8RnkJ-JlZB69I8KNRbEZvCja6lZIgD5r2ejTNzqrGiZ5D64JpogX8uVpyqEsqq3V_jqfqaJPZINSfOOdec-SpT712IgJmqkYKHFvfA-0vaFpWcGaqvYVY2b4mGk4bE2FFg3UqJ8o7cn-AvrGawrlj0gY51Dezg"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": [
+              "aud"
+            ],
+            "sub": "u",
+            "client_id": "c",
+            "exp": 1700003600,
+            "iat": 1700000000,
+            "jti": "j",
+            "auth_time": 1000
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/cert.pem"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "c"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": [
+              "aud"
+            ],
+            "sub": "u",
+            "client_id": "c",
+            "exp": 1700003600,
+            "iat": 1700000000,
+            "jti": "j",
+            "auth_time": 1000
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/missing/../public.pem"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "d"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": [
+              "aud"
+            ],
+            "sub": "u",
+            "client_id": "c",
+            "exp": 1700003600,
+            "iat": 1700000000,
+            "jti": "j",
+            "auth_time": 1000
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "RS256",
+            "key": "file:///tmp/compat-fs/${ns}/keys/./private.pem",
+            "header": {
+              "alg": "RS256"
+            },
+            "claims": {
+              "a": 1
+            }
+          },
+          "expect": "eyJhbGciOiJSUzI1NiJ9.eyJhIjoxfQ.Mv22wSm-3RXwJke1HVMuTKGC6aiX5kU2oSXWVqONWT57MxhUXeU33X8LDYZlA3PYnxD-16KaU7jg8CjyZ6JRdy-qjQMtNzmXdua0NUcW0GSkft8JFL_ON4W3WuFe8kXc_p8mAS7mVDu69fQcr9VXeiuhQgbgPkUmlXTZgJxafVOSfqER8U4mo6Uc6Au_wR0MCz4fCAnw4zcPnhTqZWzacU-KiJbubWcNnRE9MWLPya9GOeEsMcr5-AX0zmSRfLVKHijbXpyr-L6FvKx6U_SucwdLzPKmBtl8vo6zmDHghfSU4DQxowbahoU4ZZ19JWHXq7nggMU7ToydQ5p3OZPQgA"
+        }
+      ]
+    },
+    {
+      "name": "EC keys read from file:// paths",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/ec.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDAsrHbs0fga/sy4hybG\nitBvOy/n1HWq7oZiq/lBhj1vw4E3tib9PYkiq1ulC8jmKr2hZANiAASee0LlQa53\n0rZohan26TgNinftnUpxcmLooI1dEPWN3rBF2P5K70RT29N0LBlJOTE5hFwOA8wA\niujn8YXLV1hlMlS9rFM0nXVT+vLFJPjiPT17Sq/5Rl1o3pSRWIBUrZw=\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "id",
+            "private_key": "file:///tmp/compat-fs/${ns}/keys/ec.pem",
+            "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "s",
+            "audience": "a",
+            "auth_time": 1,
+            "duration": 60,
+            "now": 1700000000
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "ECDSA signatures are randomised"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "RS256",
+              "kid": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "sub": "s",
+              "aud": "a",
+              "exp": 1700000060,
+              "iat": 1700000000,
+              "auth_time": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a missing private key file",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file:///tmp/compat-fs/${ns}/keys/none.pem",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the private key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a private key path that is a directory",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file:///tmp/compat-fs/${ns}/keys",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the private key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the bare file:// scheme",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file://",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the private key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an uppercase scheme is not a path",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "FILE:///tmp/compat-fs/${ns}/keys/private.pem",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the private key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a private key path with a NUL byte",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file:///tmp/compat-fs/${ns}/keys/private.pem\u0000x",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "openssl_pkey_get_private(): Argument #1 ($private_key) must not contain any null bytes"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a NUL byte alone",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file://\u0000",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "openssl_pkey_get_private(): Argument #1 ($private_key) must not contain any null bytes"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a public key file as the private key",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file:///tmp/compat-fs/${ns}/keys/public.pem",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the private key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a path longer than MAXPATHLEN",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file:///aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the private key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a relative path",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file://missing/private.pem",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the private key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a missing public key file",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file:///tmp/compat-fs/${ns}/keys/private.pem",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/none.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.key_id",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "issuer.public_jwk",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/none.pem"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "a.b.c",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header is not valid base64url"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a public key path that is a directory",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file:///tmp/compat-fs/${ns}/keys/private.pem",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.key_id",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "issuer.public_jwk",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "a.b.c",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header is not valid base64url"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the bare file:// scheme as a public key",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file:///tmp/compat-fs/${ns}/keys/private.pem",
+            "public_key": "file://",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.key_id",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "issuer.public_jwk",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "file://"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "a.b.c",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header is not valid base64url"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a public key path with a NUL byte",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file:///tmp/compat-fs/${ns}/keys/private.pem",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem\u0000",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.key_id",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "openssl_pkey_get_public(): Argument #1 ($public_key) must not contain any null bytes"
+            }
+          }
+        },
+        {
+          "op": "issuer.public_jwk",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "openssl_pkey_get_public(): Argument #1 ($public_key) must not contain any null bytes"
+            }
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "openssl_pkey_get_public(): Argument #1 ($public_key) must not contain any null bytes"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/public.pem\u0000"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "openssl_pkey_get_public(): Argument #1 ($public_key) must not contain any null bytes"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "a.b.c",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header is not valid base64url"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a private key file as the public key",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/private.pem",
+            "content": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/keys/public.pem",
+            "content": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "access",
+            "private_key": "file:///tmp/compat-fs/${ns}/keys/private.pem",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/private.pem",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.key_id",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "issuer.public_jwk",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": [
+              "aud"
+            ],
+            "client_id": "c",
+            "auth_time": 1000,
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "asymmetric",
+            "public_key": "file:///tmp/compat-fs/${ns}/keys/private.pem"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.key_id",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unable to parse the public key"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "a.b.c",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header is not valid base64url"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "one call: an inline RSA key",
+      "op": "issuer.sign_once",
+      "args": {
+        "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n",
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n"
+      },
+      "expect": {
+        "header": {
+          "typ": "at+jwt",
+          "alg": "RS256",
+          "kid": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+        },
+        "claims": {
+          "iss": "https://issuer.test",
+          "aud": [
+            "aud"
+          ],
+          "sub": "u",
+          "client_id": "c",
+          "exp": 1700003600,
+          "iat": 1700000000,
+          "jti": "j",
+          "auth_time": 1000
+        }
+      }
+    },
+    {
+      "name": "one call: keys from files",
+      "op": "issuer.sign_once",
+      "args": {
+        "file": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n",
+        "public_file": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+        "private_key": "file://{dir}/key.pem",
+        "public_key": "file://{dir}/./pub.pem"
+      },
+      "expect": {
+        "header": {
+          "typ": "at+jwt",
+          "alg": "RS256",
+          "kid": "8e078282e0b298cefbbae98eaf2e06bae2ef67105e78cb22ce31c4c88b69ff1e"
+        },
+        "claims": {
+          "iss": "https://issuer.test",
+          "aud": [
+            "aud"
+          ],
+          "sub": "u",
+          "client_id": "c",
+          "exp": 1700003600,
+          "iat": 1700000000,
+          "jti": "j",
+          "auth_time": 1000
+        }
+      }
+    },
+    {
+      "name": "one call: an EC key from a file",
+      "op": "issuer.sign_once",
+      "args": {
+        "file": "-----BEGIN PRIVATE KEY-----\nMIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIBz574U+veEShJcpmV\nP/1tvGyj9Bhc1RM5vml5TAU2Xam89aH5suI4ZHVu8rf6JchOL91HD5FFSINqHitf\nykdly1+hgYkDgYYABAAI1MkWGNJovx5wEK6AoYpo7rmqsP5oOHeSPBWySELfR52f\ndt1xB9qT9AwkAjKojhQGbhjkFJHvnE5FFkpPXsiJOQCZXfsXM7t2e5Qj8cPPUI6e\nTi1EVjTvAKH5eSoAMmZE6bZ7y5mleve6x9lSNyXy/FHdAwQmyE3sZjCuN6Spb2t5\nCQ==\n-----END PRIVATE KEY-----\n",
+        "private_key": "file://{dir}/x/../key.pem",
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+        "key_id": "k"
+      },
+      "expect": {
+        "header": {
+          "typ": "at+jwt",
+          "alg": "RS256",
+          "kid": "k"
+        },
+        "claims": {
+          "iss": "https://issuer.test",
+          "aud": [
+            "aud"
+          ],
+          "sub": "u",
+          "client_id": "c",
+          "exp": 1700003600,
+          "iat": 1700000000,
+          "jti": "j",
+          "auth_time": 1000
+        }
+      }
+    },
+    {
+      "name": "one call: a trailing slash",
+      "op": "issuer.sign_once",
+      "args": {
+        "file": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n",
+        "private_key": "file://{dir}/key.pem/",
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+        "key_id": "k"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to parse the private key"
+        }
+      }
+    },
+    {
+      "name": "one call: a NUL byte in the public key path",
+      "op": "issuer.sign_once",
+      "args": {
+        "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOnU5kGqwSZd2A\n38UcWezeBvi73d0Ne7JNepAw142VRpCvVeOhjJ9+2+BcHcoVD9FanWktCKI5FlgI\nRnaslioYUGfaI9PutdL3cczUcrkuxZgZQou8Ra/nTgderktpgd8MhxiReZykK2xf\nGGk3FVbKC8qVef+pSTo3L5bDIqxZrLCzKUajrY9gaW06VJDNw3rc5s3YPRz2BS79\npxALmlwFTbzm8/1WYYr5ZiqclSeu79lVAnJmeyY6eTmvrE3G5eotyKOaC3RIc2wf\n8kDUwVRv/EuNzZgeTOxWvHGaDlarpXh2SfQWd8/fTmKEw2qpj9VGj1kWGAvLh9ko\nVf9tjRonAgMBAAECggEANNkBoxM7bh1GEd+qsDzEHGpWFt+B2iAIlE7EMOoBmewJ\nt/9VEQ5CAZXGBmnMNaTtHKtkqpMpw0ZW0A8N7ckfDUcLuT0uyUESrB4ckT6i5Ta/\nV76wtUBx5M0Nj4cvXNZOMgsgGp2rlkZRGuXIi8FWiKmJcMBax3cmf9UZT+I/iVPv\nQej2ySp1dakzUrq69hgZaI/IsP39/k5DjmECtQLcg3yGmNYsecHV0xEIdFkbiBAr\niKCVT6A4ez0ZZqlJtxkVa+ZMfIaOoTi6U+IxLv9UD60LtgQUM+OScpQUIewLQANy\na0EpUZKHRdd8H92C3ubSFEIpNbQY6K5ZfUDD+0yYMQKBgQD+ZqG0bm88CIX47ebd\n0d6lhy3vAyTxSdMpVdaRdOmni83HEGrL66tYrQWT6pHQaZgtotSv9PQCRZm60Fzm\nSOaHOfrrYbS8cFp+C2Jt7fj2kI1QvgO3a/OvjN0IloGlDotAWmHSk4HFxJznSMOh\nCPN2sEMv15iAf7/svwvciYw83wKBgQDP6cd5AfUOucFC2YnZhGgthNzwOvYw871R\nUS89LfKzjZD4w8FTv63Jw83tIKXs8kyiqIKMk67A8WHYZhprv0G7+LXIbRJEk5U7\nxgbR86YgZ203svlarCbV6nhE9RG9DSP0uCxq1dAD5fa1ahBz/hQZolAMWiKm8PS+\nT9+grtGDuQKBgEuKJhHxiM4GqeFUouzS2I3GKfmCsYGELlNjzaa7VHYPqTamxU9v\n1x0pozJcwJdmA23pn8XvslTKXe9+11b55pnYuY0TIhuiMPykXMHPm9F68rs68NeS\nEnXaGffm2PAt9WNScyGX8zzKONzkWlKC2egwRoL6PapKRK8Du33sydt5AoGBAIiH\nn/Gak23kFUDs0VUBWdfqU5t9XIWwyTVI9phaP/IgmH6DLcTtLhY8elGpCsyaIDEA\nLxpZMHyLBhGwmtD+exAQtm6zETfvIiRqWbgtI35L7LCS2qPsQGRg4DGILOnUYzQk\nbSaK2Vp1/JgM2lkRE+nxaFd0KSUvPchrcxJ1OighAoGBANsXzkoh+jIXnNSk/bpe\nC6jAaEUcpnyXiqY+psJyTKzyvydKusUSHl/XjkSQvHgPmP0DfOVVmQF9D0zqvLWZ\nVN7p5zNnJSFFAbb8xGy99NxVjbQRFiSUCrJmSYmNCg3YcPrip4eMN95XzvJ76Wzy\n6esQl+22N3ilYrlS1UtAW4uy\n-----END PRIVATE KEY-----\n",
+        "public_key": "file://{dir}/pub.pem\u0000"
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "openssl_pkey_get_public(): Argument #1 ($public_key) must not contain any null bytes"
+        }
+      }
+    },
+    {
+      "name": "one call: an Ed25519 key",
+      "op": "issuer.sign_once",
+      "args": {
+        "file": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIPM6LA37d5MQEAV7Y6iC+3sQJ9v5szuikA8fwCQ3Ey6q\n-----END PRIVATE KEY-----\n",
+        "private_key": "file://{dir}/key.pem",
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzp1OZBqsEmXdgN/FHFns\n3gb4u93dDXuyTXqQMNeNlUaQr1XjoYyfftvgXB3KFQ/RWp1pLQiiORZYCEZ2rJYq\nGFBn2iPT7rXS93HM1HK5LsWYGUKLvEWv504HXq5LaYHfDIcYkXmcpCtsXxhpNxVW\nygvKlXn/qUk6Ny+WwyKsWaywsylGo62PYGltOlSQzcN63ObN2D0c9gUu/acQC5pc\nBU285vP9VmGK+WYqnJUnru/ZVQJyZnsmOnk5r6xNxuXqLcijmgt0SHNsH/JA1MFU\nb/xLjc2YHkzsVrxxmg5Wq6V4dkn0FnfP305ihMNqqY/VRo9ZFhgLy4fZKFX/bY0a\nJwIDAQAB\n-----END PUBLIC KEY-----\n",
+        "key_id": "k"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to sign the token"
+        }
+      }
+    }
+  ]
+}

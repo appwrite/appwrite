@@ -1,0 +1,310 @@
+//! Compat adapter for `locale`: maps `tests/compat/locale/spec.json` operations onto `utopia-locale`.
+//!
+//! PHP keeps languages and the exception mode in static state; this adapter
+//! keeps the [`Languages`] value in a static too, so both runtimes carry it
+//! across operations until `locale.reset`. A locale handle holds the
+//! `$default` and `$fallback` names; each operation views the languages
+//! through them ([`Locale::with`]).
+
+use std::hint::black_box;
+use std::path::{Path, PathBuf};
+use std::sync::{Mutex, MutexGuard};
+
+use php_std::{Array, ArrayKey, Value as Php};
+use serde_json::{Map, Value, json};
+use utopia_locale::{Error, Languages, Locale, Missing, Translations};
+
+use crate::adapter::{Args, Fault, OpResult, Outcome, Session};
+use crate::bench::Bench;
+
+/// Operations this adapter implements (must match `spec.json`).
+pub const OPS: &[&str] = &[
+    "locale.reset",
+    "locale.exceptions",
+    "languages.set_array",
+    "languages.set_json",
+    "languages.list",
+    "locale.new",
+    "locale.set_default",
+    "locale.set_fallback",
+    "locale.state",
+    "locale.text",
+    "locale.translations",
+    "locale.lookup",
+];
+
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[
+    ("new", "Create a request locale for German with an English fallback"),
+    ("text", "Translate a key of a 313-key language"),
+    ("placeholders", "Translate a session alert email line with six placeholders"),
+    ("fallback", "Translate a key the default language lacks from the English fallback"),
+];
+
+/// Appwrite's translations: English, German and Moroccan Arabic (which
+/// lacks most email keys).
+async fn bench_languages() -> Result<&'static Languages, Fault> {
+    let mut languages = Languages::new();
+    for name in ["en", "de", "ar-ma"] {
+        languages
+            .load(name, &path(&format!("app/config/locale/translations/{name}.json")))
+            .await
+            .map_err(|e| Fault::new(format!("locale: bench languages: {e}")))?;
+    }
+    // Lives as long as the driver, as the PHP languages are static.
+    Ok(Box::leak(Box::new(languages)))
+}
+
+fn bench_locale(languages: &'static Languages, default: &str) -> Result<Locale<'static>, Fault> {
+    let mut locale = Locale::new(languages, default).map_err(|e| Fault::new(e.to_string()))?;
+    locale.set_fallback("en").map_err(|e| Fault::new(e.to_string()))?;
+    Ok(locale)
+}
+
+pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
+    let languages = bench_languages().await?;
+    Ok(match name {
+        "new" => Bench::sync(move || {
+            if let Ok(mut locale) = Locale::new(black_box(languages), black_box("de")) {
+                black_box(locale.set_fallback(black_box("en")).is_ok());
+                black_box(locale);
+            }
+        }),
+        "text" => {
+            let locale = bench_locale(languages, "de")?;
+            Bench::sync(move || {
+                black_box(locale.text(black_box("countries.de"), Missing::Key, &[]).ok());
+            })
+        }
+        "placeholders" => {
+            let locale = bench_locale(languages, "en")?;
+            let placeholders: [(&str, &str); 6] = [
+                ("b", "<strong>"),
+                ("/b", "</strong>"),
+                ("project", "Appwrite Cloud"),
+                ("date", "November 2"),
+                ("year", "2024"),
+                ("time", "08:41:57"),
+            ];
+            Bench::sync(move || {
+                black_box(
+                    locale.text(black_box("emails.sessionAlert.body"), Missing::Key, black_box(&placeholders)).ok(),
+                );
+            })
+        }
+        "fallback" => {
+            let locale = bench_locale(languages, "ar-ma")?;
+            Bench::sync(move || {
+                black_box(locale.text(black_box("emails.sessionAlert.subject"), Missing::Key, &[]).ok());
+            })
+        }
+        _ => return Err(Fault::new(format!("locale: no benchmark `{name}`"))),
+    })
+}
+
+static LANGUAGES: Mutex<Option<Languages>> = Mutex::new(None);
+
+fn languages() -> MutexGuard<'static, Option<Languages>> {
+    LANGUAGES.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// A locale handle: PHP's public `$default` and `$fallback`.
+#[derive(Clone)]
+struct State {
+    default: String,
+    fallback: Option<String>,
+}
+
+fn err(e: Error) -> Outcome {
+    Outcome::err(e.php_class(), e.to_string())
+}
+
+/// PHP's array key for a string: numeric strings are integers.
+fn key(s: &str) -> Value {
+    match php_std::types::numeric_key(s.as_bytes()) {
+        Some(i) => Value::from(i),
+        None => Value::String(s.to_owned()),
+    }
+}
+
+/// A Rust map as the PHP array it is: a list when its keys are `0..n`.
+fn php_array(t: &Translations) -> Value {
+    let array: Array = t.keys().map(|k| (ArrayKey::from_bytes(k.as_bytes()), Php::Null)).collect();
+    if array.is_list() {
+        Value::Array(t.values().map(|v| Value::String(v.clone())).collect())
+    } else {
+        Value::Object(t.iter().map(|(k, v)| (k.clone(), Value::String(v.clone()))).collect::<Map<_, _>>())
+    }
+}
+
+/// Translations from the wire: an object or a list of strings.
+fn translations(v: &Value) -> Result<Translations, Fault> {
+    let text = |v: &Value| v.as_str().map(str::to_owned).ok_or_else(|| Fault::new("translations are strings"));
+    match v {
+        Value::Object(o) => o.iter().map(|(k, v)| Ok((k.clone(), text(v)?))).collect(),
+        Value::Array(a) => a.iter().enumerate().map(|(i, v)| Ok((i.to_string(), text(v)?))).collect(),
+        _ => Err(Fault::new("translations must be an object or a list")),
+    }
+}
+
+/// getText()'s `$placeholders` (values cast to string as PHP does).
+fn placeholders(args: &Value) -> Result<Vec<(String, String)>, Fault> {
+    Ok(match args.get("placeholders") {
+        None | Some(Value::Null) => Vec::new(),
+        Some(Value::Object(o)) => o
+            .iter()
+            .map(|(k, v)| {
+                Ok((
+                    k.clone(),
+                    php_std::value::to_string(v).ok_or_else(|| Fault::new("placeholder values are scalars"))?,
+                ))
+            })
+            .collect::<Result<_, Fault>>()?,
+        Some(Value::Array(a)) => a
+            .iter()
+            .enumerate()
+            .map(|(i, v)| {
+                Ok((
+                    i.to_string(),
+                    php_std::value::to_string(v).ok_or_else(|| Fault::new("placeholder values are scalars"))?,
+                ))
+            })
+            .collect::<Result<_, Fault>>()?,
+        Some(_) => return Err(Fault::new("placeholders must be an object")),
+    })
+}
+
+fn text(locale: &Locale<'_>, key: &str, args: &Value) -> Result<Outcome, Fault> {
+    // getText()'s `$default`: absent is the dynamic key.
+    let missing = match args.get("default") {
+        None => Missing::Key,
+        Some(Value::Null) => Missing::Null,
+        Some(Value::String(s)) => Missing::Text(s),
+        Some(_) => return Err(Fault::new("default must be a string or null")),
+    };
+    let placeholders = placeholders(args)?;
+    let pairs: Vec<(&str, &str)> = placeholders.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    Ok(match locale.text(key, missing, &pairs) {
+        Ok(Some(t)) => Outcome::Ok(Value::String(t.into_owned())),
+        Ok(None) => Outcome::Ok(Value::Null),
+        Err(e) => err(e),
+    })
+}
+
+/// A relative path is relative to the repository root, as the PHP driver's
+/// working directory is.
+fn path(p: &str) -> PathBuf {
+    let p = Path::new(p);
+    if p.is_absolute() || p.as_os_str().is_empty() {
+        p.to_path_buf()
+    } else {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..").join(p)
+    }
+}
+
+pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
+    let a = Args(args);
+    let state = |s: &Session| -> Result<State, Fault> { s.get::<State>(a.value("locale")?).cloned() };
+    Ok(match op {
+        "locale.reset" => {
+            *languages() = Some(Languages::new());
+            Outcome::Ok(Value::Null)
+        }
+        "locale.exceptions" => {
+            languages().get_or_insert_with(Languages::new).set_exceptions(a.bool("on")?);
+            Outcome::Ok(Value::Null)
+        }
+        "languages.set_array" => {
+            let t = translations(a.value("translations")?)?;
+            languages().get_or_insert_with(Languages::new).insert(a.str("name")?, t);
+            Outcome::Ok(Value::Null)
+        }
+        "languages.set_json" => {
+            let mut l = languages().take().unwrap_or_default();
+            let result = l.load(a.str("name")?, &path(a.str("path")?)).await;
+            *languages() = Some(l);
+            match result {
+                Ok(()) => Outcome::Ok(Value::Null),
+                Err(e) => err(e),
+            }
+        }
+        "languages.list" => {
+            let l = languages();
+            Outcome::Ok(Value::Array(l.as_ref().map(|l| l.names().map(key).collect()).unwrap_or_default()))
+        }
+        "locale.new" => {
+            let l = languages();
+            let l = l.as_ref().ok_or_else(|| Fault::new("locale.reset first"))?;
+            match Locale::new(l, a.str("default")?) {
+                Ok(locale) => {
+                    let s = State { default: locale.default().to_owned(), fallback: None };
+                    Outcome::Ok(session.handle(s))
+                }
+                Err(e) => err(e),
+            }
+        }
+        "locale.set_default" | "locale.set_fallback" => {
+            let s = state(session)?;
+            let result = {
+                let l = languages();
+                let l = l.as_ref().ok_or_else(|| Fault::new("locale.reset first"))?;
+                let mut locale = Locale::with(l, s.default, s.fallback);
+                let r = if op == "locale.set_default" {
+                    locale.set_default(a.str("name")?).map(|_| ())
+                } else {
+                    locale.set_fallback(a.str("name")?).map(|_| ())
+                };
+                r.map(|()| State {
+                    default: locale.default().to_owned(),
+                    fallback: locale.fallback().map(str::to_owned),
+                })
+            };
+            match result {
+                Ok(next) => {
+                    *session.get_mut::<State>(a.value("locale")?)? = next;
+                    Outcome::Ok(Value::Null)
+                }
+                Err(e) => err(e),
+            }
+        }
+        "locale.state" => {
+            let s = state(session)?;
+            Outcome::Ok(json!({"default": s.default, "fallback": s.fallback}))
+        }
+        "locale.text" => {
+            let s = state(session)?;
+            let l = languages();
+            let l = l.as_ref().ok_or_else(|| Fault::new("locale.reset first"))?;
+            text(&Locale::with(l, s.default, s.fallback), a.str("key")?, args)?
+        }
+        "locale.translations" => {
+            let s = state(session)?;
+            let l = languages();
+            let l = l.as_ref().ok_or_else(|| Fault::new("locale.reset first"))?;
+            match Locale::with(l, s.default, s.fallback).translations() {
+                Ok(t) => Outcome::Ok(php_array(t)),
+                Err(e) => err(e),
+            }
+        }
+        "locale.lookup" => {
+            let mut l = Languages::new();
+            l.set_exceptions(a.bool("exceptions")?);
+            for (name, t) in a.value("languages")?.as_object().ok_or_else(|| Fault::new("languages is an object"))? {
+                l.insert(name.clone(), translations(t)?);
+            }
+            let outcome = match Locale::new(&l, a.str("language")?) {
+                Err(e) => err(e),
+                Ok(mut locale) => match a.opt_str("fallback")? {
+                    Some(f) => match locale.set_fallback(f) {
+                        Err(e) => err(e),
+                        Ok(_) => text(&locale, a.str("key")?, args)?,
+                    },
+                    None => text(&locale, a.str("key")?, args)?,
+                },
+            };
+            *languages() = Some(l);
+            outcome
+        }
+        _ => return Err(Fault::new(format!("locale: unknown operation `{op}`"))),
+    })
+}

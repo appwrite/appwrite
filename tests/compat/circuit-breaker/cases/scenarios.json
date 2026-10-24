@@ -1,0 +1,229 @@
+{
+  "source": "scenarios beyond the PHP tests",
+  "cases": [
+    {
+      "name": "opens at the ratio, probes after the timeout, closes after the threshold",
+      "op": "breaker.scenario",
+      "args": {
+        "timeout": 0,
+        "success_threshold": 2,
+        "minimum_throughput": 4,
+        "failure_ratio": 0.5,
+        "steps": [
+          "succeed",
+          "fail",
+          "succeed",
+          "fail",
+          "probe",
+          "probe",
+          "succeed",
+          "fail"
+        ]
+      },
+      "expect": [
+        [
+          "ok",
+          "closed",
+          0,
+          0
+        ],
+        [
+          "fallback",
+          "closed",
+          1,
+          0
+        ],
+        [
+          "ok",
+          "closed",
+          1,
+          0
+        ],
+        [
+          "fallback",
+          "half_open",
+          0,
+          0
+        ],
+        [
+          "probe",
+          "half_open",
+          0,
+          1
+        ],
+        [
+          "probe",
+          "closed",
+          0,
+          0
+        ],
+        [
+          "ok",
+          "closed",
+          0,
+          0
+        ],
+        [
+          "fallback",
+          "closed",
+          1,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "a failed probe reopens, and tripping an open circuit stays open",
+      "op": "breaker.scenario",
+      "args": {
+        "timeout": 30,
+        "minimum_throughput": 1,
+        "steps": [
+          "fail",
+          "trip",
+          "succeed",
+          "probe"
+        ]
+      },
+      "expect": [
+        [
+          "fallback",
+          "open",
+          1,
+          0
+        ],
+        [
+          null,
+          "open",
+          1,
+          0
+        ],
+        [
+          "fallback",
+          "open",
+          1,
+          0
+        ],
+        [
+          "fallback",
+          "open",
+          1,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "half-open failure counts and a negative timeout",
+      "op": "breaker.scenario",
+      "args": {
+        "timeout": -5,
+        "success_threshold": 3,
+        "minimum_throughput": 1,
+        "steps": [
+          "fail",
+          "fail",
+          "probe",
+          "fail",
+          "probe",
+          "probe",
+          "probe"
+        ]
+      },
+      "expect": [
+        [
+          "fallback",
+          "half_open",
+          0,
+          0
+        ],
+        [
+          "fallback",
+          "half_open",
+          0,
+          0
+        ],
+        [
+          "probe",
+          "half_open",
+          0,
+          1
+        ],
+        [
+          "fallback",
+          "half_open",
+          0,
+          0
+        ],
+        [
+          "probe",
+          "half_open",
+          0,
+          1
+        ],
+        [
+          "probe",
+          "half_open",
+          0,
+          2
+        ],
+        [
+          "probe",
+          "closed",
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "a zero success threshold closes on the first probe",
+      "op": "breaker.scenario",
+      "args": {
+        "timeout": 0,
+        "success_threshold": 0,
+        "minimum_throughput": 1,
+        "steps": [
+          "trip",
+          "probe",
+          "succeed"
+        ]
+      },
+      "expect": [
+        [
+          null,
+          "half_open",
+          0,
+          0
+        ],
+        [
+          "probe",
+          "closed",
+          0,
+          0
+        ],
+        [
+          "ok",
+          "closed",
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "an empty key without a store is allowed",
+      "op": "breaker.scenario",
+      "args": {
+        "key": "",
+        "steps": [
+          "succeed"
+        ]
+      },
+      "expect": [
+        [
+          "ok",
+          "closed",
+          0,
+          0
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+[package]
+name = "utopia-cache"
+description = "Key-value caching with expiring entries over memory, files, Redis, Redis Cluster, Memcached and Hazelcast, with sharding, pooling, circuit breaking and purge-safe leases."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/cache"
+publish.workspace = true
+
+[features]
+default = ["redis", "filesystem"]
+# Redis (redis-rs connections) and the multiplexed Redis adapter.
+redis = ["dep:redis"]
+# Redis Cluster (redis-rs cluster client).
+redis-cluster = ["redis", "redis/cluster-async"]
+# Memcached and Hazelcast (Memcached text protocol).
+memcached = []
+# Files under a directory.
+filesystem = []
+
+[dependencies]
+bytes.workspace = true
+crc32fast.workspace = true
+flate2.workspace = true
+hex.workspace = true
+indexmap.workspace = true
+php-std.workspace = true
+postcard.workspace = true
+redis = { workspace = true, optional = true }
+rustix.workspace = true
+serde.workspace = true
+sha1.workspace = true
+thiserror.workspace = true
+utopia-async.workspace = true
+tracing.workspace = true
+utopia-circuit-breaker.workspace = true
+utopia-pools.workspace = true
+utopia-telemetry.workspace = true
+
+
+[package.metadata.utopia]
+category = "data"
+php-sync = "3253f8d54953553031f7102e32dec11cd93df40a"

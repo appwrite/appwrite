@@ -1,0 +1,6767 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Builder/SearchTermTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#slash separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1928"
+          },
+          "bind": "s5108",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo/bar"
+            },
+            "as": "o1929"
+          },
+          "bind": "s5109",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo/bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1928"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1929"
+                }
+              ]
+            },
+            "as": "o1930"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1931"
+          },
+          "bind": "s5111",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo/bar"
+            },
+            "as": "o1932"
+          },
+          "bind": "s5112",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo/bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1931"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1932"
+                }
+              ]
+            },
+            "as": "o1933"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#comma separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1934"
+          },
+          "bind": "s5114",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo,bar"
+            },
+            "as": "o1935"
+          },
+          "bind": "s5115",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo,bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1934"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1935"
+                }
+              ]
+            },
+            "as": "o1936"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1937"
+          },
+          "bind": "s5117",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo,bar"
+            },
+            "as": "o1938"
+          },
+          "bind": "s5118",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo,bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1937"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1938"
+                }
+              ]
+            },
+            "as": "o1939"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#semicolon separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1940"
+          },
+          "bind": "s5120",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo;bar"
+            },
+            "as": "o1941"
+          },
+          "bind": "s5121",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo;bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1940"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1941"
+                }
+              ]
+            },
+            "as": "o1942"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1943"
+          },
+          "bind": "s5123",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo;bar"
+            },
+            "as": "o1944"
+          },
+          "bind": "s5124",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo;bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1943"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1944"
+                }
+              ]
+            },
+            "as": "o1945"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#percent separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1946"
+          },
+          "bind": "s5126",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo%bar"
+            },
+            "as": "o1947"
+          },
+          "bind": "s5127",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo%bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1946"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1947"
+                }
+              ]
+            },
+            "as": "o1948"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1949"
+          },
+          "bind": "s5129",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo%bar"
+            },
+            "as": "o1950"
+          },
+          "bind": "s5130",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo%bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1949"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1950"
+                }
+              ]
+            },
+            "as": "o1951"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#equals separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1952"
+          },
+          "bind": "s5132",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo=bar"
+            },
+            "as": "o1953"
+          },
+          "bind": "s5133",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo=bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1952"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1953"
+                }
+              ]
+            },
+            "as": "o1954"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1955"
+          },
+          "bind": "s5135",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo=bar"
+            },
+            "as": "o1956"
+          },
+          "bind": "s5136",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo=bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1955"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1956"
+                }
+              ]
+            },
+            "as": "o1957"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#question mark separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1958"
+          },
+          "bind": "s5138",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo?bar"
+            },
+            "as": "o1959"
+          },
+          "bind": "s5139",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo?bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1958"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1959"
+                }
+              ]
+            },
+            "as": "o1960"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1961"
+          },
+          "bind": "s5141",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo?bar"
+            },
+            "as": "o1962"
+          },
+          "bind": "s5142",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo?bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1961"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1962"
+                }
+              ]
+            },
+            "as": "o1963"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#hash separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1964"
+          },
+          "bind": "s5144",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo#bar"
+            },
+            "as": "o1965"
+          },
+          "bind": "s5145",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo#bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1964"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1965"
+                }
+              ]
+            },
+            "as": "o1966"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1967"
+          },
+          "bind": "s5147",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo#bar"
+            },
+            "as": "o1968"
+          },
+          "bind": "s5148",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo#bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1967"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1968"
+                }
+              ]
+            },
+            "as": "o1969"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#colon separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1970"
+          },
+          "bind": "s5150",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo:bar"
+            },
+            "as": "o1971"
+          },
+          "bind": "s5151",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo:bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1970"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1971"
+                }
+              ]
+            },
+            "as": "o1972"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1973"
+          },
+          "bind": "s5153",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo:bar"
+            },
+            "as": "o1974"
+          },
+          "bind": "s5154",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo:bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1973"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1974"
+                }
+              ]
+            },
+            "as": "o1975"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#pipe separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1976"
+          },
+          "bind": "s5156",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo|bar"
+            },
+            "as": "o1977"
+          },
+          "bind": "s5157",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo|bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1976"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1977"
+                }
+              ]
+            },
+            "as": "o1978"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1979"
+          },
+          "bind": "s5159",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo|bar"
+            },
+            "as": "o1980"
+          },
+          "bind": "s5160",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo|bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1979"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1980"
+                }
+              ]
+            },
+            "as": "o1981"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#ampersand separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1982"
+          },
+          "bind": "s5162",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo&bar"
+            },
+            "as": "o1983"
+          },
+          "bind": "s5163",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo&bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1982"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1983"
+                }
+              ]
+            },
+            "as": "o1984"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1985"
+          },
+          "bind": "s5165",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo&bar"
+            },
+            "as": "o1986"
+          },
+          "bind": "s5166",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo&bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1985"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1986"
+                }
+              ]
+            },
+            "as": "o1987"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#exclamation mark separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1988"
+          },
+          "bind": "s5168",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo!bar"
+            },
+            "as": "o1989"
+          },
+          "bind": "s5169",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo!bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1988"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1989"
+                }
+              ]
+            },
+            "as": "o1990"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1991"
+          },
+          "bind": "s5171",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo!bar"
+            },
+            "as": "o1992"
+          },
+          "bind": "s5172",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo!bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1991"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1992"
+                }
+              ]
+            },
+            "as": "o1993"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#underscore stays inside a word",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1994"
+          },
+          "bind": "s5174",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo_bar"
+            },
+            "as": "o1995"
+          },
+          "bind": "s5175",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo_bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1994"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1995"
+                }
+              ]
+            },
+            "as": "o1996"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo_bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1997"
+          },
+          "bind": "s5177",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo_bar"
+            },
+            "as": "o1998"
+          },
+          "bind": "s5178",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo_bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1997"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1998"
+                }
+              ]
+            },
+            "as": "o1999"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo_bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#mixed separators and spaces",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2000"
+          },
+          "bind": "s5180",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "baz, foo/bar;  qux"
+            },
+            "as": "o2001"
+          },
+          "bind": "s5181",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "baz, foo/bar;  qux"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2000"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2001"
+                }
+              ]
+            },
+            "as": "o2002"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "baz or foo or bar or qux"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2003"
+          },
+          "bind": "s5183",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "baz, foo/bar;  qux"
+            },
+            "as": "o2004"
+          },
+          "bind": "s5184",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "baz, foo/bar;  qux"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2003"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2004"
+                }
+              ]
+            },
+            "as": "o2005"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "baz or foo or bar or qux"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#operators are dropped",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2006"
+          },
+          "bind": "s5186",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "+foo -bar* @3 <baz> ~qux (quux)"
+            },
+            "as": "o2007"
+          },
+          "bind": "s5187",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "+foo -bar* @3 <baz> ~qux (quux)"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2006"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2007"
+                }
+              ]
+            },
+            "as": "o2008"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar or 3 or baz or qux or quux"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2009"
+          },
+          "bind": "s5189",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "+foo -bar* @3 <baz> ~qux (quux)"
+            },
+            "as": "o2010"
+          },
+          "bind": "s5190",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "+foo -bar* @3 <baz> ~qux (quux)"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2009"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2010"
+                }
+              ]
+            },
+            "as": "o2011"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar or 3 or baz or qux or quux"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#accented words are kept",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2012"
+          },
+          "bind": "s5192",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "@García!"
+            },
+            "as": "o2013"
+          },
+          "bind": "s5193",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "@García!"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2012"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2013"
+                }
+              ]
+            },
+            "as": "o2014"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "García"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2015"
+          },
+          "bind": "s5195",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "@García!"
+            },
+            "as": "o2016"
+          },
+          "bind": "s5196",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "@García!"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2015"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2016"
+                }
+              ]
+            },
+            "as": "o2017"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "García"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#exact phrase keeps its quotes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2018"
+          },
+          "bind": "s5198",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "\"foo/bar baz\""
+            },
+            "as": "o2019"
+          },
+          "bind": "s5199",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "\"foo/bar baz\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2018"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2019"
+                }
+              ]
+            },
+            "as": "o2020"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "\"foo bar baz\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2021"
+          },
+          "bind": "s5201",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "\"foo/bar baz\""
+            },
+            "as": "o2022"
+          },
+          "bind": "s5202",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "\"foo/bar baz\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2021"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2022"
+                }
+              ]
+            },
+            "as": "o2023"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "\"foo bar baz\""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testPostgreSQLSearchesEachWordOfATerm#unbalanced quote is not exact",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2024"
+          },
+          "bind": "s5204",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "\"foo/bar"
+            },
+            "as": "o2025"
+          },
+          "bind": "s5205",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "\"foo/bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2024"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2025"
+                }
+              ]
+            },
+            "as": "o2026"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2027"
+          },
+          "bind": "s5207",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "\"foo/bar"
+            },
+            "as": "o2028"
+          },
+          "bind": "s5208",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "\"foo/bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2027"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2028"
+                }
+              ]
+            },
+            "as": "o2029"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",
+              "bindings": [
+                "foo or bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMySQLSearchesEachWordOfATerm#slash separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2030"
+          },
+          "bind": "s5210",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo/bar"
+            },
+            "as": "o2031"
+          },
+          "bind": "s5211",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo/bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2030"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2031"
+                }
+              ]
+            },
+            "as": "o2032"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2033"
+          },
+          "bind": "s5213",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo/bar"
+            },
+            "as": "o2034"
+          },
+          "bind": "s5214",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo/bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2033"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2034"
+                }
+              ]
+            },
+            "as": "o2035"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMySQLSearchesEachWordOfATerm#comma separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2036"
+          },
+          "bind": "s5216",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo,bar"
+            },
+            "as": "o2037"
+          },
+          "bind": "s5217",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo,bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2036"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2037"
+                }
+              ]
+            },
+            "as": "o2038"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2039"
+          },
+          "bind": "s5219",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo,bar"
+            },
+            "as": "o2040"
+          },
+          "bind": "s5220",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo,bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2039"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2040"
+                }
+              ]
+            },
+            "as": "o2041"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMySQLSearchesEachWordOfATerm#period separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2042"
+          },
+          "bind": "s5222",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo.bar"
+            },
+            "as": "o2043"
+          },
+          "bind": "s5223",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo.bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2042"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2043"
+                }
+              ]
+            },
+            "as": "o2044"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2045"
+          },
+          "bind": "s5225",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo.bar"
+            },
+            "as": "o2046"
+          },
+          "bind": "s5226",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo.bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2045"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2046"
+                }
+              ]
+            },
+            "as": "o2047"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMySQLSearchesEachWordOfATerm#apostrophe separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2048"
+          },
+          "bind": "s5228",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo'bar"
+            },
+            "as": "o2049"
+          },
+          "bind": "s5229",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo'bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2048"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2049"
+                }
+              ]
+            },
+            "as": "o2050"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2051"
+          },
+          "bind": "s5231",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo'bar"
+            },
+            "as": "o2052"
+          },
+          "bind": "s5232",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo'bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2051"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2052"
+                }
+              ]
+            },
+            "as": "o2053"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMySQLSearchesEachWordOfATerm#trailing punctuation keeps the prefix match on the word",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2054"
+          },
+          "bind": "s5234",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo."
+            },
+            "as": "o2055"
+          },
+          "bind": "s5235",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo."
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2054"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2055"
+                }
+              ]
+            },
+            "as": "o2056"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2057"
+          },
+          "bind": "s5237",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo."
+            },
+            "as": "o2058"
+          },
+          "bind": "s5238",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo."
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2057"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2058"
+                }
+              ]
+            },
+            "as": "o2059"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMySQLSearchesEachWordOfATerm#underscore stays inside a word",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2060"
+          },
+          "bind": "s5240",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo_bar"
+            },
+            "as": "o2061"
+          },
+          "bind": "s5241",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo_bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2060"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2061"
+                }
+              ]
+            },
+            "as": "o2062"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo_bar*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2063"
+          },
+          "bind": "s5243",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo_bar"
+            },
+            "as": "o2064"
+          },
+          "bind": "s5244",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo_bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2063"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2064"
+                }
+              ]
+            },
+            "as": "o2065"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo_bar*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMySQLSearchesEachWordOfATerm#mixed separators and spaces",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2066"
+          },
+          "bind": "s5246",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "baz, foo/bar;  qux"
+            },
+            "as": "o2067"
+          },
+          "bind": "s5247",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "baz, foo/bar;  qux"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2066"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2067"
+                }
+              ]
+            },
+            "as": "o2068"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "baz foo bar qux*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2069"
+          },
+          "bind": "s5249",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "baz, foo/bar;  qux"
+            },
+            "as": "o2070"
+          },
+          "bind": "s5250",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "baz, foo/bar;  qux"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2069"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2070"
+                }
+              ]
+            },
+            "as": "o2071"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "baz foo bar qux*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMySQLSearchesEachWordOfATerm#non-operator punctuation is dropped",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2072"
+          },
+          "bind": "s5252",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "!!!foo...###"
+            },
+            "as": "o2073"
+          },
+          "bind": "s5253",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "!!!foo...###"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2072"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2073"
+                }
+              ]
+            },
+            "as": "o2074"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2075"
+          },
+          "bind": "s5255",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "!!!foo...###"
+            },
+            "as": "o2076"
+          },
+          "bind": "s5256",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "!!!foo...###"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2075"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2076"
+                }
+              ]
+            },
+            "as": "o2077"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMySQLSearchesEachWordOfATerm#exact phrase keeps its quotes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2078"
+          },
+          "bind": "s5258",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "\"foo/bar baz\""
+            },
+            "as": "o2079"
+          },
+          "bind": "s5259",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "\"foo/bar baz\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2078"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2079"
+                }
+              ]
+            },
+            "as": "o2080"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "\"foo bar baz\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2081"
+          },
+          "bind": "s5261",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "\"foo/bar baz\""
+            },
+            "as": "o2082"
+          },
+          "bind": "s5262",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "\"foo/bar baz\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2081"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2082"
+                }
+              ]
+            },
+            "as": "o2083"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "\"foo bar baz\""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMariaDBSearchesEachWordOfATerm#slash separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2084"
+          },
+          "bind": "s5264",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo/bar"
+            },
+            "as": "o2085"
+          },
+          "bind": "s5265",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo/bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2084"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2085"
+                }
+              ]
+            },
+            "as": "o2086"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2087"
+          },
+          "bind": "s5267",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo/bar"
+            },
+            "as": "o2088"
+          },
+          "bind": "s5268",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo/bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2087"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2088"
+                }
+              ]
+            },
+            "as": "o2089"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMariaDBSearchesEachWordOfATerm#comma separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2090"
+          },
+          "bind": "s5270",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo,bar"
+            },
+            "as": "o2091"
+          },
+          "bind": "s5271",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo,bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2090"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2091"
+                }
+              ]
+            },
+            "as": "o2092"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2093"
+          },
+          "bind": "s5273",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo,bar"
+            },
+            "as": "o2094"
+          },
+          "bind": "s5274",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo,bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2093"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2094"
+                }
+              ]
+            },
+            "as": "o2095"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMariaDBSearchesEachWordOfATerm#period separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2096"
+          },
+          "bind": "s5276",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo.bar"
+            },
+            "as": "o2097"
+          },
+          "bind": "s5277",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo.bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2096"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2097"
+                }
+              ]
+            },
+            "as": "o2098"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2099"
+          },
+          "bind": "s5279",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo.bar"
+            },
+            "as": "o2100"
+          },
+          "bind": "s5280",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo.bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2099"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2100"
+                }
+              ]
+            },
+            "as": "o2101"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMariaDBSearchesEachWordOfATerm#apostrophe separates words",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2102"
+          },
+          "bind": "s5282",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo'bar"
+            },
+            "as": "o2103"
+          },
+          "bind": "s5283",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo'bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2102"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2103"
+                }
+              ]
+            },
+            "as": "o2104"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2105"
+          },
+          "bind": "s5285",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo'bar"
+            },
+            "as": "o2106"
+          },
+          "bind": "s5286",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo'bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2105"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2106"
+                }
+              ]
+            },
+            "as": "o2107"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo bar*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMariaDBSearchesEachWordOfATerm#trailing punctuation keeps the prefix match on the word",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2108"
+          },
+          "bind": "s5288",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo."
+            },
+            "as": "o2109"
+          },
+          "bind": "s5289",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo."
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2108"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2109"
+                }
+              ]
+            },
+            "as": "o2110"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2111"
+          },
+          "bind": "s5291",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo."
+            },
+            "as": "o2112"
+          },
+          "bind": "s5292",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo."
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2111"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2112"
+                }
+              ]
+            },
+            "as": "o2113"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMariaDBSearchesEachWordOfATerm#underscore stays inside a word",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2114"
+          },
+          "bind": "s5294",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo_bar"
+            },
+            "as": "o2115"
+          },
+          "bind": "s5295",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo_bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2114"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2115"
+                }
+              ]
+            },
+            "as": "o2116"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo_bar*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2117"
+          },
+          "bind": "s5297",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "foo_bar"
+            },
+            "as": "o2118"
+          },
+          "bind": "s5298",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "foo_bar"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2117"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2118"
+                }
+              ]
+            },
+            "as": "o2119"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo_bar*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMariaDBSearchesEachWordOfATerm#mixed separators and spaces",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2120"
+          },
+          "bind": "s5300",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "baz, foo/bar;  qux"
+            },
+            "as": "o2121"
+          },
+          "bind": "s5301",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "baz, foo/bar;  qux"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2120"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2121"
+                }
+              ]
+            },
+            "as": "o2122"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "baz foo bar qux*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2123"
+          },
+          "bind": "s5303",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "baz, foo/bar;  qux"
+            },
+            "as": "o2124"
+          },
+          "bind": "s5304",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "baz, foo/bar;  qux"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2123"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2124"
+                }
+              ]
+            },
+            "as": "o2125"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "baz foo bar qux*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMariaDBSearchesEachWordOfATerm#non-operator punctuation is dropped",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2126"
+          },
+          "bind": "s5306",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "!!!foo...###"
+            },
+            "as": "o2127"
+          },
+          "bind": "s5307",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "!!!foo...###"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2126"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2127"
+                }
+              ]
+            },
+            "as": "o2128"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2129"
+          },
+          "bind": "s5309",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "!!!foo...###"
+            },
+            "as": "o2130"
+          },
+          "bind": "s5310",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "!!!foo...###"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2129"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2130"
+                }
+              ]
+            },
+            "as": "o2131"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "foo*"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testMariaDBSearchesEachWordOfATerm#exact phrase keeps its quotes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2132"
+          },
+          "bind": "s5312",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "\"foo/bar baz\""
+            },
+            "as": "o2133"
+          },
+          "bind": "s5313",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "\"foo/bar baz\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2132"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2133"
+                }
+              ]
+            },
+            "as": "o2134"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "\"foo bar baz\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2135"
+          },
+          "bind": "s5315",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "\"foo/bar baz\""
+            },
+            "as": "o2136"
+          },
+          "bind": "s5316",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "\"foo/bar baz\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2135"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2136"
+                }
+              ]
+            },
+            "as": "o2137"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "bindings": [
+                "\"foo bar baz\""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testATermWithoutWordsBindsNothing#separators only",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2138"
+          },
+          "bind": "s5318",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2139"
+          },
+          "bind": "s5319",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2140"
+          },
+          "bind": "s5320",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "/,;%=?#"
+            },
+            "as": "o2141"
+          },
+          "bind": "s5321",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "/,;%=?#"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2138"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2141"
+                }
+              ]
+            },
+            "as": "o2142"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "/,;%=?#"
+            },
+            "as": "o2143"
+          },
+          "bind": "s5323",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "/,;%=?#"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2138"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2143"
+                }
+              ]
+            },
+            "as": "o2144"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "/,;%=?#"
+            },
+            "as": "o2145"
+          },
+          "bind": "s5325",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "/,;%=?#"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2139"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2145"
+                }
+              ]
+            },
+            "as": "o2146"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "/,;%=?#"
+            },
+            "as": "o2147"
+          },
+          "bind": "s5327",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "/,;%=?#"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2139"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2147"
+                }
+              ]
+            },
+            "as": "o2148"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "/,;%=?#"
+            },
+            "as": "o2149"
+          },
+          "bind": "s5329",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "/,;%=?#"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2140"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2149"
+                }
+              ]
+            },
+            "as": "o2150"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "/,;%=?#"
+            },
+            "as": "o2151"
+          },
+          "bind": "s5331",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "/,;%=?#"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2140"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2151"
+                }
+              ]
+            },
+            "as": "o2152"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testATermWithoutWordsBindsNothing#operators only",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2153"
+          },
+          "bind": "s5333",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2154"
+          },
+          "bind": "s5334",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2155"
+          },
+          "bind": "s5335",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "+-*@<>~()"
+            },
+            "as": "o2156"
+          },
+          "bind": "s5336",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "+-*@<>~()"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2153"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2156"
+                }
+              ]
+            },
+            "as": "o2157"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "+-*@<>~()"
+            },
+            "as": "o2158"
+          },
+          "bind": "s5338",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "+-*@<>~()"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2153"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2158"
+                }
+              ]
+            },
+            "as": "o2159"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "+-*@<>~()"
+            },
+            "as": "o2160"
+          },
+          "bind": "s5340",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "+-*@<>~()"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2154"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2160"
+                }
+              ]
+            },
+            "as": "o2161"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "+-*@<>~()"
+            },
+            "as": "o2162"
+          },
+          "bind": "s5342",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "+-*@<>~()"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2154"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2162"
+                }
+              ]
+            },
+            "as": "o2163"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "+-*@<>~()"
+            },
+            "as": "o2164"
+          },
+          "bind": "s5344",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "+-*@<>~()"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2155"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2164"
+                }
+              ]
+            },
+            "as": "o2165"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "+-*@<>~()"
+            },
+            "as": "o2166"
+          },
+          "bind": "s5346",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "+-*@<>~()"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2155"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2166"
+                }
+              ]
+            },
+            "as": "o2167"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testATermWithoutWordsBindsNothing#punctuation only",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2168"
+          },
+          "bind": "s5348",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2169"
+          },
+          "bind": "s5349",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2170"
+          },
+          "bind": "s5350",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "!!!...###"
+            },
+            "as": "o2171"
+          },
+          "bind": "s5351",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "!!!...###"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2168"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2171"
+                }
+              ]
+            },
+            "as": "o2172"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "!!!...###"
+            },
+            "as": "o2173"
+          },
+          "bind": "s5353",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "!!!...###"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2168"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2173"
+                }
+              ]
+            },
+            "as": "o2174"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "!!!...###"
+            },
+            "as": "o2175"
+          },
+          "bind": "s5355",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "!!!...###"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2169"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2175"
+                }
+              ]
+            },
+            "as": "o2176"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "!!!...###"
+            },
+            "as": "o2177"
+          },
+          "bind": "s5357",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "!!!...###"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2169"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2177"
+                }
+              ]
+            },
+            "as": "o2178"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "!!!...###"
+            },
+            "as": "o2179"
+          },
+          "bind": "s5359",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "!!!...###"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2170"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2179"
+                }
+              ]
+            },
+            "as": "o2180"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "!!!...###"
+            },
+            "as": "o2181"
+          },
+          "bind": "s5361",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "!!!...###"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2170"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2181"
+                }
+              ]
+            },
+            "as": "o2182"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testATermWithoutWordsBindsNothing#quoted punctuation",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2183"
+          },
+          "bind": "s5363",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2184"
+          },
+          "bind": "s5364",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2185"
+          },
+          "bind": "s5365",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "\"/\""
+            },
+            "as": "o2186"
+          },
+          "bind": "s5366",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "\"/\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2183"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2186"
+                }
+              ]
+            },
+            "as": "o2187"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "\"/\""
+            },
+            "as": "o2188"
+          },
+          "bind": "s5368",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "\"/\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2183"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2188"
+                }
+              ]
+            },
+            "as": "o2189"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "\"/\""
+            },
+            "as": "o2190"
+          },
+          "bind": "s5370",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "\"/\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2184"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2190"
+                }
+              ]
+            },
+            "as": "o2191"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "\"/\""
+            },
+            "as": "o2192"
+          },
+          "bind": "s5372",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "\"/\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2184"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2192"
+                }
+              ]
+            },
+            "as": "o2193"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "\"/\""
+            },
+            "as": "o2194"
+          },
+          "bind": "s5374",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "\"/\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2185"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2194"
+                }
+              ]
+            },
+            "as": "o2195"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "\"/\""
+            },
+            "as": "o2196"
+          },
+          "bind": "s5376",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "\"/\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2185"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2196"
+                }
+              ]
+            },
+            "as": "o2197"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testATermWithoutWordsBindsNothing#whitespace only",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2198"
+          },
+          "bind": "s5378",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2199"
+          },
+          "bind": "s5379",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2200"
+          },
+          "bind": "s5380",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "  \t "
+            },
+            "as": "o2201"
+          },
+          "bind": "s5381",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "  \t "
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2198"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2201"
+                }
+              ]
+            },
+            "as": "o2202"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "  \t "
+            },
+            "as": "o2203"
+          },
+          "bind": "s5383",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "  \t "
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2198"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2203"
+                }
+              ]
+            },
+            "as": "o2204"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "  \t "
+            },
+            "as": "o2205"
+          },
+          "bind": "s5385",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "  \t "
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2199"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2205"
+                }
+              ]
+            },
+            "as": "o2206"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "  \t "
+            },
+            "as": "o2207"
+          },
+          "bind": "s5387",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "  \t "
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2199"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2207"
+                }
+              ]
+            },
+            "as": "o2208"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "  \t "
+            },
+            "as": "o2209"
+          },
+          "bind": "s5389",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "  \t "
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2200"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2209"
+                }
+              ]
+            },
+            "as": "o2210"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notSearch",
+            "args": {
+              "attribute": "title",
+              "value": "  \t "
+            },
+            "as": "o2211"
+          },
+          "bind": "s5391",
+          "expect": {
+            "$query": {
+              "method": "notSearch",
+              "attribute": "title",
+              "values": [
+                "  \t "
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2200"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2211"
+                }
+              ]
+            },
+            "as": "o2212"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 1",
+              "bindings": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SearchTermTest::testATermIsAlwaysBoundAndNeverWrittenIntoTheCondition",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2213"
+          },
+          "bind": "s5393",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2214"
+          },
+          "bind": "s5394",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2215"
+          },
+          "bind": "s5395",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo'); DROP TABLE docs; --"
+            },
+            "as": "o2216"
+          },
+          "bind": "s5396",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo'); DROP TABLE docs; --"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2213"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2216"
+                }
+              ]
+            },
+            "as": "o2217"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+              "bindings": [
+                "foo or DROP or TABLE or docs"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo'); DROP TABLE docs; --"
+            },
+            "as": "o2218"
+          },
+          "bind": "s5398",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo'); DROP TABLE docs; --"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2214"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2218"
+                }
+              ]
+            },
+            "as": "o2219"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo DROP TABLE docs*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "foo'); DROP TABLE docs; --"
+            },
+            "as": "o2220"
+          },
+          "bind": "s5400",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "foo'); DROP TABLE docs; --"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2215"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o2220"
+                }
+              ]
+            },
+            "as": "o2221"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "bindings": [
+                "foo DROP TABLE docs*"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

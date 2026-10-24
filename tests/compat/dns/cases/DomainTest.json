@@ -1,0 +1,579 @@
+{
+  "source": "packages/dns/tests/Message/DomainTest.php",
+  "cases": [
+    {
+      "name": "encode produces expected wire format",
+      "steps": [
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "www.example.com"
+          },
+          "expect": "\u0003www\u0007example\u0003com\u0000"
+        }
+      ]
+    },
+    {
+      "name": "encode treats single trailing dot as absolute",
+      "steps": [
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "example.com"
+          },
+          "expect": "\u0007example\u0003com\u0000"
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "example.com."
+          },
+          "expect": "\u0007example\u0003com\u0000"
+        }
+      ]
+    },
+    {
+      "name": "encode allows root via empty string",
+      "steps": [
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": ""
+          },
+          "expect": "\u0000"
+        }
+      ]
+    },
+    {
+      "name": "encode allows root via dot",
+      "steps": [
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "."
+          },
+          "expect": "\u0000"
+        }
+      ]
+    },
+    {
+      "name": "decode simple domain",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "\u0003www\u0007example\u0003com\u0000",
+            "offset": 0
+          },
+          "expect": {
+            "name": "www.example.com",
+            "offset": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode root domain",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "\u0000",
+            "offset": 0
+          },
+          "expect": {
+            "name": "",
+            "offset": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode compression pointer",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "BWZpcnN0B2V4YW1wbGUDY29tAMAA"
+            },
+            "offset": 0
+          },
+          "expect": {
+            "name": "first.example.com",
+            "offset": 19
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "BWZpcnN0B2V4YW1wbGUDY29tAMAA"
+            },
+            "offset": 19
+          },
+          "expect": {
+            "name": "first.example.com",
+            "offset": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode pointer loop raises exception",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "wAA="
+            },
+            "offset": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Compression pointer must reference earlier position in packet"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode forward pointer raises exception",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "wAUDd3d3AA=="
+            },
+            "offset": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Compression pointer must reference earlier position in packet"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode pointer cycle prevented by forward check",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "wAQAAMAA"
+            },
+            "offset": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Compression pointer must reference earlier position in packet"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode revisited pointer raises exception",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWHAAAFiAA=="
+            },
+            "offset": 2
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Compression pointer loop detected in domain name"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode truncated pointer raises exception",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "wA=="
+            },
+            "offset": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Truncated compression pointer in domain name"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode rejects invalid domains",
+      "steps": [
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "www..example.com"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "example.."
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "example.com.."
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "@"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain label contains invalid characters"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Label too long: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain has too many labels: 128"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Encoded domain exceeds maximum length of 255 bytes"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge cases",
+      "steps": [
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": ".."
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "..."
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "a."
+          },
+          "expect": "\u0001a\u0000"
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "a.."
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": ".a"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "a.@b"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain label contains invalid characters"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "@.com"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain label contains invalid characters"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a"
+          },
+          "expect": "\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0000"
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": "?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u0000"
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Encoded domain exceeds maximum length of 255 bytes"
+            }
+          }
+        },
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": {
+              "$bytes": "//4ugICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA=="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": {
+                "$bytes": "TGFiZWwgdG9vIGxvbmc6IICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA="
+              }
+            }
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "",
+            "offset": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Unexpected end of data while decoding domain name"
+            }
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "@abc",
+            "offset": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Reserved label type encountered in domain name"
+            }
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "gA=="
+            },
+            "offset": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Reserved label type encountered in domain name"
+            }
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "\u0005ab",
+            "offset": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Label length exceeds remaining data while decoding domain name"
+            }
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "\u0001a",
+            "offset": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Unexpected end of data while decoding domain name"
+            }
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "\u0000",
+            "offset": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Unexpected end of data while decoding domain name"
+            }
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0000",
+            "offset": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Domain name exceeds maximum label count"
+            }
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0001a\u0000",
+            "offset": 0
+          },
+          "expect": {
+            "name": "a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a",
+            "offset": 255
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAAWLAAA=="
+            },
+            "offset": 3
+          },
+          "expect": {
+            "name": "b.a",
+            "offset": 7
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAAWLAAMAD"
+            },
+            "offset": 7
+          },
+          "expect": {
+            "name": "b.a",
+            "offset": 9
+          }
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "\u0001.\u0001\u0000\u0000",
+            "offset": 0
+          },
+          "expect": {
+            "name": "..\u0000",
+            "offset": 5
+          }
+        }
+      ]
+    }
+  ]
+}

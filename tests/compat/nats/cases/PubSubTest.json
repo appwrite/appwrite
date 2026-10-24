@@ -1,0 +1,1198 @@
+{
+  "source": "packages/nats/tests/E2E/PubSubTest.php",
+  "cases": [
+    {
+      "name": "publish and subscribe",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.pubsub.${ns}",
+            "mode": "record"
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.pubsub.${ns}",
+            "data": "hello"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "subject": "test.pubsub.${ns}",
+            "data": "hello",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "msg",
+              {
+                "subject": "test.pubsub.${ns}",
+                "data": "hello",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "via": true
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "sync subscribe",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.sync.${ns}"
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.sync.${ns}",
+            "data": "sync-message"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "subject": "test.sync.${ns}",
+            "data": "sync-message",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "wildcards",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.wild.${ns}.*",
+            "mode": "record"
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.wild.${ns}.one",
+            "data": "first"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.wild.${ns}.two",
+            "data": "second"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "subject": "test.wild.${ns}.one",
+            "data": "first",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "subject": "test.wild.${ns}.two",
+            "data": "second",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "msg",
+              {
+                "subject": "test.wild.${ns}.one",
+                "data": "first",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ],
+            [
+              "msg",
+              {
+                "subject": "test.wild.${ns}.two",
+                "data": "second",
+                "reply": null,
+                "headers": null,
+                "sid": "1"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "queue groups share the messages",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.queue_subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "queue": "workers",
+            "mode": "count"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.queue_subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "queue": "workers",
+            "mode": "count"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "data": "msg-0"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "data": "msg-1"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "data": "msg-2"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "data": "msg-3"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "data": "msg-4"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "data": "msg-5"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "data": "msg-6"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "data": "msg-7"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "data": "msg-8"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.queue.${ns}",
+            "data": "msg-9"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.wait",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "count": 10,
+            "timeout": 3.0
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ],
+            [
+              "count"
+            ]
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "publish and subscribe with headers",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.headers.${ns}",
+            "mode": "record"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.headers.${ns}",
+            "data": "with-headers",
+            "headers": [
+              [
+                "set",
+                "X-Custom",
+                "test-value"
+              ],
+              [
+                "set",
+                "Content-Type",
+                "text/plain"
+              ],
+              [
+                "add",
+                "X-Custom",
+                "two"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "subject": "test.headers.${ns}",
+            "data": "with-headers",
+            "reply": null,
+            "headers": {
+              "status": "",
+              "description": "",
+              "all": [
+                [
+                  "X-Custom",
+                  [
+                    "test-value",
+                    "two"
+                  ]
+                ],
+                [
+                  "Content-Type",
+                  [
+                    "text/plain"
+                  ]
+                ]
+              ],
+              "count": 2,
+              "all_count": 2,
+              "wire": "NATS/1.0\r\nX-Custom: test-value\r\nX-Custom: two\r\nContent-Type: text/plain\r\n\r\n"
+            },
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "msg",
+              {
+                "subject": "test.headers.${ns}",
+                "data": "with-headers",
+                "reply": null,
+                "headers": {
+                  "status": "",
+                  "description": "",
+                  "all": [
+                    [
+                      "X-Custom",
+                      [
+                        "test-value",
+                        "two"
+                      ]
+                    ],
+                    [
+                      "Content-Type",
+                      [
+                        "text/plain"
+                      ]
+                    ]
+                  ],
+                  "count": 2,
+                  "all_count": 2,
+                  "wire": "NATS/1.0\r\nX-Custom: test-value\r\nX-Custom: two\r\nContent-Type: text/plain\r\n\r\n"
+                },
+                "sid": "1"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "auto-unsubscribe after a number of messages",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "au.${ns}"
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "max": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "au.${ns}",
+            "data": "0"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "au.${ns}",
+            "data": "1"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "au.${ns}",
+            "data": "2"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "au.${ns}",
+            "data": "3"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "timeout": 0.5
+          },
+          "expect": {
+            "subject": "au.${ns}",
+            "data": "0",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "timeout": 0.5
+          },
+          "expect": {
+            "subject": "au.${ns}",
+            "data": "1",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "timeout": 0.3
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "subscription counters",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "cnt.${ns}"
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "cnt.${ns}",
+            "mode": "silent"
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "cnt.${ns}",
+            "data": "abc"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "cnt.${ns}",
+            "data": "de"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.2,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "conn.sub_state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": true,
+            "received": 2,
+            "pending_count": 2,
+            "pending_bytes": 5,
+            "has_callback": false
+          }
+        },
+        {
+          "op": "conn.sub_state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "cb"
+            }
+          },
+          "expect": {
+            "active": true,
+            "received": 2,
+            "pending_count": 0,
+            "pending_bytes": 0,
+            "has_callback": true
+          }
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.sub_state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": false,
+            "received": 2,
+            "pending_count": 2,
+            "pending_bytes": 5,
+            "has_callback": false
+          }
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "timeout": 0.1
+          },
+          "expect": {
+            "subject": "cnt.${ns}",
+            "data": "abc",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.sub_state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": false,
+            "received": 2,
+            "pending_count": 1,
+            "pending_bytes": 2,
+            "has_callback": false
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "binary payloads and a 1 MiB message survive",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "bin.${ns}"
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "bin.${ns}",
+            "data": {
+              "$bytes": "AP8BAgMNCg0K/w=="
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "subject": "bin.${ns}",
+            "data": {
+              "$bytes": "AP8BAgMNCg0K/w=="
+            },
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "wait returns after its timeout",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.wait",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "count": 1,
+            "timeout": 0.2
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "new inboxes and options",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats",
+            "options": {
+              "inboxPrefix": "_MY"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.new_inbox",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "prefix": "_MY",
+            "length": 22,
+            "alnum": true
+          }
+        },
+        {
+          "op": "conn.options",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/servers"
+            ],
+            "reason": "each runtime reaches the server at its own address"
+          },
+          "expect": {
+            "servers": "<masked>",
+            "name": "",
+            "inbox_prefix": "_MY"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

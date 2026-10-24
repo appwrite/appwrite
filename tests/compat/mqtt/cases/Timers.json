@@ -1,0 +1,550 @@
+{
+  "cases": [
+    {
+      "name": "a wheel reaps after keep-alive times the multiplier, once",
+      "steps": [
+        {
+          "op": "wheel.new",
+          "args": {
+            "interval": 20,
+            "multiplier": 1.5
+          },
+          "bind": "w",
+          "expect": {
+            "wheel": {
+              "$handle": "*"
+            },
+            "interval": 20,
+            "multiplier": 1.5,
+            "chained": [
+              true,
+              true
+            ]
+          }
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 7,
+            "keep_alive": 10
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 8,
+            "keep_alive": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.log",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 30
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.log",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            }
+          },
+          "expect": [
+            [
+              "tick",
+              7
+            ]
+          ]
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 40
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 300
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.log",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            }
+          },
+          "expect": [
+            [
+              "tick",
+              7
+            ],
+            [
+              "tick",
+              8
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rescheduling moves an id; a keep-alive of 0 unschedules it; clear calls the clear hook only for scheduled ids",
+      "steps": [
+        {
+          "op": "wheel.new",
+          "args": {},
+          "bind": "w",
+          "expect": {
+            "wheel": {
+              "$handle": "*"
+            },
+            "interval": 20,
+            "multiplier": 1.5,
+            "chained": [
+              true,
+              true
+            ]
+          }
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 1,
+            "keep_alive": 10
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 1,
+            "keep_alive": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 30
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 2,
+            "keep_alive": 10
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 2,
+            "keep_alive": 0
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 60
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.clear",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.clear",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.clear",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 4,
+            "keep_alive": -5
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 1000
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.log",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            }
+          },
+          "expect": [
+            [
+              "clear",
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ids sharing a second tick in the order scheduled; a drained cursor never goes back",
+      "steps": [
+        {
+          "op": "wheel.new",
+          "args": {
+            "multiplier": 2
+          },
+          "bind": "w",
+          "expect": {
+            "wheel": {
+              "$handle": "*"
+            },
+            "interval": 20,
+            "multiplier": 2.0,
+            "chained": [
+              true,
+              true
+            ]
+          }
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 5,
+            "keep_alive": 20
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 3,
+            "keep_alive": 20
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 9,
+            "keep_alive": 20
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 6,
+            "keep_alive": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 50
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.log",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            }
+          },
+          "expect": [
+            [
+              "tick",
+              5
+            ],
+            [
+              "tick",
+              3
+            ],
+            [
+              "tick",
+              9
+            ]
+          ]
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 101
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 102
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.log",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            }
+          },
+          "expect": [
+            [
+              "tick",
+              5
+            ],
+            [
+              "tick",
+              3
+            ],
+            [
+              "tick",
+              9
+            ],
+            [
+              "tick",
+              6
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a wheel whose drained time starts in the past",
+      "steps": [
+        {
+          "op": "wheel.new",
+          "args": {
+            "interval": 5,
+            "multiplier": 1.0,
+            "now_offset": -100
+          },
+          "bind": "w",
+          "expect": {
+            "wheel": {
+              "$handle": "*"
+            },
+            "interval": 5,
+            "multiplier": 1.0,
+            "chained": [
+              true,
+              true
+            ]
+          }
+        },
+        {
+          "op": "wheel.schedule",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "id": 1,
+            "keep_alive": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": -50
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.drain",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            },
+            "offset": 10
+          },
+          "expect": null
+        },
+        {
+          "op": "wheel.log",
+          "args": {
+            "wheel": {
+              "$ref": "w",
+              "path": "/wheel"
+            }
+          },
+          "expect": [
+            [
+              "tick",
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "NoTimer does nothing",
+      "op": "notimer.run",
+      "args": {},
+      "expect": [
+        true,
+        true
+      ]
+    }
+  ]
+}

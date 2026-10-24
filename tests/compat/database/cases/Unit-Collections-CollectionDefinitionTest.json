@@ -1,0 +1,3113 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Collections/CollectionDefinitionTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CollectionDefinitionTest::testTheMetadataCollectionIsDefined",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Database",
+            "method": "collectionDefinition",
+            "args": {},
+            "as": "o89"
+          },
+          "bind": "s166",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o89"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o89"
+            },
+            "method": "name",
+            "args": {}
+          },
+          "expect": "collections"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o89"
+            },
+            "method": "getCollection",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o89"
+            },
+            "method": "documentSecurity",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o89"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "CollectionDefinitionTest::testTheMetadataAttributesKeepTheirStoredShape",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Database",
+            "method": "collectionDefinition",
+            "args": {},
+            "as": "o90"
+          },
+          "bind": "s172",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o90"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "attributes",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "indexes",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "documentSecurity",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Boolean"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CollectionDefinitionTest::testEveryCallReturnsAnIndependentCopy",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Database",
+            "method": "collectionDefinition",
+            "args": {},
+            "as": "o91"
+          },
+          "bind": "s174",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o91"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "name",
+              "value": "changed"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "changed",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o91"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "attributes",
+              "value": []
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "changed",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Database",
+            "method": "collectionDefinition",
+            "args": {},
+            "as": "o92"
+          },
+          "bind": "s177",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o92"
+            },
+            "method": "name",
+            "args": {}
+          },
+          "expect": "collections"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o92"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "attributes",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "indexes",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "documentSecurity",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Boolean"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CollectionDefinitionTest::testGetCollectionReturnsTheDefinitionForTheMetadataCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o93"
+          },
+          "bind": "s180",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o93"
+              },
+              "cache": "none"
+            },
+            "as": "o94"
+          },
+          "bind": "s181",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o94"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "definition"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o94"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "definition_u000000000001"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o94"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Database",
+            "method": "collectionDefinition",
+            "args": {},
+            "as": "o95"
+          },
+          "bind": "s185",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o95"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "_metadata",
+            "name": "collections",
+            "attributes": [
+              {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            ],
+            "indexes": [],
+            "documentSecurity": false,
+            "$collection": "_metadata"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o94"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "_metadata"
+            },
+            "as": "o96"
+          },
+          "bind": "s187",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o96"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "_metadata",
+            "name": "collections",
+            "attributes": [
+              {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            ],
+            "indexes": [],
+            "documentSecurity": false,
+            "$collection": "_metadata"
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionDefinitionTest::testInternalAttributesLeaveOutTheTenantWithoutSharedTables",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o97"
+          },
+          "bind": "s189",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o97"
+              },
+              "cache": "none"
+            },
+            "as": "o98"
+          },
+          "bind": "s190",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o98"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "definition"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o98"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "definition_u000000000002"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o98"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o98"
+            },
+            "method": "internalAttributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$id",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$sequence",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$collection",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$createdAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$updatedAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$permissions",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CollectionDefinitionTest::testInternalAttributesIncludeTheTenantUnderSharedTables",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o99"
+          },
+          "bind": "s195",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o99"
+              },
+              "cache": "none"
+            },
+            "as": "o100"
+          },
+          "bind": "s196",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o100"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "definition"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o100"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "definition_u000000000003"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o100"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o100"
+            },
+            "method": "internalAttributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$id",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$sequence",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$collection",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$tenant",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$createdAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$updatedAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$permissions",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CollectionDefinitionTest::testInternalAttributesFollowTheSharedTablesSetting",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o101"
+          },
+          "bind": "s201",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o101"
+              },
+              "cache": "none"
+            },
+            "as": "o102"
+          },
+          "bind": "s202",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o102"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "definition"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o102"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "definition_u000000000004"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o102"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o102"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o102"
+            },
+            "method": "internalAttributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$id",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$sequence",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$collection",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$tenant",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$createdAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$updatedAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$permissions",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o102"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o102"
+            },
+            "method": "internalAttributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$id",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$sequence",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$collection",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$createdAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$updatedAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$permissions",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CollectionDefinitionTest::testInternalAttributesKeepTheirStoredShape",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o103"
+          },
+          "bind": "s210",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o103"
+              },
+              "cache": "none"
+            },
+            "as": "o104"
+          },
+          "bind": "s211",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o104"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "definition"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o104"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "definition_u000000000005"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o104"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o104"
+            },
+            "method": "internalAttributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$id",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$sequence",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$collection",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$tenant",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$createdAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$updatedAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$permissions",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$id",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o105"
+          },
+          "bind": "s216",
+          "expect": {
+            "$document": {
+              "$id": "$id",
+              "key": "$id",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o105"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o105"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 255
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o105"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o105"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o105"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o105"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o105"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$sequence",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o106"
+          },
+          "bind": "s224",
+          "expect": {
+            "$document": {
+              "$id": "$sequence",
+              "key": "$sequence",
+              "type": "id",
+              "size": 0,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o106"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "id"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o106"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o106"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o106"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o106"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o106"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o106"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$collection",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o107"
+          },
+          "bind": "s232",
+          "expect": {
+            "$document": {
+              "$id": "$collection",
+              "key": "$collection",
+              "type": "string",
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o107"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o107"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 255
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o107"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o107"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o107"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o107"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o107"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$tenant",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o108"
+          },
+          "bind": "s240",
+          "expect": {
+            "$document": {
+              "$id": "$tenant",
+              "key": "$tenant",
+              "type": "id",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o108"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "id"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o108"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o108"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o108"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o108"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o108"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o108"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$createdAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o109"
+          },
+          "bind": "s248",
+          "expect": {
+            "$document": {
+              "$id": "$createdAt",
+              "key": "$createdAt",
+              "type": "datetime",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [
+                "datetime"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o109"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o109"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o109"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o109"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o109"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o109"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o109"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": [
+            "datetime"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$updatedAt",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Datetime"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "datetime"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o110"
+          },
+          "bind": "s256",
+          "expect": {
+            "$document": {
+              "$id": "$updatedAt",
+              "key": "$updatedAt",
+              "type": "datetime",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [
+                "datetime"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o110"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o110"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o110"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o110"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o110"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o110"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o110"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": [
+            "datetime"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "$permissions",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 1000000,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "json"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o111"
+          },
+          "bind": "s264",
+          "expect": {
+            "$document": {
+              "$id": "$permissions",
+              "key": "$permissions",
+              "type": "string",
+              "size": 1000000,
+              "required": false,
+              "default": [],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [
+                "json"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o111"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o111"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 1000000
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o111"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o111"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o111"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o111"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o111"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": [
+            "json"
+          ]
+        }
+      ]
+    }
+  ]
+}

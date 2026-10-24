@@ -1,0 +1,186 @@
+{
+  "lib": "abuse",
+  "environment": {
+    "date": "2026-10-18T14:24:38Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "key",
+      "description": "Derive a limit for a request: two parameters into the key pattern, then the key",
+      "php": {
+        "ns": 230.04042993177063,
+        "min": 216.3697883774781,
+        "max": 341.8883192788241,
+        "samples": 15,
+        "calls": 80757,
+        "cpu": 235.39672515488854,
+        "peak": 3008.0,
+        "retained": 0.0003103962092037429,
+        "rss": 107884544.0
+      },
+      "rust": {
+        "ns": 156.6284450414563,
+        "min": 152.99265057822657,
+        "max": 161.80114873315114,
+        "samples": 15,
+        "calls": 129534,
+        "cpu": 157.0336956577681,
+        "rss": 22310912.0,
+        "allocations": 7.000005661319293,
+        "bytes": 271.0014456950813,
+        "peak": 1650.0,
+        "retained": 0.000851256555550409
+      },
+      "speedup": 1.468701485677673,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "time_limit_redis",
+      "description": "Check a fixed-window limit in Redis: the hit script",
+      "php": {
+        "ns": 58088.32584269663,
+        "min": 53714.41947565543,
+        "max": 75003.59176029962,
+        "samples": 15,
+        "calls": 267,
+        "cpu": 20106.117353308364,
+        "peak": 5312.0,
+        "retained": 0.09388264669163546,
+        "rss": 107884544.0
+      },
+      "rust": {
+        "ns": 53651.38043478261,
+        "min": 52560.57608695652,
+        "max": 55864.809782608696,
+        "samples": 15,
+        "calls": 368,
+        "cpu": 18133.982608695653,
+        "rss": 25194496.0,
+        "allocations": 16.002717391304348,
+        "bytes": 2818.5320652173914,
+        "peak": 2729.0,
+        "retained": 0.2996376811594203
+      },
+      "speedup": 1.082699557251979,
+      "bound": "A Redis round trip running the hit script, the same on both runtimes, dominates the call",
+      "compat": null
+    },
+    {
+      "name": "sliding_window_redis",
+      "description": "Check a sliding-window limit in Redis: the estimate script on two buckets",
+      "php": {
+        "ns": 56625.13993174062,
+        "min": 49258.24914675768,
+        "max": 59531.00341296929,
+        "samples": 15,
+        "calls": 293,
+        "cpu": 18737.201365187713,
+        "peak": 5392.0,
+        "retained": 0.08555176336746302,
+        "rss": 107884544.0
+      },
+      "rust": {
+        "ns": 58372.80701754386,
+        "min": 57216.616959064326,
+        "max": 59000.85380116959,
+        "samples": 15,
+        "calls": 342,
+        "cpu": 20078.27290448343,
+        "rss": 25194496.0,
+        "allocations": 23.002923976608187,
+        "bytes": 3354.572514619883,
+        "peak": 3164.0,
+        "retained": 0.3224171539961014
+      },
+      "speedup": 0.9700602527941138,
+      "bound": "A Redis round trip running the estimate script, the same on both runtimes, dominates the call",
+      "compat": null
+    },
+    {
+      "name": "token_bucket_redis",
+      "description": "Check a token bucket in Redis: the refill-and-take script",
+      "php": {
+        "ns": 60021.99074074074,
+        "min": 58374.87345679013,
+        "max": 61595.5524691358,
+        "samples": 15,
+        "calls": 324,
+        "cpu": 19341.152263374486,
+        "peak": 5288.0,
+        "retained": 0.07736625514403292,
+        "rss": 107884544.0
+      },
+      "rust": {
+        "ns": 60497.12312312312,
+        "min": 59896.64564564564,
+        "max": 62190.93993993994,
+        "samples": 15,
+        "calls": 333,
+        "cpu": 20166.84084084084,
+        "rss": 25194496.0,
+        "allocations": 19.004804804804806,
+        "bytes": 2848.180980980981,
+        "peak": 2726.0,
+        "retained": 0.33113113113113113
+      },
+      "speedup": 0.9921461987305512,
+      "bound": "A Redis round trip running the refill script, the same on both runtimes, dominates the call",
+      "compat": null
+    },
+    {
+      "name": "time_limit_pool",
+      "description": "Check a fixed-window limit through a pool of Redis connections",
+      "php": {
+        "ns": 56442.52647058824,
+        "min": 54990.80882352941,
+        "max": 67061.88823529411,
+        "samples": 15,
+        "calls": 340,
+        "cpu": 20768.62745098039,
+        "peak": 43080.0,
+        "retained": 0.07372549019607844,
+        "rss": 107884544.0
+      },
+      "rust": {
+        "ns": 55380.83791208791,
+        "min": 53665.86538461538,
+        "max": 56405.45054945055,
+        "samples": 15,
+        "calls": 364,
+        "cpu": 19053.225274725275,
+        "rss": 25194496.0,
+        "allocations": 16.002747252747252,
+        "bytes": 2898.537912087912,
+        "peak": 2809.0,
+        "retained": 0.3029304029304029
+      },
+      "speedup": 1.0191706842750494,
+      "bound": "A pool checkout and a Redis round trip running the hit script dominate the call",
+      "compat": null
+    }
+  ]
+}

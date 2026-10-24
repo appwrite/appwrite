@@ -1,0 +1,1643 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Indexes/UniqueIndexOverDuplicatesTest.php"
+  ],
+  "cases": [
+    {
+      "name": "UniqueIndexOverDuplicatesTest::testUniqueIndexOverDuplicateValuesIsRefusedWithoutMetadata#Memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o468"
+          },
+          "bind": "s840",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o468"
+              },
+              "cache": "none"
+            },
+            "as": "o469"
+          },
+          "bind": "s841",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o470"
+          },
+          "bind": "s842",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o470"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "unique_over_duplicates"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "unique_over_duplicates_u000000000027"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o471"
+          },
+          "bind": "s847",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o471"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o470"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o472"
+          },
+          "bind": "s851",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "age"
+            },
+            "as": "o473"
+          },
+          "bind": "s852",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "age",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o474"
+          },
+          "bind": "s853",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o474"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o475"
+          },
+          "bind": "s855",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o475"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "pets",
+              "attributes": [
+                {
+                  "$obj": "o472"
+                },
+                {
+                  "$obj": "o473"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o476"
+          },
+          "bind": "s857",
+          "expect": {
+            "$document": {
+              "$id": "pets",
+              "name": "pets",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "age",
+                    "key": "age",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o476"
+              }
+            },
+            "as": "o477"
+          },
+          "expect": {
+            "$document": {
+              "$id": "pets",
+              "name": "pets",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "age",
+                    "key": "age",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "name": "chester",
+                "age": 7
+              }
+            },
+            "as": "o478"
+          },
+          "bind": "s859",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "name": "chester",
+              "age": 7
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "pets",
+              "document": {
+                "$obj": "o478"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "name": "chester",
+              "age": 7,
+              "$collection": "pets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "name": "chester",
+                "age": 7
+              }
+            },
+            "as": "o479"
+          },
+          "bind": "s861",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "name": "chester",
+              "age": 7
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "pets",
+              "document": {
+                "$obj": "o479"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "name": "chester",
+              "age": 7,
+              "$collection": "pets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "unique_name",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o480"
+          },
+          "bind": "s863",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "unique_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "pets",
+              "index": {
+                "$obj": "o480"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "pets"
+            },
+            "as": "o481"
+          },
+          "bind": "s865",
+          "expect": {
+            "$document": {
+              "name": "pets",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "age",
+                    "key": "age",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "pets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o481"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "unique_age",
+              "attributes": [
+                "age"
+              ]
+            },
+            "as": "o482"
+          },
+          "bind": "s867",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "unique_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "pets",
+              "index": {
+                "$obj": "o482"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "pets"
+            },
+            "as": "o483"
+          },
+          "bind": "s869",
+          "expect": {
+            "$document": {
+              "name": "pets",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "age",
+                    "key": "age",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "pets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o483"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "name": "chester",
+                "age": 7
+              }
+            },
+            "as": "o484"
+          },
+          "bind": "s871",
+          "expect": {
+            "$document": {
+              "name": "chester",
+              "age": 7
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "pets",
+              "document": {
+                "$obj": "o484"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "chester",
+              "age": 7,
+              "$id": "<uniqid>",
+              "$collection": "pets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o469"
+            },
+            "method": "count",
+            "args": {
+              "collection": "pets"
+            }
+          },
+          "expect": 3
+        }
+      ]
+    },
+    {
+      "name": "UniqueIndexOverDuplicatesTest::testUniqueIndexOverDuplicateValuesIsRefusedWithoutMetadata#SQLite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o485"
+          },
+          "bind": "s874",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o485"
+              },
+              "cache": "none"
+            },
+            "as": "o486"
+          },
+          "bind": "s875",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o487"
+          },
+          "bind": "s876",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o487"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "unique_over_duplicates"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "unique_over_duplicates_u000000000028"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o488"
+          },
+          "bind": "s881",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o488"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o487"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o489"
+          },
+          "bind": "s885",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "age"
+            },
+            "as": "o490"
+          },
+          "bind": "s886",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "age",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o491"
+          },
+          "bind": "s887",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o491"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o492"
+          },
+          "bind": "s889",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o492"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "pets",
+              "attributes": [
+                {
+                  "$obj": "o489"
+                },
+                {
+                  "$obj": "o490"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o493"
+          },
+          "bind": "s891",
+          "expect": {
+            "$document": {
+              "$id": "pets",
+              "name": "pets",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "age",
+                    "key": "age",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o493"
+              }
+            },
+            "as": "o494"
+          },
+          "expect": {
+            "$document": {
+              "$id": "pets",
+              "name": "pets",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "age",
+                    "key": "age",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "name": "chester",
+                "age": 7
+              }
+            },
+            "as": "o495"
+          },
+          "bind": "s893",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "name": "chester",
+              "age": 7
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "pets",
+              "document": {
+                "$obj": "o495"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "name": "chester",
+              "age": 7,
+              "$collection": "pets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "name": "chester",
+                "age": 7
+              }
+            },
+            "as": "o496"
+          },
+          "bind": "s895",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "name": "chester",
+              "age": 7
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "pets",
+              "document": {
+                "$obj": "o496"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "name": "chester",
+              "age": 7,
+              "$collection": "pets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "unique_name",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o497"
+          },
+          "bind": "s897",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "unique_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "pets",
+              "index": {
+                "$obj": "o497"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "pets"
+            },
+            "as": "o498"
+          },
+          "bind": "s899",
+          "expect": {
+            "$document": {
+              "name": "pets",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "age",
+                    "key": "age",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "pets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o498"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "unique_age",
+              "attributes": [
+                "age"
+              ]
+            },
+            "as": "o499"
+          },
+          "bind": "s901",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "unique_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "pets",
+              "index": {
+                "$obj": "o499"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "pets"
+            },
+            "as": "o500"
+          },
+          "bind": "s903",
+          "expect": {
+            "$document": {
+              "name": "pets",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "age",
+                    "key": "age",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "pets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o500"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "name": "chester",
+                "age": 7
+              }
+            },
+            "as": "o501"
+          },
+          "bind": "s905",
+          "expect": {
+            "$document": {
+              "name": "chester",
+              "age": 7
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "pets",
+              "document": {
+                "$obj": "o501"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "chester",
+              "age": 7,
+              "$id": "<uniqid>",
+              "$collection": "pets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "count",
+            "args": {
+              "collection": "pets"
+            }
+          },
+          "expect": 3
+        }
+      ]
+    }
+  ]
+}

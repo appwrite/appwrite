@@ -1,0 +1,378 @@
+{
+  "source": "packages/emails/tests/Canonicals/Providers/WallaTest.php",
+  "cases": [
+    {
+      "name": "supports",
+      "steps": [
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "walla",
+            "domain": "walla.co.il"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "walla",
+            "domain": "walla.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "walla",
+            "domain": "gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "walla",
+            "domain": "outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "walla",
+            "domain": "yahoo.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "walla",
+            "domain": "example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "get canonical",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+tag",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+spam",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+spam",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+newsletter",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+newsletter",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+work",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+work",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+personal",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+personal",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+test123",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+test123",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+anything",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+anything",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+verylongtag",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+verylongtag",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+tag.with.dots",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+tag.with.dots",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+tag-with-hyphens",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+tag-with-hyphens",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+tag_with_underscores",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+tag_with_underscores",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+tag123",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.name+tag123",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user+",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user+",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user.",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": ".user",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": ".user",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user..name",
+            "domain": "walla.co.il"
+          },
+          "expect": {
+            "local": "user..name",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+tag",
+            "domain": "walla.com"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name+spam",
+            "domain": "walla.com"
+          },
+          "expect": {
+            "local": "user.name+spam",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "user.name",
+            "domain": "walla.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "walla.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "walla.co.il"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "walla",
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "walla.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "walla.co.il"
+          }
+        }
+      ]
+    },
+    {
+      "name": "get canonical domain",
+      "steps": [
+        {
+          "op": "provider.canonical_domain",
+          "args": {
+            "provider": "walla"
+          },
+          "expect": "walla.co.il"
+        }
+      ]
+    },
+    {
+      "name": "get supported domains",
+      "steps": [
+        {
+          "op": "provider.supported_domains",
+          "args": {
+            "provider": "walla"
+          },
+          "expect": [
+            "walla.co.il",
+            "walla.com"
+          ]
+        }
+      ]
+    }
+  ]
+}

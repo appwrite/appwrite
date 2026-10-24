@@ -1,0 +1,1510 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Hook/AttachTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AttachTest::testTheRelationshipsHookRelatesThroughTheDatabaseItIsAddedTo",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o10665"
+          },
+          "bind": "s62797",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o10665"
+              },
+              "cache": "none"
+            },
+            "as": "o10666"
+          },
+          "bind": "s62798",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10666"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "attach"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10666"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "attach"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10666"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o10667"
+          },
+          "bind": "s62802",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o10668"
+          },
+          "bind": "s62803",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o10668"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o10669"
+          },
+          "bind": "s62805",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o10669"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o10670"
+          },
+          "bind": "s62807",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o10670"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "parents",
+              "attributes": [
+                {
+                  "$obj": "o10667"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o10671"
+          },
+          "bind": "s62809",
+          "expect": {
+            "$document": {
+              "$id": "parents",
+              "name": "parents",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10666"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o10671"
+              }
+            },
+            "as": "o10672"
+          },
+          "expect": {
+            "$document": {
+              "$id": "parents",
+              "name": "parents",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o10673"
+          },
+          "bind": "s62811",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o10674"
+          },
+          "bind": "s62812",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o10674"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o10675"
+          },
+          "bind": "s62814",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o10675"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o10676"
+          },
+          "bind": "s62816",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o10676"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "children",
+              "attributes": [
+                {
+                  "$obj": "o10673"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o10677"
+          },
+          "bind": "s62818",
+          "expect": {
+            "$document": {
+              "$id": "children",
+              "name": "children",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10666"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o10677"
+              }
+            },
+            "as": "o10678"
+          },
+          "expect": {
+            "$document": {
+              "$id": "children",
+              "name": "children",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "children",
+              "twoWay": true,
+              "key": "children",
+              "twoWayKey": "parent"
+            },
+            "as": "o10679"
+          },
+          "bind": "s62820",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "children",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "children",
+              "twoWayKey": "parent",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10666"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "parents",
+              "relationship": {
+                "$obj": "o10679"
+              }
+            },
+            "as": "o10680"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "children",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "children",
+              "twoWayKey": "parent",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Relationships",
+            "args": {},
+            "as": "o10681"
+          },
+          "bind": "s62822",
+          "expect": {
+            "$hook": "Relationships"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10666"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o10681"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c1",
+                "name": "c1"
+              }
+            },
+            "as": "o10682"
+          },
+          "bind": "s62824",
+          "expect": {
+            "$document": {
+              "$id": "c1",
+              "name": "c1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "p1",
+                "name": "p1",
+                "children": [
+                  {
+                    "$obj": "o10682"
+                  }
+                ]
+              }
+            },
+            "as": "o10683"
+          },
+          "bind": "s62825",
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "name": "p1",
+              "children": [
+                {
+                  "$document": {
+                    "$id": "c1",
+                    "name": "c1"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10666"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "parents",
+              "document": {
+                "$obj": "o10683"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "name": "p1",
+              "$collection": "parents",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "children": [
+                {
+                  "$document": {
+                    "name": "c1",
+                    "$id": "c1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$sequence": "1",
+                    "$collection": "children"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10666"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "parents",
+              "id": "p1"
+            },
+            "as": "o10684"
+          },
+          "bind": "s62827",
+          "expect": {
+            "$document": {
+              "name": "p1",
+              "$sequence": "1",
+              "$id": "p1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "parents",
+              "children": [
+                {
+                  "$document": {
+                    "name": "c1",
+                    "$id": "c1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$sequence": "1",
+                    "$collection": "children"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10684"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "children"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "c1",
+                "$id": "c1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "children"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c1",
+                "$id": "c1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "children"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "c1"
+        }
+      ]
+    },
+    {
+      "name": "AttachTest::testTheRelationshipsHookRefusesToMoveToAnotherDatabase",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Relationships",
+            "args": {},
+            "as": "o10685"
+          },
+          "bind": "s62830",
+          "expect": {
+            "$hook": "Relationships"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o10686"
+          },
+          "bind": "s62831",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o10686"
+              },
+              "cache": "none"
+            },
+            "as": "o10687"
+          },
+          "bind": "s62832",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o10688"
+          },
+          "bind": "s62833",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o10688"
+              },
+              "cache": "none"
+            },
+            "as": "o10689"
+          },
+          "bind": "s62834",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10687"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o10685"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10689"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o10685"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "This relationships hook is already attached to another database; attach a clone of it instead"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10685"
+            },
+            "method": "withEnabled",
+            "args": {
+              "enabled": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o10687"
+                      },
+                      "method": "snapshot",
+                      "args": {},
+                      "as": "o10690"
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": true
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "State\\Snapshot",
+                      "fields": {
+                        "authorization": true,
+                        "roles": [
+                          "any"
+                        ],
+                        "relationships": false,
+                        "existCheck": true,
+                        "population": false,
+                        "silenced": false,
+                        "silencedListeners": [],
+                        "tenant": null,
+                        "filters": true,
+                        "disabledFilters": [],
+                        "validation": true,
+                        "preserveDates": false,
+                        "preserveSequence": false,
+                        "ignoreDuplicates": false,
+                        "requestTimestamp": null,
+                        "checkGrants": false,
+                        "rewriting": true
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10685"
+            },
+            "method": "withEnabled",
+            "args": {
+              "enabled": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o10689"
+                      },
+                      "method": "snapshot",
+                      "args": {},
+                      "as": "o10691"
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": false
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "State\\Snapshot",
+                      "fields": {
+                        "authorization": true,
+                        "roles": [
+                          "any"
+                        ],
+                        "relationships": true,
+                        "existCheck": true,
+                        "population": false,
+                        "silenced": false,
+                        "silencedListeners": [],
+                        "tenant": null,
+                        "filters": true,
+                        "disabledFilters": [],
+                        "validation": true,
+                        "preserveDates": false,
+                        "preserveSequence": false,
+                        "ignoreDuplicates": false,
+                        "requestTimestamp": null,
+                        "checkGrants": false,
+                        "rewriting": true
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttachTest::testTheRelationshipsHookCanBeAddedAgainToItsOwnDatabase",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Relationships",
+            "args": {},
+            "as": "o10692"
+          },
+          "bind": "s62839",
+          "expect": {
+            "$hook": "Relationships"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o10693"
+          },
+          "bind": "s62840",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o10693"
+              },
+              "cache": "none"
+            },
+            "as": "o10694"
+          },
+          "bind": "s62841",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10694"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o10692"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10694"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o10692"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10692"
+            },
+            "method": "withEnabled",
+            "args": {
+              "enabled": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o10694"
+                      },
+                      "method": "snapshot",
+                      "args": {},
+                      "as": "o10695"
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": true
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "State\\Snapshot",
+                      "fields": {
+                        "authorization": true,
+                        "roles": [
+                          "any"
+                        ],
+                        "relationships": false,
+                        "existCheck": true,
+                        "population": false,
+                        "silenced": false,
+                        "silencedListeners": [],
+                        "tenant": null,
+                        "filters": true,
+                        "disabledFilters": [],
+                        "validation": true,
+                        "preserveDates": false,
+                        "preserveSequence": false,
+                        "ignoreDuplicates": false,
+                        "requestTimestamp": null,
+                        "checkGrants": false,
+                        "rewriting": true
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttachTest::testACloneOfAnAttachedRelationshipsHookAttachesToAnotherDatabase",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Relationships",
+            "args": {},
+            "as": "o10696"
+          },
+          "bind": "s62845",
+          "expect": {
+            "$hook": "Relationships"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o10697"
+          },
+          "bind": "s62846",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o10697"
+              },
+              "cache": "none"
+            },
+            "as": "o10698"
+          },
+          "bind": "s62847",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o10699"
+          },
+          "bind": "s62848",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o10699"
+              },
+              "cache": "none"
+            },
+            "as": "o10700"
+          },
+          "bind": "s62849",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10698"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o10696"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10700"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$hook": "Relationships",
+                "as": "o10701"
+              }
+            }
+          },
+          "bind": "s62851",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10696"
+            },
+            "method": "withEnabled",
+            "args": {
+              "enabled": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o10698"
+                      },
+                      "method": "snapshot",
+                      "args": {},
+                      "as": "o10702"
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": true
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "State\\Snapshot",
+                      "fields": {
+                        "authorization": true,
+                        "roles": [
+                          "any"
+                        ],
+                        "relationships": false,
+                        "existCheck": true,
+                        "population": false,
+                        "silenced": false,
+                        "silencedListeners": [],
+                        "tenant": null,
+                        "filters": true,
+                        "disabledFilters": [],
+                        "validation": true,
+                        "preserveDates": false,
+                        "preserveSequence": false,
+                        "ignoreDuplicates": false,
+                        "requestTimestamp": null,
+                        "checkGrants": false,
+                        "rewriting": true
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10701"
+            },
+            "method": "withEnabled",
+            "args": {
+              "enabled": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o10700"
+                      },
+                      "method": "snapshot",
+                      "args": {},
+                      "as": "o10703"
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": true
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "State\\Snapshot",
+                      "fields": {
+                        "authorization": true,
+                        "roles": [
+                          "any"
+                        ],
+                        "relationships": false,
+                        "existCheck": true,
+                        "population": false,
+                        "silenced": false,
+                        "silencedListeners": [],
+                        "tenant": null,
+                        "filters": true,
+                        "disabledFilters": [],
+                        "validation": true,
+                        "preserveDates": false,
+                        "preserveSequence": false,
+                        "ignoreDuplicates": false,
+                        "requestTimestamp": null,
+                        "checkGrants": false,
+                        "rewriting": true
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10696"
+            },
+            "method": "withEnabled",
+            "args": {
+              "enabled": false,
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o10700"
+                      },
+                      "method": "snapshot",
+                      "args": {},
+                      "as": "o10704"
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": false
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "State\\Snapshot",
+                      "fields": {
+                        "authorization": true,
+                        "roles": [
+                          "any"
+                        ],
+                        "relationships": true,
+                        "existCheck": true,
+                        "population": false,
+                        "silenced": false,
+                        "silencedListeners": [],
+                        "tenant": null,
+                        "filters": true,
+                        "disabledFilters": [],
+                        "validation": true,
+                        "preserveDates": false,
+                        "preserveSequence": false,
+                        "ignoreDuplicates": false,
+                        "requestTimestamp": null,
+                        "checkGrants": false,
+                        "rewriting": true
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

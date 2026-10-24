@@ -1,0 +1,613 @@
+{
+  "source": "packages/validators/tests/JSON/ArrayValidatorTest.php",
+  "cases": [
+    {
+      "name": "testAcceptsDecodedArrays",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": [
+              "test"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": [
+              1,
+              2
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": [
+              {
+                "test": "demo"
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": [
+              [
+                1,
+                2
+              ],
+              [
+                3,
+                4
+              ]
+            ]
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsEncodedArrays",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[1, 2]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[\"test\"]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[{\"test\": \"demo\"}]"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsAmbiguousEmptyArray",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": []
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testRejectsObjects",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "{}"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "{\"test\": \"demo\"}"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "test": "demo"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "$object": {
+                "test": "demo"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testRejectsEncodedScalars",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "\"not-an-array\""
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "1"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "1.2"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "true"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "null"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testRejectsNonJson",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "string"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[1, 2"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "['test']"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testRejectsScalars",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": false
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": true
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 1
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 1.2
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testRejectsArraysNestedBeyondDecodingDepth",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEnforcesLength",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {
+              "length": 8
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[\"test\"]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {
+              "length": 7
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            },
+            "value": "[\"test\"]"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {
+              "length": 8
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": [
+              "test"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {
+              "length": 7
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v4"
+            },
+            "value": [
+              "test"
+            ]
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testContract",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "array"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "Value must be a valid JSON array"
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\ArrayValidator",
+            "args": {
+              "length": 16
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": "Value must be a valid JSON array no longer than 16 characters when encoded"
+        }
+      ]
+    }
+  ]
+}

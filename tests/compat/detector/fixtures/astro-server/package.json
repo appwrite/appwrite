@@ -1,0 +1,10 @@
+{
+  "name": "astro-server",
+  "type": "module",
+  "dependencies": {
+    "@astrojs/node": "^9.0.0",
+    "@astrojs/react": "^4.0.0",
+    "astro": "^5.0.0",
+    "react": "^19.0.0"
+  }
+}

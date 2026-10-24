@@ -1,0 +1,6420 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/GeneralTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MongoDBTest.php"
+  ],
+  "cases": [
+    {
+      "name": "GeneralTests::testPing",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.ping",
+          "args": {},
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testQueryTimeout",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Timeouts"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "global-timeouts",
+                "name": "global-timeouts",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "global-timeouts",
+              "name": "global-timeouts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "global-timeouts",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "longtext",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 100000000,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "longtext",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100000000,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "global-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "global-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.set_timeout",
+          "args": {
+            "milliseconds": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "global-timeouts",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notEqual",
+                  "attribute": "longtext",
+                  "values": [
+                    "appwrite"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Timeout",
+              "message": "Query timed out"
+            }
+          }
+        },
+        {
+          "op": "database.clear_timeout",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "global-timeouts"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesUpdateTenant",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": 999
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Schemas"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesTenantPerDocument",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.is_tenant_per_document",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": 999
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Schemas"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesTenantPerDocumentUpsertRefreshesTheQueryCache",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Upserts"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Schemas"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesReadsScopeToTheSelectedTenant",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": 999
+        },
+        {
+          "op": "database.is_tenant_per_document",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": null
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "sharedTablesTenantScopedReads",
+                "name": "sharedTablesTenantScopedReads",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "sharedTablesTenantScopedReads",
+              "name": "sharedTablesTenantScopedReads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$tenant": null
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sharedTablesTenantScopedReads",
+            "document": {
+              "$document": {
+                "$id": "one",
+                "$tenant": 1,
+                "name": "tenant one"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "$tenant": "1",
+              "name": "tenant one",
+              "$collection": "sharedTablesTenantScopedReads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sharedTablesTenantScopedReads",
+            "document": {
+              "$document": {
+                "$id": "two",
+                "$tenant": 2,
+                "name": "tenant two"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "two",
+              "$tenant": "2",
+              "name": "tenant two",
+              "$collection": "sharedTablesTenantScopedReads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "sharedTablesTenantScopedReads"
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "tenant one",
+                "$collection": "sharedTablesTenantScopedReads",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "one",
+                "$tenant": "1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "sharedTablesTenantScopedReads"
+          },
+          "expect": 1
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "sharedTablesTenantScopedReads",
+            "id": "two"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": null
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "sharedTablesTenantScopedReads"
+          },
+          "expect": []
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "sharedTablesTenantScopedReads"
+          },
+          "expect": 0
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "sharedTablesTenantScopedReads",
+            "id": "one"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 999
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": false
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testTransactionAtomicity",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "transactionAtomicity",
+                "name": "transactionAtomicity",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "transactionAtomicity",
+              "name": "transactionAtomicity",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "transactionAtomicity",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "title",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "transactionAtomicity",
+                    "document": {
+                      "$document": {
+                        "$id": "tx_success",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Committed"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "tx_success",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "title": "Committed",
+                "$collection": "transactionAtomicity",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "<uuid7>"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "tx_success",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Committed",
+                        "$collection": "transactionAtomicity",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "<uuid7>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "transactionAtomicity",
+            "id": "tx_success"
+          },
+          "expect": {
+            "$document": {
+              "title": "Committed",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "transactionAtomicity",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "tx_success",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "transactionAtomicity",
+                    "document": {
+                      "$document": {
+                        "$id": "tx_fail",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Should be rolled back"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Exception",
+                    "message": "Intentional failure to trigger rollback"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Intentional failure to trigger rollback"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "transactionAtomicity",
+            "id": "tx_fail"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "transactionAtomicity"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testReadersSeeTheNewDocumentAfterATransactionCommits",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txDocumentCacheCommit",
+                "name": "txDocumentCacheCommit",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txDocumentCacheCommit",
+              "name": "txDocumentCacheCommit",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "txDocumentCacheCommit",
+            "document": {
+              "$document": {
+                "$id": "user",
+                "name": "original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "user",
+              "name": "original",
+              "$collection": "txDocumentCacheCommit",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheCommit",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$collection": "txDocumentCacheCommit",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "user",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.update_document",
+                  "args": {
+                    "collection": "txDocumentCacheCommit",
+                    "id": "user",
+                    "document": {
+                      "$document": {
+                        "name": "updated"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "txDocumentCacheCommit",
+                    "id": "user"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "updated",
+                        "$collection": "txDocumentCacheCommit",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "<uuid7>",
+                        "$id": "user",
+                        "$tenant": "999"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "updated",
+                        "$collection": "txDocumentCacheCommit",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "<uuid7>",
+                        "$id": "user",
+                        "$tenant": "999"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheCommit",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "updated",
+              "$collection": "txDocumentCacheCommit",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "user",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txDocumentCacheCommit"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testReadersSeeTheOriginalDocumentAfterATransactionRollsBack",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txDocumentCacheRollback",
+                "name": "txDocumentCacheRollback",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txDocumentCacheRollback",
+              "name": "txDocumentCacheRollback",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "document": {
+              "$document": {
+                "$id": "user",
+                "name": "original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "user",
+              "name": "original",
+              "$collection": "txDocumentCacheRollback",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$collection": "txDocumentCacheRollback",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "user",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.update_document",
+                  "args": {
+                    "collection": "txDocumentCacheRollback",
+                    "id": "user",
+                    "document": {
+                      "$document": {
+                        "name": "rolled-back"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "txDocumentCacheRollback",
+                    "id": "user"
+                  }
+                },
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Utopia\\Database\\Exception\\Conflict",
+                    "message": "rollback"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Conflict",
+              "message": "rollback"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$collection": "txDocumentCacheRollback",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "user",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$collection": "txDocumentCacheRollback",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "user",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txDocumentCacheRollback"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testReadersSeeTheNewDocumentAfterANestedTransactionCommits",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::TransactionNested"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testASiblingReadAfterAWriteRunsNoStatement",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\RawQuery"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testCacheInvalidationDoesNotAddRedisKeysPerWrite",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "ownerKeys6ad0697185fbb654ce27",
+                "name": "ownerKeys6ad0697185fbb654ce27",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ownerKeys6ad0697185fbb654ce27",
+              "name": "ownerKeys6ad0697185fbb654ce27",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_cache",
+          "args": {
+            "as": "o954"
+          },
+          "expect": {
+            "$cache": true
+          }
+        },
+        {
+          "op": "database.get_query_cache",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.set_cache",
+          "args": {
+            "cache": "memory"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_cache",
+          "args": {
+            "as": "o955"
+          },
+          "expect": {
+            "$cache": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testTransactionStateAfterKnownException",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txKnownException",
+                "name": "txKnownException",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txKnownException",
+              "name": "txKnownException",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "txKnownException",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "title",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "txKnownException",
+            "document": {
+              "$document": {
+                "$id": "existing_doc",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "title": "Original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "existing_doc",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "title": "Original",
+              "$collection": "txKnownException",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "txKnownException",
+                    "document": {
+                      "$document": {
+                        "$id": "existing_doc",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Duplicate"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txKnownException",
+            "id": "existing_doc"
+          },
+          "expect": {
+            "$document": {
+              "title": "Original",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "txKnownException",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "existing_doc",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txKnownException"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testTransactionStateAfterRetriesExhausted",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::TransactionRetries"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Utopia\\Database\\Exception\\Contention",
+                    "message": "Deadlock detected"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Contention",
+              "message": "Deadlock detected"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testInvalidDocumentInATransactionIsNotRetried",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txInvalidDocument",
+                "name": "txInvalidDocument",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txInvalidDocument",
+              "name": "txInvalidDocument",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "txInvalidDocument",
+                    "document": {
+                      "$document": {
+                        "$id": "invalid"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Missing required attribute \"title\""
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txInvalidDocument"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testNestedTransactionState",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::TransactionNested"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testCountTimeout",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Timeouts"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "count-timeouts",
+                "name": "count-timeouts",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "count-timeouts",
+              "name": "count-timeouts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "count-timeouts",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "longtext",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 100000000,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "longtext",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100000000,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "count-timeouts",
+            "document": {
+              "$document": {
+                "longtext": {
+                  "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                  "times": 32336
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "longtext": "<long:14421856:e8fcee5aa1091cbe89da7804b8b7424209ae898b9cea4812dd14f61eca4f08f8>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "count-timeouts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.set_timeout",
+          "args": {
+            "milliseconds": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "count-timeouts",
+            "queries": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "longtext",
+                  "values": [
+                    "needle-that-does-not-exist"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Timeout",
+              "message": "Query timed out"
+            }
+          }
+        },
+        {
+          "op": "database.clear_timeout",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "count-timeouts"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testFindOrderByAfterException",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "cursorCollection_u000000000071",
+                "name": "cursorCollection_u000000000071",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "cursorCollection_u000000000071",
+              "name": "cursorCollection_u000000000071",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursorCollection_u000000000071",
+            "queries": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    0
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "cursor",
+                        "$sequence": "1",
+                        "$collection": "other collection"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "cursor Document must be from the same Collection."
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "cursorCollection_u000000000071"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testGetAttributeLimit",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "limits",
+            "args": {}
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "database.get_limit_for_attributes",
+          "args": {},
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testGetIndexLimit",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_limit_for_indexes",
+          "args": {},
+          "expect": 58
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testNestedQueryValidation",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "testNestedQueryValidation",
+                "name": "testNestedQueryValidation",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "testNestedQueryValidation",
+              "name": "testNestedQueryValidation",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "testNestedQueryValidation",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "u0000000000000000072",
+                  "name": "test1"
+                }
+              },
+              {
+                "$document": {
+                  "$id": "u0000000000000000073",
+                  "name": "doc2"
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "testNestedQueryValidation",
+            "queries": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "name",
+                        "values": [
+                          "test1"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "search",
+                        "attribute": "name",
+                        "values": [
+                          "doc"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Searching by attribute \"name\" requires a fulltext index."
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "testNestedQueryValidation"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testPreserveDatesCreate",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.authorization.disable",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "preserve_create_dates",
+                "name": "preserve_create_dates",
+                "attributes": [
+                  {
+                    "$id": "attr1",
+                    "key": "attr1",
+                    "type": "string",
+                    "size": 10,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "preserve_create_dates",
+              "name": "preserve_create_dates",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "attr1",
+                    "key": "attr1",
+                    "type": "string",
+                    "size": 10,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [],
+                "attr1": "value1",
+                "$createdAt": ""
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Missing required attribute \"$createdAt\""
+            }
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "preserve_create_dates",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "doc2",
+                  "$permissions": [],
+                  "attr1": "value2",
+                  "$createdAt": ""
+                }
+              },
+              {
+                "$document": {
+                  "$id": "doc3",
+                  "$permissions": [],
+                  "attr1": "value3",
+                  "$createdAt": ""
+                }
+              }
+            ],
+            "batchSize": 2
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Missing required attribute \"$createdAt\""
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [],
+                "attr1": "value1",
+                "$createdAt": "2000-01-01T10:00:00.000+00:00"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "$permissions": [],
+              "attr1": "value1",
+              "$createdAt": "2000-01-01T10:00:00.000+00:00",
+              "$collection": "preserve_create_dates",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "preserve_create_dates",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "doc2",
+                  "$permissions": [],
+                  "attr1": "value2",
+                  "$createdAt": "2000-01-01T10:00:00.000+00:00"
+                }
+              },
+              {
+                "$document": {
+                  "$id": "doc3",
+                  "$permissions": [],
+                  "attr1": "value3",
+                  "$createdAt": "2000-01-01T10:00:00.000+00:00"
+                }
+              },
+              {
+                "$document": {
+                  "$id": "doc4",
+                  "$permissions": [],
+                  "attr1": "value3",
+                  "$createdAt": null
+                }
+              },
+              {
+                "$document": {
+                  "$id": "doc5",
+                  "$permissions": [],
+                  "attr1": "value3"
+                }
+              }
+            ],
+            "batchSize": 2
+          },
+          "expect": 4
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value1",
+              "$permissions": [],
+              "$createdAt": "2000-01-01T10:00:00.000+00:00",
+              "$collection": "preserve_create_dates",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc1",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "id": "doc2"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value2",
+              "$permissions": [],
+              "$createdAt": "2000-01-01T10:00:00.000+00:00",
+              "$collection": "preserve_create_dates",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc2",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "id": "doc3"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value3",
+              "$permissions": [],
+              "$createdAt": "2000-01-01T10:00:00.000+00:00",
+              "$collection": "preserve_create_dates",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc3",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "id": "doc4"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value3",
+              "$permissions": [],
+              "$createdAt": "<now>",
+              "$collection": "preserve_create_dates",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc4",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "id": "doc5"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value3",
+              "$permissions": [],
+              "$collection": "preserve_create_dates",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc5",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "preserve_create_dates"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "db.authorization.reset",
+          "args": {},
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testPreserveDatesUpdate",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.authorization.disable",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "preserve_update_dates",
+                "name": "preserve_update_dates",
+                "attributes": [
+                  {
+                    "$id": "attr1",
+                    "key": "attr1",
+                    "type": "string",
+                    "size": 10,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "preserve_update_dates",
+              "name": "preserve_update_dates",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "attr1",
+                    "key": "attr1",
+                    "type": "string",
+                    "size": 10,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [],
+                "attr1": "value1"
+              }
+            }
+          },
+          "bind": "s5951",
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "$permissions": [],
+              "attr1": "value1",
+              "$collection": "preserve_update_dates",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "document": {
+              "$document": {
+                "$id": "doc2",
+                "$permissions": [],
+                "attr1": "value2"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc2",
+              "$permissions": [],
+              "attr1": "value2",
+              "$collection": "preserve_update_dates",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "document": {
+              "$document": {
+                "$id": "doc3",
+                "$permissions": [],
+                "attr1": "value3"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc3",
+              "$permissions": [],
+              "attr1": "value3",
+              "$collection": "preserve_update_dates",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "id": "doc1",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [],
+                "attr1": "value1",
+                "$collection": "preserve_update_dates",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": "",
+                "$tenant": "999",
+                "$sequence": {
+                  "$ref": "s5951",
+                  "path": "/$document/$sequence",
+                  "default": "01a13e1b-f4cf-71f8-8da3-aa636ac2bdad"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Missing required attribute \"$updatedAt\""
+            }
+          }
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "collection": "preserve_update_dates",
+            "updates": {
+              "$document": {
+                "$updatedAt": ""
+              }
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "doc2",
+                    "doc3"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Missing required attribute \"$updatedAt\""
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "id": "doc1",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [],
+                "attr1": "value1",
+                "$collection": "preserve_update_dates",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": "2000-01-01T10:00:00.000+00:00",
+                "$tenant": "999",
+                "$sequence": {
+                  "$ref": "s5951",
+                  "path": "/$document/$sequence",
+                  "default": "01a13e1b-f4cf-71f8-8da3-aa636ac2bdad"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value1",
+              "$permissions": [],
+              "$collection": "preserve_update_dates",
+              "$createdAt": "<now>",
+              "$updatedAt": "2000-01-01T10:00:00.000+00:00",
+              "$sequence": "<uuid7>",
+              "$id": "doc1",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value1",
+              "$permissions": [],
+              "$collection": "preserve_update_dates",
+              "$createdAt": "<now>",
+              "$updatedAt": "2000-01-01T10:00:00.000+00:00",
+              "$sequence": "<uuid7>",
+              "$id": "doc1",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "collection": "preserve_update_dates",
+            "updates": {
+              "$document": {
+                "$updatedAt": "2000-01-01T10:00:00.000+00:00"
+              }
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "doc2",
+                    "doc3"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "id": "doc2"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value2",
+              "$permissions": [],
+              "$collection": "preserve_update_dates",
+              "$createdAt": "<now>",
+              "$updatedAt": "2000-01-01T10:00:00.000+00:00",
+              "$sequence": "<uuid7>",
+              "$id": "doc2",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "id": "doc3"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value3",
+              "$permissions": [],
+              "$collection": "preserve_update_dates",
+              "$createdAt": "<now>",
+              "$updatedAt": "2000-01-01T10:00:00.000+00:00",
+              "$sequence": "<uuid7>",
+              "$id": "doc3",
+              "$tenant": "999"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "preserve_update_dates"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "db.authorization.reset",
+          "args": {},
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testLostConnectionInsideANestedTransactionFailsTheOuterTransaction",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Connection"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\RawQuery"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testWritesReadTheirCollectionDefinitionFromTheCache",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\RawQuery"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testDocumentCacheRoundTripsStayWithinSevenThreeCounts",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testTenantPerDocumentRejectsATenantThatIsNotAnIntegerOrString",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Schemas"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6042 @@
+{
+  "source": "packages/schedule/tests/SchedulerTest.php",
+  "cases": [
+    {
+      "name": "tick phase drifting across minute boundaries drops nothing",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-17 15:53:59.773000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "cron": "*/5 * * * *"
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "lead": 0,
+            "recover": 300,
+            "lease": 240,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 15:55:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786982100.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 16:00:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786982400.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 16:05:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786982700.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 16:10:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786983000.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 16:15:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786983300.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 16:20:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786983600.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 16:25:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786983900.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 16:30:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786984200.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 16:35:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786984500.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 16:40:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786984800.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 16:45:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786985100.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-17 16:50:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1786985400.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0015
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "restart with shared state backfills the gap",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.memory",
+          "args": {},
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "interval": 60
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "first"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 185.0
+          },
+          "expect": null
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "interval": 60
+              }
+            }
+          },
+          "bind": "r_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "r_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "replacement"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:02:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022120.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:03:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022180.000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lookback caps the catch-up burst",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "interval": 60
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 120,
+            "lease": 60,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 3600.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:59:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787025540.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 04:00:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787025600.000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tick without commit redelivers",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "interval": 60
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "one-shots deliver once and are dropped",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:00.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "delayed",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "delayed": {
+                "in": 30,
+                "from": "2026-08-18 03:00:00.000000"
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 45.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "delayed",
+              "due": "2026-08-18 03:00:30.000000 UTC",
+              "payload": null,
+              "version": "1",
+              "key": "delayed@1787022030.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 600.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "occurrences are ordered oldest first across schedules",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "b-minutely",
+                "version": "1"
+              },
+              {
+                "id": "a-half-minute",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "b-minutely": {
+                "cron": "* * * * *"
+              },
+              "a-half-minute": {
+                "interval": 30
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 90.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "a-half-minute",
+              "due": "2026-08-18 03:00:30.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "a-half-minute@1787022030.000000"
+            },
+            {
+              "id": "a-half-minute",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "a-half-minute@1787022060.000000"
+            },
+            {
+              "id": "b-minutely",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "b-minutely@1787022060.000000"
+            },
+            {
+              "id": "a-half-minute",
+              "due": "2026-08-18 03:01:30.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "a-half-minute@1787022090.000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "watermark never rewinds when the clock steps back",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:02:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "interval": 60
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:03:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022180.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": -90.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 150.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:04:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022240.000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lookahead hands over future occurrences",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "cron": "*/15 * * * *"
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 1,
+            "lead": 60,
+            "recover": 300,
+            "lease": 244,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 840.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:15:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022900.000000"
+            }
+          ]
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            }
+          },
+          "expect": "2026-08-18 03:14:30.000000 GMT+0000"
+        }
+      ]
+    },
+    {
+      "name": "run delivers on a wall anchored cadence until stopped",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-01-01 00:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "minutely",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "minutely": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "lead": 0,
+            "recover": 300,
+            "lease": 240,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.run",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "stop_after": 2
+          },
+          "expect": [
+            {
+              "at": "2026-01-01 00:02:00.000000 GMT+0000",
+              "covered": 1767225660.0,
+              "occurrences": [
+                {
+                  "id": "minutely",
+                  "due": "2026-01-01 00:01:00.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "minutely@1767225660.000000"
+                }
+              ]
+            },
+            {
+              "at": "2026-01-01 00:03:00.000000 GMT+0000",
+              "covered": 1767225720.0,
+              "occurrences": [
+                {
+                  "id": "minutely",
+                  "due": "2026-01-01 00:02:00.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "minutely@1767225720.000000"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "standby takes over when the claim expires",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-01-01 00:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.memory",
+          "args": {},
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": null,
+            "claim": {
+              "token": "incumbent",
+              "expiresAt": 1767225750.0
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "minutely",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "minutely": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 60,
+            "lead": 0,
+            "recover": 300,
+            "lease": 240,
+            "token": "standby"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.run",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "at": "2026-01-01 00:04:00.000000 GMT+0000",
+              "covered": 1767225780.0,
+              "occurrences": [
+                {
+                  "id": "minutely",
+                  "due": "2026-01-01 00:03:00.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "minutely@1767225780.000000"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "",
+            "expiresAt": 0.0,
+            "coveredUntil": 1767225840.0,
+            "syncedUntil": 1767225840.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "deposed leader commit is fenced",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.memory",
+          "args": {},
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "leader_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "leader_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "leader"
+          },
+          "bind": "leader",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            }
+          ]
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 61.0
+          },
+          "expect": null
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "standby_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "standby_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "standby"
+          },
+          "bind": "standby",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "standby"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "standby"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:02:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022120.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "standby"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "standby",
+            "expiresAt": 1787022211.0,
+            "coveredUntil": 1787022151.0,
+            "syncedUntil": 1787022151.0
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "standby",
+            "expiresAt": 1787022211.0,
+            "coveredUntil": 1787022151.0,
+            "syncedUntil": 1787022151.0
+          }
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "a fenced commit is counted as a lease error",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.memory",
+          "args": {},
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "leader_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "leader_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "leader",
+            "telemetry": true
+          },
+          "bind": "leader",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            }
+          ]
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 121.0
+          },
+          "expect": null
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "standby_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "standby_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "standby"
+          },
+          "bind": "standby",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "standby"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "standby"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:02:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022120.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:03:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022180.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "standby"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "scheduler.telemetry",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": {
+            "counters": {
+              "schedule.error.total": [
+                1
+              ]
+            },
+            "histograms": {
+              "schedule.reconcile.duration": 1,
+              "schedule.tick.duration": 1
+            },
+            "gauges": {
+              "schedule.entries": [
+                1,
+                1
+              ],
+              "schedule.lag": [
+                0.0,
+                60.0
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a retrying loop keeps its claim while it retries",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.memory",
+          "args": {},
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "leader_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "leader_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "leader"
+          },
+          "bind": "leader",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "standby_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "standby_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "standby"
+          },
+          "bind": "standby",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "standby"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 40.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "standby"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 40.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "standby"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "leader"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "leader",
+            "expiresAt": 1787022170.0,
+            "coveredUntil": 1787022110.0,
+            "syncedUntil": 1787022030.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "handler receives each due moment when it falls due",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "b",
+                "version": "1"
+              },
+              {
+                "id": "a",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "b": {
+                "cron": "* * * * *"
+              },
+              "a": {
+                "interval": 30
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "lead": 0,
+            "recover": 300,
+            "lease": 240,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.run",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "stop_batches": 3
+          },
+          "expect": [
+            {
+              "at": "2026-08-18 03:01:00.000000 GMT+0000",
+              "covered": 1787022030.0,
+              "occurrences": [
+                {
+                  "id": "a",
+                  "due": "2026-08-18 03:00:30.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "a@1787022030.000000"
+                }
+              ]
+            },
+            {
+              "at": "2026-08-18 03:02:00.000000 GMT+0000",
+              "covered": 1787022060.0,
+              "occurrences": [
+                {
+                  "id": "a",
+                  "due": "2026-08-18 03:01:00.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "a@1787022060.000000"
+                },
+                {
+                  "id": "b",
+                  "due": "2026-08-18 03:01:00.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "b@1787022060.000000"
+                }
+              ]
+            },
+            {
+              "at": "2026-08-18 03:02:00.000000 GMT+0000",
+              "covered": 1787022060.0,
+              "occurrences": [
+                {
+                  "id": "a",
+                  "due": "2026-08-18 03:01:30.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "a@1787022090.000000"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an occurrence selected ahead is held until it is due",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "lead": 60,
+            "recover": 300,
+            "lease": 300,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.run",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "at": "2026-08-18 03:01:00.000000 GMT+0000",
+              "covered": null,
+              "occurrences": [
+                {
+                  "id": "fn",
+                  "due": "2026-08-18 03:01:00.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "fn@1787022060.000000"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "shifted schedules spread across the tick they fall in",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:00.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "a",
+                "version": "1"
+              },
+              {
+                "id": "b",
+                "version": "1"
+              },
+              {
+                "id": "c",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "a": {
+                "shifted": {
+                  "cron": "* * * * *"
+                },
+                "seconds": 0
+              },
+              "b": {
+                "shifted": {
+                  "cron": "* * * * *"
+                },
+                "seconds": 20
+              },
+              "c": {
+                "shifted": {
+                  "cron": "* * * * *"
+                },
+                "seconds": 40
+              }
+            }
+          },
+          "bind": "source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "lead": 60,
+            "lease": 300,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.run",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "stop_after": 3
+          },
+          "expect": [
+            {
+              "at": "2026-08-18 03:00:00.000000 GMT+0000",
+              "covered": null,
+              "occurrences": [
+                {
+                  "id": "a",
+                  "due": "2026-08-18 03:00:00.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "a@1787022000.000000"
+                }
+              ]
+            },
+            {
+              "at": "2026-08-18 03:00:20.000000 GMT+0000",
+              "covered": null,
+              "occurrences": [
+                {
+                  "id": "b",
+                  "due": "2026-08-18 03:00:20.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "b@1787022020.000000"
+                }
+              ]
+            },
+            {
+              "at": "2026-08-18 03:00:40.000000 GMT+0000",
+              "covered": null,
+              "occurrences": [
+                {
+                  "id": "c",
+                  "due": "2026-08-18 03:00:40.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "c@1787022040.000000"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the window is not committed until the held back runs have gone out",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:00.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.memory",
+          "args": {},
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "held",
+                "version": "1"
+              }
+            ],
+            "trigger": {
+              "shifted": {
+                "cron": "* * * * *"
+              },
+              "seconds": 30
+            }
+          },
+          "bind": "source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 60,
+            "lead": 60,
+            "lease": 300,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "held",
+              "due": "2026-08-18 03:00:30.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "held@1787022030.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "t",
+            "expiresAt": 1787022300.0,
+            "coveredUntil": 1787022060.0,
+            "syncedUntil": 1787022000.0
+          }
+        },
+        {
+          "op": "scheduler.run",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "at": "2026-08-18 03:01:30.000000 GMT+0000",
+              "covered": 1787022060.0,
+              "occurrences": [
+                {
+                  "id": "held",
+                  "due": "2026-08-18 03:01:30.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "held@1787022090.000000"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "",
+            "expiresAt": 0.0,
+            "coveredUntil": 1787022120.0,
+            "syncedUntil": 1787022060.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "a run cancelled while it waited is not handed over",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:00.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "trigger": {
+              "shifted": {
+                "cron": "* * * * *"
+              },
+              "seconds": 30
+            },
+            "payload": "id",
+            "phases": [
+              {
+                "rows": [
+                  {
+                    "id": "doomed",
+                    "version": "1"
+                  },
+                  {
+                    "id": "kept",
+                    "version": "1"
+                  }
+                ]
+              },
+              {
+                "from": "2026-08-18 03:00:10.000000",
+                "rows": [
+                  {
+                    "id": "kept",
+                    "version": "1"
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "sync": 5,
+            "lead": 60,
+            "lease": 300,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.run",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "at": "2026-08-18 03:00:30.000000 GMT+0000",
+              "covered": null,
+              "occurrences": [
+                {
+                  "id": "kept",
+                  "due": "2026-08-18 03:00:30.000000 GMT+0000",
+                  "payload": "kept",
+                  "version": "1",
+                  "key": "kept@1787022030.000000"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a deposed leader does not hand over what it was holding back",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:00.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.memory",
+          "args": {},
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "trigger": {
+              "shifted": {
+                "cron": "* * * * *"
+              },
+              "seconds": 30
+            },
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "steal": {
+              "at": "2026-08-18 03:00:10.000000",
+              "from": "leader",
+              "token": "successor",
+              "lease": 300
+            }
+          },
+          "bind": "source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 60,
+            "sync": 5,
+            "lead": 60,
+            "lease": 300,
+            "token": "leader"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.run",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "never": true
+          },
+          "expect": []
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "successor",
+            "expiresAt": 1787022310.0,
+            "coveredUntil": null,
+            "syncedUntil": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "numeric ids survive the schedule map",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "1",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "1": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "lead": 0,
+            "recover": 300,
+            "lease": 300,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 31.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "1",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "1@1787022060.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.is_current",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "id": "1",
+            "due": "2026-08-18 03:01:00",
+            "version": "1"
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.is_current",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "id": "1",
+            "due": "2026-08-18 03:01:00",
+            "version": "2"
+          },
+          "expect": false
+        },
+        {
+          "op": "scheduler.is_current",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "id": "01",
+            "due": "2026-08-18 03:01:00",
+            "version": "1"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "numeric ids sort as numbers within a moment",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "10",
+                "version": "1"
+              },
+              {
+                "id": "9",
+                "version": "1"
+              },
+              {
+                "id": "b",
+                "version": "1"
+              },
+              {
+                "id": "1e1",
+                "version": "1"
+              },
+              {
+                "id": "a",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "10": {
+                "cron": "* * * * *"
+              },
+              "9": {
+                "cron": "* * * * *"
+              },
+              "b": {
+                "cron": "* * * * *"
+              },
+              "1e1": {
+                "cron": "* * * * *"
+              },
+              "a": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "lead": 0,
+            "recover": 300,
+            "lease": 300,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 31.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "9",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "9@1787022060.000000"
+            },
+            {
+              "id": "10",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "10@1787022060.000000"
+            },
+            {
+              "id": "1e1",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "1e1@1787022060.000000"
+            },
+            {
+              "id": "a",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "a@1787022060.000000"
+            },
+            {
+              "id": "b",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "b@1787022060.000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a run loop delivers numeric ids",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "7",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "7": {
+                "interval": 30
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "lead": 0,
+            "recover": 300,
+            "lease": 300,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.run",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "at": "2026-08-18 03:01:00.000000 GMT+0000",
+              "covered": 1787022030.0,
+              "occurrences": [
+                {
+                  "id": "7",
+                  "due": "2026-08-18 03:00:30.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "7@1787022030.000000"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "occurrence key is stable across redelivery",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 95.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:02:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022120.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:02:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022120.000000"
+            }
+          ]
+        },
+        {
+          "op": "occurrence.key",
+          "args": {
+            "id": "fn",
+            "due": "2026-08-18 03:01:00",
+            "payload": "payload-a"
+          },
+          "expect": "fn@1787022060.000000"
+        },
+        {
+          "op": "occurrence.key",
+          "args": {
+            "id": "fn",
+            "due": "2026-08-18 03:01:00",
+            "payload": "payload-b"
+          },
+          "expect": "fn@1787022060.000000"
+        },
+        {
+          "op": "occurrence.key",
+          "args": {
+            "id": "fn",
+            "due": "2026-08-18 03:02:00"
+          },
+          "expect": "fn@1787022120.000000"
+        },
+        {
+          "op": "occurrence.key",
+          "args": {
+            "id": "fn",
+            "due": "1969-12-31 23:59:59.500000"
+          },
+          "expect": "fn@-1.500000"
+        }
+      ]
+    },
+    {
+      "name": "golden signals are recorded",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-01-01 00:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "minutely",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "minutely": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "lead": 0,
+            "recover": 300,
+            "lease": 240,
+            "token": "t",
+            "telemetry": true
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.run",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "at": "2026-01-01 00:02:00.000000 GMT+0000",
+              "covered": 1767225660.0,
+              "occurrences": [
+                {
+                  "id": "minutely",
+                  "due": "2026-01-01 00:01:00.000000 GMT+0000",
+                  "payload": null,
+                  "version": "1",
+                  "key": "minutely@1767225660.000000"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "scheduler.telemetry",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "counters": {
+              "schedule.dispatch.total": [
+                1
+              ]
+            },
+            "histograms": {
+              "schedule.reconcile.duration": 4,
+              "schedule.tick.duration": 2,
+              "schedule.dispatch.delay": [
+                60.0
+              ]
+            },
+            "gauges": {
+              "schedule.entries": [
+                1,
+                1,
+                1
+              ],
+              "schedule.lag": [
+                0.0,
+                30.0,
+                60.0
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a failing handler counts a dispatch error and skips commit",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-01-01 00:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "minutely",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "minutely": {
+                "cron": "* * * * *"
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "lead": 0,
+            "recover": 300,
+            "lease": 240,
+            "token": "t",
+            "telemetry": true
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.run",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "throw": {
+              "class": "RuntimeException",
+              "message": "downstream unavailable"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "downstream unavailable"
+            }
+          }
+        },
+        {
+          "op": "scheduler.telemetry",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "counters": {
+              "schedule.error.total": [
+                1
+              ]
+            },
+            "histograms": {
+              "schedule.reconcile.duration": 4,
+              "schedule.tick.duration": 2
+            },
+            "gauges": {
+              "schedule.entries": [
+                1,
+                1,
+                1
+              ],
+              "schedule.lag": [
+                0.0,
+                30.0,
+                60.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "minutely",
+              "due": "2026-01-01 00:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "minutely@1767225660.000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rejects non-positive interval",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [],
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "bind": "empty",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "empty"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 0
+          },
+          "bind": "s",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Tick interval must be at least 1 second"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a lease shorter than two ticks",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [],
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "bind": "empty",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "empty"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 30,
+            "lease": 45
+          },
+          "bind": "s",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "A leadership claim must outlive at least two ticks, delivery included"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects non-positive sync cadence",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [],
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "bind": "empty",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "empty"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "sync": 0
+          },
+          "bind": "s",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Sync cadence must be at least 1 second"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a negative relist cadence",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [],
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "bind": "empty",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "empty"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "snapshot": -1
+          },
+          "bind": "s",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Snapshot cadence must not be negative"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a negative lead time",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [],
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "bind": "empty",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "empty"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "lead": -1
+          },
+          "bind": "s",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Lead time and recovery ceiling must not be negative"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a negative recovery ceiling",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [],
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "bind": "empty",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "empty"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "recover": -1
+          },
+          "bind": "s",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Lead time and recovery ceiling must not be negative"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "accepts a lease of exactly two ticks",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [],
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "bind": "empty",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "empty"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 30,
+            "lease": 60,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        }
+      ]
+    },
+    {
+      "name": "stop outside a run changes nothing",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "1"
+              }
+            ],
+            "triggers": {
+              "fn": {
+                "interval": 60
+              }
+            }
+          },
+          "bind": "s_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "s_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 1,
+            "lead": 0,
+            "recover": 300,
+            "lease": 60,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.stop",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "1",
+              "key": "fn@1787022060.000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a default token is random but present",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [],
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "bind": "empty",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.memory",
+          "args": {},
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "empty"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/token"
+            ],
+            "reason": "the default token is random"
+          },
+          "expect": {
+            "token": "<masked>",
+            "expiresAt": 1787022033.0,
+            "coveredUntil": 1787022030.0,
+            "syncedUntil": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "a test clock advanced beyond any date fails",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 1e+300
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "The test clock holds an unrepresentable timestamp"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a test clock sleeps by advancing",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-17 15:59:59.941000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.sleep",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 0.059
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            }
+          },
+          "expect": "2026-08-17 16:00:00.000000 GMT+0000"
+        },
+        {
+          "op": "clock.sleep",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": -1.5
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            }
+          },
+          "expect": "2026-08-17 15:59:58.500000 GMT+0000"
+        }
+      ]
+    }
+  ]
+}
