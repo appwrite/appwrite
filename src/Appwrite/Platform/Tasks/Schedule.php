@@ -107,9 +107,9 @@ class Schedule extends Action
         // would otherwise leave the process healthy with inactive projects never maintained.
         $cycle = ScheduleMaintenance::cycle();
 
-        $this->loop(ScheduleFunctions::getName(), fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
-        $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
-        $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks));
+        $this->loop(ScheduleFunctions::getName(), fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
+        $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
+        $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $pools));
         $this->loop(ScheduleMaintenance::getName(), fn () => (new ScheduleMaintenance())->run(ScheduleMaintenance::loop($cycle, $publisherForMaintenance, $telemetry), $pools));
 
         if ($publisherForStatsResources !== null && $usageConnection !== null) {
@@ -124,17 +124,28 @@ class Schedule extends Action
     private function loop(string $name, \Closure $task): void
     {
         Co::create(function () use ($name, $task): void {
-            Span::init('schedule.combined.loop');
-            Span::add('loop', $name);
-            $error = null;
+            // A task that throws (a lost Redis connection ends a scheduler
+            // loop) starts again, as its own container would be restarted.
+            while (true) {
+                // Held by reference: the task's own spans replace the current one.
+                $span = Span::init('schedule.combined.loop');
+                Span::add('loop', $name);
+                $error = null;
 
-            try {
-                $task();
-            } catch (\Throwable $th) {
-                $error = $th;
-                Console::error('schedule: ' . $name . ' loop stopped: ' . $th->getMessage());
-            } finally {
-                Span::current()?->finish(error: $error);
+                try {
+                    $task();
+                } catch (\Throwable $th) {
+                    $error = $th;
+                } finally {
+                    $span->finish(error: $error);
+                }
+
+                if ($error === null) {
+                    return;
+                }
+
+                Console::error('schedule: ' . $name . ' loop failed, restarting in 5s: ' . $error->getMessage());
+                sleep(5);
             }
         });
     }
