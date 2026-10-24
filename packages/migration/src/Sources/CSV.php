@@ -20,6 +20,19 @@ use Utopia\Storage\DeviceType;
 
 class CSV extends Source
 {
+    private const TEXT_TYPES = [
+        Column::TYPE_STRING,
+        Column::TYPE_VARCHAR,
+        Column::TYPE_TEXT,
+        Column::TYPE_MEDIUMTEXT,
+        Column::TYPE_LONGTEXT,
+    ];
+
+    /**
+     * Rejected rows listed in the errors; every one is still counted.
+     */
+    private const MAX_ROW_ERRORS = 100;
+
     private const ALLOWED_INTERNALS = [
         '$id' => true,
         '$permissions' => true,
@@ -41,6 +54,8 @@ class CSV extends Source
     private Reader $database;
 
     private bool $downloaded = false;
+
+    private int $rejectedRows = 0;
 
     public function __construct(
         string $resourceId,
@@ -223,6 +238,7 @@ class CSV extends Source
         $columnTypes = [];
         $requiredColumns = [];
         $manyToManyKeys = [];
+        $textKeys = [];
 
         foreach ($columns as $column) {
             $key = $column['key'];
@@ -255,9 +271,14 @@ class CSV extends Source
             if ($isArray && $type !== Column::TYPE_RELATIONSHIP) {
                 $arrayKeys[$key] = true;
             }
+
+            // Formats (email, enum, ip, url) have no empty value, so they are not text here.
+            if (\in_array($type, self::TEXT_TYPES, true) && empty($column['format'])) {
+                $textKeys[$key] = true;
+            }
         }
 
-        $this->withCsvStream(function ($stream, $delimiter) use ($columnTypes, $databaseType, $requiredColumns, $manyToManyKeys, $arrayKeys, $tablePayload, $batchSize) {
+        $this->withCsvStream(function ($stream, $delimiter) use ($columnTypes, $databaseType, $requiredColumns, $manyToManyKeys, $arrayKeys, $textKeys, $tablePayload, $batchSize) {
             $headers = \fgetcsv($stream, 0, $delimiter, '"', '"');
 
             if (!\is_array($headers) || \count($headers) === 0) {
@@ -267,108 +288,111 @@ class CSV extends Source
             $this->validateCSVHeaders($headers, $columnTypes, $requiredColumns);
 
             $buffer = [];
+            $rowNumber = 1; // The header is row 1, as in a spreadsheet.
 
-            while (($row = \fgetcsv($stream, 0, $delimiter, '"', '"')) !== false) {
-                if (\count($row) !== \count($headers)) {
-                    throw new \Exception('CSV row does not match the number of header columns.', Exception::CODE_VALIDATION);
+            while (true) {
+                $offset = \ftell($stream);
+                $row = \fgetcsv($stream, 0, $delimiter, '"', '"');
+                if ($row === false) {
+                    break;
                 }
 
-                $data = \array_combine($headers, $row);
-                if ($data === false) {
+                $rowNumber++;
+
+                if ($row === [null]) {
+                    continue; // Blank line
+                }
+
+                if (\count($row) !== \count($headers)) {
+                    $this->rejectRow($databaseType, $tablePayload, null, "Row $rowNumber has " . \count($row) . ' columns, but the header has ' . \count($headers) . '.');
                     continue;
                 }
 
+                // PDO drops a whole batch without an error when one value is not UTF-8.
+                if (!\mb_check_encoding($row, 'UTF-8')) {
+                    $this->rejectRow($databaseType, $tablePayload, null, "Row $rowNumber is not valid UTF-8.");
+                    continue;
+                }
+
+                $data = \array_combine($headers, $row);
                 $parsedData = $data;
+                $quoted = null;
 
-                foreach ($data as $key => $value) {
-                    $parsedValue = \trim($value);
-                    $type = $columnTypes[$key] ?? null;
+                /**
+                 * Parsing logic for best compatibility with spec and 3rd party tools.
+                 * - 'null' unquoted literal is converted to null.
+                 * - text keeps its whitespace and an empty cell stays an empty string.
+                 * - an empty cell of any other column is null.
+                 * - other values are parsed as per their type; a value that does not parse rejects the row.
+                 */
+                try {
+                    foreach ($headers as $index => $key) {
+                        $type = $columnTypes[$key] ?? null;
 
-                    if (!isset($type) && $key !== '$permissions') {
-                        // Skip unknown columns
-                        continue;
-                    }
-
-                    if (isset($manyToManyKeys[$key])) {
-                        if ($parsedValue === '') {
-                            $parsedData[$key] = [];
-                        } else {
-                            // Split on commas, trim whitespace, drop empty tokens, and reindex
-                            $ids = \explode(',', $parsedValue);
-                            $ids = \array_map(\trim(...), $ids);
-                            $ids = \array_filter($ids, static fn ($id) => $id !== '');
-                            $parsedData[$key] = \array_values($ids);
+                        if (!isset($type) && $key !== '$permissions') {
+                            // Skip unknown columns
+                            continue;
                         }
-                        continue;
-                    }
 
-                    if (isset($arrayKeys[$key])) {
-                        if ($parsedValue === '') {
-                            $parsedData[$key] = [];
-                        } else {
-                            // Try to decode as JSON first
-                            $arrayValues = \json_decode($parsedValue, true);
+                        $parsedValue = isset($textKeys[$key]) ? $row[$index] : \trim($row[$index]);
 
-                            // If JSON decode fails, fall back to comma-separated parsing
-                            if (\json_last_error() !== JSON_ERROR_NONE) {
-                                // Remove empty strings from comma-separated parsing
-                                $arrayValues = \str_getcsv($parsedValue, ',', '"', '"');
-                                $arrayValues = \array_map(\trim(...), $arrayValues);
-                                $arrayValues = \array_filter($arrayValues, fn ($item) => $item !== '');
-                                $arrayValues = \array_values($arrayValues); // Re-index array
+                        if (isset($manyToManyKeys[$key])) {
+                            if ($parsedValue === '') {
+                                $parsedData[$key] = [];
+                            } else {
+                                // Split on commas, trim whitespace, drop empty tokens, and reindex
+                                $ids = \explode(',', $parsedValue);
+                                $ids = \array_map(\trim(...), $ids);
+                                $ids = \array_filter($ids, static fn ($id) => $id !== '');
+                                $parsedData[$key] = \array_values($ids);
                             }
-
-                            if (!\is_array($arrayValues)) {
-                                throw new \Exception("Invalid array format for column '$key': $parsedValue", Exception::CODE_VALIDATION);
-                            }
-
-                            $parsedData[$key] = array_map(function ($item) use ($type) {
-                                return match ($type) {
-                                    Column::TYPE_INTEGER,Column::TYPE_BIG_INT => is_numeric($item) ? (int)$item : null,
-                                    Column::TYPE_FLOAT => is_numeric($item) ? (float)$item : null,
-                                    Column::TYPE_BOOLEAN => filter_var($item, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
-                                    default => $item,
-                                };
-                            }, $arrayValues);
+                            continue;
                         }
-                        continue;
+
+                        if (\trim($parsedValue) === 'null') {
+                            $quoted ??= $this->quotedFields($stream, $offset, $delimiter);
+
+                            if (!($quoted[$index] ?? false)) {
+                                $parsedData[$key] = null;
+                                continue;
+                            }
+                        }
+
+                        if (isset($arrayKeys[$key])) {
+                            if ($parsedValue === '') {
+                                $parsedData[$key] = [];
+                            } else {
+                                // Try to decode as JSON first
+                                $arrayValues = \json_decode($parsedValue, true);
+
+                                // If JSON decode fails, fall back to comma-separated parsing
+                                if (\json_last_error() !== JSON_ERROR_NONE) {
+                                    // Remove empty strings from comma-separated parsing
+                                    $arrayValues = \str_getcsv($parsedValue, ',', '"', '"');
+                                    $arrayValues = \array_map(\trim(...), $arrayValues);
+                                    $arrayValues = \array_filter($arrayValues, fn ($item) => $item !== '');
+                                    $arrayValues = \array_values($arrayValues); // Re-index array
+                                }
+
+                                if (!\is_array($arrayValues)) {
+                                    throw new \InvalidArgumentException("'$key' must be an array");
+                                }
+
+                                $parsedData[$key] = \array_map(fn ($item) => $this->parseValue($key, $item, $type), $arrayValues);
+                            }
+                            continue;
+                        }
+
+                        if ($parsedValue === '') {
+                            $parsedData[$key] = isset($textKeys[$key]) ? '' : null;
+                            continue;
+                        }
+
+                        $parsedData[$key] = $this->parseValue($key, $parsedValue, $type);
                     }
-
-                    /**
-                     * Parsing logic for best compatibility with spec and 3rd party tools.
-                     * - 'null' unquoted literal is converted to null.
-                     * - missing strings stay empty strings for best compatibility.
-                     * - missing numbers, booleans, and datetime's are converted to null.
-                     * - other values are parsed as per their type.
-                     */
-
-                    $parsedData[$key] = match ($parsedValue) {
-                        'null' => null, // 'null' string is converted to null
-                        '' => match ($type) {
-                            Column::TYPE_INTEGER,
-                            Column::TYPE_BIG_INT,
-                            Column::TYPE_FLOAT,
-                            Column::TYPE_BOOLEAN,
-                            Column::TYPE_DATETIME,
-                            Column::TYPE_RELATIONSHIP => null, // primitive types default to null
-                            default => '', // but empty string stays empty string for compatibility
-                        },
-                        default => match ($type) {
-                            Column::TYPE_INTEGER, Column::TYPE_BIG_INT => \is_numeric($parsedValue) ? (int)$parsedValue : null,
-                            Column::TYPE_FLOAT => \is_numeric($parsedValue) ? (float)$parsedValue : null,
-                            Column::TYPE_BOOLEAN => \filter_var(
-                                $parsedValue,
-                                filter: FILTER_VALIDATE_BOOLEAN,
-                                options: FILTER_NULL_ON_FAILURE
-                            ),
-                            Column::TYPE_POINT,
-                            Column::TYPE_LINE,
-                            Column::TYPE_POLYGON,
-                            Column::TYPE_VECTOR,
-                            Column::TYPE_OBJECT => \is_string($parsedValue) ? json_decode($parsedValue, true) : null,
-                            default => $parsedValue,
-                        },
-                    };
+                } catch (\InvalidArgumentException $e) {
+                    $this->rejectRow($databaseType, $tablePayload, $data['$id'] ?? null, "Row $rowNumber: {$e->getMessage()}.");
+                    continue;
                 }
 
                 $rowId = $parsedData['$id'] ?? 'unique()';
@@ -395,6 +419,132 @@ class CSV extends Source
                 $this->callback($buffer);
             }
         });
+    }
+
+    /**
+     * @throws \InvalidArgumentException when the value is not of the column's type.
+     */
+    private function parseValue(string $key, mixed $value, ?string $type): mixed
+    {
+        switch ($type) {
+            case Column::TYPE_INTEGER:
+            case Column::TYPE_BIG_INT:
+                if (\is_numeric($value)) {
+                    $number = $value + 0;
+
+                    // Spreadsheets can write whole numbers as 1.0 or 1e3.
+                    if (\is_int($number) || (\floor($number) === $number && \abs($number) < 2 ** 63)) {
+                        return (int) $number;
+                    }
+                }
+
+                throw new \InvalidArgumentException("'$key' must be an integer");
+
+            case Column::TYPE_FLOAT:
+                if (\is_numeric($value)) {
+                    return (float) $value;
+                }
+
+                throw new \InvalidArgumentException("'$key' must be a number");
+
+            case Column::TYPE_BOOLEAN:
+                $boolean = \is_bool($value) ? $value : \filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                if ($boolean !== null) {
+                    return $boolean;
+                }
+
+                throw new \InvalidArgumentException("'$key' must be true or false");
+
+            case Column::TYPE_POINT:
+            case Column::TYPE_LINE:
+            case Column::TYPE_POLYGON:
+            case Column::TYPE_VECTOR:
+            case Column::TYPE_OBJECT:
+                $decoded = \json_decode((string) $value, true);
+                if (\json_last_error() === JSON_ERROR_NONE) {
+                    return $decoded;
+                }
+
+                throw new \InvalidArgumentException("'$key' must be JSON");
+
+            default:
+                return $value;
+        }
+    }
+
+    /**
+     * Report a row that is not imported, and count it as an error.
+     *
+     * @param array<string, mixed> $table
+     */
+    private function rejectRow(string $databaseType, array $table, ?string $rowId, string $message): void
+    {
+        $row = Appwrite::getRecord($databaseType, [
+            'id' => $rowId ?? '',
+            'table' => $table,
+            'data' => [],
+            'permissions' => [],
+        ]);
+        $row->setStatus(UtopiaResource::STATUS_ERROR, $message);
+        $this->cache->update($row);
+
+        // A malformed file would otherwise add an error for each of its rows.
+        if (++$this->rejectedRows > self::MAX_ROW_ERRORS) {
+            return;
+        }
+
+        $this->addError(new Exception(
+            UtopiaResource::TYPE_ROW,
+            Transfer::GROUP_DATABASES,
+            resourceId: $rowId,
+            message: $message,
+            code: Exception::CODE_VALIDATION,
+        ));
+    }
+
+    /**
+     * Whether each field of the record at $offset was enclosed in quotes, which fgetcsv() does not tell.
+     *
+     * @param resource $stream
+     * @return array<int, bool>
+     */
+    private function quotedFields($stream, int $offset, string $delimiter): array
+    {
+        $end = (int) \ftell($stream);
+        \fseek($stream, $offset);
+        $record = (string) \fread($stream, \max(1, $end - $offset));
+        \fseek($stream, $end);
+
+        $quoted = [];
+        $position = 0;
+
+        while (true) {
+            // Like fgetcsv(), skip whitespace before an opening quote.
+            $start = $position + \strspn($record, \str_replace($delimiter, '', " \t"), $position);
+            $isQuoted = ($record[$start] ?? '') === '"';
+            $quoted[] = $isQuoted;
+
+            if ($isQuoted) {
+                // Find the closing quote, stepping over escaped ("") ones.
+                $position = $start + 1;
+                while (($position = \strpos($record, '"', $position)) !== false && ($record[$position + 1] ?? '') === '"') {
+                    $position += 2;
+                }
+
+                if ($position === false) {
+                    break;
+                }
+            }
+
+            $position = \strpos($record, $delimiter, $position);
+            if ($position === false) {
+                break;
+            }
+
+            $position++;
+        }
+
+        return $quoted;
     }
 
     /**
@@ -497,6 +647,11 @@ class CSV extends Source
         }
 
         $delimiter = $this->delimiter($stream);
+
+        // Excel's "CSV UTF-8" starts with a byte order mark, which would become part of the first header.
+        if (\fread($stream, 3) !== "\xEF\xBB\xBF") {
+            \rewind($stream);
+        }
 
         try {
             $callback($stream, $delimiter);
