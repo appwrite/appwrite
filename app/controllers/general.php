@@ -296,9 +296,17 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         // getHeaders() follows PSR-7 and returns each header as a list of values;
         // collapse to single-line strings for the function/site header map below.
+        // Session cookies may be scoped to a parent of the functions/sites domain; never forward them to user code.
+        $strippedCookies = [COOKIE_NAME_PREVIEW];
+        foreach (\array_keys($request->getCookieParams()) as $name) {
+            if (\str_starts_with((string) $name, 'a_session_')) {
+                $strippedCookies[] = $name;
+            }
+        }
+
         $requestHeaders = \array_map(
             static fn (array $values) => \implode(', ', $values),
-            $request->getHeadersWithoutCookies([COOKIE_NAME_PREVIEW, 'a_session_console', 'a_session_console_legacy'])
+            $request->getHeadersWithoutCookies($strippedCookies)
         );
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
