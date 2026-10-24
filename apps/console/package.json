@@ -158,7 +158,7 @@
     "tw-animate-css": "^1.3.6",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^5.1.4",
-    "zod": "^4.1.11"
+    "zod": "^4.6.7"
   },
   "overrides": {
     "react": "19.1.1",
