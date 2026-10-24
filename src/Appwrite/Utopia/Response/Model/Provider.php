@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Provider extends Model
 {
@@ -54,7 +55,7 @@ class Provider extends Model
             ])
             ->addRule('credentials', [
                 'type' => self::TYPE_JSON,
-                'description' => 'Provider credentials.',
+                'description' => 'Provider credentials. Secret values are write-only and never returned.',
                 'default' => [],
                 'example' => [
                     'key' => '123456789'
@@ -69,6 +70,20 @@ class Provider extends Model
                     'from' => 'sender-email@mydomain'
                 ],
             ]);
+    }
+
+    public function filter(Document $document): Document
+    {
+        // Secrets are write-only; identifiers such as bundleId, teamId or region stay readable.
+        $credentials = $document->getAttribute('credentials');
+        if (\is_array($credentials)) {
+            foreach (['apiKey', 'apiSecret', 'authKey', 'authToken', 'password', 'secretKey', 'serviceAccountJSON'] as $secret) {
+                unset($credentials[$secret]);
+            }
+            $document->setAttribute('credentials', $credentials);
+        }
+
+        return $document;
     }
 
     /**
