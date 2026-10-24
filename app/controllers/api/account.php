@@ -1651,8 +1651,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
-                    if (!$user->getAttribute('emailVerification', false)) {
-                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user));
+                    // Claimed under the row lock an email change takes, and only while the account still holds this address
+                    if (!$user->getAttribute('emailVerification', false) && !$authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $email))) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     // The provider verified this exact address
                     $user->setAttribute('emailVerification', true);

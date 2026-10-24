@@ -1081,6 +1081,16 @@ trait KeysBase
         $this->assertSame(200, $read['headers']['status-code']);
         $this->assertSame('', $read['body']['secret']);
 
+        $list = $this->client->call(Client::METHOD_GET, '/project/keys', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $reader['body']['secret'],
+        ]);
+        $this->assertSame(200, $list['headers']['status-code']);
+        $listed = \array_values(\array_filter($list['body']['keys'], fn (array $key): bool => $key['$id'] === $narrow['body']['$id']));
+        $this->assertCount(1, $listed);
+        $this->assertSame('', $listed[0]['secret']);
+
         $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $reader['body']['$id'], $projectHeaders);
         $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $narrow['body']['$id'], $projectHeaders);
 

@@ -203,13 +203,15 @@ class User extends Document
      *
      * Used when the verified owner of the email claims an account that was
      * registered with it but never verified, so nobody else keeps access.
-     * Persists the revocation in one transaction and mirrors it on `$user`.
+     * Persists the revocation in one transaction under the user row lock an email
+     * change takes, and mirrors it on `$user`. Returns false, changing nothing,
+     * when the account no longer holds `$email` unverified.
      */
-    public static function revokeCredentials(Database $dbForProject, Document $user): void
+    public static function revokeCredentials(Database $dbForProject, Document $user, string $email): bool
     {
         $sequence = $user->getSequence();
         if ($sequence === '' || $sequence === null || $user->getAttribute('status') === false) {
-            return;
+            return true;
         }
 
         $hash = new Argon2();
@@ -225,7 +227,16 @@ class User extends Document
             'mfaRecoveryCodes' => [],
         ];
 
-        $dbForProject->withTransaction(function () use ($dbForProject, $user, $sequence, $attributes) {
+        $revoked = $dbForProject->withTransaction(function () use ($dbForProject, $user, $email, $sequence, $attributes): bool {
+            $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+            if (
+                $current->isEmpty()
+                || $current->getAttribute('emailVerification', false)
+                || \strtolower((string) $current->getAttribute('email')) !== \strtolower($email)
+            ) {
+                return false;
+            }
+
             foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
                 $dbForProject->deleteDocuments($collection, [
                     Query::equal('userInternalId', [$sequence]),
@@ -246,7 +257,13 @@ class User extends Document
             ]));
 
             $dbForProject->updateDocument('users', $user->getId(), new Document($attributes));
+
+            return true;
         });
+
+        if (!$revoked) {
+            return false;
+        }
 
         $user
             ->setAttributes($attributes)
@@ -256,5 +273,7 @@ class User extends Document
             ->setAttribute('authenticators', [])
             ->setAttribute('keys', [])
             ->setAttribute('targets', []);
+
+        return true;
     }
 }
