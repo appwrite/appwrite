@@ -111,6 +111,50 @@ final class VCSConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['installationId']);
     }
 
+    public function testGitHubCallbackRejectsUnverifiedInstallation(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $success = 'http://localhost/console/project-' . $projectId . '/success';
+        $failure = 'http://localhost/console/project-' . $projectId . '/failure';
+        $state = (string) \json_encode([
+            'projectId' => $projectId,
+            'success' => $success,
+            'failure' => $failure,
+        ]);
+        $before = $this->countGitHubInstallationsHelper($projectId);
+
+        /**
+         * Test for FAILURE
+         */
+        $missingCode = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'installation_id' => $this->providerInstallationId,
+            'setup_action' => 'install',
+            'state' => $state,
+        ], true, false);
+
+        $this->assertSame(301, $missingCode['headers']['status-code']);
+        $this->assertStringStartsWith($failure . '?error=', (string) $missingCode['headers']['location']);
+
+        $this->assertSame($before, $this->countGitHubInstallationsHelper($projectId));
+    }
+
+    private function countGitHubInstallationsHelper(string $projectId): int
+    {
+        $installations = $this->client->call(Client::METHOD_GET, '/vcs/installations', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('provider', ['github'])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $installations['headers']['status-code']);
+
+        return $installations['body']['total'];
+    }
+
     public function testGetInstallation(): void
     {
         $installationId = $this->setupInstallation();
