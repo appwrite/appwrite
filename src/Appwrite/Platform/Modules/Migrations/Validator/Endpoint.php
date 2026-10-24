@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Migrations\Validator;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Allowlist;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
 use Utopia\System\System;
 
@@ -31,5 +32,21 @@ class Endpoint extends PublicURL
         }
 
         return $this->getResolve();
+    }
+
+    /**
+     * An address to connect to a source database host on. Connect to the
+     * returned address, not the host, so DNS cannot answer differently at
+     * connect time.
+     *
+     * @throws Exception
+     */
+    public function address(string $host): string
+    {
+        try {
+            return (new PublicHostname(Allowlist::parse(System::getEnv('_APP_MIGRATIONS_ALLOWED_HOSTS', ''))))->address($host);
+        } catch (\InvalidArgumentException $exception) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `databaseHost`: ' . $exception->getMessage());
+        }
     }
 }

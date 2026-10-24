@@ -279,7 +279,7 @@ class Migrations extends Action
             Supabase::getName() => new Supabase(
                 $credentials['endpoint'],
                 $credentials['apiKey'],
-                $credentials['databaseHost'],
+                (new Endpoint())->address($credentials['databaseHost']),
                 'postgres',
                 $credentials['username'],
                 $credentials['password'],
@@ -319,7 +319,11 @@ class Migrations extends Action
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
 
-        if ($isAppwriteSource && $credentials['endpoint'] !== $this->getInternalEndpoint()) {
+        // Every source other than this deployment's own endpoint is held to public addresses, on each connection it makes
+        if (
+            \in_array($source, [Supabase::getName(), NHost::getName()], true)
+            || ($isAppwriteSource && $credentials['endpoint'] !== $this->getInternalEndpoint())
+        ) {
             $migrationSource->setResolver((new Endpoint())->resolve(...));
         }
 

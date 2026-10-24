@@ -318,6 +318,42 @@ trait MigrationsBase
         }
     }
 
+    public function testSupabaseMigrationRejectsPrivateHosts(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        foreach ([
+            ['http://169.254.169.254', 'db.appwrite.io'],
+            ['http://localhost', 'db.appwrite.io'],
+            ['https://appwrite.io', '127.0.0.1'],
+            ['https://appwrite.io', '169.254.169.254'],
+            ['https://appwrite.io', 'localhost'],
+        ] as [$endpoint, $databaseHost]) {
+            $params = [
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $endpoint,
+                'apiKey' => 'key',
+                'databaseHost' => $databaseHost,
+                'username' => 'postgres',
+                'password' => 'password',
+            ];
+
+            $report = $this->client->call(Client::METHOD_GET, '/migrations/supabase/report', $headers, $params);
+
+            $this->assertSame(400, $report['headers']['status-code'], "Report accepted {$endpoint} {$databaseHost}");
+            $this->assertSame('general_argument_invalid', $report['body']['type']);
+
+            $migration = $this->client->call(Client::METHOD_POST, '/migrations/supabase', $headers, $params);
+
+            $this->assertSame(400, $migration['headers']['status-code'], "Migration accepted {$endpoint} {$databaseHost}");
+            $this->assertSame('general_argument_invalid', $migration['body']['type']);
+        }
+    }
+
     public function testRetryAppwriteMigrationWithStoredPrivateEndpoint(): void
     {
         $headers = [

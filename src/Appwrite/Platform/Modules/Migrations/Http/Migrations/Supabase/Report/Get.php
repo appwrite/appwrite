@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Report;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Migrations\Validator\Endpoint;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -70,8 +71,16 @@ class Get extends Action
         int $port,
         Response $response
     ): void {
+        // Every connection the source makes is held to public addresses
+        $validator = new Endpoint();
+        if (!$validator->isValid($endpoint)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `endpoint`: ' . $validator->getDescription());
+        }
+        $databaseAddress = $validator->address($databaseHost);
+
         try {
-            $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
+            $supabase = (new Supabase($endpoint, $apiKey, $databaseAddress, 'postgres', $username, $password, $port))
+                ->setResolver($validator->resolve(...));
             $report = $supabase->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(

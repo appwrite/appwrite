@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\NHost\Report;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Migrations\Validator\Endpoint;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -72,7 +73,9 @@ class Get extends Action
         Response $response
     ): void {
         try {
-            $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
+            // Every HTTP connection the source makes is held to public addresses
+            $nhost = (new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port))
+                ->setResolver((new Endpoint())->resolve(...));
             $report = $nhost->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(
