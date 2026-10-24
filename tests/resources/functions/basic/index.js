@@ -19,6 +19,7 @@ module.exports = async(context) => {
     context.log('method-is-' + (context.req.method ?? '').toLowerCase());
     context.log('path-is-' + (context.req.path ?? ''));
     context.log('user-is-' + (context.req.headers['x-appwrite-user-id'] ?? ''));
+    context.log('client-ip-is-' + (context.req.headers['x-appwrite-client-ip'] ?? ''));
     
     const statusCode = context.req.query['code'] || '200';
 

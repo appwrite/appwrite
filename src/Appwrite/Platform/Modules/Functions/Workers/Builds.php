@@ -13,11 +13,12 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Platform\Modules\Compute\Base as ComputeBase;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\VCS\Adapter\Git\GitHub;
 use Appwrite\Vcs\Comment;
+use Appwrite\Vcs\Validator\Directory;
 use Exception;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -47,6 +48,47 @@ use Utopia\System\System;
 
 class Builds extends Action
 {
+    /**
+     * Resolves a repository directory inside its checkout, refusing symbolic
+     * links and anything that resolves outside it.
+     *
+     * @throws Exception
+     */
+    private function confine(string $checkout, string $directory, bool $create = false): string
+    {
+        $root = \realpath($checkout);
+        if ($root === false) {
+            throw new Exception('Repository checkout is missing.');
+        }
+
+        $path = $root;
+        foreach (\explode('/', $directory) as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+            if ($segment === '..') {
+                throw new Exception('Root directory must stay inside the repository.');
+            }
+
+            $path .= '/' . $segment;
+            if (\is_link($path)) {
+                throw new Exception('Root directory "' . $directory . '" must not be a symbolic link.');
+            }
+            if (!\file_exists($path) && (!$create || !\mkdir($path))) {
+                throw new Exception('Root directory "' . $directory . '" not found in the repository.');
+            }
+            if (!\is_dir($path)) {
+                throw new Exception('Root directory "' . $directory . '" must be a directory.');
+            }
+        }
+
+        if (\realpath($path) !== $path) {
+            throw new Exception('Root directory must stay inside the repository.');
+        }
+
+        return $path;
+    }
+
     public static function getName(): string
     {
         return 'builds';
@@ -312,6 +354,9 @@ class Builds extends Action
                 $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
+                if (!(new Directory(\PHP_INT_MAX))->isValid($templateRootDirectory)) {
+                    throw new \Exception('Template root directory must stay inside the template repository.');
+                }
                 $templateRootDirectory = \rtrim($templateRootDirectory, '/');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '.');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '/');
@@ -333,8 +378,7 @@ class Builds extends Action
 
                     Console::execute('find ' . \escapeshellarg($tmpTemplateDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
 
-                    // Ensure directories
-                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
+                    $tarParamDirectory = $this->confine($tmpTemplateDirectory, $templateRootDirectory, true);
 
                     $tmpPathFile = $tmpTemplateDirectory . '/code.tar.gz';
 
@@ -344,7 +388,6 @@ class Builds extends Action
                         $tmpTemplateDirectory .= '/';
                     }
 
-                    $tarParamDirectory = $tmpTemplateDirectory . (empty($templateRootDirectory) ? '' : '/' . $templateRootDirectory);
                     Console::execute(self::archiveCommand($tmpPathFile, $tarParamDirectory), '', $stdout, $stderr);
 
                     $source = $device->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
@@ -377,6 +420,9 @@ class Builds extends Action
                 // VCS and VCS+Temaplte
                 $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
                 $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
+                if (!(new Directory(\PHP_INT_MAX))->isValid($rootDirectory)) {
+                    throw new \Exception('Root directory must stay inside the repository.');
+                }
                 $rootDirectory = \rtrim($rootDirectory, '/');
                 $rootDirectory = \ltrim($rootDirectory, '.');
                 $rootDirectory = \ltrim($rootDirectory, '/');
@@ -418,8 +464,11 @@ class Builds extends Action
                 // Local refactoring for function folder with spaces
                 if (str_contains($rootDirectory, ' ')) {
                     $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
-                    $from = $tmpDirectory . '/' . $rootDirectory;
-                    $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
+                    $from = $this->confine($tmpDirectory, $rootDirectory);
+                    $to = $this->confine($tmpDirectory, \dirname($rootDirectoryWithoutSpaces)) . '/' . \basename($rootDirectoryWithoutSpaces);
+                    if (\file_exists($to) || \is_link($to)) {
+                        throw new \Exception('Root directory "' . $rootDirectoryWithoutSpaces . '" already exists in the repository.');
+                    }
                     $exit = Console::execute('mv ' . \escapeshellarg($from) . ' ' . \escapeshellarg($to), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
@@ -435,6 +484,9 @@ class Builds extends Action
                 $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
+                if (!(new Directory(\PHP_INT_MAX))->isValid($templateRootDirectory)) {
+                    throw new \Exception('Template root directory must stay inside the template repository.');
+                }
                 $templateRootDirectory = \rtrim($templateRootDirectory, '/');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '.');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '/');
@@ -450,12 +502,15 @@ class Builds extends Action
                         throw new \Exception('Unable to clone code repository: ' . $stderr);
                     }
 
-                    // Ensure directories
-                    Console::execute('mkdir -p ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
-                    Console::execute('mkdir -p ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                    $source = $this->confine($tmpTemplateDirectory, $templateRootDirectory, true);
+                    $destination = $this->confine($tmpDirectory, $rootDirectory, true);
 
-                    // Merge template into user repo
-                    Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                    // Merge template into user repo, keeping only links that stay inside the template
+                    $exit = Console::execute('rsync -av --safe-links --exclude \'.git\' ' . \escapeshellarg($source . '/') . ' ' . \escapeshellarg($destination), '', $stdout, $stderr);
+
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to merge template into repository: ' . $stderr);
+                    }
 
                     // Commit and push
                     $commitMessage = \escapeshellarg('Create ' . $resource->getAttribute('name', '') . ' function');
@@ -512,7 +567,7 @@ class Builds extends Action
 
                 Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
 
-                $tarParamDirectory = '/tmp/builds/' . $deploymentId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory);
+                $tarParamDirectory = $this->confine('/tmp/builds/' . $deploymentId . '/code', $rootDirectory);
                 Console::execute(self::archiveCommand($tmpPathFile, $tarParamDirectory), '', $stdout, $stderr);
 
                 $source = $device->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
@@ -1047,12 +1102,7 @@ class Builds extends Action
                 // VCS branch
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (! empty($branchName)) {
-                    $domain = (new BranchDomainFilter())->apply([
-                        'branch' => $branchName,
-                        'resourceId' => $resource->getId(),
-                        'projectId' => $project->getId(),
-                        'sitesDomain' => $platform['sitesDomain'],
-                    ]);
+                    $domain = ComputeBase::branchDomain($project, $resource, $branchName, $platform['sitesDomain'], $dbForPlatform);
                     $ruleId = md5($domain);
 
                     try {
@@ -1076,10 +1126,14 @@ class Builds extends Action
                             'region' => $project->getAttribute('region'),
                         ]));
                     } catch (Duplicate $err) {
-                        $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
-                            'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getSequence(),
-                        ]));
+                        if (ComputeBase::ownsBranchRule($dbForPlatform->getDocument('rules', $ruleId), $project, $resource, $branchName)) {
+                            $dbForPlatform->updateDocument('rules', $ruleId, new Document([
+                                'deploymentId' => $deployment->getId(),
+                                'deploymentInternalId' => $deployment->getSequence(),
+                            ]));
+                        } else {
+                            Console::warning("Skipping branch preview rule: {$domain} is held by another resource.");
+                        }
                     }
 
                     $queries = [

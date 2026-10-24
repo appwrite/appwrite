@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\State;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -53,6 +54,7 @@ class Get extends Action
             ->inject('response')
             ->inject('project')
             ->inject('platform')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -61,13 +63,22 @@ class Get extends Action
         string $failure,
         Response $response,
         Document $project,
-        array $platform
+        array $platform,
+        Document $user
     ) {
-        $state = \json_encode([
-            'projectId' => $project->getId(),
-            'success' => $success,
-            'failure' => $failure,
-        ]);
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+
+        if (empty($signingKey)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+        }
+
+        // The callback endpoint is public, so it verifies this signature and
+        // that the console user who started the flow is the one finishing it.
+        $state = (string) \json_encode(State::create($project->getId(), $user->getId(), $success, $failure)->sign($signingKey));
+
+        if (\strlen($state) > 2048) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Redirect URLs are too long to complete the installation. Please use shorter success and failure URLs.');
+        }
 
         $appName = System::getEnv('_APP_VCS_GITHUB_APP_NAME');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';

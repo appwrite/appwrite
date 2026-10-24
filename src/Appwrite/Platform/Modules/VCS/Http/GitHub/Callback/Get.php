@@ -6,11 +6,16 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\State;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -45,6 +50,8 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
+            ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -57,54 +64,129 @@ class Get extends Action
         Document $project,
         Response $response,
         Database $dbForPlatform,
-        array $platform
+        array $platform,
+        Document $user,
+        Authorization $authorization
     ) {
         if (empty($state)) {
             $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.';
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
         }
 
-        $state = \json_decode($state, true);
-        $redirectFailure = $state['failure'] ?? '';
-        $projectId = $state['projectId'] ?? '';
+        // This endpoint is public -- without verifying the signature the
+        // Authorize action put in state, anyone could pass an arbitrary
+        // projectId here and attach an installation to another project.
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
 
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            $error = 'Project with the ID from state could not be found.';
-
-            if (!empty($redirectFailure)) {
-                $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
-                $response
-                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-                return;
-            }
-
-            throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
+        if (empty($signingKey)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
         }
+
+        $state = State::verify($state, $signingKey);
+
+        if ($state === null) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
+
+        $projectId = $state->projectId;
+        $project = $dbForPlatform->getDocument('projects', $projectId);
 
         $region = $project->getAttribute('region', 'default');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $platform['consoleHostname'] ?? '';
+        $settings = $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations";
 
-        $defaultState = [
-            'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-            'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-        ];
+        $redirectSuccess = $state->success ?: $settings;
+        $redirectFailure = $state->failure ?: $settings;
 
-        $state = \array_merge($defaultState, $state ?? []);
+        if ($state->isExpired()) {
+            $this->failure($response, $redirectFailure, 'The installation request has expired. Please restart the installation from the Appwrite Console.');
+            return;
+        }
 
-        $redirectSuccess = $state['success'] ?? '';
-        $redirectFailure = $state['failure'] ?? '';
+        if ($user->isEmpty() || $user->getId() !== $state->userId) {
+            $this->failure($response, $redirectFailure, 'The installation was started by a different Appwrite account. Please sign in with that account, or restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        // Each state completes one installation; ids are capped at 36 characters
+        try {
+            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                '$id' => 'vcs-state-' . \substr(\hash('sha256', $state->nonce), 0, 26),
+            ])));
+        } catch (Duplicate) {
+            $this->failure($response, $redirectFailure, 'This installation request was already used. Please restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        if ($project->isEmpty()) {
+            $this->failure($response, $state->failure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
+            return;
+        }
+
+        // The state proves who started the flow; access to the project may have been revoked since,
+        // so the user's current roles in the project's team must still grant the scope /authorize requires.
+        $teamId = $project->getAttribute('teamId', '');
+        $roles = Config::getParam('roles', []);
+        $scopes = [];
+        foreach ($user->getAttribute('memberships', []) as $membership) {
+            if ($membership->getAttribute('teamId') !== $teamId || $membership->getAttribute('confirm', false) !== true) {
+                continue;
+            }
+
+            foreach ($membership->getAttribute('roles', []) as $role) {
+                if (\str_starts_with($role, 'project-') && !\str_starts_with($role, 'project-' . $projectId . '-')) {
+                    continue;
+                }
+
+                $role = \str_starts_with($role, 'project-') ? \substr($role, \strrpos($role, '-') + 1) : $role;
+                $scopes = \array_merge($scopes, $roles[$role]['scopes'] ?? []);
+            }
+        }
+
+        if (!\in_array('vcs.read', $scopes, true)) {
+            $this->failure($response, $redirectFailure, 'Your Appwrite account no longer has access to this project. Please restart the installation from the Appwrite Console.');
+            return;
+        }
 
         // Create / Update installation
         if (!empty($providerInstallationId)) {
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-            $owner = $github->getOwnerName($providerInstallationId);
+            if (empty($code)) {
+                $this->failure($response, $redirectFailure, 'GitHub did not return an authorization code, so the installation could not be verified. Please restart the installation from the Appwrite Console.');
+                return;
+            }
+
+            $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), '');
+
+            try {
+                $accessToken = $oauth2->getAccessToken($code);
+                $refreshToken = $oauth2->getRefreshToken($code);
+                $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
+            } catch (\Throwable) {
+                $this->failure($response, $redirectFailure, 'Failed to exchange the GitHub authorization code. Please restart the installation from the Appwrite Console.');
+                return;
+            }
+
+            if (empty($accessToken)) {
+                $this->failure($response, $redirectFailure, 'Failed to exchange the GitHub authorization code. Please restart the installation from the Appwrite Console.');
+                return;
+            }
+
+            if (!$this->canAccess($accessToken, $providerInstallationId)) {
+                $this->failure($response, $redirectFailure, 'Your GitHub account does not have access to this installation. Please restart the installation from the Appwrite Console.');
+                return;
+            }
+
+            try {
+                $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+                $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
+                $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+                $owner = $github->getOwnerName($providerInstallationId);
+                $personal = $oauth2->getUserSlug($accessToken) === $owner;
+            } catch (\Throwable) {
+                $this->failure($response, $redirectFailure, 'Failed to read the installation details from GitHub. Please restart the installation from the Appwrite Console.');
+                return;
+            }
 
             $projectInternalId = $project->getSequence();
 
@@ -112,22 +194,6 @@ class Get extends Action
                 Query::equal('providerInstallationId', [$providerInstallationId]),
                 Query::equal('projectInternalId', [$projectInternalId])
             ]);
-
-            $personal = false;
-            $refreshToken = null;
-            $accessToken = null;
-            $accessTokenExpiry = null;
-
-            if (!empty($code)) {
-                $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
-
-                $accessToken = $oauth2->getAccessToken($code);
-                $refreshToken = $oauth2->getRefreshToken($code);
-                $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
-
-                $personalSlug = $oauth2->getUserSlug($accessToken);
-                $personal = $personalSlug === $owner;
-            }
 
             if ($installation->isEmpty()) {
                 $teamId = $project->getAttribute('teamId', '');
@@ -148,38 +214,86 @@ class Get extends Action
 
                 $installation = $dbForPlatform->createDocument('installations', $installation);
             } else {
-                $installation = $installation
-                    ->setAttribute('organization', $owner)
-                    ->setAttribute('personal', $personal)
-                    ->setAttribute('personalRefreshToken', $refreshToken)
-                    ->setAttribute('personalAccessToken', $accessToken)
-                    ->setAttribute('personalAccessTokenExpiry', $accessTokenExpiry);
                 $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
-                    'organization' => $installation->getAttribute('organization'),
-                    'personal' => $installation->getAttribute('personal'),
-                    'personalRefreshToken' => $installation->getAttribute('personalRefreshToken'),
-                    'personalAccessToken' => $installation->getAttribute('personalAccessToken'),
-                    'personalAccessTokenExpiry' => $installation->getAttribute('personalAccessTokenExpiry'),
+                    'organization' => $owner,
+                    'personal' => $personal,
+                    'personalRefreshToken' => $refreshToken,
+                    'personalAccessToken' => $accessToken,
+                    'personalAccessTokenExpiry' => $accessTokenExpiry,
                 ]));
             }
         } else {
             $error = 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite console.';
 
-            if (!empty($redirectFailure)) {
-                $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
-                $response
-                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-                return;
-            }
-
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
+            $this->failure($response, $redirectFailure, $error);
+            return;
         }
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($redirectSuccess);
+    }
+
+    /**
+     * Whether the installation is one the authorizing GitHub user can access.
+     */
+    private function canAccess(string $accessToken, string $providerInstallationId): bool
+    {
+        $client = new Client();
+        $client
+            ->addHeader('accept', 'application/vnd.github+json')
+            ->addHeader('authorization', 'Bearer ' . $accessToken)
+            ->setUserAgent('Appwrite');
+
+        $page = 1;
+
+        do {
+            try {
+                $response = $client->fetch(
+                    url: 'https://api.github.com/user/installations',
+                    method: Client::METHOD_GET,
+                    query: [
+                        'per_page' => 100,
+                        'page' => $page,
+                    ],
+                );
+            } catch (\Throwable) {
+                return false;
+            }
+
+            if ($response->getStatusCode() !== 200) {
+                return false;
+            }
+
+            $body = \json_decode((string) $response->getBody(), true);
+            $installations = \is_array($body['installations'] ?? null) ? $body['installations'] : [];
+
+            foreach ($installations as $installation) {
+                if ((string) ($installation['id'] ?? '') === $providerInstallationId) {
+                    return true;
+                }
+            }
+
+            $page++;
+        } while (\count($installations) === 100);
+
+        return false;
+    }
+
+    /**
+     * Redirect back to the console with an error, or throw when no redirect is available.
+     */
+    private function failure(Response $response, string $redirect, string $error, string $type = Exception::GENERAL_ARGUMENT_INVALID): void
+    {
+        if (empty($redirect)) {
+            throw new Exception($type, $error);
+        }
+
+        $separator = \str_contains($redirect, '?') ? '&' : '?';
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($redirect . $separator . \http_build_query(['error' => $error]));
     }
 }

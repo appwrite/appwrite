@@ -56,8 +56,6 @@ class Create extends Action
         BuildPublisher $publisherForBuilds,
         array $platform
     ) {
-        $this->preprocessEvent($request);
-
         $event = $request->getHeaderLine('x-github-event', '');
         Span::add('vcs.github.event.name', $event);
 
@@ -71,6 +69,11 @@ class Create extends Action
         if (!$valid) {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable");
         }
+
+        // Only a validly-signed delivery is preprocessed (an extension may fan the event out to
+        // other regions). Running it before the signature check let an unauthenticated POST
+        // trigger N forwards, an amplification vector.
+        $this->preprocessEvent($request);
 
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
         $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');

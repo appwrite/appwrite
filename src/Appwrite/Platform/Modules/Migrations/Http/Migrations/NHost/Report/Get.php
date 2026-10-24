@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\NHost\Report;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Migrations\Validator\Endpoint;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -49,10 +50,10 @@ class Get extends Action
                 ]
             ))
             ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate.', enum: new Enum(name: 'NHostMigrationResource'))
-            ->param('subdomain', '', new Text(512), 'Source\'s Subdomain.')
-            ->param('region', '', new Text(512), 'Source\'s Region.')
+            ->param('subdomain', '', new Text(63, 1, [...Text::ALPHABET_LOWER, ...Text::NUMBERS, '-']), 'Source\'s Subdomain.')
+            ->param('region', '', new Text(63, 1, [...Text::ALPHABET_LOWER, ...Text::NUMBERS, '-']), 'Source\'s Region.')
             ->param('adminSecret', '', new Text(512), 'Source\'s Admin Secret.')
-            ->param('database', '', new Text(512), 'Source\'s Database Name.')
+            ->param('database', '', new Text(63, 1, [...Text::ALPHABET_LOWER, ...Text::ALPHABET_UPPER, ...Text::NUMBERS, '_', '-']), 'Source\'s Database Name.')
             ->param('username', '', new Text(512), 'Source\'s Database Username.')
             ->param('password', '', new PasswordFormat(new Text(512)), 'Source\'s Database Password.')
             ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true)
@@ -72,7 +73,9 @@ class Get extends Action
         Response $response
     ): void {
         try {
-            $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
+            // Every HTTP connection the source makes is held to public addresses
+            $nhost = (new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port))
+                ->setResolver((new Endpoint())->resolve(...));
             $report = $nhost->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(

@@ -157,6 +157,62 @@ class PublicHostname extends Validator
     }
 
     /**
+     * An address to connect to the host on, for a connection no client can check.
+     * The host must resolve, and to allowed addresses only. Connect to the
+     * returned address, not the host, so DNS cannot answer differently at
+     * connect time.
+     *
+     * @throws \InvalidArgumentException When the host does not resolve or resolves to a private or reserved address
+     */
+    public function address(string $host): string
+    {
+        $addresses = $this->addresses($host);
+
+        if ($addresses === []) {
+            throw new \InvalidArgumentException('Hostname ' . \strtolower(\trim($host, " \t\n\r\0\x0B[]")) . ' does not resolve.');
+        }
+
+        return $addresses[0];
+    }
+
+    /**
+     * Every address the host resolves to, none when it does not resolve yet. For a host
+     * stored now and connected to later, where only a refused address is reason to reject it.
+     *
+     * @return array<string>
+     * @throws \InvalidArgumentException When the host is empty or resolves to a private or reserved address
+     */
+    public function addresses(string $host): array
+    {
+        $host = \strtolower(\trim($host, " \t\n\r\0\x0B[]"));
+
+        if ($host === '') {
+            throw new \InvalidArgumentException('Hostname is empty.');
+        }
+
+        if (\filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            if (!$this->isAllowedAddress($host)) {
+                throw new \InvalidArgumentException("Address {$host} is in a private or reserved range.");
+            }
+
+            return [$host];
+        }
+
+        $addresses = static::resolve($host);
+
+        // An allowlisted hostname may resolve anywhere
+        if (!$this->allowlist->hasHostname($host)) {
+            foreach ($addresses as $address) {
+                if (!$this->isAllowedAddress($address)) {
+                    throw new \InvalidArgumentException("Hostname {$host} resolves to private or reserved address {$address}.");
+                }
+            }
+        }
+
+        return $addresses;
+    }
+
+    /**
      * Resolves a hostname to all A and AAAA records.
      *
      * @return array<string>

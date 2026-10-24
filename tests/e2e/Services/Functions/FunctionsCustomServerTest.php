@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -836,6 +837,63 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertGreaterThan(0, $deployment['body']['buildSize']);
         $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
         $this->assertEquals($totalSize, $deployment['body']['totalSize']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testRootDirectoryMustStayInsideRepository(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Root directory test',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'providerRootDirectory' => '/functions/starter',
+        ]);
+
+        $this->assertSame(201, $function['headers']['status-code']);
+        $this->assertSame('/functions/starter', $function['body']['providerRootDirectory']);
+
+        $functionId = $function['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['..', '../other', 'functions/../../storage', '/../etc'] as $rootDirectory) {
+            $deployment = $this->createTemplateDeployment($functionId, [
+                'repository' => 'templates',
+                'owner' => 'appwrite',
+                'rootDirectory' => $rootDirectory,
+                'type' => 'branch',
+                'reference' => 'main',
+                'activate' => true,
+            ]);
+            $this->assertSame(400, $deployment['headers']['status-code'], $rootDirectory);
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $deployment['body']['type']);
+
+            $created = $this->createFunction([
+                'functionId' => ID::unique(),
+                'name' => 'Root directory test',
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $created['headers']['status-code'], $rootDirectory);
+
+            $updated = $this->updateFunction($functionId, [
+                'name' => 'Root directory test',
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $updated['headers']['status-code'], $rootDirectory);
+        }
+
+        $function = $this->getFunction($functionId);
+        $this->assertSame('/functions/starter', $function['body']['providerRootDirectory']);
 
         $this->cleanupFunction($functionId);
     }
@@ -2528,6 +2586,48 @@ final class FunctionsCustomServerTest extends Scope
         }, 25000, 500);
 
         $this->cleanupFunction($functionId);
+    }
+
+    public function testFunctionsDomainReservedHeaders(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test domain reserved headers',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'execute' => ['any'],
+        ]);
+
+        try {
+            $domain = $this->setupFunctionDomain($functionId);
+            $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $domain);
+
+            $response = $proxyClient->call(Client::METHOD_GET, '/', [
+                'content-type' => 'application/json',
+                'X-Appwrite-User-Id' => 'impersonated-user',
+                'X-APPWRITE-TRIGGER' => 'event',
+                'X-Appwrite-Event' => 'users.user.update',
+                'x-appwrite-user-jwt' => 'caller-jwt',
+                'X-Appwrite-Client-Ip' => '203.0.113.10',
+            ]);
+
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame('', $response['body']['APPWRITE_FUNCTION_USER_ID']);
+            $this->assertSame('http', $response['body']['APPWRITE_FUNCTION_TRIGGER']);
+            $this->assertSame('', $response['body']['APPWRITE_FUNCTION_EVENT']);
+            $this->assertSame('', $response['body']['APPWRITE_FUNCTION_JWT']);
+            $this->assertNotSame('203.0.113.10', $response['body']['APPWRITE_FUNCTION_CLIENT_IP']);
+            $this->assertNotSame('', $response['body']['APPWRITE_FUNCTION_CLIENT_IP']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
     }
 
     public function testFunctionsDomainBinaryResponse()

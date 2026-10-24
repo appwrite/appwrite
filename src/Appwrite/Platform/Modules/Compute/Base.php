@@ -302,12 +302,7 @@ class Base extends Action
 
         // VCS branch preview
         if (!empty($providerBranch)) {
-            $domain = (new BranchDomainFilter())->apply([
-                'branch' => $providerBranch,
-                'resourceId' => $site->getId(),
-                'projectId' => $project->getId(),
-                'sitesDomain' => $sitesDomain,
-            ]);
+            $domain = $authorization->skip(fn () => self::branchDomain($project, $site, $providerBranch, $sitesDomain, $dbForPlatform));
             $ruleId = md5($domain);
             try {
                 $authorization->skip(
@@ -348,6 +343,40 @@ class Base extends Action
         ));
 
         return $deployment;
+    }
+
+    /**
+     * The site's preview domain for a branch. A branch previewed before the
+     * domain hash was widened keeps the domain its rule already serves.
+     */
+    public static function branchDomain(Document $project, Document $site, string $branch, string $sitesDomain, Database $dbForPlatform): string
+    {
+        $input = [
+            'branch' => $branch,
+            'resourceId' => $site->getId(),
+            'projectId' => $project->getId(),
+            'sitesDomain' => $sitesDomain,
+        ];
+        $filter = new BranchDomainFilter();
+
+        $legacy = $filter->apply([...$input, 'legacy' => true]);
+        if (self::ownsBranchRule($dbForPlatform->getDocument('rules', md5($legacy)), $project, $site, $branch)) {
+            return $legacy;
+        }
+
+        return $filter->apply($input);
+    }
+
+    /**
+     * Whether a rule is the preview rule of this site's branch.
+     */
+    public static function ownsBranchRule(Document $rule, Document $project, Document $site, string $branch): bool
+    {
+        return !$rule->isEmpty()
+            && (string) $rule->getAttribute('projectInternalId') === (string) $project->getSequence()
+            && $rule->getAttribute('deploymentResourceType') === 'site'
+            && (string) $rule->getAttribute('deploymentResourceInternalId') === (string) $site->getSequence()
+            && $rule->getAttribute('deploymentVcsProviderBranch') === $branch;
     }
 
     /**

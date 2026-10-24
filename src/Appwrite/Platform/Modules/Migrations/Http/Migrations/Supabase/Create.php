@@ -5,7 +5,9 @@ namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Migrations\Validator\Endpoint;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -87,6 +89,13 @@ class Create extends Action
         Event $queueForEvents,
         MigrationPublisher $publisherForMigrations
     ): void {
+        // The worker holds every connection to public addresses; refuse a private source up front
+        $validator = new Endpoint();
+        if (!$validator->isValid($endpoint)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `endpoint`: ' . $validator->getDescription());
+        }
+        $validator->address($databaseHost);
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',

@@ -94,7 +94,7 @@ class Maintenance extends Action
 
             $this->notifyDeleteConnections($publisherForDeletes);
             $this->renewCertificates($dbForPlatform, $publisherForCertificates);
-            $this->notifyDeleteCache($cacheRetention, $publisherForDeletes);
+            $this->notifyDeleteCache($cacheRetention, $console, $publisherForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes);
             $this->notifyDeleteCSVExports($publisherForDeletes);
         };
@@ -171,15 +171,16 @@ class Maintenance extends Action
         }
     }
 
-    private function notifyDeleteCache($interval, DeletePublisher $publisherForDeletes): void
+    private function notifyDeleteCache(int $interval, Document $console, DeletePublisher $publisherForDeletes): void
     {
         $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $console,
             type: DELETE_TYPE_CACHE_BY_TIMESTAMP,
             datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
         ));
     }
 
-    private function notifyDeleteSchedules($interval, DeletePublisher $publisherForDeletes): void
+    private function notifyDeleteSchedules(int $interval, DeletePublisher $publisherForDeletes): void
     {
         $publisherForDeletes->enqueue(new DeleteMessage(
             type: DELETE_TYPE_SCHEDULES,

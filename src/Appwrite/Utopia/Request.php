@@ -198,9 +198,21 @@ class Request extends UtopiaRequest
      */
     public function getHeaders(): array
     {
-        $headers = parent::getHeaders();
+        return $this->getHeadersWithoutCookies([]);
+    }
 
-        $cookies = $this->getCookieParams();
+    /**
+     * Get all headers like getHeaders(), leaving the named cookies out of the synthesized `cookie` header.
+     *
+     * @param list<string> $names
+     * @return array<string, array<int, string>>
+     */
+    public function getHeadersWithoutCookies(array $names): array
+    {
+        $headers = parent::getHeaders();
+        unset($headers['cookie']);
+
+        $cookies = \array_diff_key($this->getCookieParams(), \array_flip($names));
         if (!empty($cookies)) {
             $pairs = [];
             foreach ($cookies as $key => $value) {

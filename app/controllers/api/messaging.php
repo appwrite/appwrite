@@ -18,6 +18,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
@@ -25,6 +26,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Providers;
 use Appwrite\Utopia\Database\Validator\Queries\Subscribers;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\Audit\Audit;
@@ -472,6 +474,12 @@ Http::post('/v1/messaging/providers/smtp')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $host, int $port, string $username, string $password, string $encryption, bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        // Workers check the host again before every send; one that does not resolve yet is kept.
+        $hostname = new Host(resolved: false);
+        if ($host !== '' && !$hostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        }
+
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [
@@ -1823,6 +1831,12 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        // Workers check the host again before every send; one that does not resolve yet is kept.
+        $hostname = new Host(resolved: false);
+        if ($host !== '' && !$hostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        }
+
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -3402,7 +3416,8 @@ Http::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('publisherForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response) {
+    ->inject('request')
+    ->action(function (string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, Request $request) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3440,6 +3455,10 @@ Http::post('/v1/messaging/messages/email')
         }
 
         if (!empty($attachments)) {
+            if (!\in_array('files.read', $request->getScopes(), true)) {
+                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Attachments require the files.read scope.');
+            }
+
             foreach ($attachments as &$attachment) {
                 [$bucketId, $fileId] = CompoundUID::parse($attachment);
 
@@ -4204,11 +4223,18 @@ Http::patch('/v1/messaging/messages/email/:messageId')
     ->inject('project')
     ->inject('publisherForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response) {
+    ->inject('request')
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, Request $request) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        // Stored attachments are delivered too, so any update of an attached message needs files.read.
+        $hasAttachments = !empty($attachments ?? $message->getAttribute('data', [])['attachments'] ?? []);
+        if ($hasAttachments && !\in_array('files.read', $request->getScopes(), true)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Attachments require the files.read scope.');
         }
 
         if (!\is_null($draft) || !\is_null($scheduledAt)) {

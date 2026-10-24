@@ -8,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Throwable;
@@ -132,43 +133,72 @@ class Update extends Action
         // (so a credentials-only PATCH can auto-enable). Skip only when the caller is
         // explicitly keeping/turning SMTP off.
         if ((\is_null($enabled) || $enabled === true) && !empty($smtp['senderEmail'] ?? '')) {
-            $mail = new PHPMailer(true);
-            $mail->isSMTP();
-
-            $mail->Host = $smtp['host'] ?? '';
-            $mail->Port = $smtp['port'] ?? '';
-            $mail->SMTPSecure = $smtp['secure'] ?? '';
-            $mail->setFrom($smtp['senderEmail'], $smtp['senderName'] ?? '');
-
-            if (!empty($smtp['username'] ?? '')) {
-                $mail->SMTPAuth = true;
-                $mail->Username = $smtp['username'];
-                $mail->Password = $smtp['password'] ?? '';
-            }
-
-            if (!empty($smtp['replyToEmail'] ?? '')) {
-                $mail->addReplyTo($smtp['replyToEmail'], $smtp['replyToName'] ?? '');
-            }
-
-            $mail->SMTPAutoTLS = false;
-            $mail->Timeout = 5;
+            $host = $smtp['host'] ?? '';
+            $port = $smtp['port'] ?? '';
 
             try {
-                $valid = $mail->SmtpConnect();
-
-                if (!$valid) {
-                    throw new \Exception('Connection is not valid.');
+                // Each server is dialled on the address just checked, so DNS cannot answer differently
+                $servers = (new Host())->pinned($host);
+            } catch (\InvalidArgumentException $error) {
+                if (($smtp['enabled'] ?? null) === true) {
+                    throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
                 }
 
+                $servers = [];
+            }
+
+            $failure = null;
+
+            // Like PHPMailer with a server list, the first server that accepts the session wins
+            foreach ($servers as $server) {
+                $mail = new PHPMailer(true);
+                $mail->isSMTP();
+
+                $mail->Host = $server['host'];
+                // The certificate is still checked against the server name
+                $mail->SMTPOptions = ['ssl' => ['peer_name' => $server['peer']]];
+                $mail->Port = $port;
+                $mail->SMTPSecure = $smtp['secure'] ?? '';
+                $mail->setFrom($smtp['senderEmail'], $smtp['senderName'] ?? '');
+
+                if (!empty($smtp['username'] ?? '')) {
+                    $mail->SMTPAuth = true;
+                    $mail->Username = $smtp['username'];
+                    $mail->Password = $smtp['password'] ?? '';
+                }
+
+                if (!empty($smtp['replyToEmail'] ?? '')) {
+                    $mail->addReplyTo($smtp['replyToEmail'], $smtp['replyToName'] ?? '');
+                }
+
+                $mail->SMTPAutoTLS = false;
+                $mail->Timeout = 5;
+
+                try {
+                    if (!$mail->SmtpConnect()) {
+                        throw new \Exception('Connection is not valid.');
+                    }
+
+                    $failure = null;
+                    break;
+                } catch (Throwable $error) {
+                    $failure = $error;
+                } finally {
+                    $mail->smtpClose();
+                }
+            }
+
+            if ($servers !== [] && $failure === null) {
                 // Auto-enable if configuration is valid
                 // Dont do this if specifically request to mark disabled
                 if (\is_null($enabled)) {
                     $smtp['enabled'] = true;
                 }
-            } catch (Throwable $error) {
-                if (($smtp['enabled'] ?? null) === true) {
-                    throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
-                }
+            } elseif ($failure !== null && ($smtp['enabled'] ?? null) === true) {
+                // The server's own reply is not repeated: say which step failed instead.
+                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, \str_contains($failure->getMessage(), 'authenticate')
+                    ? "Could not authenticate with SMTP server {$host}:{$port}. Check the username and password."
+                    : "Could not connect to SMTP server {$host}:{$port}. Check the host, port, secure setting and credentials.");
             }
         }
 

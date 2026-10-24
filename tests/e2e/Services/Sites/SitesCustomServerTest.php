@@ -6,6 +6,7 @@ namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
@@ -1969,6 +1970,64 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testRootDirectoryMustStayInsideRepository(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Root directory test',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'providerRootDirectory' => '/sites/starter',
+        ]);
+
+        $this->assertSame(201, $site['headers']['status-code']);
+        $this->assertSame('/sites/starter', $site['body']['providerRootDirectory']);
+
+        $siteId = $site['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['..', '../other', 'sites/../../storage', '/../etc'] as $rootDirectory) {
+            $deployment = $this->createTemplateDeployment($siteId, [
+                'repository' => 'templates-for-sites',
+                'owner' => 'appwrite',
+                'rootDirectory' => $rootDirectory,
+                'type' => 'branch',
+                'reference' => 'main',
+                'activate' => true,
+            ]);
+            $this->assertSame(400, $deployment['headers']['status-code'], $rootDirectory);
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $deployment['body']['type']);
+
+            $created = $this->createSite([
+                'siteId' => ID::unique(),
+                'name' => 'Root directory test',
+                'framework' => 'other',
+                'buildRuntime' => 'node-22',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $created['headers']['status-code'], $rootDirectory);
+
+            $updated = $this->updateSite([
+                '$id' => $siteId,
+                'name' => 'Root directory test',
+                'framework' => 'other',
+                'buildRuntime' => 'node-22',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $updated['headers']['status-code'], $rootDirectory);
+        }
+
+        $site = $this->getSite($siteId);
+        $this->assertSame('/sites/starter', $site['body']['providerRootDirectory']);
+
+        $this->cleanupSite($siteId);
+    }
+
     #[Retry(count: 3)]
     public function testSiteTemplate(): void
     {
@@ -2663,6 +2722,62 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testPreviewCookies(): void
+    {
+        $siteId = '';
+
+        try {
+            $siteId = $this->setupSite([
+                'siteId' => ID::unique(),
+                'name' => 'SSR preview cookies',
+                'framework' => 'astro',
+                'adapter' => 'ssr',
+                'buildRuntime' => 'node-22',
+                'outputDirectory' => './dist',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm ci',
+                'fallbackFile' => '',
+            ]);
+
+            $deploymentId = $this->setupDeployment($siteId, [
+                'code' => $this->packageSite('astro'),
+                'activate' => 'true',
+            ]);
+
+            // The site's own domain needs no preview authorization, so no console session is created here:
+            // testPreviewDomain blocks the root user while tests in this class run in parallel.
+            $this->assertNotEmpty($deploymentId);
+            $domain = $this->setupSiteDomain($siteId);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $domain);
+
+            $secret = 'session-secret';
+            $cookie = \implode('; ', [
+                'a_jwt_console=preview-jwt',
+                'a_session_console=' . $secret,
+                'a_session_console_legacy=' . $secret,
+                'a_session_' . $this->getProject()['$id'] . '=' . $secret,
+                'a_session_' . $this->getProject()['$id'] . '_legacy=' . $secret,
+                'theme=dark',
+            ]);
+
+            $this->assertEventually(function () use ($proxyClient, $cookie, $secret) {
+                $response = $proxyClient->call(Client::METHOD_GET, '/cookie-header', [
+                    'cookie' => $cookie,
+                    'x-fallback-cookies' => \json_encode(['a_session_console' => $secret]),
+                ], followRedirects: false);
+                $this->assertSame(200, $response['headers']['status-code']);
+                $this->assertSame('theme=dark', $response['body']['cookie']);
+                $this->assertNull($response['body']['fallbackCookies']);
+            });
+        } finally {
+            if ($siteId !== '') {
+                $this->cleanupSite($siteId);
+            }
+        }
     }
 
     public function testInvalidSSRSource(): void

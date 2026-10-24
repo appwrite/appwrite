@@ -12,6 +12,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\Validator\Headers;
 use Appwrite\Network\Cors;
 use Appwrite\Platform\Appwrite;
 use Appwrite\SDK\AuthType;
@@ -233,7 +234,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         if ($isPreview && $requirePreview) {
             $cookie = $request->getCookie(COOKIE_NAME_PREVIEW, '');
             $authorized = false;
-            $user = new Document();
+            $user = new DBUser();
 
             // Security checks to mark authorized true
             if (!empty($cookie)) {
@@ -249,29 +250,28 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $userExists = false;
                 $userId = $payload['userId'] ?? '';
                 if (!empty($userId)) {
-                    $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
+                    $user = new DBUser($authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId))->getArrayCopy());
                     if (!$user->isEmpty() && $user->getAttribute('status', false)) {
                         $userExists = true;
                     }
                 }
 
-                $sessionExists = false;
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                if (!empty($jwtSessionId) && !empty($user->find('$id', $jwtSessionId, 'sessions'))) {
-                    $sessionExists = true;
-                }
+                $sessionActive = !empty($jwtSessionId) && $user->sessionActive($jwtSessionId);
 
                 $membershipExists = false;
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && !$user->isEmpty()) {
                     $teamId = $project->getAttribute('teamId', '');
-                    $membership = $user->find('teamId', $teamId, 'memberships');
-                    if (!empty($membership)) {
-                        $membershipExists = true;
+                    foreach ($user->getAttribute('memberships', []) as $membership) {
+                        if ($membership->getAttribute('teamId') === $teamId && $membership->getAttribute('confirm', false) === true) {
+                            $membershipExists = true;
+                            break;
+                        }
                     }
                 }
 
-                if ($userExists && $sessionExists && $membershipExists) {
+                if ($userExists && $sessionActive && $membershipExists) {
                     $authorized = true;
                 }
             }
@@ -296,10 +296,20 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         // getHeaders() follows PSR-7 and returns each header as a list of values;
         // collapse to single-line strings for the function/site header map below.
+        // Session cookies may be scoped to a parent of the functions/sites domain; never forward them to user code.
+        $strippedCookies = [COOKIE_NAME_PREVIEW];
+        foreach (\array_keys($request->getCookieParams()) as $name) {
+            if (\str_starts_with((string) $name, 'a_session_')) {
+                $strippedCookies[] = $name;
+            }
+        }
+
         $requestHeaders = \array_map(
             static fn (array $values) => \implode(', ', $values),
-            $request->getHeaders()
+            $request->getHeadersWithoutCookies($strippedCookies)
         );
+        // Clients without cookie support send their session in this header instead.
+        unset($requestHeaders['x-fallback-cookies']);
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
             if ($type === 'function') {
@@ -372,7 +382,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         $executionId = ID::unique();
 
-        $headers = \array_merge([], $requestHeaders);
+        $headers = Headers::stripReserved($requestHeaders);
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-country-code'] = '';

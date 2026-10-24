@@ -54,6 +54,7 @@ use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\Text;
 
 class Migrations extends Action
 {
@@ -91,6 +92,33 @@ class Migrations extends Action
     public static function getName(): string
     {
         return 'migrations';
+    }
+
+    /**
+     * NHost's subdomain and region become labels of the source hostname, and the
+     * database name part of its connection string. Migrations created before the
+     * API validated these parts are checked here too.
+     *
+     * @param array<string, mixed> $credentials
+     */
+    private function nhost(array $credentials): NHost
+    {
+        $label = new Text(63, 1, [...Text::ALPHABET_LOWER, ...Text::NUMBERS, '-']);
+        $database = new Text(63, 1, [...Text::ALPHABET_LOWER, ...Text::ALPHABET_UPPER, ...Text::NUMBERS, '_', '-']);
+
+        if (!$label->isValid($credentials['subdomain']) || !$label->isValid($credentials['region']) || !$database->isValid($credentials['database'])) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'NHost subdomain, region or database name is invalid.');
+        }
+
+        return new NHost(
+            $credentials['subdomain'],
+            $credentials['region'],
+            $credentials['adminSecret'],
+            $credentials['database'],
+            $credentials['username'],
+            $credentials['password'],
+            $credentials['port'],
+        );
     }
 
     /**
@@ -280,21 +308,13 @@ class Migrations extends Action
             Supabase::getName() => new Supabase(
                 $credentials['endpoint'],
                 $credentials['apiKey'],
-                $credentials['databaseHost'],
+                (new Endpoint())->address($credentials['databaseHost']),
                 'postgres',
                 $credentials['username'],
                 $credentials['password'],
                 $credentials['port'],
             ),
-            NHost::getName() => new NHost(
-                $credentials['subdomain'],
-                $credentials['region'],
-                $credentials['adminSecret'],
-                $credentials['database'],
-                $credentials['username'],
-                $credentials['password'],
-                $credentials['port'],
-            ),
+            NHost::getName() => $this->nhost($credentials),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
                 $credentials['endpoint'],
@@ -320,7 +340,11 @@ class Migrations extends Action
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
 
-        if ($isAppwriteSource && $credentials['endpoint'] !== $this->getInternalEndpoint()) {
+        // Every source other than this deployment's own endpoint is held to public addresses, on each connection it makes
+        if (
+            \in_array($source, [Supabase::getName(), NHost::getName()], true)
+            || ($isAppwriteSource && $credentials['endpoint'] !== $this->getInternalEndpoint())
+        ) {
             $migrationSource->setResolver((new Endpoint())->resolve(...));
         }
 
@@ -345,9 +369,10 @@ class Migrations extends Action
     }
 
     /**
-     * The database source reads the source project's tables directly, so the submitted
-     * key is never presented to the source API. Probe the source API with it first so
-     * only a key that can read those resources in that project reaches the database.
+     * The database source reads the source project's databases directly, so the submitted
+     * key is never presented to the source API. Probe the source API with it first, once per
+     * requested database family against that family's own API and scopes, so only a key that
+     * can read those resources in that project reaches the database.
      *
      * @param array<string> $resources
      * @throws Exception
@@ -380,6 +405,28 @@ class Migrations extends Action
 
             if (Resource::isSupported(Resource::TYPE_ROW, $resources)) {
                 $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/tablesdb/{$probe}/tables/{$probe}/rows", $headers));
+            }
+
+            // DocumentsDB and VectorsDB are read directly too, so the key must pass each family's own API
+
+            foreach ([Resource::TYPE_DATABASE_DOCUMENTSDB => 'documentsdb', Resource::TYPE_DATABASE_VECTORSDB => 'vectorsdb'] as $type => $api) {
+                if (!\in_array($type, $resources, true)) {
+                    continue;
+                }
+
+                $client->call(Client::METHOD_GET, "/{$api}", $headers);
+
+                if (\array_intersect([Resource::TYPE_COLLECTION, Resource::TYPE_ATTRIBUTE, Resource::TYPE_INDEX, Resource::TYPE_DOCUMENT], $resources) !== []) {
+                    $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/{$api}/{$probe}/collections", $headers));
+                }
+
+                if (\in_array(Resource::TYPE_INDEX, $resources, true)) {
+                    $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/{$api}/{$probe}/collections/{$probe}/indexes", $headers));
+                }
+
+                if (\in_array(Resource::TYPE_DOCUMENT, $resources, true)) {
+                    $this->probeScope(fn () => $client->call(Client::METHOD_GET, "/{$api}/{$probe}/collections/{$probe}/documents", $headers));
+                }
             }
         } catch (AppwriteException $error) {
             throw new Exception(Exception::MIGRATION_SOURCE_UNAUTHORIZED, previous: $error);
@@ -910,7 +957,8 @@ class Migrations extends Action
             'openSSLTag' => null,
             'openSSLIV' => null,
             'search' => \implode(' ', [$fileId, $filename]),
-            'metadata' => ['content_type' => $mime]
+            // Imports read internal files only from the project that exported them
+            'metadata' => ['content_type' => $mime, 'projectInternalId' => $project->getSequence()],
         ]));
 
         Console::info("Created file document in bucket: $fileId");

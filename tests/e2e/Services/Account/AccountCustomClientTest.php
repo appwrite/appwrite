@@ -4156,6 +4156,61 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testCreateMagicUrlEscapesRedirect(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = 'magic-escape-' . uniqid() . '@appwrite.io';
+        $url = 'http://localhost/magic"<b>path</b>#frag"<i>end';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'url' => $url,
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $userId = $response['body']['userId'];
+
+        $html = (string) $this->getLastEmailByAddress($email)['html'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->assertStringNotContainsString('"<b>', $html);
+        $this->assertStringNotContainsString('"<i>', $html);
+        $this->assertStringContainsString('http://localhost/magic&quot;&lt;b&gt;path&lt;/b&gt;?userId=' . $userId . '&secret=', $html);
+        $this->assertStringContainsString('#frag&quot;&lt;i&gt;end', $html);
+
+        $hrefStart = strpos($html, 'href="http://localhost/magic');
+        $this->assertNotFalse($hrefStart);
+        $hrefStart += \strlen('href="');
+        $hrefEnd = strpos($html, '"', $hrefStart);
+        $this->assertNotFalse($hrefEnd);
+
+        $link = html_entity_decode(substr($html, $hrefStart, $hrefEnd - $hrefStart), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $this->assertStringStartsWith('http://localhost/magic"<b>path</b>?userId=' . $userId . '&secret=', $link);
+        $this->assertStringEndsWith('#frag"<i>end', $link);
+
+        parse_str((string) parse_url($link, PHP_URL_QUERY), $query);
+        $this->assertSame($userId, $query['userId']);
+
+        $session = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $query['userId'],
+            'secret' => $query['secret'],
+        ]);
+
+        $this->assertSame(201, $session['headers']['status-code']);
+        $this->assertSame($userId, $session['body']['userId']);
+    }
+
     public function testCreateMagicUrl(): void
     {
         // Use uniqid for uniqueness in parallel test execution
