@@ -434,7 +434,7 @@ abstract class Base extends Action
 
     protected function validateFileConstraints(Document $bucket, string $name, int $size): void
     {
-        $maximumFileSize = (int) $bucket->getAttribute('maximumFileSize', 0);
+        $maximumFileSize = (int) $bucket->getAttribute('maximumFileSize', 0) ?: (int) System::getEnv('_APP_STORAGE_LIMIT', 0);
         if ($maximumFileSize > 0 && $size > $maximumFileSize) {
             throw new AppwriteException(AppwriteException::STORAGE_INVALID_FILE_SIZE, 'File size not allowed');
         }
@@ -461,7 +461,7 @@ abstract class Base extends Action
 
     protected function validateCopySize(Document $bucket, Document $sourceFile): void
     {
-        $maximumFileSize = (int) $bucket->getAttribute('maximumFileSize', 0);
+        $maximumFileSize = (int) $bucket->getAttribute('maximumFileSize', 0) ?: (int) System::getEnv('_APP_STORAGE_LIMIT', 0);
         $sourceSize = (int) $sourceFile->getAttribute('sizeOriginal', 0);
 
         if ($maximumFileSize > 0 && $sourceSize > $maximumFileSize) {
