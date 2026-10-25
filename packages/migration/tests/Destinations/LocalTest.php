@@ -170,40 +170,34 @@ class LocalTest extends TestCase
         );
     }
 
-    public function testUnwritableFileDirectoryMarksFileError(): void
+    public function testFileWriteOntoDirectoryMarksError(): void
     {
-        $files = $this->exportDir . '/files';
-        $this->assertTrue(\chmod($files, 0555));
+        $path = $this->exportDir . '/files/blocked.txt';
+        $this->assertTrue(\mkdir($path));
 
-        try {
-            $file = $this->file('blocked', 'blocked.txt', 'owned');
-            $this->importIgnoringWriteWarning($this->destination, [$file]);
+        // A later chunk does not unlink the existing path. A directory there
+        // makes the append fail for every user, including root in CI.
+        $file = $this->file('blocked', 'blocked.txt', 'owned', start: 1);
+        $this->importIgnoringWriteWarning($this->destination, [$file]);
 
-            $this->assertSame(Resource::STATUS_ERROR, $file->getStatus());
-            $this->assertSame('Unable to write export file', $file->getMessage());
-            $this->assertFileDoesNotExist($files . '/blocked.txt');
-            $this->assertSame(MigrationException::CODE_INTERNAL, $this->singleError()->getCode());
-        } finally {
-            \chmod($files, 0777);
-        }
+        $this->assertSame(Resource::STATUS_ERROR, $file->getStatus());
+        $this->assertSame('Unable to write export file', $file->getMessage());
+        $this->assertDirectoryExists($path);
+        $this->assertSame(MigrationException::CODE_INTERNAL, $this->singleError()->getCode());
     }
 
-    public function testUnwritableDeploymentsDirectoryMarksDeploymentError(): void
+    public function testDeploymentWriteOntoDirectoryMarksError(): void
     {
-        $deployments = $this->exportDir . '/deployments';
-        $this->assertTrue(\chmod($deployments, 0555));
+        $path = $this->exportDir . '/deployments/dep123.tar.gz';
+        $this->assertTrue(\mkdir($path));
 
-        try {
-            $deployment = $this->deployment('dep123', 'archive-bytes');
-            $this->importIgnoringWriteWarning($this->destination, [$deployment]);
+        $deployment = $this->deployment('dep123', 'archive-bytes');
+        $this->importIgnoringWriteWarning($this->destination, [$deployment]);
 
-            $this->assertSame(Resource::STATUS_ERROR, $deployment->getStatus());
-            $this->assertSame('Unable to write export file', $deployment->getMessage());
-            $this->assertFileDoesNotExist($deployments . '/dep123.tar.gz');
-            $this->assertSame(MigrationException::CODE_INTERNAL, $this->singleError()->getCode());
-        } finally {
-            \chmod($deployments, 0777);
-        }
+        $this->assertSame(Resource::STATUS_ERROR, $deployment->getStatus());
+        $this->assertSame('Unable to write export file', $deployment->getMessage());
+        $this->assertDirectoryExists($path);
+        $this->assertSame(MigrationException::CODE_INTERNAL, $this->singleError()->getCode());
     }
 
     #[DataProvider('linkedExportRoots')]
