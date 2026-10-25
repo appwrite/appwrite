@@ -39,7 +39,6 @@ use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
-use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Usage\Tenant as UsageTenant;
@@ -1749,18 +1748,24 @@ class Deletes extends Action
     {
         $deploymentId = $deployment->getId();
         $buildPath = $deployment->getAttribute('buildPath', '');
+        $directory = $device->getPath($deploymentId);
 
-        // A build canceled or deleted before it completed never had its staged
-        // source moved (see Deployments::payload()). Unlinking follows
-        // symlinked parent directories the build could plant, so clean up only
-        // inside the builds tree.
-        $staged = Deployments::stagedSourcePath($device, $deploymentId);
-        if ($device->getType() === DeviceType::Local && \realpath(\dirname($staged)) === \dirname($staged)) {
-            $device->delete($staged);
+        // The whole directory, not just buildPath: a build canceled or deleted
+        // before it completed leaves its staged source there (see
+        // Deployments::payload()), and other files besides the artifact.
+        try {
+            if (Deployments::deleteBuildDirectory($device, $deploymentId)) {
+                Console::success('Deleted build directory: ' . $directory);
+            } else {
+                Console::error('Failed to delete build directory: ' . $directory);
+            }
+        } catch (Throwable $th) {
+            Console::error('Failed to delete build directory: ' . $directory);
+            Console::error('[Error] Message: ' . $th->getMessage());
         }
 
-        if (empty($buildPath)) {
-            Console::info("No build files for deployment " . $deploymentId);
+        // A buildPath outside that directory is deleted on its own.
+        if (empty($buildPath) || \str_starts_with($buildPath, $directory . '/')) {
             return;
         }
 
