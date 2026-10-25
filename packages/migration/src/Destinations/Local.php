@@ -23,15 +23,33 @@ class Local extends Destination
 
     protected string $path;
 
+    private string $filesRoot;
+
+    private string $deploymentsRoot;
+
     public function __construct(string $path)
     {
         $this->path = $path;
 
         if (! \file_exists($this->path)) {
-            mkdir($this->path, 0777, true);
-            mkdir($this->path . '/files', 0777, true);
-            mkdir($this->path . '/deployments', 0777, true);
+            \mkdir($this->path, 0777, true);
         }
+        if (! \file_exists($this->path . '/files')) {
+            \mkdir($this->path . '/files', 0777, true);
+        }
+        if (! \file_exists($this->path . '/deployments')) {
+            \mkdir($this->path . '/deployments', 0777, true);
+        }
+
+        $filesRoot = \realpath($this->path . '/files');
+        $deploymentsRoot = \realpath($this->path . '/deployments');
+
+        if ($filesRoot === false || $deploymentsRoot === false) {
+            throw new \Exception('Unable to resolve export directories', MigrationException::CODE_INTERNAL);
+        }
+
+        $this->filesRoot = $filesRoot;
+        $this->deploymentsRoot = $deploymentsRoot;
     }
 
     public static function getName(): string
@@ -112,6 +130,79 @@ class Local extends Destination
     }
 
     /**
+     * Resolve a relative name under a canonical export root, creating parent
+     * directories as needed. Rejects names that leave the root or follow a symlink.
+     *
+     * @throws \Exception
+     */
+    private function confinedPath(string $root, string $name): string
+    {
+        if (
+            $name === ''
+            || \str_starts_with($name, '/')
+            || \str_contains($name, '\\')
+            || \str_contains($name, "\0")
+        ) {
+            throw new \Exception('Invalid export path', MigrationException::CODE_VALIDATION);
+        }
+
+        $segments = \explode('/', $name);
+
+        foreach ($segments as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..') {
+                throw new \Exception('Invalid export path', MigrationException::CODE_VALIDATION);
+            }
+        }
+
+        $current = $root;
+        $last = \count($segments) - 1;
+
+        foreach ($segments as $index => $segment) {
+            $next = $current . '/' . $segment;
+
+            if (\is_link($next)) {
+                throw new \Exception('Invalid export path', MigrationException::CODE_VALIDATION);
+            }
+
+            if ($index < $last) {
+                if (! \file_exists($next)) {
+                    if (! \mkdir($next, 0777) && ! \is_dir($next)) {
+                        throw new \Exception('Unable to create export directory', MigrationException::CODE_INTERNAL);
+                    }
+                } elseif (! \is_dir($next)) {
+                    throw new \Exception('Invalid export path', MigrationException::CODE_VALIDATION);
+                }
+
+                $resolved = \realpath($next);
+                if ($resolved === false || ! $this->isBeneathRoot($root, $resolved)) {
+                    throw new \Exception('Invalid export path', MigrationException::CODE_VALIDATION);
+                }
+
+                $current = $resolved;
+                continue;
+            }
+
+            if (\file_exists($next)) {
+                $resolved = \realpath($next);
+                if ($resolved === false || ! $this->isBeneathRoot($root, $resolved)) {
+                    throw new \Exception('Invalid export path', MigrationException::CODE_VALIDATION);
+                }
+
+                return $resolved;
+            }
+
+            return $next;
+        }
+
+        throw new \Exception('Invalid export path', MigrationException::CODE_VALIDATION);
+    }
+
+    private function isBeneathRoot(string $root, string $path): bool
+    {
+        return $path === $root || \str_starts_with($path, $root . '/');
+    }
+
+    /**
      * @param array<Resource> $resources
      * @param callable $callback
      * @throws \Exception
@@ -119,44 +210,52 @@ class Local extends Destination
     protected function import(array $resources, callable $callback): void
     {
         foreach ($resources as $resource) {
-            switch ($resource->getName()) {
-                case Resource::TYPE_DEPLOYMENT:
-                    /** @var Deployment $resource */
-                    if ($resource->getStart() === 0) {
-                        $this->data[$resource->getGroup()][$resource->getName()][] = (string) \json_encode($resource);
-                    }
-
-                    file_put_contents($this->path . 'deployments/' . $resource->getId() . '.tar.gz', $resource->getData(), FILE_APPEND);
-                    $resource->setData('');
-                    break;
-                case Resource::TYPE_FILE:
-                    /** @var File $resource */
-                    if (str_contains($resource->getFileName(), '/')) {
-                        $folders = explode('/', $resource->getFileName());
-                        $folderPath = $this->path.'/files';
-
-                        foreach ($folders as $folder) {
-                            $folderPath .= '/'.$folder;
-
-                            if (! \file_exists($folderPath) && str_contains($folder, '.') === false) {
-                                mkdir($folderPath, 0777, true);
-                            }
+            try {
+                switch ($resource->getName()) {
+                    case Resource::TYPE_DEPLOYMENT:
+                        /** @var Deployment $resource */
+                        if ($resource->getStart() === 0) {
+                            $this->data[$resource->getGroup()][$resource->getName()][] = (string) \json_encode($resource);
                         }
-                    }
 
-                    if ($resource->getStart() === 0 && \file_exists($this->path.'/files/'.$resource->getFileName())) {
-                        unlink($this->path.'/files/'.$resource->getFileName());
-                    }
+                        $deploymentPath = $this->confinedPath(
+                            $this->deploymentsRoot,
+                            $resource->getId() . '.tar.gz'
+                        );
 
-                    file_put_contents($this->path.'/files/'.$resource->getFileName(), $resource->getData(), FILE_APPEND);
-                    $resource->setData('');
-                    break;
-                default:
-                    $this->data[$resource->getGroup()][$resource->getName()][] = (string) \json_encode($resource);
-                    break;
+                        \file_put_contents($deploymentPath, $resource->getData(), FILE_APPEND);
+                        $resource->setData('');
+                        break;
+                    case Resource::TYPE_FILE:
+                        /** @var File $resource */
+                        $filePath = $this->confinedPath($this->filesRoot, $resource->getFileName());
+
+                        if ($resource->getStart() === 0 && \file_exists($filePath)) {
+                            \unlink($filePath);
+                        }
+
+                        \file_put_contents($filePath, $resource->getData(), FILE_APPEND);
+                        $resource->setData('');
+                        break;
+                    default:
+                        $this->data[$resource->getGroup()][$resource->getName()][] = (string) \json_encode($resource);
+                        break;
+                }
+
+                $resource->setStatus(Resource::STATUS_SUCCESS);
+            } catch (\Throwable $e) {
+                $resource->setStatus(Resource::STATUS_ERROR, $e->getMessage());
+
+                $this->addError(new MigrationException(
+                    resourceName: $resource->getName(),
+                    resourceGroup: $resource->getGroup(),
+                    resourceId: $resource->getId(),
+                    message: $e->getMessage(),
+                    code: $e->getCode(),
+                    previous: $e
+                ));
             }
 
-            $resource->setStatus(Resource::STATUS_SUCCESS);
             $this->cache->update($resource);
 
             $this->sync();
