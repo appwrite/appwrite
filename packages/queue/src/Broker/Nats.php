@@ -15,6 +15,7 @@ use Utopia\NATS\Headers;
 use Utopia\NATS\JetStream\AckPolicy;
 use Utopia\NATS\JetStream\Consumer as NatsConsumer;
 use Utopia\NATS\JetStream\ConsumerConfig;
+use Utopia\NATS\JetStream\ConsumerInfo;
 use Utopia\NATS\JetStream\DiscardPolicy;
 use Utopia\NATS\JetStream\JetStream;
 use Utopia\NATS\JetStream\JetStreamMessage;
@@ -170,10 +171,17 @@ class Nats implements Synchronous, Consumer, Bounded
     private array $served = [];
 
     /**
-     * @var array<string, array{floor: int, at: float}> per queue, the work consumer's
-     *      ack floor stream sequence as reap() last read it, and when
+     * @var array<string, array{floor: int, at: float, created: string}> per queue, the
+     *      work consumer's ack floor stream sequence as reap() last read it, when, and
+     *      the creation time of the consumer it was read from
      */
     private array $floors = [];
+
+    /**
+     * @var array<string, true> dead-letter ids copied to the dead stream whose delete
+     *      from the work stream has not succeeded yet, so a retry only deletes
+     */
+    private array $copied = [];
 
     /** Publishes the stream recognised as duplicates of an id it already held. */
     private int $duplicates = 0;
@@ -818,11 +826,10 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * Owe a failure to the caller's reporter, if it gave one.
      *
-     * Buffered rather than called here. The only caller is drainDeadLetters(), which
-     * runs under the receive lock, and the reporter is the caller's code: one that
-     * publishes a notification -- onto this very broker, plausibly -- would wait on a
-     * lock its own call stack is holding. {@see self::flushReports()} hands these over
-     * once receive() has let go.
+     * Buffered rather than called here. drainDeadLetters() runs under the receive lock,
+     * and the reporter is the caller's code: one that publishes a notification -- onto
+     * this very broker, plausibly -- would wait on a lock its own call stack is holding.
+     * {@see self::flushReports()} hands these over once receive() or maintain() has let go.
      */
     private function report(\Throwable $error): void
     {
@@ -1494,10 +1501,9 @@ class Nats implements Synchronous, Consumer, Bounded
      *
      * The floor passes a message as it is acknowledged and the stream deletes it a
      * moment later, so one read cannot tell an exhausted message from one on its way
-     * out. Only a floor read at least $strandedAfter ago, and still standing, is swept,
-     * and a broker's first call only takes that reading: it moves nothing. The lower of
-     * the old and new floors is used, so a consumer recreated in between, whose floor
-     * starts again from zero, holds the sweep back.
+     * out. Only a floor read at least $strandedAfter ago is swept, and a broker's first
+     * call only takes that reading: it moves nothing. A consumer recreated in between has
+     * a floor of its own, so its first reading is taken afresh, the same way.
      *
      * Safe to run from every replica at once: each copy carries the id reject() gives a
      * dead letter, so the dead stream stores one, and a delete that finds the message
@@ -1519,7 +1525,7 @@ class Nats implements Synchronous, Consumer, Bounded
         }
 
         try {
-            $floor = $this->command(fn (): int => $this->commandsConsumer($stream)->info(true)->ackFloor->streamSeq);
+            $info = $this->command(fn (): ConsumerInfo => $this->commandsConsumer($stream)->info(true));
         } catch (JetStreamException $e) {
             if ($e->apiError?->code === 404) {
                 unset($this->floors[$key]);
@@ -1529,12 +1535,12 @@ class Nats implements Synchronous, Consumer, Bounded
             throw $e;
         }
 
-        $this->floors[$key] = ['floor' => $floor, 'at' => $now];
-        if ($previous === null) {
+        $this->floors[$key] = ['floor' => $info->ackFloor->streamSeq, 'at' => $now, 'created' => $info->created];
+        if ($previous === null || $previous['created'] !== $info->created) {
             return 0;
         }
 
-        $settled = min($floor, $previous['floor']);
+        $settled = $previous['floor'];
         $moved = 0;
         $last = 0;
         while ($limit === null || $moved < $limit) {
@@ -1645,9 +1651,16 @@ class Nats implements Synchronous, Consumer, Bounded
             $this->command(fn () => $commands->tick());
         }
 
+        // One queue failing must not leave the others' stranded messages where they are.
         foreach ($this->served as $queue) {
-            $this->reap($queue, limit: self::REAP_LIMIT);
+            try {
+                $this->reap($queue, limit: self::REAP_LIMIT);
+            } catch (\Throwable $error) {
+                $this->report($error);
+            }
         }
+
+        $this->flushReports();
     }
 
     /**
@@ -2014,7 +2027,8 @@ class Nats implements Synchronous, Consumer, Bounded
      * Under the id reject() gives a dead letter, so the advisory and reap(), or two
      * replicas reaping, store one copy between them. Copied first, so a failure leaves
      * the message where it was rather than losing it; a delete that finds it gone means
-     * another broker finished it first.
+     * another broker finished it first. A delete that fails is retried without copying
+     * again: the dead stream only recognises the id for its duplicate window.
      */
     private function bury(JetStream $js, Queue $queue, StreamMessage $stored): void
     {
@@ -2032,7 +2046,11 @@ class Nats implements Synchronous, Consumer, Bounded
         }
         $pid = \is_array($data) && \is_string($data['pid'] ?? null) ? $data['pid'] : $this->workStream($queue);
 
-        $js->publish($this->deadSubject($queue), $stored->data, headers: $headers, msgId: $pid . '.dead.' . $stored->sequence);
+        $id = $pid . '.dead.' . $stored->sequence;
+        if (!isset($this->copied[$id])) {
+            $js->publish($this->deadSubject($queue), $stored->data, headers: $headers, msgId: $id);
+            $this->copied[$id] = true;
+        }
 
         try {
             $js->deleteMessage($this->workStream($queue), $stored->sequence);
@@ -2041,6 +2059,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 throw $e;
             }
         }
+        unset($this->copied[$id]);
     }
 
     /** Logical queue identity (namespace + name); used for cache keys and stream naming. */

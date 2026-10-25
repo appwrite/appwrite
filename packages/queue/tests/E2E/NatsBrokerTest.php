@@ -14,8 +14,10 @@ use Utopia\NATS\Exception\NatsException;
 use Utopia\NATS\Exception\NoRespondersException;
 use Utopia\NATS\JetStream\ConsumerConfig;
 use Utopia\NATS\JetStream\DiscardPolicy;
+use Utopia\NATS\JetStream\JetStream;
 use Utopia\NATS\JetStream\JetStreamMessage;
 use Utopia\NATS\JetStream\StorageType;
+use Utopia\NATS\JetStream\StreamConfig;
 use Utopia\NATS\Transport\TcpTransport;
 use Utopia\NATS\Transport\Transport;
 use Utopia\Queue\Adapter\Swoole;
@@ -33,6 +35,9 @@ final class NatsBrokerTest extends TestCase
 {
     private Nats $broker;
     private Queue $queue;
+
+    /** @var list<Nats> brokers a test builds itself, closed whether or not it passes */
+    private array $brokers = [];
 
     protected function setUp(): void
     {
@@ -55,6 +60,9 @@ final class NatsBrokerTest extends TestCase
     protected function tearDown(): void
     {
         $this->broker->close();
+        foreach ($this->brokers as $broker) {
+            $broker->close();
+        }
     }
 
     public function testPublishReceiveCommit(): void
@@ -940,7 +948,7 @@ final class NatsBrokerTest extends TestCase
     public function testReapLeavesDeliverableMessagesAlone(): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
-        $broker = new Nats(Connection::connect($url), ackWait: 30.0, maxDeliver: 3, strandedAfter: 0.0);
+        $this->brokers[] = $broker = new Nats(Connection::connect($url), ackWait: 30.0, maxDeliver: 3, strandedAfter: 0.0);
         $stream = 'Q_' . strtoupper($this->queue->name);
 
         for ($i = 1; $i <= 4; $i++) {
@@ -964,7 +972,6 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame(0, $js->getStreamInfo($stream . '_DEAD')->state->messages);
 
         $broker->commit($this->queue, $held);
-        $broker->close();
     }
 
     /**
@@ -976,7 +983,7 @@ final class NatsBrokerTest extends TestCase
     public function testReapMovesAMessageTheConsumerGaveUpOn(): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
-        $broker = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
+        $this->brokers[] = $broker = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
         $stream = 'Q_' . strtoupper($this->queue->name);
 
         $broker->publish($this->queue, ['poison' => true]);
@@ -999,13 +1006,12 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame(['poison' => true], $dead['payload']);
 
         $broker->commit($this->queue, $inFlight);
-        $broker->close();
     }
 
     public function testReapWaitsForTheFloorToStandBeforeMovingAnything(): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
-        $broker = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 3600.0);
+        $this->brokers[] = $broker = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 3600.0);
         $stream = 'Q_' . strtoupper($this->queue->name);
 
         $broker->publish($this->queue, ['poison' => true]);
@@ -1020,7 +1026,6 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame(1, $js->getStreamInfo($stream)->state->messages);
         $this->assertSame(0, $js->getStreamInfo($stream . '_DEAD')->state->messages);
 
-        $broker->close();
     }
 
     public function testEveryReplicaReapingStoresOneDeadLetter(): void
@@ -1029,7 +1034,7 @@ final class NatsBrokerTest extends TestCase
         $stream = 'Q_' . strtoupper($this->queue->name);
         $replicas = [];
         for ($i = 0; $i < 3; $i++) {
-            $replicas[$i] = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
+            $this->brokers[] = $replicas[$i] = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
         }
 
         $replicas[0]->publish($this->queue, ['poison' => true]);
@@ -1047,16 +1052,12 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame(1, $moved);
         $this->assertSame(0, $js->getStreamInfo($stream)->state->messages);
         $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages);
-
-        foreach ($replicas as $replica) {
-            $replica->close();
-        }
     }
 
     public function testMaintainReapsTheQueuesItReceivesFrom(): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
-        $broker = new Nats(static fn (): Connection => Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
+        $this->brokers[] = $broker = new Nats(static fn (): Connection => Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
         $stream = 'Q_' . strtoupper($this->queue->name);
 
         $broker->publish($this->queue, ['poison' => true]);
@@ -1071,8 +1072,121 @@ final class NatsBrokerTest extends TestCase
         $js = Connection::connect($url)->jetStream();
         $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'work stream holds nothing');
         $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'the message is on the dead stream');
+    }
 
-        $broker->close();
+    public function testMaintainReapsTheOtherQueuesWhenOneFails(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $errors = [];
+        $this->brokers[] = $broker = new Nats(
+            static fn (): Connection => Connection::connect($url),
+            ackWait: 1.0,
+            maxDeliver: 1,
+            onError: static function (\Throwable $error) use (&$errors): void {
+                $errors[] = $error;
+            },
+            strandedAfter: 0.0,
+        );
+        $failing = $this->queue;
+        $healthy = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $js = Connection::connect($url)->jetStream();
+
+        foreach ([$failing, $healthy] as $queue) {
+            $stream = 'Q_' . strtoupper($queue->name);
+            $broker->publish($queue, ['poison' => true]);
+            $this->strand($broker, $url, $stream, $queue);
+        }
+        $this->refuseDeletes($js, 'Q_' . strtoupper($failing->name));
+
+        // Received in this order, so the failing queue is reaped first.
+        $this->assertSame([], $broker->receive($failing, 1));
+        $this->assertSame([], $broker->receive($healthy, 1));
+
+        $broker->maintain();
+        $broker->maintain();
+
+        $stream = 'Q_' . strtoupper($healthy->name);
+        $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'the healthy queue was still swept');
+        $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages);
+        $this->assertCount(1, $errors, 'the failing queue was reported');
+    }
+
+    /**
+     * A consumer recreated between two readings starts a floor of its own. One that has
+     * already caught up past the old floor says nothing about how long its own floor has
+     * stood, so the sweep waits for a reading of the new consumer.
+     */
+    public function testReapTakesAFreshReadingWhenTheConsumerIsRecreated(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $this->brokers[] = $broker = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
+        $stream = 'Q_' . strtoupper($this->queue->name);
+
+        $broker->publish($this->queue, ['poison' => true]);
+        $this->strand($broker, $url, $stream);
+        $this->assertSame(0, $broker->reap($this->queue), 'the first reading moves nothing');
+
+        // A new consumer gives up on the same message, and its floor passes the old one.
+        $js = Connection::connect($url)->jetStream();
+        $config = $js->getConsumer($stream, 'worker')->info(true)->config;
+        $js->deleteConsumer($stream, 'worker');
+        $worker = $js->createConsumer($stream, $config);
+        for ($delivery = 1; $delivery <= 2; $delivery++) {
+            $this->assertCount(1, iterator_to_array($worker->fetch(1, 3.0, false), false));
+            usleep(1_500_000);
+        }
+        $broker->publish($this->queue, ['later' => true]);
+        $later = null;
+        foreach ($worker->fetch(1, 3.0, false) as $delivery) {
+            $later = $delivery;
+        }
+        $this->assertInstanceOf(JetStreamMessage::class, $later);
+        $later->ackSync();
+        $this->assertSame(3, $worker->info(true)->ackFloor->streamSeq);
+
+        $this->assertSame(0, $broker->reap($this->queue), 'a reading of the new consumer moves nothing');
+        $this->assertSame(1, $js->getStreamInfo($stream)->state->messages);
+        $this->assertSame(1, $broker->reap($this->queue));
+    }
+
+    public function testReapCopiesADeadLetterOnceWhileItsDeleteKeepsFailing(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $this->brokers[] = $broker = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
+        $stream = 'Q_' . strtoupper($this->queue->name);
+        $js = Connection::connect($url)->jetStream();
+
+        $broker->publish($this->queue, ['poison' => true]);
+        $this->strand($broker, $url, $stream);
+        $this->refuseDeletes($js, $stream);
+        $this->reconfigure($js, $stream . '_DEAD', ['duplicate_window' => 1_000_000_000]);
+
+        $this->assertSame(0, $broker->reap($this->queue), 'the first reading moves nothing');
+        for ($attempt = 1; $attempt <= 2; $attempt++) {
+            try {
+                $broker->reap($this->queue);
+                $this->fail('the delete was refused');
+            } catch (JetStreamException) {
+            }
+            usleep(1_500_000); // past the dead stream's duplicate window
+        }
+
+        $this->assertSame(1, $js->getStreamInfo($stream)->state->messages, 'still on the work stream');
+        $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'copied once');
+    }
+
+    /** Deletes are refused for good: the server will not lift deny_delete. */
+    private function refuseDeletes(JetStream $js, string $stream): void
+    {
+        $this->reconfigure($js, $stream, ['deny_delete' => true]);
+    }
+
+    /** @param array<string, mixed> $changes */
+    private function reconfigure(JetStream $js, string $stream, array $changes): void
+    {
+        // Empty sections are dropped: they round-trip as a JSON list the server refuses.
+        $config = array_filter($js->getStreamInfo($stream)->config->toArray(), static fn (mixed $value): bool => $value !== []);
+        $js->updateStream(StreamConfig::fromArray([...$config, ...$changes]));
     }
 
     /**
@@ -1081,7 +1195,7 @@ final class NatsBrokerTest extends TestCase
      * no broker subscribed to the advisory the last one raises. The server stops
      * delivering it, and the next message acknowledged moves the ack floor past it.
      */
-    private function strand(Nats $broker, string $url, string $stream): void
+    private function strand(Nats $broker, string $url, string $stream, ?Queue $queue = null): void
     {
         $worker = Connection::connect($url)->jetStream()->getConsumer($stream, 'worker');
         for ($delivery = 1; $delivery <= 2; $delivery++) {
@@ -1095,7 +1209,7 @@ final class NatsBrokerTest extends TestCase
 
         // Acknowledged off the durable as well: a broker that received here would join
         // the advisory group, and the advisory path would move the message instead.
-        $broker->publish($this->queue, ['later' => true]);
+        $broker->publish($queue ?? $this->queue, ['later' => true]);
         $later = null;
         foreach ($worker->fetch(1, 3.0, false) as $delivery) {
             $later = $delivery;
