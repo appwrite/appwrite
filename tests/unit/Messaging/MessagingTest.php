@@ -729,6 +729,74 @@ final class MessagingTest extends TestCase
         }
     }
 
+    public function testFromPayloadUserEventsDropAccountSecrets(): void
+    {
+        // Account events reach the user's own sockets; what a server response held stays out.
+        foreach ([
+            'users.A.create',
+            'users.A.update.labels',
+            'users.A.sessions.S.create',
+            'users.A.tokens.T.create',
+            'users.A.create.mfa.recovery-codes',
+            'users.A.identities.I.delete',
+        ] as $event) {
+            $result = Realtime::fromPayload(
+                event: $event,
+                payload: new Document(['$id' => Id::custom('A')]),
+            );
+
+            foreach (['password', 'hash', 'hashOptions', 'secret', 'providerAccessToken', 'providerRefreshToken', 'providerIdToken', 'recoveryCodes'] as $key) {
+                $this->assertContains($key, $result['sensitive'], $event);
+            }
+        }
+
+        // Other payloads are the resource itself, whose attributes may be named anything.
+        $result = Realtime::fromPayload(
+            event: 'databases.D.collections.C.documents.X.create',
+            payload: new Document(['$id' => 'X', '$permissions' => [Permission::read(Role::any())]]),
+            database: new Document(['$id' => 'D']),
+            collection: new Document(['$id' => 'C', 'documentSecurity' => true]),
+        );
+
+        $this->assertSame([], $result['sensitive']);
+    }
+
+    public function testFromPayloadMembershipEventsFollowMembershipsPrivacy(): void
+    {
+        // Every member receives membership events, so fields the project hides from other
+        // members stay out of them, as they do over the API.
+        $result = Realtime::fromPayload(
+            event: 'teams.T.memberships.M.create',
+            payload: new Document(['$id' => 'M', 'userId' => 'A']),
+            project: new Document(['$id' => 'P', 'auths' => [
+                'membershipsUserName' => false,
+                'membershipsUserEmail' => false,
+                'membershipsUserPhone' => false,
+            ]]),
+        );
+
+        $this->assertEqualsCanonicalizing(['userName', 'userEmail', 'userPhone', 'userAccessedAt'], $result['sensitive']);
+
+        // Unset settings fall back to the API's defaults, which show all but the last access.
+        $result = Realtime::fromPayload(
+            event: 'teams.T.memberships.M.update',
+            payload: new Document(['$id' => 'M', 'userId' => 'A']),
+            project: new Document(['$id' => 'P']),
+        );
+
+        $this->assertSame(['userAccessedAt'], $result['sensitive']);
+
+        // A hidden user ID still routes the delete to the member who left.
+        $result = Realtime::fromPayload(
+            event: 'teams.T.memberships.M.delete',
+            payload: new Document(['$id' => 'M', 'userId' => 'A']),
+            project: new Document(['$id' => 'P', 'auths' => ['membershipsUserId' => false]]),
+        );
+
+        $this->assertContains('userId', $result['sensitive']);
+        $this->assertContains(Role::user(Id::custom('A'))->toString(), $result['roles']);
+    }
+
     public function testSubscribeKeepsConnectionAuthorizationState(): void
     {
         $realtime = new Realtime();

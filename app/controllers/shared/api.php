@@ -543,7 +543,9 @@ Http::init()
         // Step 9: Validate scope permissions
         $allowed = (array) $route->getLabel('scope', 'none');
         if (empty(\array_intersect($allowed, $scopes))) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
+            // The message reaches logs and error reports: name keys and guests by their service address, never a person by theirs
+            $actor = $user->getId() === '' ? $user->getAttribute('email', 'User') : 'User';
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $actor . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
         $request->setScopes($scopes);
 

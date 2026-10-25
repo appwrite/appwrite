@@ -1371,7 +1371,8 @@ Http::error()
         try {
             /** @var Utopia\Database\Document $user */
             $user = $utopia->context()->get('user');
-            Span::add('user.id', $user->isEmpty() ? 'guest-' . hash('sha256', $request->getIP()) : $user->getId());
+            // Keyed, so the guest's IP cannot be recovered from the ID by hashing every address
+            Span::add('user.id', $user->isEmpty() ? 'guest-' . \hash_hmac('sha256', $request->getIP(), System::getEnv('_APP_OPENSSL_KEY_V1', '')) : $user->getId());
         } catch (\Throwable) {
             // User resource may not be available in error context
         }

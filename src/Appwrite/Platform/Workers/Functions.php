@@ -849,9 +849,12 @@ class Functions extends Action
                 ->trigger();
 
             /** Trigger Realtime Events */
+            // Realtime reaches the user who ran the function, who reads executions without
+            // their logs and errors over the API too; webhooks and functions keep both
             $queueForRealtime
                 ->setSubscribers(['console', $project->getId()])
                 ->from($queueForEvents)
+                ->setPayload([...$queueForEvents->getPayload(), 'logs' => '', 'errors' => ''])
                 ->trigger();
 
             /** Trigger Functions */

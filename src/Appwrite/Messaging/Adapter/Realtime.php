@@ -44,6 +44,32 @@ class Realtime extends MessagingAdapter
         'presences'
     ];
 
+    // Credentials and secrets account events never carry. The events reach the user's
+    // sockets, where any script on the page can read them, while the API returns these
+    // only in its own responses: to a server key, or to the user who asked for them.
+    private const ACCOUNT_SECRETS = [
+        'password',
+        'hash',
+        'hashOptions',
+        'secret',
+        'providerAccessToken',
+        'providerRefreshToken',
+        'providerIdToken',
+        'recoveryCodes',
+    ];
+
+    // Membership fields a project can hide from other members, by its `auths` setting,
+    // with the default the API applies when the setting is unset. Membership events reach
+    // every member, so a hidden field stays out of them as it does over the API.
+    private const MEMBERSHIP_PRIVACY = [
+        'membershipsUserName' => ['userName', true],
+        'membershipsUserEmail' => ['userEmail', true],
+        'membershipsMfa' => ['mfa', true],
+        'membershipsUserId' => ['userId', true],
+        'membershipsUserPhone' => ['userPhone', true],
+        'membershipsUserAccessedAt' => ['userAccessedAt', false],
+    ];
+
     // User events, after `users.{userId}`, that neither shape the user's roles nor
     // end a session, so fromPayload() does not re-resolve the user's open connections
     // for them. `*` stands for one ID segment. Anything not listed re-resolves, so a
@@ -852,6 +878,7 @@ class Realtime extends MessagingAdapter
     {
         $channels = [];
         $roles = [];
+        $sensitive = [];
         $permissionsChanged = false;
         $projectId = null;
         // TODO: add method here to remove all the magic index accesses
@@ -862,6 +889,7 @@ class Realtime extends MessagingAdapter
                 $channels[] = 'account';
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(Id::custom($parts[1]))->toString()];
+                $sensitive = self::ACCOUNT_SECRETS;
                 // Roles come from the user document (verification, labels, status,
                 // sessions), so the user's open connections re-resolve when it changes,
                 // as they already do for memberships.
@@ -905,6 +933,12 @@ class Realtime extends MessagingAdapter
                     $permissionsChanged = $parts[4] ?? false;
                     $channels[] = 'memberships';
                     $channels[] = 'memberships.' . $parts[3];
+                    $auths = $project?->getAttribute('auths', []) ?? [];
+                    foreach (self::MEMBERSHIP_PRIVACY as $setting => [$key, $shown]) {
+                        if (!($auths[$setting] ?? $shown)) {
+                            $sensitive[] = $key;
+                        }
+                    }
                 } else {
                     $permissionsChanged = $parts[2] === 'create';
                     $channels[] = 'teams';
@@ -1073,6 +1107,7 @@ class Realtime extends MessagingAdapter
         return [
             'channels' => $channels,
             'roles' => $roles,
+            'sensitive' => $sensitive,
             'permissionsChanged' => $permissionsChanged,
             'projectId' => $projectId,
         ];

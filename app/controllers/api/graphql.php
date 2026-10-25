@@ -258,7 +258,8 @@ function execute(
         }
     }
 
-    $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
+    // Raw messages and traces only in development, as for REST errors
+    $flags = Http::isDevelopment() ? DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE : DebugFlag::NONE;
     $validations = GraphQL::getStandardValidationRules();
 
     if (System::getEnv('_APP_GRAPHQL_INTROSPECTION', 'enabled') === 'disabled') {
@@ -269,10 +270,6 @@ function execute(
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);
     }
-    if (Http::getMode() === Http::MODE_TYPE_PRODUCTION) {
-        $flags = DebugFlag::NONE;
-    }
-
     $promises = [];
     foreach ($query as $indexed) {
         $source = $indexed['query'];
