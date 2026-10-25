@@ -1077,16 +1077,7 @@ final class NatsBrokerTest extends TestCase
     public function testMaintainReapsTheOtherQueuesWhenOneFails(): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
-        $errors = [];
-        $this->brokers[] = $broker = new Nats(
-            static fn (): Connection => Connection::connect($url),
-            ackWait: 1.0,
-            maxDeliver: 1,
-            onError: static function (\Throwable $error) use (&$errors): void {
-                $errors[] = $error;
-            },
-            strandedAfter: 0.0,
-        );
+        $this->brokers[] = $broker = new Nats(static fn (): Connection => Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
         $failing = $this->queue;
         $healthy = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
         $js = Connection::connect($url)->jetStream();
@@ -1103,12 +1094,15 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame([], $broker->receive($healthy, 1));
 
         $broker->maintain();
-        $broker->maintain();
+        try {
+            $broker->maintain();
+            $this->fail('the failing queue is raised for the adapter to report');
+        } catch (JetStreamException) {
+        }
 
         $stream = 'Q_' . strtoupper($healthy->name);
         $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'the healthy queue was still swept');
         $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages);
-        $this->assertCount(1, $errors, 'the failing queue was reported');
     }
 
     /**
@@ -1173,6 +1167,43 @@ final class NatsBrokerTest extends TestCase
 
         $this->assertSame(1, $js->getStreamInfo($stream)->state->messages, 'still on the work stream');
         $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'copied once');
+    }
+
+    /**
+     * Two queues can hold a message under the same id, at the same sequence: a delete
+     * that failed on one says nothing about whether the other was copied.
+     */
+    public function testReapCopiesADeadLetterTheOtherQueueFailedToDelete(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $this->brokers[] = $broker = new Nats(
+            Connection::connect($url),
+            ackWait: 1.0,
+            maxDeliver: 1,
+            messageId: static fn (array $payload): string => isset($payload['poison']) ? 'shared' : bin2hex(random_bytes(8)),
+            strandedAfter: 0.0,
+        );
+        $failing = $this->queue;
+        $healthy = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $js = Connection::connect($url)->jetStream();
+
+        foreach ([$failing, $healthy] as $queue) {
+            $broker->publish($queue, ['poison' => true]);
+            $this->strand($broker, $url, 'Q_' . strtoupper($queue->name), $queue);
+            $this->assertSame(0, $broker->reap($queue), 'the first reading moves nothing');
+        }
+        $this->refuseDeletes($js, 'Q_' . strtoupper($failing->name));
+
+        try {
+            $broker->reap($failing);
+            $this->fail('the delete was refused');
+        } catch (JetStreamException) {
+        }
+        $this->assertSame(1, $broker->reap($healthy));
+
+        $stream = 'Q_' . strtoupper($healthy->name);
+        $this->assertSame(0, $js->getStreamInfo($stream)->state->messages);
+        $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'copied, not only deleted');
     }
 
     /** Deletes are refused for good: the server will not lift deny_delete. */

@@ -178,8 +178,9 @@ class Nats implements Synchronous, Consumer, Bounded
     private array $floors = [];
 
     /**
-     * @var array<string, true> dead-letter ids copied to the dead stream whose delete
-     *      from the work stream has not succeeded yet, so a retry only deletes
+     * @var array<string, true> per work stream and dead-letter id, copies on the dead
+     *      stream whose delete from the work stream has not succeeded yet, so a retry
+     *      only deletes
      */
     private array $copied = [];
 
@@ -826,10 +827,11 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * Owe a failure to the caller's reporter, if it gave one.
      *
-     * Buffered rather than called here. drainDeadLetters() runs under the receive lock,
-     * and the reporter is the caller's code: one that publishes a notification -- onto
-     * this very broker, plausibly -- would wait on a lock its own call stack is holding.
-     * {@see self::flushReports()} hands these over once receive() or maintain() has let go.
+     * Buffered rather than called here. The only caller is drainDeadLetters(), which
+     * runs under the receive lock, and the reporter is the caller's code: one that
+     * publishes a notification -- onto this very broker, plausibly -- would wait on a
+     * lock its own call stack is holding. {@see self::flushReports()} hands these over
+     * once receive() has let go.
      */
     private function report(\Throwable $error): void
     {
@@ -1651,16 +1653,20 @@ class Nats implements Synchronous, Consumer, Bounded
             $this->command(fn () => $commands->tick());
         }
 
-        // One queue failing must not leave the others' stranded messages where they are.
+        // One queue failing must not leave the others' stranded messages where they are,
+        // and is raised once they are swept, for the adapter's error callback.
+        $failure = null;
         foreach ($this->served as $queue) {
             try {
                 $this->reap($queue, limit: self::REAP_LIMIT);
             } catch (\Throwable $error) {
-                $this->report($error);
+                $failure ??= $error;
             }
         }
 
-        $this->flushReports();
+        if ($failure !== null) {
+            throw $failure;
+        }
     }
 
     /**
@@ -2047,9 +2053,10 @@ class Nats implements Synchronous, Consumer, Bounded
         $pid = \is_array($data) && \is_string($data['pid'] ?? null) ? $data['pid'] : $this->workStream($queue);
 
         $id = $pid . '.dead.' . $stored->sequence;
-        if (!isset($this->copied[$id])) {
+        $copy = $this->workStream($queue) . ' ' . $id;
+        if (!isset($this->copied[$copy])) {
             $js->publish($this->deadSubject($queue), $stored->data, headers: $headers, msgId: $id);
-            $this->copied[$id] = true;
+            $this->copied[$copy] = true;
         }
 
         try {
@@ -2059,7 +2066,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 throw $e;
             }
         }
-        unset($this->copied[$id]);
+        unset($this->copied[$copy]);
     }
 
     /** Logical queue identity (namespace + name); used for cache keys and stream naming. */
