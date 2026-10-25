@@ -121,17 +121,14 @@ class Image
 
         $originalAspect = $this->width / $this->height;
 
-        if ($width === 0) {
-            $width = \intval($height * $originalAspect);
-        }
-
-        if ($height === 0) {
-            $height = \intval($width / $originalAspect);
-        }
-
-        if ($height === 0 && $width === 0) {
+        // A derived side rounds down, so a 1px side on a skewed source must not collapse to 0.
+        if ($width === 0 && $height === 0) {
             $height = $this->height;
             $width = $this->width;
+        } elseif ($width === 0) {
+            $width = max(1, \intval($height * $originalAspect));
+        } elseif ($height === 0) {
+            $height = max(1, \intval($width / $originalAspect));
         }
 
         $resizeWidth = $this->width;

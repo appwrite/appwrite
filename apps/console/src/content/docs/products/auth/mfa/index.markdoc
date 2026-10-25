@@ -526,7 +526,7 @@ let byteBuffer = try await avatars.getQR(
   text: authenticatorUrl,
   size: 800, // optional
   margin: 0, // optional
-  download: xfalse // optional
+  download: false // optional
 )
 ```
 ```client-android-kotlin
@@ -620,7 +620,7 @@ the MFA is enforced.
 {% multicode %}
 ```client-web
 const result = await account.updateMFA({
-    enabled: true
+    mfa: true
 });
 ```
 
@@ -638,7 +638,7 @@ result.then((response) {
 
 ```client-apple
 let response = try await account.updateMFA(
-  mfa: xtrue
+  mfa: true
 )
 ```
 
@@ -967,16 +967,16 @@ result.then((response) {
 ```
 
 ```client-apple
-val response = account.updateMfaChallenge(
-    challengeId = "<CHALLENGE_ID>",
-    otp = "<OTP>"
+let result = try await account.updateMfaChallenge(
+  challengeId: "<CHALLENGE_ID>",
+  otp: "<OTP>"
 )
 ```
 
 ```client-android-kotlin
-let result = try await account.updateMfaChallenge(
-  challengeId: "<CHALLENGE_ID>",
-  otp: "<OTP>"
+val response = account.updateMfaChallenge(
+    challengeId = "<CHALLENGE_ID>",
+    otp = "<OTP>"
 )
 ```
 {% /multicode %}
@@ -1054,16 +1054,16 @@ result.then((response) {
 ```
 
 ```client-apple
-val response = account.updateMfaChallenge(
-    challengeId = "<CHALLENGE_ID>",
-    otp = "<RECOVERY_CODE>"
+let result = try await account.updateMfaChallenge(
+  challengeId: "<CHALLENGE_ID>",
+  otp: "<RECOVERY_CODE>"
 )
 ```
 
 ```client-android-kotlin
-let result = try await account.updateMfaChallenge(
-  challengeId: "<CHALLENGE_ID>",
-  otp: "<RECOVERY_CODE>"
+val response = account.updateMfaChallenge(
+    challengeId = "<CHALLENGE_ID>",
+    otp = "<RECOVERY_CODE>"
 )
 ```
 {% /multicode %}

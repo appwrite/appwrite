@@ -704,6 +704,16 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Your plan supports intervals of {minutes} minutes or longer.':
     'ご利用のプランでは {minutes} 分以上の間隔を設定できます。',
   'Upgrade to unlock': 'アップグレードで利用可能',
+  'Cron schedules are available on paid plans.':
+    'Cron スケジュールは有料プランで利用できます。',
+  'to use cron.': 'すると、Cron を使用できます。',
+  'Cron schedules are not available on your plan':
+    'ご利用のプランでは Cron スケジュールを利用できません',
+  'This function keeps running on its current cron until you switch it to an interval.':
+    'この関数は、間隔に切り替えるまで現在の Cron で引き続き実行されます。',
+  'to edit cron schedules.': 'すると、Cron スケジュールを編集できます。',
+  'Appwrite picks a fixed time within each interval for this function to spread load.':
+    '負荷を分散するため、Appwrite が各間隔内でこの関数の固定の実行時刻を決めます。',
   'Interval length': '間隔の長さ',
   'Interval unit': '間隔の単位',
   'Appwrite picks a fixed time within each interval for this function to spread load. Use cron if you need exact times.':
@@ -712,4 +722,45 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Every {count} minutes': '{count} 分ごと',
   'Every {count} hours': '{count} 時間ごと',
   'Every {count} days': '{count} 日ごと',
+  // Inbound email (SMTP) trigger
+  'Email trigger enabled': 'メールトリガーを有効にしました',
+  'Email trigger disabled': 'メールトリガーを無効にしました',
+  'Failed to update email trigger': 'メールトリガーの更新に失敗しました',
+  'Allow inbound email to trigger this function. It is off by default, so no mail is accepted until you enable it.':
+    '受信メールでこの関数をトリガーできるようにします。デフォルトはオフのため、有効にするまでメールは受け付けません。',
+  'Email trigger': 'メールトリガー',
+  'Inbound mail for this function is accepted.':
+    'この関数宛ての受信メールを受け付けます。',
+  'Inbound mail for this function is rejected.':
+    'この関数宛ての受信メールは拒否されます。',
+  'Default address': 'デフォルトアドレス',
+  'Enable the email trigger to receive mail at this address.':
+    'このアドレスでメールを受信するには、メールトリガーを有効にしてください。',
+  'Mail is delivered when this function has an active deployment.':
+    'この関数にアクティブなデプロイがある場合にメールが配信されます。',
+  // Inbound email (SMTP) custom domains
+  'Email domain verified': 'メールドメインを検証しました',
+  'Failed to add email domain': 'メールドメインの追加に失敗しました',
+  'Verify email domain': 'メールドメインを検証',
+  'Add email domain': 'メールドメインを追加',
+  'Email domains': 'メールドメイン',
+  'No email domains yet': 'メールドメインはまだありません',
+  'Email domain has been deleted': 'メールドメインを削除しました',
+  'Serve HTTP requests on your domain':
+    'ドメインで HTTP リクエストを処理します',
+  'Run on mail sent to any address on your domain':
+    'ドメイン内の任意のアドレスに届いたメールで実行します',
+  'Email domains need the email trigger.':
+    'メールドメインにはメールトリガーが必要です。',
+  'Enable it in settings': '設定で有効にする',
+  'Run this function on mail sent to domains you own.':
+    '所有するドメインに届いたメールでこの関数を実行します。',
+  'Add a domain, publish its MX and TXT records, then verify it to start receiving mail.':
+    'ドメインを追加し、MX レコードと TXT レコードを公開してから検証すると、メールの受信が始まります。',
+  'Use a domain or subdomain that receives no other mail, since its MX record will point to Appwrite.':
+    'MX レコードは Appwrite を指すため、他のメールを受信していないドメインまたはサブドメインを使用してください。',
+  'Mail is delivered to Appwrite on port 25, so the MX record must point straight at the value above, not at a proxied hostname.':
+    'メールはポート 25 で Appwrite に配信されるため、MX レコードはプロキシ経由のホスト名ではなく、上記の値を直接指す必要があります。',
+  'This region does not report its mail server yet, so the MX record cannot be shown. Add the TXT record now and come back for the MX record later.':
+    'このリージョンはまだメールサーバーを報告していないため、MX レコードを表示できません。先に TXT レコードを追加し、後で MX レコードを確認してください。',
 }

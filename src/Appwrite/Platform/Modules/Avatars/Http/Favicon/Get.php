@@ -45,6 +45,9 @@ class Get extends Action
             ->desc('Get favicon')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
+            ->label('abuse-key', 'url:{url},ip:{ip}')
+            ->label('abuse-limit', 60)
+            ->label('abuse-time', 60)
             ->label('cache', true)
             ->label('cache.resource', 'avatar/favicon')
             ->label('sdk', new Method(
@@ -87,10 +90,8 @@ class Get extends Action
             System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
         );
 
-        $client = $clientForAvatars->withTimeout(15);
-
         try {
-            $pageResponse = $this->safeFetch($url, $userAgent, $publicURL, $client, $pageUrl);
+            $pageResponse = $this->safeFetch($url, $userAgent, $publicURL, $clientForAvatars, $pageUrl);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -154,7 +155,7 @@ class Get extends Action
         }
 
         try {
-            $iconResponse = $this->safeFetch($outputHref, $userAgent, $publicURL, $client);
+            $iconResponse = $this->safeFetch($outputHref, $userAgent, $publicURL, $clientForAvatars);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }

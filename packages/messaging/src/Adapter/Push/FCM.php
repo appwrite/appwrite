@@ -134,6 +134,9 @@ class FCM extends PushAdapter
         if (!\is_null($message->getContentAvailable())) {
             $shared['message']['apns']['payload']['aps']['content-available'] = (int) $message->getContentAvailable();
         }
+        if (!\is_null($message->getMutableContent())) {
+            $shared['message']['apns']['payload']['aps']['mutable-content'] = (int) $message->getMutableContent();
+        }
         if (!\is_null($message->getPriority())) {
             $shared['message']['android']['priority'] = match ($message->getPriority()) {
                 Priority::HIGH => 'high',
@@ -143,6 +146,19 @@ class FCM extends PushAdapter
                 Priority::HIGH => '10',
                 Priority::NORMAL => '5',
             };
+        }
+
+        // No user-facing content means a silent background push: on the APNs side Apple requires type
+        // background, priority 5, and content-available. Android keeps its requested priority.
+        $background = \is_null($message->getTitle())
+            && \is_null($message->getBody())
+            && \is_null($message->getSound())
+            && \is_null($message->getCritical())
+            && \is_null($message->getBadge());
+        if ($background) {
+            $shared['message']['apns']['headers']['apns-push-type'] = 'background';
+            $shared['message']['apns']['headers']['apns-priority'] = '5';
+            $shared['message']['apns']['payload']['aps']['content-available'] = 1;
         }
 
         $bodies = [];

@@ -9,10 +9,13 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Tests\E2E\Services\Functions\FunctionsBase;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\System\System;
+use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
+use WebSocket\TimeoutException;
 
 final class RealtimeConsoleClientTest extends Scope
 {
@@ -31,7 +34,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -41,7 +44,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -85,7 +88,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors Tables DB',
         ]);
 
@@ -96,7 +99,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Actors',
         ]);
 
@@ -351,7 +354,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -361,7 +364,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -465,7 +468,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -475,7 +478,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1111,7 +1114,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -1237,5 +1240,208 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($payload['buildLogs']);
 
         $client->close();
+    }
+
+    public function testAdminModeRequiresProjectAccess(): void
+    {
+        $rootHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+
+        $team = $this->createTeamFixture($rootHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Admin Mode',
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        $projectId = $this->createOrganizationProject($rootHeaders, $teamId);
+        $otherProjectId = $this->createOrganizationProject($rootHeaders, $teamId);
+
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($rootHeaders, $teamId, $member['email'], ['project-' . $otherProjectId . '-developer']);
+
+        $stranger = $this->createConsoleAccount();
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getAdminWebsocket($projectId, $this->getRoot()['session'], ['account']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        // A project user sharing the console user's ID is a different identity.
+        $rootId = $this->getRoot()['$id'];
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+        ], [
+            'userId' => $rootId,
+            'email' => \uniqid('collision-', true) . '@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        while (true) {
+            try {
+                $frame = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                break;
+            }
+
+            $this->assertNotContains('users.' . $rootId . '.create', $frame['data']['events'] ?? [], 'An admin connection received a project user\'s account event.');
+        }
+        $client->close();
+
+        $client = $this->getAdminWebsocket($otherProjectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $client->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getAdminWebsocket($projectId, $stranger['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(401, $response['data']['code']);
+        $this->receiveUntilClosed($client);
+
+        $client = $this->getAdminWebsocket($projectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(404, $response['data']['code']);
+        $this->receiveUntilClosed($client);
+    }
+
+    public function testAdminModeRequiresConsoleOrigin(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $hostname = 'realtime-admin-' . \uniqid() . '.example.com';
+
+        $platform = $this->client->call(Client::METHOD_POST, '/project/platforms/web', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'platformId' => Id::unique(),
+            'name' => $hostname,
+            'hostname' => $hostname,
+        ]);
+        $this->assertSame(201, $platform['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getAdminWebsocket($projectId, $this->getRoot()['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $client->close();
+
+        $client = $this->getWebsocket(['documents'], [
+            'origin' => 'http://' . $hostname,
+        ], $projectId);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $client->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getWebsocket(['documents'], [
+            'origin' => 'http://' . $hostname,
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-mode' => 'admin',
+        ], $projectId);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(1008, $response['data']['code']);
+        $this->assertStringStartsWith('Invalid Origin', $response['data']['message']);
+        $this->receiveUntilClosed($client);
+    }
+
+    private function getAdminWebsocket(string $projectId, string $session, array $channels = ['documents']): WebSocketClient
+    {
+        return $this->getWebsocket($channels, [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $session,
+            'x-appwrite-mode' => 'admin',
+        ], $projectId);
+    }
+
+    private function createOrganizationProject(array $headers, string $teamId): string
+    {
+        $project = $this->client->call(Client::METHOD_POST, '/projects', $headers, [
+            'projectId' => Id::unique(),
+            'region' => System::getEnv('_APP_REGION', 'default'),
+            'name' => 'Realtime Admin Mode',
+            'teamId' => $teamId,
+        ]);
+        $this->assertSame(201, $project['headers']['status-code']);
+
+        return $project['body']['$id'];
+    }
+
+    /**
+     * @return array{email: string, session: string}
+     */
+    private function createConsoleAccount(): array
+    {
+        $email = \uniqid('realtime-', true) . \bin2hex(\random_bytes(4)) . '@localhost.test';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ];
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Realtime Member',
+        ]);
+        $this->assertSame(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        return [
+            'email' => $email,
+            'session' => $session['cookies']['a_session_console'],
+        ];
+    }
+
+    private function addOrganizationMember(array $headers, string $teamId, string $email, array $roles): void
+    {
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $headers, [
+            'email' => $email,
+            'roles' => $roles,
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $invite = $this->getLastEmailByAddress($email, function (array $email): void {
+            $this->assertStringContainsString('/join-us', (string) ($email['html'] ?? ''));
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
+
+        $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['body']['$id'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => $tokens['userId'],
+            'secret' => $tokens['secret'],
+        ]);
+        $this->assertSame(200, $confirm['headers']['status-code']);
     }
 }

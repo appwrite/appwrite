@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
@@ -55,9 +56,9 @@ class Get extends Action
                     replaceWith: 'tablesDB.getIndex',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
-            ->param('key', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Index Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
+            ->param('key', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Index Key.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -78,7 +79,7 @@ class Get extends Action
             throw new Exception($this->getGrandParentNotFoundException(), params: [$collectionId]);
         }
 
-        $index = $collection->find('key', $key, 'indexes');
+        $index = \array_find($collection->getAttribute('indexes', []), static fn (Document $candidate): bool => $candidate->getAttribute('key') === $key);
         if (empty($index)) {
             throw new Exception($this->getNotFoundException(), params: [$key]);
         }

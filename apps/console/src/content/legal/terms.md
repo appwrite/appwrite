@@ -30,6 +30,14 @@ Certain refund requests for Subscriptions may be considered by Appwrite on a cas
 
 For more details, refer to the [full refund policy](/docs/advanced/billing/refund-policy).
 
+## Credits, Vouchers, and Coupons
+
+Appwrite may, at its sole discretion, issue credits, credit vouchers, coupons, or promotional codes ("Credits") that can be applied toward the Service. Credits are issued solely for use by the recipient on the recipient's own account or organization.
+
+You may not sell, resell, trade, or otherwise exchange Credits for money or anything else of value, or offer or advertise Credits for any such purpose.
+
+Appwrite may void or revoke any Credits that are sold, resold, traded, or obtained in violation of these Terms, and may suspend or terminate any account involved.
+
 ## Content
 
 Our Service allows you to post, link, store, share, and otherwise make available certain information, text, graphics, videos, or other material ("Content"). You are responsible for the Content that you post to the Service, including its legality, reliability, and appropriateness.

@@ -8,11 +8,13 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Validator\Filename;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
@@ -20,7 +22,6 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Nullable;
-use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -62,7 +63,7 @@ class Update extends Action
             ))
             ->param('bucketId', '', new UID(), 'Bucket unique ID.')
             ->param('fileId', '', new UID(), 'File ID.')
-            ->param('name', null, new Text(128), 'File name.', true)
+            ->param('name', null, new Filename(128), 'File name.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -93,7 +94,7 @@ class Update extends Action
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $valid = $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()));
+        $valid = $authorization->isValid(new Input(PermissionType::Update, $bucket->getPermissionsByType(PermissionType::Update)));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
@@ -107,18 +108,18 @@ class Update extends Action
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions, [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
         ]);
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
         if (!$user->isKey($roles) && !$user->isPrivileged($roles) && !\is_null($permissions)) {
-            foreach (Database::PERMISSIONS as $type) {
+            foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
+                    if ($permission->getPermission() != $type->value) {
                         continue;
                     }
                     $role = (new Role(

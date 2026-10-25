@@ -516,7 +516,7 @@ class V22 extends Migration
 
             switch ($id) {
                 case '_metadata':
-                    if (!$this->dbForProject->getCollection('builds')->isEmpty()) {
+                    if ($this->dbForProject->findCollection('builds') !== null) {
                         $this->dbForProject->deleteCollection('builds');
                     }
                     break;

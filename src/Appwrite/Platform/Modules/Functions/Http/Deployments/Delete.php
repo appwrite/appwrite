@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -58,13 +59,14 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
-            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('deviceForFunctions')
+            ->inject('deployments')
             ->callback($this->action(...));
     }
 
@@ -75,7 +77,8 @@ class Delete extends Action
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
         Event $queueForEvents,
-        Device $deviceForFunctions
+        Device $deviceForFunctions,
+        Deployments $deployments,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -111,6 +114,14 @@ class Delete extends Action
         if (!empty($deployment->getAttribute('sourcePath', ''))) {
             if (!($deviceForFunctions->delete($deployment->getAttribute('sourcePath', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
+            }
+        }
+
+        // A build still running would write its output after the deletes worker has cleared it.
+        if (!\in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'], true)) {
+            try {
+                $deployments->cancel($deployment->getId());
+            } catch (\Throwable) {
             }
         }
 

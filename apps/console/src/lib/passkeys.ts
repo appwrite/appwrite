@@ -189,7 +189,6 @@ export async function registerPasskey(name: string): Promise<Models.Passkey> {
   )
   return account.updatePasskeyVerification({
     passkeyId: challenge.passkeyId,
-    challengeId: challenge.$id,
     credential: credentialToJSON(credential),
   })
 }

@@ -16,10 +16,11 @@ final class Delete extends Base
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
-            'project' => $this->project?->getArrayCopy(),
+            'project' => $this->project === null ? null : ProjectContext::fromDocument($this->project)->toArray(),
             'type' => $this->type,
             'document' => $this->document?->getArrayCopy(),
             'resource' => $this->resource,
@@ -28,6 +29,7 @@ final class Delete extends Base
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(

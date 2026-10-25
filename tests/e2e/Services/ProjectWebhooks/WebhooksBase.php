@@ -6,9 +6,9 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait WebhooksBase
@@ -76,7 +76,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -88,7 +88,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -150,7 +150,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -162,7 +162,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -223,7 +223,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -250,7 +250,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => $name
         ]);
 
@@ -272,7 +272,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Friend User',
@@ -319,7 +319,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'firstName' => 'Chris',
                 'lastName' => 'Evans',
@@ -347,7 +347,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'firstName' => 'Chris',
                 'lastName' => 'Evans',
@@ -374,14 +374,14 @@ trait WebhooksBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'folderId' => ID::custom('xyz'),
+            'folderId' => Id::custom('xyz'),
         ]);
 
         return ['fileId' => $file['body']['$id']];
@@ -398,7 +398,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -412,7 +412,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -458,7 +458,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -472,7 +472,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -586,7 +586,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'firstName' => 'Chris',
                 'lastName' => 'Evans',
@@ -704,7 +704,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'firstName' => 'Bradly',
                 'lastName' => 'Cooper',
@@ -767,7 +767,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -781,7 +781,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -827,7 +827,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -841,7 +841,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -953,7 +953,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'firstName' => 'Chris',
                 'lastName' => 'Evans',
@@ -1071,7 +1071,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'firstName' => 'Bradly',
                 'lastName' => 'Cooper',
@@ -1133,7 +1133,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1223,14 +1223,14 @@ trait WebhooksBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'folderId' => ID::custom('xyz'),
+            'folderId' => Id::custom('xyz'),
         ]);
 
         $fileId = $file['body']['$id'];
@@ -1427,7 +1427,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -1549,7 +1549,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Chelsea'
         ]);
 
@@ -1596,7 +1596,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Friend User',
@@ -1784,7 +1784,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'AutoDisable DB',
         ]);
 
@@ -1820,7 +1820,7 @@ trait WebhooksBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'collectionId' => ID::unique(),
+                'collectionId' => Id::unique(),
                 'name' => 'newCollection' . $i,
                 'permissions' => [
                     Permission::read(Role::any()),
