@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import {
   acquisitionSourceFromStorage,
-  addPendingSourceId,
+  addPendingSourceClaim,
   parseAcquisitionSource,
   persistAcquisitionSource,
-  readPendingSourceIds,
+  readPendingSourceClaims,
 } from '@/lib/marketing/utm'
 
 function memoryStorage() {
@@ -106,23 +106,25 @@ describe('persistAcquisitionSource', () => {
   })
 })
 
-describe('pending source ids', () => {
-  test('keeps the latest ten unique ids', () => {
+describe('pending source claims', () => {
+  test('keeps the latest ten unique claims', () => {
     const storage = memoryStorage()
-    for (let i = 0; i < 12; i++) addPendingSourceId(`id${i}`, storage)
-    addPendingSourceId('id5', storage)
+    for (let i = 0; i < 12; i++) addPendingSourceClaim(`id${i}.sig`, storage)
+    addPendingSourceClaim('id5.sig', storage)
 
-    const ids = readPendingSourceIds(storage)
-    expect(ids).toHaveLength(10)
-    expect(ids[0]).toBe('id2')
-    expect(ids.at(-1)).toBe('id5')
+    const claims = readPendingSourceClaims(storage)
+    expect(claims).toHaveLength(10)
+    expect(claims[0]).toBe('id2.sig')
+    expect(claims.at(-1)).toBe('id5.sig')
   })
 
-  test('ignores malformed storage', () => {
+  test('ignores malformed storage and the legacy id list', () => {
     const storage = memoryStorage()
-    storage.setItem('utmSourceIds', '{not json')
-    expect(readPendingSourceIds(storage)).toEqual([])
-    storage.setItem('utmSourceIds', JSON.stringify(['a', 1, '']))
-    expect(readPendingSourceIds(storage)).toEqual(['a'])
+    storage.setItem('utmSourceIds', JSON.stringify(['legacy']))
+    expect(readPendingSourceClaims(storage)).toEqual([])
+    storage.setItem('utmSourceClaims', '{not json')
+    expect(readPendingSourceClaims(storage)).toEqual([])
+    storage.setItem('utmSourceClaims', JSON.stringify(['a.sig', 1, '']))
+    expect(readPendingSourceClaims(storage)).toEqual(['a.sig'])
   })
 })

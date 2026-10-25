@@ -14,10 +14,10 @@ const STORAGE_KEYS = {
   utmMedium: 'utmMedium',
   utmCampaign: 'utmCampaign',
   posted: 'utmSourcePosted',
-  sourceIds: 'utmSourceIds',
+  sourceClaims: 'utmSourceClaims',
 } as const
 
-const SOURCE_IDS_LIMIT = 10
+const SOURCE_CLAIMS_LIMIT = 10
 
 // Cloud has no click-id column, so a paid click without utm_source would be
 // stored as organic search.
@@ -249,31 +249,34 @@ function getLocalStorage(): Storage | undefined {
   }
 }
 
-/** Source ids created while a guest, waiting to be linked to an account. */
-export function readPendingSourceIds(
+/** Source claims created while a guest, waiting to be linked to an account. */
+export function readPendingSourceClaims(
   storage: Pick<Storage, 'getItem'> | undefined = getLocalStorage(),
 ): string[] {
   try {
     const parsed: unknown = JSON.parse(
-      storage?.getItem(STORAGE_KEYS.sourceIds) ?? '[]',
+      storage?.getItem(STORAGE_KEYS.sourceClaims) ?? '[]',
     )
     return Array.isArray(parsed)
-      ? parsed.filter((id): id is string => typeof id === 'string' && !!id)
+      ? parsed.filter((c): c is string => typeof c === 'string' && !!c)
       : []
   } catch {
     return []
   }
 }
 
-export function addPendingSourceId(
-  id: string,
+export function addPendingSourceClaim(
+  claim: string,
   storage: Pick<Storage, 'getItem' | 'setItem'> | undefined = getLocalStorage(),
 ): void {
-  const ids = [...readPendingSourceIds(storage).filter((x) => x !== id), id]
+  const claims = [
+    ...readPendingSourceClaims(storage).filter((c) => c !== claim),
+    claim,
+  ]
   try {
     storage?.setItem(
-      STORAGE_KEYS.sourceIds,
-      JSON.stringify(ids.slice(-SOURCE_IDS_LIMIT)),
+      STORAGE_KEYS.sourceClaims,
+      JSON.stringify(claims.slice(-SOURCE_CLAIMS_LIMIT)),
     )
   } catch {
     // Storage full or blocked; the backend fingerprint fallback still applies.
@@ -341,10 +344,10 @@ function createSource(source: AcquisitionSource): void {
       }
       storage?.setItem(STORAGE_KEYS.posted, signature)
       const created = (await response.json().catch(() => null)) as {
-        $id?: unknown
+        claim?: unknown
       } | null
-      if (typeof created?.$id === 'string') {
-        addPendingSourceId(created.$id)
+      if (typeof created?.claim === 'string') {
+        addPendingSourceClaim(created.claim)
         // The POST can resolve after a fast sign-up already ran the link.
         if (linkRequested) linkPendingSources()
       }
@@ -359,14 +362,14 @@ let linkRequested = false
 
 /**
  * Attach the sources this browser created as a guest to the signed-in account.
- * Best effort: a failure keeps the ids for the next authenticated load.
+ * Best effort: a failure keeps the claims for the next authenticated load.
  */
 export function linkPendingSources(): void {
   if (typeof window === 'undefined') return
   linkRequested = true
   if (linkingSources) return
-  const sourceIds = readPendingSourceIds()
-  if (sourceIds.length === 0) return
+  const claims = readPendingSourceClaims()
+  if (claims.length === 0) return
   linkingSources = true
 
   void (async () => {
@@ -381,21 +384,21 @@ export function linkPendingSources(): void {
         'patch',
         new URL(`${client.config.endpoint.replace(/\/$/, '')}/console/sources`),
         { 'content-type': 'application/json' },
-        { sourceIds },
+        { claims },
       )
-      // Drop only the sent ids; a POST may have added more while this ran.
+      // Drop only the sent claims; a POST may have added more while this ran.
       const storage = getLocalStorage()
-      const remaining = readPendingSourceIds(storage).filter(
-        (id) => !sourceIds.includes(id),
+      const remaining = readPendingSourceClaims(storage).filter(
+        (c) => !claims.includes(c),
       )
       try {
-        storage?.setItem(STORAGE_KEYS.sourceIds, JSON.stringify(remaining))
+        storage?.setItem(STORAGE_KEYS.sourceClaims, JSON.stringify(remaining))
         relink = remaining.length > 0
       } catch {
-        // Blocked storage; the ids are re-sent next time.
+        // Blocked storage; the claims are re-sent next time.
       }
     } catch {
-      // Never block sign-up; the ids stay for the next attempt.
+      // Never block sign-up; the claims stay for the next attempt.
     } finally {
       linkingSources = false
     }
