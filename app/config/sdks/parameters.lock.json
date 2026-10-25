@@ -2409,6 +2409,13 @@
             "apiKey",
             "enabled"
         ],
+        "messaging.createTelnyxProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createTextmagicProvider": [
             "providerId",
             "name",
@@ -2678,6 +2685,13 @@
             "name",
             "enabled",
             "customerId",
+            "apiKey",
+            "from"
+        ],
+        "messaging.updateTelnyxProvider": [
+            "providerId",
+            "name",
+            "enabled",
             "apiKey",
             "from"
         ],
@@ -6492,6 +6506,13 @@
             "apiKey",
             "enabled"
         ],
+        "messaging.createTelnyxProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createTextmagicProvider": [
             "providerId",
             "name",
@@ -6761,6 +6782,13 @@
             "name",
             "enabled",
             "customerId",
+            "apiKey",
+            "from"
+        ],
+        "messaging.updateTelnyxProvider": [
+            "providerId",
+            "name",
+            "enabled",
             "apiKey",
             "from"
         ],
