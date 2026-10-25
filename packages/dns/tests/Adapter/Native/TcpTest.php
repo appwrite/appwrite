@@ -97,9 +97,7 @@ final class TcpTest extends TestCase
         // deadline, the retry loop spins on a permanently stalled peer
         // forever. Bounded here to a handful of iterations instead of letting
         // it actually hang the test suite.
-        $tcp = new class extends StallingTcp {
-            public int $sleeps = 0;
-
+        $tcp = new class () extends StallingTcp {
             protected function write(Socket $client, string $data): int|false
             {
                 $this->writeAttempts++;
