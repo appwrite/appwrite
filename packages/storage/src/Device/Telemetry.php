@@ -93,10 +93,7 @@ class Telemetry extends Device
     /**
      * @param  UploadMetadata  $metadata
      */
-    /**
-     * @param  UploadMetadata  $metadata
-     */
-    protected function uploadChunk(StreamInterface $data, string $path, int $chunk, int $chunks, array &$metadata): int
+    public function uploadChunk(StreamInterface $data, string $path, int $chunk, int $chunks, array &$metadata): int
     {
         return $this->measure(__FUNCTION__, function () use ($data, $path, $chunk, $chunks, &$metadata): int {
             return $this->device->uploadChunk($data, $path, $chunk, $chunks, $metadata);

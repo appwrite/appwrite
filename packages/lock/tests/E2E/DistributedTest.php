@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Lock\Tests\E2E;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Redis;
 use Utopia\Lock\Distributed;
@@ -40,6 +41,108 @@ final class DistributedTest extends TestCase
         if (isset($this->redis) && $this->key !== '') {
             $this->redis->del($this->key);
         }
+    }
+
+    public function testConnectionProviderReleasesBeforeRunningTheGuardedWork(): void
+    {
+        $state = new class () {
+            public bool $borrowed = false;
+            public bool $entered = false;
+        };
+        $provider = function (\Closure $operation) use ($state): mixed {
+            if ($state->borrowed) {
+                throw new \RuntimeException('The single connection is already borrowed');
+            }
+            $state->borrowed = true;
+            try {
+                return $operation($this->redis);
+            } finally {
+                $state->borrowed = false;
+            }
+        };
+        $failure = new \RuntimeException('Guarded work failed');
+        $outer = new Distributed($provider, $this->key, 30);
+        $inner = new Distributed($provider, $this->key . ':nested', 30);
+        $this->expectExceptionObject($failure);
+        try {
+            $outer->withLock(function () use ($outer, $inner, $state, $failure): void {
+                $this->assertFalse($state->borrowed);
+                $this->assertTrue($outer->isHeld());
+                $inner->withLock(function () use ($outer, $inner, $failure, $state): void {
+                    $this->assertTrue($outer->refresh());
+                    $this->assertTrue($inner->isHeld());
+                    $state->entered = true;
+                    throw $failure;
+                });
+            });
+        } finally {
+            $this->assertTrue($state->entered);
+            $this->assertFalse($state->borrowed);
+            $this->assertSame(0, $this->redis->exists($this->key));
+            $this->assertSame(0, $this->redis->exists($this->key . ':nested'));
+        }
+    }
+
+    public function testTransientReleaseFailureDoesNotLeaveALease(): void
+    {
+        $state = new class () {
+            public int $commands = 0;
+        };
+        $lock = new Distributed(function (\Closure $operation) use ($state): mixed {
+            if (++$state->commands === 2) {
+                throw new \RedisException('Temporary connection failure');
+            }
+            return $operation($this->redis);
+        }, $this->key, 30);
+        $this->assertSame('committed', $lock->withLock(fn (): string => 'committed'));
+        $this->assertSame(0, $this->redis->exists($this->key));
+        $this->assertNull($lock->token());
+        $next = new Distributed($this->redis, $this->key, 30);
+        $this->assertTrue($next->tryAcquire());
+        $next->release();
+    }
+
+    #[DataProvider('callbackFailures')]
+    public function testReleaseOutagePreservesTheOperationOutcome(bool $callbackFails): void
+    {
+        $state = new class () {
+            public bool $outage = false;
+        };
+        $releaseError = new \RedisException('Connection unavailable');
+        $operationError = new Contention('Operation lost its lease');
+        $lock = new Distributed(function (\Closure $operation) use ($state, $releaseError): mixed {
+            if ($state->outage) {
+                throw $releaseError;
+            }
+            return $operation($this->redis);
+        }, $this->key, 30);
+        $caught = null;
+        try {
+            $lock->withLock(function () use ($state, $callbackFails, $operationError): string {
+                $state->outage = true;
+                if ($callbackFails) {
+                    throw $operationError;
+                }
+                return 'committed';
+            });
+        } catch (\Throwable $error) {
+            $caught = $error;
+        } finally {
+            // Redis still owns the lease. Keep its token so cleanup can retry
+            // after connectivity recovers instead of abandoning it until TTL.
+            $this->assertNotNull($lock->token());
+            $this->assertSame($lock->token(), $this->redis->get($this->key));
+            $state->outage = false;
+            $lock->release();
+            $this->assertSame(0, $this->redis->exists($this->key));
+        }
+        $this->assertSame($callbackFails ? $operationError : $releaseError, $caught);
+    }
+
+    /** @return array<string, array{bool}> */
+    public static function callbackFailures(): array
+    {
+        return ['failed operation' => [true], 'successful operation' => [false]];
     }
 
     public function testAcquireAndRelease(): void

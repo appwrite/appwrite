@@ -391,6 +391,130 @@ final class S3CustomServerTest extends Scope
     }
 
     #[Group('s3')]
+    public function testParallelMultipartPartsRespectLimit(): void
+    {
+        $bucketId = $this->setupBucket(['maximumFileSize' => 1024]);
+        $key = Id::unique() . '.bin';
+        $uploadId = $this->createMultipartUpload($bucketId, $key);
+        $body = \str_repeat('a', 600);
+        $path = '/' . $bucketId . '/' . $key;
+
+        try {
+            /**
+             * Test for FAILURE - each part fits, but both exceed the bucket limit.
+             */
+            $responses = $this->client->callConcurrently([
+                $this->signedRequest(Client::METHOD_PUT, $path, ['uploadId' => $uploadId, 'partNumber' => '1'], $body),
+                $this->signedRequest(Client::METHOD_PUT, $path, ['uploadId' => $uploadId, 'partNumber' => '2'], $body),
+            ], decode: false);
+            $statuses = \array_column(\array_column($responses, 'headers'), 'status-code');
+            \sort($statuses);
+            $this->assertSame([200, 400], $statuses);
+
+            $parts = $this->call(Client::METHOD_GET, $path, ['uploadId' => $uploadId]);
+            $this->assertSame(200, $parts['headers']['status-code']);
+            $xml = \simplexml_load_string($parts['body']);
+            $this->assertCount(1, $xml->Part);
+            $this->assertSame(600, (int) $xml->Part->Size);
+            $this->assertSame('"' . \md5($body) . '"', (string) $xml->Part->ETag);
+        } finally {
+            $this->call(Client::METHOD_DELETE, $path, ['uploadId' => $uploadId]);
+        }
+    }
+
+    #[Group('s3')]
+    public function testParallelMultipartPartsPreserveOverwrite(): void
+    {
+        $bucketId = $this->setupBucket();
+        $key = 'parallel-overwrite.bin';
+        $original = 'the published version';
+        $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: $original);
+        $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+        $uploadId = $this->createMultipartUpload($bucketId, $key);
+        $parts = [];
+        $etags = [];
+        for ($number = 1; $number <= 5; $number++) {
+            $parts[$number] = \str_repeat((string) $number, self::PART_SIZE);
+            $etags[$number] = \md5($parts[$number]);
+        }
+
+        $requests = [];
+        foreach ([5, 2, 1, 4, 3, 1] as $number) {
+            $requests[] = $this->signedRequest(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, [
+                'partNumber' => (string) $number,
+                'uploadId' => $uploadId,
+            ], $parts[$number]);
+        }
+        foreach ($this->client->callConcurrently($requests, decode: false) as $index => $part) {
+            $this->assertSame(200, $part['headers']['status-code'], $part['body']);
+            $number = [5, 2, 1, 4, 3, 1][$index];
+            $this->assertSame('"' . $etags[$number] . '"', $part['headers']['etag']);
+        }
+
+        // Accepted parts must not replace the published object before completion.
+        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+        $this->assertSame($original, $object['body']);
+        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, $etags);
+        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+        $replacement = \implode('', $parts);
+        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+        $this->assertSame(\strlen($replacement), \strlen($object['body']));
+        $this->assertSame(\hash('sha256', $replacement), \hash('sha256', $object['body']));
+
+        // A late conflicting retry cannot change the completed object.
+        $retry = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, [
+            'partNumber' => '1', 'uploadId' => $uploadId,
+        ], \str_repeat('x', self::PART_SIZE));
+        $this->assertSame(400, $retry['headers']['status-code'], $retry['body']);
+        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+        $this->assertSame(\hash('sha256', $replacement), \hash('sha256', $object['body']));
+    }
+
+    #[Group('s3')]
+    public function testS3OverwriteWaitsForNativeMultipartCompletion(): void
+    {
+        $bucketId = $this->setupBucket();
+        $fileId = Id::unique();
+        $key = 'native-pending.bin';
+        $chunk = \tempnam(\sys_get_temp_dir(), 'native-part-');
+        \file_put_contents($chunk, \str_repeat('a', self::PART_SIZE));
+        $headers = \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        try {
+            $first = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+                ...$headers, 'content-range' => 'bytes 0-5242879/10485760',
+            ], ['fileId' => $fileId, 'file' => new \CURLFile($chunk, 'application/octet-stream', $key)]);
+            $this->assertSame(201, $first['headers']['status-code'], \json_encode($first['body']));
+            $this->assertSame(1, $first['body']['chunksUploaded']);
+
+            $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: 'replacement');
+            $this->assertSame(503, $put['headers']['status-code'], $put['body']);
+            $this->assertSame('SlowDown', (string) \simplexml_load_string($put['body'])->Code);
+            $delete = $this->call(Client::METHOD_DELETE, '/' . $bucketId . '/' . $key);
+            $this->assertSame(503, $delete['headers']['status-code'], $delete['body']);
+
+            $last = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+                ...$headers, 'content-range' => 'bytes 5242880-10485759/10485760',
+            ], ['fileId' => $fileId, 'file' => new \CURLFile($chunk, 'application/octet-stream', $key)]);
+            $this->assertSame(201, $last['headers']['status-code'], \json_encode($last['body']));
+            $this->assertSame(2, $last['body']['chunksUploaded']);
+            $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: 'replacement');
+            $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+            $native = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view', [
+                'x-appwrite-project' => $this->getProject()['$id'], ...$this->getHeaders(),
+            ]);
+            $this->assertSame(200, $native['headers']['status-code']);
+            $this->assertSame('replacement', $native['body']);
+            $s3 = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+            $this->assertSame('replacement', $s3['body']);
+        } finally {
+            \unlink($chunk);
+        }
+    }
+
+    #[Group('s3')]
     public function testNativeReadDuringOverwrite(): void
     {
         $bucketId = $this->setupBucket();
@@ -595,6 +719,17 @@ final class S3CustomServerTest extends Scope
      */
     private function call(string $method, string $path, array $query = [], string $body = '', array $headers = [], array $unsignedHeaders = []): array
     {
+        return $this->client->call(...$this->signedRequest($method, $path, $query, $body, $headers, $unsignedHeaders), decode: false);
+    }
+
+    /**
+     * @param array<string, string> $query
+     * @param array<string, string> $headers
+     * @param array<string, string> $unsignedHeaders
+     * @return array{string, string, array<string, string>, string}
+     */
+    private function signedRequest(string $method, string $path, array $query = [], string $body = '', array $headers = [], array $unsignedHeaders = []): array
+    {
         $endpoint = \parse_url($this->client->getEndpoint());
         $host = $endpoint['host'] . (isset($endpoint['port']) ? ':' . $endpoint['port'] : '');
         $uri = ($endpoint['path'] ?? '') . '/s3' . $path;
@@ -645,12 +780,12 @@ final class S3CustomServerTest extends Scope
         }
         $signature = \hash_hmac('sha256', $stringToSign, $signingKey);
 
-        return $this->client->call($method, '/s3' . $path . ($canonicalQuery === '' ? '' : '?' . $canonicalQuery), \array_merge([
+        return [$method, '/s3' . $path . ($canonicalQuery === '' ? '' : '?' . $canonicalQuery), \array_merge([
             // text/plain makes the client send the body as is.
             'content-type' => 'text/plain',
             'x-amz-content-sha256' => $payloadHash,
             'x-amz-date' => $date,
             'authorization' => 'AWS4-HMAC-SHA256 Credential=' . $this->getProject()['$id'] . '/' . $scope . ', SignedHeaders=' . $signedHeaders . ', Signature=' . $signature,
-        ], $headers, $unsignedHeaders), $body, decode: false);
+        ], $headers, $unsignedHeaders), $body];
     }
 }

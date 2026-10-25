@@ -57,14 +57,16 @@ abstract class Device
     /**
      * Upload Chunk.
      *
-     * Store exactly one chunk of file contents without finalizing the full upload.
-     * Returns the number of chunks received so far.
+     * Store exactly one chunk of a prepared upload without finalizing it.
+     * Call prepare() first. Concurrent callers must merge part receipts into
+     * their latest metadata before calling finalize(); the returned count is
+     * only for this metadata snapshot, not an acknowledgement from other callers.
      *
      * @param  UploadMetadata  $metadata
      *
      * @throws StorageException
      */
-    abstract protected function uploadChunk(StreamInterface $data, string $path, int $chunk, int $chunks, array &$metadata): int;
+    abstract public function uploadChunk(StreamInterface $data, string $path, int $chunk, int $chunks, array &$metadata): int;
 
     /**
      * Finalize.

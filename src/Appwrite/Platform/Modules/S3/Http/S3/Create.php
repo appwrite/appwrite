@@ -16,6 +16,8 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Lock\Distributed;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Storage\Device;
 
@@ -137,12 +139,51 @@ class Create extends Base
             }
 
             $etag = \md5($body);
-            // SDKs upload parts of one upload concurrently; the cached parts map
-            // and device chunk bookkeeping are read-modify-write, so load and
-            // save must share the upload's critical section.
-            $locks($this->multipartLockKey($project, $uploadId), 600, function () use ($cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag): void {
-                $upload = $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
-                $this->uploadMultipartPart($cache, $project, $deviceForFiles, $bucket, $upload, $partNumber, $body, $etag);
+            $checksum = \hash('sha256', $body);
+            $size = \strlen($body);
+            $lockKey = $this->multipartLockKey($project, $uploadId);
+            $locks($lockKey . ':part:' . $partNumber, 600, function (Distributed $partLock) use ($locks, $lockKey, $cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag, $checksum, $size): void {
+                $upload = $locks($lockKey, 600, function () use ($cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag, $checksum, $size): ?array {
+                    $upload = $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
+                    $this->validateMultipartPart($bucket, $upload, $partNumber, $size, $checksum);
+                    if (empty($upload['metadata']['device']['uploadId'])) {
+                        // Local chunks share a directory: keep transfer and abort serialized.
+                        $receipt = $this->uploadMultipartPart($deviceForFiles, $upload, $partNumber, $body, $etag, $checksum);
+                        // A part that expired during transfer must not revive the upload.
+                        $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
+                        $upload['parts'][$partNumber] = ['etag' => $receipt['etag'], 'checksum' => $receipt['checksum'], 'size' => $receipt['size']];
+                        $upload['metadata']['device']['parts'][$partNumber] = $receipt['device'];
+                        $upload['metadata']['device']['chunks'] = \count($upload['metadata']['device']['parts']);
+                        // Gateway parts are fragments, even when completion selects one.
+                        $upload['metadata']['device']['whole'] = false;
+                        $this->saveMultipartUpload($cache, $project, $upload);
+                        return null;
+                    }
+                    return $upload;
+                }, timeout: 120.0);
+
+                if ($upload !== null) {
+                    if (!$partLock->refresh()) {
+                        throw new Contention('Part lease lost before transfer');
+                    }
+                    $receipt = $this->uploadMultipartPart($deviceForFiles, $upload, $partNumber, $body, $etag, $checksum);
+                    if (!$partLock->isHeld()) {
+                        throw new Contention('Part lease lost after transfer');
+                    }
+                    $locks($lockKey, 600, function () use ($cache, $project, $uploadId, $bucketId, $key, $partNumber, $receipt, $partLock, $bucket): void {
+                        if (!$partLock->refresh()) {
+                            throw new Contention('Part lease lost before recording completion');
+                        }
+                        // Abort removes the state. Never recreate it from the transfer's snapshot.
+                        $current = $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
+                        // Concurrent parts may have consumed the remaining bucket limit.
+                        $this->validateMultipartPart($bucket, $current, $partNumber, $receipt['size'], $receipt['checksum']);
+                        $current['parts'][$partNumber] = ['etag' => $receipt['etag'], 'checksum' => $receipt['checksum'], 'size' => $receipt['size']];
+                        $current['metadata']['device']['parts'][$partNumber] = $receipt['device'];
+                        $current['metadata']['device']['chunks'] = \count($current['metadata']['device']['parts']);
+                        $this->saveMultipartUpload($cache, $project, $current);
+                    }, timeout: 120.0);
+                }
             }, timeout: 120.0);
             if ($copySource !== '') {
                 $this->sendXml($response, S3Xml::copyPart($etag));
@@ -158,12 +199,8 @@ class Create extends Base
         if ($request->getMethod() === Action::HTTP_REQUEST_METHOD_POST && $key !== '' && $this->query($request, 'uploadId') !== '') {
             $this->authorize($request, $project, $team, $user, ['files.write']);
             $bucket = $this->bucket($dbForProject, $bucketId);
-            // No multipart lock here: clients complete only after every part
-            // returned 200, and each part's state save commits inside its lock
-            // before that response, so the snapshot below always holds all
-            // acknowledged parts. Nesting the multipart lock around the object
-            // lock inside completeMultipartUpload would also need two
-            // connections from the fail-fast lock pool at once.
+            // Part receipts commit before their 200 response. Completion selects
+            // only acknowledged parts, then publishes under the object lock.
             $selected = CompleteMultipartUpload::parts($this->requestBody($request));
             $upload = $this->multipartUploadForBucket($cache, $project, $this->query($request, 'uploadId'), $bucketId, $key);
             [$file, $event] = $this->completeMultipartUpload($locks, $dbForProject, $cache, $project, $publisherForDeletes, $deviceForFiles, $bucket, $upload, $selected);

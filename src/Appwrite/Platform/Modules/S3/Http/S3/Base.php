@@ -35,7 +35,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
-use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\NotFoundException as StorageNotFoundException;
 use Utopia\System\System;
 
 abstract class Base extends Action
@@ -276,50 +276,45 @@ abstract class Base extends Action
         $cache->save($this->multipartStateKey($project, (string) $upload['uploadId']), \json_encode($upload, JSON_THROW_ON_ERROR));
     }
 
-    protected function uploadMultipartPart(Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, array $upload, int $partNumber, string $body, string $etag): array
+    protected function validateMultipartPart(Document $bucket, array $upload, int $partNumber, int $size, string $checksum): void
     {
         if ($partNumber < 1 || $partNumber > self::MULTIPART_MAX_PARTS) {
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Part number must be an integer between 1 and ' . self::MULTIPART_MAX_PARTS . '.');
         }
 
-        // Devices keep the first bytes staged for a part number, so a retry must resend the same content.
-        $checksum = \hash('sha256', $body);
+        // A retry may acknowledge only the same bytes as the recorded part.
         $staged = $upload['parts'][(string) $partNumber] ?? null;
         if ($staged !== null && ($staged['checksum'] ?? null) !== $checksum) {
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Part ' . $partNumber . ' was already uploaded with different content. Start a new multipart upload to change it.');
         }
 
-        $size = \strlen($body);
         foreach (($upload['parts'] ?? []) as $number => $part) {
             if ((int) $number !== $partNumber) {
                 $size += (int) ($part['size'] ?? 0);
             }
         }
         $this->validateFileConstraints($bucket, (string) ($upload['name'] ?? $upload['key'] ?? ''), $size);
+    }
 
-        $metadata = $upload['metadata'] ?? [];
-        $deviceMetadata = $metadata['device'] ?? [];
-        $chunks = \max(2, (int) ($deviceMetadata['chunks'] ?? 0) + 2, $partNumber + 1);
-        $deviceForFiles->upload(
-            new Stream($body),
-            (string) $upload['path'],
-            (string) ($upload['contentType'] ?? 'application/octet-stream'),
-            $partNumber,
-            $chunks,
-            $deviceMetadata
-        );
-
-        // Expiry may have aborted the staging while this part was written.
-        if (!\is_string($cache->load($this->multipartStateKey($project, (string) $upload['uploadId']), self::MULTIPART_TTL))) {
+    /**
+     * @return array{etag: string, checksum: string, size: int, device: bool|string}
+     */
+    protected function uploadMultipartPart(Device $deviceForFiles, array $upload, int $partNumber, string $body, string $etag, string $checksum): array
+    {
+        $deviceMetadata = $upload['metadata']['device'] ?? [];
+        try {
+            $deviceForFiles->uploadChunk(
+                new Stream($body),
+                (string) $upload['path'],
+                $partNumber,
+                0, // The final part count is chosen by CompleteMultipartUpload.
+                $deviceMetadata
+            );
+        } catch (StorageNotFoundException) {
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Multipart upload not found.');
         }
 
-        $metadata['device'] = $deviceMetadata;
-        $upload['metadata'] = $metadata;
-        $upload['parts'][(string) $partNumber] = ['etag' => $etag, 'checksum' => $checksum, 'size' => \strlen($body)];
-        $this->saveMultipartUpload($cache, $project, $upload);
-
-        return $upload;
+        return ['etag' => $etag, 'checksum' => $checksum, 'size' => \strlen($body), 'device' => $deviceMetadata['parts'][$partNumber]];
     }
 
     protected function unsupportedSubresource(Request $request): bool
@@ -760,10 +755,8 @@ abstract class Base extends Action
     }
 
     /**
-     * Serializes part uploads and abort of one multipart upload: the cached
-     * upload state and the device chunk bookkeeping are read-modify-write, so
-     * concurrent parts would drop each other's entries. Never held together
-     * with the object lock — the lock pool fails fast instead of queueing.
+     * Serializes upload-state updates and abort. Distinct backend parts transfer
+     * outside this lock; each receipt is merged into fresh state while held.
      */
     protected function multipartLockKey(Document $project, string $uploadId): string
     {
@@ -886,7 +879,14 @@ abstract class Base extends Action
             Query::orderAsc('$sequence'),
         ]));
 
-        return $file->isEmpty() ? null : $file;
+        $file = $file->isEmpty() ? null : $file;
+        if ($file !== null && $file->getAttribute('chunksTotal', 1) !== $file->getAttribute('chunksUploaded', 0)) {
+            // Native completion owns this unpublished path until its metadata is
+            // committed. S3 writers must retry rather than replace that document
+            // between its generation check and publication.
+            throw new Contention('A native file upload is still in progress');
+        }
+        return $file;
     }
 
     /**
@@ -1036,7 +1036,10 @@ abstract class Base extends Action
 
                 return [$file, $existing === null ? 'create' : 'update'];
             } catch (\Throwable $error) {
-                if ($cleanup) {
+                // A rolling older native writer can still bypass the shared
+                // publication lock. Retain this upload's finalized staging path
+                // on contention so its cached receipts remain retryable.
+                if ($cleanup && !($error instanceof Contention)) {
                     $this->discard($deviceForFiles, $path);
                 }
                 throw $error;
@@ -1083,7 +1086,7 @@ abstract class Base extends Action
                 if ($committed->isEmpty()) {
                     try {
                         $aborted = $deviceForFiles->abort($path, (string) ($upload['metadata']['device']['uploadId'] ?? ''));
-                    } catch (NotFoundException) {
+                    } catch (StorageNotFoundException) {
                         $aborted = true;
                     } catch (\Throwable $error) {
                         Console::warning('Failed to abort expired S3 multipart upload ' . $uploadId . ': ' . $error->getMessage());
