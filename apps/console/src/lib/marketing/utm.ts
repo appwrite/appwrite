@@ -343,7 +343,11 @@ function createSource(source: AcquisitionSource): void {
       const created = (await response.json().catch(() => null)) as {
         $id?: unknown
       } | null
-      if (typeof created?.$id === 'string') addPendingSourceId(created.$id)
+      if (typeof created?.$id === 'string') {
+        addPendingSourceId(created.$id)
+        // The POST can resolve after a fast sign-up already ran the link.
+        if (linkRequested) linkPendingSources()
+      }
     } catch {
       startedSignatures.delete(signature)
     }
@@ -351,13 +355,16 @@ function createSource(source: AcquisitionSource): void {
 }
 
 let linkingSources = false
+let linkRequested = false
 
 /**
  * Attach the sources this browser created as a guest to the signed-in account.
  * Best effort: a failure keeps the ids for the next authenticated load.
  */
 export function linkPendingSources(): void {
-  if (typeof window === 'undefined' || linkingSources) return
+  if (typeof window === 'undefined') return
+  linkRequested = true
+  if (linkingSources) return
   const sourceIds = readPendingSourceIds()
   if (sourceIds.length === 0) return
   linkingSources = true
