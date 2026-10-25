@@ -6,7 +6,7 @@
       "name": "template-tanstack-start",
       "dependencies": {
         "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@79eecfa07bef2761d4ed806524c68df52f19c7f0",
-        "@appwrite.io/specs": "github:appwrite/specs#3aba27c956bf7a3fe64605fed2f5081646ec3c52",
+        "@appwrite.io/specs": "github:appwrite/specs#83b9f17549a0735f29ec89600160ee9cdc9ededd",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
         "@dnd-kit/utilities": "^3.2.2",
@@ -141,7 +141,7 @@
   "packages": {
     "@appwrite.io/console": ["@appwrite.io/console@https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@79eecfa07bef2761d4ed806524c68df52f19c7f0", { "dependencies": { "buffer": "6.0.3", "json-bigint": "1.0.0", "mqtt": "5.15.2" } }, "sha512-OkDrJWo9WBnEBwC4n9dNJ2RWd2fvXRf+5oN52LOe1AgQxYEi/E3bJhpOlduEE9KuqWHTvUr+Kzwa9dIRPGJgEw=="],
 
-    "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#3aba27c", {}, "appwrite-specs-3aba27c", "sha512-B0zaRELq5MjGcELYR3F7nMrApU7LEjF8zRn+grJEot0588ydGHGwUJS/dwtB2KFdg5YU/VFIUPgHSAykIrKQdw=="],
+    "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#83b9f17", {}, "appwrite-specs-83b9f17", "sha512-Uxi18BjNkSM99trhzJeV3CX93ETm7Wajh2PsiMBwtoBkqWEOwEotCOMYpTzBpSp1Akth4Ckz7lIqCS9N+XYabg=="],
 
     "@babel/code-frame": ["@babel/code-frame@7.29.7", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.29.7", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw=="],
 
