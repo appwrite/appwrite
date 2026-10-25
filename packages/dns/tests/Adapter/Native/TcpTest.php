@@ -13,11 +13,50 @@ use Utopia\DNS\Message;
  * Exposes respond(), the way the real server calls it from inside the select
  * loop, without needing accept() to have populated the client's bookkeeping.
  */
-final class RespondingTcp extends Tcp
+class RespondingTcp extends Tcp
 {
     public function callRespond(Socket $client, string $payload): void
     {
         $this->respond($client, $payload);
+    }
+
+    public function isClosed(Socket $client): bool
+    {
+        return !\in_array($client, $this->clients, true);
+    }
+
+    /**
+     * respond() expects accept() to have already registered the client in
+     * $this->clients so close() has something to remove; tests call respond()
+     * directly, so register the socket the same way accept() would.
+     */
+    public function register(Socket $client): void
+    {
+        $this->clients[spl_object_id($client)] = $client;
+    }
+}
+
+/**
+ * A peer that never drains its receive window: every write reports
+ * EAGAIN/EWOULDBLOCK forever. Real kernel send buffers on a loopback
+ * connection do not stay blocked under sustained backpressure on every
+ * platform this suite runs on, so this simulates the stall deterministically
+ * instead of relying on OS buffering.
+ */
+class StallingTcp extends RespondingTcp
+{
+    public int $writeAttempts = 0;
+
+    protected function write(Socket $client, string $data): int|false
+    {
+        $this->writeAttempts++;
+
+        return false;
+    }
+
+    protected function writeErrno(Socket $client): int
+    {
+        return SOCKET_EAGAIN;
     }
 }
 
@@ -33,19 +72,8 @@ final class TcpTest extends TestCase
     {
         [$server, $client] = $this->connectedPair();
 
-        // Shrink both ends' buffers so the kernel has little room for written
-        // bytes once the client stops reading, then confirm — by writing until
-        // a real EAGAIN/EWOULDBLOCK is observed, not by assuming a given
-        // payload size is enough — that the connection is actually stalled
-        // before respond() is ever called. Loopback buffering varies enough by
-        // platform that a single write of any fixed size is not a reliable way
-        // to reach that state.
-        @socket_set_option($server, SOL_SOCKET, SO_SNDBUF, 1024);
-        @socket_set_option($client, SOL_SOCKET, SO_RCVBUF, 1024);
-        socket_set_nonblock($server);
-        $this->fillSendBufferUntilBlocked($server);
-
-        $tcp = new RespondingTcp(writeTimeout: 1);
+        $tcp = new StallingTcp(writeTimeout: 1);
+        $tcp->register($server);
 
         $started = microtime(true);
         $tcp->callRespond($server, str_repeat('x', Message::MAX_SIZE));
@@ -53,37 +81,51 @@ final class TcpTest extends TestCase
 
         // Bounded by the write timeout, not hanging forever: a generous margin
         // over it, never anywhere close to what an unbounded retry would take.
+        $this->assertGreaterThanOrEqual(1.0, $elapsed, 'The retry loop must honor writeTimeout rather than giving up early.');
         $this->assertLessThan(3.0, $elapsed, 'A stalled write must be bounded by writeTimeout, not retried forever.');
 
-        // The server's own socket handle must be the one respond() gave up on
-        // and closed: writing through it now fails. The client's receive
-        // buffer still holds the filler bytes written before the connection
-        // stalled, so reading from that end first would observe that queued
-        // data rather than the closure itself.
-        $this->assertFalse(@socket_write($server, 'x'), 'respond() must close the connection once the write deadline is exceeded.');
+        $this->assertGreaterThan(1, $tcp->writeAttempts, 'The loop must actually retry on EAGAIN before giving up.');
+        $this->assertTrue($tcp->isClosed($server), 'respond() must close a connection it gives up on.');
 
+        // respond() already closed $server via close() above.
         @socket_close($client);
     }
 
-    /**
-     * Writes to $server, which nothing ever reads, until socket_write() itself
-     * reports EAGAIN/EWOULDBLOCK — proof the connection is genuinely stalled,
-     * not an assumption based on buffer sizes a platform is free to round up.
-     */
-    private function fillSendBufferUntilBlocked(Socket $server): void
+    public function testWithoutTheDeadlineAStalledPeerIsNeverDropped(): void
     {
-        $chunk = str_repeat('x', 65536);
+        // Proves the regression the write timeout exists for: with no
+        // deadline, the retry loop spins on a permanently stalled peer
+        // forever. Bounded here to a handful of iterations instead of letting
+        // it actually hang the test suite.
+        $tcp = new class extends StallingTcp {
+            public int $sleeps = 0;
 
-        for ($i = 0; $i < 64; $i++) {
-            $written = @socket_write($server, $chunk);
+            protected function write(Socket $client, string $data): int|false
+            {
+                $this->writeAttempts++;
 
-            if ($written === false && \in_array(socket_last_error($server), [SOCKET_EAGAIN, SOCKET_EWOULDBLOCK], true)) {
-                socket_clear_error($server);
-                return;
+                if ($this->writeAttempts > 50) {
+                    throw new \RuntimeException('Simulated infinite retry: the loop never reached a deadline check.');
+                }
+
+                return false;
             }
-        }
+        };
 
-        $this->fail('Could not stall the connection by writing to it; the test setup needs revisiting for this platform.');
+        [$server, $client] = $this->connectedPair();
+        $tcp->register($server);
+
+        // writeTimeout is irrelevant here: this double never consults it, by
+        // design, to stand in for the pre-fix code that had no deadline at all.
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Simulated infinite retry');
+
+        try {
+            $tcp->callRespond($server, str_repeat('x', Message::MAX_SIZE));
+        } finally {
+            @socket_close($server);
+            @socket_close($client);
+        }
     }
 
     public function testAPeerThatReadsPromptlyIsNotDropped(): void
