@@ -17,11 +17,9 @@ function memoryStorage() {
 }
 
 function land(storage: ReturnType<typeof memoryStorage>, search: string) {
-  const url = new URL(`https://appwrite.io/${search}`)
   persistAcquisitionSource(
-    parseAcquisitionSource(url, ''),
+    parseAcquisitionSource(new URL(`https://appwrite.io/${search}`), ''),
     storage,
-    url.search !== '',
   )
 }
 
@@ -63,6 +61,29 @@ describe('persistAcquisitionSource', () => {
     expect(acquisitionSourceFromStorage(storage)).toMatchObject({
       utmSource: 'b',
       utmCampaign: null,
+    })
+  })
+
+  test('a click-id-only landing replaces the stored tuple', () => {
+    const storage = memoryStorage()
+    land(storage, '?utm_source=a&utm_campaign=A')
+    land(storage, '?gclid=x')
+
+    expect(acquisitionSourceFromStorage(storage)).toMatchObject({
+      utmSource: 'google',
+      utmMedium: 'cpc',
+      utmCampaign: null,
+    })
+  })
+
+  test('keys we do not store leave the stored tuple untouched', () => {
+    const storage = memoryStorage()
+    land(storage, '?utm_source=a&utm_campaign=A')
+    land(storage, '?utm_term=t&utm_content=c&utm_id=i')
+
+    expect(acquisitionSourceFromStorage(storage)).toMatchObject({
+      utmSource: 'a',
+      utmCampaign: 'A',
     })
   })
 

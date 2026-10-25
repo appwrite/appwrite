@@ -111,15 +111,19 @@ export function hasAcquisitionSource(source: AcquisitionSource): boolean {
 }
 
 /**
- * A tagged landing (any utm_*, ref or click id) replaces the stored tuple so
- * keys from an earlier campaign never mix into the new one.
+ * A landing carrying a value we store (utm source/medium/campaign, ref or a
+ * click id) replaces the stored tuple so campaigns never mix keys.
  */
 export function persistAcquisitionSource(
   source: AcquisitionSource,
   storage: Pick<Storage, 'setItem' | 'removeItem'>,
-  tagged = false,
 ): void {
-  if (tagged) {
+  if (
+    source.ref ||
+    source.utmSource ||
+    source.utmMedium ||
+    source.utmCampaign
+  ) {
     storage.removeItem(STORAGE_KEYS.utmSource)
     storage.removeItem(STORAGE_KEYS.utmMedium)
     storage.removeItem(STORAGE_KEYS.utmCampaign)
@@ -371,10 +375,15 @@ export function linkPendingSources(): void {
         { 'content-type': 'application/json' },
         { sourceIds },
       )
+      // Drop only the sent ids; a POST may have added more while this ran.
+      const storage = getLocalStorage()
+      const remaining = readPendingSourceIds(storage).filter(
+        (id) => !sourceIds.includes(id),
+      )
       try {
-        getLocalStorage()?.removeItem(STORAGE_KEYS.sourceIds)
+        storage?.setItem(STORAGE_KEYS.sourceIds, JSON.stringify(remaining))
       } catch {
-        // Blocked storage; nothing to clear.
+        // Blocked storage; the ids are re-sent next time.
       }
     } catch {
       // Never block sign-up; the ids stay for the next attempt.
@@ -408,13 +417,7 @@ export function saveReferrerAndUtmSource(
 
   const source = parseAcquisitionSource(url, documentReferrer, currentOrigin)
   const storage = getSessionStorage()
-  if (storage) {
-    persistAcquisitionSource(
-      source,
-      storage,
-      pickAttributionSearchParams(url.searchParams).toString() !== '',
-    )
-  }
+  if (storage) persistAcquisitionSource(source, storage)
 
   const toPost =
     hasAcquisitionSource(source) || !storage
