@@ -1,7 +1,6 @@
 /**
- * Acquisition-source tracking for the marketing site shell, ported from
- * https://github.com/appwrite/website. The marketing shell only mounts on `/`
- * when it renders the guest homepage, never for the console hop.
+ * Acquisition-source tracking for guest visits, ported from
+ * https://github.com/appwrite/website.
  */
 
 import {
@@ -15,7 +14,18 @@ const STORAGE_KEYS = {
   utmMedium: 'utmMedium',
   utmCampaign: 'utmCampaign',
   posted: 'utmSourcePosted',
+  sourceIds: 'utmSourceIds',
 } as const
+
+const SOURCE_IDS_LIMIT = 10
+
+// Cloud has no click-id column, so a paid click without utm_source would be
+// stored as organic search.
+const CLICK_ID_SOURCES = [
+  ['gclid', 'google'],
+  ['msclkid', 'bing'],
+  ['fbclid', 'facebook'],
+] as const
 
 /** Query keys Plausible uses for campaign / click-id attribution. */
 export const ATTRIBUTION_QUERY_PARAM_NAMES = [
@@ -76,11 +86,16 @@ export function parseAcquisitionSource(
   currentOrigin?: string,
 ): AcquisitionSource {
   const params = url.searchParams
+  const utmSource = firstQueryValue(params, 'utm_source')
+  const utmMedium = firstQueryValue(params, 'utm_medium')
+  const clickSource = utmSource
+    ? undefined
+    : CLICK_ID_SOURCES.find(([key]) => firstQueryValue(params, key))?.[1]
   return {
     ref: firstQueryValue(params, 'ref'),
     referrer: resolveExternalReferrer(documentReferrer, currentOrigin),
-    utmSource: firstQueryValue(params, 'utm_source'),
-    utmMedium: firstQueryValue(params, 'utm_medium'),
+    utmSource: utmSource ?? clickSource ?? null,
+    utmMedium: clickSource ? (utmMedium ?? 'cpc') : utmMedium,
     utmCampaign: firstQueryValue(params, 'utm_campaign'),
   }
 }
@@ -95,10 +110,21 @@ export function hasAcquisitionSource(source: AcquisitionSource): boolean {
   )
 }
 
+/**
+ * A tagged landing (any utm_*, ref or click id) replaces the stored tuple so
+ * keys from an earlier campaign never mix into the new one.
+ */
 export function persistAcquisitionSource(
   source: AcquisitionSource,
-  storage: Pick<Storage, 'setItem'>,
+  storage: Pick<Storage, 'setItem' | 'removeItem'>,
+  tagged = false,
 ): void {
+  if (tagged) {
+    storage.removeItem(STORAGE_KEYS.utmSource)
+    storage.removeItem(STORAGE_KEYS.utmMedium)
+    storage.removeItem(STORAGE_KEYS.utmCampaign)
+    storage.removeItem(STORAGE_KEYS.utmReferral)
+  }
   if (source.utmSource)
     storage.setItem(STORAGE_KEYS.utmSource, source.utmSource)
   if (source.utmMedium)
@@ -211,6 +237,45 @@ function getSessionStorage(): Storage | undefined {
   return sessionStorage
 }
 
+function getLocalStorage(): Storage | undefined {
+  try {
+    return typeof localStorage === 'undefined' ? undefined : localStorage
+  } catch {
+    return undefined
+  }
+}
+
+/** Source ids created while a guest, waiting to be linked to an account. */
+export function readPendingSourceIds(
+  storage: Pick<Storage, 'getItem'> | undefined = getLocalStorage(),
+): string[] {
+  try {
+    const parsed: unknown = JSON.parse(
+      storage?.getItem(STORAGE_KEYS.sourceIds) ?? '[]',
+    )
+    return Array.isArray(parsed)
+      ? parsed.filter((id): id is string => typeof id === 'string' && !!id)
+      : []
+  } catch {
+    return []
+  }
+}
+
+export function addPendingSourceId(
+  id: string,
+  storage: Pick<Storage, 'getItem' | 'setItem'> | undefined = getLocalStorage(),
+): void {
+  const ids = [...readPendingSourceIds(storage).filter((x) => x !== id), id]
+  try {
+    storage?.setItem(
+      STORAGE_KEYS.sourceIds,
+      JSON.stringify(ids.slice(-SOURCE_IDS_LIMIT)),
+    )
+  } catch {
+    // Storage full or blocked; the backend fingerprint fallback still applies.
+  }
+}
+
 function compactSourcePayload(
   source: AcquisitionSource,
 ): Record<string, string> {
@@ -271,14 +336,56 @@ function createSource(source: AcquisitionSource): void {
         throw new Error(`createSource failed: ${response.status}`)
       }
       storage?.setItem(STORAGE_KEYS.posted, signature)
+      const created = (await response.json().catch(() => null)) as {
+        $id?: unknown
+      } | null
+      if (typeof created?.$id === 'string') addPendingSourceId(created.$id)
     } catch {
       startedSignatures.delete(signature)
     }
   })()
 }
 
+let linkingSources = false
+
 /**
- * Capture landing-page source from the marketing site shell. `/` only counts
+ * Attach the sources this browser created as a guest to the signed-in account.
+ * Best effort: a failure keeps the ids for the next authenticated load.
+ */
+export function linkPendingSources(): void {
+  if (typeof window === 'undefined' || linkingSources) return
+  const sourceIds = readPendingSourceIds()
+  if (sourceIds.length === 0) return
+  linkingSources = true
+
+  void (async () => {
+    try {
+      const { isCloudProfile } = await import('@/lib/console-profiles')
+      if (!isCloudProfile()) return
+
+      const { sdk } = await import('@/lib/appwrite/sdk')
+      const client = sdk.forConsole.client
+      await client.call(
+        'patch',
+        new URL(`${client.config.endpoint.replace(/\/$/, '')}/console/sources`),
+        { 'content-type': 'application/json' },
+        { sourceIds },
+      )
+      try {
+        getLocalStorage()?.removeItem(STORAGE_KEYS.sourceIds)
+      } catch {
+        // Blocked storage; nothing to clear.
+      }
+    } catch {
+      // Never block sign-up; the ids stay for the next attempt.
+    } finally {
+      linkingSources = false
+    }
+  })()
+}
+
+/**
+ * Capture the landing source for a guest visit. `/` only counts
  * when it renders the guest homepage; as a console hop it must not POST.
  * Cloud only stores a row when at least one of `ref`, an external referrer,
  * or a UTM param is present.
@@ -301,7 +408,13 @@ export function saveReferrerAndUtmSource(
 
   const source = parseAcquisitionSource(url, documentReferrer, currentOrigin)
   const storage = getSessionStorage()
-  if (storage) persistAcquisitionSource(source, storage)
+  if (storage) {
+    persistAcquisitionSource(
+      source,
+      storage,
+      pickAttributionSearchParams(url.searchParams).toString() !== '',
+    )
+  }
 
   const toPost =
     hasAcquisitionSource(source) || !storage
