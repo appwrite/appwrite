@@ -39,6 +39,7 @@ use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
+use Utopia\Storage\Exception\NotFoundException;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Usage\Tenant as UsageTenant;
@@ -368,6 +369,7 @@ class Deletes extends Action
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteExpiredPushLedger($project, $getProjectDB);
+                $this->deleteExpiredUploads($project, $getProjectDB, $deviceForFiles);
                 $this->deleteOldDeployments($dbForPlatform, $publisherForDeletes, $project, $getProjectDB, $deploymentRetention);
                 $this->updateProcessingMigrations($project, $getProjectDB);
                 break;
@@ -2104,6 +2106,51 @@ class Deletes extends Action
         $dbForProject->deleteDocuments('pushLedger', [
             Query::lessThan('$createdAt', $expired),
         ]);
+    }
+
+    private function deleteExpiredUploads(Document $project, callable $getProjectDB, Device $deviceForFiles): void
+    {
+        Console::info('Delete expired uploads');
+
+        $dbForProject = $getProjectDB($project);
+        $expired = DateTime::addSeconds(new \DateTime(), -APP_STORAGE_UPLOAD_RETENTION);
+
+        $this->listByGroup('buckets', [
+            Query::select(['$id', '$sequence']),
+        ], $dbForProject, function (Document $bucket) use ($dbForProject, $deviceForFiles, $expired) {
+            $collection = 'bucket_' . $bucket->getSequence();
+
+            // Every chunk updates the document, and its signature stays empty until the upload completes.
+            try {
+                $this->listByGroup($collection, [
+                    Query::select([...$this->selects, 'path', 'metadata', 'chunksTotal', 'chunksUploaded']),
+                    Query::equal('signature', ['']),
+                    Query::updatedBefore($expired),
+                ], $dbForProject, function (Document $file) use ($collection, $dbForProject, $deviceForFiles) {
+                    if ($file->getAttribute('chunksUploaded', 0) >= $file->getAttribute('chunksTotal', 1)) {
+                        return;
+                    }
+
+                    try {
+                        $aborted = $deviceForFiles->abort($file->getAttribute('path'), $file->getAttribute('metadata', [])['uploadId'] ?? '');
+                    } catch (NotFoundException) {
+                        $aborted = true;
+                    } catch (Throwable $th) {
+                        Console::warning('Failed to abort upload, keeping its row for the next run: ' . $file->getId() . ': ' . $th->getMessage());
+                        return;
+                    }
+
+                    if (!$aborted) {
+                        Console::warning('Failed to abort upload, keeping its row for the next run: ' . $file->getId());
+                        return;
+                    }
+
+                    $dbForProject->deleteDocument($collection, $file->getId());
+                });
+            } catch (Throwable $th) {
+                Console::error('Failed to delete expired uploads in bucket ' . $bucket->getId() . ': ' . $th->getMessage());
+            }
+        });
     }
 
     private function deleteExpiredPresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void

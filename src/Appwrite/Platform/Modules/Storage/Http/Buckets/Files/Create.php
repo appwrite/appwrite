@@ -247,6 +247,11 @@ class Create extends Action
 
             $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
             $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
+
+            // A range starting at the declared size addresses a part past the last one.
+            if ($chunk > $chunks) {
+                throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+            }
         }
 
         $filename = new Filename(0, 0);

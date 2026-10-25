@@ -425,6 +425,48 @@ final class AbuseTest extends Scope
         }
     }
 
+    #[Group('abuseEnabled')]
+    public function testAbuseGetFilePreview(): void
+    {
+        $bucketId = $this->createBucket()['bucketId'];
+        $max = 60;
+
+        $fileIds = [];
+        for ($i = 0; $i < 2; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'fileId' => Id::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'preview.png'),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertSame(201, $response['headers']['status-code']);
+            $fileIds[] = $response['body']['$id'];
+        }
+
+        $headers = [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
+        ];
+
+        // Each width is a distinct transform, so none of these are answered from the preview cache.
+        $this->startCountingInOneWindow(60);
+        for ($i = 0; $i < $max; $i++) {
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $i + 1]);
+            $this->assertSame(200, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $max + 1]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A guest previewing past the limit is throttled');
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[1] . '/preview', $headers, ['width' => 1]);
+        $this->assertSame(200, $response['headers']['status-code'], 'Another file has its own limit');
+    }
+
     private function assertQueryLimited(string $path): void
     {
         $max = 120;
