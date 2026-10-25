@@ -58,7 +58,22 @@ class Redis implements Synchronous, Consumer
         // Minimum publish age for recovery without a live heartbeat.
         // Keep conservative until all workers and adapters heartbeat.
         private readonly int $reapAfter = 90_000,
+        // Claims the sweep has requeued this many times are parked on the dead
+        // queue instead; null requeues them unbounded.
+        private readonly ?int $reapMaxAttempts = null,
+        // Claims published longer ago than this many seconds are parked on the
+        // dead queue instead of re-run; null requeues them at any age.
+        private readonly ?int $reapMaxAge = null,
     ) {
+        if ($this->reapMaxAttempts !== null && $this->reapMaxAttempts < 1) {
+            throw new \InvalidArgumentException('reapMaxAttempts must be at least 1, or null to requeue unbounded');
+        }
+
+        // Every claim the sweep reaches is at least reapAfter old, so a ceiling at
+        // or below it would park all of them and recover none.
+        if ($this->reapMaxAge !== null && $this->reapMaxAge <= $this->reapAfter) {
+            throw new \InvalidArgumentException(\sprintf('reapMaxAge (%d) must exceed reapAfter (%d), or be null to requeue at any age', $this->reapMaxAge, $this->reapAfter));
+        }
     }
 
     public function setReconnectCallback(?callable $callback): self
@@ -152,6 +167,8 @@ class Redis implements Synchronous, Consumer
             "{$queue->namespace}.poison.{$queue->name}"];
         $messages = $args = $poison = [];
         foreach ($batch as $raw) {
+            $size = \is_string($raw) ? \strlen($raw) : 0;
+            Message::warnIfLarge($queue->name, $size);
             try {
                 $envelope = $this->codec->decode($raw);
                 if (!\is_array($envelope) || !isset($envelope['pid'], $envelope['queue'], $envelope['timestamp'])) {
@@ -163,7 +180,7 @@ class Redis implements Synchronous, Consumer
                 $poison[] = $raw;
                 continue;
             }
-            $message->setReceipt($token);
+            $message->setReceipt($token)->setSize($size);
             $messages[] = $message;
             $pid = $message->getPid();
             $keys[] = "{$queue->namespace}.jobs.{$queue->name}.{$pid}";
@@ -274,7 +291,7 @@ class Redis implements Synchronous, Consumer
             if ($expired !== []) {
                 $this->script($this->commands, 'recover', [$registry, "{$queue->namespace}.queue.{$queue->name}", ...$expired], [self::REAP_LIMIT]);
             }
-            $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, scan: self::REAP_LIMIT * 2);
+            $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, maxAttempts: $this->reapMaxAttempts, newerThan: $this->reapMaxAge, scan: self::REAP_LIMIT * 2);
         }
     }
 
@@ -463,10 +480,22 @@ class Redis implements Synchronous, Consumer
             $job = $this->getJob($queue, $pid);
             $owner = $this->commands->get($ownerKey);
             if ($job === false) {
-                if (\is_string($owner)) {
-                    throw new \RuntimeException('Queue delivery payload is missing');
+                if (!\is_string($owner)) {
+                    $this->commands->listRemove($processing, $pid);
+                    continue;
                 }
-                $this->commands->listRemove($processing, $pid);
+                // Owned, but nothing left to requeue or park. Dropped unless its
+                // handler still heartbeats (commit tolerates a missing payload).
+                // Throwing here ended the sweep before its cursor was saved, so
+                // every sweep stopped at the same orphan and never got past it.
+                $abandoned = $this->script($this->commands, 'abandon', [
+                    $ownerKey, "{$queue->namespace}.claims.{$queue->name}.{$pid}",
+                    "{$queue->namespace}.jobs.{$queue->name}.{$pid}", $processing,
+                    "{$queue->namespace}.stats.{$queue->name}.processing",
+                ], [$owner, $pid]);
+                if (!$abandoned) {
+                    $retained++;
+                }
                 continue;
             }
 

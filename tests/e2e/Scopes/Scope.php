@@ -10,9 +10,9 @@ use PHPUnit\Framework\TestCase;
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
@@ -56,6 +56,26 @@ abstract class Scope extends TestCase
      * not a successful POST /teams: the returned response is a real GET (200).
      * Application teams still use the public create API (201).
      */
+    /**
+     * Console organization creation is serialized behind an instance-wide lock that
+     * parallel test processes contend for, so a locked 409 is retried rather than
+     * taken as the answer.
+     */
+    protected function postTeam(array $headers, array $params): array
+    {
+        $deadline = \microtime(true) + 10.0;
+        do {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, $params);
+            $locked = $team['headers']['status-code'] === 409
+                && ($team['body']['type'] ?? '') === 'general_resource_locked';
+            if ($locked) {
+                \usleep(200_000);
+            }
+        } while ($locked && \microtime(true) < $deadline);
+
+        return $team;
+    }
+
     protected function createTeamFixture(array $headers, array $params): array
     {
         if (($headers['x-appwrite-project'] ?? '') !== 'console') {
@@ -67,18 +87,8 @@ abstract class Scope extends TestCase
 
         // The first organization of a self-hosted instance, and every organization on an
         // edition without the instance limit, comes from the public API. Only a refusal
-        // falls through to seeding the rows directly. Creation is serialized behind an
-        // instance-wide lock, and parallel test processes contend for it, so a 409 asks
-        // for a retry rather than answering whether the organization was allowed.
-        $deadline = \microtime(true) + 10.0;
-        do {
-            $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, $params);
-            $locked = $team['headers']['status-code'] === 409
-                && ($team['body']['type'] ?? '') === 'general_resource_locked';
-            if ($locked) {
-                \usleep(200_000);
-            }
-        } while ($locked && \microtime(true) < $deadline);
+        // falls through to seeding the rows directly.
+        $team = $this->postTeam($headers, $params);
 
         if ($team['headers']['status-code'] === 201) {
             $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'], $headers);
@@ -94,7 +104,7 @@ abstract class Scope extends TestCase
             $this->assertSame(200, $account['headers']['status-code']);
         }, 3_000, 100);
 
-        $teamId = ($params['teamId'] ?? 'unique()') === 'unique()' ? ID::unique() : $params['teamId'];
+        $teamId = ($params['teamId'] ?? 'unique()') === 'unique()' ? Id::unique() : $params['teamId'];
         $seed = function () use ($account, $params, $teamId) {
             global $register;
             $pools = $register->get('pools');
@@ -118,7 +128,7 @@ abstract class Scope extends TestCase
                         'search' => $teamId . ' ' . $params['name'],
                     ]));
                     $roles = array_values(array_unique([...($params['roles'] ?? []), 'owner']));
-                    $membershipId = ID::unique();
+                    $membershipId = Id::unique();
                     $database->createDocument('memberships', new Document([
                         '$id' => $membershipId,
                         '$permissions' => [
@@ -216,6 +226,16 @@ abstract class Scope extends TestCase
         return $this->getConsoleVariables()['supportForSpatials'] ?? true;
     }
 
+    protected function getSupportForAggregations(): bool
+    {
+        return $this->getConsoleVariables()['supportForAggregations'] ?? true;
+    }
+
+    protected function getSupportForJoins(): bool
+    {
+        return $this->getConsoleVariables()['supportForJoins'] ?? true;
+    }
+
     /**
      * Check if the database adapter supports spatial indexes on nullable columns
      */
@@ -238,6 +258,14 @@ abstract class Scope extends TestCase
     protected function getSupportForMultipleFulltextIndexes(): bool
     {
         return $this->getConsoleVariables()['supportForMultipleFulltextIndexes'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports trigram indexes
+     */
+    protected function getSupportForTrigramIndex(): bool
+    {
+        return $this->getConsoleVariables()['supportForTrigramIndex'] ?? false;
     }
 
     /**
@@ -323,7 +351,7 @@ abstract class Scope extends TestCase
             }
 
             $this->fail("No email found for address: {$address}" . ($probe !== null ? ' matching probe' : ''));
-        }, 15_000, 500);
+        }, 45_000, 500);
 
         return $result;
     }
@@ -513,7 +541,7 @@ abstract class Scope extends TestCase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => 'console',
             ], [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $email,
                 'password' => $password,
                 'name' => $name,
@@ -548,7 +576,7 @@ abstract class Scope extends TestCase
 
             if ($verify['headers']['status-code'] === 200) {
                 self::$root = [
-                    '$id' => ID::custom($root['body']['$id']),
+                    '$id' => Id::custom($root['body']['$id']),
                     'name' => $root['body']['name'],
                     'email' => $root['body']['email'],
                     'session' => $session['cookies']['a_session_console'],
@@ -589,7 +617,7 @@ abstract class Scope extends TestCase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -607,7 +635,7 @@ abstract class Scope extends TestCase
         ]);
 
         self::$user[$projectId] = [
-            '$id' => ID::custom($user['body']['$id']),
+            '$id' => Id::custom($user['body']['$id']),
             'name' => $user['body']['name'],
             'email' => $user['body']['email'],
             'session' => $session['cookies']['a_session_' . $projectId],

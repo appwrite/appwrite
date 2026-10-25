@@ -21,6 +21,8 @@ const EXECUTION_TRIGGER_ELEMENTS = [
   { value: 'http', label: 'HTTP' },
   { value: 'schedule', label: 'Schedule' },
   { value: 'event', label: 'Event' },
+  // Edge SMTP ingress stores trigger `email` (x-appwrite-trigger / execution.trigger).
+  { value: 'email', label: 'Email' },
 ]
 
 /**

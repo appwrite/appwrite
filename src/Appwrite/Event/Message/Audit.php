@@ -7,9 +7,12 @@ use Utopia\Database\Document;
 
 final class Audit extends Base
 {
+    /**
+     * @param array $payload Not queued: no audits consumer reads it. Kept so producers that still pass it keep working.
+     */
     public function __construct(
         public readonly string $event,
-        public readonly array $payload,
+        public readonly array $payload = [],
         public readonly Document $project = new Document(),
         public readonly Document $user = new Document(),
         public readonly Document $impersonatorUser = new Document(),
@@ -23,13 +26,13 @@ final class Audit extends Base
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
             'project' => ProjectContext::fromDocument($this->project)->toArray(),
-            'user' => $this->user->getArrayCopy(),
-            'impersonatorUser' => $this->impersonatorUser->getArrayCopy(),
-            'payload' => $this->payload,
+            'user' => UserContext::fromDocument($this->user)->toArray(),
+            'impersonatorUser' => UserContext::fromDocument($this->impersonatorUser)->toArray(),
             'resource' => $this->resource,
             'mode' => $this->mode,
             'ip' => $this->ip,
@@ -41,14 +44,15 @@ final class Audit extends Base
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(
             event: $data['event'] ?? '',
-            payload: $data['payload'] ?? [],
             project: new Document($data['project'] ?? []),
-            user: new Document($data['user'] ?? []),
-            impersonatorUser: new Document($data['impersonatorUser'] ?? []),
+            // Messages queued by older producers carry the whole user document; keep only what consumers read.
+            user: new Document(UserContext::fromArray($data['user'] ?? [])->toArray()),
+            impersonatorUser: new Document(UserContext::fromArray($data['impersonatorUser'] ?? [])->toArray()),
             resource: $data['resource'] ?? '',
             mode: $data['mode'] ?? '',
             ip: $data['ip'] ?? '',

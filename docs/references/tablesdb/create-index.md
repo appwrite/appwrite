@@ -1,2 +1,2 @@
 Creates an index on the columns listed. Your index should include all the columns you will query in a single request.
-Type can be `key`, `fulltext`, or `unique`.
+Type can be `key`, `fulltext`, `unique`, `spatial`, or `trigram`. `trigram` is only available on PostgreSQL and lets `contains`, `startsWith`, and `endsWith` queries on string columns use an index.

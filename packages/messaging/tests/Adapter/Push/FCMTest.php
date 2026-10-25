@@ -4,12 +4,64 @@ declare(strict_types=1);
 
 namespace Utopia\Messaging\Tests\Adapter\Push;
 
+use Closure;
 use PHPUnit\Framework\TestCase;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Messages\Push;
+use Utopia\Messaging\Priority;
 
 final class FCMTest extends TestCase
 {
+    /**
+     * A wake signal (no title/body, data + content-available) must render as a data-only message: no
+     * notification block, so FCM delivers it in the background and the app can reconnect and replay.
+     */
+    public function testSilentWakeIsDataOnly(): void
+    {
+        $stub = new FCMStub($this->serviceAccount());
+
+        $stub->send(new Push(
+            to: ['token'],
+            data: ['type' => 'wake', 'messageId' => 'msg1'],
+            contentAvailable: true,
+            priority: Priority::HIGH,
+        ));
+
+        $message = $stub->capturedBodies[0]['message'];
+
+        $this->assertArrayNotHasKey('notification', $message);
+        $this->assertSame(['type' => 'wake', 'messageId' => 'msg1'], $message['data']);
+        $this->assertSame(1, $message['apns']['payload']['aps']['content-available']);
+        $this->assertSame('token', $message['token']);
+
+        // Android keeps high priority; the APNs side must be a background push (type background,
+        // priority 5) or iOS drops the silent wake.
+        $this->assertSame('high', $message['android']['priority']);
+        $this->assertSame('background', $message['apns']['headers']['apns-push-type']);
+        $this->assertSame('5', $message['apns']['headers']['apns-priority']);
+    }
+
+    /**
+     * mutable-content is set under the APNs payload so the iOS notification service extension runs;
+     * it is an iOS-only flag and must not touch the Android notification.
+     */
+    public function testMutableContentIsSetUnderApns(): void
+    {
+        $stub = new FCMStub($this->serviceAccount());
+
+        $stub->send(new Push(
+            to: ['token'],
+            title: 'New message',
+            priority: Priority::HIGH,
+            mutableContent: true,
+        ));
+
+        $message = $stub->capturedBodies[0]['message'];
+
+        $this->assertSame(1, $message['apns']['payload']['aps']['mutable-content']);
+        $this->assertArrayNotHasKey('mutable-content', $message['android']['notification'] ?? []);
+    }
+
     public function testChannelIdIsSentOnTheAndroidNotification(): void
     {
         $stub = new FCMStub($this->serviceAccount());
@@ -83,6 +135,7 @@ class FCMStub extends FCM
      * @param  array<string>  $urls
      * @param  array<string>  $headers
      * @param  array<array<string, mixed>>  $bodies
+     * @param  (Closure(array<string, mixed>): void)|null  $onResult
      * @return array<array{index: int, url: string, statusCode: int, response: array<string, mixed>|string|null, headers: array<string, string>, error: string, errorCode: int}>
      */
     #[\Override]
@@ -93,12 +146,19 @@ class FCMStub extends FCM
         array $bodies = [],
         int $timeout = 30,
         int $connectTimeout = 10,
+        ?Closure $onResult = null,
     ): array {
         $this->capturedBodies = $bodies;
 
         $results = [];
         foreach ($bodies as $index => $body) {
             $results[] = ['index' => $index, 'url' => $urls[0], 'statusCode' => 200, 'response' => null, 'headers' => [], 'error' => '', 'errorCode' => 0];
+        }
+
+        if ($onResult !== null) {
+            \array_walk($results, fn (array $result) => $onResult($result));
+
+            return [];
         }
 
         return $results;

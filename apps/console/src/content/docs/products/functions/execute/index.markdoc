@@ -145,7 +145,7 @@ let functions = Functions(client)
 let execution = try await functions.createExecution(
   functionId: "<FUNCTION_ID>",
   body: "<BODY>", // optional
-  async: xfalse, // optional
+  async: false, // optional
   path: "<PATH>", // optional
   method: "GET", // optional
   headers: [:] // optional
@@ -264,7 +264,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/appwrite/sdk-for-go/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -465,7 +465,7 @@ let functions = Functions(client)
 let execution = try await functions.createExecution(
   functionId: "<FUNCTION_ID>",
   body: "<BODY>", // optional
-  async: xfalse, // optional
+  async: false, // optional
   path: "<PATH>", // optional
   method: "GET", // optional
   headers: [:] // optional
@@ -896,7 +896,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/appwrite/sdk-for-go/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {

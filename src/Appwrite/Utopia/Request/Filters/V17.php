@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Request\Filters;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 
 class V17 extends Filter
 {
@@ -65,8 +66,7 @@ class V17 extends Filter
         $parsed = [];
         foreach ($content['queries'] as $query) {
             try {
-                $query = $this->parseQuery($query);
-                $parsed[] = \json_encode(\array_filter($query->toArray()));
+                $parsed[] = \json_encode(\array_filter($this->parseQuery($query)));
             } catch (\Throwable $th) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $th->getMessage());
             }
@@ -77,8 +77,13 @@ class V17 extends Filter
         return $content;
     }
 
-    // 1.4 query parser
-    public function parseQuery(string $filter): Query
+    /**
+     * Parses a 1.4 query string into its 1.5 array form. An unknown method is kept as-is so the
+     * endpoint's query validation rejects it, as it did before the methods became an enum.
+     *
+     * @return array<string, mixed>
+     */
+    public function parseQuery(string $filter): array
     {
         // Init empty vars we fill later
         $method = '';
@@ -92,16 +97,21 @@ class V17 extends Filter
             throw new \Exception('Invalid query');
         }
 
-        $method = \mb_substr($filter, 0, $paramsStart);
+        $name = \mb_substr($filter, 0, $paramsStart);
+
+        if (\str_contains($name, '.')) {
+            throw new \Exception('Invalid query method');
+        }
+
+        $method = Method::tryFrom($name);
+
+        if ($method === null) {
+            return ['method' => $name];
+        }
 
         // Separate params from filter
         $paramsEnd = \strlen($filter) - 1; // -1 to ignore )
         $parametersStart = $paramsStart + 1; // +1 to ignore (
-
-        // Check for deprecated query syntax
-        if (\str_contains($method, '.')) {
-            throw new \Exception('Invalid query method');
-        }
 
         $currentParam = ''; // We build param here before pushing when it's ended
         $currentArrayParam = []; // We build array param here before pushing when it's ended
@@ -225,37 +235,45 @@ class V17 extends Filter
             }
         }
 
+        return $this->toQuery($method, $parsedParams)->toArray();
+    }
+
+    /**
+     * @param array<mixed> $parsedParams
+     */
+    private function toQuery(Method $method, array $parsedParams): Query
+    {
         switch ($method) {
-            case Query::TYPE_EQUAL:
-            case Query::TYPE_NOT_EQUAL:
-            case Query::TYPE_LESSER:
-            case Query::TYPE_LESSER_EQUAL:
-            case Query::TYPE_GREATER:
-            case Query::TYPE_GREATER_EQUAL:
-            case Query::TYPE_CONTAINS:
-            case Query::TYPE_SEARCH:
-            case Query::TYPE_IS_NULL:
-            case Query::TYPE_IS_NOT_NULL:
-            case Query::TYPE_STARTS_WITH:
-            case Query::TYPE_ENDS_WITH:
+            case Method::Equal:
+            case Method::NotEqual:
+            case Method::LessThan:
+            case Method::LessThanEqual:
+            case Method::GreaterThan:
+            case Method::GreaterThanEqual:
+            case Method::Contains:
+            case Method::Search:
+            case Method::IsNull:
+            case Method::IsNotNull:
+            case Method::StartsWith:
+            case Method::EndsWith:
                 $attribute = $parsedParams[0] ?? '';
                 if (count($parsedParams) < 2) {
                     return new Query($method, $attribute);
                 }
                 return new Query($method, $attribute, \is_array($parsedParams[1]) ? $parsedParams[1] : [$parsedParams[1]]);
 
-            case Query::TYPE_BETWEEN:
+            case Method::Between:
                 return new Query($method, $parsedParams[0], [$parsedParams[1], $parsedParams[2]]);
-            case Query::TYPE_SELECT:
+            case Method::Select:
                 return new Query($method, values: $parsedParams[0]);
-            case Query::TYPE_ORDER_ASC:
-            case Query::TYPE_ORDER_DESC:
+            case Method::OrderAsc:
+            case Method::OrderDesc:
                 return new Query($method, $parsedParams[0] ?? '');
 
-            case Query::TYPE_LIMIT:
-            case Query::TYPE_OFFSET:
-            case Query::TYPE_CURSOR_AFTER:
-            case Query::TYPE_CURSOR_BEFORE:
+            case Method::Limit:
+            case Method::Offset:
+            case Method::CursorAfter:
+            case Method::CursorBefore:
                 if (count($parsedParams) > 0) {
                     return new Query($method, values: [$parsedParams[0]]);
                 }

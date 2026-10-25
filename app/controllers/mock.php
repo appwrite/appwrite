@@ -12,9 +12,9 @@ use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
@@ -175,7 +175,8 @@ Http::get('/v1/mock/tests/general/oauth2/user')
             $user = [
                 'id' => $id,
                 'name' => 'Canonical Email User',
-                'email' => 'oauth.' . $id . '@gmail.com',
+                // Any address only in development, where the e2e suite runs
+                'email' => \str_contains($id, '@') && System::getEnv('_APP_ENV', 'development') === 'development' ? $id : 'oauth.' . $id . '@gmail.com',
                 'verified' => true,
                 'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
             ];
@@ -240,7 +241,7 @@ Http::patch('/v1/mock/tests/general/oauth2/native')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, bool $enabled, string $provider, ?string $appId, array $clientIds, Response $response, Database $dbForPlatform) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -368,7 +369,7 @@ Http::post('/v1/mock/api-key-unprefixed')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -383,7 +384,7 @@ Http::post('/v1/mock/api-key-unprefixed')
         $scopes = array_keys(Config::getParam('projectScopes'));
 
         $key = new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             '$permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -421,7 +422,7 @@ Http::get('/v1/mock/github/callback')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $providerInstallationId, string $projectId, VcsFactory $vcsFactory, Document $project, Response $response, Database $dbForPlatform) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -449,13 +450,13 @@ Http::get('/v1/mock/github/callback')
         $teamId = $project->getAttribute('teamId', '');
 
         $installation = new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             '$permissions' => [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                Permission::read(Role::team(Id::custom($teamId))),
+                Permission::update(Role::team(Id::custom($teamId), 'owner')),
+                Permission::update(Role::team(Id::custom($teamId), 'developer')),
+                Permission::delete(Role::team(Id::custom($teamId), 'owner')),
+                Permission::delete(Role::team(Id::custom($teamId), 'developer')),
             ],
             'providerInstallationId' => $providerInstallationId,
             'projectId' => $projectId,

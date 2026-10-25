@@ -88,7 +88,7 @@ async function prepareDatabase() {
         tableId: todoTable.$id,
         key: 'description',
         required: false,
-        default: 'This is a test description'
+        xdefault: 'This is a test description'
     });
 
     await tablesDB.createBooleanColumn({

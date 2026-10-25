@@ -32,6 +32,7 @@ import {
   passkeySignInErrorMessage,
   signInWithPasskey,
 } from '@/lib/passkeys'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
@@ -304,9 +305,11 @@ function SignInPage() {
 
   // Runs for everyone: the page cannot know the user yet, and the browser only
   // offers a passkey it already holds for the console.
+  const { features } = useConsoleProfile()
   const [passkeySupported, setPasskeySupported] = useState(false)
   const [passkeyAutofill, setPasskeyAutofill] = useState(false)
   useEffect(() => {
+    if (!features.accountPasskeys) return
     let active = true
     setPasskeySupported(isPasskeySupported())
     void isPasskeyAutofillAvailable().then((available) => {
@@ -319,7 +322,7 @@ function SignInPage() {
       passkeyRequest.current?.controller.abort()
       passkeyRequest.current = null
     }
-  }, [startPasskeyAutofill])
+  }, [features.accountPasskeys, startPasskeyAutofill])
 
   // The browser runs one passkey request at a time, so the prompt replaces the
   // autofill request, and autofill comes back if the prompt ends without a session.
@@ -347,9 +350,17 @@ function SignInPage() {
       <SignIn
         mode="sign-in"
         onSubmit={(data) => signInMutation.mutate(data)}
-        onOAuthLogin={handleOAuthLogin}
-        onPasskeyAutofill={passkeyAutofill ? startPasskeyAutofill : undefined}
-        onPasskeySignIn={passkeySupported ? handlePasskeySignIn : undefined}
+        onOAuthLogin={features.accountOAuth ? handleOAuthLogin : undefined}
+        onPasskeyAutofill={
+          features.accountPasskeys && passkeyAutofill
+            ? startPasskeyAutofill
+            : undefined
+        }
+        onPasskeySignIn={
+          features.accountPasskeys && passkeySupported
+            ? handlePasskeySignIn
+            : undefined
+        }
         isLoading={signInMutation.isPending || passkeyBusy || isOpeningMfa}
         oauthLoading={oauthLoading}
         redirect={search.redirect}
