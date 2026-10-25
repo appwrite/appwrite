@@ -5,6 +5,7 @@ import {
   SSR_CLIENT_IP_WINDOW_KEY,
   type ClientIpSnapshot,
 } from '@/lib/client-ip'
+import { serializeInlineScriptJson } from '@/lib/runtime-config-shared'
 
 /**
  * SSR snapshot from the document request. Server APIs stay inside `.server()`
@@ -24,6 +25,6 @@ export const getSsrClientIpSnapshot = createIsomorphicFn()
   })
 
 export function getSsrClientIpScript(): string {
-  return `window.${SSR_CLIENT_IP_WINDOW_KEY}=${JSON.stringify(getSsrClientIpSnapshot())}`
+  return `window.${SSR_CLIENT_IP_WINDOW_KEY}=${serializeInlineScriptJson(getSsrClientIpSnapshot())}`
 }
 

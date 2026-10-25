@@ -103,12 +103,15 @@ jobs:
             echo "preview=false" >> "$GITHUB_OUTPUT"
           fi
 
+  # Builds published here are installable from pkg.pr.new under this
+  # repository's name, so only this repository's own branches publish them.
   console:
     name: Console / Preview SDK
     needs: changes
     if: >-
       always()
-      && (needs.changes.outputs.preview == 'true'
+      && ((needs.changes.outputs.preview == 'true'
+      && github.event.pull_request.head.repo.full_name == github.repository)
       || (github.event_name == 'workflow_dispatch' && inputs.platform == 'console'))
     runs-on: ubuntu-24.04
     timeout-minutes: 20

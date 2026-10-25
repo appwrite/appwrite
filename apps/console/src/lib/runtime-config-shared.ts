@@ -143,12 +143,21 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
 // so the serialized JSON can't break out of the surrounding <script> element.
 const SCRIPT_UNSAFE = new RegExp('[<>&\\u2028\\u2029]', 'g')
 
-/** Serialize a config to a <script>-safe JSON object literal. */
-export function serializeRuntimeConfig(config: RuntimeConfig): string {
-  return JSON.stringify(config).replace(
+/**
+ * JSON for an inline `<script>` body. `JSON.stringify` leaves `<` as is, so a
+ * string value containing `</script>` would end the element early; every
+ * value written into a document script goes through this instead.
+ */
+export function serializeInlineScriptJson(value: unknown): string {
+  return (JSON.stringify(value) ?? 'null').replace(
     SCRIPT_UNSAFE,
     (ch) => '\\u' + ch.charCodeAt(0).toString(16).padStart(4, '0'),
   )
+}
+
+/** Serialize a config to a <script>-safe JSON object literal. */
+export function serializeRuntimeConfig(config: RuntimeConfig): string {
+  return serializeInlineScriptJson(config)
 }
 
 const RUNTIME_CONFIG_SCRIPT_ASSIGNMENT = /window\.__APP_CONFIG__=[^;]*;/g

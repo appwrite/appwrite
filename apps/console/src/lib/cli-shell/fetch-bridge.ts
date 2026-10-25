@@ -12,21 +12,31 @@ function resolveRequestUrl(input: RequestInfo | URL): string {
   return input.url
 }
 
-function isAppwriteApiRequest(url: string, endpointPrefixes: string[]): boolean {
+/**
+ * Whether the bridge adds the console session to a request: only API calls
+ * (`/v1` paths) on one of the console's own endpoint origins. Every other
+ * fetch on the page goes out unchanged.
+ */
+export function isAppwriteApiRequest(
+  url: string,
+  endpointPrefixes: string[],
+): boolean {
+  let parsed: URL
   try {
-    const parsed = new URL(url)
-    if (parsed.pathname.startsWith('/v1/')) return true
-    return endpointPrefixes.some((prefix) => {
-      try {
-        const endpointUrl = new URL(prefix)
-        return parsed.origin === endpointUrl.origin
-      } catch {
-        return url.startsWith(prefix)
-      }
-    })
+    parsed = new URL(url)
   } catch {
-    return endpointPrefixes.some((prefix) => url.startsWith(prefix))
+    return false
   }
+  if (parsed.pathname !== '/v1' && !parsed.pathname.startsWith('/v1/')) {
+    return false
+  }
+  return endpointPrefixes.some((prefix) => {
+    try {
+      return new URL(prefix).origin === parsed.origin
+    } catch {
+      return false
+    }
+  })
 }
 
 function isConsoleAccountGetRequest(url: string, method?: string): boolean {

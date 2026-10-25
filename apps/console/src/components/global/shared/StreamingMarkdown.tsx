@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
+import { isLoadableMessageImage } from '@/lib/assistant/message-images'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import {
@@ -168,6 +169,13 @@ export function StreamingMarkdown({
           },
           img({ src, alt }) {
             if (!src) return null
+            const origin =
+              typeof window === 'undefined' ? '' : window.location.origin
+            if (!isLoadableMessageImage(src, origin)) {
+              return alt ? (
+                <span className="text-muted-foreground">[{alt}]</span>
+              ) : null
+            }
             return (
               <img
                 src={src}

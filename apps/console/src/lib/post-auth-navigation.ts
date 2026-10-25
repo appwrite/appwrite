@@ -11,6 +11,7 @@ import {
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 
 /**
  * Cloud (and any profile with userVerification) requires a verified console
@@ -37,29 +38,7 @@ const AUTH_PAGE_PATHS = [
   '/auth/magic-url',
 ] as const
 
-export function isValidRelativeRedirect(value: string): boolean {
-  if (
-    !value.startsWith('/') ||
-    value.startsWith('//') ||
-    /[\\\u0000-\u001f\u007f]/.test(value)
-  ) {
-    return false
-  }
-  try {
-    // Validate destination structure, not URLs embedded in query values.
-    // Callers must retain the original bytes rather than the normalized URL.
-    const origin = 'https://console.invalid'
-    const destination = new URL(value, origin)
-    const pathname = decodeURIComponent(destination.pathname)
-    return (
-      destination.origin === origin &&
-      !pathname.startsWith('//') &&
-      !/[\\\u0000-\u001f\u007f]/.test(pathname)
-    )
-  } catch {
-    return false
-  }
-}
+export { isValidRelativeRedirect }
 
 function normalizeRedirectPathname(redirect: string): string {
   const pathname = redirect.split('?')[0]?.split('#')[0] ?? redirect

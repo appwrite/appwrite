@@ -8,6 +8,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import type { MarketplaceApp } from '@/lib/marketplace/types'
+import { getAppLinkHref } from '@/lib/oauth2/app-links'
 import { useT } from '@/lib/i18n/translate'
 
 type MarketplaceAppResourceLinksProps = {
@@ -34,15 +35,27 @@ export function MarketplaceAppResourceLinks({
 }: MarketplaceAppResourceLinksProps) {
   const t = useT()
   const links = [
-    { label: t('Homepage'), url: app.clientUri, icon: Globe },
+    { label: t('Homepage'), url: getAppLinkHref(app.clientUri), icon: Globe },
     {
       label: t('Privacy policy'),
-      url: app.privacyPolicyUrl,
+      url: getAppLinkHref(app.privacyPolicyUrl),
       icon: ShieldCheck,
     },
-    { label: t('Terms of service'), url: app.termsUrl, icon: ScrollText },
-    { label: t('Support'), url: app.supportUrl, icon: LifeBuoy },
-    { label: t('Data deletion'), url: app.dataDeletionUrl, icon: Trash2 },
+    {
+      label: t('Terms of service'),
+      url: getAppLinkHref(app.termsUrl),
+      icon: ScrollText,
+    },
+    {
+      label: t('Support'),
+      url: getAppLinkHref(app.supportUrl),
+      icon: LifeBuoy,
+    },
+    {
+      label: t('Data deletion'),
+      url: getAppLinkHref(app.dataDeletionUrl),
+      icon: Trash2,
+    },
   ].filter((link): link is { label: string; url: string; icon: LucideIcon } =>
     Boolean(link.url),
   )
