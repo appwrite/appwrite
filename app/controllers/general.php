@@ -67,8 +67,10 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -249,7 +251,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             - If JWT in cookie is invalid or expired -> not authorized
             - If user is blocked or removed -> not authorized
             - If user's session is removed or expired -> not authorized
-            - If user is not member of team of this deployment -> not authorized
+            - If user lacks read permission on this project -> not authorized
             - If not authorized, redirect to Console redirect UI
             - If authorized, continue as if auth was not required
         */
@@ -283,14 +285,19 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $jwtSessionId = $payload['sessionId'] ?? '';
                 $sessionActive = !empty($jwtSessionId) && $user->sessionActive($jwtSessionId);
 
-                $membershipExists = false;
+                $hasProjectAccess = false;
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && !$user->isEmpty()) {
-                    $teamId = $project->getAttribute('teamId', '');
-                    $membershipExists = \array_any($user->getAttribute('memberships', []), static fn (Document $membership): bool => $membership->getAttribute('teamId') === $teamId && $membership->getAttribute('confirm', false) === true);
+                    // Same project-read check as HTTP admin mode and realtime: confirmed
+                    // membership alone is not enough when the only role is another project.
+                    $projectAuthorization = new Authorization();
+                    foreach ($user->getRoles($projectAuthorization) as $role) {
+                        $projectAuthorization->addRole($role);
+                    }
+                    $hasProjectAccess = $projectAuthorization->isValid(new Input(PermissionType::Read, $project->getPermissionsByType(PermissionType::Read)));
                 }
 
-                if ($userExists && $sessionActive && $membershipExists) {
+                if ($userExists && $sessionActive && $hasProjectAccess) {
                     $authorized = true;
                 }
             }
