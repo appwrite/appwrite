@@ -183,10 +183,10 @@ export function BucketSecurity() {
               <p className="text-[13px] text-muted-foreground">
                 {t('When file security is enabled, users need')}{' '}
                 <strong>
-                  {t('both bucket permissions and file permissions')}
+                  {t('either bucket permissions or file permissions')}
                 </strong>{' '}
                 {t(
-                  'to access files. File permissions are an additional layer, not an alternative to bucket permissions.',
+                  'to access files. Permissions granted at the bucket level apply to all files in the bucket.',
                 )}
               </p>
               <p className="text-[13px] text-muted-foreground">
