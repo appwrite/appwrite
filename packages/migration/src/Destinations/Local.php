@@ -41,10 +41,18 @@ class Local extends Destination
             \mkdir($this->path . '/deployments', 0777, true);
         }
 
+        // realpath() follows a symlinked files/ or deployments/ directory, which
+        // would otherwise become the trusted root. Keep those roots only when
+        // the resolved path is still inside the export directory.
+        $exportRoot = \realpath($this->path);
         $filesRoot = \realpath($this->path . '/files');
         $deploymentsRoot = \realpath($this->path . '/deployments');
 
-        if ($filesRoot === false || $deploymentsRoot === false) {
+        if ($exportRoot === false || $filesRoot === false || $deploymentsRoot === false) {
+            throw new \Exception('Unable to resolve export directories', MigrationException::CODE_INTERNAL);
+        }
+
+        if (! $this->isBeneathRoot($exportRoot, $filesRoot) || ! $this->isBeneathRoot($exportRoot, $deploymentsRoot)) {
             throw new \Exception('Unable to resolve export directories', MigrationException::CODE_INTERNAL);
         }
 
@@ -223,7 +231,19 @@ class Local extends Destination
                             $resource->getId() . '.tar.gz'
                         );
 
-                        \file_put_contents($deploymentPath, $resource->getData(), FILE_APPEND);
+                        $data = $resource->getData();
+                        $written = \file_put_contents($deploymentPath, $data, FILE_APPEND);
+
+                        if ($written === false || $written !== \strlen($data)) {
+                            throw new MigrationException(
+                                resourceName: $resource->getName(),
+                                resourceGroup: $resource->getGroup(),
+                                resourceId: $resource->getId(),
+                                message: 'Unable to write export file',
+                                code: MigrationException::CODE_INTERNAL,
+                            );
+                        }
+
                         $resource->setData('');
                         break;
                     case Resource::TYPE_FILE:
@@ -234,7 +254,19 @@ class Local extends Destination
                             \unlink($filePath);
                         }
 
-                        \file_put_contents($filePath, $resource->getData(), FILE_APPEND);
+                        $data = $resource->getData();
+                        $written = \file_put_contents($filePath, $data, FILE_APPEND);
+
+                        if ($written === false || $written !== \strlen($data)) {
+                            throw new MigrationException(
+                                resourceName: $resource->getName(),
+                                resourceGroup: $resource->getGroup(),
+                                resourceId: $resource->getId(),
+                                message: 'Unable to write export file',
+                                code: MigrationException::CODE_INTERNAL,
+                            );
+                        }
+
                         $resource->setData('');
                         break;
                     default:
