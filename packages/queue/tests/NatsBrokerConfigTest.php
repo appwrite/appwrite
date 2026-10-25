@@ -53,6 +53,12 @@ final class NatsBrokerConfigTest extends TestCase
         new Nats($this->neverConnect(), deadMaxAge: 0.0);
     }
 
+    public function testStrandedAfterMustNotBeNegative(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new Nats($this->neverConnect(), strandedAfter: -1.0);
+    }
+
     public function testValidBackoffConstructs(): void
     {
         $broker = new Nats($this->neverConnect(), ackWait: 10.0, maxDeliver: 5, backoff: [10.0, 30.0, 120.0], deadMaxAge: 604800.0);

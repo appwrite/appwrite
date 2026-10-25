@@ -22,6 +22,8 @@ use Utopia\NATS\JetStream\PubAck;
 use Utopia\NATS\JetStream\RetentionPolicy;
 use Utopia\NATS\JetStream\StorageType;
 use Utopia\NATS\JetStream\StreamConfig;
+use Utopia\NATS\JetStream\StreamMessage;
+use Utopia\NATS\JetStream\StreamState;
 use Utopia\Queue\Codec;
 use Utopia\Queue\Codec\Json;
 use Utopia\Queue\Consumer;
@@ -38,7 +40,8 @@ use Utopia\Queue\Queue;
  * Redelivery and dead-lettering are native: a rejected message is NAK'd and
  * redelivered until MaxDeliver, after which it is TERM'd and copied to a per-queue
  * dead stream. This replaces the Redis broker's hand-rolled processing/failed/dead
- * lists and its reap()/retry() sweeps (AckWait redelivery reclaims stranded jobs).
+ * lists (AckWait redelivery reclaims stranded jobs); reap() is left only the
+ * messages the consumer has given up on without anything dead-lettering them.
  *
  * Stream/subject names carry the queue name but NOT its namespace (isolation is a
  * per-account/cluster concern), so run one queue namespace per NATS account. Two
@@ -133,6 +136,11 @@ class Nats implements Synchronous, Consumer, Bounded
     // timeout, so the caller waits at most this plus one request timeout.
     private const float PUBLISH_RETRY_BUDGET = 10.0;
 
+    // Most stranded messages one maintain() moves per queue, so a backlog of them
+    // is worked off over several intervals rather than holding the commands
+    // connection for one long sweep.
+    private const int REAP_LIMIT = 100;
+
     /**
      * Wait forever to get onto the connection. A command must never be dropped
      * because the socket is momentarily busy — matching Connection\Locking.
@@ -157,6 +165,15 @@ class Nats implements Synchronous, Consumer, Bounded
      *      the consumer allows none, and exhaustion falls to the advisory alone
      */
     private array $spareDelivery = [];
+
+    /** @var array<string, Queue> queues this broker has received from, swept by maintain() */
+    private array $served = [];
+
+    /**
+     * @var array<string, array{floor: int, at: float}> per queue, the work consumer's
+     *      ack floor stream sequence as reap() last read it, and when
+     */
+    private array $floors = [];
 
     /** Publishes the stream recognised as duplicates of an id it already held. */
     private int $duplicates = 0;
@@ -288,6 +305,11 @@ class Nats implements Synchronous, Consumer, Bounded
      *        deliveries without running: a fleet scaled down 8 -> 1 lost messages that
      *        way. The delay has to outlast the stopping workers' last fetch. 0
      *        redelivers at once.
+     * @param float $strandedAfter How long a message must have been behind the work
+     *        consumer's ack floor before reap() moves it to the dead stream, in
+     *        seconds. The floor passes a message the moment it is acknowledged, and
+     *        the stream deletes it just after, so a message seen behind the floor once
+     *        may simply be on its way out; one still there this much later is not.
      */
     public function __construct(
         private readonly NatsConnection|\Closure $source,
@@ -313,6 +335,7 @@ class Nats implements Synchronous, Consumer, Bounded
         // it on a stream that already holds messages.
         private readonly Codec $codec = new Json(),
         private readonly float $releaseDelay = 5.0,
+        private readonly float $strandedAfter = 60.0,
     ) {
         $this->lock = new Mutex();
 
@@ -338,6 +361,9 @@ class Nats implements Synchronous, Consumer, Bounded
         }
         if ($this->releaseDelay < 0) {
             throw new \InvalidArgumentException('releaseDelay must be zero or a positive number of seconds');
+        }
+        if ($this->strandedAfter < 0) {
+            throw new \InvalidArgumentException('strandedAfter must be zero or a positive number of seconds');
         }
         if ($this->maxAge !== null && $this->maxAge <= 0) {
             throw new \InvalidArgumentException('maxAge must be a positive number of seconds, or null to derive it from the queue\'s jobTtl');
@@ -923,12 +949,13 @@ class Nats implements Synchronous, Consumer, Bounded
     {
         $this->ensure($queue);
         $key = $this->identity($queue);
+        $this->served[$key] = $queue;
 
         // The fallback for the spare delivery dying too: JetStream then stops delivering
         // and emits this advisory, which drainDeadLetters() reads to move the message to
         // the dead stream. Only a fallback, because core advisories are ephemeral: one
         // emitted while no broker is subscribed is lost, and the message stays on the
-        // work stream reading as neither pending nor in flight.
+        // work stream reading as neither pending nor in flight until reap() finds it.
         //
         // The queue group is what keeps this to one dead-letter copy: without it every
         // worker publishes its own copy of the exhausted message. But the server hands
@@ -1449,13 +1476,90 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /**
-     * Reaping stranded in-flight jobs is unnecessary on JetStream: AckWait redelivery
-     * reclaims a message whose worker died before committing. Kept for drop-in
-     * compatibility with the Redis broker's call sites; always returns 0.
+     * Move messages the work consumer has given up on, but nothing dead-lettered, to the
+     * dead stream. Returns how many it moved.
+     *
+     * AckWait redelivery reclaims a message whose worker died, so in-flight work needs
+     * no reaping. What it misses is a message past its last delivery: the server stops
+     * delivering it, the next acknowledgement moves the consumer's ack floor past it,
+     * and only the max-deliveries advisory says so. Core NATS keeps no advisory nobody is subscribed
+     * to -- a fleet scaled to zero, or a consumer adopted without a spare delivery -- so
+     * the message stays on the work stream, behind the floor, for good.
+     *
+     * The floor is what this reads instead. On a work-queue stream an acknowledged
+     * message is deleted, so anything still stored at or below the consumer's ack floor
+     * was neither acknowledged nor is it pending: the server will never deliver it
+     * again. A message above the floor -- in flight, waiting on a NAK backoff, or not yet
+     * delivered -- is never touched.
+     *
+     * The floor passes a message as it is acknowledged and the stream deletes it a
+     * moment later, so one read cannot tell an exhausted message from one on its way
+     * out. Only a floor read at least $strandedAfter ago, and still standing, is swept,
+     * and a broker's first call only takes that reading: it moves nothing. The lower of
+     * the old and new floors is used, so a consumer recreated in between, whose floor
+     * starts again from zero, holds the sweep back.
+     *
+     * Safe to run from every replica at once: each copy carries the id reject() gives a
+     * dead letter, so the dead stream stores one, and a delete that finds the message
+     * gone means another broker finished it first. Runs on the commands connection, one
+     * request per lock, so the consume loop and its acknowledgements are not held up.
+     *
+     * $olderThan, $maxAttempts and $newerThan exist only for signature compatibility
+     * with Broker\Redis::reap(); the floor already says a message is out of attempts.
      */
     public function reap(Queue $queue, int $olderThan = 90000, ?int $limit = null, ?int $maxAttempts = null, ?int $newerThan = null): int
     {
-        return 0;
+        $key = $this->identity($queue);
+        $stream = $this->workStream($queue);
+        $now = microtime(true);
+
+        $previous = $this->floors[$key] ?? null;
+        if ($previous !== null && $now - $previous['at'] < $this->strandedAfter) {
+            return 0;
+        }
+
+        try {
+            $floor = $this->command(fn (): int => $this->commandsConsumer($stream)->info(true)->ackFloor->streamSeq);
+        } catch (JetStreamException $e) {
+            if ($e->apiError?->code === 404) {
+                unset($this->floors[$key]);
+
+                return 0; // not provisioned yet, or the consumer was removed: nothing it gave up on
+            }
+            throw $e;
+        }
+
+        $this->floors[$key] = ['floor' => $floor, 'at' => $now];
+        if ($previous === null) {
+            return 0;
+        }
+
+        $settled = min($floor, $previous['floor']);
+        $moved = 0;
+        $last = 0;
+        while ($limit === null || $moved < $limit) {
+            $state = $this->command(fn (): StreamState => $this->commandsJs()->getStreamInfo($stream)->state);
+            // A sequence already handled means the delete has not landed in the stream's
+            // state yet; the next sweep picks up from there.
+            if ($state->messages === 0 || $state->firstSeq > $settled || $state->firstSeq <= $last) {
+                break;
+            }
+            $last = $state->firstSeq;
+
+            try {
+                $stored = $this->command(fn (): StreamMessage => $this->commandsJs()->getMessage($stream, $state->firstSeq));
+            } catch (JetStreamException $e) {
+                if ($e->apiError?->code === 404) {
+                    continue; // removed since the state was read
+                }
+                throw $e;
+            }
+
+            $this->command(fn () => $this->bury($this->commandsJs(), $queue, $stored));
+            $moved++;
+        }
+
+        return $moved;
     }
 
     /**
@@ -1530,12 +1634,19 @@ class Nats implements Synchronous, Consumer, Bounded
      * next commit() fails after the work is done -- a guaranteed redelivery.
      * Without this method the adapter skipped the broker entirely: it sweeps
      * consumers through maintain(), and this broker only had tick().
+     *
+     * Then {@see self::reap()} for every queue this broker has received from, which is
+     * what moves a message the consumer gave up on while no advisory was caught.
      */
     public function maintain(): void
     {
         if ($this->commandsConnection instanceof NatsConnection && $this->commandsConnection !== $this->connection) {
             $commands = $this->commandsConnection;
             $this->command(fn () => $commands->tick());
+        }
+
+        foreach ($this->served as $queue) {
+            $this->reap($queue, limit: self::REAP_LIMIT);
         }
     }
 
@@ -1882,9 +1993,7 @@ class Nats implements Synchronous, Consumer, Bounded
             }
 
             try {
-                $stored = $this->js()->getMessage($this->workStream($queue), $seq);
-                $this->js()->publish($this->deadSubject($queue), $stored->data);
-                $this->js()->deleteMessage($this->workStream($queue), $seq);
+                $this->bury($this->js(), $queue, $this->js()->getMessage($this->workStream($queue), $seq));
             } catch (\Throwable $error) {
                 // Usually benign — the message was acked, deleted or claimed by
                 // another worker between the advisory and this read. But a real
@@ -1895,6 +2004,41 @@ class Nats implements Synchronous, Consumer, Bounded
                 // cases are indistinguishable from the outside and only one of
                 // them is fine.
                 $this->report($error);
+            }
+        }
+    }
+
+    /**
+     * Copy a message stored on the work stream to the dead stream, then delete it there.
+     *
+     * Under the id reject() gives a dead letter, so the advisory and reap(), or two
+     * replicas reaping, store one copy between them. Copied first, so a failure leaves
+     * the message where it was rather than losing it; a delete that finds it gone means
+     * another broker finished it first.
+     */
+    private function bury(JetStream $js, Queue $queue, StreamMessage $stored): void
+    {
+        // The message's own Content-Type, as in park(): the bytes go over unread.
+        $headers = new Headers();
+        $contentType = $stored->headers?->get(self::CONTENT_TYPE);
+        if ($contentType !== null) {
+            $headers->set(self::CONTENT_TYPE, $contentType);
+        }
+
+        try {
+            $data = $this->codec->decode($stored->data);
+        } catch (\Throwable) {
+            $data = null;
+        }
+        $pid = \is_array($data) && \is_string($data['pid'] ?? null) ? $data['pid'] : $this->workStream($queue);
+
+        $js->publish($this->deadSubject($queue), $stored->data, headers: $headers, msgId: $pid . '.dead.' . $stored->sequence);
+
+        try {
+            $js->deleteMessage($this->workStream($queue), $stored->sequence);
+        } catch (JetStreamException $e) {
+            if ($e->apiError?->code !== 404) {
+                throw $e;
             }
         }
     }
