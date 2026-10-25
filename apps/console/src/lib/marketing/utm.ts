@@ -370,6 +370,7 @@ export function linkPendingSources(): void {
   linkingSources = true
 
   void (async () => {
+    let relink = false
     try {
       const { isCloudProfile } = await import('@/lib/console-profiles')
       if (!isCloudProfile()) return
@@ -389,6 +390,7 @@ export function linkPendingSources(): void {
       )
       try {
         storage?.setItem(STORAGE_KEYS.sourceIds, JSON.stringify(remaining))
+        relink = remaining.length > 0
       } catch {
         // Blocked storage; the ids are re-sent next time.
       }
@@ -397,6 +399,8 @@ export function linkPendingSources(): void {
     } finally {
       linkingSources = false
     }
+    // Only after a successful PATCH and write, so a failing endpoint cannot loop.
+    if (relink) linkPendingSources()
   })()
 }
 
