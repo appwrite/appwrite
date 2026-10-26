@@ -2165,12 +2165,19 @@ class Nats implements Synchronous, Consumer, Bounded
      */
     private function nanoseconds(string $time): string
     {
-        if (preg_match('/^(.+?)(?:\.(\d{1,9}))?(Z|[+-]\d{2}:\d{2})$/', $time, $parts) !== 1) {
+        // DateTime keeps six fraction digits, so the fraction is read apart from the rest.
+        $digits = '';
+        $dot = strpos($time, '.');
+        if ($dot !== false) {
+            $digits = substr($time, $dot + 1, strspn($time, '0123456789', $dot + 1));
+            $time = substr($time, 0, $dot) . substr($time, $dot + 1 + \strlen($digits));
+        }
+        if (\strlen($digits) > 9) {
             throw new \UnexpectedValueException("Unreadable stream message time \"{$time}\"");
         }
-        $seconds = new \DateTimeImmutable($parts[1] . $parts[3])->getTimestamp();
+        $seconds = new \DateTimeImmutable($time)->getTimestamp();
 
-        return (string) ($seconds * 1_000_000_000 + (int) str_pad($parts[2], 9, '0'));
+        return (string) ($seconds * 1_000_000_000 + (int) str_pad($digits, 9, '0'));
     }
 
     /** Logical queue identity (namespace + name); used for cache keys and stream naming. */
