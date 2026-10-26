@@ -982,11 +982,13 @@ final class RealtimeCustomClientTest extends Scope
 
         $this->assertSame(200, $policy(true)['headers']['status-code']);
 
+        // The guest cap test before this one closes many connections at once, which can hold up new ones for a few seconds.
+
         try {
             /**
              * Test for FAILURE
              */
-            $client = $this->getWebsocket(['documents'], $guest);
+            $client = $this->getWebsocket(['documents'], $guest, timeout: 10);
             $response = \json_decode($client->receive(), true);
             $this->assertSame('error', $response['type'] ?? null);
             $this->assertSame(1008, $response['data']['code'] ?? null);
@@ -994,7 +996,7 @@ final class RealtimeCustomClientTest extends Scope
             $this->receiveUntilClosed($client);
 
             // Over a message the guest is refused but stays connected, so it can still sign in.
-            $client = $this->getWebsocket([], $guest);
+            $client = $this->getWebsocket([], $guest, timeout: 10);
             $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
             $client->send(\json_encode(['type' => 'subscribe', 'data' => [['channels' => ['documents']]]]));
             $response = \json_decode($client->receive(), true);
@@ -1019,14 +1021,14 @@ final class RealtimeCustomClientTest extends Scope
             $client = $this->getWebsocket(['documents'], [
                 'origin' => 'http://localhost',
                 'cookie' => 'a_session_' . $projectId . '=' . $this->getUser()['session'],
-            ]);
+            ], timeout: 10);
             $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
             $client->close();
         } finally {
             $policy(false);
         }
 
-        $client = $this->getWebsocket(['documents'], $guest);
+        $client = $this->getWebsocket(['documents'], $guest, timeout: 10);
         $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
         $client->close();
     }
