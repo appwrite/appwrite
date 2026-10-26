@@ -204,6 +204,35 @@ trait ProxyBase
         $this->assertEquals(400, $rule['headers']['status-code']);
     }
 
+    public function testCreateRuleOnFunctionsFallbackDomain(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $domain = \uniqid() . '.fallback.localhost';
+        $ruleId = $this->setupAPIRule($domain);
+        $rule = $this->getRule($ruleId);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame('verified', $rule['body']['status']);
+        $this->cleanupRule($ruleId);
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->createAPIRule('fallback.localhost');
+        $this->assertSame(400, $rule['headers']['status-code']);
+
+        $rule = $this->createAPIRule('nested.' . \uniqid() . '.fallback.localhost');
+        $this->assertSame(400, $rule['headers']['status-code']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', 'fallback.localhost');
+        $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertStringContainsString('cannot be used for security reasons', (string) \json_encode($response['body']));
+    }
+
     public function testCreateAPIRuleFoldsDomainCase(): void
     {
         $domain = \uniqid() . '-Case.Custom.LOCALHOST';
