@@ -110,18 +110,18 @@ class Realtime extends MessagingAdapter
     public array $subscriptions = [];
 
     /**
-     * Open connections per project user: [PROJECT_ID:USER_ID] -> count
+     * Open connections per owner, a project user or a guest's IP: [PROJECT_ID:OWNER] -> count
      *
      * @var array<string, int>
      */
-    private array $userConnections = [];
+    private array $ownerConnections = [];
 
     /**
-     * The project user each counted connection belongs to: [CONNECTION_ID] -> PROJECT_ID:USER_ID
+     * The owner each counted connection belongs to: [CONNECTION_ID] -> PROJECT_ID:OWNER
      *
      * @var array<int|string, string>
      */
-    private array $connectionUsers = [];
+    private array $connectionOwners = [];
 
     private ?PubSubPool $pubSubPool = null;
 
@@ -452,45 +452,66 @@ class Realtime extends MessagingAdapter
     }
 
     /**
-     * Counts a connection against its project user, moving it off any user it was counted for
-     * before. Guests are not counted. Returns false, leaving the count as it was, when the
-     * user already holds $limit connections.
+     * Counts a connection against its owner, a user id or a guest owner from getGuestOwner(),
+     * moving it off any owner it was counted for before. An empty owner is not counted. Returns
+     * false, leaving the count as it was, when the owner already holds $limit connections.
      */
-    public function addConnection(mixed $connection, string $projectId, string $userId, int $limit): bool
+    public function addConnection(mixed $connection, string $projectId, string $owner, int $limit): bool
     {
-        if ($userId === '') {
+        if ($owner === '') {
             $this->removeConnection($connection);
             return true;
         }
 
-        $key = $projectId . ':' . $userId;
-        if (($this->connectionUsers[$connection] ?? null) === $key) {
+        $key = $projectId . ':' . $owner;
+        if (($this->connectionOwners[$connection] ?? null) === $key) {
             return true;
         }
-        if (($this->userConnections[$key] ?? 0) >= $limit) {
+        if (($this->ownerConnections[$key] ?? 0) >= $limit) {
             return false;
         }
 
         $this->removeConnection($connection);
-        $this->connectionUsers[$connection] = $key;
-        $this->userConnections[$key] = ($this->userConnections[$key] ?? 0) + 1;
+        $this->connectionOwners[$connection] = $key;
+        $this->ownerConnections[$key] = ($this->ownerConnections[$key] ?? 0) + 1;
 
         return true;
     }
 
     /**
-     * Stops counting a connection against its project user. Idempotent.
+     * The owner a guest's connections are counted under: its IPv4 address, or the /64 network
+     * of its IPv6 address, as one IPv6 user holds the whole /64. Empty for an unknown address.
+     */
+    public static function getGuestOwner(string $ip): string
+    {
+        $address = @\inet_pton($ip);
+        if ($address === false) {
+            return '';
+        }
+        // An IPv4 address seen through a dual-stack socket arrives as ::ffff:a.b.c.d.
+        if (\strlen($address) === 16 && \str_starts_with($address, \str_repeat("\0", 10) . "\xff\xff")) {
+            $address = \substr($address, 12);
+        }
+        if (\strlen($address) === 16) {
+            return 'ip:' . \inet_ntop(\substr($address, 0, 8) . \str_repeat("\0", 8)) . '/64';
+        }
+
+        return 'ip:' . \inet_ntop($address);
+    }
+
+    /**
+     * Stops counting a connection against its owner. Idempotent.
      */
     public function removeConnection(mixed $connection): void
     {
-        $key = $this->connectionUsers[$connection] ?? null;
+        $key = $this->connectionOwners[$connection] ?? null;
         if ($key === null) {
             return;
         }
 
-        unset($this->connectionUsers[$connection]);
-        if (--$this->userConnections[$key] <= 0) {
-            unset($this->userConnections[$key]);
+        unset($this->connectionOwners[$connection]);
+        if (--$this->ownerConnections[$key] <= 0) {
+            unset($this->ownerConnections[$key]);
         }
     }
 

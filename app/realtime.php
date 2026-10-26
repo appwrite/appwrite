@@ -1074,12 +1074,15 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $expire = $session !== null ? $user->getSessionExpiry($session->getId()) : null;
 
         // The lookups above can yield, so a socket closed meanwhile is never counted.
-        // Guests are not counted; the per-IP abuse limit covers them.
         if (!$adapter->getNative()->isEstablished($connection)) {
             $success = true;
             return;
         }
-        if (!$realtime->addConnection($connection, $project->getId(), $targetUser->getId(), APP_LIMIT_REALTIME_CONNECTIONS)) {
+        // Many people can share one IP, so guests get a higher limit than a single user.
+        $isGuest = $targetUser->getId() === '';
+        $owner = $isGuest ? Realtime::getGuestOwner($request->getIP()) : $targetUser->getId();
+        $limit = $isGuest ? APP_LIMIT_REALTIME_GUEST_CONNECTIONS : APP_LIMIT_REALTIME_CONNECTIONS;
+        if (!$realtime->addConnection($connection, $project->getId(), $owner, $limit)) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many open connections. Close an existing connection and try again.');
         }
 
