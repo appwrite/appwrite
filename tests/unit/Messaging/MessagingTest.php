@@ -823,8 +823,9 @@ final class MessagingTest extends TestCase
         $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS, $subscriptions);
 
         // A channel without queries joins slot 0, which already exists.
-        $subscriptions = Realtime::constructSubscriptions(['documents', 'files'], fn (string $key) => $key === 'documents' ? $slots : null);
-        $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS, $subscriptions);
+        $subscriptions = Realtime::constructSubscriptions(['documents', 'files'], fn (string $key) => $key === 'documents' ? \array_slice($slots, 1) : null);
+        $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS - 1, $subscriptions);
+        $this->assertSame(['documents', 'files'], $subscriptions[0]['channels']);
 
         // ...but cannot add a slot past the limit.
         $offset = \array_combine(\range(1, APP_LIMIT_REALTIME_SUBSCRIPTIONS), $slots);
@@ -846,12 +847,12 @@ final class MessagingTest extends TestCase
 
         // One channel can appear in every slot, so channels are counted per subscription.
         $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, 3));
-        $slots = \array_fill(0, 66, [$select]);
+        $slots = \array_fill(0, 33, [$select]);
         $subscriptions = Realtime::constructSubscriptions($channels, fn () => $slots);
-        $this->assertCount(66, $subscriptions);
+        $this->assertCount(33, $subscriptions);
 
         try {
-            Realtime::constructSubscriptions($channels, fn () => \array_fill(0, 67, [$select]));
+            Realtime::constructSubscriptions($channels, fn () => \array_fill(0, 34, [$select]));
             $this->fail('Expected the channel total to be enforced.');
         } catch (QueryException $e) {
             $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels across its subscriptions.', $e->getMessage());

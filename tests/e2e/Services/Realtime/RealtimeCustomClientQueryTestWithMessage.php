@@ -687,14 +687,13 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         };
         $channels = fn (string $prefix, int $count) => \array_map(fn (int $i) => $prefix . $i, \range(1, $count));
         $equals = fn (int $count) => \array_map(fn (int $i) => Query::equal('f' . $i, ['x'])->toString(), \range(1, $count));
-        $perSubscription = APP_LIMIT_ARRAY_PARAMS_SIZE;
 
         /**
          * Test for SUCCESS
          */
         $first = $this->sendSubscribeMessage($client, [
-            ['subscriptionId' => 'a', 'channels' => $channels('documents.a', $perSubscription), 'queries' => $equals(60)],
-            ['subscriptionId' => 'b', 'channels' => $channels('documents.b', APP_LIMIT_REALTIME_CHANNELS - $perSubscription), 'queries' => $equals(40)],
+            ['subscriptionId' => 'a', 'channels' => $channels('documents.a', 60), 'queries' => $equals(60)],
+            ['subscriptionId' => 'b', 'channels' => $channels('documents.b', APP_LIMIT_REALTIME_CHANNELS - 60), 'queries' => $equals(APP_LIMIT_REALTIME_QUERIES - 60)],
         ]);
         $this->assertCount(2, $first['data']['subscriptions']);
 
@@ -706,7 +705,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertSame(1003, $tooManyChannels['data']['code']);
         $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels across its subscriptions. Unsubscribe from some before subscribing to more.', $tooManyChannels['data']['message']);
 
-        $tooManyQueries = $send([['subscriptionId' => 'b', 'channels' => [], 'queries' => $equals(41)]]);
+        $tooManyQueries = $send([['subscriptionId' => 'b', 'channels' => [], 'queries' => $equals(APP_LIMIT_REALTIME_QUERIES - 60 + 1)]]);
         $this->assertSame('error', $tooManyQueries['type']);
         $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries across its subscriptions. Unsubscribe from some before subscribing to more.', $tooManyQueries['data']['message']);
 
