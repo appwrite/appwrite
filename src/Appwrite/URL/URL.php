@@ -225,44 +225,52 @@ class URL
 
     /**
      * RFC 3986 §5.2.4 — remove "." and ".." segments from a path.
+     *
+     * Walks the path with an offset and keeps the output as a stack of segments, so each byte is visited once.
      */
     private static function removeDotSegments(string $path): string
     {
-        $output = '';
-        $input = $path;
+        $segments = [];
+        $length = \strlen($path);
+        $offset = 0;
 
-        while ($input !== '') {
-            if (\str_starts_with($input, '../')) {
-                $input = \substr($input, 3);
-            } elseif (\str_starts_with($input, './')) {
-                $input = \substr($input, 2);
-            } elseif (\str_starts_with($input, '/./')) {
-                $input = '/' . \substr($input, 3);
-            } elseif ($input === '/.') {
-                $input = '/';
-            } elseif (\str_starts_with($input, '/../')) {
-                $input = '/' . \substr($input, 4);
-                $slash = \strrpos($output, '/');
-                $output = $slash === false ? '' : \substr($output, 0, $slash);
-            } elseif ($input === '/..') {
-                $input = '/';
-                $slash = \strrpos($output, '/');
-                $output = $slash === false ? '' : \substr($output, 0, $slash);
-            } elseif ($input === '.' || $input === '..') {
-                $input = '';
+        while ($offset < $length) {
+            $rest = $length - $offset;
+            if (self::startsAt($path, $offset, '../')) {
+                $offset += 3;
+            } elseif (self::startsAt($path, $offset, './')) {
+                $offset += 2;
+            } elseif (self::startsAt($path, $offset, '/./')) {
+                $offset += 2;
+            } elseif ($rest === 2 && self::startsAt($path, $offset, '/.')) {
+                $segments[] = '/';
+                break;
+            } elseif (self::startsAt($path, $offset, '/../')) {
+                $offset += 3;
+                \array_pop($segments);
+            } elseif ($rest === 3 && self::startsAt($path, $offset, '/..')) {
+                \array_pop($segments);
+                $segments[] = '/';
+                break;
+            } elseif (($rest === 1 && $path[$offset] === '.') || ($rest === 2 && self::startsAt($path, $offset, '..'))) {
+                break;
             } else {
-                $start = ($input[0] === '/') ? 1 : 0;
-                $next = \strpos($input, '/', $start);
+                $start = $path[$offset] === '/' ? $offset + 1 : $offset;
+                $next = \strpos($path, '/', $start);
                 if ($next === false) {
-                    $output .= $input;
-                    $input = '';
-                } else {
-                    $output .= \substr($input, 0, $next);
-                    $input = \substr($input, $next);
+                    $segments[] = \substr($path, $offset);
+                    break;
                 }
+                $segments[] = \substr($path, $offset, $next - $offset);
+                $offset = $next;
             }
         }
 
-        return $output;
+        return \implode('', $segments);
+    }
+
+    private static function startsAt(string $path, int $offset, string $prefix): bool
+    {
+        return \substr_compare($path, $prefix, $offset, \strlen($prefix)) === 0;
     }
 }

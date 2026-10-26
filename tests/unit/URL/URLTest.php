@@ -238,6 +238,36 @@ final class URLTest extends TestCase
         );
     }
 
+    public function testResolveLocationRfcDotSegmentExamples(): void
+    {
+        $base = 'http://a/b/c/d;p?q';
+
+        $this->assertSame('http://a/b/c/', URL::resolveLocation($base, '.'));
+        $this->assertSame('http://a/b/', URL::resolveLocation($base, '..'));
+        $this->assertSame('http://a/b/g', URL::resolveLocation($base, '../g'));
+        $this->assertSame('http://a/', URL::resolveLocation($base, '../../'));
+        $this->assertSame('http://a/g', URL::resolveLocation($base, '../../../../g'));
+        $this->assertSame('http://a/g', URL::resolveLocation($base, '/./g'));
+        $this->assertSame('http://a/b/c/g.', URL::resolveLocation($base, 'g.'));
+        $this->assertSame('http://a/b/c/..g', URL::resolveLocation($base, '..g'));
+        $this->assertSame('http://a/b/g', URL::resolveLocation($base, './../g'));
+        $this->assertSame('http://a/b/c/g/', URL::resolveLocation($base, './g/.'));
+        $this->assertSame('http://a/b/c/h', URL::resolveLocation($base, 'g/../h'));
+        $this->assertSame('http://a/b/c/y', URL::resolveLocation($base, 'g;x=1/../y'));
+    }
+
+    public function testResolveLocationLongDotSegmentPathIsLinear(): void
+    {
+        $reference = '/' . \str_repeat('./', 200_000) . 'icon.png';
+
+        $start = \microtime(true);
+        $location = URL::resolveLocation('https://base.example/', $reference);
+        $elapsed = \microtime(true) - $start;
+
+        $this->assertSame('https://base.example/icon.png', $location);
+        $this->assertLessThan(1, $elapsed);
+    }
+
     public function testResolveLocationEmpty(): void
     {
         // Empty reference returns base unchanged
