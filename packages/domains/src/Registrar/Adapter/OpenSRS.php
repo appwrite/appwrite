@@ -871,7 +871,7 @@ class OpenSRS extends Adapter
     private function createArray(string $key, array $ary): string
     {
         $result = [
-            '<item key="' . $key . '">',
+            '<item key="' . $this->escape($key) . '">',
             '<dt_array>',
         ];
 
@@ -888,7 +888,7 @@ class OpenSRS extends Adapter
     private function createAssoc(string $key, array $assoc): string
     {
         $result = [
-            '<item key="' . $key . '">',
+            '<item key="' . $this->escape($key) . '">',
             '<dt_assoc>',
         ];
 
@@ -933,7 +933,12 @@ class OpenSRS extends Adapter
             return $this->createArray($key, $value);
         }
 
-        return "<item key='{$key}'>{$value}</item>";
+        return '<item key="' . $this->escape($key) . '">' . $this->escape((string) $value) . '</item>';
+    }
+
+    private function escape(string $value): string
+    {
+        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
     private function validateContact(array $contact): array
@@ -980,7 +985,7 @@ class OpenSRS extends Adapter
     {
         $contact = $this->validateContact($contact);
         $result = [
-            "<item key='{$type}'>",
+            '<item key="' . $this->escape($type) . '">',
             '<dt_assoc>',
         ];
 
