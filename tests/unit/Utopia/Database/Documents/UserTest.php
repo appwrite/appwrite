@@ -131,45 +131,42 @@ final class UserTest extends TestCase
         $this->assertFalse($user->sessionActive('missing', null));
     }
 
-    public static function sessionVerifyInvalidationProvider(): array
+    public static function sessionVerifyInvalidationProvider(): \Iterator
     {
         $secret = 'secret1';
         $proofForToken = new Token();
         $hash = $proofForToken->hash($secret);
-
-        return [
-            'session before invalidation is rejected' => [
-                $hash,
-                $secret,
-                $proofForToken,
-                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)), // createdAt: 2 minutes ago
-                DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
-                false,
-            ],
-            'session at invalidation is rejected (<=)' => [
-                $hash,
-                $secret,
-                $proofForToken,
-                DateTime::formatTz(DateTime::now()),                              // createdAt == invalidatedAt
-                DateTime::formatTz(DateTime::now()),
-                false,
-            ],
-            'session after invalidation passes' => [
-                $hash,
-                $secret,
-                $proofForToken,
-                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60)),    // createdAt: future
-                DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
-                'sessionId',
-            ],
-            'null invalidatedAt — existing behavior unchanged' => [
-                $hash,
-                $secret,
-                $proofForToken,
-                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)),
-                null,
-                'sessionId',
-            ],
+        yield 'session before invalidation is rejected' => [
+            $hash,
+            $secret,
+            $proofForToken,
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)), // createdAt: 2 minutes ago
+            DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
+            false,
+        ];
+        yield 'session at invalidation is rejected (<=)' => [
+            $hash,
+            $secret,
+            $proofForToken,
+            DateTime::formatTz(DateTime::now()),                              // createdAt == invalidatedAt
+            DateTime::formatTz(DateTime::now()),
+            false,
+        ];
+        yield 'session after invalidation passes' => [
+            $hash,
+            $secret,
+            $proofForToken,
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60)),    // createdAt: future
+            DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
+            'sessionId',
+        ];
+        yield 'null invalidatedAt — existing behavior unchanged' => [
+            $hash,
+            $secret,
+            $proofForToken,
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)),
+            null,
+            'sessionId',
         ];
     }
 
@@ -194,29 +191,27 @@ final class UserTest extends TestCase
         $this->assertSame($expected, $result);
     }
 
-    public static function sessionActiveInvalidationProvider(): array
+    public static function sessionActiveInvalidationProvider(): \Iterator
     {
-        return [
-            'session before invalidation is rejected' => [
-                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)), // createdAt: 2 minutes ago
-                DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
-                false,
-            ],
-            'session at invalidation is rejected (<=)' => [
-                DateTime::formatTz(DateTime::now()),
-                DateTime::formatTz(DateTime::now()),
-                false,
-            ],
-            'session after invalidation passes' => [
-                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60)),
-                DateTime::formatTz(DateTime::now()),
-                true,
-            ],
-            'null invalidatedAt — existing behavior unchanged' => [
-                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)),
-                null,
-                true,
-            ],
+        yield 'session before invalidation is rejected' => [
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)), // createdAt: 2 minutes ago
+            DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
+            false,
+        ];
+        yield 'session at invalidation is rejected (<=)' => [
+            DateTime::formatTz(DateTime::now()),
+            DateTime::formatTz(DateTime::now()),
+            false,
+        ];
+        yield 'session after invalidation passes' => [
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60)),
+            DateTime::formatTz(DateTime::now()),
+            true,
+        ];
+        yield 'null invalidatedAt — existing behavior unchanged' => [
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)),
+            null,
+            true,
         ];
     }
 
