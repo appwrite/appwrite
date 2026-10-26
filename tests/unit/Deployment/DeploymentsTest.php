@@ -283,6 +283,41 @@ final class DeploymentsTest extends TestCase
         }
     }
 
+    public function testOpenArtifactKeepsReadingTheCheckedFile(): void
+    {
+        $base = \realpath(\sys_get_temp_dir()) . '/open-artifact-' . \bin2hex(\random_bytes(6));
+        $root = $base . '/app-project1';
+        \mkdir($root . '/deployment1', 0o777, true);
+        \file_put_contents($root . '/deployment1/code.tar.gz', 'artifact');
+        \file_put_contents($base . '/secret', 'secret');
+        \symlink($base . '/secret', $root . '/deployment1/link.tar.gz');
+        $device = new Local($root);
+
+        try {
+            $this->assertNull(Deployments::openArtifact($device, $root . '/deployment1/link.tar.gz'));
+            $this->assertNull(Deployments::openArtifact($device, $root . '/deployment1/missing.tar.gz'));
+            $this->assertNull(Deployments::openArtifact($device, $base . '/secret'));
+
+            $artifact = Deployments::openArtifact($device, $root . '/deployment1/code.tar.gz');
+            $this->assertNotNull($artifact);
+            $this->assertSame(8, $artifact->getSize());
+
+            // The build swaps the checked file for a link once the download started
+            \unlink($root . '/deployment1/code.tar.gz');
+            \symlink($base . '/secret', $root . '/deployment1/code.tar.gz');
+
+            $this->assertSame('artifact', $artifact->getContents());
+            $artifact->close();
+        } finally {
+            \unlink($root . '/deployment1/code.tar.gz');
+            \unlink($root . '/deployment1/link.tar.gz');
+            \unlink($base . '/secret');
+            \rmdir($root . '/deployment1');
+            \rmdir($root);
+            \rmdir($base);
+        }
+    }
+
     public function testDeleteBuildDirectoryReportsWhetherAnythingIsLeft(): void
     {
         $base = \realpath(\sys_get_temp_dir()) . '/build-directory-' . \bin2hex(\random_bytes(6));
