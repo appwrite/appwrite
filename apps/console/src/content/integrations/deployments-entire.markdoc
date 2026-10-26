@@ -63,15 +63,17 @@ entire repo remote add origin --override /et/acme/storefront
 git push -u origin main
 ```
 
-You can also create the project and the repository on Entire. Entire's [repository docs](https://docs.entire.com/guides/repositories/entire-native-repositories) cover regions in more detail.
+You can also create the project and the repository on Entire. Entire's [repository docs](https://docs.entire.com/guides/repositories/repository) cover regions in more detail.
 
-If your code lives on GitHub, you don't have to move it. [Mirror the repository on Entire](https://docs.entire.com/guides/repositories/mirrors) and Appwrite deploys from the mirror. A mirror belongs to the Entire project for its GitHub owner, so choose that project when you connect Entire in the next step. Appwrite only deploys pushes that go through Entire, which forwards them to GitHub, so point your local clone at the mirror and push there:
+If your code lives on GitHub, you don't have to move it. Create a [GitHub repository mirror](https://docs.entire.com/guides/repositories/mirrors) on Entire, and Appwrite deploys from the mirror. A mirror belongs to the Entire project for its GitHub owner, so choose that project when you connect Entire in the next step. Appwrite only deploys pushes that go through Entire, which forwards them to GitHub, so point your local clone at the mirror and push there:
 
 ```bash
 entire repo mirror add /gh/acme/storefront
 entire repo remote add origin --override /gh/acme/storefront
 git push -u origin main
 ```
+
+To move a mirrored repository off GitHub, [detach it](https://docs.entire.com/guides/repositories/repository) into an Entire project with `entire repo mirror detach /gh/acme/storefront --into /et/acme/storefront`. It then deploys like any other repository in that project, and GitHub stops syncing.
 
 ## Step 2: Connect Entire to your Appwrite project
 

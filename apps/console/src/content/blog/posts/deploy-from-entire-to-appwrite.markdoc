@@ -66,7 +66,7 @@ CLUSTER                     ROLE     CLONE URL                                  
 aws-eu-central-1.entire.io  primary  entire://aws-eu-central-1.entire.io/et/acme/storefront  ready
 ```
 
-You can do the same on entire.io: create a project from your organization, then a repository inside it. The repository's **Clone** menu shows the command for a fresh clone and the one for connecting a project you already have. Entire's [repository docs](https://docs.entire.com/guides/repositories/entire-native-repositories) cover regions and regional mirrors in more detail.
+You can do the same on entire.io: create a project from your organization, then a repository inside it. The repository's **Clone** menu shows the command for a fresh clone and the one for connecting a project you already have. Entire's [repository docs](https://docs.entire.com/guides/repositories/repository) cover regions and regional mirrors in more detail.
 
 ![The Clone menu of an Entire repository with commands to clone it or connect an existing project](/images/blog/deploy-from-entire-to-appwrite/entire-clone.avif)
 
