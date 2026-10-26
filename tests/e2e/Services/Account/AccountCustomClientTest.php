@@ -3218,6 +3218,91 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testCreateOAuth2SessionRejectsPlantedNonceCookie(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $nonceCookieKey = 'a_oauth2_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $email = \uniqid() . 'planted@localhost.test';
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $signedInCookie = $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey];
+
+        // Another browser starts a flow and stops at the provider's redirect back to Appwrite
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertArrayHasKey($nonceCookieKey, $response['cookies']);
+        $plantedCookie = $nonceCookieKey . '=' . $response['cookies'][$nonceCookieKey];
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $callbackUrl = $response['headers']['location'];
+
+        /**
+         * Test for FAILURE - the signed-in browser carries that nonce, planted by a sibling site
+         */
+        $headers = ['cookie' => $signedInCookie . '; ' . $plantedCookie];
+        $response = $oauthClient->call(Client::METHOD_GET, $callbackUrl, $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
+
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $failureParams);
+        $this->assertSame('user_oauth2_state_invalid', \json_decode($failureParams['error'], true)['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/identities', [
+            'x-appwrite-project' => $projectId,
+            'cookie' => $signedInCookie,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['total']);
+    }
+
     public function testCreateOAuth2SessionRejectsCallbackFromAnotherBrowser(): void
     {
         $provider = 'mock';

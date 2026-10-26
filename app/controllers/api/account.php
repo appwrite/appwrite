@@ -1480,7 +1480,8 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ->inject('project')
     ->inject('platform')
     ->inject('clientForOAuth2')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('user')
+    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2, User $user) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1544,6 +1545,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             'failure' => $failure,
             'token' => false,
             'nonce' => $nonce,
+            'binding' => \hash_hmac('sha256', $nonce . ':' . $user->getId(), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
             'state' => $state,
         ], $scopes);
 
@@ -1772,7 +1774,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         // The state comes back through the provider unchanged, so it says nothing about which
         // browser started the flow (RFC 6749 §10.12). The nonce cookie set alongside it does:
-        // only that browser holds it, and no other site can read or set it. The cookie is not
+        // only that browser holds it. The cookie is not
         // rewritten here: two callbacks finishing together would race on it, and replaying an
         // authorization code is refused by the provider (RFC 6749 §4.1.2).
         // A token flow started by the app's server leaves that cookie on the server, so an unbound
@@ -1780,9 +1782,12 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // it started this flow, and linking the provider identity to it would let anyone attach
         // their identity to that account by sending the callback link. The app binds the token it
         // receives to its own user through the `state` it passed in.
+        // A sibling site can plant the nonce cookie, so the flow is also bound to the user who started it
         $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())));
         $stateNonce = \is_string($state['nonce'] ?? null) ? $state['nonce'] : '';
-        if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce))) {
+        $stateBinding = \is_string($state['binding'] ?? null) ? $state['binding'] : '';
+        $binding = \hash_hmac('sha256', $stateNonce . ':' . $user->getId(), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
+        if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce)) || !\hash_equals($binding, $stateBinding)) {
             if (empty($state['token'])) {
                 $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
             }
@@ -2450,7 +2455,8 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ->inject('project')
     ->inject('platform')
     ->inject('clientForOAuth2')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('user')
+    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2, User $user) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -2511,6 +2517,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             'failure' => $failure,
             'token' => true,
             'nonce' => $nonce,
+            'binding' => \hash_hmac('sha256', $nonce . ':' . $user->getId(), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
             'state' => $state,
         ], $scopes);
 
