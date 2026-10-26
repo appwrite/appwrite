@@ -1063,6 +1063,26 @@ final class StorageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(404, $file['headers']['status-code']);
+
+        // With a partial last chunk, the declared size still maps onto that chunk's index.
+        $fileId = Id::unique();
+        $totalSize = 5 * 1024 * 1024 + 1024;
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes ' . $totalSize . '-' . $totalSize . '/' . $totalSize,
+        ], $this->getHeaders()), [
+            'fileId' => $fileId,
+            'file' => new CURLFile('data://text/plain;base64,' . base64_encode('a'), 'text/plain', 'chunk.txt'),
+        ]);
+        $this->assertEquals(400, $file['headers']['status-code']);
+        $this->assertEquals('storage_invalid_content_range', $file['body']['type']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(404, $file['headers']['status-code']);
     }
 
     public function testUpdateFileRejectsDisallowedExtension(): void
