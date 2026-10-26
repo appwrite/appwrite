@@ -41,7 +41,8 @@ class Realtime extends MessagingAdapter
         'account',
         'teams',
         'memberships',
-        'presences'
+        'presences',
+        'videos',
     ];
 
     // User events, after `users.{userId}`, that neither shape the user's roles nor
@@ -614,6 +615,11 @@ class Realtime extends MessagingAdapter
                         $scope['teamId'] = $parts[1];
                     }
                     break;
+                case 'videos':
+                    if (isset($parts[1])) {
+                        $scope['videoId'] = $parts[1];
+                    }
+                    break;
             }
         }
 
@@ -1024,6 +1030,31 @@ class Realtime extends MessagingAdapter
             case 'presences':
                 $channels[] = 'presences';
                 $channels[] = 'presences.' . $parts[1];
+                $roles = $payload->getPermissionsByType(PermissionType::Read);
+                break;
+            case 'videos':
+                // Plain video event: `videos.{videoId}.{action}`
+                $channels[] = 'videos';
+                if (isset($parts[1])) {
+                    $channels[] = 'videos.' . $parts[1];
+                }
+                // Nested rendition/caption events:
+                // `videos.{videoId}.renditions.{renditionId}.{action}`
+                // `videos.{videoId}.captions.{captionId}.{action}`
+                if (isset($parts[2]) && \in_array($parts[2], ['renditions', 'captions'], true)) {
+                    $channels[] = 'videos.' . $parts[1] . '.' . $parts[2];
+                    if (isset($parts[3])) {
+                        $channels[] = 'videos.' . $parts[1] . '.' . $parts[2] . '.' . $parts[3];
+                    }
+                }
+                // Console subscribers listen on `console` and scope by `projects.{projectId}`,
+                // like deployments and executions.
+                $channels[] = 'console';
+                if ($project !== null && !$project->isEmpty()) {
+                    $channels[] = 'projects.' . $project->getId();
+                }
+                // Renditions and captions inherit the video's read permissions, which the
+                // publisher stamps onto the payload before it reaches Realtime.
                 $roles = $payload->getPermissionsByType(PermissionType::Read);
                 break;
         }

@@ -393,4 +393,23 @@ return [
         'icon' => '/images/services/insights.png',
         'platforms' => ['server', 'console'],
     ],
+    'videos' => [
+        'key' => 'videos',
+        'name' => 'Videos',
+        'subtitle' => 'The Videos service allows you to transcode video files into adaptive HLS and DASH streams.',
+        'description' => '/docs/services/videos.md',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => true,
+        // Not optional yet: `optional` services are surfaced in the project
+        // response and the per-project service toggle, whose serviceId enum is
+        // generated into the SDKs. Flipping this on before the SDK ships a
+        // `videos` ProjectServiceId makes the generated client reject the
+        // project payload.
+        'optional' => false,
+        'icon' => '/images/services/storage.png',
+        'platforms' => ['client', 'server', 'console'],
+    ],
 ];

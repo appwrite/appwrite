@@ -132,20 +132,6 @@ export function VideoStreamPlayer({
     [projectId, video.bucketId, video.fileId],
   )
 
-  const posterUrl = useMemo(
-    () =>
-      video.previewId
-        ? withAdminMode(
-            sdk.forProject(projectId).videos.getPreview({
-              videoId: video.$id,
-              previewId: video.previewId,
-              width: 1280,
-            }),
-          )
-        : undefined,
-    [projectId, video.$id, video.previewId],
-  )
-
   const activeManifestUrl = useMemo(() => {
     switch (output) {
       case 'hls':
@@ -638,7 +624,6 @@ export function VideoStreamPlayer({
                   : 'cursor-pointer',
               )}
               playsInline
-              poster={posterUrl}
               aria-label={video.name}
               onClick={() => {
                 const el = videoRef.current
