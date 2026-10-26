@@ -123,6 +123,13 @@ analytics.create_event(
     None, // user_agent
 ).await?;
 ```
+```bash
+appwrite analytics create-event \
+    --property-id '<PROPERTY_ID>' \
+    --name signup_completed \
+    --url https://example.com/signup \
+    --props plan --props pro --props source --props pricing_page
+```
 ```curl
 curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
     -H 'Content-Type: application/json' \

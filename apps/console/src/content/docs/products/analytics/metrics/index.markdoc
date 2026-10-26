@@ -336,6 +336,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+```bash
+appwrite client \
+    --endpoint https://<REGION>.cloud.appwrite.io/v1 \
+    --project-id '<PROJECT_ID>' \
+    --key '<API_KEY>'
+
+appwrite analytics list-metrics \
+    --property-id '<PROPERTY_ID>' \
+    --dimensions country \
+    --date-range 7d \
+    --limit 5
+```
 ```curl
 curl -G 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/metrics' \
     -H 'X-Appwrite-Project: <PROJECT_ID>' \
@@ -685,6 +697,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+```
+```bash
+appwrite client \
+    --endpoint https://<REGION>.cloud.appwrite.io/v1 \
+    --project-id '<PROJECT_ID>' \
+    --key '<API_KEY>'
+
+appwrite analytics list-metrics \
+    --property-id '<PROPERTY_ID>' \
+    --interval 1d \
+    --date-range 14d \
+    --filter channel=search
 ```
 ```curl
 curl -G 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/metrics' \

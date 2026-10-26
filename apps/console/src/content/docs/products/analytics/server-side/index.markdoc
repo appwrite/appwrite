@@ -279,6 +279,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+```bash
+appwrite client \
+    --endpoint https://<REGION>.cloud.appwrite.io/v1 \
+    --project-id '<PROJECT_ID>' \
+    --key '<API_KEY>'
+
+appwrite analytics create-event \
+    --property-id '<PROPERTY_ID>' \
+    --name purchase_completed \
+    --url https://example.com/checkout \
+    --user-id '<USER_ID>' \
+    --ip '<VISITOR_IP>' \
+    --user-agent '<VISITOR_USER_AGENT>' \
+    --props plan --props pro --props interval --props yearly
+```
 ```curl
 curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
     -H 'Content-Type: application/json' \
