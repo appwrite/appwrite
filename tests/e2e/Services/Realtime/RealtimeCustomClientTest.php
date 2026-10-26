@@ -977,23 +977,23 @@ final class RealtimeCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE));
+        $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, APP_LIMIT_REALTIME_CHANNELS));
         $client = $this->getWebsocket($channels, $headers);
         $response = \json_decode($client->receive(), true);
         $this->assertSame('connected', $response['type'] ?? null);
-        $this->assertCount(APP_LIMIT_ARRAY_PARAMS_SIZE, $response['data']['channels']);
+        $this->assertCount(APP_LIMIT_REALTIME_CHANNELS, $response['data']['channels']);
         $client->close();
 
         /**
          * Test for FAILURE
          */
-        $channels[] = 'documents.' . (APP_LIMIT_ARRAY_PARAMS_SIZE + 1);
+        $channels[] = 'documents.' . (APP_LIMIT_REALTIME_CHANNELS + 1);
         $client = $this->getWebsocket($channels, $headers);
         // The client connects on its first receive, so read the error before waiting for the close.
         $response = \json_decode($client->receive(), true);
         $this->assertSame('error', $response['type'] ?? null);
         $this->assertSame(1008, $response['data']['code'] ?? null);
-        $this->assertSame('channels must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.', $response['data']['message'] ?? null);
+        $this->assertSame('channels must contain at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels.', $response['data']['message'] ?? null);
         $this->receiveUntilClosed($client);
     }
 

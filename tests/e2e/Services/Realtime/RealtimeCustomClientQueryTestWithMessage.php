@@ -636,6 +636,21 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS, $full['data']['subscriptions']);
         $subscriptionId = $full['data']['subscriptions'][0]['subscriptionId'];
 
+        /**
+         * Test for FAILURE
+         */
+        $overLimit = $send('subscribe', [['channels' => ['documents']]]);
+        $this->assertSame('error', $overLimit['type']);
+        $this->assertSame(1003, $overLimit['data']['code']);
+        $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions. Unsubscribe from some before subscribing to more.', $overLimit['data']['message']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // The connection stays open, and unsubscribing makes room.
+        $unsubscribed = $send('unsubscribe', [['subscriptionId' => $full['data']['subscriptions'][1]['subscriptionId']]]);
+        $this->assertTrue($unsubscribed['data']['subscriptions'][0]['removed']);
+
         // Adding channels to an existing subscription does not count as a new one.
         $added = $this->sendSubscribeMessage($client, [['subscriptionId' => $subscriptionId, 'channels' => ['files']]]);
         $this->assertSame(['files'], $added['data']['subscriptions'][0]['channels']);
@@ -649,15 +664,9 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertSame('error', $tooManyAdded['type']);
         $this->assertSame('Subscription "' . $subscriptionId . '" must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.', $tooManyAdded['data']['message']);
 
-        $overLimit = $send('subscribe', [['channels' => ['documents']]]);
-        $this->assertSame('error', $overLimit['type']);
-        $this->assertSame(1003, $overLimit['data']['code']);
-        $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions. Unsubscribe from some before subscribing to more.', $overLimit['data']['message']);
-
         /**
          * Test for SUCCESS
          */
-        // The connection stays open, and unsubscribing makes room.
         $unsubscribed = $send('unsubscribe', [['subscriptionId' => $subscriptionId]]);
         $this->assertTrue($unsubscribed['data']['subscriptions'][0]['removed']);
         $this->sendSubscribeMessage($client, [['channels' => ['documents']]]);
@@ -687,13 +696,16 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         };
         $channels = fn (string $prefix, int $count) => \array_map(fn (int $i) => $prefix . $i, \range(1, $count));
         $equals = fn (int $count) => \array_map(fn (int $i) => Query::equal('f' . $i, ['x'])->toString(), \range(1, $count));
+        // Split each total across two subscriptions, so the connection is exactly at its limits.
+        $channelsA = \intdiv(APP_LIMIT_REALTIME_CHANNELS, 2);
+        $queriesA = \intdiv(APP_LIMIT_REALTIME_QUERIES, 2);
 
         /**
          * Test for SUCCESS
          */
         $first = $this->sendSubscribeMessage($client, [
-            ['subscriptionId' => 'a', 'channels' => $channels('documents.a', 60), 'queries' => $equals(60)],
-            ['subscriptionId' => 'b', 'channels' => $channels('documents.b', APP_LIMIT_REALTIME_CHANNELS - 60), 'queries' => $equals(APP_LIMIT_REALTIME_QUERIES - 60)],
+            ['subscriptionId' => 'a', 'channels' => $channels('documents.a', $channelsA), 'queries' => $equals($queriesA)],
+            ['subscriptionId' => 'b', 'channels' => $channels('documents.b', APP_LIMIT_REALTIME_CHANNELS - $channelsA), 'queries' => $equals(APP_LIMIT_REALTIME_QUERIES - $queriesA)],
         ]);
         $this->assertCount(2, $first['data']['subscriptions']);
 
@@ -705,7 +717,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertSame(1003, $tooManyChannels['data']['code']);
         $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels across its subscriptions. Unsubscribe from some before subscribing to more.', $tooManyChannels['data']['message']);
 
-        $tooManyQueries = $send([['subscriptionId' => 'b', 'channels' => [], 'queries' => $equals(APP_LIMIT_REALTIME_QUERIES - 60 + 1)]]);
+        $tooManyQueries = $send([['subscriptionId' => 'b', 'channels' => [], 'queries' => $equals(APP_LIMIT_REALTIME_QUERIES - $queriesA + 1)]]);
         $this->assertSame('error', $tooManyQueries['type']);
         $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries across its subscriptions. Unsubscribe from some before subscribing to more.', $tooManyQueries['data']['message']);
 
@@ -721,8 +733,8 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
          * Test for SUCCESS
          */
         // Subscribing again replaces a subscription's queries, so lowering one makes room in another.
-        $this->sendSubscribeMessage($client, [['subscriptionId' => 'a', 'channels' => [], 'queries' => $equals(10)]]);
-        $this->sendSubscribeMessage($client, [['subscriptionId' => 'b', 'channels' => [], 'queries' => $equals(90)]]);
+        $this->sendSubscribeMessage($client, [['subscriptionId' => 'a', 'channels' => [], 'queries' => $equals(1)]]);
+        $this->sendSubscribeMessage($client, [['subscriptionId' => 'b', 'channels' => [], 'queries' => $equals(APP_LIMIT_REALTIME_QUERIES - 1)]]);
 
         $client->close();
     }
