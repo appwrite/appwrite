@@ -8,6 +8,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Database\RuntimeQuery;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
@@ -811,6 +812,45 @@ final class MessagingTest extends TestCase
         // Closing forgets it.
         $realtime->unsubscribe(1);
         $this->assertSame([2], $realtime->getUserConnections('1', 'A'));
+    }
+
+    public function testConstructSubscriptionsLimitsSubscriptions(): void
+    {
+        $select = Query::select(['*'])->toString();
+        $slots = \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS, [$select]);
+
+        $subscriptions = Realtime::constructSubscriptions(['documents'], fn () => $slots);
+        $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS, $subscriptions);
+
+        // A channel without queries joins slot 0, which already exists.
+        $subscriptions = Realtime::constructSubscriptions(['documents', 'files'], fn (string $key) => $key === 'documents' ? $slots : null);
+        $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS, $subscriptions);
+
+        // ...but cannot add a slot past the limit.
+        $offset = \array_combine(\range(1, APP_LIMIT_REALTIME_SUBSCRIPTIONS), $slots);
+        try {
+            Realtime::constructSubscriptions(['documents', 'files'], fn (string $key) => $key === 'documents' ? $offset : null);
+            $this->fail('Expected the subscription limit to be enforced.');
+        } catch (QueryException $e) {
+            $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.', $e->getMessage());
+        }
+
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.');
+        Realtime::constructSubscriptions(['documents'], fn () => [...$slots, [$select]]);
+    }
+
+    public function testConstructSubscriptionsLimitsQueries(): void
+    {
+        $select = Query::select(['*'])->toString();
+
+        $subscriptions = Realtime::constructSubscriptions(['documents'], fn () => [\array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE, $select)]);
+        $this->assertCount(APP_LIMIT_ARRAY_PARAMS_SIZE, $subscriptions[0]['queries']);
+
+        // Rejected before the queries are parsed, so even unparsable ones never reach the parser.
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.');
+        Realtime::constructSubscriptions(['documents'], fn () => [\array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE + 1, 'not a query')]);
     }
 
     public function testAddConnectionLimitsUserConnections(): void

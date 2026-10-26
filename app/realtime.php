@@ -1153,15 +1153,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
         }
 
-        if (\count($subscriptions) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
-            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.');
-        }
-        foreach ($subscriptions as $subscription) {
-            if (\count($subscription['queries']) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
-                throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.');
-            }
-        }
-
         $sanitizedUser = empty($targetUser->getId()) ? null : $response->output($targetUser, Response::MODEL_ACCOUNT);
 
         $mapping = [];

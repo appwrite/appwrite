@@ -636,13 +636,19 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS, $full['data']['subscriptions']);
         $subscriptionId = $full['data']['subscriptions'][0]['subscriptionId'];
 
-        // Replacing an existing subscription does not count as a new one.
-        $replaced = $this->sendSubscribeMessage($client, [['subscriptionId' => $subscriptionId, 'channels' => ['files']]]);
-        $this->assertSame(['files'], $replaced['data']['subscriptions'][0]['channels']);
+        // Adding channels to an existing subscription does not count as a new one.
+        $added = $this->sendSubscribeMessage($client, [['subscriptionId' => $subscriptionId, 'channels' => ['files']]]);
+        $this->assertSame(['files'], $added['data']['subscriptions'][0]['channels']);
 
         /**
          * Test for FAILURE
          */
+        // Channels added under the same id count towards that subscription's limit.
+        $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE - 1));
+        $tooManyAdded = $send('subscribe', [['subscriptionId' => $subscriptionId, 'channels' => $channels]]);
+        $this->assertSame('error', $tooManyAdded['type']);
+        $this->assertSame('Subscription "' . $subscriptionId . '" must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.', $tooManyAdded['data']['message']);
+
         $overLimit = $send('subscribe', [['channels' => ['documents']]]);
         $this->assertSame('error', $overLimit['type']);
         $this->assertSame(1003, $overLimit['data']['code']);

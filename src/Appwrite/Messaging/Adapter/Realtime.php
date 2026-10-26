@@ -825,6 +825,9 @@ class Realtime extends MessagingAdapter
 
             if ($params === null) {
                 if (!isset($subscriptions[0])) {
+                    if (\count($subscriptions) >= APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+                        throw new QueryException('Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.');
+                    }
                     $subscriptions[0] = ['channels' => [], 'queries' => []];
                 }
                 $subscriptions[0]['channels'][] = $channel;
@@ -841,6 +844,10 @@ class Realtime extends MessagingAdapter
 
             foreach ($params as $index => $slot) {
                 if (!isset($subscriptions[$index])) {
+                    // Counted before parsing, so an oversized URL is rejected without the work.
+                    if (\count($subscriptions) >= APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+                        throw new QueryException('Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.');
+                    }
                     $subscriptions[$index] = ['channels' => [], 'queries' => []];
                 }
 
@@ -850,6 +857,9 @@ class Realtime extends MessagingAdapter
 
                 if (empty($subscriptions[$index]['queries'])) {
                     $raw = \is_array($slot) ? $slot : [$slot];
+                    if (\count($raw) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+                        throw new QueryException('queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.');
+                    }
                     $subscriptions[$index]['queries'] = self::convertQueries($raw);
                 }
             }
