@@ -1295,7 +1295,8 @@ Http::error()
     ->inject('project')
     ->inject('bus')
     ->inject('authorization')
-    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, Bus $bus, Authorization $authorization) {
+    ->inject('localeCodes')
+    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, Bus $bus, Authorization $authorization, array $localeCodes) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request)?->route;
         $class = \get_class($error);
@@ -1365,7 +1366,10 @@ Http::error()
         }
 
         Span::add('http.hostname', $request->getHostname());
-        Span::add('http.locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
+        $locale = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
+        if (\in_array($locale, $localeCodes, true)) {
+            Span::add('http.locale', $locale);
+        }
         if (Span::current()?->get('project.id') === null) {
             Span::add('project.id', $project->getId());
         }
