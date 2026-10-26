@@ -60,6 +60,7 @@ export function useConsoleVariables(region?: string) {
     emailDomain: (vars as unknown as Record<string, string | undefined>)
       ?._APP_DOMAIN_EMAIL,
     computeSizeLimit: vars?._APP_COMPUTE_SIZE_LIMIT,
+    storageLimit: vars?._APP_STORAGE_LIMIT,
     // Undefined until loaded (or on older servers): callers treat undefined
     // as "no capability info", not as "no provider supports it".
     vcsProvidersWithRepositoryCreation:

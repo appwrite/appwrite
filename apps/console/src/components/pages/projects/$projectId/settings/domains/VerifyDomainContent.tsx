@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react'
-import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import { getApexDomain, isCloud as isCloudEndpoint } from '@/lib/utils/proxy-domains'
 import type { Models } from '@appwrite.io/console'
 import { Copy, Check, Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -21,7 +20,7 @@ import { toast } from 'sonner'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 
-const DNS_PROVIDERS_LINK =
+export const DNS_PROVIDERS_LINK =
   '/docs/advanced/platform/custom-domains'
 
 export type DomainVerificationError = {
@@ -69,24 +68,28 @@ interface VerifyDomainContentProps {
   verificationError?: DomainVerificationError | string | null
 }
 
-type DnsRecord = {
+export type DnsRecord = {
   type: string
   name: string
   value: string
   ttl: number | null
+  /** MX preference, shown when the table has a Priority column. */
+  priority?: number
   badge?: string
 }
 
-function DnsRecordsTable({
+export function DnsRecordsTable({
   records,
   onCopy,
   copiedField,
   showTtl,
+  showPriority = false,
 }: {
   records: DnsRecord[]
   onCopy: (text: string, field: string) => void
   copiedField: string | null
   showTtl: boolean
+  showPriority?: boolean
 }) {
   const t = useT()
   return (
@@ -102,6 +105,11 @@ function DnsRecordsTable({
           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
             {t('Value')}
           </TableHead>
+          {showPriority && (
+            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
+              {t('Priority')}
+            </TableHead>
+          )}
           {showTtl && (
             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
               TTL
@@ -138,6 +146,11 @@ function DnsRecordsTable({
             >
               {r.value}
             </TableCell>
+            {showPriority && (
+              <TableCell className="px-4 py-3 text-end text-[12px] text-muted-foreground">
+                {r.priority ?? '-'}
+              </TableCell>
+            )}
             {showTtl && (
               <TableCell className="px-4 py-3 text-end text-[12px] text-muted-foreground">
                 {r.ttl ?? '-'}
@@ -161,6 +174,58 @@ function DnsRecordsTable({
         ))}
       </TableBody>
     </Table>
+  )
+}
+
+/** Amber "not verified yet" or red failure alert above the DNS records. */
+export function DomainVerificationAlert({
+  error,
+}: {
+  error?: DomainVerificationError | string | null
+}) {
+  const t = useT()
+  const structuredError = error && typeof error !== 'string' ? error : null
+  const plainError = typeof error === 'string' ? error : null
+  const errorPending = structuredError?.pending ?? false
+  const errorTitle =
+    structuredError?.title ?? (plainError ? t('Verification failed') : null)
+  const errorMessage = structuredError?.message ?? plainError
+
+  if (!errorMessage || !errorTitle) return null
+
+  return (
+    <Alert
+      variant="default"
+      className={
+        errorPending
+          ? 'border-amber-500/30 bg-amber-500/10 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400'
+          : 'border-red-500/30 bg-red-500/10 [&>svg]:text-red-600 dark:[&>svg]:text-red-400'
+      }
+    >
+      {errorPending ? (
+        <Info className="h-4 w-4" />
+      ) : (
+        <AlertCircle className="h-4 w-4" />
+      )}
+      <AlertTitle
+        className={
+          errorPending
+            ? 'text-[13px] font-medium text-amber-700 dark:text-amber-400'
+            : 'text-[13px] font-medium text-red-600 dark:text-red-400'
+        }
+      >
+        {errorTitle}
+      </AlertTitle>
+      <AlertDescription
+        className={
+          errorPending
+            ? 'text-[13px] text-amber-700/90 dark:text-amber-400/90'
+            : 'text-[13px] text-red-600 dark:text-red-400'
+        }
+      >
+        {errorMessage}
+      </AlertDescription>
+    </Alert>
   )
 }
 
@@ -191,13 +256,7 @@ export function VerifyDomainContent({
     error,
   } = useConsoleVariables(region)
 
-  const isCloud = useMemo(() => {
-    try {
-      return getBaseEndpoint().includes('cloud.appwrite.io')
-    } catch {
-      return false
-    }
-  }, [])
+  const isCloud = useMemo(() => isCloudEndpoint(), [])
 
   const { features } = useConsoleProfile()
   const edgeNetworkEnabled = features.edgeNetwork
@@ -504,54 +563,9 @@ export function VerifyDomainContent({
     </>
   )
 
-  const structuredError =
-    verificationError && typeof verificationError !== 'string'
-      ? verificationError
-      : null
-  const plainError =
-    typeof verificationError === 'string' ? verificationError : null
-  const errorPending = structuredError?.pending ?? false
-  const errorTitle =
-    structuredError?.title ??
-    (plainError ? t('Verification failed') : null)
-  const errorMessage = structuredError?.message ?? plainError
-
   return (
     <div className={compact ? 'space-y-4' : 'space-y-6'}>
-      {errorMessage && errorTitle && (
-        <Alert
-          variant="default"
-          className={
-            errorPending
-              ? 'border-amber-500/30 bg-amber-500/10 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400'
-              : 'border-red-500/30 bg-red-500/10 [&>svg]:text-red-600 dark:[&>svg]:text-red-400'
-          }
-        >
-          {errorPending ? (
-            <Info className="h-4 w-4" />
-          ) : (
-            <AlertCircle className="h-4 w-4" />
-          )}
-          <AlertTitle
-            className={
-              errorPending
-                ? 'text-[13px] font-medium text-amber-700 dark:text-amber-400'
-                : 'text-[13px] font-medium text-red-600 dark:text-red-400'
-            }
-          >
-            {errorTitle}
-          </AlertTitle>
-          <AlertDescription
-            className={
-              errorPending
-                ? 'text-[13px] text-amber-700/90 dark:text-amber-400/90'
-                : 'text-[13px] text-red-600 dark:text-red-400'
-            }
-          >
-            {errorMessage}
-          </AlertDescription>
-        </Alert>
-      )}
+      <DomainVerificationAlert error={verificationError} />
       {rule.status === 'verifying' && (
         <Alert variant="default" className="border-blue-500/30 bg-blue-500/5">
           <AlertDescription className="text-[13px] text-muted-foreground">

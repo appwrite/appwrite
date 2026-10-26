@@ -2499,8 +2499,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'It will stop receiving events immediately. This action cannot be undone.':
     'הוא יפסיק לקבל אירועים באופן מיידי. לא ניתן לבטל פעולה זו.',
   'Last deployed:': 'פריסה אחרונה:',
-  'Leave blank to keep current password unchanged.':
-    'השאירו ריק כדי לשמור על הסיסמה הנוכחית ללא שינוי.',
+  'Leave blank to keep the current password. Re-enter it when changing the host, port, or secure protocol.':
+    'השאירו ריק כדי לשמור על הסיסמה הנוכחית. הזינו אותה מחדש בעת שינוי המארח, הפורט או הפרוטוקול המאובטח.',
   'Leave blank to keep existing': 'השאירו ריק כדי לשמור על הקיים',
   'Leave empty to auto-generate': 'השאירו ריק ליצירה אוטומטית',
   'Leave empty to clear the whole project':
@@ -3463,4 +3463,19 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Ship your apps to every store': 'הפצת האפליקציות שלכם לכל חנות',
   'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
     'בנו גרסאות Android,‏ iOS ו-Windows ממקום אחד והגישו אותן ל-Google Play,‏ App Store ו-Microsoft Store.',
+  'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
+    'בחרו כמה זמן לשמור פריסות לא פעילות. פריסות פעילות ופריסות שמקושרות לדומיין מותאם אישית נשמרות תמיד.',
+  'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':
+    'החל מ-5 בנובמבר 2026, Appwrite Cloud ימחק פריסות לא פעילות אחרי 30 יום כברירת מחדל. כדי לשמור היסטוריה ארוכה יותר, בחרו תקופת שמירה ארוכה יותר ולחצו על עדכון לפני תאריך זה.',
+  'Retention limits are unavailable. Try reloading this page.':
+    'לא ניתן לטעון את מגבלות השמירה. נסו לטעון את הדף מחדש.',
+  'Your plan keeps up to 100 inactive deployments for up to 90 days.':
+    'התוכנית שלכם שומרת עד 100 פריסות לא פעילות למשך עד 90 יום.',
+  'Your plan allows retention for up to 3 years.':
+    'התוכנית שלכם מאפשרת שמירה למשך עד 3 שנים.',
+  'Your organization has a custom retention policy.':
+    'לארגון שלכם יש מדיניות שמירה מותאמת אישית.',
+  'Your saved retention exceeds your plan limit. Save a supported period to update it.':
+    'תקופת השמירה שנשמרה חורגת ממגבלת התוכנית שלכם. בחרו תקופה נתמכת ושמרו לעדכון.',
+  '3 Years': '3 שנים',
 }

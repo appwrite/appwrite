@@ -211,6 +211,15 @@ final class FactoryTest extends TestCase
         $this->assertSame('https://gitlab.example.com/owner', $factory->fromProviderForBrowser('gitlab')->getOrganizationUrl('owner'));
     }
 
+    public function testFromProviderVerifiesCertificatesByDefault(): void
+    {
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), Config::getParam('vcs', []));
+
+        foreach (['github', 'gitea', 'gitlab', 'bitbucket', 'origin', 'entire'] as $key) {
+            $this->assertFalse($factory->fromProvider($key)->isSelfSigned(), "'{$key}' must verify certificates by default");
+        }
+    }
+
     public function testGetWebhookSecret(): void
     {
         $entry = [

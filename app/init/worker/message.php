@@ -88,8 +88,13 @@ return function (Container $container): void {
 
     $container->set('getProjectDB', function (DatabaseFactory $databaseFactory, Database $dbForPlatform) {
         return function (Document $project) use ($databaseFactory, $dbForPlatform): Database {
-            if ($project->isEmpty() || $project->getId() === 'console') {
+            if ($project->getId() === 'console') {
                 return $dbForPlatform;
+            }
+
+            // An empty project is one deleted after the job was queued, never the platform.
+            if ($project->isEmpty()) {
+                throw new \Exception('Project not found');
             }
 
             return $databaseFactory->project(
