@@ -1098,8 +1098,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         ];
 
         $requestedChannels = $request->getQuery('channels', []);
-        if (\is_array($requestedChannels) && \count($requestedChannels) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
-            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'channels must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.');
+        if (\is_array($requestedChannels) && \count($requestedChannels) > $limits['channels']) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'channels must contain at most ' . $limits['channels'] . ' channels.');
         }
 
         $channels = Realtime::convertChannels($requestedChannels, $subscriberId);

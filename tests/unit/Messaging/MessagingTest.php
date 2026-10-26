@@ -845,24 +845,22 @@ final class MessagingTest extends TestCase
     public function testConstructSubscriptionsLimitsTotals(): void
     {
         $select = Query::select(['*'])->toString();
+        $channels = ['documents.1', 'documents.2', 'documents.3'];
 
         // One channel can appear in every slot, so channels are counted per subscription.
-        $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, 3));
-        $slots = \array_fill(0, 33, [$select]);
-        $subscriptions = Realtime::constructSubscriptions($channels, fn () => $slots);
-        $this->assertCount(33, $subscriptions);
+        $this->assertCount(3, Realtime::constructSubscriptions($channels, fn () => \array_fill(0, 3, [$select]), maxChannels: 9));
 
         try {
-            Realtime::constructSubscriptions($channels, fn () => \array_fill(0, 34, [$select]));
+            Realtime::constructSubscriptions($channels, fn () => \array_fill(0, 4, [$select]), maxChannels: 9);
             $this->fail('Expected the channel total to be enforced.');
         } catch (QueryException $e) {
-            $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels across its subscriptions.', $e->getMessage());
+            $this->assertSame('Connection must have at most 9 channels across its subscriptions.', $e->getMessage());
         }
 
         // Queries are counted across subscriptions.
         $this->expectException(QueryException::class);
-        $this->expectExceptionMessage('Connection must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries across its subscriptions.');
-        Realtime::constructSubscriptions(['documents'], fn () => \array_fill(0, 2, \array_fill(0, 51, $select)));
+        $this->expectExceptionMessage('Connection must have at most 5 queries across its subscriptions.');
+        Realtime::constructSubscriptions(['documents'], fn () => \array_fill(0, 2, \array_fill(0, 3, $select)), maxQueries: 5);
     }
 
     public function testConstructSubscriptionsUsesConnectionLimits(): void
@@ -963,7 +961,7 @@ final class MessagingTest extends TestCase
     {
         $select = Query::select(['*'])->toString();
 
-        $subscriptions = Realtime::constructSubscriptions(['documents'], fn () => [\array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE, $select)]);
+        $subscriptions = Realtime::constructSubscriptions(['documents'], fn () => [\array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE, $select)], maxQueries: APP_LIMIT_ARRAY_PARAMS_SIZE);
         $this->assertCount(APP_LIMIT_ARRAY_PARAMS_SIZE, $subscriptions[0]['queries']);
 
         // Rejected before the queries are parsed, so even unparsable ones never reach the parser.
