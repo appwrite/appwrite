@@ -2139,7 +2139,7 @@ class Deletes extends Action
                             $file->isEmpty()
                             || $file->getAttribute('signature') !== ''
                             || $file->getAttribute('chunksUploaded', 0) >= $file->getAttribute('chunksTotal', 1)
-                            || $file->getUpdatedAt() >= $expired
+                            || \strtotime($file->getUpdatedAt()) >= \strtotime($expired)
                         ) {
                             return;
                         }
