@@ -3,6 +3,7 @@
 namespace Appwrite\Deletes;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -11,7 +12,7 @@ use Utopia\Database\Query;
 
 class Targets
 {
-    public static function delete(Database $database, Query $query): void
+    public static function delete(Database $database, Query $query, ?Mqtt $mqtt = null, ?string $projectId = null): void
     {
         $database->deleteDocuments(
             'targets',
@@ -20,11 +21,11 @@ class Targets
                 Query::orderAsc()
             ],
             Database::BATCH_SIZE,
-            fn (Document $target) => self::deleteSubscribers($database, $target)
+            fn (Document $target) => self::deleteSubscribers($database, $target, $mqtt, $projectId)
         );
     }
 
-    public static function deleteSubscribers(Database $database, Document $target): void
+    public static function deleteSubscribers(Database $database, Document $target, ?Mqtt $mqtt = null, ?string $projectId = null): void
     {
         $database->deleteDocuments(
             'subscribers',
@@ -33,7 +34,7 @@ class Targets
                 Query::orderAsc(),
             ],
             Database::BATCH_SIZE,
-            function (Document $subscriber) use ($database, $target) {
+            function (Document $subscriber) use ($database, $target, $mqtt, $projectId) {
                 $topicId = $subscriber->getAttribute('topicId');
                 $topicInternalId = $subscriber->getAttribute('topicInternalId');
 
@@ -61,8 +62,39 @@ class Targets
                         Console::error("Delete subscribers decreaseDocumentAttribute (topicId={$topicId}): {$e->getMessage()}");
                     }
                 }
+
+                self::revokeIfNoLongerSubscribed($database, $subscriber, $mqtt, $projectId);
             }
         );
     }
 
+    /**
+     * Drop the user's live MQTT subscription once they hold no other subscriber row for the topic,
+     * matching the subscribe gate (membership is per user, not per target). Mirrors the explicit
+     * subscriber-delete endpoint's own notification, which this cleanup path otherwise lacks.
+     */
+    private static function revokeIfNoLongerSubscribed(Database $database, Document $subscriber, ?Mqtt $mqtt, ?string $projectId): void
+    {
+        if ($mqtt === null || $projectId === null) {
+            return;
+        }
+
+        $userId = $subscriber->getAttribute('userId');
+        $topicInternalId = $subscriber->getAttribute('topicInternalId');
+
+        $stillSubscribed = $database->skipFilters(fn () => $database->findOne('subscribers', [
+            Query::equal('topicInternalId', [$topicInternalId]),
+            Query::equal('userId', [$userId]),
+        ]), APP_TOPICS_SUBQUERIES);
+
+        if (!$stillSubscribed->isEmpty()) {
+            return;
+        }
+
+        try {
+            $mqtt->revokeTopic($projectId, $userId, $subscriber->getAttribute('topicId'));
+        } catch (\Throwable $error) {
+            Console::error('Failed to unsubscribe MQTT connection: ' . $error->getMessage());
+        }
+    }
 }

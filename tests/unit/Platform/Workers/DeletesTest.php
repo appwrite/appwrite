@@ -9,11 +9,13 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Schedule\Source\Functions as FunctionSchedules;
 use Executor\Executor;
 use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Appwrite\Messaging\Adapter\Fakes\RecordingPubSub;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
@@ -74,6 +76,11 @@ final class DeletesTest extends TestCase
         \putenv($this->key === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $this->key);
     }
 
+    private function mqtt(): Mqtt
+    {
+        return new Mqtt(new NoTelemetry(), new RecordingPubSub());
+    }
+
     public function testQueuedFileCleanupOnlyDeletesTheObsoletePath(): void
     {
         $directory = sys_get_temp_dir() . '/s3-version-' . bin2hex(random_bytes(8));
@@ -99,6 +106,7 @@ final class DeletesTest extends TestCase
                     deviceForSites: $device,
                     deviceForBuilds: $device,
                     telemetry: new NoTelemetry(),
+                    mqtt: $this->mqtt(),
                     certificates: $this->createStub(Certificates::class),
                     executor: $this->createStub(Executor::class),
                     executionRetention: '',
@@ -164,6 +172,7 @@ final class DeletesTest extends TestCase
                 deviceForSites: $device,
                 deviceForBuilds: $device,
                 telemetry: $telemetry,
+                mqtt: $this->mqtt(),
                 certificates: $certificates,
                 executor: $this->createStub(Executor::class),
                 executionRetention: '',
@@ -229,6 +238,7 @@ final class DeletesTest extends TestCase
             deviceForSites: $this->createStub(Device::class),
             deviceForBuilds: $this->createStub(Device::class),
             telemetry: new NoTelemetry(),
+            mqtt: $this->mqtt(),
             certificates: $this->createStub(Certificates::class),
             executor: $this->createStub(Executor::class),
             executionRetention: DateTime::format(new \DateTime('-14 days')),
