@@ -230,7 +230,8 @@ trait ProxyBase
         $proxyClient->addHeader('x-appwrite-hostname', 'fallback.localhost');
         $response = $proxyClient->call(Client::METHOD_GET, '/versions');
         $this->assertSame(401, $response['headers']['status-code']);
-        $this->assertStringContainsString('cannot be used for security reasons', (string) \json_encode($response['body']));
+        $this->assertIsString($response['body']);
+        $this->assertStringContainsString('cannot be used for security reasons', $response['body']);
     }
 
     public function testCreateAPIRuleFoldsDomainCase(): void
