@@ -3,6 +3,8 @@
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
+use Appwrite\GraphQL\Rule\Complexity;
+use Appwrite\GraphQL\Rule\Depth;
 use Appwrite\GraphQL\Schema;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -19,8 +21,6 @@ use GraphQL\Language\Source;
 use GraphQL\Type\Schema as GQLSchema;
 use GraphQL\Utils\AST;
 use GraphQL\Validator\Rules\DisableIntrospection;
-use GraphQL\Validator\Rules\QueryComplexity;
-use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -266,8 +266,8 @@ function execute(
     }
 
     if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
-        $validations[] = new QueryComplexity($maxComplexity);
-        $validations[] = new QueryDepth($maxDepth);
+        $validations[] = new Complexity($maxComplexity);
+        $validations[] = new Depth($maxDepth);
     }
     if (Http::getMode() === Http::MODE_TYPE_PRODUCTION) {
         $flags = DebugFlag::NONE;
