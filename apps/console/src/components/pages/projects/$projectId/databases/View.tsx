@@ -78,6 +78,7 @@ import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { DatabaseTypeFilterDropdown } from './_components/DatabaseTypeFilterDropdown'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import { ProjectDedicatedDatabaseResilienceUpgradeStrip } from './_components/ProjectDedicatedDatabaseResilienceUpgradeStrip'
 
 import { useT } from '@/lib/i18n/translate'
 
@@ -151,6 +152,10 @@ export function View() {
   )
   const databaseTypeFilterOptions = useMemo(
     () => getDatabaseTypeFilterOptions(),
+    [],
+  )
+  const emptyDedicatedProductRouteMap = useMemo(
+    () => new Map<string, DatabaseRouteKind>(),
     [],
   )
   const selectedDatabaseTypes = useMemo(
@@ -549,23 +554,29 @@ export function View() {
         fullWidthBorder
         rightContent={hasNoDatabases ? undefined : <ViewToggle />}
         contentAfterBorder={
-          // Data is prefetched in route loader, only render if data exists
-          // PlanLimitWarning handles its own visibility logic
-          project &&
-          organizationPlan !== undefined &&
-          totalDatabasesData !== undefined ? (
-            <PlanLimitWarning
-              currentCount={totalDatabasesCount}
-              limit={databasesLimit}
-              planName={resolveOrganizationPlanDisplayLabel({
-                planName: organizationPlan?.name ?? null,
-                planId: organizationPlan?.$id,
-              })}
-              resourceName="databases"
-              orgId={project?.teamId}
-              fullWidth={false}
-            />
-          ) : undefined
+          <>
+            {project &&
+            organizationPlan !== undefined &&
+            totalDatabasesData !== undefined ? (
+              <PlanLimitWarning
+                currentCount={totalDatabasesCount}
+                limit={databasesLimit}
+                planName={resolveOrganizationPlanDisplayLabel({
+                  planName: organizationPlan?.name ?? null,
+                  planId: organizationPlan?.$id,
+                })}
+                resourceName="databases"
+                orgId={project?.teamId}
+                fullWidth={false}
+              />
+            ) : null}
+            {projectId && isCloudDedicatedDatabasesEnabled() ? (
+              <ProjectDedicatedDatabaseResilienceUpgradeStrip
+                projectId={projectId}
+                productRouteKindByDedicatedId={emptyDedicatedProductRouteMap}
+              />
+            ) : null}
+          </>
         }
       />
 
