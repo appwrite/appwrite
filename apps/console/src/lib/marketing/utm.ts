@@ -1,7 +1,6 @@
 /**
- * Acquisition-source tracking for the marketing site shell, ported from
- * https://github.com/appwrite/website. The marketing shell only mounts on `/`
- * when it renders the guest homepage, never for the console hop.
+ * Acquisition-source tracking for guest visits, ported from
+ * https://github.com/appwrite/website.
  */
 
 import {
@@ -15,7 +14,18 @@ const STORAGE_KEYS = {
   utmMedium: 'utmMedium',
   utmCampaign: 'utmCampaign',
   posted: 'utmSourcePosted',
+  sourceClaims: 'utmSourceClaims',
 } as const
+
+const SOURCE_CLAIMS_LIMIT = 10
+
+// Cloud has no click-id column, so a paid click without utm_source would be
+// stored as organic search.
+const CLICK_ID_SOURCES = [
+  ['gclid', 'google'],
+  ['msclkid', 'bing'],
+  ['fbclid', 'facebook'],
+] as const
 
 /** Query keys Plausible uses for campaign / click-id attribution. */
 export const ATTRIBUTION_QUERY_PARAM_NAMES = [
@@ -76,11 +86,16 @@ export function parseAcquisitionSource(
   currentOrigin?: string,
 ): AcquisitionSource {
   const params = url.searchParams
+  const utmSource = firstQueryValue(params, 'utm_source')
+  const utmMedium = firstQueryValue(params, 'utm_medium')
+  const clickSource = utmSource
+    ? undefined
+    : CLICK_ID_SOURCES.find(([key]) => firstQueryValue(params, key))?.[1]
   return {
     ref: firstQueryValue(params, 'ref'),
     referrer: resolveExternalReferrer(documentReferrer, currentOrigin),
-    utmSource: firstQueryValue(params, 'utm_source'),
-    utmMedium: firstQueryValue(params, 'utm_medium'),
+    utmSource: utmSource ?? clickSource ?? null,
+    utmMedium: clickSource ? (utmMedium ?? 'cpc') : utmMedium,
     utmCampaign: firstQueryValue(params, 'utm_campaign'),
   }
 }
@@ -95,10 +110,25 @@ export function hasAcquisitionSource(source: AcquisitionSource): boolean {
   )
 }
 
+/**
+ * A landing carrying a value we store (utm source/medium/campaign, ref or a
+ * click id) replaces the stored tuple so campaigns never mix keys.
+ */
 export function persistAcquisitionSource(
   source: AcquisitionSource,
-  storage: Pick<Storage, 'setItem'>,
+  storage: Pick<Storage, 'setItem' | 'removeItem'>,
 ): void {
+  if (
+    source.ref ||
+    source.utmSource ||
+    source.utmMedium ||
+    source.utmCampaign
+  ) {
+    storage.removeItem(STORAGE_KEYS.utmSource)
+    storage.removeItem(STORAGE_KEYS.utmMedium)
+    storage.removeItem(STORAGE_KEYS.utmCampaign)
+    storage.removeItem(STORAGE_KEYS.utmReferral)
+  }
   if (source.utmSource)
     storage.setItem(STORAGE_KEYS.utmSource, source.utmSource)
   if (source.utmMedium)
@@ -211,6 +241,48 @@ function getSessionStorage(): Storage | undefined {
   return sessionStorage
 }
 
+function getLocalStorage(): Storage | undefined {
+  try {
+    return typeof localStorage === 'undefined' ? undefined : localStorage
+  } catch {
+    return undefined
+  }
+}
+
+/** Source claims created while a guest, waiting to be linked to an account. */
+export function readPendingSourceClaims(
+  storage: Pick<Storage, 'getItem'> | undefined = getLocalStorage(),
+): string[] {
+  try {
+    const parsed: unknown = JSON.parse(
+      storage?.getItem(STORAGE_KEYS.sourceClaims) ?? '[]',
+    )
+    return Array.isArray(parsed)
+      ? parsed.filter((c): c is string => typeof c === 'string' && !!c)
+      : []
+  } catch {
+    return []
+  }
+}
+
+export function addPendingSourceClaim(
+  claim: string,
+  storage: Pick<Storage, 'getItem' | 'setItem'> | undefined = getLocalStorage(),
+): void {
+  const claims = [
+    ...readPendingSourceClaims(storage).filter((c) => c !== claim),
+    claim,
+  ]
+  try {
+    storage?.setItem(
+      STORAGE_KEYS.sourceClaims,
+      JSON.stringify(claims.slice(-SOURCE_CLAIMS_LIMIT)),
+    )
+  } catch {
+    // Storage full or blocked; the backend fingerprint fallback still applies.
+  }
+}
+
 function compactSourcePayload(
   source: AcquisitionSource,
 ): Record<string, string> {
@@ -271,14 +343,72 @@ function createSource(source: AcquisitionSource): void {
         throw new Error(`createSource failed: ${response.status}`)
       }
       storage?.setItem(STORAGE_KEYS.posted, signature)
+      const created = (await response.json().catch(() => null)) as {
+        claim?: unknown
+      } | null
+      if (typeof created?.claim === 'string') {
+        addPendingSourceClaim(created.claim)
+        // The POST can resolve after a fast sign-up already ran the link.
+        if (linkRequested) linkPendingSources()
+      }
     } catch {
       startedSignatures.delete(signature)
     }
   })()
 }
 
+let linkingSources = false
+let linkRequested = false
+
 /**
- * Capture landing-page source from the marketing site shell. `/` only counts
+ * Attach the sources this browser created as a guest to the signed-in account.
+ * Best effort: a failure keeps the claims for the next authenticated load.
+ */
+export function linkPendingSources(): void {
+  if (typeof window === 'undefined') return
+  linkRequested = true
+  if (linkingSources) return
+  const claims = readPendingSourceClaims()
+  if (claims.length === 0) return
+  linkingSources = true
+
+  void (async () => {
+    let relink = false
+    try {
+      const { isCloudProfile } = await import('@/lib/console-profiles')
+      if (!isCloudProfile()) return
+
+      const { sdk } = await import('@/lib/appwrite/sdk')
+      const client = sdk.forConsole.client
+      await client.call(
+        'patch',
+        new URL(`${client.config.endpoint.replace(/\/$/, '')}/console/sources`),
+        { 'content-type': 'application/json' },
+        { claims },
+      )
+      // Drop only the sent claims; a POST may have added more while this ran.
+      const storage = getLocalStorage()
+      const remaining = readPendingSourceClaims(storage).filter(
+        (c) => !claims.includes(c),
+      )
+      try {
+        storage?.setItem(STORAGE_KEYS.sourceClaims, JSON.stringify(remaining))
+        relink = remaining.length > 0
+      } catch {
+        // Blocked storage; the claims are re-sent next time.
+      }
+    } catch {
+      // Never block sign-up; the claims stay for the next attempt.
+    } finally {
+      linkingSources = false
+    }
+    // Only after a successful PATCH and write, so a failing endpoint cannot loop.
+    if (relink) linkPendingSources()
+  })()
+}
+
+/**
+ * Capture the landing source for a guest visit. `/` only counts
  * when it renders the guest homepage; as a console hop it must not POST.
  * Cloud only stores a row when at least one of `ref`, an external referrer,
  * or a UTM param is present.

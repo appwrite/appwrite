@@ -32,7 +32,7 @@ Client libraries for integrating with Appwrite to build client-based application
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/react.svg" alt="React logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/react.svg" alt="React logo" size="m" /%}{% /only_light %}
-* React library `0.1.0`
+* React library `0.1.1`
 * [appwrite/sdk-for-react](https://github.com/appwrite/sdk-for-react)
 * `beta`
 ---
@@ -44,15 +44,20 @@ Client libraries for integrating with Appwrite to build client-based application
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/apple.svg" alt="Apple logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/apple.svg" alt="Apple logo" size="m" /%}{% /only_light %}
-* Apple SDK `20.2.0`
+* Apple SDK `21.1.1`
 * [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)
 * 
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/android.svg" alt="Android logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/android.svg" alt="Android logo" size="m" /%}{% /only_light %}
-* Android SDK `29.2.0`
+* Android SDK `31.0.1`
 * [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)
 * 
+---
+* {% icon_image src="/icons/unity.svg" alt="Unity logo" size="m" /%}
+* Unity SDK `0.11.1`
+* [appwrite/sdk-for-unity](https://github.com/appwrite/sdk-for-unity)
+* `beta`
 {% /table %}
 
 # Server {% #server %}
@@ -73,7 +78,7 @@ Server libraries for integrating with Appwrite to build server side integrations
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/python.svg" alt="Python logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/python.svg" alt="Python logo" size="m" /%}{% /only_light %}
-* Python SDK `24.4.0`
+* Python SDK `27.0.0`
 * [appwrite/sdk-for-python](https://github.com/appwrite/sdk-for-python)
 * 
 ---
@@ -344,14 +349,14 @@ You can discover the available enums in each SDK at the source.
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/apple.svg" alt="Apple logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/apple.svg" alt="Apple logo" size="m" /%}{% /only_light %}
-* Apple SDK `20.2.0`
-* [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple/tree/dev/Sources/AppwriteEnums)
+* Apple SDK `21.1.1`
+* [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple/tree/21.1.1/Sources/AppwriteEnums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/android.svg" alt="Android logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/android.svg" alt="Android logo" size="m" /%}{% /only_light %}
-* Android SDK `29.2.0`
-* [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android/tree/dev/library/src/main/java/io/appwrite/enums)
+* Android SDK `31.0.1`
+* [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android/tree/31.0.1/library/src/main/java/io/appwrite/enums)
 *
 {% /table %}
 {% /tabsitem %}
@@ -373,8 +378,8 @@ You can discover the available enums in each SDK at the source.
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/python.svg" alt="Python logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/python.svg" alt="Python logo" size="m" /%}{% /only_light %}
-* Python SDK `24.4.0`
-* [appwrite/sdk-for-python](https://github.com/appwrite/sdk-for-python/tree/dev/appwrite/enums)
+* Python SDK `27.0.0`
+* [appwrite/sdk-for-python](https://github.com/appwrite/sdk-for-python/tree/27.0.0/appwrite/enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/dart.svg" alt="Dart logo" size="m" /%}{% /only_dark %}

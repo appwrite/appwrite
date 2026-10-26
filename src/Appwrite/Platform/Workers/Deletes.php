@@ -39,7 +39,6 @@ use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
-use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Usage\Tenant as UsageTenant;
@@ -258,6 +257,13 @@ class Deletes extends Action
         Span::add('project.id', $project->getId());
         Span::add('type', $type);
 
+        // The project was deleted after the job was queued: getProjectDB() refuses it, and its own deletion removes its data.
+        if ($project->isEmpty() && !$this->runsWithoutProject(\strval($type), $document)) {
+            Span::add('project.id', $deleteMessage->project?->getId() ?? '');
+            Span::add('skipped', 'deleted');
+            return;
+        }
+
         switch (\strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
@@ -351,17 +357,9 @@ class Deletes extends Action
                 $this->deleteSessionTargets($project, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_CSV_EXPORTS:
-                $this->deleteOldCSVExports($dbForPlatform, $deviceForFiles);
+                $this->deleteOldExports($dbForPlatform, $deviceForFiles);
                 break;
             case DELETE_TYPE_MAINTENANCE:
-                // The project was deleted after the job was queued; getProjectDB() would hand back the platform database.
-                if ($project->isEmpty()) {
-                    // The injected project is empty here, so name the one the message was queued for.
-                    Span::add('project.id', $deleteMessage->project?->getId() ?? '');
-                    Span::add('maintenance.skipped', 'deleted');
-                    break;
-                }
-
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount, $executionStore);
                 $this->deleteExpiredSessions($project, $getProjectDB);
@@ -379,6 +377,25 @@ class Deletes extends Action
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
         }
+    }
+
+    /**
+     * Platform-wide jobs, and documents that live in the platform database, still run once their project is gone.
+     */
+    private function runsWithoutProject(string $type, Document $document): bool
+    {
+        if ($type === DELETE_TYPE_DOCUMENT) {
+            return \in_array($document->getCollection(), [DELETE_TYPE_PROJECTS, DELETE_TYPE_RULES], true);
+        }
+
+        return \in_array($type, [
+            DELETE_TYPE_FILES,
+            DELETE_TYPE_TEAM_PROJECTS,
+            DELETE_TYPE_REALTIME,
+            DELETE_TYPE_SCHEDULES,
+            DELETE_TYPE_CSV_EXPORTS,
+            DELETE_TYPE_REPORT,
+        ], true);
     }
 
     private function deleteReport(Database $dbForPlatform, Document $project, Document $report): void
@@ -526,13 +543,28 @@ class Deletes extends Action
             return;
         }
 
+        $dbForProject = $getProjectDB($project);
+
         $this->deleteByGroup(
             'subscribers',
             [
                 Query::equal('topicInternalId', [$topic->getSequence()]),
                 Query::orderAsc(),
             ],
-            $getProjectDB($project)
+            $dbForProject
+        );
+
+        if ($dbForProject->findCollection('pushLedger') === null) {
+            return;
+        }
+
+        $this->deleteByGroup(
+            'pushLedger',
+            [
+                Query::equal('topicInternalId', [$topic->getSequence()]),
+                Query::orderAsc(),
+            ],
+            $dbForProject
         );
     }
 
@@ -1372,37 +1404,57 @@ class Deletes extends Action
     }
 
     /**
-     * @param Database $dbForPlatform
-     * @param Device $deviceForFiles
-     * @return void
+     * The platform default bucket only holds migration transfer files: CSV and JSON
+     * export results, and files the Console stages there for imports. Export rows are
+     * named after the user's filename, without an extension, so the bucket is the only
+     * reliable marker. Every file in it expires with the export's download link.
+     *
      * @throws Exception|Throwable
      */
-    private function deleteOldCSVExports(Database $dbForPlatform, Device $deviceForFiles): void
+    private function deleteOldExports(Database $dbForPlatform, Device $deviceForFiles): void
     {
         $bucket = $dbForPlatform->getDocument('buckets', 'default');
 
         if ($bucket->isEmpty()) {
-            Console::warning('Default bucket not found, skipping CSV export cleanup');
+            Console::warning('Default bucket not found, skipping export cleanup');
             return;
         }
 
-        $oneWeekAgo = DateTime::addSeconds(new \DateTime(), -1 * DATA_EXPORT_RETENTION);
+        $expiry = DateTime::addSeconds(new \DateTime(), -1 * DATA_EXPORT_RETENTION);
+        $stranded = new \DateTime(DateTime::addSeconds(new \DateTime(), -2 * DATA_EXPORT_RETENTION));
 
-        Console::info("Deleting CSV export files older than " . $oneWeekAgo);
+        Console::info('Deleting export files older than ' . $expiry);
 
-        $this->deleteByGroup('bucket_' . $bucket->getSequence(), [
+        $collection = 'bucket_' . $bucket->getSequence();
+
+        $this->listByGroup($collection, [
             Query::select([...$this->selects, '$createdAt', 'name', 'path']),
-            Query::equal('bucketId', ['default']),
-            Query::createdBefore($oneWeekAgo),
-            Query::endsWith('name', '.csv'),
+            Query::equal('bucketId', [$bucket->getId()]),
+            Query::createdBefore($expiry),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
-        ], $dbForPlatform, function (Document $file) use ($deviceForFiles) {
+        ], $dbForPlatform, function (Document $file) use ($collection, $dbForPlatform, $deviceForFiles, $stranded) {
             $path = $file->getAttribute('path');
-            if ($deviceForFiles->exists($path)) {
-                $deviceForFiles->delete($path);
-                Console::success('Deleted CSV file: ' . $file->getAttribute('name'));
+
+            // Workers with different storage devices can share this database, and an S3 delete
+            // of a missing key still succeeds: only the worker holding the object drops the row.
+            // A row past twice the retention has outlived a full cycle of every worker, so one
+            // whose object is gone (deleted before its row, say) is stranded and dropped.
+            if (!$deviceForFiles->exists($path)) {
+                if (new \DateTime($file->getCreatedAt() ?? 'now') < $stranded) {
+                    $dbForPlatform->deleteDocument($collection, $file->getId());
+                    Console::success('Deleted stranded export row: ' . $file->getId());
+                }
+                return;
             }
+
+            if (!$deviceForFiles->delete($path)) {
+                Console::warning('Failed to delete export file, keeping its row for the next run: ' . $path);
+                return;
+            }
+
+            $dbForPlatform->deleteDocument($collection, $file->getId());
+            Console::success('Deleted export file: ' . $file->getAttribute('name'));
         });
     }
 
@@ -1707,18 +1759,24 @@ class Deletes extends Action
     {
         $deploymentId = $deployment->getId();
         $buildPath = $deployment->getAttribute('buildPath', '');
+        $directory = $device->getPath($deploymentId);
 
-        // A build canceled or deleted before it completed never had its staged
-        // source moved (see Deployments::payload()). Unlinking follows
-        // symlinked parent directories the build could plant, so clean up only
-        // inside the builds tree.
-        $staged = Deployments::stagedSourcePath($device, $deploymentId);
-        if ($device->getType() === DeviceType::Local && \realpath(\dirname($staged)) === \dirname($staged)) {
-            $device->delete($staged);
+        // The whole directory, not just buildPath: a build canceled or deleted
+        // before it completed leaves its staged source there (see
+        // Deployments::payload()), and other files besides the artifact.
+        try {
+            if (Deployments::deleteBuildDirectory($device, $deploymentId)) {
+                Console::success('Deleted build directory: ' . $directory);
+            } else {
+                Console::error('Failed to delete build directory: ' . $directory);
+            }
+        } catch (Throwable $th) {
+            Console::error('Failed to delete build directory: ' . $directory);
+            Console::error('[Error] Message: ' . $th->getMessage());
         }
 
-        if (empty($buildPath)) {
-            Console::info("No build files for deployment " . $deploymentId);
+        // A buildPath outside that directory is deleted on its own.
+        if (empty($buildPath) || \str_starts_with($buildPath, $directory . '/')) {
             return;
         }
 

@@ -217,7 +217,7 @@ return [
             ],
             [
                 'name' => '_APP_DNS_EXTERNAL',
-                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source or an avatar URL before Appwrite fetches it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
+                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source, an avatar URL or a project\'s SMTP server before Appwrite connects to it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
                 'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
@@ -226,7 +226,7 @@ return [
             ],
             [
                 'name' => '_APP_ALLOWED_INTERNAL_ADDRESSES',
-                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
+                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars) or connecting to a project\'s SMTP server (project SMTP and messaging SMTP providers). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
                 'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
@@ -445,6 +445,15 @@ return [
                 'description' => 'Internal Worker per core for the API and Executor containers. Can be configured to optimize performance. Realtime ignores this and runs a single worker per container; use _APP_WORKERS_NUM to override.',
                 'introduction' => '0.13.0',
                 'default' => 6,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MEMORY_LIMIT',
+                'description' => 'PHP memory limit of each Appwrite process, including the API, Realtime, workers and tasks. Accepts any PHP memory_limit value, such as \'2G\', or \'-1\' for no limit. Raise it when a Realtime container holds thousands of connections. By default, set to \'512M\'.',
+                'introduction' => '2.6.2',
+                'default' => '512M',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

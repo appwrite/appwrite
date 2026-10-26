@@ -10,6 +10,7 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -25,6 +26,7 @@ use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -110,6 +112,7 @@ class Create extends Action
             ->inject('cache')
             ->inject('bus')
             ->inject('clientForOAuth2')
+            ->inject('mqtt')
             ->callback($this->action(...));
     }
 
@@ -138,6 +141,7 @@ class Create extends Action
         Cache $cache,
         Bus $bus,
         Client $clientForOAuth2,
+        Mqtt $mqtt,
     ): void {
         $profile = new Document(Config::getParam('oAuthProviders', [])[$provider]['idToken'] ?? []);
         if ($profile->isEmpty()) {
@@ -375,6 +379,14 @@ class Create extends Action
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        if ($current) {
+            try {
+                $mqtt->revoke($project->getId(), $user->getId());
+            } catch (\Throwable $error) {
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+            }
+        }
     }
 
     /**
@@ -420,6 +432,9 @@ class Create extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
+                if (!$user->getAttribute('emailVerification', false)) {
+                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user));
+                }
                 // The provider verified this address, or its canonical form on the same domain
                 if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
                     $user->setAttribute('emailVerification', true);
@@ -664,8 +679,7 @@ class Create extends Action
                 && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
                 && $isVerified;
             // Keep the provider domain for delivery (e.g. live.com must
-            // not become outlook.com). Still canonicalize the local part
-            // and include the full provider canonical in collision lookups.
+            // not become outlook.com). Still canonicalize the local part.
             if ($canonicalize) {
                 $canonicalLocal = \explode('@', $canonical, 2)[0];
                 $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
@@ -673,7 +687,8 @@ class Create extends Action
             } else {
                 $email = $providerEmail;
             }
-            $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, $canonical])));
+            // Match existing users by the provider's own address only, never by a cross-domain canonical form
+            $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, \mb_strtolower($providerEmail)])));
             $emailMetadata = [
                 'emailCanonical' => $canonical,
                 'emailIsCanonical' => \mb_strtolower($email) === $canonical,

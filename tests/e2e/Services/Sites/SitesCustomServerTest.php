@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
@@ -3070,6 +3071,64 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testRootDirectoryMustStayInsideRepository(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $site = $this->createSite([
+            'siteId' => Id::unique(),
+            'name' => 'Root directory test',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'providerRootDirectory' => '/sites/starter',
+        ]);
+
+        $this->assertSame(201, $site['headers']['status-code']);
+        $this->assertSame('/sites/starter', $site['body']['providerRootDirectory']);
+
+        $siteId = $site['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['..', '../other', 'sites/../../storage', '/../etc'] as $rootDirectory) {
+            $deployment = $this->createTemplateDeployment($siteId, [
+                'repository' => 'templates-for-sites',
+                'owner' => 'appwrite',
+                'rootDirectory' => $rootDirectory,
+                'type' => 'branch',
+                'reference' => 'main',
+                'activate' => true,
+            ]);
+            $this->assertSame(400, $deployment['headers']['status-code'], $rootDirectory);
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $deployment['body']['type']);
+
+            $created = $this->createSite([
+                'siteId' => Id::unique(),
+                'name' => 'Root directory test',
+                'framework' => 'other',
+                'buildRuntime' => 'node-22',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $created['headers']['status-code'], $rootDirectory);
+
+            $updated = $this->updateSite([
+                '$id' => $siteId,
+                'name' => 'Root directory test',
+                'framework' => 'other',
+                'buildRuntime' => 'node-22',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $updated['headers']['status-code'], $rootDirectory);
+        }
+
+        $site = $this->getSite($siteId);
+        $this->assertSame('/sites/starter', $site['body']['providerRootDirectory']);
+
+        $this->cleanupSite($siteId);
+    }
+
     #[Retry(count: 3)]
     public function testSiteTemplate(): void
     {
@@ -3294,6 +3353,7 @@ final class SitesCustomServerTest extends Scope
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
         $apiKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
         ]);
@@ -3742,6 +3802,66 @@ final class SitesCustomServerTest extends Scope
             $this->assertArrayNotHasKey('set-cookie', $response['headers'], $message);
         }
 
+        // Failure: Membership not confirmed
+        $project = $this->client->call(Client::METHOD_GET, '/projects/' . $this->getProject()['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+        ]);
+        $this->assertSame(200, $project['headers']['status-code']);
+        $teamId = $project['body']['teamId'];
+
+        $inviteeEmail = \uniqid() . 'invitee@appwrite.io';
+        $invitee = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => Id::unique(),
+            'email' => $inviteeEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $invitee['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], [
+            'email' => $inviteeEmail,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+        $this->assertFalse($membership['body']['confirm']);
+
+        $inviteeSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $inviteeEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $inviteeSession['headers']['status-code']);
+
+        $inviteeJwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $inviteeSession['cookies']['a_session_console'],
+            'x-appwrite-project' => 'console',
+        ], []);
+        $this->assertSame(201, $inviteeJwt['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $inviteeJwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+
         // Failure: Session missing (old bad, new ok)
         $session = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', array_merge([
             'origin' => 'http://localhost',
@@ -3833,6 +3953,78 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testPreviewCookies(): void
+    {
+        $siteId = '';
+
+        try {
+            $siteId = $this->setupSite([
+                'siteId' => Id::unique(),
+                'name' => 'SSR preview cookies',
+                'framework' => 'astro',
+                'adapter' => 'ssr',
+                'buildRuntime' => 'node-22',
+                'outputDirectory' => './dist',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm ci',
+                'fallbackFile' => '',
+            ]);
+
+            $deploymentId = $this->setupDeployment($siteId, [
+                'code' => $this->packageSite('astro'),
+                'activate' => 'true',
+            ]);
+
+            $domain = $this->getDeploymentDomain($deploymentId);
+            $this->assertNotEmpty($domain);
+
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+            ], [
+                'email' => $this->getRoot()['email'],
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $session['headers']['status-code']);
+            $secret = $session['cookies']['a_session_console'];
+
+            $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $secret,
+                'x-appwrite-project' => 'console',
+            ], []);
+            $this->assertSame(201, $jwt['headers']['status-code']);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $domain);
+
+            $cookie = \implode('; ', [
+                'a_jwt_console=' . $jwt['body']['jwt'],
+                'a_session_console=' . $secret,
+                'a_session_console_legacy=' . $secret,
+                'a_session_' . $this->getProject()['$id'] . '=' . $secret,
+                'a_session_' . $this->getProject()['$id'] . '_legacy=' . $secret,
+                'theme=dark',
+            ]);
+
+            $this->assertEventually(function () use ($proxyClient, $cookie, $secret) {
+                $response = $proxyClient->call(Client::METHOD_GET, '/cookie-header', [
+                    'cookie' => $cookie,
+                    'x-fallback-cookies' => \json_encode(['a_session_console' => $secret]),
+                ], followRedirects: false);
+                $this->assertSame(200, $response['headers']['status-code']);
+                $this->assertSame('theme=dark', $response['body']['cookie']);
+                $this->assertNull($response['body']['fallbackCookies']);
+            });
+        } finally {
+            if ($siteId !== '') {
+                $this->cleanupSite($siteId);
+            }
+        }
     }
 
     public function testInvalidSSRSource(): void
@@ -3999,6 +4191,7 @@ final class SitesCustomServerTest extends Scope
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
         $apiKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
         ]);

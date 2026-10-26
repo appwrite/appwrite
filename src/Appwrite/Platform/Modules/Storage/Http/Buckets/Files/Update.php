@@ -8,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Validator\Filename;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\NotFound as NotFoundException;
@@ -21,7 +22,6 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Nullable;
-use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -63,7 +63,7 @@ class Update extends Action
             ))
             ->param('bucketId', '', new UID(), 'Bucket unique ID.')
             ->param('fileId', '', new UID(), 'File ID.')
-            ->param('name', null, new Text(128), 'File name.', true)
+            ->param('name', null, new Filename(128), 'File name.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('response')
             ->inject('dbForProject')

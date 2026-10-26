@@ -381,6 +381,29 @@ class Create extends Action
         if ($isPrivilegedUser || $isAppUser) {
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
+            // Recheck under the lock an address change takes, so the invite is never sent to an address the user just left
+            $moved = (! empty($email) || ! empty($phone)) && $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $invitee, $membership, $email, $phone, $secret, $proofForToken): bool {
+                $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $invitee->getId(), forUpdate: true));
+                $address = ! empty($email) ? $current->getAttribute('email') : $current->getAttribute('phone');
+                $destination = ! empty($email) ? $invitee->getAttribute('email') : $phone;
+
+                if ($address === $destination) {
+                    return false;
+                }
+
+                // Void only the secret this request wrote, never one a newer resend replaced it with
+                $stored = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+                if ($proofForToken->verify($secret, (string) $stored->getAttribute('secret'))) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['secret' => ''])));
+                }
+
+                return true;
+            });
+
+            if ($moved) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'The invitee address changed while the invitation was being sent. Send it again.');
+            }
+
             $url = Template::parseURL($url);
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId, 'teamName' => $team->getAttribute('name')]);
             $url = Template::unParseURL($url);

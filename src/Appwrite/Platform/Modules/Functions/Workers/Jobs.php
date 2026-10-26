@@ -61,7 +61,7 @@ use Utopia\System\System;
  * no-ops here, where a verified build has nothing left to wait for. Whatever the
  * subclass is waiting on reports back as its own callback on this queue, handled
  * in onCallback(), so the waiting happens between callbacks rather than inside one
- * and nothing holds jobs-deployment:<id> while it is outstanding.
+ * and nothing holds the deployment lock while it is outstanding.
  */
 class Jobs extends Action
 {
@@ -161,9 +161,9 @@ class Jobs extends Action
 
         $failure = null;
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
+        $locks(Deployments::lock($project->getSequence(), $deploymentId), self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
             if ($event->id !== '') {
-                $key = 'jobs-event-' . $event->id;
+                $key = self::key('event', $project, $event->id);
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
                     return; // already processed
                 }
@@ -234,6 +234,15 @@ class Jobs extends Action
 
         if ($failure !== null) {
             throw $failure;
+        }
+
+        // Deleted mid-build: the deletes worker has already cleared the build
+        // directory, so output written after it is removed here. Outside the
+        // callback's dedupe, so a redelivery after a failed cleanup tries again.
+        if (CallbackEvent::tryFrom($event->event) !== CallbackEvent::Log
+            && $dbForProject->getDocument('deployments', $deploymentId)->isEmpty()
+            && !Deployments::deleteBuildDirectory($deviceForBuilds, $deploymentId)) {
+            throw new \RuntimeException("Failed to delete the build directory of deleted deployment {$deploymentId}");
         }
     }
 
@@ -361,7 +370,7 @@ class Jobs extends Action
             // skipped), never a failed build.
             $manifest = $artifact->status === 'success' ? $artifact->content : null;
             $files = \is_array($manifest) ? (array) ($manifest['files'] ?? []) : [];
-            $cache->save('jobs-manifest-' . $deployment->getId(), ['files' => \array_values($files)]);
+            $cache->save(self::key('manifest', $project, $deployment->getId()), ['files' => \array_values($files)]);
 
             return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
@@ -383,7 +392,7 @@ class Jobs extends Action
                 return $deployment;
             }
 
-            $cache->save('jobs-output-' . $deployment->getId(), true);
+            $cache->save(self::key('output', $project, $deployment->getId()), true);
 
             return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
@@ -418,7 +427,7 @@ class Jobs extends Action
             'totalSize' => $size + (int) $deployment->getAttribute('buildSize', 0),
         ]));
 
-        if ($cache->load('jobs-complete-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
+        if ($cache->load(self::key('complete', $project, $deployment->getId()), self::DEDUPE_TTL) !== false) {
             $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
         }
 
@@ -482,7 +491,7 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
-        $cache->save('jobs-exit-' . $deployment->getId(), true);
+        $cache->save(self::key('exit', $project, $deployment->getId()), true);
 
         return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
     }
@@ -509,7 +518,7 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        $cache->save('jobs-complete-' . $deployment->getId(), true);
+        $cache->save(self::key('complete', $project, $deployment->getId()), true);
 
         $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
 
@@ -598,15 +607,15 @@ class Jobs extends Action
         $deploymentId = $deployment->getId();
         $isSite = $deployment->getAttribute('resourceType') === 'sites';
 
-        if ($cache->load('jobs-exit-' . $deploymentId, self::DEDUPE_TTL) === false || $cache->load('jobs-complete-' . $deploymentId, self::DEDUPE_TTL) === false) {
+        if ($cache->load(self::key('exit', $project, $deploymentId), self::DEDUPE_TTL) === false || $cache->load(self::key('complete', $project, $deploymentId), self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 
-        if ($deviceForBuilds->getType() !== DeviceType::Local && $cache->load('jobs-output-' . $deploymentId, self::DEDUPE_TTL) === false) {
+        if ($deviceForBuilds->getType() !== DeviceType::Local && $cache->load(self::key('output', $project, $deploymentId), self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 
-        $manifest = $isSite ? $cache->load('jobs-manifest-' . $deploymentId, self::DEDUPE_TTL) : null;
+        $manifest = $isSite ? $cache->load(self::key('manifest', $project, $deploymentId), self::DEDUPE_TTL) : null;
         if ($isSite && $manifest === false) {
             return $deployment;
         }
@@ -619,7 +628,7 @@ class Jobs extends Action
         }
 
         $path = (string) $deployment->getAttribute('buildPath', '');
-        if ($path === '' || ! $deviceForBuilds->exists($path)) {
+        if (! Deployments::isArtifact($deviceForBuilds, $path)) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
@@ -742,15 +751,24 @@ class Jobs extends Action
             $this->updateLatestDeployment($dbForProject, $resource);
         }
 
-        if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
-            $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
-        }
-
+        // The status and the resource's deploymentId commit together, so
+        // executions never reach a deployment that is still building and a
+        // deployment reported ready is already the one they reach. The rules
+        // live in the platform database and are repointed before the commit;
+        // the router keeps serving the active deployment until then.
         if ($applied > 0) {
-            $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
-                Query::equal('$id', [$deployment->getId()]),
-                Query::notEqual('status', 'canceled'),
-            ]);
+            $applied = $dbForProject->withTransaction(function () use ($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus, $success, $terminal): int {
+                $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
+                    Query::equal('$id', [$deployment->getId()]),
+                    Query::notEqual('status', 'canceled'),
+                ]);
+
+                if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
+                    $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+                }
+
+                return $applied;
+            });
             $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         }
 
@@ -984,6 +1002,11 @@ class Jobs extends Action
             payload: $update->getPayload(),
             platform: $update->getPlatform(),
         ));
+    }
+
+    protected static function key(string $marker, Document $project, string $id): string
+    {
+        return "jobs-{$marker}-{$project->getSequence()}-{$id}";
     }
 
     private static function event(Document $deployment): string

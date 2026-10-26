@@ -149,10 +149,7 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
 /** Fallback provider for display when a value is unknown or legacy. */
 export const DEFAULT_VCS_OAUTH_PROVIDER: VcsProviderId = 'github'
 
-type VcsConnectFlag = keyof Pick<
-  ConsoleProfileFeatures,
-  'extraVcsOAuth' | 'vcsEntire'
->
+type VcsConnectFlag = keyof Pick<ConsoleProfileFeatures, 'extraVcsOAuth'>
 
 /**
  * The profile flag each provider's Git connect sits behind, or null when it is
@@ -160,7 +157,7 @@ type VcsConnectFlag = keyof Pick<
  */
 const VCS_CONNECT_FLAGS: Record<VcsProviderId, VcsConnectFlag | null> = {
   github: null,
-  entire: 'vcsEntire',
+  entire: null,
   origin: 'extraVcsOAuth',
   gitlab: null,
   bitbucket: null,

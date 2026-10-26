@@ -1853,14 +1853,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
-                'Entire Git provider',
-                'Show Entire on Git connect. Existing Entire installations still render.',
-                'vcsEntire',
-                profileId,
-                features.vcsEntire,
-                { category: 'Auth & security' },
-              ),
-              createProfileFeatureFlagItem(
                 'Cookie banner',
                 'Show the locale-gated cookie consent banner and footer cookie settings.',
                 'cookieBanner',
@@ -2142,7 +2134,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.accountApplications,
     features.userVerification,
     features.extraVcsOAuth,
-    features.vcsEntire,
     features.cookieBanner,
     features.blogDrafts,
     features.orgApiKeys,

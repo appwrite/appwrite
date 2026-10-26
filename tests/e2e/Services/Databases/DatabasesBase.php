@@ -2192,6 +2192,46 @@ trait DatabasesBase
         }
     }
 
+    public function testCreateCollectionInlineEncryptedStringTooSmall(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $containerId = Id::unique();
+
+        $rejected = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => $containerId,
+            'name' => 'Inline Encrypted Too Small',
+            $this->getSchemaResource() => [
+                ['key' => 'secret', 'type' => ColumnType::String->value, 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN - 1, 'filters' => ['encrypt']],
+            ],
+        ]);
+
+        $this->assertSame(400, $rejected['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_BAD_REQUEST, $rejected['body']['type']);
+
+        $missing = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $headers);
+        $this->assertSame(404, $missing['headers']['status-code']);
+
+        $keyed = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Inline Encrypted Keyed',
+            $this->getSchemaResource() => [
+                ['key' => 'secret', 'type' => ColumnType::String->value, 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN - 1, 'filters' => ['encrypt' => true]],
+            ],
+        ]);
+
+        $this->assertSame(400, $keyed['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_BAD_REQUEST, $keyed['body']['type']);
+    }
+
     /**
      * The filters the endpoints set still work inline: an encrypted string reads
      * back in plain text and cannot be queried, like one the string endpoint made.
@@ -4682,6 +4722,60 @@ trait DatabasesBase
         $this->assertSame(['potato,carrot', 'apple,orange'], $fetched['body']['actors']);
     }
 
+    public function testCreateDocumentFloatPrecision(): void
+    {
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Float Precision'
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/float', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'key' => 'value',
+                'required' => true,
+            ]);
+
+            $this->waitForAttribute($databaseId, $collectionId, 'value');
+        }
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'value' => 1234567.123456789,
+            ],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        $fetched = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $created['body']['$id']), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertSame(1234567.123456789, $fetched['body']['value']);
+    }
+
     public function testCreateDocument(): void
     {
         $data = $this->setupIndexes();
@@ -5973,6 +6067,78 @@ trait DatabasesBase
         $this->assertEquals(200, $documents3['headers']['status-code']);
         $this->assertArrayHasKey('x-appwrite-cache', $documents3['headers']);
         $this->assertEquals('miss', $documents3['headers']['x-appwrite-cache']);
+    }
+
+    public function testListDocumentsCacheBustedByPermissionChange(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Cache Permissions',
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+            $this->getSchemaResource() => [
+                ['key' => 'title', 'type' => ColumnType::String->value, 'size' => 64],
+            ],
+        ]);
+
+        $this->assertSame(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['title' => 'Cached'],
+        ]);
+
+        $this->assertSame(201, $record['headers']['status-code']);
+
+        $list = fn (): array => $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'ttl' => 300,
+        ]);
+
+        $this->assertSame('miss', $list()['headers']['x-appwrite-cache']);
+        $this->assertSame('hit', $list()['headers']['x-appwrite-cache']);
+
+        $update = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Cache Permissions',
+            'permissions' => [
+                Permission::read(Role::users()),
+            ],
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        $changed = $list();
+        $this->assertSame(200, $changed['headers']['status-code']);
+        $this->assertSame('miss', $changed['headers']['x-appwrite-cache']);
+
+        $update = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Cache Permissions',
+            'permissions' => [
+                Permission::read(Role::users()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        $changed = $list();
+        $this->assertSame(200, $changed['headers']['status-code']);
+        $this->assertSame('miss', $changed['headers']['x-appwrite-cache']);
     }
 
     public function testListDocumentsCachedWithoutSelectQuery(): void

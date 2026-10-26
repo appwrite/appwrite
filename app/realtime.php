@@ -42,9 +42,11 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Timeout as TimeoutException;
 use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\DI\Container;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
@@ -644,7 +646,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         // been delivered.
                         $revoked = static fn (?string $sessionId): bool => $user->isEmpty()
                             || $user->getAttribute('status') === false
-                            || ($sessionId !== null && !$user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null));
+                            || ($sessionId !== null && (!$user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null) || !$user->sessionFactorsMet($sessionId)));
 
                         foreach ($impersonating as $connection) {
                             $impersonatorSessionId = $realtime->connections[$connection]['impersonator']['sessionId'] ?? null;
@@ -998,10 +1000,55 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $session = $connectionContainer->get('session'); /** @var ?Document $session */
         $jwtExpire = $connectionContainer->get('jwtExpire'); /** @var ?int $jwtExpire */
         if (!$impersonatorUser->isEmpty()) {
+            // As over HTTP: impersonating needs a session to count factors on, and a blocked user cannot be impersonated.
+            if ($session === null || !$user->sessionFactorsMet($session->getId())) {
+                throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
+            }
+            if ($targetUser->getAttribute('status') === false) {
+                throw new Exception(Exception::USER_BLOCKED);
+            }
             getConsoleDB()->setMetadata('user', $targetUser->getId());
             getProjectDB($project)->setMetadata('user', $targetUser->getId());
         }
         $logUser = $user;
+
+        // As over HTTP, admin mode needs project access and grants admin roles, never console identity roles.
+        $adminRoles = null;
+        if ($connectionContainer->get('mode') === APP_MODE_ADMIN && $project->getId() !== 'console' && !$targetUser->isEmpty()) {
+            $membershipRoles = [];
+            foreach ($targetUser->getAttribute('memberships', []) as $membership) {
+                if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $project->getAttribute('teamId')) {
+                    $membershipRoles = $membership->getAttribute('roles', []);
+                    break;
+                }
+            }
+
+            if (empty($membershipRoles)) {
+                throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+            }
+
+            $projectAuthorization = new Authorization();
+            foreach ($targetUser->getRoles($projectAuthorization) as $role) {
+                $projectAuthorization->addRole($role);
+            }
+            if (!$projectAuthorization->isValid(new Input(PermissionType::Read, $project->getPermissionsByType(PermissionType::Read)))) {
+                throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
+            }
+
+            $adminRoles = [];
+            foreach ($membershipRoles as $membershipRole) {
+                if (!\str_starts_with($membershipRole, 'project-')) {
+                    $adminRoles[] = $membershipRole;
+                } elseif (\substr($membershipRole, 0, (int) \strrpos($membershipRole, '-')) === 'project-' . $project->getId()) {
+                    $adminRoles[] = \substr($membershipRole, \strrpos($membershipRole, '-') + 1);
+                }
+            }
+            $adminRoles = \array_values(\array_unique($adminRoles));
+
+            foreach ($adminRoles as $role) {
+                $authorization->addRole($role);
+            }
+        }
 
         $apis = $project->getAttribute('apis', []);
         // Websocket is what to check, but realtime is checked too for backwards compatibility
@@ -1026,7 +1073,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Abuse limits are connecting 128 times per minute and ip address.
          */
         $isRateLimited = $timelimit('url:{url},ip:{ip}', 128, 60, function (TimeLimit $timeLimit) use ($request): bool {
-            return System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $timeLimit->withParams(['{ip}' => $request->getIP(), '{url}' => $request->getURI()])->check()->limited;
+            return System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $timeLimit->withParams(['{ip}' => $request->getIP(), '{url}' => '/v1/realtime'])->check()->limited;
         });
 
         if ($isRateLimited) {
@@ -1049,7 +1096,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
-        $roles = $targetUser->getRoles($authorization);
+        $roles = $adminRoles ?? $targetUser->getRoles($authorization);
+        // A console user is no user of this project.
+        $subscriberId = $adminRoles === null ? $targetUser->getId() : '';
 
         // The session this connection was opened with. An impersonated connection runs
         // on the impersonator's session, which is not one of the target user's, so it
@@ -1058,12 +1107,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $impersonator = $impersonatorUser->isEmpty() ? null : [
             'projectId' => $impersonatorUser->getAttribute('projectId'),
             'userId' => $impersonatorUser->getId(),
-            'sessionId' => $session?->getId(),
+            'sessionId' => $session->getId(),
         ];
         // Impersonated or not, the connection lasts only as long as the session it runs on.
         $expire = $session !== null ? $user->getSessionExpiry($session->getId()) : null;
 
-        $channels = Realtime::convertChannels($request->getQuery('channels', []), $targetUser->getId());
+        $channels = Realtime::convertChannels($request->getQuery('channels', []), $subscriberId);
         $channelCount = \count($channels);
 
         $updateStats = static function (string $projectId, ?string $teamId) use ($register, $stats): void {
@@ -1105,7 +1154,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $server->send([$connection], $connectedPayloadJson);
             $outboundBytes += \strlen($connectedPayloadJson);
 
-            $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $targetUser->getId());
+            $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $subscriberId);
             $realtime->connections[$connection]['authorization'] = $authorization;
             $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
             $realtime->connections[$connection]['sessionId'] = $sessionId;
@@ -1167,7 +1216,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
                 $roles,
                 $subscription['channels'],
                 $subscription['queries'],
-                $targetUser->getId()
+                $subscriberId
             );
         }
 
@@ -1333,8 +1382,9 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $isRateLimited = $container->get('timelimit')('url:{url},connection:{connection}', 32, 60, function (TimeLimit $timeLimit) use ($connection, $containerId): bool {
-            return $timeLimit->withParams(['{connection}' => (string) $connection, '{container}' => (string) $containerId])->check()->limited && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
+        // Connection ids are only unique within a container, so the key carries the container too.
+        $isRateLimited = $container->get('timelimit')('project:{project},container:{container},connection:{connection}', 32, 60, function (TimeLimit $timeLimit) use ($connection, $containerId, $projectId): bool {
+            return $timeLimit->withParams(['{project}' => (string) $projectId, '{connection}' => (string) $connection, '{container}' => (string) $containerId])->check()->limited && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
         });
 
         if ($isRateLimited) {
