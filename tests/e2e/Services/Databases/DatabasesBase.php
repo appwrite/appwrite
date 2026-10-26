@@ -6179,7 +6179,7 @@ trait DatabasesBase
         $visible = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $serverHeaders, [
             $this->getRecordIdParam() => Id::unique(),
             'data' => ['title' => 'Guest visible'],
-            'permissions' => [Permission::read(Role::any())],
+            'permissions' => [Permission::read(Role::guests())],
         ]);
         $this->assertSame(201, $visible['headers']['status-code']);
         $visibleId = $visible['body']['$id'];
@@ -6187,7 +6187,7 @@ trait DatabasesBase
         $kept = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $serverHeaders, [
             $this->getRecordIdParam() => Id::unique(),
             'data' => ['title' => 'Guest kept'],
-            'permissions' => [Permission::read(Role::any())],
+            'permissions' => [Permission::read(Role::guests())],
         ]);
         $this->assertSame(201, $kept['headers']['status-code']);
         $keptId = $kept['body']['$id'];

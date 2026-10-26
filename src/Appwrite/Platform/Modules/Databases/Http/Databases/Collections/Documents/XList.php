@@ -227,7 +227,7 @@ class XList extends Action
                 }
 
                 try {
-                    if ($documents !== [] || $replaceCache) {
+                    if (!$documentsCacheHit && ($documents !== [] || $replaceCache)) {
                         $cache->saveMany($cacheKey, [
                             $documentsField => \array_map(fn (Document $document): array => $document->getArrayCopy(), $documents),
                             $operationsField => $operations->counts($documents),
