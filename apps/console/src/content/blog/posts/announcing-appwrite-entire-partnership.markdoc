@@ -18,7 +18,7 @@ faqs:
   - question: "Does Appwrite create preview deployments for Entire branches?"
     answer: "Yes. Pushes to your production branch build and activate. Pushes to any other branch build without activating, and Sites get a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open."
   - question: "How do I see Appwrite build results on Entire?"
-    answer: "Appwrite writes a check run to every commit it builds. The check moves from starting to building to succeeded or failed, and its summary links to the deployment in the Appwrite Console and, for Sites, to the running preview."
+    answer: "Unless Silent mode is on, Appwrite writes a check run to every commit it builds. The check moves from starting to building to succeeded or failed, and its summary links to the deployment in the Appwrite Console and, for Sites, to the running preview."
   - question: "Can I create a new Entire repository from the Appwrite Console?"
     answer: "No. Appwrite's connection to Entire reads repository contents and writes check runs, but it cannot create repositories. Create the repository on entire.com or with `entire repo create` in the Entire CLI first, then connect it from the Site or Function wizard."
   - question: "Is Entire available on self-hosted Appwrite?"

@@ -20,7 +20,7 @@ faqs:
   - question: "Why didn't my push to Entire create a deployment?"
     answer: "Check three things: the repository is connected to the Site or Function, the branch matches the branch filters under **Settings** > **Build** > **Triggers**, and at least one changed file matches the path filters. Path filters match from the repository root. The first push of a new branch has no previous commit to compare against, so it deploys regardless of path filters."
   - question: "Does Appwrite comment on Entire trails?"
-    answer: "Not today. Appwrite reports each build to Entire as a check run on the commit instead, and the deployment itself, with its logs and preview, lives in the Appwrite Console."
+    answer: "Not today. Unless Silent mode is on, Appwrite reports each build to Entire as a check run on the commit instead, and the deployment itself, with its logs and preview, lives in the Appwrite Console."
 ---
 
 Entire keeps your code and the agent sessions behind it in one repository. Appwrite runs that code. With Entire now an Appwrite Git provider, you can connect the two once and let every push deploy.
