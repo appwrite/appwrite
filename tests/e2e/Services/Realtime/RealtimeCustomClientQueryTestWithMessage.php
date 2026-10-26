@@ -713,6 +713,10 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertSame('error', $tooManyValues['type']);
         $this->assertStringContainsString('A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.', (string) $tooManyValues['data']['message']);
 
+        $tooLong = $send([['subscriptionId' => 'b', 'channels' => [], 'queries' => [Query::equal('id', [\str_repeat('x', APP_LIMIT_ARRAY_ELEMENT_SIZE)])->toString()]]]);
+        $this->assertSame('error', $tooLong['type']);
+        $this->assertStringContainsString('A query must be at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', (string) $tooLong['data']['message']);
+
         /**
          * Test for SUCCESS
          */
