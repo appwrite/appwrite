@@ -5384,6 +5384,127 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/videos",
+    "title": "Videos",
+    "description": "Stream video and audio with Appwrite Videos. Turn files in Storage into adaptive HLS, DASH, and CMAF streams with encoding profiles, captions, and scrubbing thumbnails.",
+    "excerpt": "Appwrite **Videos** turns video and audio files in Storage into adaptive streams. You create a video from a file that is already in a bucket, encode it into a ladder of renditions, and hand the master manifest URL to any HLS or DASH player. The source file stays in its bucket, untouched. Each video has its own permissions, so who can watch a stream is separate from who can download the file. You manage videos under **Videos** in your project,…",
+    "breadcrumbs": [
+      "Videos",
+      "Getting started",
+      "Overview"
+    ]
+  },
+  {
+    "slug": "products/videos/captions",
+    "title": "Captions",
+    "description": "Add WebVTT or SubRip captions to an Appwrite video, use subtitle tracks embedded in the source, and set a default language for players.",
+    "excerpt": "**Captions** are text tracks attached to a video. Players pick them up from the master manifest and let viewers switch languages. A caption comes from a file in Storage, from the caption editor in the Console, or from the source file itself. Appwrite does not transcribe speech, so to caption a video that has no track yet, upload the output of a transcription service or write the track in the caption editor. Captions make a video usable with the sound…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Captions"
+    ]
+  },
+  {
+    "slug": "products/videos/inspector",
+    "title": "Inspect playback",
+    "description": "Use the Appwrite Videos inspector to watch a playback session's experience score, buffer, bitrate, network requests, and manifests.",
+    "excerpt": "The **inspector** shows what the player in the Console is doing while it plays a video. Use it to check how fast a stream starts, whether it rebuffers, which renditions it picks, and what the player actually requested. Open the inspector 1. Open **Videos** in your project and select a video with at least one ready rendition. 2. Select **Inspector** under **Playback** in the video menu. It opens in its own window next to the video, so you can watch…",
+    "breadcrumbs": [
+      "Videos",
+      "Guides",
+      "Inspect playback"
+    ]
+  },
+  {
+    "slug": "products/videos/outputs",
+    "title": "Outputs",
+    "description": "Learn the difference between HLS, DASH, and CMAF outputs in Appwrite Videos, where to find each master manifest, and which players support them.",
+    "excerpt": "An **output** is the streaming format a rendition is packaged in. Appwrite Videos packages renditions as **HLS**, **DASH**, or **CMAF**. Each output has a **master manifest**: the playlist a player loads first, which lists every rendition and caption track so the player can pick the best one. What a manifest looks like A manifest is a small text file. You rarely read one, but seeing it makes the rest of this page easier to follow. A simplified HLS master manifest…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Outputs"
+    ]
+  },
+  {
+    "slug": "products/videos/permissions",
+    "title": "Permissions",
+    "description": "Learn how Appwrite Videos controls who can watch a stream with per-video permissions, and which scopes manage videos and encoding profiles.",
+    "excerpt": "Appwrite Videos has two kinds of access: who can **watch** a stream, and who can **manage** videos, renditions, captions, and profiles. Playback Each video has its own permissions. Manifest, segment, caption, timeline, and thumbnail requests check the video's **read** permission. The source file's permissions in Storage are checked only when the video is created: whoever creates it must be able to read the file. After that, playback never looks at the file, so the source can stay private while its…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Permissions"
+    ]
+  },
+  {
+    "slug": "products/videos/play",
+    "title": "Play a video in your app",
+    "description": "Play Appwrite Videos streams on the web, Apple platforms, Android, Flutter, and React Native by loading the master manifest in a standard player.",
+    "excerpt": "Appwrite Videos streams work with standard HLS and DASH players. You give the player the master manifest URL, and it handles adaptive bitrate and captions on its own. There is no Appwrite SDK to add for playback. Open a video and select **Install**. Pick a platform, player, framework, and format to get install steps and code with your stream URL already filled in. **Copy prompt** copies the same setup as instructions for an AI coding agent. Before you start 1.…",
+    "breadcrumbs": [
+      "Videos",
+      "Guides",
+      "Play a video in your app"
+    ]
+  },
+  {
+    "slug": "products/videos/profiles",
+    "title": "Encoding profiles",
+    "description": "Learn how Appwrite Videos encoding profiles set the resolution, bitrate, and codec of each rendition, and how profile changes apply.",
+    "excerpt": "An **encoding profile** is a reusable encoding target. It sets the resolution, video bitrate, audio bitrate, and codec for every rendition encoded from it. Profiles belong to a project and are shared by all its videos. Together, the profiles you encode a video with form its **bitrate ladder**: a set of renditions from low to high quality that players switch between as bandwidth changes. Resolution and bitrate Two numbers decide how a rendition looks and how much data it needs:…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Encoding profiles"
+    ]
+  },
+  {
+    "slug": "products/videos/quick-start",
+    "title": "Start with Videos",
+    "description": "Create your first Appwrite video from a Storage file, encode an adaptive ladder, and play the stream in a browser.",
+    "excerpt": "In this quick start you create a video from a file, encode it into a few renditions, and play the stream with a web player. Create encoding profiles New projects have no encoding profiles, so create a small ladder first. You only do this once per project. 1. Sign in to Appwrite Cloud and open a project. 2. Open **Videos** in the sidebar and select **Encoding profiles**. 3. Click **Create profile**, choose the **360p** preset, and click **Create**. 4. Repeat…",
+    "breadcrumbs": [
+      "Videos",
+      "Getting started",
+      "Quick start"
+    ]
+  },
+  {
+    "slug": "products/videos/renditions",
+    "title": "Renditions",
+    "description": "Learn how Appwrite Videos encodes a rendition per profile and output, how rendition status and progress work, and how to retry a failed encode.",
+    "excerpt": "A **rendition** is one encoded copy of a video at the resolution and bitrate of one profile, packaged for one output. The renditions of a video make up the ladder that adaptive players switch between. Why several renditions Viewers watch on very different connections. If you only had a 1080p copy, someone on a slow mobile network would wait for it to buffer. With a ladder of renditions, the player starts on one it can fetch quickly, then moves up…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Renditions"
+    ]
+  },
+  {
+    "slug": "products/videos/timeline",
+    "title": "Timeline",
+    "description": "Learn how Appwrite Videos generates sprite sheets and a WebVTT index for scrubbing thumbnails, and how to load them in your player.",
+    "excerpt": "The **timeline** gives a video scrubbing thumbnails: viewers see a preview frame while they drag across the progress bar. It is made of **sprite sheets**, images that pack many thumbnails into a grid, plus a **WebVTT index** that maps each time range to a thumbnail inside a sprite. Why sprite sheets A one-hour video could need hundreds of thumbnails. Loading each as its own image would mean hundreds of requests the moment a viewer starts scrubbing. A sprite sheet packs…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Timeline"
+    ]
+  },
+  {
+    "slug": "products/videos/videos",
+    "title": "Videos",
+    "description": "Learn how an Appwrite video points at a Storage file, which metadata it holds, how its status is derived, and what deleting it removes.",
+    "excerpt": "A **video** is the root resource in Appwrite Videos. It points at a video or audio file in a Storage bucket and holds the media metadata probed from that file. Renditions, captions, and the timeline all belong to a video. Source file You create a video from a and a . The file must be a video or audio file, such as MP4, MOV, WebM, MKV, MP3, or M4A, and you must be able to read it. The source stays…",
+    "breadcrumbs": [
+      "Videos",
+      "Concepts",
+      "Videos"
+    ]
+  },
+  {
     "slug": "quick-starts/android",
     "title": "Start with Android (Kotlin)",
     "description": "Get started with Appwrite on Android and learn how to build secure and scalable apps using our powerful backend.",
