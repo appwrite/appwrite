@@ -34,6 +34,7 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
+use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -81,7 +82,8 @@ class Deletes extends Action
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
             ->inject('bus')
-            ->inject('executionStore');
+            ->inject('executionStore')
+            ->inject('locks');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -113,6 +115,7 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        callable $locks,
         UsageConnection $usageConnection,
     ): void {
         $payload = $message->getPayload();
@@ -147,6 +150,7 @@ class Deletes extends Action
             $publisherForUsage,
             $bus,
             $executionStore,
+            $locks,
         );
 
         // Sweep rows that landed between the purge and the delete. The
@@ -241,6 +245,7 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        ?callable $locks = null,
     ): void {
         $payload = $message->getPayload();
 
@@ -369,7 +374,7 @@ class Deletes extends Action
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteExpiredPushLedger($project, $getProjectDB);
-                $this->deleteExpiredUploads($project, $getProjectDB, $deviceForFiles);
+                $this->deleteExpiredUploads($project, $getProjectDB, $deviceForFiles, $locks);
                 $this->deleteOldDeployments($dbForPlatform, $publisherForDeletes, $project, $getProjectDB, $deploymentRetention);
                 $this->updateProcessingMigrations($project, $getProjectDB);
                 break;
@@ -2108,7 +2113,7 @@ class Deletes extends Action
         ]);
     }
 
-    private function deleteExpiredUploads(Document $project, callable $getProjectDB, Device $deviceForFiles): void
+    private function deleteExpiredUploads(Document $project, callable $getProjectDB, Device $deviceForFiles, ?callable $locks): void
     {
         Console::info('Delete expired uploads');
 
@@ -2117,35 +2122,61 @@ class Deletes extends Action
 
         $this->listByGroup('buckets', [
             Query::select(['$id', '$sequence']),
-        ], $dbForProject, function (Document $bucket) use ($dbForProject, $deviceForFiles, $expired) {
+        ], $dbForProject, function (Document $bucket) use ($project, $dbForProject, $deviceForFiles, $locks, $expired) {
             $collection = 'bucket_' . $bucket->getSequence();
 
             // Every chunk updates the document, and its signature stays empty until the upload completes.
             try {
                 $this->listByGroup($collection, [
-                    Query::select([...$this->selects, 'path', 'metadata', 'chunksTotal', 'chunksUploaded']),
+                    Query::select(['$id']),
                     Query::equal('signature', ['']),
                     Query::updatedBefore($expired),
-                ], $dbForProject, function (Document $file) use ($collection, $dbForProject, $deviceForFiles) {
-                    if ($file->getAttribute('chunksUploaded', 0) >= $file->getAttribute('chunksTotal', 1)) {
+                ], $dbForProject, function (Document $file) use ($project, $bucket, $collection, $dbForProject, $deviceForFiles, $locks, $expired) {
+                    $deleteUpload = function () use ($collection, $file, $dbForProject, $deviceForFiles, $expired): void {
+                        // Re-read under the lock: a chunk may have landed since the listing.
+                        $file = $dbForProject->getDocument($collection, $file->getId());
+                        if (
+                            $file->isEmpty()
+                            || $file->getAttribute('signature') !== ''
+                            || $file->getAttribute('chunksUploaded', 0) >= $file->getAttribute('chunksTotal', 1)
+                            || $file->getUpdatedAt() >= $expired
+                        ) {
+                            return;
+                        }
+
+                        $path = $file->getAttribute('path');
+                        try {
+                            $aborted = $deviceForFiles->abort($path, $file->getAttribute('metadata', [])['uploadId'] ?? '');
+                        } catch (NotFoundException) {
+                            $aborted = true;
+                        } catch (Throwable $th) {
+                            Console::warning('Failed to abort upload ' . $file->getId() . ': ' . $th->getMessage());
+                            $aborted = false;
+                        }
+
+                        // A stale upload ID can fail every abort, so fall back to removing the path and drop the row regardless.
+                        if (!$aborted) {
+                            try {
+                                $deviceForFiles->delete($path, true);
+                            } catch (Throwable $th) {
+                                Console::warning('Failed to delete upload ' . $file->getId() . ': ' . $th->getMessage());
+                            }
+                        }
+
+                        $dbForProject->deleteDocument($collection, $file->getId());
+                    };
+
+                    if (\is_null($locks)) {
+                        $deleteUpload();
                         return;
                     }
 
                     try {
-                        $aborted = $deviceForFiles->abort($file->getAttribute('path'), $file->getAttribute('metadata', [])['uploadId'] ?? '');
-                    } catch (NotFoundException) {
-                        $aborted = true;
-                    } catch (Throwable $th) {
-                        Console::warning('Failed to abort upload, keeping its row for the next run: ' . $file->getId() . ': ' . $th->getMessage());
-                        return;
+                        // Same key as the upload endpoint, so a resuming chunk and the cleanup never interleave.
+                        $locks('storage:file:' . $project->getId() . ':' . $bucket->getId() . ':' . $file->getId(), 60, fn () => $deleteUpload());
+                    } catch (LockContention) {
+                        Console::info('Upload in progress, skipping cleanup: ' . $file->getId());
                     }
-
-                    if (!$aborted) {
-                        Console::warning('Failed to abort upload, keeping its row for the next run: ' . $file->getId());
-                        return;
-                    }
-
-                    $dbForProject->deleteDocument($collection, $file->getId());
                 });
             } catch (Throwable $th) {
                 Console::error('Failed to delete expired uploads in bucket ' . $bucket->getId() . ': ' . $th->getMessage());
