@@ -281,7 +281,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
 
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                $sessionActive = !empty($jwtSessionId) && $user->sessionActive($jwtSessionId);
+                $sessionActive = !empty($jwtSessionId)
+                    && $user->sessionActive($jwtSessionId, Config::getParam('console')['auths']['sessionsInvalidatedAt'] ?? null)
+                    && $user->sessionFactorsMet($jwtSessionId);
 
                 $membershipExists = false;
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
