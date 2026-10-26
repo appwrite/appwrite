@@ -11,19 +11,16 @@ use PHPUnit\Framework\TestCase;
 final class UnsubscribePayloadTest extends TestCase
 {
     /**
-     * @return array<string, array{mixed, bool}>
+     * @return \Iterator<string, array{mixed, bool}>
      */
-    public static function payloads(): array
+    public static function payloads(): \Iterator
     {
         $subscription = ['subscriptionId' => 'sub'];
-
-        return [
-            'one subscription' => [[$subscription], true],
-            'subscriptions at the limit' => [\array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS, $subscription), true],
-            'subscriptions over the limit' => [\array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS + 1, $subscription), false],
-            'not a list' => [$subscription, false],
-            'empty subscription id' => [[['subscriptionId' => '']], false],
-        ];
+        yield 'one subscription' => [[$subscription], true];
+        yield 'subscriptions at the limit' => [\array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS, $subscription), true];
+        yield 'subscriptions over the limit' => [\array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS + 1, $subscription), false];
+        yield 'not a list' => [$subscription, false];
+        yield 'empty subscription id' => [[['subscriptionId' => '']], false];
     }
 
     #[DataProvider('payloads')]

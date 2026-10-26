@@ -900,10 +900,12 @@ final class RealtimeCustomClientTest extends Scope
          * Test for FAILURE
          */
         $client = $this->getWebsocket(['documents'], $headers);
-        $frames = $this->receiveUntilClosed($client);
-        $this->assertSame('error', $frames[0]['type'] ?? null);
-        $this->assertSame(1008, $frames[0]['data']['code'] ?? null);
-        $this->assertSame('Too many open connections. Close an existing connection and try again.', $frames[0]['data']['message'] ?? null);
+        // The client connects on its first receive, so read the error before waiting for the close.
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type'] ?? null);
+        $this->assertSame(1008, $response['data']['code'] ?? null);
+        $this->assertSame('Too many open connections. Close an existing connection and try again.', $response['data']['message'] ?? null);
+        $this->receiveUntilClosed($client);
 
         /**
          * Test for SUCCESS
@@ -940,10 +942,12 @@ final class RealtimeCustomClientTest extends Scope
          */
         $channels[] = 'documents.' . (APP_LIMIT_ARRAY_PARAMS_SIZE + 1);
         $client = $this->getWebsocket($channels, $headers);
-        $frames = $this->receiveUntilClosed($client);
-        $this->assertSame('error', $frames[0]['type'] ?? null);
-        $this->assertSame(1008, $frames[0]['data']['code'] ?? null);
-        $this->assertSame('channels must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.', $frames[0]['data']['message'] ?? null);
+        // The client connects on its first receive, so read the error before waiting for the close.
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type'] ?? null);
+        $this->assertSame(1008, $response['data']['code'] ?? null);
+        $this->assertSame('channels must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.', $response['data']['message'] ?? null);
+        $this->receiveUntilClosed($client);
     }
 
     public function testConnectionRequiresAllFactors(): void

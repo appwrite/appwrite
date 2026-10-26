@@ -615,19 +615,19 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $tooManyChannels = $send('subscribe', [['channels' => \array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE + 1, 'documents')]]);
         $this->assertSame('error', $tooManyChannels['type']);
         $this->assertSame(1003, $tooManyChannels['data']['code']);
-        $this->assertStringContainsString('channels must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.', $tooManyChannels['data']['message']);
+        $this->assertStringContainsString('channels must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.', (string) $tooManyChannels['data']['message']);
 
         $tooManyQueries = $send('subscribe', [['channels' => ['documents'], 'queries' => \array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE + 1, $select)]]);
         $this->assertSame('error', $tooManyQueries['type']);
-        $this->assertStringContainsString('queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.', $tooManyQueries['data']['message']);
+        $this->assertStringContainsString('queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.', (string) $tooManyQueries['data']['message']);
 
         $tooManySubscriptions = $send('subscribe', \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS + 1, ['channels' => ['documents']]));
         $this->assertSame('error', $tooManySubscriptions['type']);
-        $this->assertStringContainsString('Payload must contain at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.', $tooManySubscriptions['data']['message']);
+        $this->assertStringContainsString('Payload must contain at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.', (string) $tooManySubscriptions['data']['message']);
 
         $tooManyUnsubscribes = $send('unsubscribe', \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS + 1, ['subscriptionId' => 'sub']));
         $this->assertSame('error', $tooManyUnsubscribes['type']);
-        $this->assertStringContainsString('Payload must contain at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.', $tooManyUnsubscribes['data']['message']);
+        $this->assertStringContainsString('Payload must contain at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.', (string) $tooManyUnsubscribes['data']['message']);
 
         /**
          * Test for SUCCESS
