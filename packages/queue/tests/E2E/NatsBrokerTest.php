@@ -12,6 +12,7 @@ use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\JetStreamException;
 use Utopia\NATS\Exception\NatsException;
 use Utopia\NATS\Exception\NoRespondersException;
+use Utopia\NATS\Headers;
 use Utopia\NATS\JetStream\ConsumerConfig;
 use Utopia\NATS\JetStream\DiscardPolicy;
 use Utopia\NATS\JetStream\JetStream;
@@ -1252,6 +1253,64 @@ final class NatsBrokerTest extends TestCase
 
         $this->assertSame(1, $js->getStreamInfo($stream)->state->messages, 'only the original, not re-driven');
         $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'the dead letter stays');
+    }
+
+    /**
+     * A dead letter names its original by sequence and stored time, in the form a
+     * delivery's metadata carries it, which is what reject() has: retry() finds the
+     * original still on the work stream and deletes it before re-driving the copy.
+     */
+    public function testRetryDeletesTheOriginalOfADeadLetter(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $stream = 'Q_' . strtoupper($this->queue->name);
+        $js = Connection::connect($url)->jetStream();
+
+        $this->broker->publish($this->queue, ['task' => 'doomed']);
+        $delivery = null;
+        foreach ($js->getConsumer($stream, 'worker')->fetch(1, 3.0, false) as $delivery) {
+        }
+        $this->assertInstanceOf(JetStreamMessage::class, $delivery);
+        $metadata = $delivery->metadata();
+        $headers = new Headers();
+        $headers->set('Utopia-Queue-Work-Sequence', (string) $metadata->streamSequence);
+        $headers->set('Utopia-Queue-Work-Time', $metadata->timestamp);
+        $js->publish('q.' . $this->queue->name . '.dead.copy', $delivery->getData(), headers: $headers);
+
+        $this->broker->retry($this->queue);
+
+        $this->assertSame(0, $js->getStreamInfo($stream . '_DEAD')->state->messages);
+        $state = $js->getStreamInfo($stream)->state;
+        $this->assertSame(1, $state->messages, 'the re-driven copy, without the original');
+        $this->assertGreaterThan($metadata->streamSequence, $state->firstSeq);
+    }
+
+    /**
+     * A recreated work stream numbers its messages from 1 again. One stored there since,
+     * even with the same bytes, is not the original of an older dead letter.
+     */
+    public function testRetryLeavesAMessageThatReusesTheOriginalsSequence(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $stream = 'Q_' . strtoupper($this->queue->name);
+        $js = Connection::connect($url)->jetStream();
+
+        $this->broker->publish($this->queue, ['task' => 'doomed']);
+        $message = $this->broker->receive($this->queue, 2)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $message);
+        $this->broker->reject($this->queue, $message->terminal());
+        $data = $js->getMessage($stream . '_DEAD', 1)->data;
+
+        $js->deleteStream($stream);
+        $this->brokers[] = $broker = new Nats(Connection::connect($url), ackWait: 2.0, maxDeliver: 3);
+        $broker->retry($this->queue, 0); // provisions the work stream afresh
+        $js->publish('q.' . $this->queue->name . '.normal', $data);
+        $this->assertSame(1, $js->getStreamInfo($stream)->state->firstSeq);
+
+        $broker->retry($this->queue);
+
+        $this->assertSame(2, $js->getStreamInfo($stream)->state->messages, 'the newer message and the re-driven copy');
+        $this->assertSame($data, $js->getMessage($stream, 1)->data);
     }
 
     /**

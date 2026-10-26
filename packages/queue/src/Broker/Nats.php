@@ -94,6 +94,9 @@ class Nats implements Synchronous, Consumer, Bounded
 
     /** On a dead letter, the work-stream sequence of the message it is a copy of. */
     private const string WORK_SEQUENCE = 'Utopia-Queue-Work-Sequence';
+
+    /** On a dead letter, when the work stream stored that message, in nanoseconds. */
+    private const string WORK_TIME = 'Utopia-Queue-Work-Time';
     private const string ADVISORY_MAX_DELIVERIES = '$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES';
 
     // Queue group for the advisory subscription, so one worker per queue acts
@@ -1390,12 +1393,13 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($terminal || $numDelivered >= $this->maxDeliver) {
             // Exhausted or terminal: park on the dead stream and term it. A NAK would
             // hold a maxAckPending slot for its whole backoff.
-            $sequence = $jsMessage->metadata()->streamSequence;
+            $metadata = $jsMessage->metadata();
             $this->retryingCommand(fn () => $this->deadLetter(
                 $this->commandsJs(),
                 $queue,
-                $pid . '.dead.' . $sequence,
-                $sequence,
+                $pid . '.dead.' . $metadata->streamSequence,
+                $metadata->streamSequence,
+                $metadata->timestamp,
                 $jsMessage->getData(),
             ), $deadline);
             $this->retryingCommand(fn () => $this->onCommands($jsMessage)->term($terminal ? 'permanent failure' : 'max deliveries exceeded'), $deadline);
@@ -1506,19 +1510,20 @@ class Nats implements Synchronous, Consumer, Bounded
      * Re-driving it then, and removing the dead copy, would free its dead-letter subject
      * for the next reap to copy the original again, and the job would run twice. So the
      * original goes first, and a dead letter whose original cannot be deleted stays.
-     * Matched on the data as well as the sequence, because a recreated work stream
-     * reuses sequences.
+     * Matched on when it was stored as well as its sequence, because a recreated work
+     * stream reuses sequences, and a message stored there since is not the original.
      */
     private function deleteOriginal(Queue $queue, JetStreamMessage $dead): void
     {
         $sequence = $dead->getHeaders()?->get(self::WORK_SEQUENCE);
-        if ($sequence === null) {
-            return; // stored by a release before the header, or parked: no original kept
+        $time = $dead->getHeaders()?->get(self::WORK_TIME);
+        if ($sequence === null || $time === null) {
+            return; // stored by a release before the headers, or parked: no original kept
         }
 
         try {
             $stored = $this->js()->getMessage($this->workStream($queue), (int) $sequence);
-            if ($stored->data === $dead->getData()) {
+            if ($stored->time !== null && $this->nanoseconds($stored->time) === $time) {
                 $this->js()->deleteMessage($this->workStream($queue), $stored->sequence);
             }
         } catch (JetStreamException $e) {
@@ -2098,7 +2103,15 @@ class Nats implements Synchronous, Consumer, Bounded
         }
         $pid = \is_array($data) && \is_string($data['pid'] ?? null) ? $data['pid'] : $this->workStream($queue);
 
-        $this->deadLetter($js, $queue, $pid . '.dead.' . $stored->sequence, $stored->sequence, $stored->data, $headers);
+        $this->deadLetter(
+            $js,
+            $queue,
+            $pid . '.dead.' . $stored->sequence,
+            $stored->sequence,
+            $stored->time === null ? null : $this->nanoseconds($stored->time),
+            $stored->data,
+            $headers,
+        );
 
         try {
             $js->deleteMessage($this->workStream($queue), $stored->sequence);
@@ -2120,12 +2133,16 @@ class Nats implements Synchronous, Consumer, Bounded
      * the copy is already made. The data is in the subject as well as the id, so a work
      * stream recreated under a reused id and sequence is not taken for the old one.
      *
-     * Each copy names the sequence it was copied from, for deleteOriginal().
+     * Each copy names the message it was copied from, by sequence and stored time, for
+     * deleteOriginal().
      */
-    private function deadLetter(JetStream $js, Queue $queue, string $id, int $sequence, string $data, ?Headers $headers = null): void
+    private function deadLetter(JetStream $js, Queue $queue, string $id, int $sequence, ?string $time, string $data, ?Headers $headers = null): void
     {
         $headers ??= new Headers();
         $headers->set(self::WORK_SEQUENCE, (string) $sequence);
+        if ($time !== null) {
+            $headers->set(self::WORK_TIME, $time);
+        }
 
         try {
             $js->publish(
@@ -2140,6 +2157,20 @@ class Nats implements Synchronous, Consumer, Bounded
                 throw $e;
             }
         }
+    }
+
+    /**
+     * A stored message's time, which the server reports in RFC 3339 with up to nine
+     * fraction digits, as the nanoseconds since the epoch a delivery's metadata carries.
+     */
+    private function nanoseconds(string $time): string
+    {
+        if (preg_match('/^(.+?)(?:\.(\d{1,9}))?(Z|[+-]\d{2}:\d{2})$/', $time, $parts) !== 1) {
+            throw new \UnexpectedValueException("Unreadable stream message time \"{$time}\"");
+        }
+        $seconds = new \DateTimeImmutable($parts[1] . $parts[3])->getTimestamp();
+
+        return (string) ($seconds * 1_000_000_000 + (int) str_pad($parts[2], 9, '0'));
     }
 
     /** Logical queue identity (namespace + name); used for cache keys and stream naming. */
