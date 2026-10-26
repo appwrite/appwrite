@@ -50,7 +50,7 @@ Entire is available as a Git provider on [Appwrite Cloud](/sign-up). The self-ho
 
 To deploy from Entire to Appwrite, there are several steps you must complete:
 
-## Step 1: Create a repository on Entire
+## Step 1: Create or mirror a repository on Entire
 
 Appwrite can't create repositories on Entire, so create the repository and push your code before you connect it. Entire repositories live inside projects, and each Appwrite installation connects to one Entire project, so keep the repositories you plan to deploy in the same project when you can.
 
@@ -64,6 +64,14 @@ git push -u origin main
 ```
 
 You can also create the project and the repository on Entire. Entire's [repository docs](https://docs.entire.com/guides/repositories/entire-native-repositories) cover regions in more detail.
+
+If your code lives on GitHub, you don't have to move it. [Mirror the repository on Entire](https://docs.entire.com/guides/repositories/mirrors) and Appwrite deploys from the mirror. A mirror belongs to the Entire project for its GitHub owner, so choose that project when you connect Entire in the next step. Appwrite only deploys pushes that go through Entire, which forwards them to GitHub, so point your local clone at the mirror and push there:
+
+```bash
+entire repo mirror add /gh/acme/storefront
+entire repo remote add origin --override /gh/acme/storefront
+git push -u origin main
+```
 
 ## Step 2: Connect Entire to your Appwrite project
 
