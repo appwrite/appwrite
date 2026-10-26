@@ -902,21 +902,23 @@ final class MessagingTest extends TestCase
         $values = \array_map(fn (int $i) => 'v' . $i, \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE));
         $this->assertCount(1, Realtime::convertQueries([Query::equal('id', $values)->toString()]));
 
-        $nested = Query::or(\array_map(fn (int $i) => Query::equal('f' . $i, ['x']), \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE - 1)));
-        $this->assertSame(APP_LIMIT_ARRAY_PARAMS_SIZE, Realtime::countQueries(Realtime::convertQueries([$nested->toString()])));
+        // Four or() of 24 equals are 100 queries once the nested ones are counted.
+        $or = fn () => Query::or(\array_map(fn (int $i) => Query::equal('f' . $i, ['x']), \range(1, 24)))->toString();
+        $nested = [$or(), $or(), $or(), $or()];
+        $this->assertSame(APP_LIMIT_ARRAY_PARAMS_SIZE, Realtime::countQueries(Realtime::convertQueries($nested)));
 
-        try {
-            Realtime::convertQueries([Query::equal('id', [...$values, 'one more'])->toString()]);
-            $this->fail('Expected the value limit to be enforced.');
-        } catch (QueryException $e) {
-            $this->assertSame('A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.', $e->getMessage());
+        foreach ([
+            'A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.' => [Query::equal('id', [...$values, 'one more'])->toString()],
+            'A query must be at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.' => [Query::equal('id', [\str_repeat('x', APP_LIMIT_ARRAY_ELEMENT_SIZE)])->toString()],
+            'A subscription must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries, counting the ones nested in and/or.' => [...$nested, Query::equal('a', ['b'])->toString()],
+        ] as $message => $queries) {
+            try {
+                Realtime::convertQueries($queries);
+                $this->fail('Expected: ' . $message);
+            } catch (QueryException $e) {
+                $this->assertSame($message, $e->getMessage());
+            }
         }
-
-        // Queries nested in and/or count, so one large or() cannot stand in for many queries.
-        $this->expectException(QueryException::class);
-        $this->expectExceptionMessage('A subscription must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries, counting the ones nested in and/or.');
-        $tooMany = Query::or(\array_map(fn (int $i) => Query::equal('f' . $i, ['x']), \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE)));
-        Realtime::convertQueries([$tooMany->toString()]);
     }
 
     public function testCountQueriesIncludesNested(): void
