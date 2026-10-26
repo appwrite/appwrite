@@ -3559,12 +3559,6 @@ parameters:
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Parameter \#1 \$databaseType of static method Utopia\\Migration\\Sources\\Appwrite\:\:getDatabase\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sources/Appwrite.php
-
-		-
 			message: '#^Parameter \#1 \$dbForProject of class Utopia\\Migration\\Sources\\Appwrite\\Reader\\Database constructor expects Utopia\\Database\\Database, Utopia\\Database\\Database\|null given\.$#'
 			identifier: argument.type
 			count: 1
@@ -3736,12 +3730,6 @@ parameters:
 			message: '#^Parameter \#1 \$string of function strlen expects string, array\<mixed\>\|string given\.$#'
 			identifier: argument.type
 			count: 2
-			path: src/Sources/Appwrite.php
-
-		-
-			message: '#^Parameter \#1 \$types of static method Utopia\\Migration\\Resource\:\:isSupported\(\) expects array\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
