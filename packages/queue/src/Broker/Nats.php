@@ -91,6 +91,9 @@ class Nats implements Synchronous, Consumer, Bounded
     private const string CONSUMER_WORK = 'worker';
     private const string CONSUMER_RETRY = 'retry';
     private const string CONTENT_TYPE = 'Content-Type';
+
+    /** On a dead letter, the work-stream sequence of the message it is a copy of. */
+    private const string WORK_SEQUENCE = 'Utopia-Queue-Work-Sequence';
     private const string ADVISORY_MAX_DELIVERIES = '$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES';
 
     // Queue group for the advisory subscription, so one worker per queue acts
@@ -1387,10 +1390,12 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($terminal || $numDelivered >= $this->maxDeliver) {
             // Exhausted or terminal: park on the dead stream and term it. A NAK would
             // hold a maxAckPending slot for its whole backoff.
+            $sequence = $jsMessage->metadata()->streamSequence;
             $this->retryingCommand(fn () => $this->deadLetter(
                 $this->commandsJs(),
                 $queue,
-                $pid . '.dead.' . $jsMessage->metadata()->streamSequence,
+                $pid . '.dead.' . $sequence,
+                $sequence,
                 $jsMessage->getData(),
             ), $deadline);
             $this->retryingCommand(fn () => $this->onCommands($jsMessage)->term($terminal ? 'permanent failure' : 'max deliveries exceeded'), $deadline);
@@ -1465,17 +1470,62 @@ class Nats implements Synchronous, Consumer, Bounded
             ));
 
             $remaining = $limit ?? $consumer->info(true)->numPending;
+            $failure = null;
             while ($remaining > 0) {
                 $jsMessage = $this->fetch($consumer, 1, 1.0, false)[0] ?? null;
                 if (!$jsMessage instanceof JetStreamMessage) {
                     break;
                 }
+                $remaining--;
+
+                try {
+                    $this->deleteOriginal($queue, $jsMessage);
+                } catch (JetStreamException $e) {
+                    // Left unacknowledged on the dead stream, for a later retry once
+                    // the work stream lets go of the original.
+                    $failure ??= $e;
+
+                    continue;
+                }
+
                 // Re-drive onto the work queue, then remove it from the dead stream.
                 $this->js()->publish($this->workSubject($queue), $jsMessage->getData());
                 $jsMessage->ackSync();
-                $remaining--;
+            }
+
+            if ($failure !== null) {
+                throw $failure;
             }
         });
+    }
+
+    /**
+     * Delete the work-stream message a dead letter was copied from, if it is still there.
+     *
+     * Only a copy whose delete from the work stream failed leaves the original behind.
+     * Re-driving it then, and removing the dead copy, would free its dead-letter subject
+     * for the next reap to copy the original again, and the job would run twice. So the
+     * original goes first, and a dead letter whose original cannot be deleted stays.
+     * Matched on the data as well as the sequence, because a recreated work stream
+     * reuses sequences.
+     */
+    private function deleteOriginal(Queue $queue, JetStreamMessage $dead): void
+    {
+        $sequence = $dead->getHeaders()?->get(self::WORK_SEQUENCE);
+        if ($sequence === null) {
+            return; // stored by a release before the header, or parked: no original kept
+        }
+
+        try {
+            $stored = $this->js()->getMessage($this->workStream($queue), (int) $sequence);
+            if ($stored->data === $dead->getData()) {
+                $this->js()->deleteMessage($this->workStream($queue), $stored->sequence);
+            }
+        } catch (JetStreamException $e) {
+            if ($e->apiError?->code !== 404) {
+                throw $e;
+            }
+        }
     }
 
     /**
@@ -2048,7 +2098,7 @@ class Nats implements Synchronous, Consumer, Bounded
         }
         $pid = \is_array($data) && \is_string($data['pid'] ?? null) ? $data['pid'] : $this->workStream($queue);
 
-        $this->deadLetter($js, $queue, $pid . '.dead.' . $stored->sequence, $stored->data, $headers);
+        $this->deadLetter($js, $queue, $pid . '.dead.' . $stored->sequence, $stored->sequence, $stored->data, $headers);
 
         try {
             $js->deleteMessage($this->workStream($queue), $stored->sequence);
@@ -2069,9 +2119,14 @@ class Nats implements Synchronous, Consumer, Bounded
      * second message there for as long as the first is stored, and that refusal means
      * the copy is already made. The data is in the subject as well as the id, so a work
      * stream recreated under a reused id and sequence is not taken for the old one.
+     *
+     * Each copy names the sequence it was copied from, for deleteOriginal().
      */
-    private function deadLetter(JetStream $js, Queue $queue, string $id, string $data, ?Headers $headers = null): void
+    private function deadLetter(JetStream $js, Queue $queue, string $id, int $sequence, string $data, ?Headers $headers = null): void
     {
+        $headers ??= new Headers();
+        $headers->set(self::WORK_SEQUENCE, (string) $sequence);
+
         try {
             $js->publish(
                 $this->deadSubject($queue) . '.' . hash('xxh128', $id . "\n" . $data),

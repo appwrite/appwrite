@@ -1223,6 +1223,38 @@ final class NatsBrokerTest extends TestCase
     }
 
     /**
+     * Re-driving a dead letter while its original is still on the work stream would free
+     * its dead-letter subject for the next reap to copy the original again, and the job
+     * would run twice. Until the original can be deleted, the dead letter stays.
+     */
+    public function testRetryKeepsADeadLetterWhoseOriginalCannotBeDeleted(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $stream = 'Q_' . strtoupper($this->queue->name);
+        $js = Connection::connect($url)->jetStream();
+        $this->brokers[] = $broker = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
+
+        $broker->publish($this->queue, ['poison' => true]);
+        $this->strand($broker, $url, $stream);
+        $this->refuseDeletes($js, $stream);
+        $this->assertSame(0, $broker->reap($this->queue), 'the first reading moves nothing');
+        try {
+            $broker->reap($this->queue);
+            $this->fail('the delete was refused');
+        } catch (JetStreamException) {
+        }
+
+        try {
+            $broker->retry($this->queue);
+            $this->fail('the original could not be deleted');
+        } catch (JetStreamException) {
+        }
+
+        $this->assertSame(1, $js->getStreamInfo($stream)->state->messages, 'only the original, not re-driven');
+        $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'the dead letter stays');
+    }
+
+    /**
      * Two queues can hold a message under the same id, at the same sequence: a delete
      * that failed on one says nothing about whether the other was copied.
      */
