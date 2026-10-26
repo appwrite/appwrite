@@ -3628,13 +3628,18 @@ Http::post('/v1/account/jwts')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('project')
+    ->inject('console')
     ->inject('mode')
-    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, string $mode) {
+    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, Document $console, string $mode) {
         if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
             throw new Exception(Exception::USER_JWT_CREATION_DENIED);
         }
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
 
         if (!$sessionId) {
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);

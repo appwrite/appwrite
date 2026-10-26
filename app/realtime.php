@@ -767,7 +767,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
 
                             if ($userId === '' || $sessionId === null) {
-                                continue; // Guests and key connections hold no session to invalidate.
+                                continue; // Guests, keys and admin-mode connections hold no project session to invalidate.
                             }
 
                             /** @var User $user */
