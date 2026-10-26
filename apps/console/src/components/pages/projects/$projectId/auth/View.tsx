@@ -1565,6 +1565,7 @@ export function View({
                                 emailVerification: user.emailVerification,
                                 phoneVerification: user.phoneVerification,
                                 status: user.status as boolean | null,
+                                targets: user.targets,
                               }}
                             >
                               <TableRow
@@ -1903,6 +1904,7 @@ export function View({
                           emailVerification: user.emailVerification,
                           phoneVerification: user.phoneVerification,
                           status: user.status as boolean | null,
+                          targets: user.targets,
                         }}
                       >
                         <Link
