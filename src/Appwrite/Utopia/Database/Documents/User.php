@@ -139,11 +139,15 @@ class User extends Document
      *
      * @return bool|string
      */
-    public function sessionVerify(string $secret, Token $proofForToken)
+    public function sessionVerify(string $secret, Token $proofForToken, ?string $invalidatedAt)
     {
         $sessions = $this->getAttribute('sessions', []);
 
         foreach ($sessions as $session) {
+            if ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt) {
+                continue;
+            }
+
             if (
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
@@ -164,11 +168,15 @@ class User extends Document
      * Used by JWT authentication, which binds to a session ID rather than a
      * session secret.
      */
-    public function sessionActive(string $sessionId): bool
+    public function sessionActive(string $sessionId, ?string $invalidatedAt): bool
     {
         $session = $this->getSession($sessionId);
 
         if ($session === null) {
+            return false;
+        }
+
+        if ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt) {
             return false;
         }
 
