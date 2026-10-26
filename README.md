@@ -23,8 +23,8 @@ Find out more at [https://appwrite.io](https://appwrite.io).
 Table of Contents:
 
 - [Products](#products)
-- [Installation \& Setup](#installation--setup)
-- [Self-Hosting](#self-hosting)
+- [Installation & Setup](#installation--setup)
+  - [Self-Hosting](#self-hosting)
   - [Unix](#unix)
   - [Windows](#windows)
     - [CMD](#cmd)
@@ -98,6 +98,7 @@ docker run -it --rm ^
     --entrypoint="install" ^
     appwrite/appwrite:2.6.2
 ```
+
 
 #### PowerShell
 
