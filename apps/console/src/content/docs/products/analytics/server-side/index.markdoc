@@ -21,6 +21,200 @@ Keep the key on your server. A key with `analytics.write` can also create, chang
 Call `createEvent` with the property ID, the event name, and the URL the event belongs to.
 
 {% multicode %}
+```server-nodejs
+import { Client, Analytics } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const analytics = new Analytics(client);
+
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'purchase_completed',
+    url: 'https://example.com/checkout',
+    userId: '<USER_ID>',
+    ip: '<VISITOR_IP>',
+    userAgent: '<VISITOR_USER_AGENT>',
+    props: ['plan', 'pro', 'interval', 'yearly'],
+});
+```
+```server-deno
+import { Client, Analytics } from 'npm:node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const analytics = new Analytics(client);
+
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'purchase_completed',
+    url: 'https://example.com/checkout',
+    userId: '<USER_ID>',
+    ip: '<VISITOR_IP>',
+    userAgent: '<VISITOR_USER_AGENT>',
+    props: ['plan', 'pro', 'interval', 'yearly'],
+});
+```
+```server-php
+<?php
+
+require 'vendor/autoload.php';
+
+use Appwrite\Client;
+use Appwrite\Services\Analytics;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$analytics = new Analytics($client);
+
+$analytics->createEvent(
+    propertyId: '<PROPERTY_ID>',
+    name: 'purchase_completed',
+    url: 'https://example.com/checkout',
+    userId: '<USER_ID>',
+    ip: '<VISITOR_IP>',
+    userAgent: '<VISITOR_USER_AGENT>',
+    props: ['plan', 'pro', 'interval', 'yearly'],
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.analytics import Analytics
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+analytics = Analytics(client)
+
+analytics.create_event(
+    property_id='<PROPERTY_ID>',
+    name='purchase_completed',
+    url='https://example.com/checkout',
+    user_id='<USER_ID>',
+    ip='<VISITOR_IP>',
+    user_agent='<VISITOR_USER_AGENT>',
+    props=['plan', 'pro', 'interval', 'yearly'],
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+analytics = Analytics.new(client)
+
+analytics.create_event(
+    property_id: '<PROPERTY_ID>',
+    name: 'purchase_completed',
+    url: 'https://example.com/checkout',
+    user_id: '<USER_ID>',
+    ip: '<VISITOR_IP>',
+    user_agent: '<VISITOR_USER_AGENT>',
+    props: ['plan', 'pro', 'interval', 'yearly']
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+var client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+var analytics = new Analytics(client);
+
+await analytics.CreateEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "purchase_completed",
+    url: "https://example.com/checkout",
+    userId: "<USER_ID>",
+    ip: "<VISITOR_IP>",
+    userAgent: "<VISITOR_USER_AGENT>",
+    props: new List<string> { "plan", "pro", "interval", "yearly" }
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Future<void> main() async {
+  final client = Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>')
+      .setKey('<API_KEY>');
+
+  final analytics = Analytics(client);
+
+  await analytics.createEvent(
+    propertyId: '<PROPERTY_ID>',
+    name: 'purchase_completed',
+    url: 'https://example.com/checkout',
+    userId: '<USER_ID>',
+    ip: '<VISITOR_IP>',
+    userAgent: '<VISITOR_USER_AGENT>',
+    props: ['plan', 'pro', 'interval', 'yearly'],
+  );
+}
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Analytics
+
+suspend fun main() {
+    val client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<API_KEY>")
+
+    val analytics = Analytics(client)
+
+    analytics.createEvent(
+        propertyId = "<PROPERTY_ID>",
+        name = "purchase_completed",
+        url = "https://example.com/checkout",
+        userId = "<USER_ID>",
+        ip = "<VISITOR_IP>",
+        userAgent = "<VISITOR_USER_AGENT>",
+        props = listOf("plan", "pro", "interval", "yearly"),
+    )
+}
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let analytics = Analytics(client)
+
+_ = try await analytics.createEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "purchase_completed",
+    url: "https://example.com/checkout",
+    props: ["plan", "pro", "interval", "yearly"],
+    userId: "<USER_ID>",
+    ip: "<VISITOR_IP>",
+    userAgent: "<VISITOR_USER_AGENT>"
+)
+```
 ```server-go
 package main
 
@@ -53,6 +247,38 @@ func main() {
     }
 }
 ```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Analytics;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let analytics = Analytics::new(&client);
+
+    analytics.create_event(
+        "<PROPERTY_ID>",
+        "purchase_completed",
+        "https://example.com/checkout",
+        None, // domain
+        None, // referrer
+        None, // screen_width
+        None, // session_hash
+        None, // scroll_depth
+        None, // engagement_time
+        Some(vec!["plan".into(), "pro".into(), "interval".into(), "yearly".into()]),
+        Some("<USER_ID>"),
+        Some("<VISITOR_IP>"),
+        Some("<VISITOR_USER_AGENT>"),
+    ).await?;
+
+    Ok(())
+}
+```
 ```curl
 curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
     -H 'Content-Type: application/json' \
@@ -69,7 +295,7 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPER
 ```
 {% /multicode %}
 
-From any other language, send the same request with your HTTP client. The event takes the same parameters as a client-side event. See [Send events over REST](/docs/products/analytics/rest#parameters).
+The event takes the same parameters as a client-side event. See [Send events over REST](/docs/products/analytics/rest#parameters).
 
 # Attribute the event to a visitor {% #visitor %}
 

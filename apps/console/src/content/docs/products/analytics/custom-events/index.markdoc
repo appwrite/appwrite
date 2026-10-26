@@ -23,6 +23,78 @@ tracking.event(
   props: {'plan': 'pro', 'source': 'pricing_page'},
 );
 ```
+```server-nodejs
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+});
+```
+```server-deno
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+});
+```
+```server-php
+$analytics->createEvent(
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+);
+```
+```server-python
+analytics.create_event(
+    property_id='<PROPERTY_ID>',
+    name='signup_completed',
+    url='https://example.com/signup',
+    props=['plan', 'pro', 'source', 'pricing_page'],
+)
+```
+```server-ruby
+analytics.create_event(
+    property_id: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page']
+)
+```
+```server-dotnet
+await analytics.CreateEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "signup_completed",
+    url: "https://example.com/signup",
+    props: new List<string> { "plan", "pro", "source", "pricing_page" }
+);
+```
+```server-dart
+await analytics.createEvent(
+  propertyId: '<PROPERTY_ID>',
+  name: 'signup_completed',
+  url: 'https://example.com/signup',
+  props: ['plan', 'pro', 'source', 'pricing_page'],
+);
+```
+```server-kotlin
+analytics.createEvent(
+    propertyId = "<PROPERTY_ID>",
+    name = "signup_completed",
+    url = "https://example.com/signup",
+    props = listOf("plan", "pro", "source", "pricing_page"),
+)
+```
+```server-swift
+_ = try await analytics.createEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "signup_completed",
+    url: "https://example.com/signup",
+    props: ["plan", "pro", "source", "pricing_page"]
+)
+```
 ```server-go
 _, err := analytics.CreateEvent(
     "<PROPERTY_ID>",
@@ -33,6 +105,23 @@ _, err := analytics.CreateEvent(
 if err != nil {
     log.Fatal(err)
 }
+```
+```server-rust
+analytics.create_event(
+    "<PROPERTY_ID>",
+    "signup_completed",
+    "https://example.com/signup",
+    None, // domain
+    None, // referrer
+    None, // screen_width
+    None, // session_hash
+    None, // scroll_depth
+    None, // engagement_time
+    Some(vec!["plan".into(), "pro".into(), "source".into(), "pricing_page".into()]),
+    None, // user_id
+    None, // ip
+    None, // user_agent
+).await?;
 ```
 ```curl
 curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \

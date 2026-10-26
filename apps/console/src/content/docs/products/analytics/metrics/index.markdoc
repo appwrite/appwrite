@@ -59,6 +59,216 @@ Read metrics with `listMetrics` and an API key that has the `analytics.read` sco
 This example lists the five countries with the most visitors over the last seven days.
 
 {% multicode %}
+```server-nodejs
+import { Client, Analytics, AnalyticsDimension } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const analytics = new Analytics(client);
+
+const countries = await analytics.listMetrics({
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension.Country],
+    dateRange: '7d',
+    limit: 5,
+});
+
+for (const row of countries.metrics) {
+    console.log(row.value, row.visitors);
+}
+```
+```server-deno
+import { Client, Analytics, AnalyticsDimension } from 'npm:node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const analytics = new Analytics(client);
+
+const countries = await analytics.listMetrics({
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension.Country],
+    dateRange: '7d',
+    limit: 5,
+});
+
+for (const row of countries.metrics) {
+    console.log(row.value, row.visitors);
+}
+```
+```server-php
+<?php
+
+require 'vendor/autoload.php';
+
+use Appwrite\Client;
+use Appwrite\Enums\AnalyticsDimension;
+use Appwrite\Services\Analytics;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$analytics = new Analytics($client);
+
+$countries = $analytics->listMetrics(
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension::COUNTRY()],
+    dateRange: '7d',
+    limit: 5,
+);
+
+foreach ($countries->metrics as $row) {
+    echo $row->value, ' ', $row->visitors, PHP_EOL;
+}
+```
+```server-python
+from appwrite.client import Client
+from appwrite.enums.analytics_dimension import AnalyticsDimension
+from appwrite.services.analytics import Analytics
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+analytics = Analytics(client)
+
+countries = analytics.list_metrics(
+    property_id='<PROPERTY_ID>',
+    dimensions=[AnalyticsDimension.COUNTRY],
+    date_range='7d',
+    limit=5,
+)
+
+for row in countries.metrics:
+    print(row.value, row.visitors)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+analytics = Analytics.new(client)
+
+countries = analytics.list_metrics(
+    property_id: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension::COUNTRY],
+    date_range: '7d',
+    limit: 5
+)
+
+countries.metrics.each do |row|
+    puts "#{row.value} #{row.visitors}"
+end
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Services;
+
+var client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+var analytics = new Analytics(client);
+
+var countries = await analytics.ListMetrics(
+    propertyId: "<PROPERTY_ID>",
+    dimensions: new List<AnalyticsDimension> { AnalyticsDimension.Country },
+    dateRange: "7d",
+    limit: 5
+);
+
+foreach (var row in countries.Metrics)
+{
+    Console.WriteLine($"{row.Value} {row.Visitors}");
+}
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Future<void> main() async {
+  final client = Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>')
+      .setKey('<API_KEY>');
+
+  final analytics = Analytics(client);
+
+  final countries = await analytics.listMetrics(
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [enums.AnalyticsDimension.country],
+    dateRange: '7d',
+    limit: 5,
+  );
+
+  for (final row in countries.metrics) {
+    print('${row.value} ${row.visitors}');
+  }
+}
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.enums.AnalyticsDimension
+import io.appwrite.services.Analytics
+
+suspend fun main() {
+    val client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<API_KEY>")
+
+    val analytics = Analytics(client)
+
+    val countries = analytics.listMetrics(
+        propertyId = "<PROPERTY_ID>",
+        dimensions = listOf(AnalyticsDimension.COUNTRY),
+        dateRange = "7d",
+        limit = 5,
+    )
+
+    for (row in countries.metrics) {
+        println("${row.value} ${row.visitors}")
+    }
+}
+```
+```server-swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let analytics = Analytics(client)
+
+let countries = try await analytics.listMetrics(
+    propertyId: "<PROPERTY_ID>",
+    dimensions: [.country],
+    dateRange: "7d",
+    limit: 5
+)
+
+for row in countries.metrics {
+    print(row.value ?? "", row.visitors)
+}
+```
 ```server-go
 package main
 
@@ -91,6 +301,39 @@ func main() {
     for _, row := range countries.Metrics {
         fmt.Println(*row.Value, row.Visitors)
     }
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::enums::AnalyticsDimension;
+use appwrite::services::Analytics;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let analytics = Analytics::new(&client);
+
+    let countries = analytics.list_metrics(
+        "<PROPERTY_ID>",
+        None, // queries
+        None, // interval
+        Some(vec![AnalyticsDimension::Country]),
+        Some("7d"),
+        None, // start_at
+        None, // end_at
+        Some(5),
+        None, // total
+    ).await?;
+
+    for row in countries.metrics {
+        println!("{} {}", row.value.unwrap_or_default(), row.visitors);
+    }
+
+    Ok(())
 }
 ```
 ```curl
@@ -159,6 +402,219 @@ A range never starts before your plan's [data retention](/docs/products/analytic
 Filters narrow the events every metric is calculated from. Each filter is a query on a dimension, using `equal`, `notEqual`, `contains`, `startsWith`, or `endsWith`. This example returns daily visitors who arrived from search engines over the last two weeks.
 
 {% multicode %}
+```server-nodejs
+import { Client, Analytics, AnalyticsInterval, Query } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const analytics = new Analytics(client);
+
+const days = await analytics.listMetrics({
+    propertyId: '<PROPERTY_ID>',
+    interval: AnalyticsInterval.OneDay,
+    dateRange: '14d',
+    queries: [Query.equal('channel', 'search')],
+});
+
+for (const row of days.metrics) {
+    console.log(row.date, row.visitors);
+}
+```
+```server-deno
+import { Client, Analytics, AnalyticsInterval, Query } from 'npm:node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const analytics = new Analytics(client);
+
+const days = await analytics.listMetrics({
+    propertyId: '<PROPERTY_ID>',
+    interval: AnalyticsInterval.OneDay,
+    dateRange: '14d',
+    queries: [Query.equal('channel', 'search')],
+});
+
+for (const row of days.metrics) {
+    console.log(row.date, row.visitors);
+}
+```
+```server-php
+<?php
+
+require 'vendor/autoload.php';
+
+use Appwrite\Client;
+use Appwrite\Enums\AnalyticsInterval;
+use Appwrite\Query;
+use Appwrite\Services\Analytics;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$analytics = new Analytics($client);
+
+$days = $analytics->listMetrics(
+    propertyId: '<PROPERTY_ID>',
+    interval: AnalyticsInterval::ONEDAY(),
+    dateRange: '14d',
+    queries: [Query::equal('channel', 'search')],
+);
+
+foreach ($days->metrics as $row) {
+    echo $row->date, ' ', $row->visitors, PHP_EOL;
+}
+```
+```server-python
+from appwrite.client import Client
+from appwrite.enums.analytics_interval import AnalyticsInterval
+from appwrite.query import Query
+from appwrite.services.analytics import Analytics
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+analytics = Analytics(client)
+
+days = analytics.list_metrics(
+    property_id='<PROPERTY_ID>',
+    interval=AnalyticsInterval.ONE_DAY,
+    date_range='14d',
+    queries=[Query.equal('channel', 'search')],
+)
+
+for row in days.metrics:
+    print(row.date, row.visitors)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+analytics = Analytics.new(client)
+
+days = analytics.list_metrics(
+    property_id: '<PROPERTY_ID>',
+    interval: AnalyticsInterval::ONE_DAY,
+    date_range: '14d',
+    queries: [Query.equal('channel', 'search')]
+)
+
+days.metrics.each do |row|
+    puts "#{row.date} #{row.visitors}"
+end
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Services;
+
+var client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+var analytics = new Analytics(client);
+
+var days = await analytics.ListMetrics(
+    propertyId: "<PROPERTY_ID>",
+    interval: AnalyticsInterval.OneDay,
+    dateRange: "14d",
+    queries: new List<string> { Query.Equal("channel", "search") }
+);
+
+foreach (var row in days.Metrics)
+{
+    Console.WriteLine($"{row.Date} {row.Visitors}");
+}
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Future<void> main() async {
+  final client = Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>')
+      .setKey('<API_KEY>');
+
+  final analytics = Analytics(client);
+
+  final days = await analytics.listMetrics(
+    propertyId: '<PROPERTY_ID>',
+    interval: enums.AnalyticsInterval.oneDay,
+    dateRange: '14d',
+    queries: [Query.equal('channel', 'search')],
+  );
+
+  for (final row in days.metrics) {
+    print('${row.date} ${row.visitors}');
+  }
+}
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.enums.AnalyticsInterval
+import io.appwrite.services.Analytics
+
+suspend fun main() {
+    val client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<API_KEY>")
+
+    val analytics = Analytics(client)
+
+    val days = analytics.listMetrics(
+        propertyId = "<PROPERTY_ID>",
+        interval = AnalyticsInterval.ONE_DAY,
+        dateRange = "14d",
+        queries = listOf(Query.equal("channel", "search")),
+    )
+
+    for (row in days.metrics) {
+        println("${row.date} ${row.visitors}")
+    }
+}
+```
+```server-swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let analytics = Analytics(client)
+
+let days = try await analytics.listMetrics(
+    propertyId: "<PROPERTY_ID>",
+    queries: [Query.equal("channel", value: "search")],
+    interval: .oneDay,
+    dateRange: "14d"
+)
+
+for row in days.metrics {
+    print(row.date ?? "", row.visitors)
+}
+```
 ```server-go
 package main
 
@@ -194,6 +650,40 @@ func main() {
     for _, row := range days.Metrics {
         fmt.Println(*row.Date, row.Visitors)
     }
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::enums::AnalyticsInterval;
+use appwrite::query::Query;
+use appwrite::services::Analytics;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let analytics = Analytics::new(&client);
+
+    let days = analytics.list_metrics(
+        "<PROPERTY_ID>",
+        Some(vec![Query::equal("channel", "search").to_string()]),
+        Some(AnalyticsInterval::OneDay),
+        None, // dimensions
+        Some("14d"),
+        None, // start_at
+        None, // end_at
+        None, // limit
+        None, // total
+    ).await?;
+
+    for row in days.metrics {
+        println!("{} {}", row.date.unwrap_or_default(), row.visitors);
+    }
+
+    Ok(())
 }
 ```
 ```curl
