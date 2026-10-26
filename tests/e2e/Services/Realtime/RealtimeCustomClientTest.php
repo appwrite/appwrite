@@ -15,6 +15,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
+use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -925,6 +926,11 @@ final class RealtimeCustomClientTest extends Scope
 
     public function testConnectionLimitPerGuest(): void
     {
+        // Opening this many connections from one address would trip the abuse limit on new connections first.
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            $this->markTestSkipped('Abuse limits are enabled.');
+        }
+
         $headers = ['origin' => 'http://localhost'];
 
         /**
