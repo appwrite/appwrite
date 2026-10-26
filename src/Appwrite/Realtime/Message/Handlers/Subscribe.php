@@ -52,7 +52,8 @@ class Subscribe extends Action
         $userId = $realtime->connections[$connectionId]['userId'] ?? '';
 
         $parsedPayloads = [];
-        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
+        $subscriptions = $realtime->getSubscriptionMetadata($connectionId);
+        $subscriptionsBefore = \count($subscriptions);
 
         foreach ($items as $payload) {
             $subscriptionId = \array_key_exists('subscriptionId', $payload)
@@ -75,6 +76,20 @@ class Subscribe extends Action
                 'convertedChannels' => $convertedChannels,
                 'queries' => $convertedQueries,
             ];
+        }
+
+        // Re-subscribing an existing id replaces it in place, so only new ids count towards the limit.
+        $added = [];
+        foreach ($parsedPayloads as $parsedPayload) {
+            if (!isset($subscriptions[$parsedPayload['subscriptionId']])) {
+                $added[$parsedPayload['subscriptionId']] = true;
+            }
+        }
+        if ($subscriptionsBefore + \count($added) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+            throw new Exception(
+                Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+                'Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions. Unsubscribe from some before subscribing to more.'
+            );
         }
 
         // Console live event tail: authorize every `console.tail.<projectId>` channel

@@ -97,6 +97,10 @@ class Authentication extends Action
         if ($impersonatedUserId !== null) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Cannot re-authenticate on an impersonated connection.');
         }
+        // Counted before any state changes, so a rejected switch leaves the connection as it was.
+        if (!empty($projectId) && !$realtime->addConnection($connectionId, $projectId, $user->getId(), APP_LIMIT_REALTIME_CONNECTIONS)) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many open connections. Close an existing connection and try again.');
+        }
         // Capture the pre-auth userId and presence hold before unsubscribe() clears the
         // connection entry, so we can rebind account channels and carry or release the hold.
         $previousUserId = $realtime->connections[$connectionId]['userId'] ?? '';

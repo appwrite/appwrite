@@ -813,6 +813,54 @@ final class MessagingTest extends TestCase
         $this->assertSame([2], $realtime->getUserConnections('1', 'A'));
     }
 
+    public function testAddConnectionLimitsUserConnections(): void
+    {
+        $realtime = new Realtime();
+
+        $this->assertTrue($realtime->addConnection(1, '1', 'A', 2));
+        $this->assertTrue($realtime->addConnection(2, '1', 'A', 2));
+        $this->assertFalse($realtime->addConnection(3, '1', 'A', 2));
+
+        // Counted per project user: another project or user has its own allowance.
+        $this->assertTrue($realtime->addConnection(3, '2', 'A', 2));
+        $this->assertTrue($realtime->addConnection(4, '1', 'B', 2));
+
+        // Guests are not counted.
+        $this->assertTrue($realtime->addConnection(5, '1', '', 2));
+        $this->assertTrue($realtime->addConnection(6, '1', '', 2));
+        $this->assertTrue($realtime->addConnection(7, '1', '', 2));
+
+        // Counting a connection again for the same user does not use up the allowance.
+        $this->assertTrue($realtime->addConnection(1, '1', 'A', 2));
+        $this->assertFalse($realtime->addConnection(8, '1', 'A', 2));
+
+        // Closing frees a slot, and closing twice frees only one.
+        $realtime->removeConnection(1);
+        $realtime->removeConnection(1);
+        $this->assertTrue($realtime->addConnection(8, '1', 'A', 2));
+        $this->assertFalse($realtime->addConnection(9, '1', 'A', 2));
+    }
+
+    public function testAddConnectionMovesConnectionBetweenUsers(): void
+    {
+        $realtime = new Realtime();
+
+        $this->assertTrue($realtime->addConnection(1, '1', 'A', 1));
+        $this->assertTrue($realtime->addConnection(2, '1', 'B', 1));
+
+        // Switching to a user with no slot left is refused, and the connection stays with A.
+        $this->assertFalse($realtime->addConnection(1, '1', 'B', 1));
+        $this->assertFalse($realtime->addConnection(3, '1', 'A', 1));
+
+        // Switching to a user with room frees the slot it held.
+        $this->assertTrue($realtime->addConnection(1, '1', 'C', 1));
+        $this->assertTrue($realtime->addConnection(3, '1', 'A', 1));
+
+        // Becoming a guest frees it too.
+        $this->assertTrue($realtime->addConnection(1, '1', '', 1));
+        $this->assertTrue($realtime->addConnection(4, '1', 'C', 1));
+    }
+
     public function testGetImpersonatorConnections(): void
     {
         $realtime = new Realtime();

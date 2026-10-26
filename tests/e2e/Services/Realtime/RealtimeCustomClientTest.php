@@ -859,6 +859,93 @@ final class RealtimeCustomClientTest extends Scope
         self::$user[$projectId]['sessionId'] = $refreshedSession['body']['$id'];
     }
 
+    public function testConnectionLimitPerUser(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => \uniqid() . 'limit@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/jwts', $server);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+        $headers = [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $clients = [];
+        for ($i = 0; $i < APP_LIMIT_REALTIME_CONNECTIONS; $i++) {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        }
+
+        // Guests are not held to the per-user limit.
+        $guest = $this->getWebsocket(['documents'], ['origin' => 'http://localhost']);
+        $this->assertSame('connected', \json_decode($guest->receive(), true)['type'] ?? null);
+        $guest->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getWebsocket(['documents'], $headers);
+        $frames = $this->receiveUntilClosed($client);
+        $this->assertSame('error', $frames[0]['type'] ?? null);
+        $this->assertSame(1008, $frames[0]['data']['code'] ?? null);
+        $this->assertSame('Too many open connections. Close an existing connection and try again.', $frames[0]['data']['message'] ?? null);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Closing a connection frees its slot once the server sees the close.
+        \array_pop($clients)->close();
+        $this->assertEventually(function () use ($headers, &$clients): void {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        });
+
+        foreach ($clients as $client) {
+            $client->close();
+        }
+    }
+
+    public function testConnectionChannelLimit(): void
+    {
+        $headers = ['origin' => 'http://localhost'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE));
+        $client = $this->getWebsocket($channels, $headers);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type'] ?? null);
+        $this->assertCount(APP_LIMIT_ARRAY_PARAMS_SIZE, $response['data']['channels']);
+        $client->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $channels[] = 'documents.' . (APP_LIMIT_ARRAY_PARAMS_SIZE + 1);
+        $client = $this->getWebsocket($channels, $headers);
+        $frames = $this->receiveUntilClosed($client);
+        $this->assertSame('error', $frames[0]['type'] ?? null);
+        $this->assertSame(1008, $frames[0]['data']['code'] ?? null);
+        $this->assertSame('channels must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.', $frames[0]['data']['message'] ?? null);
+    }
+
     public function testConnectionRequiresAllFactors(): void
     {
         $projectId = $this->getProject()['$id'];

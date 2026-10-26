@@ -109,6 +109,20 @@ class Realtime extends MessagingAdapter
      */
     public array $subscriptions = [];
 
+    /**
+     * Open connections per project user: [PROJECT_ID:USER_ID] -> count
+     *
+     * @var array<string, int>
+     */
+    private array $userConnections = [];
+
+    /**
+     * The project user each counted connection belongs to: [CONNECTION_ID] -> PROJECT_ID:USER_ID
+     *
+     * @var array<int|string, string>
+     */
+    private array $connectionUsers = [];
+
     private ?PubSubPool $pubSubPool = null;
 
     /**
@@ -428,6 +442,49 @@ class Realtime extends MessagingAdapter
         }
 
         return $connections;
+    }
+
+    /**
+     * Counts a connection against its project user, moving it off any user it was counted for
+     * before. Guests are not counted. Returns false, leaving the count as it was, when the
+     * user already holds $limit connections.
+     */
+    public function addConnection(mixed $connection, string $projectId, string $userId, int $limit): bool
+    {
+        if ($userId === '') {
+            $this->removeConnection($connection);
+            return true;
+        }
+
+        $key = $projectId . ':' . $userId;
+        if (($this->connectionUsers[$connection] ?? null) === $key) {
+            return true;
+        }
+        if (($this->userConnections[$key] ?? 0) >= $limit) {
+            return false;
+        }
+
+        $this->removeConnection($connection);
+        $this->connectionUsers[$connection] = $key;
+        $this->userConnections[$key] = ($this->userConnections[$key] ?? 0) + 1;
+
+        return true;
+    }
+
+    /**
+     * Stops counting a connection against its project user. Idempotent.
+     */
+    public function removeConnection(mixed $connection): void
+    {
+        $key = $this->connectionUsers[$connection] ?? null;
+        if ($key === null) {
+            return;
+        }
+
+        unset($this->connectionUsers[$connection]);
+        if (--$this->userConnections[$key] <= 0) {
+            unset($this->userConnections[$key]);
+        }
     }
 
     /**

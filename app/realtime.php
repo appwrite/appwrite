@@ -1073,7 +1073,17 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         // Impersonated or not, the connection lasts only as long as the session it runs on.
         $expire = $session !== null ? $user->getSessionExpiry($session->getId()) : null;
 
-        $channels = Realtime::convertChannels($request->getQuery('channels', []), $subscriberId);
+        // Guests are not counted; the per-IP abuse limit covers them.
+        if (!$realtime->addConnection($connection, $project->getId(), $targetUser->getId(), APP_LIMIT_REALTIME_CONNECTIONS)) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many open connections. Close an existing connection and try again.');
+        }
+
+        $requestedChannels = $request->getQuery('channels', []);
+        if (\is_array($requestedChannels) && \count($requestedChannels) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'channels must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.');
+        }
+
+        $channels = Realtime::convertChannels($requestedChannels, $subscriberId);
         $channelCount = \count($channels);
 
         $updateStats = static function (string $projectId, ?string $teamId) use ($register, $stats): void {
@@ -1141,6 +1151,15 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             );
         } catch (QueryException $e) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
+        }
+
+        if (\count($subscriptions) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.');
+        }
+        foreach ($subscriptions as $subscription) {
+            if (\count($subscription['queries']) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+                throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.');
+            }
         }
 
         $sanitizedUser = empty($targetUser->getId()) ? null : $response->output($targetUser, Response::MODEL_ACCOUNT);
@@ -1571,6 +1590,8 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
             Console::error('Realtime onClose tail cleanup error: ' . $th->getMessage());
             Span::current()?->setError($th);
         }
+
+        $realtime->removeConnection($connection);
 
         Span::add('realtime.success', $success);
         if (!empty($projectId)) {
