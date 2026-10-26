@@ -1062,6 +1062,67 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testScopesWithinKey(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['sites.read', 'sites.write', 'users.read']),
+        ];
+        $params = [
+            'name' => 'Scopes within key',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => Id::unique(),
+            ...$params,
+            'scopes' => ['users.read'],
+        ]);
+        $this->assertSame(201, $site['headers']['status-code']);
+        $this->assertSame(['users.read'], $site['body']['scopes']);
+
+        $siteId = $site['body']['$id'];
+
+        $site = $this->updateSite(['$id' => $siteId, ...$params, 'scopes' => ['users.read', 'users.write']]);
+        $this->assertSame(200, $site['headers']['status-code']);
+
+        // Scopes the site already has are kept by a key that lacks them
+        $site = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $headers, [
+            ...$params,
+            'scopes' => ['users.read', 'users.write'],
+        ]);
+        $this->assertSame(200, $site['headers']['status-code']);
+        $this->assertSame(['users.read', 'users.write'], $site['body']['scopes']);
+
+        /**
+         * Test for FAILURE
+         */
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => Id::unique(),
+            ...$params,
+            'scopes' => ['users.read', 'databases.write'],
+        ]);
+        $this->assertSame(401, $site['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_UNAUTHORIZED_SCOPE, $site['body']['type']);
+
+        $site = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $headers, [
+            ...$params,
+            'scopes' => ['users.read', 'users.write', 'databases.write'],
+        ]);
+        $this->assertSame(401, $site['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_UNAUTHORIZED_SCOPE, $site['body']['type']);
+
+        $site = $this->getSite($siteId);
+        $this->assertSame(['users.read', 'users.write'], $site['body']['scopes']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testScopes(): void
     {
         $site = $this->createSite([
