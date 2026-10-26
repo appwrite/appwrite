@@ -30,8 +30,10 @@
     "lint:native-dialogs": "bun run scripts/lint-native-dialogs.ts",
     "lint:removed-blog-links": "bun run scripts/lint-removed-blog-links.ts",
     "lint:sdk-pins": "bun run scripts/lint-sdk-pins.ts",
+    "lint:types": "bun run scripts/lint-types.ts",
     "prune:removed-blog-assets": "bun run scripts/prune-removed-blog-assets.ts",
     "release:self-hosted": "bun run scripts/release-self-hosted.ts",
+    "sdk:preview": "bun run scripts/sdk-preview.ts",
     "serve": "vite preview",
     "start": "bun --preload ./src/lib/sentry/init-server.ts ./server.ts",
     "test": "playwright test",
@@ -57,8 +59,8 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "18.4.0-rc.1",
-    "@appwrite.io/specs": "github:appwrite/specs#fcaf861efd0186d0e53dd82df6993f90eb66bd7b",
+    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@79eecfa07bef2761d4ed806524c68df52f19c7f0",
+    "@appwrite.io/specs": "github:appwrite/specs#83b9f17549a0735f29ec89600160ee9cdc9ededd",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -156,7 +158,7 @@
     "tw-animate-css": "^1.3.6",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^5.1.4",
-    "zod": "^4.1.11"
+    "zod": "^4.6.7"
   },
   "overrides": {
     "react": "19.1.1",
@@ -164,7 +166,7 @@
     "use-sync-external-store": "^1.6.0",
     "@tanstack/react-store": "^0.11.2",
     "@tanstack/store": "^0.11.2",
-    "dompurify": "^3.4.16",
+    "dompurify": "^3.4.17",
     "sharp": "^0.35.5"
   },
   "pnpm": {
@@ -173,7 +175,7 @@
       "react-dom": "19.1.1",
       "@tanstack/react-store": "^0.11.2",
       "@tanstack/store": "^0.11.2",
-      "dompurify": "^3.4.16",
+      "dompurify": "^3.4.17",
       "sharp": "^0.35.5"
     }
   },

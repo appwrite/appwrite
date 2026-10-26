@@ -10,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Auth\Tests\Passkeys\Authenticator;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 
 final class PasskeysCustomClientTest extends Scope
@@ -605,12 +605,84 @@ final class PasskeysCustomClientTest extends Scope
          */
         // Apple apps sign in from the relying party ID itself
         $response = $this->client->call(Client::METHOD_POST, '/project/platforms/apple', $this->getServerHeaders($project), [
-            'platformId' => ID::unique(),
+            'platformId' => Id::unique(),
             'name' => 'iOS',
             'bundleIdentifier' => 'com.example.app',
         ]);
         $this->assertSame(201, $response['headers']['status-code'], \json_encode($response['body']));
         $this->assertSame(201, $this->signIn($project, $authenticator, 'https://example.com')['headers']['status-code']);
+    }
+
+    public function testAndroidAppSignIn(): void
+    {
+        $project = $this->getProject(true);
+        $this->createWebPlatform($project, 'example.com');
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/passkey', $this->getServerHeaders($project), [
+            'rpId' => 'example.com',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->enablePasskeys($project, true);
+        [$user, $session] = $this->createUserWithSession($project);
+        $headers = $this->getSessionHeaders($project, $session);
+
+        $release = 'android:apk-key-hash:FG3pg8VzBlDY7rmVLzT8ZBagg0LmHb6oigSWsj_PROU';
+        $debug = 'android:apk-key-hash:-vr6-vr6-vr6-vr6-vr6-vr6-vr6-vr6-vr6-vr6-vo';
+
+        /**
+         * Test for FAILURE
+         */
+        // An Android app without fingerprints cannot use passkeys
+        $platform = $this->client->call(Client::METHOD_POST, '/project/platforms/android', $this->getServerHeaders($project), [
+            'platformId' => Id::unique(),
+            'name' => 'Android',
+            'applicationId' => 'com.example.app',
+        ]);
+        $this->assertSame(201, $platform['headers']['status-code'], \json_encode($platform['body']));
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers);
+        $authenticator = new Authenticator();
+        $response = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $challenge['body']['passkeyId'] . '/verification', $headers, [
+            'credential' => $authenticator->register($challenge['body']['publicKey'], $release),
+        ]);
+        $this->assertSame(401, $response['headers']['status-code'], \json_encode($response['body']));
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/project/platforms/android/' . $platform['body']['$id'], $this->getServerHeaders($project), [
+            'name' => 'Android',
+            'applicationId' => 'com.example.app',
+            'fingerprints' => [
+                '14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5',
+                \implode(':', \array_fill(0, 32, 'FA')),
+            ],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+
+        $response = $this->client->call(Client::METHOD_GET, '/project/policies/passkey', $this->getServerHeaders($project));
+        $this->assertSame([$release, $debug, 'https://example.com'], $response['body']['origins']);
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/passkeys', $headers);
+        $this->assertSame('example.com', $challenge['body']['publicKey']['rp']['id']);
+        $response = $this->client->call(Client::METHOD_PUT, '/account/passkeys/' . $challenge['body']['passkeyId'] . '/verification', $headers, [
+            'credential' => $authenticator->register($challenge['body']['publicKey'], $release),
+        ]);
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+
+        // A passkey made in the app also works on the website and in a build signed with the other key
+        foreach ([$release, $debug, 'https://example.com'] as $origin) {
+            $token = $this->signIn($project, $authenticator, $origin);
+            $this->assertSame(201, $token['headers']['status-code'], $origin);
+            $this->assertSame($user['$id'], $token['body']['userId']);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        // Another signing key or a malformed hash
+        foreach (['android:apk-key-hash:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'android:apk-key-hash:' . \substr($release, 21, 20), 'android:apk-key-hash:*'] as $origin) {
+            $this->assertSame(401, $this->signIn($project, $authenticator, $origin)['headers']['status-code'], $origin);
+        }
     }
 
     public function testLocalhostWebPlatformNeedsNoPolicy(): void
@@ -1254,7 +1326,7 @@ final class PasskeysCustomClientTest extends Scope
     private function createWebPlatform(array $project, string $hostname): string
     {
         $response = $this->client->call(Client::METHOD_POST, '/project/platforms/web', $this->getServerHeaders($project), [
-            'platformId' => ID::unique(),
+            'platformId' => Id::unique(),
             'name' => $hostname,
             'hostname' => $hostname,
         ]);
@@ -1279,7 +1351,7 @@ final class PasskeysCustomClientTest extends Scope
         $email = \uniqid('passkey.', true) . \bin2hex(\random_bytes(4)) . '@localhost.test';
 
         $user = $this->client->call(Client::METHOD_POST, '/account', $this->getGuestHeaders($project), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Passkey User',

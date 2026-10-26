@@ -9,6 +9,7 @@ import {
   Dependencies,
   useProject,
   useOrganizationPlan,
+  useConsoleVariables,
   getCachedBucketListsFromQueryClient,
   pickNextBucketIdAfterDelete,
 } from '@/lib/react-query/hooks'
@@ -65,8 +66,11 @@ export function BucketSettings() {
 
   // Get organization plan to check max file size limit
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const { storageLimit } = useConsoleVariables(project?.region)
 
-  // Get max file size from plan object (fileSize is in MB, -1 means unlimited)
+  // Get max file size from plan object (fileSize is in MB, -1 means unlimited).
+  // MAX_SAFE_INTEGER is the stand-in plan on self-hosted or after a failed
+  // request, where _APP_STORAGE_LIMIT is the limit instead.
   const maxFileSizeByPlan = useMemo(() => {
     if (!organizationPlan) return null
 
@@ -78,11 +82,11 @@ export function BucketSettings() {
           ? Number(fileSize)
           : Number(fileSize)
 
-    // -1 means unlimited
     if (
       fileSizeNumber == null ||
       !Number.isFinite(fileSizeNumber) ||
-      fileSizeNumber === -1
+      fileSizeNumber === -1 ||
+      fileSizeNumber >= Number.MAX_SAFE_INTEGER
     ) {
       return null
     }
@@ -99,6 +103,7 @@ export function BucketSettings() {
     'none',
   )
   const [transformations, setTransformations] = useState(false)
+  const [stripMetadata, setStripMetadata] = useState(false)
   const [maximumFileSize, setMaximumFileSize] = useState(0)
   const [fileSizeUnit, setFileSizeUnit] = useState<
     'bytes' | 'KB' | 'MB' | 'GB'
@@ -120,6 +125,7 @@ export function BucketSettings() {
         (bucket.compression as 'none' | 'gzip' | 'zstd') || 'none'
       setCompression(bucketCompression)
       setTransformations(bucket.transformations)
+      setStripMetadata(bucket.stripMetadata)
       // Pick the unit whose numeric value is smallest while still a whole integer
       if (toByteCount(bucket.maximumFileSize) > 0) {
         const { value, unit } = pickFormDecimalByteDisplayUnit(
@@ -241,7 +247,8 @@ export function BucketSettings() {
       return await projectSdk.storage.updateBucket({
         bucketId,
         name: bucket.name, // Required parameter
-        maximumFileSize,
+        // The server rejects 0; leaving it out applies the plan or server limit
+        maximumFileSize: maximumFileSize || undefined,
         enabled: bucket.enabled ?? undefined,
         encryption: bucket.encryption ?? undefined,
         antivirus: bucket.antivirus ?? undefined,
@@ -386,6 +393,39 @@ export function BucketSettings() {
     },
   })
 
+  const updateStripMetadataMutation = useMutation({
+    mutationFn: async (stripMetadata: boolean) => {
+      if (!projectId || !bucketId || !bucket)
+        throw new Error('Project ID, Bucket ID, and Bucket are required')
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.storage.updateBucket({
+        bucketId,
+        name: bucket.name, // Required parameter
+        stripMetadata,
+        enabled: bucket.enabled ?? undefined,
+        encryption: bucket.encryption ?? undefined,
+        antivirus: bucket.antivirus ?? undefined,
+        compression: bucket.compression as Compression,
+        transformations: bucket.transformations ?? undefined,
+        maximumFileSize: bucket.maximumFileSize ?? undefined,
+        allowedFileExtensions: bucket.allowedFileExtensions ?? undefined,
+      })
+    },
+    onSuccess: () => {
+      toast.success(t('Image metadata setting has been updated'))
+      queryClient.invalidateQueries({
+        queryKey: ['bucket', 'project', projectId, bucketId],
+      })
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error))
+      // Revert to original value on error
+      if (bucket) {
+        setStripMetadata(bucket.stripMetadata)
+      }
+    },
+  })
+
   const handleNameUpdate = () => {
     if (bucketName.trim() && bucketName !== bucket?.name) {
       updateNameMutation.mutate(bucketName)
@@ -404,6 +444,10 @@ export function BucketSettings() {
     setTransformations(checked)
   }
 
+  const handleStripMetadataToggle = (checked: boolean) => {
+    setStripMetadata(checked)
+  }
+
   const handleEncryptionUpdate = () => {
     if (encryption !== bucket?.encryption) {
       updateEncryptionMutation.mutate(encryption)
@@ -413,6 +457,12 @@ export function BucketSettings() {
   const handleTransformationsUpdate = () => {
     if (transformations !== bucket?.transformations) {
       updateTransformationsMutation.mutate(transformations)
+    }
+  }
+
+  const handleStripMetadataUpdate = () => {
+    if (stripMetadata !== bucket?.stripMetadata) {
+      updateStripMetadataMutation.mutate(stripMetadata)
     }
   }
 
@@ -458,8 +508,8 @@ export function BucketSettings() {
 
   // Validation error for file size input
   const fileSizeError = useMemo(() => {
-    if (maxFileSizeByPlan === null) return null // Enterprise has no limit
-    if (fileSizeInBytes === 0) return null // 0 means unlimited, which is allowed
+    if (maxFileSizeByPlan === null) return null
+    if (fileSizeInBytes === 0) return null // 0 uses the plan or server limit
     if (fileSizeInBytes > maxFileSizeByPlan) {
       return {
         message: `${t('Maximum file size cannot exceed')} ${formatBytes(maxFileSizeByPlan)} ${t('for your plan')}`,
@@ -765,7 +815,9 @@ export function BucketSettings() {
               {t('Image transformations')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              {t('Enable image transformation features for files in this bucket.')}
+              {t(
+                'Enable image transformation features for files in this bucket.',
+              )}
             </p>
           </div>
           <div className="border-t border-border" />
@@ -799,6 +851,55 @@ export function BucketSettings() {
                 updateTransformationsMutation.isPending
               }
               onClick={handleTransformationsUpdate}
+            >
+              {t('Update')}
+            </Button>
+          </div>
+        </div>
+
+        {/* Image Metadata */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Image metadata')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t(
+                "Remove metadata such as location, device, and capture time from images uploaded to this bucket. The color profile and orientation are kept. For file size above 20MB metadata is not removed even if it's enabled. This change will only apply to new files uploaded after the update.",
+              )}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label
+                  htmlFor="stripMetadata"
+                  className="text-[13px] font-medium text-foreground"
+                >
+                  {t('Enabled')}
+                </Label>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  {t('Remove metadata from uploaded images')}
+                </p>
+              </div>
+              <Switch
+                id="stripMetadata"
+                checked={stripMetadata}
+                onCheckedChange={handleStripMetadataToggle}
+                disabled={updateStripMetadataMutation.isPending}
+              />
+            </div>
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={
+                stripMetadata === bucket.stripMetadata ||
+                updateStripMetadataMutation.isPending
+              }
+              onClick={handleStripMetadataUpdate}
             >
               {t('Update')}
             </Button>
@@ -852,7 +953,9 @@ export function BucketSettings() {
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">Gzip</span>
                         <span className="text-[11px] text-muted-foreground">
-                          {t('Good balance between compression ratio and speed.')}
+                          {t(
+                            'Good balance between compression ratio and speed.',
+                          )}
                         </span>
                       </div>
                     </SelectItem>
@@ -860,7 +963,9 @@ export function BucketSettings() {
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">Zstd</span>
                         <span className="text-[11px] text-muted-foreground">
-                          {t('Excellent compression ratios with fast decompression.')}
+                          {t(
+                            'Excellent compression ratios with fast decompression.',
+                          )}
                         </span>
                       </div>
                     </SelectItem>
@@ -902,8 +1007,8 @@ export function BucketSettings() {
               {t('Set the maximum file size allowed.')}{' '}
               {maxFileSizeByPlan !== null ? (
                 <>
-                  {t('Maximum allowed value is')} {formatBytes(maxFileSizeByPlan)}{' '}
-                  {t('for your plan.')}{' '}
+                  {t('Maximum allowed value is')}{' '}
+                  {formatBytes(maxFileSizeByPlan)} {t('for your plan.')}{' '}
                   <Button
                     variant="link"
                     size="sm"
@@ -917,11 +1022,16 @@ export function BucketSettings() {
                   >
                     {t('Upgrade')}
                   </Button>{' '}
-                  {t("to increase the limit. Set to 0 to use your plan's maximum limit")}{' '}
+                  {t(
+                    "to increase the limit. Set to 0 to use your plan's maximum limit",
+                  )}{' '}
                   ({formatBytes(maxFileSizeByPlan)}).
                 </>
               ) : (
-                t('No limit for your plan. Set to 0 for unlimited.')
+                <>
+                  {t("Set to 0 to use the server's maximum limit")}
+                  {storageLimit ? ` (${formatBytes(storageLimit)})` : ''}.
+                </>
               )}
             </p>
           </div>
@@ -950,7 +1060,7 @@ export function BucketSettings() {
                     }
                   }}
                   max={maxFileSizeInCurrentUnit}
-                  placeholder={t('0 for unlimited')}
+                  placeholder={t('0 for the maximum limit')}
                   disabled={updateMaximumFileSizeMutation.isPending}
                 />
               </div>
@@ -1018,9 +1128,13 @@ export function BucketSettings() {
                 </div>
               ) : (
                 <p className="text-[12px] text-muted-foreground">
-                  {bucket.maximumFileSize > 0
-                    ? `${t('Current:')} ${formatBytes(bucket.maximumFileSize)}`
-                    : t('Unlimited')}
+                  {t('Current:')}{' '}
+                  {formatBytes(
+                    toByteCount(bucket.maximumFileSize) ||
+                      maxFileSizeByPlan ||
+                      storageLimit ||
+                      0,
+                  )}
                 </p>
               )}
             </div>
@@ -1031,7 +1145,9 @@ export function BucketSettings() {
               className="h-9 text-[13px]"
               disabled={
                 !bucket ||
-                Math.abs(fileSizeInBytes - toByteCount(bucket.maximumFileSize)) < 1 ||
+                Math.abs(
+                  fileSizeInBytes - toByteCount(bucket.maximumFileSize),
+                ) < 1 ||
                 updateMaximumFileSizeMutation.isPending ||
                 fileSizeError !== null
               }

@@ -183,6 +183,16 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Import .env file': '.env ファイルをインポート',
   'Invalid JSON format': '無効な JSON 形式です',
   'Invalid format': '無効な形式です',
+
+  // Custom ID field (IdInput)
+  'Invalid ID format': 'ID の形式が正しくありません',
+  'ID is too long': 'ID が長すぎます',
+  'Allowed characters: letters and numbers only':
+    '使用可能な文字: 英字と数字のみ',
+  'Allowed characters: lowercase letters, numbers, non-leading hyphen':
+    '使用可能な文字: 小文字の英字、数字、先頭以外のハイフン',
+  'Allowed characters: alphanumeric, non-leading hyphen, underscore, period':
+    '使用可能な文字: 英数字、先頭以外のハイフン、アンダースコア、ピリオド',
   'Join 24k+ developers': '24,000人以上の開発者に参加',
   'Skip for now': '今はスキップ',
   'Help other Appwriters on Discord and grow with the community.':
@@ -1343,4 +1353,10 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Load more': 'さらに読み込む',
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
+  Experiments: '実験',
+  'Features the quality team can try before they launch. Choices stay in this browser.':
+    '公開前に品質チームが試せる機能です。選択内容はこのブラウザに保存されます。',
+  'Appwrite Analytics': 'Appwrite Analytics',
+  'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
+    'コンソールにアナリティクスを表示し、プロジェクト内の訪問者、ページ、参照元、キャンペーン、カスタムイベントを計測します。',
 }

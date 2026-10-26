@@ -44,6 +44,17 @@ final class CeremonyTest extends TestCase
         $this->assertSame(Authenticator::encode($authenticator->userHandle), Authenticator::string($options, 'user', 'id'));
     }
 
+    public function testExcludedPasskeyWithoutTransportsSendsEmptyTransports(): void
+    {
+        $authenticator = new Authenticator();
+        $record = $this->register($authenticator)->record;
+        $record['transports'] = [];
+
+        $options = $this->ceremony->register('user@example.com', 'User', [$record])->options;
+
+        $this->assertSame([['type' => 'public-key', 'id' => Authenticator::encode($authenticator->credentialId), 'transports' => []]], $options['excludeCredentials']);
+    }
+
     public function testRegisterAndSignIn(): void
     {
         $authenticator = new Authenticator();
@@ -267,6 +278,24 @@ final class CeremonyTest extends TestCase
 
         $this->expectException(Exception::class);
         $ceremony->verifyRegistration($challenge->state, (new Authenticator())->register($challenge->options, 'https://example.com:8443', 'example.com'));
+    }
+
+    public function testAndroidAppOriginMatchesExactly(): void
+    {
+        $app = 'android:apk-key-hash:FG3pg8VzBlDY7rmVLzT8ZBagg0LmHb6oigSWsj_PROU';
+        $ceremony = new Ceremony(new RelyingParty('example.com', 'Test', ['https://example.com', $app]));
+        $authenticator = new Authenticator();
+
+        $challenge = $ceremony->register('user@example.com', 'User');
+        $registered = $ceremony->verifyRegistration($challenge->state, $authenticator->register($challenge->options, $app));
+
+        $challenge = $ceremony->authenticate();
+        $signedIn = $ceremony->verifyAuthentication($challenge->state, $authenticator->authenticate($challenge->options, 'https://example.com'), $registered->record);
+        $this->assertSame($registered->identifier, $signedIn->identifier);
+
+        $challenge = $ceremony->authenticate();
+        $this->expectException(Exception::class);
+        $ceremony->verifyAuthentication($challenge->state, $authenticator->authenticate($challenge->options, 'android:apk-key-hash:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'), $registered->record);
     }
 
     public function testFingerprintIgnoresOriginOrder(): void

@@ -100,7 +100,8 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.4.0';
+const APP_VERSION_STABLE = '2.6.2';
+const APP_READINESS_MARKER = '/tmp/.appwrite-ready';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -118,6 +119,13 @@ const APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER = 300 * 1000; // 5 minutes
 const APP_DATABASE_TIMEOUT_MILLISECONDS_TASK = 300 * 1000; // 5 minutes
 const APP_DATABASE_QUERY_MAX_VALUES = 500;
 const APP_DATABASE_QUERY_MAX_VALUES_WORKER = 5000;
+const APP_DATABASE_PDO_ATTRIBUTES = [
+    \PDO::ATTR_TIMEOUT => 3,
+    \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+    \PDO::ATTR_EMULATE_PREPARES => true,
+    \PDO::ATTR_STRINGIFY_FETCHES => true,
+];
 const APP_DATABASE_ENCRYPT_SIZE_MIN = 150;
 const APP_DATABASE_TXN_TTL_MIN = 60; // 1 minute
 const APP_DATABASE_TXN_TTL_MAX = 3600; // 1 hour
@@ -163,6 +171,7 @@ const APP_VCS_GITEA_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own
 const APP_VCS_GITLAB_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
 const APP_VCS_BITBUCKET_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
 const APP_VCS_ORIGIN_EMAIL = 'vcs@utopia.dev'; // Used to detect commits the VCS adapter pushes over Git HTTPS
+const APP_VCS_ENTIRE_EMAIL = 'vcs@utopia.dev'; // Used to detect commits the VCS adapter pushes over Git HTTPS
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Embeddings
@@ -289,6 +298,7 @@ const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
+const DELETE_TYPE_FILES = 'files';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';
 const DELETE_TYPE_SESSIONS = 'sessions';
@@ -345,6 +355,9 @@ const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
 // Message providers
 const MESSAGE_PROVIDER_APPWRITE = 'appwrite';
+const APP_PUSH_LEDGER_RETENTION = 60 * 60 * 24 * 7;
+const APP_MQTT_SESSION_RECHECK = 60; // Seconds between checks of the session an MQTT connection runs on
+const APP_PUSH_IMAGE_TOKEN_DURATION = 60 * 60 * 24 * 15;
 // Notification types
 const NOTIFICATION_TYPE_EMAIL = MESSAGE_TYPE_EMAIL;
 const NOTIFICATION_TYPE_SMS = MESSAGE_TYPE_SMS;

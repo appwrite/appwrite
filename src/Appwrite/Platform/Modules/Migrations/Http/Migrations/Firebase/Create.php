@@ -13,7 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Platform\Enum;
@@ -46,7 +46,7 @@ class Create extends Action
                 group: null,
                 name: 'createFirebaseMigration',
                 description: '/docs/references/migrations/migration-firebase.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -86,7 +86,7 @@ class Create extends Action
         }
 
         $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => Firebase::getName(),

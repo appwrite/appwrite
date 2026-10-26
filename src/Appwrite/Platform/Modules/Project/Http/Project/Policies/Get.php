@@ -81,6 +81,7 @@ class Get extends Action
             'password-strength' => Response::MODEL_POLICY_PASSWORD_STRENGTH,
             'password-personal-data' => Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
             'password-pwned' => Response::MODEL_POLICY_PASSWORD_PWNED,
+            'password-rotation' => Response::MODEL_POLICY_PASSWORD_ROTATION,
             'session-alert' => Response::MODEL_POLICY_SESSION_ALERT,
             'session-duration' => Response::MODEL_POLICY_SESSION_DURATION,
             'session-invalidation' => Response::MODEL_POLICY_SESSION_INVALIDATION,
@@ -108,6 +109,7 @@ class Get extends Action
                 new Document([
                     '$id' => 'password-dictionary',
                     'enabled' => $auths['passwordDictionary'] ?? false,
+                    'denyList' => $auths['passwordDictionaryDenyList'] ?? [],
                 ]),
                 Response::MODEL_POLICY_PASSWORD_DICTIONARY,
             ],
@@ -134,6 +136,7 @@ class Get extends Action
                 new Document([
                     '$id' => 'password-personal-data',
                     'enabled' => $auths['personalDataCheck'] ?? false,
+                    'denyList' => $auths['personalDataDenyList'] ?? [],
                 ]),
                 Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
             ],
@@ -146,6 +149,14 @@ class Get extends Action
                     '$id' => 'password-pwned',
                 ])),
                 Response::MODEL_POLICY_PASSWORD_PWNED,
+            ],
+            'password-rotation' => [
+                new Document([
+                    '$id' => 'password-rotation',
+                    'enabled' => $auths['passwordRotation']['enabled'] ?? false,
+                    'maxAge' => $auths['passwordRotation']['maxAge'] ?? 31536000,
+                ]),
+                Response::MODEL_POLICY_PASSWORD_ROTATION,
             ],
             'session-alert' => [
                 new Document([
