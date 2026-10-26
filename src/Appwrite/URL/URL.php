@@ -226,11 +226,12 @@ class URL
     /**
      * RFC 3986 §5.2.4 — remove "." and ".." segments from a path.
      *
-     * Walks the path with an offset and keeps the output as a stack of segments, so each byte is visited once.
+     * Rewrites one buffer in place, so time and memory stay linear in the path length.
      */
     private static function removeDotSegments(string $path): string
     {
-        $segments = [];
+        $output = $path;
+        $used = 0;
         $length = \strlen($path);
         $offset = 0;
 
@@ -243,30 +244,36 @@ class URL
             } elseif (self::startsAt($path, $offset, '/./')) {
                 $offset += 2;
             } elseif ($rest === 2 && self::startsAt($path, $offset, '/.')) {
-                $segments[] = '/';
+                $output[$used++] = '/';
                 break;
             } elseif (self::startsAt($path, $offset, '/../')) {
                 $offset += 3;
-                \array_pop($segments);
+                $used = self::lastSlash($output, $used);
             } elseif ($rest === 3 && self::startsAt($path, $offset, '/..')) {
-                \array_pop($segments);
-                $segments[] = '/';
+                $used = self::lastSlash($output, $used);
+                $output[$used++] = '/';
                 break;
             } elseif (($rest === 1 && $path[$offset] === '.') || ($rest === 2 && self::startsAt($path, $offset, '..'))) {
                 break;
             } else {
-                $start = $path[$offset] === '/' ? $offset + 1 : $offset;
-                $next = \strpos($path, '/', $start);
-                if ($next === false) {
-                    $segments[] = \substr($path, $offset);
-                    break;
+                $next = \strpos($path, '/', $path[$offset] === '/' ? $offset + 1 : $offset);
+                $end = $next === false ? $length : $next;
+                while ($offset < $end) {
+                    $output[$used++] = $path[$offset++];
                 }
-                $segments[] = \substr($path, $offset, $next - $offset);
-                $offset = $next;
             }
         }
 
-        return \implode('', $segments);
+        return \substr($output, 0, $used);
+    }
+
+    private static function lastSlash(string $output, int $used): int
+    {
+        if ($used === 0) {
+            return 0;
+        }
+
+        return \strrpos($output, '/', $used - \strlen($output) - 1) ?: 0;
     }
 
     private static function startsAt(string $path, int $offset, string $prefix): bool

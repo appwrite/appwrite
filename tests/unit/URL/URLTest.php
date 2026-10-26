@@ -266,6 +266,13 @@ final class URLTest extends TestCase
 
         $this->assertSame('https://base.example/icon.png', $location);
         $this->assertLessThan(1, $elapsed);
+
+        $reference = '/' . \str_repeat('a/', 200_000);
+        \memory_reset_peak_usage();
+        $before = \memory_get_peak_usage();
+        URL::resolveLocation('https://base.example/', $reference);
+
+        $this->assertLessThan(4 * \strlen($reference), \memory_get_peak_usage() - $before);
     }
 
     public function testResolveLocationEmpty(): void
