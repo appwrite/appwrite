@@ -457,7 +457,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting",
     "title": "Self-hosting",
     "description": "Set up your self-hosted Appwrite instance easily. Read the installation guide to configure and deploy Appwrite on your infrastructure for complete control.",
-    "excerpt": "Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a Docker CLI. Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud. Appwrite is open source. Peek at the Docker files, services, and the rest of the stack in the appwrite/appwrite repository. If you are migrating from an older version of Appwrite, you need to follow the migration…",
+    "excerpt": "Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a Docker CLI, or on your own Kubernetes cluster with the official Helm chart. Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud. Appwrite is open source. Peek at the Docker files, services, and the rest of the stack in the appwrite/appwrite repository. If you are migrating from…",
     "breadcrumbs": [
       "Self-hosting",
       "Getting started",
@@ -589,7 +589,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting/installation",
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
-    "excerpt": "This guide will walk you through installing Appwrite on your server using Docker. Appwrite is designed to run on any operating system that supports Docker. System requirements Before installing Appwrite, ensure your system meets these minimum requirements: - **2 CPU cores** - **4GB of RAM** - **2GB of swap memory** - **Operating system** that supports Docker - **Docker Compose Version 2** Install with Docker The easiest way to install Appwrite is using our Docker installer. The installer launches a web-based…",
+    "excerpt": "This guide will walk you through installing Appwrite on your server using Docker. Appwrite is designed to run on any operating system that supports Docker. To install Appwrite on a Kubernetes cluster instead of a single Docker host, use the official Helm chart. System requirements Before installing Appwrite, ensure your system meets these minimum requirements: - **2 CPU cores** - **4GB of RAM** - **2GB of swap memory** - **Operating system** that supports Docker - **Docker Compose Version 2** Install…",
     "breadcrumbs": [
       "Self-hosting",
       "Getting started",
@@ -671,6 +671,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Self-hosting",
       "Platform deployment",
       "Google Cloud"
+    ]
+  },
+  {
+    "slug": "advanced/self-hosting/platforms/kubernetes",
+    "title": "Kubernetes",
+    "description": "Install self-hosted Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, ClickHouse, and S3 storage.",
+    "excerpt": "The official Appwrite Helm chart installs self-hosted Appwrite on your own Kubernetes cluster, and upgrades it with Helm. It deploys the API, console, realtime, workers, and schedulers, plus the routes your ingress controller or Gateway needs to reach them. A plain install includes everything Appwrite needs, PostgreSQL, Redis, and ClickHouse included, so you can try it on an empty cluster. For production, you replace each of those with a managed service, one at a time. The chart is published to…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Platform deployment",
+      "Kubernetes"
     ]
   },
   {
@@ -2439,6 +2450,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/auth/passkeys",
+    "title": "Passkeys",
+    "description": "Let users sign up and sign in with a passkey, a key pair stored on their device and unlocked with Face ID, Touch ID, a fingerprint, or a device PIN, on the web, Android, and Apple platforms.",
+    "excerpt": "A passkey replaces a password with a key pair that lives on the user's device or in their password manager, such as iCloud Keychain or Google Password Manager. The user unlocks it with Face ID, Touch ID, a fingerprint, or the device PIN. The private key never leaves the device, and the public key that Appwrite stores is useless to an attacker. A passkey only works on the domain it was created for, so a look-alike phishing site cannot use…",
+    "breadcrumbs": [
+      "Auth",
+      "Guides",
+      "Passkeys"
+    ]
+  },
+  {
     "slug": "products/auth/phone-sms",
     "title": "Phone (SMS) login",
     "description": "Enhance security with SMS and phone authentication in Appwrite. Add multi-factor authentication via SMS, verify phone numbers, and protect user accounts.",
@@ -2574,7 +2596,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/verify-user",
     "title": "Verify user",
     "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
-    "excerpt": "User verification in Appwrite allows you to verify user email addresses and phone numbers. Users don't need to be verified to log in, but you can restrict resource access to verified users only using permissions. Verify email To verify a user's email, first ensure the user is logged in so that the verification email can be sent to the user who created the account. Then, send the verification email specifying a redirect URL. The verification secrets will be appended as…",
+    "excerpt": "User verification in Appwrite allows you to verify user email addresses and phone numbers. Users don't need to be verified to log in, but you can restrict resource access to verified users only using permissions. Verify email You can verify a user's email with a link or with a code. A link suits web apps, because the user opens it and lands on a verification page in your app. A code suits mobile apps, desktop apps, and any app without…",
     "breadcrumbs": [
       "Auth",
       "Guides",
@@ -2607,7 +2629,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/avatars/favicons",
     "title": "Favicons",
     "description": "Fetch favicons from remote websites for link previews and bookmark displays.",
-    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | | width…",
+    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | Favicon retrieval…",
     "breadcrumbs": [
       "Avatars",
       "Concepts",
@@ -5408,7 +5430,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/sites/quick-start/tanstack-start",
     "title": "Deploy a TanStack Start app to Appwrite Sites",
     "description": "Learn how to setup and deploy TanStack Start apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a TanStack Start app or setup the TanStack Start starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository…",
+    "excerpt": "First, you must either create a TanStack Start app or setup the TanStack Start starter template. Open your terminal, and run the following command. When the CLI asks for a deployment adapter, select **Nitro (agnostic)** or **None**. Appwrite Sites runs both. The adapter sets the output directory you confirm in step 3. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project.…",
     "breadcrumbs": [
       "Sites",
       "Start with Sites",
@@ -6013,6 +6035,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Tooling",
       "IDEs",
       "OpenCode"
+    ]
+  },
+  {
+    "slug": "tooling/ai/agents/pi",
+    "title": "Pi",
+    "description": "Learn how you can add the Appwrite MCP server to Pi to interact with both the Appwrite API and documentation, and to react to events in your project.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Pi, a terminal coding agent, for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so you don't run a server on your machine. If you don't have Pi yet, install it from your terminal on macOS or Linux. On Windows, or to install with npm, see pi.dev. Pi connects to the server…",
+    "breadcrumbs": [
+      "Tooling",
+      "IDEs",
+      "Pi"
     ]
   },
   {

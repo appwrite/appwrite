@@ -2,8 +2,12 @@
 
 namespace Appwrite\Realtime\Message\Handlers;
 
+use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
@@ -11,6 +15,7 @@ use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
@@ -28,8 +33,14 @@ class Authentication extends Action
             ->inject('connectionId')
             ->inject('realtime')
             ->inject('database')
+            ->inject('dbForConsole')
             ->inject('register')
             ->inject('response')
+            ->inject('presenceState')
+            ->inject('project')
+            ->inject('publisherForUsage')
+            ->inject('queueForEvents')
+            ->inject('queueForRealtime')
             ->callback($this->action(...));
     }
 
@@ -41,8 +52,14 @@ class Authentication extends Action
         int $connectionId,
         Realtime $realtime,
         Database $database,
+        Database $dbForConsole,
         Registry $register,
         Response $response,
+        PresenceState $presenceState,
+        ?Document $project,
+        UsagePublisher $publisherForUsage,
+        QueueEvent $queueForEvents,
+        QueueRealtime $queueForRealtime,
     ): array {
         $store = new Store();
         $store->decode($session);
@@ -59,24 +76,45 @@ class Authentication extends Action
         $proofForToken = new Token();
         $proofForToken->setHash(new Sha());
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $authorization = $realtime->connections[$connectionId]['authorization'] ?? null;
+        $impersonatedUserId = $realtime->connections[$connectionId]['impersonatedUserId'] ?? null;
+        $projectId = $realtime->connections[$connectionId]['projectId'] ?? null;
+
+        $invalidatedAt = null;
+
+        if ($projectId !== null && $projectId !== '') {
+            // The message scope resolves the connection's project, except on the
+            // console project, where the user lives in the platform database.
+            $invalidatedAtProject = ($project !== null && !$project->isEmpty())
+                ? $project
+                : $dbForConsole->getAuthorization()->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+
+            $invalidatedAt = $invalidatedAtProject->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
+        }
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $invalidatedAt);
 
         if (empty($user->getId()) || $sessionId === false) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
         }
 
-        $roles = $user->getRoles($database->getAuthorization());
+        if ($user->getAttribute('status') === false) {
+            throw new Exception(Exception::USER_BLOCKED);
+        }
 
-        $authorization = $realtime->connections[$connectionId]['authorization'] ?? null;
-        $impersonatedUserId = $realtime->connections[$connectionId]['impersonatedUserId'] ?? null;
-        $projectId = $realtime->connections[$connectionId]['projectId'] ?? null;
+        if (!$user->sessionFactorsMet($sessionId)) {
+            throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
+        }
+
+        $roles = $user->getRoles($database->getAuthorization());
 
         if ($impersonatedUserId !== null) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Cannot re-authenticate on an impersonated connection.');
         }
-        // Capture the pre-auth userId before unsubscribe() clears the connection entry,
-        // so we can rebind any account channels that were stored under it.
+        // Capture the pre-auth userId and presence hold before unsubscribe() clears the
+        // connection entry, so we can rebind account channels and carry or release the hold.
         $previousUserId = $realtime->connections[$connectionId]['userId'] ?? '';
+        $presenceHold = $realtime->connections[$connectionId]['presence'] ?? null;
 
         $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
         $meta = $realtime->getSubscriptionMetadata($connectionId);
@@ -111,6 +149,23 @@ class Authentication extends Action
             $realtime->connections[$connectionId]['expire'] = $user->getSessionExpiry($sessionId);
             // Now authenticated by this session, not by any JWT it was opened with.
             $realtime->connections[$connectionId]['jwtExpire'] = null;
+        }
+
+        // Same user with the entry restored keeps its hold; otherwise this socket gives it up --
+        // drop the stash (subscribe() may have carried it over) and release the connection.
+        if ($presenceHold !== null && !empty($projectId) && $projectId !== 'console') {
+            if ($previousUserId === $user->getId() && isset($realtime->connections[$connectionId])) {
+                $realtime->connections[$connectionId]['presence'] = $presenceHold;
+            } else {
+                unset($realtime->connections[$connectionId]['presence']);
+                $sequence = (string) ($presenceHold['sequence'] ?? '');
+                if ($project !== null && !$project->isEmpty() && $previousUserId !== '' && $sequence !== '') {
+                    $deleted = $presenceState->releaseConnectionForUser($database, (string) $previousUserId, $sequence);
+                    if ($deleted !== null) {
+                        $presenceState->triggerPresenceDeleted($database, $project, (string) $previousUserId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime);
+                    }
+                }
+            }
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));

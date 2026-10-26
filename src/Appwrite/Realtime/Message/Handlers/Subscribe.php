@@ -10,8 +10,9 @@ use Appwrite\Realtime\Message\Validators\SubscribePayload as SubscribePayloadVal
 use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -56,7 +57,7 @@ class Subscribe extends Action
         foreach ($items as $payload) {
             $subscriptionId = \array_key_exists('subscriptionId', $payload)
                 ? $payload['subscriptionId']
-                : ID::unique();
+                : Id::unique();
 
             $queries = $payload['queries'] ?? [];
 
@@ -79,9 +80,8 @@ class Subscribe extends Action
         // Console live event tail: authorize every `console.tail.<projectId>` channel
         // FIRST — before any subscription state is mutated — so a batch mixing authorized
         // and unauthorized tails can't leave partial state behind. Each tail is authorized
-        // by team membership of the target project's owning team, with ownership resolved
-        // fresh (projects can be transferred between teams, so a cached teamId could
-        // authorize the wrong team).
+        // by the target project's read permissions, resolved fresh (projects can be
+        // transferred between teams, so cached permissions could authorize the wrong team).
         $now = \microtime(true);
         $pendingTails = [];
         foreach ($parsedPayloads as $parsedPayload) {
@@ -117,20 +117,19 @@ class Subscribe extends Action
                         'Not authorized to tail project "' . $targetProjectId . '".'
                     );
                 }
-                $teamId = (string) $project->getAttribute('teamId', '');
-                $requiredRole = Role::team($teamId)->toString();
+                // The roles that may read the project: its team owners and developers, and members with a role on this project.
+                $readRoles = $project->getPermissionsByType(PermissionType::Read);
 
-                if ($teamId === '' || !\in_array($requiredRole, $roles, true)) {
+                if (empty(\array_intersect($readRoles, $roles))) {
                     throw new Exception(
                         Exception::REALTIME_POLICY_VIOLATION,
                         'Not authorized to tail project "' . $targetProjectId . '".'
                     );
                 }
 
-                $compiled ??= RuntimeQuery::compile($parsedPayload['queries']);
-                // Carry the authorizing role so the tail can be revoked if the viewer
-                // later loses team membership (or the project is transferred).
-                $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled, $requiredRole];
+                $compiled ??= RuntimeQuery::prepare($parsedPayload['queries']);
+                // Carry the authorizing roles so the tail is revoked when the viewer's roles change.
+                $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled, $readRoles];
             }
         }
 
@@ -149,8 +148,8 @@ class Subscribe extends Action
         // registry is keyed by (connId, subId, projectId): re-subscribing the same channel
         // overwrites its filter in place, while a reused subscription id that names a new
         // tail channel keeps the ones already registered (mirrors the tree).
-        foreach ($pendingTails as [$subId, $targetProjectId, $compiled, $role]) {
-            $eventTailRegistry->add($connectionId, $subId, $targetProjectId, $compiled, $now, $role);
+        foreach ($pendingTails as [$subId, $targetProjectId, $compiled, $readRoles]) {
+            $eventTailRegistry->add($connectionId, $subId, $targetProjectId, $compiled, $now, $readRoles);
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));

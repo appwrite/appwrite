@@ -59,25 +59,28 @@ export function AccountSecurity({
       })
     }
 
-    items.push({
-      id: 'passkeys',
-      search: {
-        title: 'Passkeys',
-        keywords: [
-          'passkey',
-          'webauthn',
-          'fingerprint',
-          'face id',
-          'biometric',
-        ],
-      },
-      node: <PasskeysSection initialData={initialData?.passkeys} />,
-    })
+    if (features.accountPasskeys) {
+      items.push({
+        id: 'passkeys',
+        search: {
+          title: 'Passkeys',
+          keywords: [
+            'passkey',
+            'webauthn',
+            'fingerprint',
+            'face id',
+            'biometric',
+          ],
+        },
+        node: <PasskeysSection initialData={initialData?.passkeys} />,
+      })
+    }
 
     return items
   }, [
     features.accountIdentities,
     features.accountMfa,
+    features.accountPasskeys,
     initialData?.identities,
     initialData?.passkeys,
   ])

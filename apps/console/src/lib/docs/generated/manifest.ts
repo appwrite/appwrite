@@ -322,7 +322,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 22
+    "readingTimeMinutes": 24
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -378,7 +378,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 8
   },
   {
     "slug": "advanced/self-hosting/mcp",
@@ -428,6 +428,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Deploy Appwrite on Google Cloud Platform using Compute Engine. Learn how to set up a production-ready Appwrite instance on GCP.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "advanced/self-hosting/platforms/kubernetes",
+    "title": "Kubernetes",
+    "description": "Install self-hosted Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, ClickHouse, and S3 storage.",
+    "layout": "article",
+    "readingTimeMinutes": 15
   },
   {
     "slug": "advanced/self-hosting/production",
@@ -490,7 +497,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "apis",
@@ -525,7 +532,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Authentication",
     "description": "Learn how authentication works with Appwrite Realtime subscriptions and how to handle session-based access.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "apis/realtime/channels",
@@ -581,7 +588,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Response codes",
     "description": "Understand Appwrite platform response codes and error handling. Learn to interpret HTTP status codes, error types, and implement best practices for handling errors gracefully.",
     "layout": "article",
-    "readingTimeMinutes": 19
+    "readingTimeMinutes": 20
   },
   {
     "slug": "apis/rest",
@@ -1323,7 +1330,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Email and password login",
     "description": "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/auth/email-policies",
@@ -1575,6 +1582,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "products/auth/passkeys",
+    "title": "Passkeys",
+    "description": "Let users sign up and sign in with a passkey, a key pair stored on their device and unlocked with Face ID, Touch ID, a fingerprint, or a device PIN, on the web, Android, and Apple platforms.",
+    "layout": "article",
+    "readingTimeMinutes": 9
+  },
+  {
     "slug": "products/auth/phone-sms",
     "title": "Phone (SMS) login",
     "description": "Enhance security with SMS and phone authentication in Appwrite. Add multi-factor authentication via SMS, verify phone numbers, and protect user accounts.",
@@ -1663,7 +1677,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Verify user",
     "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/avatars",
@@ -1684,7 +1698,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Favicons",
     "description": "Fetch favicons from remote websites for link previews and bookmark displays.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 1
   },
   {
     "slug": "products/avatars/flags",
@@ -3469,7 +3483,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy a TanStack Start app to Appwrite Sites",
     "description": "Learn how to setup and deploy TanStack Start apps on Appwrite Sites.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/sites/quick-start/vanilla",
@@ -3525,7 +3539,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Buckets",
     "description": "Organize and manage your files effectively with Appwrite Storage Buckets. Explore how to create, configure, and use storage buckets for seamless file organization.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/storage/file-tokens",
@@ -3871,6 +3885,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 1
   },
   {
+    "slug": "tooling/ai/agents/pi",
+    "title": "Pi",
+    "description": "Learn how you can add the Appwrite MCP server to Pi to interact with both the Appwrite API and documentation, and to react to events in your project.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
     "slug": "tooling/ai/agents/vscode",
     "title": "VS Code",
     "description": "Learn how you can use Appwrite with VS Code and GitHub Copilot for AI-assisted development. Get started quickly with pre-built prompts and connect to the Appwrite MCP server for deeper integration.",
@@ -3945,7 +3966,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Appwrite MCP server",
     "description": "Enable LLMs and code-generation tools to interact with your Appwrite project and documentation",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 8
   },
   {
     "slug": "tooling/ai/persistent-agents-with-realtime",

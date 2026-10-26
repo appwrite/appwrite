@@ -214,6 +214,9 @@ export function View() {
       if (entry.title === 'Multi-factor authentication') {
         return features.accountMfa
       }
+      if (entry.title === 'Passkeys') {
+        return features.accountPasskeys
+      }
       return true
     })
   }, [
@@ -222,6 +225,7 @@ export function View() {
     features.browserAlerts,
     features.accountIdentities,
     features.accountMfa,
+    features.accountPasskeys,
     features.accountApplications,
   ])
 

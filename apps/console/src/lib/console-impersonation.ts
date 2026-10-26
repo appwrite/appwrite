@@ -192,7 +192,7 @@ export function notifyConsoleImpersonationChanged() {
 
 /** True when the account payload indicates impersonation or a session target is stored (e.g. before first account fetch). */
 export function isConsoleImpersonationActive(
-  account?: { impersonatorUserId?: string } | null,
+  account?: { impersonatorUserId?: string | null } | null,
 ): boolean {
   return (
     !!account?.impersonatorUserId || !!readConsoleImpersonationTargetUserId()

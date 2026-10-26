@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4a93bcc8a54492fc73e8ca119e470d53",
+    "content-hash": "e8d3fe25934634791688e8dd02e325b2",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "30.2.2",
+            "version": "32.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "ec301b5d92af2fd99e8a7b1155a8f1016310b2a4"
+                "reference": "864a406cfa4e0004e099b66bfca9b2e28f95b13b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/ec301b5d92af2fd99e8a7b1155a8f1016310b2a4",
-                "reference": "ec301b5d92af2fd99e8a7b1155a8f1016310b2a4",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/864a406cfa4e0004e099b66bfca9b2e28f95b13b",
+                "reference": "864a406cfa4e0004e099b66bfca9b2e28f95b13b",
                 "shasum": ""
             },
             "require": {
@@ -86,6 +86,7 @@
                 "ext-curl": "*",
                 "ext-json": "*",
                 "php": ">=8.5",
+                "psr/http-client": "^1.0",
                 "utopia-php/client": "^0.6"
             },
             "require-dev": {
@@ -110,10 +111,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/30.2.2",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/32.0.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-10-12T13:46:08+00:00"
+            "time": "2026-10-20T23:47:23+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -1509,6 +1510,71 @@
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
             "time": "2026-09-09T22:06:17+00:00"
+        },
+        {
+            "name": "opis/closure",
+            "version": "4.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/opis/closure.git",
+                "reference": "b97e42b95bb72d87507f5e2d137ceb239aea8d6b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/opis/closure/zipball/b97e42b95bb72d87507f5e2d137ceb239aea8d6b",
+                "reference": "b97e42b95bb72d87507f5e2d137ceb239aea8d6b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/functions.php"
+                ],
+                "psr-4": {
+                    "Opis\\Closure\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marius Sarca",
+                    "email": "marius.sarca@gmail.com"
+                },
+                {
+                    "name": "Sorin Sarca",
+                    "email": "sarca_sorin@hotmail.com"
+                }
+            ],
+            "description": "A library that can be used to serialize closures (anonymous functions) and arbitrary data.",
+            "homepage": "https://opis.io/closure",
+            "keywords": [
+                "anonymous classes",
+                "anonymous functions",
+                "closure",
+                "function",
+                "serializable",
+                "serialization",
+                "serialize"
+            ],
+            "support": {
+                "issues": "https://github.com/opis/closure/issues",
+                "source": "https://github.com/opis/closure/tree/4.5.0"
+            },
+            "time": "2026-03-05T13:32:42+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -4298,17 +4364,79 @@
             "time": "2025-06-29T15:42:06+00:00"
         },
         {
-            "name": "utopia-php/database",
-            "version": "7.4.2",
+            "name": "utopia-php/async",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/database.git",
-                "reference": "2bbc6f048e82d2e3a310c4e46f37ef7476a51619"
+                "url": "https://github.com/utopia-php/async.git",
+                "reference": "c7925a2ad7cf0fceebb3f93200c95a269126f692"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/2bbc6f048e82d2e3a310c4e46f37ef7476a51619",
-                "reference": "2bbc6f048e82d2e3a310c4e46f37ef7476a51619",
+                "url": "https://api.github.com/repos/utopia-php/async/zipball/c7925a2ad7cf0fceebb3f93200c95a269126f692",
+                "reference": "c7925a2ad7cf0fceebb3f93200c95a269126f692",
+                "shasum": ""
+            },
+            "require": {
+                "opis/closure": "4.*",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "amphp/amp": "3.*",
+                "amphp/parallel": "2.*",
+                "amphp/process": "^2.0",
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "2.*",
+                "phpunit/phpunit": "11.5.45",
+                "react/child-process": "0.*",
+                "react/event-loop": "1.*",
+                "swoole/ide-helper": "*"
+            },
+            "suggest": {
+                "amphp/amp": "Required for Amp promise adapter",
+                "amphp/parallel": "Required for Amp parallel adapter",
+                "ext-ev": "Required for ReactPHP event loop (recommended for best performance)",
+                "ext-parallel": "Required for parallel adapter (requires PHP ZTS build)",
+                "ext-sockets": "Required for Swoole Process adapter",
+                "ext-swoole": "Required for Swoole Thread and Process adapters (recommended for best performance)",
+                "react/child-process": "Required for ReactPHP parallel adapter",
+                "react/event-loop": "Required for ReactPHP promise and parallel adapters"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Async\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Appwrite Team",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "High-performance concurrent + parallel library with Promise and Parallel execution support for PHP.",
+            "support": {
+                "issues": "https://github.com/utopia-php/async/issues",
+                "source": "https://github.com/utopia-php/async/tree/0.2.0"
+            },
+            "time": "2026-09-29T14:07:22+00:00"
+        },
+        {
+            "name": "utopia-php/database",
+            "version": "8.3.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/database.git",
+                "reference": "86e31fb84e535c69e58bcbc19037bf1fb472fccb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/86e31fb84e535c69e58bcbc19037bf1fb472fccb",
+                "reference": "86e31fb84e535c69e58bcbc19037bf1fb472fccb",
                 "shasum": ""
             },
             "require": {
@@ -4317,23 +4445,36 @@
                 "ext-pdo": "*",
                 "ext-redis": "*",
                 "php": ">=8.5",
+                "utopia-php/async": "^0.2",
                 "utopia-php/cache": "^4.0 || ^5.0",
                 "utopia-php/console": "^0.1 || ^0.2",
-                "utopia-php/mongo": "1.*",
-                "utopia-php/pools": "2.*",
-                "utopia-php/validators": "^1.0"
+                "utopia-php/mongo": "^1.5.4",
+                "utopia-php/pools": "^2.0",
+                "utopia-php/query": "^0.7.2",
+                "utopia-php/validators": "^1.0 || ^2.0"
             },
             "require-dev": {
-                "fakerphp/faker": "1.23.*",
-                "laravel/pint": "*",
-                "pcov/clobber": "2.*",
-                "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "9.*",
-                "rregeer/phpunit-coverage-check": "0.3.*",
+                "brianium/paratest": "^7.20",
+                "fakerphp/faker": "^1.23",
+                "laravel/pint": "^1.29",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpunit/phpunit": "^12.5",
                 "swoole/ide-helper": "5.1.3",
                 "utopia-php/cli": "^0.24.4"
             },
+            "suggest": {
+                "ext-pdo": "Needed to support MariaDB, MySQL or SQLite Database Adapter",
+                "ext-redis": "Needed to support Redis Cache Adapter",
+                "ext-swoole": "Needed to scope lifecycle hook silencing per coroutine and to detect lost connections"
+            },
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "8.0.x-dev",
+                    "dev-feat-query-lib": "8.0.x-dev"
+                }
+            },
             "autoload": {
                 "psr-4": {
                     "Utopia\\Database\\": "src/Database"
@@ -4353,64 +4494,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/7.4.2"
+                "source": "https://github.com/utopia-php/database/tree/8.3.14"
             },
-            "time": "2026-10-13T08:13:02+00:00"
-        },
-        {
-            "name": "utopia-php/migration",
-            "version": "2.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/migration.git",
-                "reference": "24e3b214884c7520fbd8b1f2f0eae4f812cf6196"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/24e3b214884c7520fbd8b1f2f0eae4f812cf6196",
-                "reference": "24e3b214884c7520fbd8b1f2f0eae4f812cf6196",
-                "shasum": ""
-            },
-            "require": {
-                "appwrite/appwrite": "^30.2.2",
-                "ext-curl": "*",
-                "ext-openssl": "*",
-                "halaxa/json-machine": "^1.2",
-                "php": ">=8.5",
-                "utopia-php/database": "^7.0.0",
-                "utopia-php/dsn": "0.2.*",
-                "utopia-php/storage": "4.*"
-            },
-            "require-dev": {
-                "ext-pdo": "*",
-                "laravel/pint": "1.*",
-                "phpstan/phpstan": "^2.1",
-                "phpunit/phpunit": "11.*",
-                "vlucas/phpdotenv": "5.*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Migration\\": "src/Migration"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library to migrate resources between services.",
-            "keywords": [
-                "framework",
-                "migration",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/2.1.0"
-            },
-            "time": "2026-10-12T14:04:01+00:00"
+            "time": "2026-10-22T06:59:55+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4775,16 +4861,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.0.1",
+            "version": "5.13.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "dc832d125ca8fc5ce27284e7b241d21cbcb55bed"
+                "reference": "be65dd140b1f01386a1a93307c2de2ec326ad4e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/dc832d125ca8fc5ce27284e7b241d21cbcb55bed",
-                "reference": "dc832d125ca8fc5ce27284e7b241d21cbcb55bed",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/be65dd140b1f01386a1a93307c2de2ec326ad4e9",
+                "reference": "be65dd140b1f01386a1a93307c2de2ec326ad4e9",
                 "shasum": ""
             },
             "require": {
@@ -4821,9 +4907,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.0.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.13.17"
             },
-            "time": "2026-09-12T18:58:40+00:00"
+            "time": "2026-10-24T11:32:35+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -7515,16 +7601,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.28.0",
+            "version": "v3.30.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "597c12ed286fb9d1701a36684ce6e0cbe28ebc8b"
+                "reference": "8c737079b726af72ff8ef3c595be9f6a810ea1ef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/597c12ed286fb9d1701a36684ce6e0cbe28ebc8b",
-                "reference": "597c12ed286fb9d1701a36684ce6e0cbe28ebc8b",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/8c737079b726af72ff8ef3c595be9f6a810ea1ef",
+                "reference": "8c737079b726af72ff8ef3c595be9f6a810ea1ef",
                 "shasum": ""
             },
             "require": {
@@ -7579,7 +7665,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.28.0"
+                "source": "https://github.com/twigphp/Twig/tree/v3.30.0"
             },
             "funding": [
                 {
@@ -7591,7 +7677,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-03T20:44:34+00:00"
+            "time": "2026-09-25T13:20:01+00:00"
         }
     ],
     "aliases": [],

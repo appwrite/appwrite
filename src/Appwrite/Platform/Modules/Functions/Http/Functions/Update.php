@@ -16,12 +16,13 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
+use Appwrite\Vcs\Validator\Directory;
 use Executor\Executor;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
@@ -30,6 +31,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -75,7 +77,7 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
             ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true, enum: new Enum(name: 'Runtime'))
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
@@ -91,7 +93,7 @@ class Update extends Base
             ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the function', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
-            ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
+            ->param('providerRootDirectory', '', new Directory(), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', null, fn (array $plan) => new Nullable(new Specification(
@@ -107,8 +109,9 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             )), 'Runtime specification for the function executions.', true, ['plan'], example: 's-1vcpu-512mb')
-            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('interval', null, new Nullable(new Range(0, Database::MAX_INT)), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule. When omitted, the current interval is kept unless schedule is set.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the function.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -123,6 +126,7 @@ class Update extends Base
             ->inject('executor')
             ->inject('authorization')
             ->inject('platform')
+            ->inject('deviceForBuilds')
             ->callback($this->action(...));
     }
 
@@ -150,6 +154,7 @@ class Update extends Base
         ?string $runtimeSpecification,
         int $deploymentRetention,
         ?int $interval,
+        ?string $description,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -163,7 +168,8 @@ class Update extends Base
         RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         Authorization $authorization,
-        array $platform
+        array $platform,
+        ?Device $deviceForBuilds = null,
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -193,6 +199,7 @@ class Update extends Base
             $runtime = $function->getAttribute('runtime');
         }
 
+        $description ??= $function->getAttribute('description', '');
         $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
         $runtimeSpecification ??= $function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
 
@@ -247,7 +254,7 @@ class Update extends Base
             $teamId = $project->getAttribute('teamId', '');
 
             $repository = $dbForPlatform->createDocument('repositories', new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
@@ -273,6 +280,22 @@ class Update extends Base
             } catch (\Throwable $error) {
                 $dbForPlatform->deleteDocument('repositories', $repository->getId());
                 throw $error;
+            }
+        }
+
+        // Reconnecting a connected function only moves the function to the new installation, while
+        // webhook deployments take theirs from the repository link
+        if ($isConnected && !empty($providerRepositoryId) && !empty($repositoryId) && !$installation->isEmpty()) {
+            $repository = $dbForPlatform->getDocument('repositories', $repositoryId);
+            if (
+                !$repository->isEmpty()
+                && $repository->getAttribute('providerRepositoryId') === $providerRepositoryId
+                && $repository->getAttribute('installationInternalId') !== $installation->getSequence()
+            ) {
+                $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document([
+                    'installationId' => $installation->getId(),
+                    'installationInternalId' => $installation->getSequence(),
+                ]));
             }
         }
 
@@ -309,9 +332,11 @@ class Update extends Base
             }
         }
 
+        $previous = $function;
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
+            'description' => $description,
             'runtime' => $runtime,
             'events' => $events,
             'schedule' => $schedule,
@@ -336,8 +361,10 @@ class Update extends Base
             'providerPaths' => $providerPaths ?? $function->getAttribute('providerPaths', []),
             'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $runtimeSpecification,
-            'search' => implode(' ', [$functionId, $name, $runtime]),
+            'search' => implode(' ', [$functionId, $name, $description, $runtime]),
         ])));
+
+        $this->deleteStaleBuildCache($deviceForBuilds, $project->getId(), $previous, $function);
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {

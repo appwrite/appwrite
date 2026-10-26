@@ -98,12 +98,12 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
+            ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Message ID.', false, ['dbForProject'])
+            ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of Topic IDs.', true, ['dbForProject'])
+            ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of User IDs.', true, ['dbForProject'])
+            ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of Targets IDs.', true, ['dbForProject'])
             ->param('title', null, new Nullable(new Text(256)), 'Title for push notification.', true)
             ->param('body', null, new Nullable(new Text(64230)), 'Body for push notification.', true)
-            ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Topic IDs.', true, ['dbForProject'])
-            ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of User IDs.', true, ['dbForProject'])
-            ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
             ->param('data', null, new Nullable(new JSONObject()), 'Additional Data for push notification.', true)
             ->param('action', null, new Nullable(new Text(256)), 'Action for push notification.', true)
             ->param('image', null, new Nullable(new CompoundUID()), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
@@ -128,7 +128,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?string $title, ?string $body, ?array $topics, ?array $users, ?array $targets, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, ?string $channelId, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
+    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, ?string $channelId, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
     {
         $data = $this->normalizeJsonObject($data);
 
@@ -307,29 +307,30 @@ class Update extends Action
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $scheduleTime = $currentScheduledAt ?? $scheduledAt;
-            if (!\is_null($scheduleTime)) {
-                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
-            } else {
-                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
-            }
-
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
-
-            $jwt = $encoder->encode([
+            $pushData['image'] = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
+            ];
+        }
+
+        if (!empty($pushData['image'])) {
+            // Reissue on every update so the token tracks the current delivery time.
+            $scheduleTime = $scheduledAt ?? $currentScheduledAt;
+            $delivery = \is_null($scheduleTime) ? \time() : (new \DateTime($scheduleTime))->getTimestamp();
+
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
+
+            $jwt = $encoder->encode([
+                'bucketId' => $pushData['image']['bucketId'],
+                'fileId' => $pushData['image']['fileId'],
                 'projectId' => $project->getId(),
+                'exp' => $delivery + APP_PUSH_IMAGE_TOKEN_DURATION,
             ]);
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
-            $pushData['image'] = [
-                'bucketId' => $bucket->getId(),
-                'fileId' => $file->getId(),
-                'url' => "{$endpoint}/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
-            ];
+            $pushData['image']['url'] = "{$endpoint}/storage/buckets/{$pushData['image']['bucketId']}/files/{$pushData['image']['fileId']}/push?project={$project->getId()}&jwt={$jwt}";
         }
 
         $message->setAttribute('data', $pushData);
