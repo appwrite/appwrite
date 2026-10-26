@@ -8,6 +8,7 @@
 import {
   Account,
   Activities,
+  Admin,
   Affiliates,
   Analytics,
   Apps,
@@ -231,6 +232,7 @@ function createConsoleSdkRaw(client: Client) {
     functions: new Functions(client),
     locale: new Locale(client),
     manager: new Manager(client),
+    admin: new Admin(client),
     projects: new Projects(client),
     teams: new Teams(client),
     users: new Users(client),
