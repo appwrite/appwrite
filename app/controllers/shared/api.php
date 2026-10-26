@@ -618,8 +618,8 @@ Http::init()
                     '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
                 ];
 
-                // Path params such as a file ID are not part of the request input.
-                foreach (\array_merge($pathParams, $request->getParams()) as $key => $value) {
+                // Path params are not part of the request input, and the query must not override them.
+                foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
                     if (! empty($value)) {
                         $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
                     }
@@ -1011,7 +1011,7 @@ Http::shutdown()
                 '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
             ];
 
-            foreach (\array_merge($pathParams, $request->getParams()) as $key => $value) {
+            foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
                 if (! empty($value)) {
                     $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
                 }

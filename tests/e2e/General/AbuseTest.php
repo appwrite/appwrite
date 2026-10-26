@@ -463,6 +463,9 @@ final class AbuseTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $max + 1]);
         $this->assertSame(429, $response['headers']['status-code'], 'A guest previewing past the limit is throttled');
 
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $max + 2, 'fileId' => $fileIds[1]]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A query param cannot replace the file ID in the limit key');
+
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[1] . '/preview', $headers, ['width' => 1]);
         $this->assertSame(200, $response['headers']['status-code'], 'Another file has its own limit');
     }
