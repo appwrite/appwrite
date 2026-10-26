@@ -135,6 +135,11 @@ class Authentication extends Action
                     $user->getId(),
                 );
             }
+
+            // A connection without subscriptions has nothing to re-subscribe, so record its project, roles and user here.
+            if (!isset($realtime->connections[$connectionId])) {
+                $realtime->subscribe($projectId, $connectionId, '', $roles, [], [], $user->getId());
+            }
         }
 
         if ($authorization !== null) {
