@@ -12,6 +12,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Realtime\EventTailRegistry;
+use Appwrite\Realtime\Limits;
 use Appwrite\Realtime\Message\Dispatcher as MessageDispatcher;
 use Appwrite\Realtime\Message\Handlers\Authentication as AuthenticationHandler;
 use Appwrite\Realtime\Message\Handlers\Ping as PingHandler;
@@ -679,6 +680,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
                             $presence = $realtime->connections[$connection]['presence'] ?? null;
                             $jwtExpire = $realtime->connections[$connection]['jwtExpire'] ?? null;
+                            $limits = $realtime->connections[$connection]['limits'] ?? null;
                             // Re-read, as extending the session moves it. An impersonated
                             // connection has no sessionId; its impersonator's events refresh it.
                             $expire = $sessionId !== null
@@ -729,6 +731,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 if ($presence !== null) {
                                     $realtime->connections[$connection]['presence'] = $presence;
                                 }
+                            }
+                            if ($limits !== null && isset($realtime->connections[$connection])) {
+                                $realtime->connections[$connection]['limits'] = $limits;
                             }
 
                             $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
@@ -1086,6 +1091,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many open connections. Close an existing connection and try again.');
         }
 
+        $limits = Limits::fromPlan($connectionContainer->get('plan'));
+
         $requestedChannels = $request->getQuery('channels', []);
         if (\is_array($requestedChannels) && \count($requestedChannels) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'channels must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.');
@@ -1140,6 +1147,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $realtime->connections[$connection]['impersonator'] = $impersonator;
             $realtime->connections[$connection]['expire'] = $expire;
             $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
+            $realtime->connections[$connection]['limits'] = $limits;
             $updateStats($project->getId(), $project->getAttribute('teamId'));
             triggerStats([
                 METRIC_REALTIME_OUTBOUND => \strlen($connectedPayloadJson),
@@ -1155,7 +1163,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         try {
             $subscriptions = Realtime::constructSubscriptions(
                 $names,
-                fn ($channel) => $request->getQuery($channel, null)
+                fn ($channel) => $request->getQuery($channel, null),
+                $limits,
             );
         } catch (QueryException $e) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
@@ -1205,6 +1214,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $realtime->connections[$connection]['impersonator'] = $impersonator;
         $realtime->connections[$connection]['expire'] = $expire;
         $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
+        $realtime->connections[$connection]['limits'] = $limits;
         $updateStats($project->getId(), $project->getAttribute('teamId'));
 
         $subscriptionCount = \count($subscriptions);

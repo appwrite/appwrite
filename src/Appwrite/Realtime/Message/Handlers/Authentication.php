@@ -109,6 +109,7 @@ class Authentication extends Action
         // connection entry, so we can rebind account channels and carry or release the hold.
         $previousUserId = $realtime->connections[$connectionId]['userId'] ?? '';
         $presenceHold = $realtime->connections[$connectionId]['presence'] ?? null;
+        $limits = $realtime->connections[$connectionId]['limits'] ?? null;
 
         $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
         $meta = $realtime->getSubscriptionMetadata($connectionId);
@@ -143,6 +144,9 @@ class Authentication extends Action
             $realtime->connections[$connectionId]['expire'] = $user->getSessionExpiry($sessionId);
             // Now authenticated by this session, not by any JWT it was opened with.
             $realtime->connections[$connectionId]['jwtExpire'] = null;
+        }
+        if ($limits !== null) {
+            $realtime->connections[$connectionId]['limits'] = $limits;
         }
 
         // Same user with the entry restored keeps its hold; otherwise this socket gives it up --

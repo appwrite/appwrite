@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Realtime\Limits;
 use Appwrite\Utopia\Database\RuntimeQuery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -865,13 +866,47 @@ final class MessagingTest extends TestCase
         Realtime::constructSubscriptions(['documents'], fn () => \array_fill(0, 2, \array_fill(0, 51, $select)));
     }
 
+    public function testConstructSubscriptionsUsesConnectionLimits(): void
+    {
+        $select = Query::select(['*'])->toString();
+        $limits = new Limits(subscriptions: 2, channels: 3, queries: 4);
+
+        $this->assertCount(2, Realtime::constructSubscriptions(['documents'], fn () => [[$select], [$select]], $limits));
+
+        foreach ([
+            'Connection must have at most 2 subscriptions.' => fn () => Realtime::constructSubscriptions(['documents'], fn () => [[$select], [$select], [$select]], $limits),
+            'Connection must have at most 3 channels across its subscriptions.' => fn () => Realtime::constructSubscriptions(['a', 'b'], fn () => [[$select], [$select]], $limits),
+            'Connection must have at most 4 queries across its subscriptions.' => fn () => Realtime::constructSubscriptions(['documents'], fn () => [[$select, $select], [$select, $select, $select]], $limits),
+        ] as $message => $construct) {
+            try {
+                $construct();
+                $this->fail('Expected: ' . $message);
+            } catch (QueryException $e) {
+                $this->assertSame($message, $e->getMessage());
+            }
+        }
+    }
+
+    public function testSubscribeKeepsLimits(): void
+    {
+        $realtime = new Realtime();
+        $role = Role::user(Id::custom('A'))->toString();
+        $limits = new Limits(subscriptions: 5);
+
+        $realtime->subscribe('1', 1, '', [$role], [], [], 'A');
+        $realtime->connections[1]['limits'] = $limits;
+        $realtime->subscribe('1', 1, 'sub', [$role], ['documents'], [], 'A');
+
+        $this->assertSame($limits, $realtime->connections[1]['limits']);
+    }
+
     public function testConvertQueriesLimitsQuerySize(): void
     {
         $values = \array_map(fn (int $i) => 'v' . $i, \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE));
         $this->assertCount(1, Realtime::convertQueries([Query::equal('id', $values)->toString()]));
 
-        $nested = Query::or(\array_map(fn (int $i) => Query::equal('f' . $i, ['x']), \range(1, APP_LIMIT_REALTIME_QUERIES - 1)));
-        $this->assertSame(APP_LIMIT_REALTIME_QUERIES, Realtime::countQueries(Realtime::convertQueries([$nested->toString()])));
+        $nested = Query::or(\array_map(fn (int $i) => Query::equal('f' . $i, ['x']), \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE - 1)));
+        $this->assertSame(APP_LIMIT_ARRAY_PARAMS_SIZE, Realtime::countQueries(Realtime::convertQueries([$nested->toString()])));
 
         try {
             Realtime::convertQueries([Query::equal('id', [...$values, 'one more'])->toString()]);
@@ -882,8 +917,8 @@ final class MessagingTest extends TestCase
 
         // Queries nested in and/or count, so one large or() cannot stand in for many queries.
         $this->expectException(QueryException::class);
-        $this->expectExceptionMessage('A subscription must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries, counting the ones nested in and/or.');
-        $tooMany = Query::or(\array_map(fn (int $i) => Query::equal('f' . $i, ['x']), \range(1, APP_LIMIT_REALTIME_QUERIES)));
+        $this->expectExceptionMessage('A subscription must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries, counting the ones nested in and/or.');
+        $tooMany = Query::or(\array_map(fn (int $i) => Query::equal('f' . $i, ['x']), \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE)));
         Realtime::convertQueries([$tooMany->toString()]);
     }
 
