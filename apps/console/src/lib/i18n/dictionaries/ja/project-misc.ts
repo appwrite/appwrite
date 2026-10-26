@@ -2399,6 +2399,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'No subscribers found': 'サブスクライバーが見つかりません',
   'No subscribers for this channel': 'このチャンネルにはサブスクライバーがいません',
   'No subscribers yet': 'サブスクライバーがまだありません',
+  'No targets for this channel': 'このチャンネルにはターゲットがありません',
   'No targets': 'ターゲットがありません',
   'No targets have been selected for this message.':
     'このメッセージにターゲットが選択されていません。',
