@@ -144,6 +144,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         return false;
     }
 
+    // Preview grants only apply to the rule the key was issued for
+    if (!\is_null($apiKey) && !$apiKey->isBoundTo($rule)) {
+        $apiKey = null;
+    }
+
     $projectId = $rule->getAttribute('projectId');
     $project = $authorization->skip(
         fn () => $dbForPlatform->getDocument('projects', $projectId)

@@ -3424,14 +3424,9 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
-        $apiKey = $jwtObj->encode([
-            Key::PURPOSE_CLAIM => Key::PURPOSE,
-            'projectCheckDisabled' => true,
-            'previewAuthDisabled' => true,
-        ]);
+        $apiKey = $this->createPreviewKey($deploymentDomain, $deploymentId);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
-            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Hello Appwrite", (string) $response['body']);
@@ -3439,7 +3434,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/non-existing-path', followRedirects: false, headers: [
-            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertStringContainsString("Page not found", (string) $response['body']);
@@ -3447,6 +3442,91 @@ final class SitesCustomServerTest extends Scope
         $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testSitePreviewKeyBoundToRule(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Preview key site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+        $this->assertNotEmpty($deploymentId);
+        $otherDeploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+        ]);
+        $this->assertNotEmpty($otherDeploymentId);
+
+        $domain = $this->getDeploymentDomain($deploymentId);
+        $otherDomain = $this->getDeploymentDomain($otherDeploymentId);
+        $apiKey = $this->createPreviewKey($domain, $deploymentId);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => $apiKey,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Hello Appwrite', (string) $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => $apiKey,
+            'x-appwrite-hostname' => $otherDomain,
+        ]);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+
+        $proxyClient->setEndpoint('http://' . $otherDomain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => $apiKey,
+        ]);
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $unbound = $jwt->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
+            'projectCheckDisabled' => true,
+            'previewAuthDisabled' => true,
+        ]);
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $unbound,
+        ]);
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    private function createPreviewKey(string $hostname, string $deploymentId): string
+    {
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+
+        return API_KEY_EPHEMERAL . '_' . $jwt->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
+            'hostname' => $hostname,
+            'deploymentId' => $deploymentId,
+            'hostnameOverride' => true,
+            'projectCheckDisabled' => true,
+            'previewAuthDisabled' => true,
+        ]);
     }
 
     public function testSiteCors(): void
@@ -4351,15 +4431,8 @@ final class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
 
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
-        $apiKey = $jwtObj->encode([
-            Key::PURPOSE_CLAIM => Key::PURPOSE,
-            'projectCheckDisabled' => true,
-            'previewAuthDisabled' => true,
-        ]);
-
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
-            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            'x-appwrite-key' => $this->createPreviewKey($deploymentDomain, $deploymentId),
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $deployment = $this->getDeployment($siteId, $deploymentId);
@@ -4400,8 +4473,9 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
 
         // deployment is still building error page
+        $apiKey = $this->createPreviewKey($deploymentDomain, $deploymentId);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
-            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment is still building", (string) $response['body']);
@@ -4416,7 +4490,7 @@ final class SitesCustomServerTest extends Scope
 
         // deployment failed error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
-            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment build failed", (string) $response['body']);

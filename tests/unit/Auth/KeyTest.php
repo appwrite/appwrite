@@ -423,6 +423,30 @@ final class KeyTest extends TestCase
         $this->assertTrue($decoded->isProjectCheckDisabled());
     }
 
+    public static function rules(): \Iterator
+    {
+        yield 'issued rule' => [['hostname' => 'preview.sites.test', 'deploymentId' => 'deployment1'], new Document(['domain' => 'preview.sites.test', 'deploymentId' => 'deployment1']), true];
+        yield 'other hostname' => [['hostname' => 'preview.sites.test', 'deploymentId' => 'deployment1'], new Document(['domain' => 'victim.sites.test', 'deploymentId' => 'deployment1']), false];
+        yield 'other deployment' => [['hostname' => 'preview.sites.test', 'deploymentId' => 'deployment1'], new Document(['domain' => 'preview.sites.test', 'deploymentId' => 'deployment2']), false];
+        yield 'unbound key' => [[], new Document(['domain' => '', 'deploymentId' => '']), false];
+    }
+
+    /**
+     * @param array<string, string> $binding
+     */
+    #[DataProvider('rules')]
+    public function testDecodedKeyIsBoundToItsRule(array $binding, Document $rule, bool $bound): void
+    {
+        $decoded = Key::decode(
+            project: new Document(['$id' => 'test']),
+            team: new Document(),
+            user: new Document(),
+            key: self::generateKey('test', false, [], extra: $binding),
+        );
+
+        $this->assertSame($bound, $decoded->isBoundTo($rule));
+    }
+
     public function testDecodeExpiredEphemeral(): void
     {
         $expiredKey = self::generateKey('test', false, ['documents.read'], maxAge: 1, timestamp: time() - 60);
