@@ -24,6 +24,16 @@
 - Appwrite to Appwrite migrations carry what sdk-for-php 30.4 can write: membership IDs, topic `qos` and `expiry`,
   the reply-to address of scheduled emails, the Android channel of scheduled pushes, the password-pwned,
   password-rotation and passkey policies, and project environments as the new `project-environment` resource.
+- `Source::setResourceIds()` holds an Appwrite export to the listed resources, per type: the IDs of a root type's
+  resources, or of the parents whose children to export (a bucket for files, a function for deployments, a team for
+  memberships, a topic for subscribers, a database or `databaseId:tableId` for tables and rows). A type without an
+  entry is unrestricted within what its parents allow. Memberships of users outside a user list are left behind
+  rather than failing the export.
+
+### Fixed
+
+- The Appwrite source keeps listing databases past a page that holds only databases it was not asked for;
+  the cursor now moves over every database listed.
 
 ## 3.1.2
 
