@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Realtime\Limits;
 use Appwrite\Utopia\Database\RuntimeQuery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -869,14 +868,12 @@ final class MessagingTest extends TestCase
     public function testConstructSubscriptionsUsesConnectionLimits(): void
     {
         $select = Query::select(['*'])->toString();
-        $limits = new Limits(subscriptions: 2, channels: 3, queries: 4);
-
-        $this->assertCount(2, Realtime::constructSubscriptions(['documents'], fn () => [[$select], [$select]], $limits));
+        $this->assertCount(2, Realtime::constructSubscriptions(['documents'], fn () => [[$select], [$select]], 2, 3, 4));
 
         foreach ([
-            'Connection must have at most 2 subscriptions.' => fn () => Realtime::constructSubscriptions(['documents'], fn () => [[$select], [$select], [$select]], $limits),
-            'Connection must have at most 3 channels across its subscriptions.' => fn () => Realtime::constructSubscriptions(['a', 'b'], fn () => [[$select], [$select]], $limits),
-            'Connection must have at most 4 queries across its subscriptions.' => fn () => Realtime::constructSubscriptions(['documents'], fn () => [[$select, $select], [$select, $select, $select]], $limits),
+            'Connection must have at most 2 subscriptions.' => fn () => Realtime::constructSubscriptions(['documents'], fn () => [[$select], [$select], [$select]], 2, 3, 4),
+            'Connection must have at most 3 channels across its subscriptions.' => fn () => Realtime::constructSubscriptions(['a', 'b'], fn () => [[$select], [$select]], 2, 3, 4),
+            'Connection must have at most 4 queries across its subscriptions.' => fn () => Realtime::constructSubscriptions(['documents'], fn () => [[$select, $select], [$select, $select, $select]], 2, 3, 4),
         ] as $message => $construct) {
             try {
                 $construct();
@@ -891,7 +888,7 @@ final class MessagingTest extends TestCase
     {
         $realtime = new Realtime();
         $role = Role::user(Id::custom('A'))->toString();
-        $limits = new Limits(subscriptions: 5);
+        $limits = ['subscriptions' => 5, 'channels' => 100, 'queries' => 100];
 
         $realtime->subscribe('1', 1, '', [$role], [], [], 'A');
         $realtime->connections[1]['limits'] = $limits;

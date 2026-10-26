@@ -4,7 +4,6 @@ namespace Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
-use Appwrite\Realtime\Limits;
 use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -89,7 +88,7 @@ class Realtime extends MessagingAdapter
      *      'impersonator' -> ['projectId' => ..., 'userId' => ..., 'sessionId' => ...] who opened it then
      *      'expire' -> [UNIX_TIMESTAMP] when that session expires, if any
      *      'jwtExpire' -> [UNIX_TIMESTAMP] when the JWT the connection was opened with expires, if any
-     *      'limits' -> [Limits] how much the connection may subscribe to, from its project's plan
+     *      'limits' -> ['subscriptions' => int, 'channels' => int, 'queries' => int] from its project's plan
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
      *      'presence' -> ['projectId' => ..., 'userId' => ..., 'sequence' => ...] the row this
      *                    socket holds (by internal sequence), released on close; absent until a presence write
@@ -823,8 +822,13 @@ class Realtime extends MessagingAdapter
      *
      * @throws QueryException
      */
-    public static function constructSubscriptions(array $channelNames, callable $getQueryParam, Limits $limits = new Limits()): array
-    {
+    public static function constructSubscriptions(
+        array $channelNames,
+        callable $getQueryParam,
+        int $maxSubscriptions = APP_LIMIT_REALTIME_SUBSCRIPTIONS,
+        int $maxChannels = APP_LIMIT_REALTIME_CHANNELS,
+        int $maxQueries = APP_LIMIT_REALTIME_QUERIES,
+    ): array {
         $subscriptions = [];
         $channelCount = 0;
         $queryCount = 0;
@@ -857,19 +861,19 @@ class Realtime extends MessagingAdapter
 
             if ($params === null) {
                 if (!isset($subscriptions[0])) {
-                    if (\count($subscriptions) >= $limits->subscriptions) {
-                        throw new QueryException('Connection must have at most ' . $limits->subscriptions . ' subscriptions.');
+                    if (\count($subscriptions) >= $maxSubscriptions) {
+                        throw new QueryException('Connection must have at most ' . $maxSubscriptions . ' subscriptions.');
                     }
                     $subscriptions[0] = ['channels' => [], 'queries' => []];
                 }
                 $subscriptions[0]['channels'][] = $channel;
-                if (++$channelCount > $limits->channels) {
-                    throw new QueryException('Connection must have at most ' . $limits->channels . ' channels across its subscriptions.');
+                if (++$channelCount > $maxChannels) {
+                    throw new QueryException('Connection must have at most ' . $maxChannels . ' channels across its subscriptions.');
                 }
                 if (empty($subscriptions[0]['queries'])) {
                     $subscriptions[0]['queries'] = [Query::select(['*'])];
-                    if (++$queryCount > $limits->queries) {
-                        throw new QueryException('Connection must have at most ' . $limits->queries . ' queries across its subscriptions.');
+                    if (++$queryCount > $maxQueries) {
+                        throw new QueryException('Connection must have at most ' . $maxQueries . ' queries across its subscriptions.');
                     }
                 }
 
@@ -883,16 +887,16 @@ class Realtime extends MessagingAdapter
             foreach ($params as $index => $slot) {
                 if (!isset($subscriptions[$index])) {
                     // Counted before parsing, so an oversized URL is rejected without the work.
-                    if (\count($subscriptions) >= $limits->subscriptions) {
-                        throw new QueryException('Connection must have at most ' . $limits->subscriptions . ' subscriptions.');
+                    if (\count($subscriptions) >= $maxSubscriptions) {
+                        throw new QueryException('Connection must have at most ' . $maxSubscriptions . ' subscriptions.');
                     }
                     $subscriptions[$index] = ['channels' => [], 'queries' => []];
                 }
 
                 if (!\in_array($channel, $subscriptions[$index]['channels'], true)) {
                     $subscriptions[$index]['channels'][] = $channel;
-                    if (++$channelCount > $limits->channels) {
-                        throw new QueryException('Connection must have at most ' . $limits->channels . ' channels across its subscriptions.');
+                    if (++$channelCount > $maxChannels) {
+                        throw new QueryException('Connection must have at most ' . $maxChannels . ' channels across its subscriptions.');
                     }
                 }
 
@@ -903,8 +907,8 @@ class Realtime extends MessagingAdapter
                     }
                     $subscriptions[$index]['queries'] = self::convertQueries($raw);
                     $queryCount += self::countQueries($subscriptions[$index]['queries']);
-                    if ($queryCount > $limits->queries) {
-                        throw new QueryException('Connection must have at most ' . $limits->queries . ' queries across its subscriptions.');
+                    if ($queryCount > $maxQueries) {
+                        throw new QueryException('Connection must have at most ' . $maxQueries . ' queries across its subscriptions.');
                     }
                 }
             }

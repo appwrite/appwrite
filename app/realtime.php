@@ -12,7 +12,6 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Realtime\EventTailRegistry;
-use Appwrite\Realtime\Limits;
 use Appwrite\Realtime\Message\Dispatcher as MessageDispatcher;
 use Appwrite\Realtime\Message\Handlers\Authentication as AuthenticationHandler;
 use Appwrite\Realtime\Message\Handlers\Ping as PingHandler;
@@ -1091,7 +1090,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many open connections. Close an existing connection and try again.');
         }
 
-        $limits = Limits::fromPlan($connectionContainer->get('plan'));
+        $plan = $connectionContainer->get('plan');
+        $limits = [
+            'subscriptions' => (int) ($plan['realtimeSubscriptions'] ?? APP_LIMIT_REALTIME_SUBSCRIPTIONS),
+            'channels' => (int) ($plan['realtimeChannels'] ?? APP_LIMIT_REALTIME_CHANNELS),
+            'queries' => (int) ($plan['realtimeQueries'] ?? APP_LIMIT_REALTIME_QUERIES),
+        ];
 
         $requestedChannels = $request->getQuery('channels', []);
         if (\is_array($requestedChannels) && \count($requestedChannels) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
@@ -1168,7 +1172,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $subscriptions = Realtime::constructSubscriptions(
                 $names,
                 fn ($channel) => $request->getQuery($channel, null),
-                $limits,
+                $limits['subscriptions'],
+                $limits['channels'],
+                $limits['queries'],
             );
         } catch (QueryException $e) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
