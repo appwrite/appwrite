@@ -97,6 +97,10 @@ class Authentication extends Action
         if ($impersonatedUserId !== null) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Cannot re-authenticate on an impersonated connection.');
         }
+        // The lookups above can yield; onClose drops the entry first, so a closed socket is never counted.
+        if (!isset($realtime->connections[$connectionId])) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Connection is closed.');
+        }
         // Counted before any state changes, so a rejected switch leaves the connection as it was.
         if (!empty($projectId) && !$realtime->addConnection($connectionId, $projectId, $user->getId(), APP_LIMIT_REALTIME_CONNECTIONS)) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many open connections. Close an existing connection and try again.');

@@ -911,7 +911,7 @@ $adapter->onWorkerExit(function (int $workerId) use ($server, $realtime, &$exitS
     }
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $registerConnectionResources) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $adapter, $register, $stats, &$realtime, $registerConnectionResources) {
     global $container;
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
@@ -1073,7 +1073,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         // Impersonated or not, the connection lasts only as long as the session it runs on.
         $expire = $session !== null ? $user->getSessionExpiry($session->getId()) : null;
 
+        // The lookups above can yield, so a socket closed meanwhile is never counted.
         // Guests are not counted; the per-IP abuse limit covers them.
+        if (!$adapter->getNative()->isEstablished($connection)) {
+            $success = true;
+            return;
+        }
         if (!$realtime->addConnection($connection, $project->getId(), $targetUser->getId(), APP_LIMIT_REALTIME_CONNECTIONS)) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many open connections. Close an existing connection and try again.');
         }
