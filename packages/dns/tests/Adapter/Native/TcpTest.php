@@ -167,6 +167,10 @@ final class TcpTest extends TestCase
         $port = 0;
         socket_getsockname($listener, $address, $port);
 
+        if (!\is_string($address) || !\is_int($port)) {
+            $this->fail('socket_getsockname() did not report an address and port.');
+        }
+
         $client = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         $this->assertInstanceOf(Socket::class, $client);
         $this->assertNotFalse(socket_connect($client, $address, $port));
