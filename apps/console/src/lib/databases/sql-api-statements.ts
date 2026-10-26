@@ -4,7 +4,8 @@
  * The SQL API sidecar defaults to read/write DML only (SELECT, INSERT, UPDATE,
  * DELETE). DDL/DCL types (CREATE, ALTER, DROP, TRUNCATE, GRANT, REVOKE) are
  * opt-in per database. The console SQL editor and schema UI need those types,
- * so we enable the full allow-list before running console SQL.
+ * so the console opts a database in while it still has the default list. A
+ * list someone has changed, or a disabled SQL API, is left as it is.
  */
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -22,6 +23,14 @@ export const SQL_API_ALLOWED_STATEMENT_TYPES = [
   'GRANT',
   'REVOKE',
 ] as const
+
+/** The allow-list the SQL API gives a database until someone changes it. */
+export const SQL_API_DEFAULT_STATEMENTS: SqlApiStatementType[] = [
+  'SELECT',
+  'INSERT',
+  'UPDATE',
+  'DELETE',
+]
 
 export type SqlApiStatementType =
   (typeof SQL_API_ALLOWED_STATEMENT_TYPES)[number]
@@ -42,10 +51,7 @@ function normalizedStatementSet(
 
 /** True when the database already allows every statement the console issues. */
 export function hasConsoleSqlApiStatements(
-  database:
-    | { sqlApiAllowedStatements?: string[] | null }
-    | null
-    | undefined,
+  database: { sqlApiAllowedStatements?: string[] | null } | null | undefined,
 ): boolean {
   const allowed = normalizedStatementSet(database?.sqlApiAllowedStatements)
   if (allowed.size === 0) return false
@@ -80,37 +86,61 @@ export function isSqlApiDdlBlockedError(error: unknown): boolean {
   return false
 }
 
+/**
+ * True when the console may opt the database into its allow-list: the list is
+ * still the SQL API default, and the SQL API is enabled or the console is
+ * enabling it for a database it just created.
+ */
+export function canAdoptConsoleSqlApiStatements(
+  database: {
+    sqlApiEnabled?: boolean | null
+    sqlApiAllowedStatements?: string[] | null
+  },
+  enable = false,
+): boolean {
+  if (database.sqlApiEnabled === false && !enable) return false
+  if (hasConsoleSqlApiStatements(database)) return false
+
+  const allowed = normalizedStatementSet(database.sqlApiAllowedStatements)
+  if (allowed.size === 0) return true
+  return (
+    allowed.size === SQL_API_DEFAULT_STATEMENTS.length &&
+    SQL_API_DEFAULT_STATEMENTS.every((type) => allowed.has(type))
+  )
+}
+
 export type EnsureConsoleSqlApiStatementsResult = {
   database: Models.DedicatedDatabase | null
   updated: boolean
 }
 
 /**
- * Opt the database into the console SQL allow-list when DDL/DCL is missing.
- * Returns `updated: true` only when a PATCH was sent.
+ * Opt the database into the console SQL allow-list while it still has the
+ * SQL API default. Pass `enable` only for a database the console just created,
+ * to also turn the SQL API on. Returns `updated: true` only when a PATCH was sent.
  */
 export async function ensureConsoleSqlApiStatements(
   projectId: string,
   databaseId: string,
   engine: string,
   database?: Models.DedicatedDatabase | null,
+  enable = false,
 ): Promise<EnsureConsoleSqlApiStatementsResult> {
   const service = dedicatedEngineService(sdk.forProject(projectId), engine)
   const current =
-    database ??
-    (await service.get({ databaseId }).catch(() => null))
+    database ?? (await service.get({ databaseId }).catch(() => null))
 
   if (!current) {
     return { database: null, updated: false }
   }
-  if (hasConsoleSqlApiStatements(current)) {
+  if (!canAdoptConsoleSqlApiStatements(current, enable)) {
     return { database: current, updated: false }
   }
 
   const updated = await service.update({
     databaseId,
-    sqlApiEnabled: true,
     sqlApiAllowedStatements: CONSOLE_SQL_API_ALLOWED_STATEMENTS,
+    ...(current.sqlApiEnabled === false ? { sqlApiEnabled: true } : {}),
   })
   return { database: updated, updated: true }
 }

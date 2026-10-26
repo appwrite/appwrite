@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import {
+  canAdoptConsoleSqlApiStatements,
   CONSOLE_SQL_API_ALLOWED_STATEMENTS,
   hasConsoleSqlApiStatements,
   isSqlApiDdlBlockedError,
@@ -18,9 +19,9 @@ describe('hasConsoleSqlApiStatements', () => {
     expect(hasConsoleSqlApiStatements({ sqlApiAllowedStatements: [] })).toBe(
       false,
     )
-    expect(hasConsoleSqlApiStatements({ sqlApiAllowedStatements: undefined })).toBe(
-      false,
-    )
+    expect(
+      hasConsoleSqlApiStatements({ sqlApiAllowedStatements: undefined }),
+    ).toBe(false)
     expect(hasConsoleSqlApiStatements(null)).toBe(false)
   })
 
@@ -32,8 +33,8 @@ describe('hasConsoleSqlApiStatements', () => {
     ).toBe(true)
     expect(
       hasConsoleSqlApiStatements({
-        sqlApiAllowedStatements: CONSOLE_SQL_API_ALLOWED_STATEMENTS.map((type) =>
-          type.toLowerCase(),
+        sqlApiAllowedStatements: CONSOLE_SQL_API_ALLOWED_STATEMENTS.map(
+          (type) => type.toLowerCase(),
         ),
       }),
     ).toBe(true)
@@ -62,6 +63,63 @@ describe('isSqlApiDdlBlockedError', () => {
   test('ignores unrelated query errors', () => {
     expect(
       isSqlApiDdlBlockedError(new Error('relation "users" already exists')),
+    ).toBe(false)
+  })
+})
+
+describe('canAdoptConsoleSqlApiStatements', () => {
+  test('adopts the SQL API default list', () => {
+    expect(
+      canAdoptConsoleSqlApiStatements({
+        sqlApiEnabled: true,
+        sqlApiAllowedStatements: ['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+      }),
+    ).toBe(true)
+    expect(
+      canAdoptConsoleSqlApiStatements({
+        sqlApiEnabled: true,
+        sqlApiAllowedStatements: [],
+      }),
+    ).toBe(true)
+  })
+
+  test('keeps a list someone narrowed or changed', () => {
+    expect(
+      canAdoptConsoleSqlApiStatements({
+        sqlApiEnabled: true,
+        sqlApiAllowedStatements: ['SELECT'],
+      }),
+    ).toBe(false)
+    expect(
+      canAdoptConsoleSqlApiStatements({
+        sqlApiEnabled: true,
+        sqlApiAllowedStatements: [
+          'SELECT',
+          'INSERT',
+          'UPDATE',
+          'DELETE',
+          'CREATE',
+        ],
+      }),
+    ).toBe(false)
+  })
+
+  test('keeps a disabled SQL API disabled unless the console is enabling it', () => {
+    const database = {
+      sqlApiEnabled: false,
+      sqlApiAllowedStatements: ['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
+    }
+
+    expect(canAdoptConsoleSqlApiStatements(database)).toBe(false)
+    expect(canAdoptConsoleSqlApiStatements(database, true)).toBe(true)
+  })
+
+  test('skips a database that already has the console list', () => {
+    expect(
+      canAdoptConsoleSqlApiStatements({
+        sqlApiEnabled: true,
+        sqlApiAllowedStatements: CONSOLE_SQL_API_ALLOWED_STATEMENTS,
+      }),
     ).toBe(false)
   })
 })

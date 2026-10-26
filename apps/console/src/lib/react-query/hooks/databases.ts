@@ -283,6 +283,7 @@ export async function waitForDedicatedDatabaseReady(
           databaseId,
           source.engine,
           database,
+          true,
         ).catch(() => {
           /* Console DDL still retries on first write if this PATCH fails */
         })
@@ -319,6 +320,7 @@ export async function waitForDedicatedDatabaseReady(
           databaseId,
           source.engine,
           database,
+          true,
         ).catch(() => {
           /* Console DDL still retries on first write if this PATCH fails */
         })
