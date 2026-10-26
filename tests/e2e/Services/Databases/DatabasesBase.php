@@ -6141,6 +6141,232 @@ trait DatabasesBase
         $this->assertSame('miss', $changed['headers']['x-appwrite-cache']);
     }
 
+    public function testListDocumentsCacheBustedByDocumentPermissionChange(): void
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $guestHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'origin' => 'http://localhost',
+        ];
+        $resource = $this->getRecordResource();
+
+        $payload = [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'List Cache Document Permissions',
+            'permissions' => [],
+            $this->getSecurityParam() => true,
+        ];
+        if ($this->getSupportForAttributes()) {
+            $payload[$this->getSchemaResource()] = [
+                ['key' => 'title', 'type' => ColumnType::String->value, 'size' => 64],
+            ];
+        }
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $serverHeaders, $payload);
+        $this->assertSame(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->waitForAttribute($databaseId, $containerId, 'title');
+        }
+
+        $visible = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $serverHeaders, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['title' => 'Guest visible'],
+            'permissions' => [Permission::read(Role::guests())],
+        ]);
+        $this->assertSame(201, $visible['headers']['status-code']);
+        $visibleId = $visible['body']['$id'];
+
+        $kept = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $serverHeaders, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['title' => 'Guest kept'],
+            'permissions' => [Permission::read(Role::guests())],
+        ]);
+        $this->assertSame(201, $kept['headers']['status-code']);
+        $keptId = $kept['body']['$id'];
+
+        $listAsGuest = fn (): array => $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId), $guestHeaders, [
+            'ttl' => 300,
+        ]);
+
+        $miss = $listAsGuest();
+        $this->assertSame(200, $miss['headers']['status-code']);
+        $this->assertSame('miss', $miss['headers']['x-appwrite-cache']);
+        $this->assertSame(2, $miss['body']['total']);
+        $this->assertCount(2, $miss['body'][$resource]);
+
+        $hit = $listAsGuest();
+        $this->assertSame(200, $hit['headers']['status-code']);
+        $this->assertSame('hit', $hit['headers']['x-appwrite-cache']);
+        $this->assertSame(2, $hit['body']['total']);
+        $this->assertCount(2, $hit['body'][$resource]);
+
+        $email = \uniqid('', true) . \getmypid() . \bin2hex(\random_bytes(4)) . '@localhost.test';
+        $account = $this->client->call(Client::METHOD_POST, '/account', $guestHeaders, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'List Cache User',
+        ]);
+        $this->assertSame(201, $account['headers']['status-code']);
+        $userId = $account['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $guestHeaders, [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertArrayHasKey('a_session_' . $this->getProject()['$id'], $session['cookies']);
+        $userHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session['cookies']['a_session_' . $this->getProject()['$id']],
+        ];
+
+        $owned = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $serverHeaders, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['title' => 'User visible'],
+            'permissions' => [Permission::read(Role::user($userId))],
+        ]);
+        $this->assertSame(201, $owned['headers']['status-code']);
+        $ownedId = $owned['body']['$id'];
+
+        $listAsUser = fn (): array => $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId), $userHeaders, [
+            'ttl' => 300,
+        ]);
+
+        $userMiss = $listAsUser();
+        $this->assertSame(200, $userMiss['headers']['status-code']);
+        $this->assertSame('miss', $userMiss['headers']['x-appwrite-cache']);
+        $this->assertSame(1, $userMiss['body']['total']);
+        $this->assertSame([$ownedId], \array_column($userMiss['body'][$resource], '$id'));
+
+        $userHit = $listAsUser();
+        $this->assertSame(200, $userHit['headers']['status-code']);
+        $this->assertSame('hit', $userHit['headers']['x-appwrite-cache']);
+        $this->assertSame(1, $userHit['body']['total']);
+
+        $revokeGuest = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $containerId, $visibleId), $serverHeaders, [
+            'permissions' => [],
+        ]);
+        $this->assertSame(200, $revokeGuest['headers']['status-code']);
+
+        $guestGet = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $visibleId), $guestHeaders);
+        $this->assertSame(404, $guestGet['headers']['status-code']);
+
+        $guestAfter = $listAsGuest();
+        $this->assertSame(200, $guestAfter['headers']['status-code']);
+        $this->assertSame(1, $guestAfter['body']['total']);
+        $this->assertSame([$keptId], \array_column($guestAfter['body'][$resource], '$id'));
+
+        $guestAgain = $listAsGuest();
+        $this->assertSame(200, $guestAgain['headers']['status-code']);
+        $this->assertSame(1, $guestAgain['body']['total']);
+        $this->assertSame([$keptId], \array_column($guestAgain['body'][$resource], '$id'));
+
+        $guestUncached = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId), $guestHeaders, [
+            'ttl' => 0,
+        ]);
+        $this->assertSame(200, $guestUncached['headers']['status-code']);
+        $this->assertSame(1, $guestUncached['body']['total']);
+        $this->assertArrayNotHasKey('x-appwrite-cache', $guestUncached['headers']);
+
+        $revokeUser = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $containerId, $ownedId), $serverHeaders, [
+            'permissions' => [],
+        ]);
+        $this->assertSame(200, $revokeUser['headers']['status-code']);
+
+        $userGet = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $ownedId), $userHeaders);
+        $this->assertSame(404, $userGet['headers']['status-code']);
+
+        $userAfter = $listAsUser();
+        $this->assertSame(200, $userAfter['headers']['status-code']);
+        $this->assertSame(0, $userAfter['body']['total']);
+        $this->assertCount(0, $userAfter['body'][$resource]);
+    }
+
+    public function testListDocumentsCacheBustedByDocumentDeletion(): void
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $guestHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'origin' => 'http://localhost',
+        ];
+        $resource = $this->getRecordResource();
+
+        $payload = [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'List Cache Document Deletion',
+            'permissions' => [],
+            $this->getSecurityParam() => true,
+        ];
+        if ($this->getSupportForAttributes()) {
+            $payload[$this->getSchemaResource()] = [
+                ['key' => 'title', 'type' => ColumnType::String->value, 'size' => 64],
+            ];
+        }
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $serverHeaders, $payload);
+        $this->assertSame(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->waitForAttribute($databaseId, $containerId, 'title');
+        }
+
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $serverHeaders, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['title' => 'To delete'],
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(201, $record['headers']['status-code']);
+        $recordId = $record['body']['$id'];
+
+        $listAsGuest = fn (): array => $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId), $guestHeaders, [
+            'ttl' => 300,
+        ]);
+
+        $miss = $listAsGuest();
+        $this->assertSame(200, $miss['headers']['status-code']);
+        $this->assertSame('miss', $miss['headers']['x-appwrite-cache']);
+        $this->assertSame(1, $miss['body']['total']);
+        $this->assertSame([$recordId], \array_column($miss['body'][$resource], '$id'));
+
+        $hit = $listAsGuest();
+        $this->assertSame(200, $hit['headers']['status-code']);
+        $this->assertSame('hit', $hit['headers']['x-appwrite-cache']);
+        $this->assertSame(1, $hit['body']['total']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $containerId, $recordId), $serverHeaders);
+        $this->assertSame(204, $delete['headers']['status-code']);
+
+        $guestGet = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $recordId), $guestHeaders);
+        $this->assertSame(404, $guestGet['headers']['status-code']);
+
+        $after = $listAsGuest();
+        $this->assertSame(200, $after['headers']['status-code']);
+        $this->assertSame(0, $after['body']['total']);
+        $this->assertCount(0, $after['body'][$resource]);
+
+        $again = $listAsGuest();
+        $this->assertSame(200, $again['headers']['status-code']);
+        $this->assertSame(0, $again['body']['total']);
+        $this->assertCount(0, $again['body'][$resource]);
+    }
+
     public function testListDocumentsCachedWithoutSelectQuery(): void
     {
         if (!$this->getSupportForAttributes()) {
