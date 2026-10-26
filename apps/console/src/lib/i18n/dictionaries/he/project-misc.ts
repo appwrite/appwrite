@@ -2881,6 +2881,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'לא נבחרו יעדים חדשים (או שכולם כבר מנויים)',
   'No providers yet': 'אין ספקים עדיין',
   'No subscribers found': 'לא נמצאו מנויים',
+  'No subscribers for this channel': 'אין מנויים בערוץ הזה',
   'No subscribers yet': 'אין מנויים עדיין',
   'No targets': 'אין יעדים',
   'No targets have been selected for this message.':

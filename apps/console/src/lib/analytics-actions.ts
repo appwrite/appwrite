@@ -288,6 +288,7 @@ export const ANALYTICS_ACTIONS = {
   'add-team-member': 'Add Team Member Clicked',
   'create-membership': 'Create Membership Clicked',
   'create-message': 'Create Message Clicked',
+  'send-message': 'Send Message Clicked',
   'create-topic': 'Create Topic Clicked',
   'create-provider': 'Create Provider Clicked',
   'add-subscriber': 'Add Subscriber Clicked',
