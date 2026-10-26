@@ -48,7 +48,9 @@ class Properties
         $user = [];
         foreach ($this->properties as $property) {
             if ($property->id === Property::USER && \is_array($property->value)) {
-                $user = array_merge($user, $property->value);
+                foreach ($property->value as $key => $value) {
+                    $user[$key] = $value;
+                }
             }
         }
 
