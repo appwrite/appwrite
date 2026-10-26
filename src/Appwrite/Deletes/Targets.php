@@ -75,7 +75,9 @@ class Targets
      */
     private static function revokeIfNoLongerSubscribed(Database $database, Document $subscriber, ?Mqtt $mqtt, ?string $projectId): void
     {
-        if ($mqtt === null || $projectId === null) {
+        // MQTT delivers only to push targets; an email/SMS row's deletion has nothing
+        // for a broker to revoke, so skip the extra lookup this check would otherwise cost.
+        if ($mqtt === null || $projectId === null || $subscriber->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
             return;
         }
 

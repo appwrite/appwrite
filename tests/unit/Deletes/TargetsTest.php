@@ -63,13 +63,13 @@ final class TargetsTest extends TestCase
     }
 
     /** @return array{0: Document, 1: Document} [target, subscriber] */
-    private function subscribe(Document $topic, string $userId, string $targetSuffix): array
+    private function subscribe(Document $topic, string $userId, string $targetSuffix, string $providerType = MESSAGE_TYPE_PUSH): array
     {
         $target = $this->database->createDocument('targets', new Document([
             '$id' => 'target-' . $userId . '-' . $targetSuffix,
             'userId' => $userId,
             'userInternalId' => $userId,
-            'providerType' => MESSAGE_TYPE_PUSH,
+            'providerType' => $providerType,
             'identifier' => 'identifier-' . $userId . '-' . $targetSuffix,
         ]));
 
@@ -81,7 +81,7 @@ final class TargetsTest extends TestCase
             'userInternalId' => $userId,
             'topicId' => $topic->getId(),
             'topicInternalId' => $topic->getSequence(),
-            'providerType' => MESSAGE_TYPE_PUSH,
+            'providerType' => $providerType,
         ]));
 
         return [$target, $subscriber];
@@ -135,6 +135,17 @@ final class TargetsTest extends TestCase
         $this->assertCount(1, $this->pubsub->published);
         $event = \json_decode($this->pubsub->published[0]['message'], true);
         $this->assertSame('user-1', $event['userId']);
+    }
+
+    public function testDoesNotRevokeForAnEmailOrSmsTargetEvenAsTheLastRow(): void
+    {
+        $topic = $this->createTopic();
+        $topic = $this->database->updateDocument('topics', $topic->getId(), $topic->setAttribute('emailTotal', 1));
+        [$target] = $this->subscribe($topic, 'user-1', 'email', MESSAGE_TYPE_EMAIL);
+
+        Targets::deleteSubscribers($this->database, $target, $this->mqtt(), 'project-1');
+
+        $this->assertSame([], $this->pubsub->published, 'MQTT only delivers to push targets; an email target has nothing for a broker to revoke.');
     }
 
     public function testWithoutAnMqttAdapterDeletionStillSucceeds(): void
