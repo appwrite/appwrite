@@ -80,7 +80,7 @@ class XList extends Action
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID to read uncommitted changes within the transaction.', true, ['dbForProject'])
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-            ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for caching list responses. Responses are stored in an in-memory key-value cache, keyed per project, collection, schema version (attributes and indexes), caller authorization roles, and the exact query — so users with different permissions never share cached entries. Schema changes invalidate cached entries automatically; document writes do not, so choose a TTL you are comfortable serving as stale data. Set to 0 to disable caching. Lists with join queries are not cached. Must be between 0 and 86400 (24 hours).', true)
+            ->param('ttl', 0, new Range(min: 0, max: 86400), $this->getListCacheTtlDescription(), true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -191,14 +191,16 @@ class XList extends Action
                     $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries),
                 );
                 $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
-            } elseif ((int)$ttl > 0 && $parsed->joins === []) {
+            } elseif ((int)$ttl > 0 && $parsed->joins === [] && ($readsRecords || !$collection->getAttribute('documentSecurity', false))) {
                 $cache = $dbForProject->getCache();
                 $cacheKey = $this->getListCacheKey($dbForProject, $database, $collectionId);
                 $roles = $dbForProject->getAuthorization()->getRoles();
                 $documentsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_DOCUMENTS);
                 $operationsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_OPERATIONS);
+                $documentSecurity = $collection->getAttribute('documentSecurity', false);
 
                 $documentsCacheHit = false;
+                $replaceCache = false;
                 try {
                     $cachedDocuments = $cache->load($cacheKey, $ttl, $documentsField);
                 } catch (\Throwable) {
@@ -207,43 +209,54 @@ class XList extends Action
 
                 if (\is_array($cachedDocuments)) {
                     $documents = \array_map($hydrate, $cachedDocuments);
-                    $documentsCacheHit = true;
+                    if ($this->cachedListIsCurrent($collection, $documents, $readsRecords, $dbForDatabases, $collectionTableId)) {
+                        $documentsCacheHit = true;
 
-                    try {
-                        $cachedOperations = $cache->load($cacheKey, $ttl, $operationsField);
-                    } catch (\Throwable) {
-                        $cachedOperations = null;
+                        try {
+                            $cachedOperations = $cache->load($cacheKey, $ttl, $operationsField);
+                        } catch (\Throwable) {
+                            $cachedOperations = null;
+                        }
+                        $this->recordCachedOperations($operations, $documents, $cachedOperations);
+                    } else {
+                        $documents = $find();
+                        $replaceCache = true;
                     }
-                    $this->recordCachedOperations($operations, $documents, $cachedOperations);
                 } else {
                     $documents = $find();
+                }
 
-                    try {
-                        if ($documents !== []) {
-                            $cache->saveMany($cacheKey, [
-                                $documentsField => \array_map(fn (Document $document): array => $document->getArrayCopy(), $documents),
-                                $operationsField => $operations->counts($documents),
-                            ]);
-                        }
-                    } catch (\Throwable) {
+                try {
+                    if ($documents !== [] || $replaceCache) {
+                        $cache->saveMany($cacheKey, [
+                            $documentsField => \array_map(fn (Document $document): array => $document->getArrayCopy(), $documents),
+                            $operationsField => $operations->counts($documents),
+                        ]);
                     }
+                } catch (\Throwable) {
                 }
 
                 $total = 0;
                 if ($includeTotal) {
+                    $useCachedTotal = $documentsCacheHit && !$documentSecurity;
                     $totalField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_TOTAL);
-                    try {
-                        $cachedTotal = $cache->load($cacheKey, $ttl, $totalField);
-                    } catch (\Throwable) {
-                        $cachedTotal = null;
+                    $cachedTotal = null;
+                    if ($useCachedTotal) {
+                        try {
+                            $cachedTotal = $cache->load($cacheKey, $ttl, $totalField);
+                        } catch (\Throwable) {
+                            $cachedTotal = null;
+                        }
                     }
                     if ($cachedTotal !== null && $cachedTotal !== false) {
                         $total = (int) $cachedTotal;
                     } else {
                         $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
-                        try {
-                            $cache->save($cacheKey, (string) $total, $totalField);
-                        } catch (\Throwable) {
+                        if (!$documentSecurity) {
+                            try {
+                                $cache->save($cacheKey, (string) $total, $totalField);
+                            } catch (\Throwable) {
+                            }
                         }
                     }
                 }
@@ -318,6 +331,50 @@ class XList extends Action
 
         foreach ($documents as $index => $document) {
             $operations->record($document, $counts[$index]);
+        }
+    }
+
+    /**
+     * True when every cached row is still readable by this caller.
+     *
+     * Record lists are re-read by id with the current authorization. Aggregates
+     * have no stable row ids, so they are only treated as current when the
+     * collection does not use document-level security.
+     *
+     * @param array<Document> $documents
+     */
+    private function cachedListIsCurrent(Document $collection, array $documents, bool $readsRecords, Database $dbForDatabases, string $collectionTableId): bool
+    {
+        if (!$readsRecords) {
+            return !$collection->getAttribute('documentSecurity', false);
+        }
+
+        try {
+            $ids = [];
+            foreach ($documents as $document) {
+                $id = $document->getId();
+                if ($id === '') {
+                    return false;
+                }
+                $ids[] = $id;
+            }
+
+            if ($ids === []) {
+                return true;
+            }
+
+            $found = 0;
+            foreach (\array_chunk($ids, APP_LIMIT_ARRAY_PARAMS_SIZE) as $chunk) {
+                $fresh = $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, [
+                    Query::equal('$id', $chunk),
+                    Query::limit(\count($chunk)),
+                ]));
+                $found += \count($fresh);
+            }
+
+            return $found === \count($ids);
+        } catch (\Throwable) {
+            return false;
         }
     }
 }

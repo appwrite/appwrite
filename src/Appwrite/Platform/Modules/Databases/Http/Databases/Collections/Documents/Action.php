@@ -108,6 +108,18 @@ abstract class Action extends DatabasesAction
     }
 
     /**
+     * TTL query-param description for list endpoints that share the document/row cache.
+     */
+    protected function getListCacheTtlDescription(): string
+    {
+        if ($this->isCollectionsAPI()) {
+            return 'TTL (seconds) for caching list responses. Responses are stored in an in-memory key-value cache, keyed per project, collection, schema version (attributes and indexes), collection permissions, documentSecurity, caller authorization roles, and the exact query — so callers with different roles never share cached entries. Schema and collection-permission changes invalidate cached entries automatically. Each cached document is checked against current access on a cache hit, so a document the caller can no longer read is not returned. Other document attribute values may stay stale until the TTL expires. Set to 0 to disable caching. Lists with join queries are not cached. Must be between 0 and 86400 (24 hours).';
+        }
+
+        return 'TTL (seconds) for caching list responses. Responses are stored in an in-memory key-value cache, keyed per project, table, schema version (columns and indexes), table permissions, rowSecurity, caller authorization roles, and the exact query — so callers with different roles never share cached entries. Schema and table-permission changes invalidate cached entries automatically. Each cached row is checked against current access on a cache hit, so a row the caller can no longer read is not returned. Other row attribute values may stay stale until the TTL expires. Set to 0 to disable caching. Lists with join queries are not cached. Must be between 0 and 86400 (24 hours).';
+    }
+
+    /**
      * Get the SDK group name for the current action.
      *
      * Can be used for XList operations as well!
