@@ -12,7 +12,7 @@ faqs:
   - question: "How do I deploy an Entire repository to Appwrite?"
     answer: "Go to **Project settings** > **Git configuration** in the Appwrite Console and click **Connect to Entire**. Approve the installation on entire.com and choose which repositories Appwrite can see. Then create a Site or Function, pick your Entire project and repository under **Import repository**, confirm the settings, and deploy. Every later push to that repository deploys automatically."
   - question: "Which Entire repositories can Appwrite access?"
-    answer: "The ones you choose on the installation page on entire.com: **All repositories**, which includes repositories added to the project later, or **Only selected repositories**. Appwrite gets read access to repository contents and write access to checks, trail comments, and deployments. It cannot create or delete repositories on Entire. To change the selection later, use **Update Entire permissions** in the creation wizard or **Configure** on the installation in **Project settings** > **Git configuration**."
+    answer: "The ones you choose on the installation page on entire.com: **All repositories**, which includes repositories added to the project later, or **Only selected repositories**. Appwrite gets read access to repository contents and write access to checks. It cannot create or delete repositories on Entire. To change the selection later, use **Update Entire permissions** in the creation wizard or **Configure** on the installation in **Project settings** > **Git configuration**."
   - question: "Can one Appwrite project deploy from several Entire projects?"
     answer: "Yes. Each installation covers one Entire project. Click **Connect with Entire** in **Project settings** > **Git configuration** to add another, and each Entire project appears as its own owner in the repository picker."
   - question: "Do pushes to other branches deploy?"
@@ -20,7 +20,7 @@ faqs:
   - question: "Why didn't my push to Entire create a deployment?"
     answer: "Check three things: the repository is connected to the Site or Function, the branch matches the branch filters under **Settings** > **Build** > **Triggers**, and at least one changed file matches the path filters. Path filters match from the repository root. The first push of a new branch has no previous commit to compare against, so it deploys regardless of path filters."
   - question: "Does Appwrite comment on Entire trails?"
-    answer: "Yes. When you push to a branch with an open trail, Appwrite comments on the trail with each build's status, a link to its logs, and, for Sites, the preview link, and updates the comment as builds finish. It also reports each build to the commit as a check run. Silent mode turns off both."
+    answer: "Not today. Appwrite reports each build to Entire as a check run on the commit instead, and the deployment itself, with its logs and preview, lives in the Appwrite Console."
 ---
 
 Entire keeps your code and the agent sessions behind it in one repository. Appwrite runs that code. With Entire now an Appwrite Git provider, you can connect the two once and let every push deploy.
@@ -34,7 +34,6 @@ To deploy from Entire, connect your Entire project to Appwrite from **Project se
 - **Production branch:** the deployment builds and activates.
 - **Any other branch:** the deployment builds but stays inactive. Sites get preview URLs for the branch and the commit.
 - **Every build:** unless Silent mode is on, Appwrite reports the result back to Entire as a check run on the commit.
-- **Branches with an open trail:** Appwrite also comments on the trail with the build's status and, for Sites, the preview link.
 
 Under the hood, Appwrite installs as a plugin on your Entire project. Entire notifies Appwrite of each push, Appwrite fetches that commit through Entire's own Git tooling, builds it, and reports the outcome back.
 
@@ -131,7 +130,7 @@ A plain `git remote add origin <clone URL>` works too, since `git-remote-entire`
 
 ![Entire's Install Appwrite page with the acme project selected and the storefront repository checked](/images/blog/deploy-from-entire-to-appwrite/entire-install.avif)
 
-The installation page lists the permissions Appwrite asks for: read repository contents, write checks on commits, comment on trails, and report deployments on commits. It cannot create or delete repositories. Back in the Console, your Entire project appears in the **Owner** column of the installation list.
+The installation page states exactly what Appwrite can do: read repository contents and write checks on commits. It cannot create or delete repositories. Back in the Console, your Entire project appears in the **Owner** column of the installation list.
 
 ![The Git configuration card listing the acme Entire project as an installation](/images/blog/deploy-from-entire-to-appwrite/git-installation.avif)
 
@@ -187,8 +186,6 @@ Appwrite builds this deployment but does not activate it, so production keeps se
 ![The deployments list with the redesign-hero deployment ready and the main deployment active](/images/blog/deploy-from-entire-to-appwrite/deployments-list.avif)
 
 Click the deployment to open it. Its panel shows a preview of the branch, plus URLs for the branch and the commit. Live traffic keeps using the active deployment until you click **Activate**.
-
-If the branch has an open trail on Entire, Appwrite also comments on the trail with the deployment's status, a link to its logs, and its preview link, and keeps that comment up to date as later pushes build.
 
 ![A branch deployment's preview and its branch and commit URLs](/images/blog/deploy-from-entire-to-appwrite/preview-deployment.avif)
 
