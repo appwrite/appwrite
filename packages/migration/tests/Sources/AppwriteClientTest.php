@@ -153,6 +153,13 @@ final class AppwriteClientTest extends TestCase
         $this->assertStringEndsWith(' pinned.invalid:'.$port, $requests[0]);
     }
 
+    public function testCompressedResponseDecodingPastTheLimitIsAbandoned(): void
+    {
+        $this->expectException(AppwriteException::class);
+
+        $this->client($this->server->getURL())->call(Client::METHOD_GET, '/compressed');
+    }
+
     private function client(string $endpoint): Client
     {
         $client = new Client();

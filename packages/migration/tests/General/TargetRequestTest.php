@@ -131,6 +131,13 @@ final class TargetRequestTest extends TestCase
         }
     }
 
+    public function testCompressedResponseDecodingPastTheLimitIsAbandoned(): void
+    {
+        $this->expectException(\Exception::class);
+
+        $this->target($this->server->getURL())->request('GET', '/compressed');
+    }
+
     private function target(string $endpoint): RequestTarget
     {
         return new RequestTarget($endpoint);
