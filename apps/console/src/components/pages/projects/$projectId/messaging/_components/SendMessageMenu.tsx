@@ -49,6 +49,8 @@ interface SendMessageMenuProps {
   users?: string[]
   /** Reason a channel can't reach these recipients, keyed by channel. */
   unavailable?: Partial<Record<MessagingProviderType, string>>
+  /** `inline` always shows the label instead of following the header width. */
+  layout?: 'toolbar' | 'inline'
 }
 
 /** Creates a draft addressed to the recipients, then opens it in the editor. */
@@ -114,13 +116,29 @@ export function SendMessageMenu(props: SendMessageMenuProps) {
     <Button
       variant="outline"
       size="sm"
-      className="h-9 w-9 p-0 text-[13px] @[640px]:w-auto @[640px]:px-3"
+      className={
+        props.layout === 'inline'
+          ? 'h-8 gap-2 text-xs'
+          : 'h-9 w-9 p-0 text-[13px] @[640px]:w-auto @[640px]:px-3'
+      }
       disabled={!allowed || pending}
       aria-label={t('Send message')}
       {...analyticsAttrs('send-message')}
     >
-      <Send className="h-4 w-4 shrink-0 @[640px]:me-1.5" />
-      <span className="hidden @[640px]:inline">{t('Send message')}</span>
+      <Send
+        className={
+          props.layout === 'inline'
+            ? 'h-4 w-4 shrink-0'
+            : 'h-4 w-4 shrink-0 @[640px]:me-1.5'
+        }
+      />
+      <span
+        className={
+          props.layout === 'inline' ? undefined : 'hidden @[640px]:inline'
+        }
+      >
+        {t('Send message')}
+      </span>
     </Button>
   )
 
