@@ -134,14 +134,17 @@ class Subscribe extends Action
         }
 
         // Checked on fresh state just before the tree changes, as the tail lookups above can yield.
-        // Subscribing again with an existing id adds its channels to that subscription.
+        // Subscribing again with an existing id adds its channels and replaces its queries.
         $channels = [];
+        $queries = [];
         foreach ($realtime->getSubscriptionMetadata($connectionId) as $subscriptionId => $subscription) {
             $channels[$subscriptionId] = \array_flip($subscription['channels']);
+            $queries[$subscriptionId] = $subscription['count'];
         }
         foreach ($parsedPayloads as $parsedPayload) {
             $subscriptionId = $parsedPayload['subscriptionId'];
             $channels[$subscriptionId] = ($channels[$subscriptionId] ?? []) + \array_flip($parsedPayload['convertedChannels']);
+            $queries[$subscriptionId] = Realtime::countQueries($parsedPayload['queries']);
             if (\count($channels[$subscriptionId]) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
                 throw new Exception(
                     Exception::REALTIME_MESSAGE_FORMAT_INVALID,
@@ -149,10 +152,25 @@ class Subscribe extends Action
                 );
             }
         }
-        if (\count(\array_filter($channels)) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+        // A subscription without channels is never stored, so it counts towards nothing.
+        $channels = \array_filter($channels);
+        $queries = \array_intersect_key($queries, $channels);
+        if (\count($channels) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
             throw new Exception(
                 Exception::REALTIME_MESSAGE_FORMAT_INVALID,
                 'Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions. Unsubscribe from some before subscribing to more.'
+            );
+        }
+        if (\array_sum(\array_map(\count(...), $channels)) > APP_LIMIT_REALTIME_CHANNELS) {
+            throw new Exception(
+                Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+                'Connection must have at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels across its subscriptions. Unsubscribe from some before subscribing to more.'
+            );
+        }
+        if (\array_sum($queries) > APP_LIMIT_REALTIME_QUERIES) {
+            throw new Exception(
+                Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+                'Connection must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries across its subscriptions. Unsubscribe from some before subscribing to more.'
             );
         }
 

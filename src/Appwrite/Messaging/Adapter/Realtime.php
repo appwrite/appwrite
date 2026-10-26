@@ -164,20 +164,26 @@ class Realtime extends MessagingAdapter
         }
 
         $strings = [];
-        $data = [];
+        if (empty($queryGroup)) {
+            $strings[] = Query::select(['*'])->toString();
+        } else {
+            foreach ($queryGroup as $query) {
+                $strings[] = $query->toString();
+            }
+        }
+        $data = [
+            'strings' => $strings,
+            'compiled' => RuntimeQuery::prepare($queryGroup),
+            'count' => self::countQueries($queryGroup),
+        ];
 
-        if (!empty($channels)) {
-            if (empty($queryGroup)) {
-                $strings[] = Query::select(['*'])->toString();
-            } else {
-                foreach ($queryGroup as $query) {
-                    $strings[] = $query->toString();
+        // A subscription has one set of queries, so subscribing again with its id replaces them on its other channels too.
+        foreach ($this->connections[$identifier]['roles'] ?? [] as $role) {
+            foreach ($this->connections[$identifier]['channels'] ?? [] as $channel) {
+                if (isset($this->subscriptions[$projectId][$role][$channel][$identifier][$subscriptionId])) {
+                    $this->subscriptions[$projectId][$role][$channel][$identifier][$subscriptionId] = $data;
                 }
             }
-            $data = [
-                'strings' => $strings,
-                'compiled' => RuntimeQuery::prepare($queryGroup),
-            ];
         }
 
         foreach ($roles as $role) {
@@ -225,7 +231,7 @@ class Realtime extends MessagingAdapter
      * Retrieves subscription data including channels and queries directly from the subscriptions tree.
      *
      * @param mixed $connection Connection ID
-     * @return array Array of [subscriptionId => ['channels' => string[], 'queries' => string[]]]
+     * @return array Array of [subscriptionId => ['channels' => string[], 'queries' => string[], 'count' => int]]
      */
     public function getSubscriptionMetadata(mixed $connection): array
     {
@@ -255,6 +261,7 @@ class Realtime extends MessagingAdapter
                         $subscriptions[$subscriptionId] = [
                             'channels' => [],
                             'queries' => $data['strings'] ?? [],
+                            'count' => $data['count'] ?? 0,
                         ];
                     }
                     if (!\in_array($channel, $subscriptions[$subscriptionId]['channels'])) {
@@ -796,6 +803,8 @@ class Realtime extends MessagingAdapter
     public static function constructSubscriptions(array $channelNames, callable $getQueryParam): array
     {
         $subscriptions = [];
+        $channelCount = 0;
+        $queryCount = 0;
 
         /**
          * Reserved channel params with expected type
@@ -831,8 +840,14 @@ class Realtime extends MessagingAdapter
                     $subscriptions[0] = ['channels' => [], 'queries' => []];
                 }
                 $subscriptions[0]['channels'][] = $channel;
+                if (++$channelCount > APP_LIMIT_REALTIME_CHANNELS) {
+                    throw new QueryException('Connection must have at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels across its subscriptions.');
+                }
                 if (empty($subscriptions[0]['queries'])) {
                     $subscriptions[0]['queries'] = [Query::select(['*'])];
+                    if (++$queryCount > APP_LIMIT_REALTIME_QUERIES) {
+                        throw new QueryException('Connection must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries across its subscriptions.');
+                    }
                 }
 
                 continue;
@@ -853,6 +868,9 @@ class Realtime extends MessagingAdapter
 
                 if (!\in_array($channel, $subscriptions[$index]['channels'], true)) {
                     $subscriptions[$index]['channels'][] = $channel;
+                    if (++$channelCount > APP_LIMIT_REALTIME_CHANNELS) {
+                        throw new QueryException('Connection must have at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels across its subscriptions.');
+                    }
                 }
 
                 if (empty($subscriptions[$index]['queries'])) {
@@ -861,6 +879,10 @@ class Realtime extends MessagingAdapter
                         throw new QueryException('queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.');
                     }
                     $subscriptions[$index]['queries'] = self::convertQueries($raw);
+                    $queryCount += self::countQueries($subscriptions[$index]['queries']);
+                    if ($queryCount > APP_LIMIT_REALTIME_QUERIES) {
+                        throw new QueryException('Connection must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries across its subscriptions.');
+                    }
                 }
             }
         }
@@ -897,10 +919,38 @@ class Realtime extends MessagingAdapter
 
             if (in_array($method, [Method::And, Method::Or], true)) {
                 \array_push($stack, ...$query->getValues());
+            } elseif (\count($query->getValues()) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+                throw new QueryException('A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.');
             }
         }
 
+        if (self::countQueries($queries) > APP_LIMIT_REALTIME_QUERIES) {
+            throw new QueryException('A subscription must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries, counting the ones nested in and/or.');
+        }
+
         return $queries;
+    }
+
+    /**
+     * Counts queries, including the ones nested in and/or.
+     *
+     * @param array<Query> $queries
+     */
+    public static function countQueries(array $queries): int
+    {
+        $count = 0;
+        $stack = $queries;
+
+        while (!empty($stack)) {
+            $query = \array_pop($stack);
+            $count++;
+
+            if (\in_array($query->getMethod(), [Method::And, Method::Or], true)) {
+                \array_push($stack, ...$query->getValues());
+            }
+        }
+
+        return $count;
     }
 
     /**

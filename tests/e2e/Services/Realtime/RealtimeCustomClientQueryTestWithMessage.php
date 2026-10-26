@@ -665,6 +665,65 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $client->close();
     }
 
+    public function testSubscribeTotals(): void
+    {
+        $user = $this->getUser();
+        $projectId = $this->getProject()['$id'];
+        $client = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . \http_build_query(['project' => $projectId]),
+            [
+                'headers' => [
+                    'origin' => 'http://localhost',
+                    'cookie' => 'a_session_' . $projectId . '=' . ($user['session'] ?? ''),
+                ],
+                'timeout' => 10,
+            ]
+        );
+        $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+
+        $send = function (array $data) use ($client): array {
+            $client->send(\json_encode(['type' => 'subscribe', 'data' => $data]));
+            return \json_decode($client->receive(), true);
+        };
+        $channels = fn (string $prefix, int $count) => \array_map(fn (int $i) => $prefix . $i, \range(1, $count));
+        $equals = fn (int $count) => \array_map(fn (int $i) => Query::equal('f' . $i, ['x'])->toString(), \range(1, $count));
+        $perSubscription = APP_LIMIT_ARRAY_PARAMS_SIZE;
+
+        /**
+         * Test for SUCCESS
+         */
+        $first = $this->sendSubscribeMessage($client, [
+            ['subscriptionId' => 'a', 'channels' => $channels('documents.a', $perSubscription), 'queries' => $equals(60)],
+            ['subscriptionId' => 'b', 'channels' => $channels('documents.b', APP_LIMIT_REALTIME_CHANNELS - $perSubscription), 'queries' => $equals(40)],
+        ]);
+        $this->assertCount(2, $first['data']['subscriptions']);
+
+        /**
+         * Test for FAILURE
+         */
+        $tooManyChannels = $send([['channels' => ['files']]]);
+        $this->assertSame('error', $tooManyChannels['type']);
+        $this->assertSame(1003, $tooManyChannels['data']['code']);
+        $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels across its subscriptions. Unsubscribe from some before subscribing to more.', $tooManyChannels['data']['message']);
+
+        $tooManyQueries = $send([['subscriptionId' => 'b', 'channels' => [], 'queries' => $equals(41)]]);
+        $this->assertSame('error', $tooManyQueries['type']);
+        $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries across its subscriptions. Unsubscribe from some before subscribing to more.', $tooManyQueries['data']['message']);
+
+        $tooManyValues = $send([['subscriptionId' => 'b', 'channels' => [], 'queries' => [Query::equal('id', $channels('v', APP_LIMIT_ARRAY_PARAMS_SIZE + 1))->toString()]]]);
+        $this->assertSame('error', $tooManyValues['type']);
+        $this->assertStringContainsString('A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.', (string) $tooManyValues['data']['message']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Subscribing again replaces a subscription's queries, so lowering one makes room in another.
+        $this->sendSubscribeMessage($client, [['subscriptionId' => 'a', 'channels' => [], 'queries' => $equals(10)]]);
+        $this->sendSubscribeMessage($client, [['subscriptionId' => 'b', 'channels' => [], 'queries' => $equals(90)]]);
+
+        $client->close();
+    }
+
     public function testInvalidQueryShouldNotSubscribe(): void
     {
         $user = $this->getUser();

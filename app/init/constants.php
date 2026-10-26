@@ -46,6 +46,8 @@ const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
 const APP_LIMIT_REALTIME_SUBSCRIPTIONS = 100; // Maximum subscriptions per realtime connection
 const APP_LIMIT_REALTIME_CONNECTIONS = 32; // Maximum open realtime connections per project user on one worker
+const APP_LIMIT_REALTIME_CHANNELS = 200; // Maximum channels across all subscriptions of a realtime connection
+const APP_LIMIT_REALTIME_QUERIES = 100; // Maximum queries, counting nested ones, across all subscriptions of a realtime connection
 
 const APP_PROJECTS_SUBQUERIES = [
     'subQueryKeys',

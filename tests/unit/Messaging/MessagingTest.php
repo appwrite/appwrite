@@ -840,6 +840,89 @@ final class MessagingTest extends TestCase
         Realtime::constructSubscriptions(['documents'], fn () => [...$slots, [$select]]);
     }
 
+    public function testConstructSubscriptionsLimitsTotals(): void
+    {
+        $select = Query::select(['*'])->toString();
+
+        // One channel can appear in every slot, so channels are counted per subscription.
+        $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, 3));
+        $slots = \array_fill(0, 66, [$select]);
+        $subscriptions = Realtime::constructSubscriptions($channels, fn () => $slots);
+        $this->assertCount(66, $subscriptions);
+
+        try {
+            Realtime::constructSubscriptions($channels, fn () => \array_fill(0, 67, [$select]));
+            $this->fail('Expected the channel total to be enforced.');
+        } catch (QueryException $e) {
+            $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels across its subscriptions.', $e->getMessage());
+        }
+
+        // Queries are counted across subscriptions.
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('Connection must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries across its subscriptions.');
+        Realtime::constructSubscriptions(['documents'], fn () => \array_fill(0, 2, \array_fill(0, 51, $select)));
+    }
+
+    public function testConvertQueriesLimitsQuerySize(): void
+    {
+        $values = \array_map(fn (int $i) => 'v' . $i, \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE));
+        $this->assertCount(1, Realtime::convertQueries([Query::equal('id', $values)->toString()]));
+
+        $nested = Query::or(\array_map(fn (int $i) => Query::equal('f' . $i, ['x']), \range(1, APP_LIMIT_REALTIME_QUERIES - 1)));
+        $this->assertSame(APP_LIMIT_REALTIME_QUERIES, Realtime::countQueries(Realtime::convertQueries([$nested->toString()])));
+
+        try {
+            Realtime::convertQueries([Query::equal('id', [...$values, 'one more'])->toString()]);
+            $this->fail('Expected the value limit to be enforced.');
+        } catch (QueryException $e) {
+            $this->assertSame('A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.', $e->getMessage());
+        }
+
+        // Queries nested in and/or count, so one large or() cannot stand in for many queries.
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('A subscription must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries, counting the ones nested in and/or.');
+        $tooMany = Query::or(\array_map(fn (int $i) => Query::equal('f' . $i, ['x']), \range(1, APP_LIMIT_REALTIME_QUERIES)));
+        Realtime::convertQueries([$tooMany->toString()]);
+    }
+
+    public function testCountQueriesIncludesNested(): void
+    {
+        $this->assertSame(0, Realtime::countQueries([]));
+        $this->assertSame(2, Realtime::countQueries([Query::equal('a', ['x']), Query::equal('b', ['y'])]));
+        $this->assertSame(4, Realtime::countQueries([
+            Query::and([Query::equal('a', ['x']), Query::or([Query::equal('b', ['y'])])]),
+        ]));
+    }
+
+    public function testSubscribeAgainReplacesQueriesOnEveryChannel(): void
+    {
+        $realtime = new Realtime();
+        $role = Role::user(Id::custom('A'))->toString();
+
+        $realtime->subscribe('1', 1, 'sub', [$role], ['documents'], [Query::equal('status', ['old'])], 'A');
+        $realtime->subscribe('1', 1, 'sub', [$role], ['files'], [Query::equal('status', ['new'])], 'A');
+
+        $meta = $realtime->getSubscriptionMetadata(1);
+        $this->assertEqualsCanonicalizing(['documents', 'files'], $meta['sub']['channels']);
+        $this->assertSame([Query::equal('status', ['new'])->toString()], $meta['sub']['queries']);
+        $this->assertSame(1, $meta['sub']['count']);
+
+        // An event on the older channel is now matched by the new queries.
+        $event = fn (string $status) => [
+            'project' => '1',
+            'roles' => [$role],
+            'data' => ['channels' => ['documents'], 'payload' => ['status' => $status]],
+        ];
+        $this->assertEmpty($realtime->getSubscribers($event('old')));
+        $this->assertArrayHasKey(1, $realtime->getSubscribers($event('new')));
+
+        // Without channels, it only replaces the queries.
+        $realtime->subscribe('1', 1, 'sub', [$role], [], [Query::equal('status', ['newer'])], 'A');
+        $this->assertEqualsCanonicalizing(['documents', 'files'], $realtime->getSubscriptionMetadata(1)['sub']['channels']);
+        $this->assertArrayHasKey(1, $realtime->getSubscribers($event('newer')));
+        $this->assertEmpty($realtime->getSubscribers($event('new')));
+    }
+
     public function testConstructSubscriptionsLimitsQueries(): void
     {
         $select = Query::select(['*'])->toString();
