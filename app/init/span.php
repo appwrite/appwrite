@@ -85,7 +85,6 @@ if ($loggingConfig !== '') {
                 'user.id',
                 'http.method',
                 'http.path',
-                'http.uri',
                 'http.hostname',
                 'http.locale',
                 'http.service',
