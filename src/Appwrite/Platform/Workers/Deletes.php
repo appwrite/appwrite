@@ -333,7 +333,7 @@ class Deletes extends Action
                 $this->deleteRealtimeUsage($dbForPlatform, $datetime);
                 break;
             case DELETE_TYPE_SESSIONS:
-                $this->deleteExpiredSessions($project, $getProjectDB);
+                $this->deleteExpiredSessions($project, $getProjectDB, $datetime);
                 break;
             case DELETE_TYPE_CACHE_BY_RESOURCE:
                 $this->deleteCacheByResource($project, $getProjectDB, $resource, $resourceType);
@@ -1316,21 +1316,32 @@ class Deletes extends Action
      * @return void
      * @throws Exception|Throwable
      */
-    private function deleteExpiredSessions(Document $project, callable $getProjectDB): void
+    private function deleteExpiredSessions(Document $project, callable $getProjectDB, ?string $invalidatedAt = null): void
     {
         Console::info('Delete expired sessions');
 
         $dbForProject = $getProjectDB($project);
-        $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
+
+        if ($invalidatedAt !== null) {
+            $cutoff = $invalidatedAt;
+        } else {
+            $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
+            $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $duration);
+        }
 
         // Delete Sessions
         $this->deleteByGroup('sessions', [
-            Query::select([...$this->selects, '$createdAt']),
-            Query::lessThan('$createdAt', $expired),
+            Query::select([...$this->selects, '$createdAt', 'userId']),
+            Query::lessThanEqual('$createdAt', $cutoff),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
-        ], $dbForProject);
+        ], $dbForProject, function (Document $session) use ($dbForProject) {
+            $userId = $session->getAttribute('userId');
+
+            if (!empty($userId)) {
+                $dbForProject->purgeCachedDocument('users', $userId);
+            }
+        });
     }
 
     /**
