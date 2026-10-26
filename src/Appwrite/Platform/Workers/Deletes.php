@@ -34,6 +34,7 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
+use Utopia\Lock\Distributed;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -51,6 +52,8 @@ class Deletes extends Action
 {
     protected array $selects = ['$sequence', '$id', '$collection', '$permissions', '$updatedAt'];
     public const PROCESSING_STUCK_RETENTION_SECONDS = 3 * 24 * 60 * 60; // 3 days
+
+    private const UPLOAD_ABORT_ATTEMPTS = 3; // Daily runs before a failing abort falls back to deleting the path
 
     public static function getName(): string
     {
@@ -2132,7 +2135,7 @@ class Deletes extends Action
                     Query::equal('signature', ['']),
                     Query::updatedBefore($expired),
                 ], $dbForProject, function (Document $file) use ($project, $bucket, $collection, $dbForProject, $deviceForFiles, $locks, $expired) {
-                    $deleteUpload = function () use ($collection, $file, $dbForProject, $deviceForFiles, $expired): void {
+                    $deleteUpload = function (?Distributed $lock = null) use ($collection, $file, $dbForProject, $deviceForFiles, $expired): void {
                         // Re-read under the lock: a chunk may have landed since the listing.
                         $file = $dbForProject->getDocument($collection, $file->getId());
                         if (
@@ -2145,8 +2148,9 @@ class Deletes extends Action
                         }
 
                         $path = $file->getAttribute('path');
+                        $metadata = $file->getAttribute('metadata', []);
                         try {
-                            $aborted = $deviceForFiles->abort($path, $file->getAttribute('metadata', [])['uploadId'] ?? '');
+                            $aborted = $deviceForFiles->abort($path, $metadata['uploadId'] ?? '');
                         } catch (NotFoundException) {
                             $aborted = true;
                         } catch (Throwable $th) {
@@ -2154,7 +2158,23 @@ class Deletes extends Action
                             $aborted = false;
                         }
 
-                        // A stale upload ID can fail every abort, so fall back to removing the path and drop the row regardless.
+                        // A resumed chunk may own the key once the lease lapses.
+                        if ($lock !== null && !$lock->isHeld()) {
+                            return;
+                        }
+
+                        $attempts = ($metadata['abortAttempts'] ?? 0) + 1;
+                        if (!$aborted && $attempts < self::UPLOAD_ABORT_ATTEMPTS) {
+                            // Keep the upload ID for the next run; preserved dates keep the row idle.
+                            $metadata['abortAttempts'] = $attempts;
+                            $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument($collection, $file->getId(), new Document([
+                                '$updatedAt' => $file->getUpdatedAt(),
+                                'metadata' => $metadata,
+                            ])));
+                            return;
+                        }
+
+                        // A stale upload ID can fail every abort, so after the last attempt remove the path and drop the row.
                         if (!$aborted) {
                             try {
                                 $deviceForFiles->delete($path, true);
@@ -2173,7 +2193,7 @@ class Deletes extends Action
 
                     try {
                         // Same key as the upload endpoint, so a resuming chunk and the cleanup never interleave.
-                        $locks('storage:file:' . $project->getId() . ':' . $bucket->getId() . ':' . $file->getId(), 60, fn () => $deleteUpload());
+                        $locks('storage:file:' . $project->getId() . ':' . $bucket->getId() . ':' . $file->getId(), 600, $deleteUpload);
                     } catch (LockContention) {
                         Console::info('Upload in progress, skipping cleanup: ' . $file->getId());
                     }

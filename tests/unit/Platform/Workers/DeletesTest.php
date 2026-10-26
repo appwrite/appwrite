@@ -282,6 +282,63 @@ final class DeletesTest extends TestCase
         $this->assertSame(1, $scheduler->count(), 'only the schedule of the project that still exists may fire');
     }
 
+    public function testIdleUploadKeepsItsRowUntilTheAbortRetriesRunOut(): void
+    {
+        $collections = Config::getParam('collections', []);
+        $buckets = $collections['projects']['buckets'];
+        $this->database->createCollection(Collection::create(id: 'buckets', attributes: $buckets['attributes'], indexes: $buckets['indexes']));
+        $bucket = $this->database->createDocument('buckets', new Document([
+            '$id' => 'uploads',
+            'name' => 'Uploads',
+            'enabled' => true,
+            'maximumFileSize' => 0,
+            'allowedFileExtensions' => [],
+            'compression' => 'none',
+            'encryption' => false,
+            'antivirus' => false,
+        ]));
+        $files = $collections['buckets']['files'];
+        $collection = 'bucket_' . $bucket->getSequence();
+        $this->database->createCollection(Collection::create(id: $collection, attributes: $files['attributes'], indexes: $files['indexes']));
+
+        $idle = DateTime::format(new \DateTime('-8 days'));
+        foreach (['failing', 'missing'] as $fileId) {
+            $this->database->withPreserveDates(true, fn () => $this->database->createDocument($collection, new Document([
+                '$id' => $fileId,
+                '$updatedAt' => $idle,
+                'bucketId' => 'uploads',
+                'bucketInternalId' => $bucket->getSequence(),
+                'name' => $fileId,
+                'path' => '/uploads/' . $fileId,
+                'signature' => '',
+                'chunksTotal' => 2,
+                'chunksUploaded' => 1,
+                'metadata' => ['uploadId' => $fileId],
+            ])));
+        }
+
+        $device = $this->createMock(Device::class);
+        $device->method('abort')->willReturnCallback(fn (string $path, string $uploadId): bool => $uploadId === 'missing'
+            ? throw new \Utopia\Storage\Exception\NotFoundException()
+            : throw new \Exception('Abort failed'));
+        $device->expects($this->once())->method('delete')->with('/uploads/failing', true);
+
+        $cleanup = new \ReflectionMethod(Deletes::class, 'deleteExpiredUploads');
+        $run = fn () => $cleanup->invoke(new Deletes(), new Document(['$id' => 'project']), fn () => $this->database, $device, null);
+
+        $run();
+        $this->assertTrue($this->database->getDocument($collection, 'missing')->isEmpty(), 'an upload the device no longer has is removed at once');
+
+        $run();
+        $failing = $this->database->getDocument($collection, 'failing');
+        $this->assertSame(2, $failing->getAttribute('metadata')['abortAttempts']);
+        $this->assertSame('failing', $failing->getAttribute('metadata')['uploadId'], 'the upload ID is kept for the next attempt');
+        $this->assertSame(\strtotime($idle), \strtotime($failing->getUpdatedAt()), 'a failed attempt leaves the row idle');
+
+        $run();
+        $this->assertTrue($this->database->getDocument($collection, 'failing')->isEmpty(), 'the last attempt removes the row');
+    }
+
     private function addSchedule(string $projectId, string $functionId): void
     {
         // Projects and functions carry subquery filters into collections this
