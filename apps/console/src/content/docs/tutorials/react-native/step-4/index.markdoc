@@ -5,61 +5,84 @@ description: Add authentication to your React Native application.
 step: 4
 ---
 
-## User context {% #user-context %}
+## Display toasts {% #display-toasts %}
 
-In React Native, you can use [context](https://reactjs.org/docs/context.html) to share data between components.
-You can use a context and a custom hook to manage our user's data.
+For a better user experience, display toasts when the users perform an action, such as login, logout, create new ideas, etc.
+Android has native toasts. On iOS, the app shows an alert instead.
 
-Create a new file `contexts/UserContext.jsx` and add the following code to it.
+Create a new file `src/lib/toast.ts` and add the following code to it.
 
 ```client-react-native
-import { ID } from "react-native-appwrite";
-import { createContext, useContext, useEffect, useState } from "react";
-import { account } from "../lib/appwrite";
-import { toast } from "../lib/toast";
+import { Alert, Platform, ToastAndroid } from "react-native";
 
+export function toast(message: string) {
+  if (Platform.OS === "android") {
+    ToastAndroid.show(message, ToastAndroid.SHORT);
+  } else {
+    Alert.alert(message);
+  }
+}
+```
 
-const UserContext = createContext();
+## User context {% #user-context %}
+
+In React Native, you can use [context](https://react.dev/learn/passing-data-deeply-with-context) to share data between components.
+You can use a context and a custom hook to manage our user's data.
+
+Create a new file `src/contexts/UserContext.tsx` and add the following code to it.
+
+```client-react-native
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { ID, type Models } from "react-native-appwrite";
+import { account } from "@/lib/appwrite";
+import { toast } from "@/lib/toast";
+
+type UserContextValue = {
+  current: Models.User | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
+};
+
+const UserContext = createContext<UserContextValue | null>(null);
 
 export function useUser() {
-  return useContext(UserContext);
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error("useUser must be used inside a UserProvider");
+  }
+  return context;
 }
 
-export function UserProvider(props) {
-  const [user, setUser] = useState(null);
+export function UserProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<Models.User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  async function login(email, password) {
-    const loggedIn = await account.createEmailPasswordSession({
-      email,
-      password
-    });
-    setUser(loggedIn);
-    toast('Welcome back. You are logged in');
+  async function login(email: string, password: string) {
+    await account.createEmailPasswordSession({ email, password });
+    setUser(await account.get());
+    toast("Welcome back. You are logged in");
   }
 
   async function logout() {
     await account.deleteSession({ sessionId: "current" });
     setUser(null);
-    toast('Logged out');
+    toast("Logged out");
   }
 
-  async function register(email, password) {
-    await account.create({
-      userId: ID.unique(),
-      email,
-      password
-    });
+  async function register(email: string, password: string) {
+    await account.create({ userId: ID.unique(), email, password });
     await login(email, password);
-    toast('Account created');
   }
 
   async function init() {
     try {
-      const loggedIn = await account.get();
-      setUser(loggedIn);
-      toast('Welcome back. You are logged in');
-    } catch (err) {
+      setUser(await account.get());
+    } catch {
       setUser(null);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -68,106 +91,90 @@ export function UserProvider(props) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ current: user, login, logout, register, toast }}>
-      {props.children}
+    <UserContext.Provider value={{ current: user, loading, login, logout, register }}>
+      {children}
     </UserContext.Provider>
   );
 }
 ```
 
+The `loading` value is `true` until the app finishes checking for an existing session.
+The router uses it in the next step to wait before it chooses which screen to show.
+
 Now, you can use the `useUser` hook to access the user's data from any component wrapped by this context's provider.
 
-## Display toasts {% #display-toasts %}
-
-For a better user experience, display toasts when the users perform an action, such as login, logout, create new ideas, etc.
-
-We can do this by creating a new file `lib/toast.js` and adding the following code to it.
-
-```client-react-native
-import { ToastAndroid, Platform, AlertIOS } from 'react-native';
-
-export function toast(msg) {
-    if (Platform.OS === 'android') {
-        ToastAndroid.show(msg, ToastAndroid.SHORT)
-    } else {
-        AlertIOS.alert(msg);
-    }
-}
-```
 ## Login page {% #login-page %}
 
-Create a new file `views/Login.jsx` and add the following code to it.
-this page contains a basic form to allow the user to login or register.
+Create a new file `src/app/login.tsx` and add the following code to it.
+Because the file is in `src/app`, Expo Router serves it as the `/login` route.
+This page contains a basic form to allow the user to login or register.
 Notice how this page consumes the `useUser` hook to access the user's data and perform login and register actions.
 
 ```client-react-native
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
-import { useUser } from '../contexts/UserContext';
-
+import { useState } from "react";
+import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { useUser } from "@/contexts/UserContext";
+import { toast } from "@/lib/toast";
 
 export default function LoginScreen() {
-    const user = useUser();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    return (
-        <View style={styles.container}>
-            <Text style={styles.header}>Login or register</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-            <View style={styles.buttonContainer}>
-                <Button
-                    title="Login"
-                    onPress={
-                        () => {
-                            user.login(email, password)
-                        }
-                    }
-                />
-                <Button
-                    title="Register"
-                    onPress={
-                        () => {
-                            user.register(email, password)
-                        }
-                    }
-                />
-            </View>
-        </View>
-    );
+  const user = useUser();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function submit(action: "login" | "register") {
+    try {
+      await user[action](email, password);
+    } catch (error) {
+      toast(error instanceof Error ? error.message : "Something went wrong");
+    }
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.header}>Login or register</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      <View style={styles.buttonContainer}>
+        <Button title="Login" onPress={() => submit("login")} />
+        <Button title="Register" onPress={() => submit("register")} />
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        padding: 16,
-    },
-    header: {
-        fontSize: 24,
-        marginBottom: 20,
-    },
-    input: {
-        height: 40,
-        borderColor: 'gray',
-        borderWidth: 1,
-        marginBottom: 10,
-        paddingLeft: 8,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 16,
+  },
+  header: {
+    fontSize: 24,
+    marginBottom: 20,
+  },
+  input: {
+    height: 40,
+    borderColor: "gray",
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingLeft: 8,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
 });
 ```

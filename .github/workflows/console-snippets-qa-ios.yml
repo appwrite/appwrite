@@ -49,10 +49,12 @@ jobs:
             snippets: react-native
             template: ''
             config_file: .env
-            create: npx -y create-expo-app@latest "$APP_DIR" --template blank-typescript --no-install
+            # The default template: an Expo Router app with its screens in
+            # src/app, which is the layout the snippet targets.
+            create: npx -y create-expo-app@latest "$APP_DIR" --no-install
             configure: jq --arg id "$APP_ID" '.expo.ios.bundleIdentifier = $id' app.json > app.json.tmp && mv app.json.tmp app.json
             # react-native-appwrite hard-pins expo-file-system 18.*.*, which
-            # conflicts with the Expo SDK 54 app's 19.x and mixes two versions
+            # conflicts with the Expo app's own version and mixes two versions
             # of the native module (crashed Android at launch; the iOS pods
             # have the same skew). Override it to the app's own version until
             # appwrite/sdk-for-react-native#114 ships.
