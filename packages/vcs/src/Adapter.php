@@ -339,6 +339,20 @@ abstract class Adapter
     }
 
     /**
+     * Reports a deployed resource on a commit: where it runs and where its
+     * build logs are, kept as one entry per key across reports and commits.
+     * state can be one of: queued, pending, success, failure, error,
+     * cancelled, inactive (the resource no longer exists); environment is
+     * preview or production; the group gathers resources, such as those of
+     * one project.
+     *
+     * A provider without deployments ignores the report.
+     */
+    public function updateDeployment(string $owner, string $repositoryName, string $SHA, string $key, string $name, string $state, string $environment = 'preview', string $url = '', string $logsUrl = '', string $type = '', string $groupKey = '', string $groupName = ''): void
+    {
+    }
+
+    /**
      * Creates a check run for a commit.
      * status can be one of: queued, in_progress
      * Use updateCheckRun() to set conclusion and mark the run as completed.

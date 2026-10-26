@@ -92,7 +92,7 @@ class MintingEntire extends Entire
 class DataCallsEntire extends Entire
 {
     /**
-     * @var list<array{method: string, path: string, params: array<mixed>}>
+     * @var list<array{method: string, path: string, params: array<mixed>, version: string}>
      */
     public array $calls = [];
 
@@ -117,9 +117,9 @@ class DataCallsEntire extends Entire
     }
 
     #[\Override]
-    protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true): array
+    protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true, string $version = 'v1'): array
     {
-        $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params];
+        $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params, 'version' => $version];
         [$status, $body] = array_shift($this->answers) ?? [200, []];
 
         return ['headers' => ['status-code' => $status], 'body' => $body];
@@ -518,6 +518,7 @@ final class EntireTest extends TestCase
             'method' => 'GET',
             'path' => '/git/repos/regional_repo_test-repo/merge-base',
             'params' => ['commitA' => 'main', 'commitB' => self::COMMIT_HASH],
+            'version' => 'v1',
         ]], $adapter->calls);
 
         $this->expectException(\Exception::class);
@@ -669,6 +670,67 @@ final class EntireTest extends TestCase
         $this->assertSame('in_progress', $hello['check_runs'][0]['status']);
     }
 
+    public function testUpdateDeployment(): void
+    {
+        $adapter = new DataCallsEntire([
+            [200, [self::COMMIT_HASH => ['refs/heads/' . self::HEAD_BRANCH]]],
+            [200, []],
+        ]);
+
+        $adapter->updateDeployment(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'production/landing', 'Landing', 'success', 'production', 'https://landing.appwrite.network', 'https://cloud.appwrite.io/console/logs', 'site', 'production', 'Production');
+
+        // The deployment names the branch holding the commit, on the cell's v0 API
+        $this->assertSame('POST', $adapter->calls[1]['method']);
+        $this->assertSame('/repos/repo_test-repo/commits/' . self::COMMIT_HASH . '/deployments', $adapter->calls[1]['path']);
+        $this->assertSame('v0', $adapter->calls[1]['version']);
+        $this->assertSame(self::HEAD_BRANCH, $this->param($adapter, 1, 'branch'));
+
+        $this->assertSame('production/landing', $this->param($adapter, 1, 'deployments', 0, 'key'));
+        $this->assertSame('Landing', $this->param($adapter, 1, 'deployments', 0, 'name'));
+        $this->assertSame('completed', $this->param($adapter, 1, 'deployments', 0, 'status'));
+        $this->assertSame('success', $this->param($adapter, 1, 'deployments', 0, 'conclusion'));
+        $this->assertSame('production', $this->param($adapter, 1, 'deployments', 0, 'environment'));
+        $this->assertSame('site', $this->param($adapter, 1, 'deployments', 0, 'type'));
+        $this->assertSame(['key' => 'production', 'name' => 'Production'], $this->param($adapter, 1, 'deployments', 0, 'group'));
+        $this->assertSame('https://landing.appwrite.network', $this->param($adapter, 1, 'deployments', 0, 'environment_url'));
+        $this->assertSame('https://cloud.appwrite.io/console/logs', $this->param($adapter, 1, 'deployments', 0, 'logs_url'));
+        $this->assertSame($this->param($adapter, 1, 'deployments', 0, 'external_updated_at'), $this->param($adapter, 1, 'deployments', 0, 'completed_at'));
+    }
+
+    public function testUpdateDeploymentStates(): void
+    {
+        $adapter = new DataCallsEntire([[200, [self::COMMIT_HASH => ['refs/heads/' . self::HEAD_BRANCH]]]]);
+
+        // A running build has no conclusion, and only https links reach Entire
+        $adapter->updateDeployment(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'p/billing', 'Billing', 'pending', logsUrl: 'http://localhost/console/logs', type: 'function');
+        $this->assertSame('in_progress', $this->param($adapter, 1, 'deployments', 0, 'status'));
+        $this->assertNull($this->param($adapter, 1, 'deployments', 0, 'conclusion'));
+        $this->assertSame('preview', $this->param($adapter, 1, 'deployments', 0, 'environment'));
+        $this->assertNull($this->param($adapter, 1, 'deployments', 0, 'logs_url'));
+        $this->assertNull($this->param($adapter, 1, 'deployments', 0, 'group'));
+
+        // A gone resource offers no links, and the commit's branch is looked up once
+        $adapter->updateDeployment(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'p/landing', 'Landing', 'inactive', url: 'https://landing.appwrite.network', logsUrl: 'https://cloud.appwrite.io/console/logs');
+        $this->assertSame(['POST', 'POST', 'POST'], array_column($adapter->calls, 'method'));
+        $this->assertSame('inactive', $this->param($adapter, 2, 'deployments', 0, 'status'));
+        $this->assertNull($this->param($adapter, 2, 'deployments', 0, 'conclusion'));
+        $this->assertNull($this->param($adapter, 2, 'deployments', 0, 'environment_url'));
+        $this->assertNull($this->param($adapter, 2, 'deployments', 0, 'logs_url'));
+    }
+
+    public function testUpdateDeploymentNeedsTheDeploymentsPermission(): void
+    {
+        // An installation that has not accepted deployments gets a token without them
+        $adapter = new MintingEntire(['permission_not_accepted', 'permission_not_accepted', '']);
+        $adapter->setIssuer(self::ISSUER);
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+
+        $adapter->updateDeployment(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'p/landing', 'Landing', 'success');
+
+        // Three mints and no report
+        $this->assertCount(3, $adapter->requested);
+    }
+
     public function testSharedSuiteIsStatedFromEveryRun(): void
     {
         $runs = [
@@ -754,12 +816,15 @@ final class EntireTest extends TestCase
      */
     public static function mints(): \Iterator
     {
+        $deployments = ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write'];
+        $discussions = ['contents' => 'read', 'checks' => 'write', 'discussions' => 'write'];
         $checks = ['contents' => 'read', 'checks' => 'write'];
         $contents = ['contents' => 'read'];
         yield 'every permission accepted' => [[''], [Entire::PERMISSIONS]];
-        yield 'installation not yet updated' => [['permission_not_accepted', ''], [Entire::PERMISSIONS, $checks]];
-        yield 'discussions not declared' => [['unsupported_permission', ''], [Entire::PERMISSIONS, $checks]];
-        yield 'contents alone accepted' => [['permission_not_accepted', 'permission_not_accepted', ''], [Entire::PERMISSIONS, $checks, $contents]];
+        yield 'deployments not yet accepted' => [['permission_not_accepted', 'permission_not_accepted', ''], [Entire::PERMISSIONS, $deployments, $discussions]];
+        yield 'discussions no longer declared' => [['unsupported_permission', ''], [Entire::PERMISSIONS, $deployments]];
+        yield 'neither accepted' => [['permission_not_accepted', 'permission_not_accepted', 'permission_not_accepted', ''], [Entire::PERMISSIONS, $deployments, $discussions, $checks]];
+        yield 'contents alone accepted' => [['permission_not_accepted', 'permission_not_accepted', 'permission_not_accepted', 'permission_not_accepted', ''], [Entire::PERMISSIONS, $deployments, $discussions, $checks, $contents]];
     }
 
     /**

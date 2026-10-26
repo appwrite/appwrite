@@ -613,8 +613,11 @@ trait Deployment
                         $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
                         $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
-                        // The comment above already lists this build; only the check is still owed
-                        $authorization->skip(fn () => GitAction::check('waiting', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform));
+                        // The comment above already lists this build; the check and the deployed resource are still owed
+                        $authorization->skip(function () use ($vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform) {
+                            GitAction::check('waiting', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
+                            GitAction::deployment('waiting', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
+                        });
                     } catch (\Throwable $e) {
                         Console::warning("Failed to report deployment '{$deploymentId}' as waiting: " . $e->getMessage());
                     }

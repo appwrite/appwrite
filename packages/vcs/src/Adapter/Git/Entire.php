@@ -61,16 +61,19 @@ class Entire extends Git
      * The repository permissions the plugin registers, requested as a whole
      * so one token covers every selected repository: Entire refuses a token
      * without a repository that asks for less than the installation holds,
-     * so discussions are asked for even before the plugin uses them.
+     * so a permission is asked for whether or not the plugin still uses it.
      */
-    public const PERMISSIONS = ['contents' => 'read', 'checks' => 'write', 'discussions' => 'write'];
+    public const PERMISSIONS = ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write'];
 
     /**
      * What a mint asks for when Entire refuses PERMISSIONS, in order: an
      * installation not yet updated to a permission, or a plugin that does
-     * not declare it, is refused it.
+     * not declare it, is refused it. Deployments and discussions come and
+     * go independently; reading contents is the least a token needs.
      */
     protected const FALLBACK_PERMISSIONS = [
+        ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write'],
+        ['contents' => 'read', 'checks' => 'write', 'discussions' => 'write'],
         ['contents' => 'read', 'checks' => 'write'],
         ['contents' => 'read'],
     ];
@@ -97,6 +100,15 @@ class Entire extends Git
         'failure' => ['completed', 'failure'],
         'error' => ['completed', 'failure'],
         'cancelled' => ['completed', 'cancelled'],
+    ];
+
+    /**
+     * Deployment status and conclusion for each state updateDeployment()
+     * takes: a check's, plus inactive for a resource that no longer exists.
+     */
+    private const array DEPLOYMENT_STATES = [
+        ...self::CHECK_STATES,
+        'inactive' => ['inactive', null],
     ];
 
     /**
@@ -155,6 +167,22 @@ class Entire extends Git
     protected string $installationId = '';
 
     protected string $jwtToken = '';
+
+    /**
+     * The permissions the installation token was granted, as resource =>
+     * access; a token cached before they were recorded has none listed.
+     *
+     * @var array<string, string>|null
+     */
+    protected ?array $permissions = null;
+
+    /**
+     * The branch holding each commit a check or deployment named, memoized
+     * per instance since one report writes both.
+     *
+     * @var array<string, string>
+     */
+    protected array $branches = [];
 
     protected string $accessToken = '';
 
@@ -259,6 +287,7 @@ class Entire extends Git
         }
 
         $this->accessToken = $accessToken;
+        $this->permissions = \array_key_exists('permissions', $parsed) ? $this->grantedPermissions($parsed['permissions']) : null;
     }
 
     /**
@@ -295,13 +324,32 @@ class Entire extends Git
         }
 
         $this->accessToken = $this->text($responseBody, 'token');
+        $this->permissions = $this->grantedPermissions($responseBody['permissions'] ?? []);
 
         $expiresAt = strtotime($this->text($responseBody, 'expires_at'));
 
         $this->cache->save('entire-' . $this->installationId, json_encode([
             'accessToken' => $this->accessToken,
             'expiresAt' => $expiresAt === false ? 0 : $expiresAt,
+            'permissions' => $this->permissions,
         ]) ?: '{}');
+    }
+
+    /**
+     * The resource => access pairs a token, or its cache entry, lists.
+     *
+     * @return array<string, string>
+     */
+    protected function grantedPermissions(mixed $permissions): array
+    {
+        $granted = [];
+        foreach (\is_array($permissions) ? $permissions : [] as $resource => $access) {
+            if (\is_string($resource) && \is_string($access)) {
+                $granted[$resource] = $access;
+            }
+        }
+
+        return $granted;
     }
 
     /**
@@ -1230,10 +1278,10 @@ class Entire extends Git
      * @param array<mixed> $params
      * @return array<mixed>
      */
-    protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true): array
+    protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true, string $version = 'v1'): array
     {
         return $this->callAt(
-            $this->dataEndpoint($repositoryId) . '/api/v1',
+            $this->dataEndpoint($repositoryId) . '/api/' . $version,
             $method,
             $path,
             ['Authorization' => "Bearer {$this->accessToken}"],
@@ -2116,9 +2164,7 @@ class Entire extends Git
             $run['output'] = ['title' => mb_strimwidth($title, 0, 255), 'summary' => $summary === '' ? $title : $summary];
         }
 
-        // Entire takes only an https details URL without credentials; a
-        // plain-http one (a local console) is left off rather than refused
-        if (str_starts_with($detailsUrl, 'https://') && !str_contains(substr($detailsUrl, 8), '@')) {
+        if ($this->isLink($detailsUrl)) {
             $run['details_url'] = $detailsUrl;
         }
 
@@ -2139,6 +2185,10 @@ class Entire extends Git
      */
     protected function branchContaining(string $repositoryId, string $commitHash): string
     {
+        if (isset($this->branches[$commitHash])) {
+            return $this->branches[$commitHash];
+        }
+
         $response = $this->dataCall(
             $repositoryId,
             self::METHOD_POST,
@@ -2158,7 +2208,77 @@ class Entire extends Git
             throw new Exception("No branch contains commit {$commitHash}");
         }
 
-        return str_starts_with($branch, 'refs/heads/') ? substr($branch, \strlen('refs/heads/')) : $branch;
+        return $this->branches[$commitHash] = str_starts_with($branch, 'refs/heads/') ? substr($branch, \strlen('refs/heads/')) : $branch;
+    }
+
+    /**
+     * Whether Entire takes a URL as a link: https, without credentials. A
+     * plain-http one, such as a local console, is left off rather than
+     * refused.
+     */
+    protected function isLink(string $url): bool
+    {
+        return str_starts_with($url, 'https://') && !str_contains(substr($url, 8), '@');
+    }
+
+    /**
+     * Reports a deployed resource on a commit through Entire's deployments
+     * API, which shows it on every change holding the commit. The key keeps
+     * one entry per resource across reports and commits, ordered by when
+     * each was made. A token the installation has not granted deployments
+     * reports none.
+     */
+    public function updateDeployment(string $owner, string $repositoryName, string $SHA, string $key, string $name, string $state, string $environment = 'preview', string $url = '', string $logsUrl = '', string $type = '', string $groupKey = '', string $groupName = ''): void
+    {
+        if ($this->permissions !== null && !isset($this->permissions['deployments'])) {
+            return;
+        }
+
+        $repositoryId = $this->repositoryId($owner, $repositoryName);
+        $now = $this->rfc3339Now();
+        [$status, $conclusion] = self::DEPLOYMENT_STATES[$state] ?? ['completed', 'failure'];
+
+        $deployment = [
+            'key' => $key,
+            'name' => $name,
+            'status' => $status,
+            'environment' => $environment,
+            'external_updated_at' => $now,
+        ];
+
+        if ($conclusion !== null) {
+            $deployment['conclusion'] = $conclusion;
+            $deployment['completed_at'] = $now;
+        }
+
+        if ($type !== '') {
+            $deployment['type'] = $type;
+        }
+
+        if ($groupKey !== '') {
+            $deployment['group'] = ['key' => $groupKey, 'name' => $groupName === '' ? $groupKey : $groupName];
+        }
+
+        // An inactive resource offers no links
+        if ($status !== 'inactive' && $this->isLink($url)) {
+            $deployment['environment_url'] = $url;
+        }
+
+        if ($status !== 'inactive' && $this->isLink($logsUrl)) {
+            $deployment['logs_url'] = $logsUrl;
+        }
+
+        $response = $this->dataCall(
+            $repositoryId,
+            self::METHOD_POST,
+            '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/deployments',
+            ['branch' => $this->branchContaining($repositoryId, $SHA), 'deployments' => [$deployment]],
+            version: 'v0',
+        );
+
+        if ($this->status($response) >= 400) {
+            throw $this->requestFailed('Failed to report deployment', $response);
+        }
     }
 
     /**
