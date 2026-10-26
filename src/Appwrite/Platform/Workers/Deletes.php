@@ -436,6 +436,7 @@ class Deletes extends Action
 
             try {
                 if ($projectTables || !\in_array($collectionId, $projectCollectionIds, true)) {
+                    $this->throttle($dbForDatabases);
                     $dbForDatabases->deleteCollection($collectionId);
                     continue;
                 }
@@ -449,6 +450,14 @@ class Deletes extends Action
                 Console::error('Error deleting ' . $collectionId . ' ' . $e->getMessage());
             }
         }
+    }
+
+    /**
+     * Runs before each table a project deletion drops, so a deployment can hold
+     * the drops back while the database's replicas catch up.
+     */
+    protected function throttle(Database $database): void
+    {
     }
 
     /**
