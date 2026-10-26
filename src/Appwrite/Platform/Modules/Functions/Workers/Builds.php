@@ -421,12 +421,11 @@ class Builds extends Action
                 // Commit and push
                 $commitMessage = 'Create ' . $resource->getAttribute('name', '') . ' function';
                 $push = Command::and(
-                    (new Command('git'))->argument('config')->flag('--global')->argument('user.email')->argument(APP_VCS_GITHUB_EMAIL),
-                    (new Command('git'))->argument('config')->flag('--global')->argument('user.name')->argument(APP_VCS_GITHUB_USERNAME),
                     // A branch clone already has the branch; a commit clone is detached
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('checkout')->flag('-B')->argument($branchName),
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('add')->argument('.'),
-                    (new Command('git'))->option('-C', $tmpDirectory)->argument('commit')->option('-m', $commitMessage),
+                    // The author is set for this commit only: concurrent builds writing the global config fail on each other's lock
+                    (new Command('git'))->option('-C', $tmpDirectory)->option('-c', 'user.email=' . APP_VCS_GITHUB_EMAIL)->option('-c', 'user.name=' . APP_VCS_GITHUB_USERNAME)->argument('commit')->option('-m', $commitMessage),
                     // The provider's remote may need more than the clone URL carries
                     $providerAdapter->generatePushCommand($cloneOwner, $cloneRepository, $tmpDirectory, $branchName),
                 );

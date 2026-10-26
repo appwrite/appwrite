@@ -349,8 +349,9 @@ abstract class Git extends Adapter
 
         return Command::and(
             new Command('mkdir')->flag('-p')->argument($directory),
-            new Command('git')->argument('config')->flag('--global')->argument('init.defaultBranch')->argument('main'),
-            $this->git($directory)->argument('init'),
+            // Set for this repository only: concurrent builds writing the
+            // global config fail on each other's lock
+            $this->git($directory)->option('-c', 'init.defaultBranch=main')->argument('init'),
             $this->git($directory)->argument('remote')->argument('add')->argument('origin')->argument($cloneUrl),
             $this->git($directory)->argument('config')->argument('core.sparseCheckout')->argument('true'),
             Command::appendStdout(
