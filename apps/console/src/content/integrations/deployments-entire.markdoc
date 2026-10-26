@@ -33,8 +33,9 @@ Each push to a connected repository can create a deployment:
 - **Production branch:** the deployment builds and activates.
 - **Any other branch:** the deployment builds but stays inactive. Sites get [preview links](/docs/products/sites/previews) for the branch and the commit, which only members of your Appwrite organization can open.
 - **Every build:** Appwrite reports the result to the commit on Entire as a check run, unless **Silent mode** is on.
+- **Branches with an open trail:** Appwrite also comments on the trail with each build's status, a link to its logs, and, for Sites, the preview link, and updates the comment as builds finish. Silent mode turns these comments off too.
 
-Appwrite asks Entire for read access to repository contents and write access to checks, and only for the repositories you select. It cannot create or delete repositories on Entire.
+Appwrite asks Entire for read access to repository contents and write access to checks, trail comments, and deployments, and only for the repositories you select. It cannot create or delete repositories on Entire.
 
 {% info title="Available on Appwrite Cloud" %}
 Entire is available as a Git provider on [Appwrite Cloud](/sign-up). The self-hosted Appwrite Console does not offer new Entire connections.
@@ -65,7 +66,7 @@ git push -u origin main
 
 You can also create the project and the repository on Entire. Entire's [repository docs](https://docs.entire.com/guides/repositories/repository) cover regions in more detail.
 
-If your code lives on GitHub, you don't have to move it. Create a [GitHub repository mirror](https://docs.entire.com/guides/repositories/mirrors) on Entire, and Appwrite deploys from the mirror. A mirror belongs to the Entire project for its GitHub owner, so choose that project when you connect Entire in the next step. Appwrite only deploys pushes that go through Entire, which forwards them to GitHub, so point your local clone at the mirror and push there:
+If your code lives on GitHub, you don't have to move it. Create a [GitHub repository mirror](https://docs.entire.com/guides/repositories/mirrors) on Entire, and Appwrite deploys from the mirror. A mirror belongs to no Entire project, so when you connect Entire in the next step, choose the mirror's GitHub owner instead. The mirror then appears under that owner in the repository picker. Appwrite only deploys pushes that go through Entire, which forwards them to GitHub, so point your local clone at the mirror and push there:
 
 ```bash
 entire repo mirror add /gh/acme/storefront
@@ -73,7 +74,14 @@ entire repo remote add origin --override /gh/acme/storefront
 git push -u origin main
 ```
 
-To move a mirrored repository off GitHub, [detach it](https://docs.entire.com/guides/repositories/repository) into an Entire project with `entire repo mirror detach /gh/acme/storefront --into /et/acme/storefront`. It then deploys like any other repository in that project, and GitHub stops syncing.
+To move a mirrored repository off GitHub, [detach it](https://docs.entire.com/guides/repositories/repository) into an Entire project. The old `/gh/` address then reports that the repository has moved, so point your clone at the new one:
+
+```bash
+entire repo mirror detach /gh/acme/storefront --into /et/acme/storefront
+entire repo remote add origin --override /et/acme/storefront
+```
+
+The repository then deploys like any other repository in that project, and GitHub stops syncing.
 
 ## Step 2: Connect Entire to your Appwrite project
 
@@ -103,7 +111,7 @@ From now on, every push to the repository creates a deployment. Pushes to the pr
 
 ![The deployments list with a branch deployment ready and the main deployment active](/images/integrations/deployments-entire/deployments-list.avif)
 
-Appwrite reports each build back to the commit on Entire as a check run. The check moves from starting to building to succeeded or failed, and its summary links to the deployment in the Console and, for Sites, to the running preview. In the Console, each deployment links back to its repository, branch, and commit on Entire.
+Appwrite reports each build back to the commit on Entire as a check run. The check moves from starting to building to succeeded or failed, and its summary links to the deployment in the Console and, for Sites, to the running preview. If the branch has an open trail, Appwrite also comments on the trail and keeps that comment up to date as later pushes build. In the Console, each deployment links back to its repository, branch, and commit on Entire.
 
 [Branch and path filters](/blog/post/announcing-git-deployment-triggers), root directories, install and build commands, and environment variables work exactly as they do for any Git-connected Site or Function. Set filters under **Settings** > **Build** > **Triggers**. Path filters match from the repository root, so a site and a function in the same repository can each rebuild only when their own files change.
 
@@ -121,7 +129,7 @@ For the full walkthrough, from creating the repository to branch previews and pa
 - **There is no option to create a repository.** The wizard only offers **Create new repository** for providers that support it. For Entire, create the repository on Entire first, push your code, and connect it.
 - **The framework shows as Other.** Appwrite detects the framework from the `package.json` in the root directory. If your app lives in a subfolder, set the **Root directory** to that folder, and if Appwrite still doesn't recognize the framework, select it yourself.
 - **A push didn't create a deployment.** Check that the repository is connected to the Site or Function, that the branch matches the branch filters, and that at least one changed file matches the path filters. The first push of a new branch has no previous commit to compare against, so it deploys regardless of path filters.
-- **No check runs appear on the commit.** Silent mode stops Appwrite from reporting builds back to Entire. Turn it off in the site or function's Git settings.
+- **No check runs or trail comments appear.** Silent mode stops Appwrite from reporting builds back to Entire. Turn it off in the site or function's Git settings.
 - **The build fails.** Open the deployment in the Console and read the build logs. Most failures come from a root directory that doesn't contain the app, or a build command that doesn't match the package manager.
 
 # Read more about Entire and Appwrite

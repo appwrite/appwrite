@@ -12,15 +12,15 @@ faqs:
   - question: "What is the Appwrite and Entire partnership?"
     answer: "It's a collaboration between Appwrite and Entire, two companies that build in the open, to connect Entire's Git platform for agent-driven development with Appwrite's hosting and backend. As part of it, Entire becomes a Git provider for Appwrite Sites and Functions on Appwrite Cloud: connect an Entire project, pick a repository, and every push builds and deploys."
   - question: "What is Entire?"
-    answer: "Entire is a Git forge built for development with coding agents. It hosts repositories on its own Git network across several regions and stores the agent sessions behind each change next to the code, so a commit can carry the conversation that produced it. Its CLI is open source under the MIT license. Learn more at [entire.io](https://entire.io)."
+    answer: "Entire is a Git forge built for development with coding agents. It hosts repositories on its own Git network across several regions and stores the agent sessions behind each change next to the code, so a commit can carry the conversation that produced it. Its CLI is open source under the MIT license. Learn more at [entire.com](https://entire.com)."
   - question: "How do I connect an Entire repository to Appwrite?"
-    answer: "In the Appwrite Console, go to **Project settings** > **Git configuration** and click **Connect to Entire**, or click **Connect Entire** in the Site or Function creation wizard. Approve the installation on entire.io, choose the repositories Appwrite can see, then create a Site or Function from one of them. The [step-by-step guide](/blog/post/deploy-from-entire-to-appwrite) covers the full flow."
+    answer: "In the Appwrite Console, go to **Project settings** > **Git configuration** and click **Connect to Entire**, or click **Connect Entire** in the Site or Function creation wizard. Approve the installation on entire.com, choose the repositories Appwrite can see, then create a Site or Function from one of them. The [step-by-step guide](/blog/post/deploy-from-entire-to-appwrite) covers the full flow."
   - question: "Does Appwrite create preview deployments for Entire branches?"
     answer: "Yes. Pushes to your production branch build and activate. Pushes to any other branch build without activating, and Sites get a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open."
   - question: "How do I see Appwrite build results on Entire?"
-    answer: "Appwrite writes a check run to every commit it builds. The check moves from starting to building to succeeded or failed, and its summary links to the deployment in the Appwrite Console and, for Sites, to the running preview."
+    answer: "Appwrite writes a check run to every commit it builds. The check moves from starting to building to succeeded or failed, and its summary links to the deployment in the Appwrite Console and, for Sites, to the running preview. If the branch has an open trail, Appwrite also comments on the trail with each build's status and, for Sites, the preview link."
   - question: "Can I create a new Entire repository from the Appwrite Console?"
-    answer: "No. Appwrite's connection to Entire reads repository contents and writes check runs, but it cannot create repositories. Create the repository on entire.io or with `entire repo create` in the Entire CLI first, then connect it from the Site or Function wizard."
+    answer: "No. Appwrite's connection to Entire reads repository contents, writes check runs, and comments on trails, but it cannot create repositories. Create the repository on entire.com or with `entire repo create` in the Entire CLI first, then connect it from the Site or Function wizard."
   - question: "Is Entire available on self-hosted Appwrite?"
     answer: "Entire is available as a Git provider on [Appwrite Cloud](/sign-in). The self-hosted Appwrite Console does not offer new Entire connections yet."
 ---
@@ -47,12 +47,12 @@ With this integration, a commit pushed to Entire goes directly to an Appwrite bu
 
 You can connect an Entire project to your Appwrite project, pick a repository, and every push builds and deploys. Here's what that includes on **Appwrite Cloud**:
 
-- **Connect each Entire project separately.** Connect Entire from the Appwrite Console and approve the installation on entire.io. You can give Appwrite access to all of the project's repositories, including ones you add later, or only the ones you select. You can change that selection whenever you need to.
+- **Connect each Entire project separately.** Connect Entire from the Appwrite Console and approve the installation on entire.com. You can give Appwrite access to all of the project's repositories, including ones you add later, or only the ones you select. You can change that selection whenever you need to.
 - **Push to deploy.** Commits to your production branch build and activate. Commits to any other branch build without activating, and Sites get a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open.
-- **Build results on Entire.** Appwrite reports every build back to Entire as a check run on the commit. The check moves from starting to building to succeeded or failed, and its summary links to the deployment in the Console and, for Sites, to the running preview.
+- **Build results on Entire.** Appwrite reports every build back to Entire as a check run on the commit. The check moves from starting to building to succeeded or failed, and its summary links to the deployment in the Console and, for Sites, to the running preview. When the branch has an open trail, Appwrite also comments on the trail with each build's status and, for Sites, the preview link.
 - **The same build controls.** [Branch and path filters](/blog/post/announcing-git-deployment-triggers), root directories, install and build commands, and environment variables work exactly as they do for any Git-connected Site or Function.
-- **Links that resolve to Entire.** Deployments link to the repository, branch, and commit on entire.io, using Entire's own URL paths.
-- **Narrow access.** Appwrite asks Entire for read access to repository contents and write access to checks, and only for the repositories you select. If you uninstall Appwrite from your Entire project, Appwrite disconnects the Sites and Functions that were deployed from it.
+- **Links that resolve to Entire.** Deployments link to the repository, branch, and commit on entire.com, using Entire's own URL paths.
+- **Narrow access.** Appwrite asks Entire for read access to repository contents and write access to checks, trail comments, and deployments, and only for the repositories you select. If you uninstall Appwrite from your Entire project, Appwrite disconnects the Sites and Functions that were deployed from it.
 
 **Ready to get started?** Our [guide to deploying from Entire](/blog/post/deploy-from-entire-to-appwrite) walks through creating an Entire repository, connecting it to Appwrite, and shipping a site and a function from it.
 
