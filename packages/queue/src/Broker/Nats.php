@@ -177,13 +177,6 @@ class Nats implements Synchronous, Consumer, Bounded
      */
     private array $floors = [];
 
-    /**
-     * @var array<string, true> per work stream and dead-letter id, copies on the dead
-     *      stream whose delete from the work stream has not succeeded yet, so a retry
-     *      only deletes
-     */
-    private array $copied = [];
-
     /** Publishes the stream recognised as duplicates of an id it already held. */
     private int $duplicates = 0;
 
@@ -1394,11 +1387,11 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($terminal || $numDelivered >= $this->maxDeliver) {
             // Exhausted or terminal: park on the dead stream and term it. A NAK would
             // hold a maxAckPending slot for its whole backoff.
-            // Its own id, so a retry dedupes against a copy that already landed.
-            $this->retryingCommand(fn (): PubAck => $this->commandsJs()->publish(
-                $this->deadSubject($queue),
+            $this->retryingCommand(fn () => $this->deadLetter(
+                $this->commandsJs(),
+                $queue,
+                $pid . '.dead.' . $jsMessage->metadata()->streamSequence,
                 $jsMessage->getData(),
-                msgId: $pid . '.dead.' . $jsMessage->metadata()->streamSequence,
             ), $deadline);
             $this->retryingCommand(fn () => $this->onCommands($jsMessage)->term($terminal ? 'permanent failure' : 'max deliveries exceeded'), $deadline);
 
@@ -1463,11 +1456,12 @@ class Nats implements Synchronous, Consumer, Bounded
             // Created in both modes on purpose: this durable reads the dead stream and
             // carries none of the settings a running fleet depends on, so requiring it
             // to pre-exist would only mean refusing the first re-drive of every queue.
+            // Unfiltered: the stream holds only dead letters, under the shared subject
+            // older releases wrote and the per-message ones deadLetter() writes.
             $consumer = $this->js()->createConsumer($this->deadStream($queue), new ConsumerConfig(
                 durableName: self::CONSUMER_RETRY,
                 ackPolicy: AckPolicy::Explicit,
                 ackWait: $this->ackWait,
-                filterSubject: $this->deadSubject($queue),
             ));
 
             $remaining = $limit ?? $consumer->info(true)->numPending;
@@ -1507,9 +1501,9 @@ class Nats implements Synchronous, Consumer, Bounded
      * call only takes that reading: it moves nothing. A consumer recreated in between has
      * a floor of its own, so its first reading is taken afresh, the same way.
      *
-     * Safe to run from every replica at once: each copy carries the id reject() gives a
-     * dead letter, so the dead stream stores one, and a delete that finds the message
-     * gone means another broker finished it first. Runs on the commands connection, one
+     * Safe to run from every replica at once: each copy goes to the subject reject() gives
+     * a dead letter, which the dead stream fills only once, and a delete that finds the
+     * message gone means another broker finished it first. Runs on the commands connection, one
      * request per lock, so the consume loop and its acknowledgements are not held up.
      *
      * $olderThan, $maxAttempts and $newerThan exist only for signature compatibility
@@ -1846,7 +1840,9 @@ class Nats implements Synchronous, Consumer, Bounded
 
         $this->js()->createOrUpdateStream(new StreamConfig(
             name: $this->deadStream($queue),
-            subjects: [$this->deadSubject($queue)],
+            // The shared subject still holds dead letters from releases before
+            // deadLetter() gave each its own, and park() writes there.
+            subjects: [$this->deadSubject($queue), $this->deadSubject($queue) . '.>'],
             description: $key,
             retention: RetentionPolicy::WorkQueue,
             // Size limits are the work stream's backpressure and do not belong on a
@@ -2033,8 +2029,8 @@ class Nats implements Synchronous, Consumer, Bounded
      * Under the id reject() gives a dead letter, so the advisory and reap(), or two
      * replicas reaping, store one copy between them. Copied first, so a failure leaves
      * the message where it was rather than losing it; a delete that finds it gone means
-     * another broker finished it first. A delete that fails is retried without copying
-     * again: the dead stream only recognises the id for its duplicate window.
+     * another broker finished it first. A delete that keeps failing is retried by
+     * copying again, which the dead stream refuses: see deadLetter().
      */
     private function bury(JetStream $js, Queue $queue, StreamMessage $stored): void
     {
@@ -2052,12 +2048,7 @@ class Nats implements Synchronous, Consumer, Bounded
         }
         $pid = \is_array($data) && \is_string($data['pid'] ?? null) ? $data['pid'] : $this->workStream($queue);
 
-        $id = $pid . '.dead.' . $stored->sequence;
-        $copy = $this->workStream($queue) . ' ' . $id;
-        if (!isset($this->copied[$copy])) {
-            $js->publish($this->deadSubject($queue), $stored->data, headers: $headers, msgId: $id);
-            $this->copied[$copy] = true;
-        }
+        $this->deadLetter($js, $queue, $pid . '.dead.' . $stored->sequence, $stored->data, $headers);
 
         try {
             $js->deleteMessage($this->workStream($queue), $stored->sequence);
@@ -2066,7 +2057,34 @@ class Nats implements Synchronous, Consumer, Bounded
                 throw $e;
             }
         }
-        unset($this->copied[$copy]);
+    }
+
+    /**
+     * Store one dead copy of a message, however often and from wherever it is asked.
+     *
+     * A message id is recognised only for the dead stream's duplicate window, and a
+     * delete from the work stream can keep failing for longer, after which a restarted
+     * broker or another replica copies the message again. So each dead letter gets a
+     * subject of its own and is published only onto an empty one: the stream refuses a
+     * second message there for as long as the first is stored, and that refusal means
+     * the copy is already made. The data is in the subject as well as the id, so a work
+     * stream recreated under a reused id and sequence is not taken for the old one.
+     */
+    private function deadLetter(JetStream $js, Queue $queue, string $id, string $data, ?Headers $headers = null): void
+    {
+        try {
+            $js->publish(
+                $this->deadSubject($queue) . '.' . hash('xxh128', $id . "\n" . $data),
+                $data,
+                headers: $headers,
+                msgId: $id,
+                expectedLastSubjectSeq: 0,
+            );
+        } catch (JetStreamException $e) {
+            if ($e->apiError?->errCode !== JetStream::ERR_WRONG_LAST_SEQUENCE) {
+                throw $e;
+            }
+        }
     }
 
     /** Logical queue identity (namespace + name); used for cache keys and stream naming. */
