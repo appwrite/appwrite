@@ -367,6 +367,7 @@ class XList extends Action
             foreach (\array_chunk($ids, APP_LIMIT_ARRAY_PARAMS_SIZE) as $chunk) {
                 $fresh = $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, [
                     Query::equal('$id', $chunk),
+                    Query::select(['$id']),
                     Query::limit(\count($chunk)),
                 ]));
                 $found += \count($fresh);
