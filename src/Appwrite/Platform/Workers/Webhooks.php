@@ -8,10 +8,13 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Redelivery;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
+use Psr\Http\Message\UriInterface;
 use Utopia\Cache\Cache;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -48,7 +51,7 @@ class Webhooks extends Action
             ->inject('publisherForUsage')
             ->inject('platform')
             ->inject('plan')
-            ->inject('clientForWebhooks')
+            ->inject('publicHostname')
             ->inject('cache')
             ->callback($this->action(...));
     }
@@ -61,12 +64,12 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
-     * @param Client $clientForWebhooks
+     * @param PublicHostname $publicHostname
      * @param Cache $cache
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $clientForWebhooks, Cache $cache): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, PublicHostname $publicHostname, Cache $cache): void
     {
         $payload = $message->getPayload();
 
@@ -107,7 +110,7 @@ class Webhooks extends Action
                 continue;
             }
 
-            $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $clientForWebhooks, $redelivery->id($webhook->getId()));
+            $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $publicHostname, $redelivery->id($webhook->getId()));
             if ($error !== null) {
                 $errors[] = $error;
             } else {
@@ -140,11 +143,11 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
-     * @param Client $clientForWebhooks
+     * @param PublicHostname $publicHostname
      * @param string $deliveryId Identifies this event to this webhook; the same on every attempt
      * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $clientForWebhooks, string $deliveryId): ?string
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, PublicHostname $publicHostname, string $deliveryId): ?string
     {
         $rawUrl = $webhook->getAttribute('url');
 
@@ -152,15 +155,6 @@ class Webhooks extends Action
         $signature = base64_encode(hash_hmac('sha1', $rawUrl . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
-
-        $client = $clientForWebhooks
-            ->withTimeout(15)
-            ->withConnectTimeout(15)
-            ->withSslVerification($webhook->getAttribute('security', true));
-
-        if (!empty($httpUser) && !empty($httpPass)) {
-            $client = $client->withBasicAuth($httpUser, $httpPass);
-        }
 
         $responseBody = '';
         $clientError = '';
@@ -188,6 +182,16 @@ class Webhooks extends Action
                     'X-' . APP_NAME . '-Webhook-Signature' => $signature,
                 ],
             );
+
+            $client = $this->client($request->getUri(), $publicHostname)
+                ->withTimeout(15)
+                ->withConnectTimeout(15)
+                ->withSslVerification($webhook->getAttribute('security', true));
+
+            if (!empty($httpUser) && !empty($httpPass)) {
+                $client = $client->withBasicAuth($httpUser, $httpPass);
+            }
+
             $response = $client->stream(
                 request: $request,
                 sink: function (string $chunk) use (&$responseBody): void {
@@ -411,6 +415,25 @@ class Webhooks extends Action
         }
 
         return false;
+    }
+
+    /**
+     * A client that connects only to the address checked for the URL's host, whatever DNS answers later.
+     *
+     * @throws \InvalidArgumentException When the host does not resolve or resolves to an address the destination does not allow
+     */
+    private function client(UriInterface $uri, PublicHostname $publicHostname): Client
+    {
+        $host = \strtolower(\trim($uri->getHost(), '[]'));
+        $address = $publicHostname->address($host);
+        $options = [];
+
+        if (\filter_var($host, FILTER_VALIDATE_IP) === false) {
+            $port = $uri->getPort() ?? ($uri->getScheme() === 'https' ? 443 : 80);
+            $options[\CURLOPT_RESOLVE] = ["{$host}:{$port}:" . (\str_contains($address, ':') ? "[{$address}]" : $address)];
+        }
+
+        return new Client(new CurlAdapter(options: $options), $publicHostname->getDestinations());
     }
 
     /**
