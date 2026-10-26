@@ -1001,13 +1001,21 @@ final class RealtimeCustomClientTest extends Scope
             $this->assertSame('error', $response['type'] ?? null);
             $this->assertSame(401, $response['data']['code'] ?? null);
             $this->assertSame('This project does not allow guests to subscribe. Sign in first.', $response['data']['message'] ?? null);
-            $client->send(\json_encode(['type' => 'ping']));
-            $this->assertSame('pong', \json_decode($client->receive(), true)['type'] ?? null);
-            $client->close();
 
             /**
              * Test for SUCCESS
              */
+            // Signing in over the same connection lets it subscribe.
+            $client->send(\json_encode(['type' => 'authentication', 'data' => ['session' => $this->getUser()['session']]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('authentication', $response['data']['to'] ?? null);
+            $this->assertTrue($response['data']['success'] ?? false);
+            $client->send(\json_encode(['type' => 'subscribe', 'data' => [['channels' => ['documents']]]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('subscribe', $response['data']['to'] ?? null);
+            $this->assertTrue($response['data']['success'] ?? false);
+            $client->close();
+
             $client = $this->getWebsocket(['documents'], [
                 'origin' => 'http://localhost',
                 'cookie' => 'a_session_' . $projectId . '=' . $this->getUser()['session'],
