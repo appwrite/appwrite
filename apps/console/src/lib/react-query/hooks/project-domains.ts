@@ -229,12 +229,9 @@ export function useVerifyDomain(
       const projectSdk = sdk.forProject(projectId, region)
       return await projectSdk.proxy.updateRuleStatus({ ruleId })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['proxy-rules', 'project', projectId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: Dependencies.DOMAINS,
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules'],
       })
     },
   })
