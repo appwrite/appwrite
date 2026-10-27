@@ -35,9 +35,87 @@ class CheckRunsEntire extends Entire
     /**
      * @return array{branch: string, check_suite: array<string, mixed>, check_runs: list<array<string, mixed>>}
      */
-    public function write(string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): array
+    public function write(string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = '', string $key = '', string $suiteKey = ''): array
     {
-        return $this->checkRuns('main', $state, $name, $title, $summary, $detailsUrl);
+        return $this->checkRuns('main', $state, $name, $title, $summary, $detailsUrl, $suite, $key, $suiteKey);
+    }
+}
+
+/**
+ * Entire whose repository is already resolved and whose data-plane calls are
+ * recorded and answered in turn from a script, so the requests an operation
+ * makes and its reading of their answers can be checked.
+ */
+class DataCallsEntire extends Entire
+{
+    /**
+     * @var list<array{method: string, path: string, params: array<mixed>, version: string}>
+     */
+    public array $calls = [];
+
+    /**
+     * @param list<array{int, array<mixed>}> $answers The status and body each call in turn is answered with
+     */
+    public function __construct(private array $answers)
+    {
+        parent::__construct(new Cache(new None()));
+    }
+
+    #[\Override]
+    protected function repositoryId(string $owner, string $repositoryName): string
+    {
+        return 'repo_' . $repositoryName;
+    }
+
+    #[\Override]
+    protected function gitRepositoryId(string $repositoryId): string
+    {
+        return 'regional_' . $repositoryId;
+    }
+
+    #[\Override]
+    protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true, string $version = 'v1'): array
+    {
+        $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params, 'version' => $version];
+        [$status, $body] = array_shift($this->answers) ?? [200, []];
+
+        return ['headers' => ['status-code' => $status], 'body' => $body];
+    }
+}
+
+/**
+ * Entire acting for a known installation whose core calls are answered in
+ * turn from a script and recorded, and which looks for a created
+ * repository's placement without waiting, so creation and the
+ * installation's repository list can be followed.
+ */
+class CoreCallsEntire extends Entire
+{
+    /**
+     * @var list<array{method: string, path: string, params: array<mixed>}>
+     */
+    public array $calls = [];
+
+    /**
+     * @param list<array{int, array<mixed>}> $answers The status and body each call in turn is answered with
+     * @param array<string, string>|null $permissions The permissions the installation token holds
+     */
+    public function __construct(private array $answers, ?array $permissions = ['contents' => 'write', 'repositories' => 'create'])
+    {
+        parent::__construct(new Cache(new None()));
+        $this->plugin = 'appwrite';
+        $this->installationId = 'ins_01ARZ3NDEKTSV4RRFFQ69G5FAV';
+        $this->permissions = $permissions;
+        $this->provisioningInterval = 0;
+    }
+
+    #[\Override]
+    protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+    {
+        $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params];
+        [$status, $body] = array_shift($this->answers) ?? [200, []];
+
+        return ['headers' => ['status-code' => $status], 'body' => $body];
     }
 }
 
@@ -300,12 +378,13 @@ final class EntireTest extends TestCase
         parse_str($parsed['query'] ?? '', $params);
 
         $this->assertSame('https', $parsed['scheme'] ?? '');
-        $this->assertSame('entire.io', $parsed['host'] ?? '');
+        // entire.io only redirects to entire.com
+        $this->assertSame('entire.com', $parsed['host'] ?? '');
         $this->assertSame('/plugins/appwrite/install', $parsed['path'] ?? '');
         $this->assertSame('https://appwrite.test/v1/vcs/entire/callback', $params['redirect_uri'] ?? '');
         $this->assertSame('{"projectId":"p1"}', $params['state'] ?? '');
 
-        $this->assertSame('https://entire.io/plugins/appwrite/install', $this->adapter->getInstallUrl(self::PLUGIN));
+        $this->assertSame('https://entire.com/plugins/appwrite/install', $this->adapter->getInstallUrl(self::PLUGIN));
     }
 
     public function testVerifyReceipt(): void
@@ -445,7 +524,7 @@ final class EntireTest extends TestCase
                     'repository' => [
                         'id' => self::REPOSITORY_ID,
                         'path' => 'et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
-                        'default_branch' => 'main',
+                        'default_branch' => 'refs/heads/main',
                         'clone_url' => 'https://aws-us-east-2.entire.io/et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
                         'entire_clone_url' => 'entire://aws-us-east-2.entire.io/et/' . self::OWNER . '/' . self::REPOSITORY_NAME,
                     ],
@@ -479,6 +558,7 @@ final class EntireTest extends TestCase
         $this->assertSame(self::CELL, $event['apiUrl']);
         $this->assertSame(self::COMMIT_HASH, $event['commitHash']);
         $this->assertSame(self::PREVIOUS_COMMIT_HASH, $event['previousCommitHash']);
+        // Entire names the default branch by its full ref; consumers get its name
         $this->assertSame('main', $event['defaultBranch']);
         $this->assertSame('github:alice', $event['headCommitAuthorName']);
         $this->assertFalse($event['branchCreated']);
@@ -487,9 +567,58 @@ final class EntireTest extends TestCase
         $this->assertFalse($event['external']);
         // Deliveries carry no file lists
         $this->assertSame([], $event['affectedFiles']);
-        $this->assertSame('https://entire.io/et/test-project/test-repo', $event['repositoryUrl']);
-        $this->assertSame('https://entire.io/et/test-project/test-repo/tree/main', $event['branchUrl']);
-        $this->assertSame('https://entire.io/et/test-project/test-repo/commit/' . self::COMMIT_HASH, $event['headCommitUrl']);
+        $this->assertSame('https://entire.com/et/test-project/test-repo', $event['repositoryUrl']);
+        $this->assertSame('https://entire.com/et/test-project/test-repo/commits/main', $event['branchUrl']);
+        $this->assertSame('https://entire.com/et/test-project/test-repo/commit/' . self::COMMIT_HASH, $event['headCommitUrl']);
+    }
+
+    public function testGetEventFromAGithubMirror(): void
+    {
+        $payload = array_replace_recursive($this->refPayload('ref.updated', 'refs/heads/main'), [
+            'event' => ['payload' => ['repository' => ['path' => '/gh/octocat/hello-world']]],
+        ]);
+
+        $event = $this->adapter->getEvents('ref.updated', (string) json_encode($payload))[0];
+
+        // The mirror keeps its forge in its owner, and its links go under gh
+        $this->assertSame('gh/octocat', $event['owner']);
+        $this->assertSame('hello-world', $event['repositoryName']);
+        $this->assertSame('https://entire.com/gh/octocat/hello-world', $event['repositoryUrl']);
+        $this->assertSame('https://entire.com/gh/octocat/hello-world/commits/main', $event['branchUrl']);
+        $this->assertSame('https://entire.com/gh/octocat/hello-world/commit/' . self::COMMIT_HASH, $event['headCommitUrl']);
+    }
+
+    public function testMirrorsOfSeveralGithubOwners(): void
+    {
+        // As Entire lists a mirror: the full name without its forge, the
+        // path with it and in lower case
+        $mirror = static fn (string $id, string $fullName): array => [
+            'id' => $id,
+            'full_name' => $fullName,
+            'path' => '/gh/' . strtolower($fullName),
+            'entire_clone_url' => 'entire://aws-eu-central-1.entire.io/gh/' . strtolower($fullName),
+            'placements' => [['role' => 'processing_primary', 'api_base_url' => self::CELL]],
+        ];
+        $adapter = new CoreCallsEntire([[200, ['repositories' => [
+            $mirror('repo_01M5HELLO', 'Octocat/hello-world'),
+            $mirror('repo_01M5DOCS', 'appwrite/docs'),
+        ], 'next_cursor' => '']]]);
+
+        // The installation's owner is its first mirror's, spelled as GitHub does, with its forge
+        $this->assertSame('gh/Octocat', $adapter->getOwnerName(self::INSTALLATION_ID));
+
+        // Both owners' mirrors are offered under it
+        $listed = $adapter->searchRepositories('gh/Octocat', 1, 10);
+        $this->assertSame(2, $listed['total']);
+        $this->assertSame(['gh/Octocat', 'gh/appwrite'], array_column($listed['items'], 'organization'));
+
+        // A repository is found by its name under the installation's owner, and links under its own
+        $this->assertSame('entire://aws-eu-central-1.entire.io/gh/appwrite/docs', $adapter->getRepositoryCloneUrl('gh/Octocat', 'docs'));
+        $this->assertSame('https://entire.com/gh/appwrite/docs', $adapter->getRepositoryUrl('gh/Octocat', 'docs'));
+        $this->assertSame('https://entire.com/gh/Octocat/hello-world/commit/abc', $adapter->getCommitUrl('gh/octocat', 'hello-world', 'abc'));
+
+        // The repository list was read once
+        $this->assertCount(1, $adapter->calls);
     }
 
     public function testGetEventRefLifecycle(): void
@@ -504,6 +633,22 @@ final class EntireTest extends TestCase
         $this->assertTrue($deleted[0]['branchDeleted']);
         $this->assertSame('', $deleted[0]['commitHash']);
         $this->assertSame('', $deleted[0]['headCommitUrl']);
+    }
+
+    public function testGetMergeBase(): void
+    {
+        $adapter = new DataCallsEntire([[200, ['mergeBaseSHA' => self::PREVIOUS_COMMIT_HASH, 'resolvedSHAs' => [self::PREVIOUS_COMMIT_HASH, self::COMMIT_HASH]]]]);
+
+        $this->assertSame(self::PREVIOUS_COMMIT_HASH, $adapter->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH));
+        $this->assertSame([[
+            'method' => 'GET',
+            'path' => '/git/repos/regional_repo_test-repo/merge-base',
+            'params' => ['commitA' => 'main', 'commitB' => self::COMMIT_HASH],
+            'version' => 'v1',
+        ]], $adapter->calls);
+
+        $this->expectException(\Exception::class);
+        new DataCallsEntire([[404, ['code' => 'not_found']]])->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH);
     }
 
     public function testGetEventIgnoresTags(): void
@@ -568,12 +713,21 @@ final class EntireTest extends TestCase
 
     public function testUrls(): void
     {
-        $this->assertSame('https://entire.io/et/acme', $this->adapter->getOrganizationUrl('acme'));
-        $this->assertSame('https://entire.io/et/acme/api', $this->adapter->getRepositoryUrl('acme', 'api'));
-        $this->assertSame('https://entire.io/et/acme/api/tree/main', $this->adapter->getBranchUrl('acme', 'api', 'main'));
-        $this->assertSame('https://entire.io/et/acme/api/commit/abc', $this->adapter->getCommitUrl('acme', 'api', 'abc'));
-        $this->assertSame('https://entire.io/et/acme/api/blob/main', $this->adapter->getFileUrl('acme', 'api', 'main'));
-        $this->assertSame('https://entire.io/et/acme/api/trails/7', $this->adapter->getPullRequestUrl('acme', 'api', 7));
+        // An Entire-native repository, under its project
+        $this->assertSame('https://entire.com/et/acme', $this->adapter->getOrganizationUrl('acme'));
+        $this->assertSame('https://entire.com/et/acme/api', $this->adapter->getRepositoryUrl('acme', 'api'));
+        $this->assertSame('https://entire.com/et/acme/api/commits/main', $this->adapter->getBranchUrl('acme', 'api', 'main'));
+        $this->assertSame('https://entire.com/et/acme/api/commits/feature%2Fpricing', $this->adapter->getBranchUrl('acme', 'api', 'feature/pricing'));
+        $this->assertSame('https://entire.com/et/acme/api/commit/abc', $this->adapter->getCommitUrl('acme', 'api', 'abc'));
+        $this->assertSame('https://entire.com/et/acme/api/files/docs/guide.md?ref=main', $this->adapter->getFileUrl('acme', 'api', 'main/docs/guide.md'));
+        $this->assertSame('https://entire.com/et/acme/api/trails/7', $this->adapter->getPullRequestUrl('acme', 'api', 7));
+
+        // A GitHub mirror, whose owner names its forge
+        $this->assertSame('https://entire.com/gh/octocat', $this->adapter->getOrganizationUrl('gh/octocat'));
+        $this->assertSame('https://entire.com/gh/octocat/hello-world', $this->adapter->getRepositoryUrl('gh/octocat', 'hello-world'));
+        $this->assertSame('https://entire.com/gh/octocat/hello-world/commits/main', $this->adapter->getBranchUrl('gh/octocat', 'hello-world', 'main'));
+        $this->assertSame('https://entire.com/gh/octocat/hello-world/commit/abc', $this->adapter->getCommitUrl('gh/octocat', 'hello-world', 'abc'));
+        $this->assertSame('https://entire.com/gh/octocat/hello-world/trails/7', $this->adapter->getPullRequestUrl('gh/octocat', 'hello-world', 7));
     }
 
     public function testCapabilities(): void
@@ -581,7 +735,7 @@ final class EntireTest extends TestCase
         $this->assertSame('entire', $this->adapter->getName());
         $this->assertSame([Entire::WEBHOOK_SCOPE_INSTALLATION], $this->adapter->getSupportedWebhookScopes());
         $this->assertSame('authorization', $this->adapter->getSignatureHeaderName());
-        $this->assertFalse($this->adapter->supportsRepositoryCreation());
+        $this->assertTrue($this->adapter->supportsRepositoryCreation());
         $this->assertFalse($this->adapter->supportsRepositoryDeletion());
         $this->assertFalse($this->adapter->supportsRepositoryArchives());
         $this->assertFalse($this->adapter->supportsCommentImages());
@@ -612,10 +766,14 @@ final class EntireTest extends TestCase
         $this->assertSame('Site (Project)', $run['name']);
         $this->assertSame('Site (Project)', $run['external_id']);
         $this->assertSame(['title' => 'Starting...', 'summary' => 'Starting...'], $run['output']);
-        // The suite reports the same state next to its timestamp, and no output
-        $this->assertSame('queued', $queued['check_suite']['status']);
-        $this->assertSame($run['external_updated_at'], $queued['check_suite']['external_updated_at']);
-        $this->assertArrayNotHasKey('output', $queued['check_suite']);
+        // Without a suite the run gets one of its own, which carries the run's state and no output
+        $this->assertSame([
+            'key' => 'Site (Project)',
+            'name' => 'Site (Project)',
+            'external_id' => 'Site (Project)',
+            'external_updated_at' => $run['external_updated_at'],
+            'status' => 'queued',
+        ], $queued['check_suite']);
 
         $this->assertSame('in_progress', $adapter->write('pending', 'check', 'Building...')['check_runs'][0]['status']);
         $this->assertSame('in_progress', $adapter->write('in_progress', 'check', 'Building...')['check_runs'][0]['status']);
@@ -630,6 +788,238 @@ final class EntireTest extends TestCase
         }
     }
 
+    public function testCheckRunsShareTheirSuite(): void
+    {
+        $adapter = new CheckRunsEntire(new Cache(new None()));
+
+        $billing = $adapter->write('success', 'Billing', 'Build succeeded.', suite: 'Atlas Production');
+        $hello = $adapter->write('pending', 'Hello', 'Building...', suite: 'Atlas Production');
+
+        // Each resource is a run of its project's suite, which updateCheck() states once the run landed
+        $suite = ['key' => 'Atlas Production', 'name' => 'Atlas Production', 'external_id' => 'Atlas Production'];
+        $this->assertSame($suite, $billing['check_suite']);
+        $this->assertSame($suite, $hello['check_suite']);
+        $this->assertSame('Billing', $billing['check_runs'][0]['key']);
+        $this->assertSame('completed', $billing['check_runs'][0]['status']);
+        $this->assertSame('Hello', $hello['check_runs'][0]['name']);
+        $this->assertSame('in_progress', $hello['check_runs'][0]['status']);
+    }
+
+    public function testUpdateDeployment(): void
+    {
+        $adapter = new DataCallsEntire([
+            [200, [self::COMMIT_HASH => ['refs/heads/' . self::HEAD_BRANCH]]],
+            [200, []],
+        ]);
+
+        $adapter->updateDeployment(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'production/landing', 'Landing', 'success', 'production', 'https://landing.appwrite.network', 'https://cloud.appwrite.io/console/logs', 'site', 'production', 'Production');
+
+        // The deployment names the branch holding the commit, on the cell's v0 API
+        $this->assertSame('POST', $adapter->calls[1]['method']);
+        $this->assertSame('/repos/repo_test-repo/commits/' . self::COMMIT_HASH . '/deployments', $adapter->calls[1]['path']);
+        $this->assertSame('v0', $adapter->calls[1]['version']);
+        $this->assertSame(self::HEAD_BRANCH, $this->param($adapter, 1, 'branch'));
+
+        $this->assertSame('production/landing', $this->param($adapter, 1, 'deployments', 0, 'key'));
+        $this->assertSame('Landing', $this->param($adapter, 1, 'deployments', 0, 'name'));
+        $this->assertSame('completed', $this->param($adapter, 1, 'deployments', 0, 'status'));
+        $this->assertSame('success', $this->param($adapter, 1, 'deployments', 0, 'conclusion'));
+        $this->assertSame('production', $this->param($adapter, 1, 'deployments', 0, 'environment'));
+        $this->assertSame('site', $this->param($adapter, 1, 'deployments', 0, 'type'));
+        $this->assertSame(['key' => 'production', 'name' => 'Production'], $this->param($adapter, 1, 'deployments', 0, 'group'));
+        $this->assertSame('https://landing.appwrite.network', $this->param($adapter, 1, 'deployments', 0, 'environment_url'));
+        $this->assertSame('https://cloud.appwrite.io/console/logs', $this->param($adapter, 1, 'deployments', 0, 'logs_url'));
+        $this->assertSame($this->param($adapter, 1, 'deployments', 0, 'external_updated_at'), $this->param($adapter, 1, 'deployments', 0, 'completed_at'));
+    }
+
+    public function testUpdateDeploymentStates(): void
+    {
+        $adapter = new DataCallsEntire([[200, [self::COMMIT_HASH => ['refs/heads/' . self::HEAD_BRANCH]]]]);
+
+        // A running build has no conclusion, and only https links reach Entire
+        $adapter->updateDeployment(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'p/billing', 'Billing', 'pending', logsUrl: 'http://localhost/console/logs', type: 'function');
+        $this->assertSame('in_progress', $this->param($adapter, 1, 'deployments', 0, 'status'));
+        $this->assertNull($this->param($adapter, 1, 'deployments', 0, 'conclusion'));
+        $this->assertSame('preview', $this->param($adapter, 1, 'deployments', 0, 'environment'));
+        $this->assertNull($this->param($adapter, 1, 'deployments', 0, 'logs_url'));
+        $this->assertNull($this->param($adapter, 1, 'deployments', 0, 'group'));
+
+        // A gone resource offers no links, and the commit's branch is looked up once
+        $adapter->updateDeployment(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'p/landing', 'Landing', 'inactive', url: 'https://landing.appwrite.network', logsUrl: 'https://cloud.appwrite.io/console/logs');
+        $this->assertSame(['POST', 'POST', 'POST'], array_column($adapter->calls, 'method'));
+        $this->assertSame('inactive', $this->param($adapter, 2, 'deployments', 0, 'status'));
+        $this->assertNull($this->param($adapter, 2, 'deployments', 0, 'conclusion'));
+        $this->assertNull($this->param($adapter, 2, 'deployments', 0, 'environment_url'));
+        $this->assertNull($this->param($adapter, 2, 'deployments', 0, 'logs_url'));
+    }
+
+    public function testCreateRepositoryWaitsForItsPlacement(): void
+    {
+        $listed = static fn (array $placements): array => [200, ['repositories' => [[
+            'id' => 'repo_01M5NEW',
+            'full_name' => 'et/' . self::OWNER . '/pricing-site',
+            'clone_url' => 'https://aws-eu-central-1.entire.io/et/' . self::OWNER . '/pricing-site.git',
+            'placements' => $placements,
+        ]], 'next_cursor' => '']];
+        $adapter = new CoreCallsEntire([
+            [201, ['repositoryId' => 'repo_01M5NEW', 'name' => 'pricing-site', 'owningProjectId' => '01M4ZC', 'state' => 'provisioning']],
+            $listed([]),
+            $listed([['region' => 'aws-eu-central-1', 'role' => 'processing_primary', 'api_base_url' => self::CELL]]),
+        ]);
+
+        $repository = $adapter->createRepository(self::OWNER, 'pricing-site', false);
+
+        // The core creates it in the installation's project, named alone
+        $this->assertSame(['method' => 'POST', 'path' => '/repos', 'params' => ['name' => 'pricing-site']], $adapter->calls[0]);
+        // The installation lists it before its placement exists, then with one
+        $this->assertSame('/plugins/appwrite/installations/ins_01ARZ3NDEKTSV4RRFFQ69G5FAV/repositories', $adapter->calls[2]['path']);
+        $this->assertCount(3, $adapter->calls);
+
+        $this->assertSame('repo_01M5NEW', $repository['id']);
+        $this->assertSame('pricing-site', $repository['name']);
+        $this->assertSame(self::OWNER, $repository['organization']);
+        $this->assertTrue($repository['private']);
+    }
+
+    public function testCreateRepositoryNamesAnExistingRepository(): void
+    {
+        $adapter = new CoreCallsEntire([[409, ['type' => 'https://entire.com/errors/name-in-use', 'title' => 'Conflict']]]);
+
+        try {
+            $adapter->createRepository(self::OWNER, 'pricing-site', true);
+            $this->fail('A taken name must fail');
+        } catch (\Exception $e) {
+            $this->assertSame(409, $e->getCode());
+            $this->assertSame('A repository named pricing-site already exists in ' . self::OWNER . '.', $e->getMessage());
+        }
+    }
+
+    public function testCreateRepositoryNeedsTheRepositoriesPermission(): void
+    {
+        // A cached token without repository creation, and an installation that still has not accepted it
+        $checks = ['contents' => 'read', 'checks' => 'write'];
+        $adapter = new CoreCallsEntire([[201, ['token' => 'fresh', 'expires_at' => '2026-10-27T10:00:00Z', 'permissions' => $checks]]], $checks);
+
+        try {
+            $adapter->createRepository(self::OWNER, 'pricing-site', true);
+            $this->fail('Creation without the permission must fail');
+        } catch (\Exception $e) {
+            $this->assertSame(403, $e->getCode());
+            $this->assertStringContainsString('Connect an existing repository', $e->getMessage());
+        }
+
+        // One fresh mint, and no creation
+        $this->assertCount(1, $adapter->calls);
+        $this->assertStringEndsWith('/access-tokens', $adapter->calls[0]['path']);
+    }
+
+    public function testCreateRepositoryRefreshesATokenCachedBeforeThePermission(): void
+    {
+        // The installation accepted repository creation after its token was cached
+        $adapter = new CoreCallsEntire([
+            [201, ['token' => 'fresh', 'expires_at' => '2026-10-27T10:00:00Z', 'permissions' => Entire::PERMISSIONS]],
+            [201, ['repositoryId' => 'repo_01M5NEW', 'name' => 'pricing-site', 'owningProjectId' => '01M4ZC', 'state' => 'provisioning']],
+            [200, ['repositories' => [[
+                'id' => 'repo_01M5NEW',
+                'full_name' => 'et/' . self::OWNER . '/pricing-site',
+                'placements' => [['region' => 'aws-eu-central-1', 'role' => 'processing_primary', 'api_base_url' => self::CELL]],
+            ]], 'next_cursor' => '']],
+        ], ['contents' => 'read', 'checks' => 'write']);
+
+        $repository = $adapter->createRepository(self::OWNER, 'pricing-site', true);
+
+        $this->assertStringEndsWith('/access-tokens', $adapter->calls[0]['path']);
+        $this->assertSame(['method' => 'POST', 'path' => '/repos', 'params' => ['name' => 'pricing-site']], $adapter->calls[1]);
+        $this->assertSame('repo_01M5NEW', $repository['id']);
+    }
+
+    public function testUpdateDeploymentNeedsTheDeploymentsPermission(): void
+    {
+        // An installation that has not accepted deployments gets a token without them
+        $refused = 'permission_not_accepted';
+        $adapter = new MintingEntire([$refused, $refused, $refused, $refused, '']);
+        $adapter->setIssuer(self::ISSUER);
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+
+        $adapter->updateDeployment(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'p/landing', 'Landing', 'success');
+
+        // Five mints and no report
+        $this->assertCount(5, $adapter->requested);
+    }
+
+    public function testCheckRunsAreKeyedApartFromTheirNames(): void
+    {
+        $adapter = new CheckRunsEntire(new Cache(new None()));
+
+        // Two projects named alike, each with a site named alike
+        $production = $adapter->write('success', 'Landing', 'Build succeeded.', suite: 'Atlas', key: 'production/sites/landing', suiteKey: 'production');
+        $staging = $adapter->write('failure', 'Landing', 'Build failed.', suite: 'Atlas', key: 'staging/sites/landing', suiteKey: 'staging');
+
+        $this->assertSame(['key' => 'production', 'name' => 'Atlas', 'external_id' => 'production'], $production['check_suite']);
+        $this->assertSame('staging', $staging['check_suite']['key']);
+        $this->assertSame('production/sites/landing', $production['check_runs'][0]['key']);
+        $this->assertSame('staging/sites/landing', $staging['check_runs'][0]['external_id']);
+        $this->assertSame('Landing', $staging['check_runs'][0]['name']);
+    }
+
+    public function testSharedSuiteIsStatedFromEveryRun(): void
+    {
+        $runs = [
+            ['suite_key' => 'Atlas Production', 'key' => 'Billing', 'status' => 'in_progress', 'conclusion' => null],
+            ['suite_key' => 'Atlas Production', 'key' => 'Hello', 'status' => 'completed', 'conclusion' => 'failure'],
+            ['suite_key' => 'Atlas Staging', 'key' => 'Billing (staging)', 'status' => 'in_progress', 'conclusion' => null],
+        ];
+        $adapter = new DataCallsEntire([
+            [200, [self::COMMIT_HASH => ['refs/heads/' . self::HEAD_BRANCH]]],
+            [200, []],
+            [200, ['check_runs' => $runs]],
+            [200, []],
+        ]);
+
+        $adapter->updateCheck(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'success', 'Billing', 'Build succeeded.', suite: 'Atlas Production');
+
+        // The run lands, the commit's runs are read, and the suite is written alone
+        $path = '/repos/repo_test-repo/commits/' . self::COMMIT_HASH . '/check-runs';
+        $this->assertSame(['POST', 'POST', 'GET', 'POST'], array_column($adapter->calls, 'method'));
+        $this->assertSame([$path, $path, $path], array_column(\array_slice($adapter->calls, 1), 'path'));
+        $this->assertNull($this->param($adapter, 1, 'check_suite', 'status'));
+        $this->assertSame('completed', $this->param($adapter, 1, 'check_runs', 0, 'status'));
+
+        // Billing now succeeded, but Hello failed, so the suite did; the
+        // staging run is another suite's
+        $this->assertSame(self::HEAD_BRANCH, $this->param($adapter, 3, 'branch'));
+        $this->assertSame([], $this->param($adapter, 3, 'check_runs'));
+        $this->assertSame('Atlas Production', $this->param($adapter, 3, 'check_suite', 'key'));
+        $this->assertSame('completed', $this->param($adapter, 3, 'check_suite', 'status'));
+        $this->assertSame('failure', $this->param($adapter, 3, 'check_suite', 'conclusion'));
+        $this->assertSame($this->param($adapter, 3, 'check_suite', 'external_updated_at'), $this->param($adapter, 3, 'check_suite', 'completed_at'));
+
+        // A run still building keeps the suite running
+        $adapter = new DataCallsEntire([
+            [200, [self::COMMIT_HASH => ['refs/heads/' . self::HEAD_BRANCH]]],
+            [200, []],
+            [200, ['check_runs' => $runs]],
+            [200, []],
+        ]);
+        $adapter->updateCheck(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'success', 'Hello', 'Build succeeded.', suite: 'Atlas Production');
+        $this->assertSame('in_progress', $this->param($adapter, 3, 'check_suite', 'status'));
+        $this->assertNull($this->param($adapter, 3, 'check_suite', 'conclusion'));
+    }
+
+    /**
+     * The value at a path in a recorded call's parameters, or null where
+     * the path leads nowhere.
+     */
+    protected function param(DataCallsEntire $adapter, int $call, string|int ...$path): mixed
+    {
+        $value = $adapter->calls[$call]['params'];
+        foreach ($path as $key) {
+            $value = \is_array($value) ? $value[$key] ?? null : null;
+        }
+
+        return $value;
+    }
+
     public function testCheckRunsOutputAndDetails(): void
     {
         $adapter = new CheckRunsEntire(new Cache(new None()));
@@ -639,7 +1029,8 @@ final class EntireTest extends TestCase
         $run = $body['check_runs'][0];
         $this->assertSame(['title' => 'Build succeeded.', 'summary' => $summary], $run['output']);
         $this->assertSame('https://x.example.com', $run['details_url']);
-        $this->assertSame('https://x.example.com', $body['check_suite']['details_url']);
+        // A suite covers several resources, so only the run links to one
+        $this->assertArrayNotHasKey('details_url', $body['check_suite']);
 
         // Only an https URL without credentials reaches Entire
         $this->assertArrayNotHasKey('details_url', $adapter->write('success', 'check', 'Done.', '', 'http://localhost/console')['check_runs'][0]);

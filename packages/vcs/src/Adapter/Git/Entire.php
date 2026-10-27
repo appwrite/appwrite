@@ -11,7 +11,7 @@ use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 /**
- * Adapter for Entire (entire.io), the agent-native Git host.
+ * Adapter for Entire (entire.com), the agent-native Git host.
  *
  * Entire plugins authenticate like GitHub Apps: an Ed25519-signed (EdDSA)
  * plugin JWT is exchanged on a control plane ("core") for an installation
@@ -28,6 +28,14 @@ use Utopia\VCS\Exception\RepositoryNotFound;
  */
 class Entire extends Git
 {
+    /**
+     * The forges a repository path names: Entire-native repositories and
+     * GitHub mirrors.
+     */
+    public const FORGE_ENTIRE = 'et';
+
+    public const FORGE_GITHUB = 'gh';
+
     public const EVENT_REF_CREATED = 'ref.created';
 
     public const EVENT_REF_UPDATED = 'ref.updated';
@@ -59,7 +67,9 @@ class Entire extends Git
 
     /**
      * The repository permissions the plugin registers, requested as a whole
-     * so one token covers every selected repository.
+     * so one token covers every selected repository: Entire refuses a token
+     * without a repository that asks for less than the installation holds,
+     * so a permission is asked for whether or not the plugin still uses it.
      */
     public const PERMISSIONS = ['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write', 'repositories' => 'create'];
 
@@ -89,6 +99,17 @@ class Entire extends Git
     protected const FALLBACK_CODES = ['permission_not_accepted', 'unsupported_permission', 'coverage_changed', 'repository_required'];
 
     /**
+     * How often, and how many times, a created repository is looked for
+     * until it has a placement to serve Git and its cell's API from.
+     */
+    protected const PROVISIONING_ATTEMPTS = 30;
+
+    /**
+     * The conclusions a suite takes from its runs, worst first.
+     */
+    private const array SUITE_CONCLUSIONS = ['failure', 'timed_out', 'action_required', 'cancelled', 'neutral', 'skipped', 'success'];
+
+    /**
      * Check run status and conclusion for each state updateCheck() takes.
      * Entire files a cancelled run as neutral.
      */
@@ -100,6 +121,15 @@ class Entire extends Git
         'failure' => ['completed', 'failure'],
         'error' => ['completed', 'failure'],
         'cancelled' => ['completed', 'cancelled'],
+    ];
+
+    /**
+     * Deployment status and conclusion for each state updateDeployment()
+     * takes: a check's, plus inactive for a resource that no longer exists.
+     */
+    private const array DEPLOYMENT_STATES = [
+        ...self::CHECK_STATES,
+        'inactive' => ['inactive', null],
     ];
 
     /**
@@ -145,9 +175,9 @@ class Entire extends Git
     protected string $issuer = '';
 
     /**
-     * Browser-facing host.
+     * Browser-facing host; entire.io only redirects here.
      */
-    protected string $webEndpoint = 'https://entire.io';
+    protected string $webEndpoint = 'https://entire.com';
 
     /**
      * Plugin slug: the {plugin} segment of the plugin API paths and the
@@ -158,6 +188,33 @@ class Entire extends Git
     protected string $installationId = '';
 
     protected string $jwtToken = '';
+
+    /**
+     * The permissions the installation token was granted, as resource =>
+     * access; a token cached before they were recorded has none listed.
+     *
+     * @var array<string, string>|null
+     */
+    protected ?array $permissions = null;
+
+    /**
+     * Whether this instance minted its token, rather than reusing a cached
+     * one that may predate permissions the installation accepted since.
+     */
+    protected bool $minted = false;
+
+    /**
+     * The branch holding each commit a check or deployment named, memoized
+     * per instance since one report writes both.
+     *
+     * @var array<string, string>
+     */
+    protected array $branches = [];
+
+    /**
+     * Microseconds between looks for a created repository's placement.
+     */
+    protected int $provisioningInterval = 1_000_000;
 
     protected string $accessToken = '';
 
@@ -262,6 +319,7 @@ class Entire extends Git
         }
 
         $this->accessToken = $accessToken;
+        $this->permissions = \array_key_exists('permissions', $parsed) ? $this->grantedPermissions($parsed['permissions']) : null;
     }
 
     /**
@@ -269,8 +327,7 @@ class Entire extends Git
      *
      * Signs an EdDSA plugin JWT and exchanges it for an installation access
      * token covering every selected repository with every registered
-     * permission. Entire refuses a set the installation does not hold
-     * exactly, so the mint falls back through FALLBACK_PERMISSIONS.
+     * permission.
      */
     protected function generateAccessToken(string $privateKey, ?string $appId): void
     {
@@ -279,8 +336,17 @@ class Entire extends Git
         }
 
         $this->jwtToken = $this->generatePluginJwt($privateKey, $appId);
+        $this->mintAccessToken();
+    }
 
-        $path = '/plugins/' . rawurlencode($appId) . '/installations/' . rawurlencode($this->installationId) . '/access-tokens';
+    /**
+     * Exchanges the plugin JWT for an installation access token and caches
+     * it. Entire refuses a set the installation does not hold exactly, so
+     * the mint falls back through FALLBACK_PERMISSIONS.
+     */
+    protected function mintAccessToken(): void
+    {
+        $path = '/plugins/' . rawurlencode($this->plugin) . '/installations/' . rawurlencode($this->installationId) . '/access-tokens';
         foreach ([self::PERMISSIONS, ...self::FALLBACK_PERMISSIONS] as $permissions) {
             $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => $permissions]);
 
@@ -297,13 +363,33 @@ class Entire extends Git
         }
 
         $this->accessToken = $this->text($responseBody, 'token');
+        $this->permissions = $this->grantedPermissions($responseBody['permissions'] ?? []);
+        $this->minted = true;
 
         $expiresAt = strtotime($this->text($responseBody, 'expires_at'));
 
         $this->cache->save('entire-' . $this->installationId, json_encode([
             'accessToken' => $this->accessToken,
             'expiresAt' => $expiresAt === false ? 0 : $expiresAt,
+            'permissions' => $this->permissions,
         ]) ?: '{}');
+    }
+
+    /**
+     * The resource => access pairs a token, or its cache entry, lists.
+     *
+     * @return array<string, string>
+     */
+    protected function grantedPermissions(mixed $permissions): array
+    {
+        $granted = [];
+        foreach (\is_array($permissions) ? $permissions : [] as $resource => $access) {
+            if (\is_string($resource) && \is_string($access)) {
+                $granted[$resource] = $access;
+            }
+        }
+
+        return $granted;
     }
 
     /**
@@ -849,6 +935,11 @@ class Entire extends Git
         $repositoryUrl = $owner !== '' && $repositoryName !== '' ? $this->getRepositoryUrl($owner, $repositoryName) : '';
 
         $branch = substr($ref, \strlen('refs/heads/'));
+        // Entire names the default branch by its full ref
+        $defaultBranch = $this->text($repository, 'default_branch');
+        if (str_starts_with($defaultBranch, 'refs/heads/')) {
+            $defaultBranch = substr($defaultBranch, \strlen('refs/heads/'));
+        }
         $deleted = $type === self::EVENT_REF_DELETED;
         $commitHash = $deleted ? '' : $this->text($payload, 'after');
 
@@ -866,7 +957,7 @@ class Entire extends Git
             'installationId' => $delivery['installationId'],
             'deliveryId' => $delivery['deliveryId'],
             'apiUrl' => $delivery['apiUrl'],
-            'defaultBranch' => $this->text($repository, 'default_branch'),
+            'defaultBranch' => $defaultBranch,
             'commitHash' => $commitHash,
             'previousCommitHash' => $this->text($payload, 'before'),
             'forced' => (bool) ($payload['forced'] ?? false),
@@ -989,11 +1080,12 @@ class Entire extends Git
      */
     public function searchRepositories(string $owner, int $page, int $per_page, string $search = ''): array
     {
+        // Every repository the installation covers is one to offer: a
+        // GitHub mirrors project holds several owners' mirrors, so the
+        // single owner a consumer resolves for the installation narrows
+        // nothing
         $repositories = [];
         foreach ($this->installationRepositories() as $repository) {
-            if ($owner !== '' && strtolower($this->text($repository, 'organization')) !== strtolower($owner)) {
-                continue;
-            }
             if ($search !== '' && stripos($this->text($repository, 'name'), $search) === false) {
                 continue;
             }
@@ -1108,7 +1200,15 @@ class Entire extends Git
     protected function normalizeRepository(array $repository): array
     {
         $fullName = $this->text($repository, 'full_name');
-        [$owner, $name] = $this->splitPath($fullName);
+        $path = $this->text($repository, 'path');
+        [$owner, $name] = $this->splitPath($fullName !== '' ? $fullName : $path);
+
+        // The full name keeps the owner's own spelling but not its forge,
+        // which the path carries: a GitHub mirror is /gh/{owner}/{repo}
+        $mirror = str_starts_with($this->splitPath($path)[0], self::FORGE_GITHUB . '/');
+        if ($mirror && !str_starts_with($owner, self::FORGE_GITHUB . '/')) {
+            $owner = self::FORGE_GITHUB . '/' . $owner;
+        }
         $id = $this->text($repository, 'id');
 
         $apiBaseUrl = '';
@@ -1151,16 +1251,43 @@ class Entire extends Git
      */
     protected function repository(string $owner, string $repositoryName): array
     {
+        $named = [];
         foreach ($this->installationRepositories() as $repository) {
-            if (
-                strtolower($this->text($repository, 'organization')) === strtolower($owner)
-                && strtolower($this->text($repository, 'name')) === strtolower($repositoryName)
-            ) {
+            if (strtolower($this->text($repository, 'name')) !== strtolower($repositoryName)) {
+                continue;
+            }
+            if (strtolower($this->text($repository, 'organization')) === strtolower($owner)) {
                 return $repository;
             }
+            $named[] = $repository;
+        }
+
+        // Consumers resolve one owner per installation, which a mirrors
+        // project with several GitHub owners does not have; a name the
+        // installation holds once still names one repository
+        if (\count($named) === 1) {
+            return $named[0];
         }
 
         throw new RepositoryNotFound('Repository not found.');
+    }
+
+    /**
+     * The owner a repository's web addresses go under: the installation's
+     * own record of it once its repositories are listed, the owner given
+     * otherwise.
+     */
+    protected function canonicalOwner(string $owner, string $repositoryName): string
+    {
+        if ($this->repositories === null) {
+            return $owner;
+        }
+
+        try {
+            return $this->text($this->repository($owner, $repositoryName), 'organization') ?: $owner;
+        } catch (RepositoryNotFound) {
+            return $owner;
+        }
     }
 
     protected function repositoryId(string $owner, string $repositoryName): string
@@ -1169,8 +1296,12 @@ class Entire extends Git
     }
 
     /**
-     * The owner and name a repository path carries: et/{project}/{repo} or
-     * gh/{owner}/{repo}, with or without the forge prefix.
+     * The owner and name a repository path carries. An Entire-native
+     * repository is et/{project}/{repo}, or {project}/{repo} without its
+     * forge, and its owner is the project. A GitHub mirror is
+     * gh/{owner}/{repo}, and its owner keeps the forge, gh/{owner}, because
+     * Entire addresses it there and a GitHub owner can share its name with
+     * a project. A clone URL's host comes before the path and is dropped.
      *
      * @return array{string, string}
      */
@@ -1182,14 +1313,23 @@ class Entire extends Git
         }
 
         $segments = explode('/', $path);
-        if (\count($segments) >= 3) {
-            $segments = \array_slice($segments, -2);
-        }
-        if (\count($segments) !== 2) {
+        if (\count($segments) < 2) {
             return ['', ''];
         }
 
-        return [$segments[0], $segments[1]];
+        [$owner, $name] = \array_slice($segments, -2);
+        $forge = \count($segments) >= 3 ? $segments[\count($segments) - 3] : self::FORGE_ENTIRE;
+
+        return [$forge === self::FORGE_GITHUB ? self::FORGE_GITHUB . '/' . $owner : $owner, $name];
+    }
+
+    /**
+     * The web path of an owner: et/{project}, or gh/{owner} for GitHub
+     * mirrors, whose owner already names its forge.
+     */
+    protected function webOwner(string $owner): string
+    {
+        return str_starts_with($owner, self::FORGE_GITHUB . '/') ? $owner : self::FORGE_ENTIRE . '/' . $owner;
     }
 
     /**
@@ -1227,10 +1367,10 @@ class Entire extends Git
      * @param array<mixed> $params
      * @return array<mixed>
      */
-    protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true): array
+    protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true, string $version = 'v1'): array
     {
         return $this->callAt(
-            $this->dataEndpoint($repositoryId) . '/api/v1',
+            $this->dataEndpoint($repositoryId) . '/api/' . $version,
             $method,
             $path,
             ['Authorization' => "Bearer {$this->accessToken}"],
@@ -1330,14 +1470,65 @@ class Entire extends Git
     /**
      * Create new repository
      *
-     * Creating a repository takes the project's manage grant, which an
-     * installation token does not hold.
+     * Creates the repository in the installation's project through the core,
+     * with a token holding repositories:create. The core answers once the
+     * installation covers the repository, even one limited to selected
+     * repositories, but Git and the repository's cell serve it only once it
+     * is provisioned, so this waits for its placement and gives up waiting
+     * after PROVISIONING_ATTEMPTS. Entire creates every repository private.
      *
-     * @return array<mixed>
+     * @return array<mixed> The repository, as getRepository() reports it
      */
     public function createRepository(string $owner, string $repositoryName, bool $private): array
     {
-        throw new Exception('createRepository() is not supported by ' . $this->getName());
+        // A cached token may predate the installation accepting repository creation
+        if ($this->permissions !== null && !isset($this->permissions['repositories']) && !$this->minted) {
+            $this->mintAccessToken();
+        }
+
+        if ($this->permissions !== null && !isset($this->permissions['repositories'])) {
+            throw new Exception('This Entire installation cannot create repositories yet. Connect an existing repository, or accept the plugin\'s updated permissions in Entire if it asks for them.', 403);
+        }
+
+        $response = $this->call(self::METHOD_POST, '/repos', ['Authorization' => "Bearer {$this->accessToken}"], ['name' => $repositoryName]);
+
+        $statusCode = $this->status($response);
+        if ($statusCode === 409) {
+            throw new Exception("A repository named {$repositoryName} already exists in {$owner}.", $statusCode);
+        }
+        if ($statusCode >= 400) {
+            throw $this->requestFailed('Failed to create repository', $response);
+        }
+
+        $repositoryId = $this->text($this->body($response), 'repositoryId');
+
+        $created = [];
+        for ($attempt = 0; $attempt < self::PROVISIONING_ATTEMPTS; $attempt++) {
+            // A fresh list each time; a placement appears once provisioning ends
+            $this->repositories = null;
+            foreach ($this->installationRepositories() as $repository) {
+                if ($this->text($repository, 'id') === $repositoryId) {
+                    $created = $repository;
+                }
+            }
+
+            if ($created !== [] && isset($this->dataEndpoints[$repositoryId])) {
+                return $created;
+            }
+
+            usleep($this->provisioningInterval);
+        }
+
+        // Still provisioning: the repository exists, so hand it back; Git
+        // calls on it fail until Entire finishes
+        return $created !== [] ? $created : [
+            'id' => $repositoryId,
+            'name' => $repositoryName,
+            'full_name' => "{$owner}/{$repositoryName}",
+            'organization' => $owner,
+            'private' => true,
+            'pushed_at' => '',
+        ];
     }
 
     /**
@@ -1349,12 +1540,6 @@ class Entire extends Git
     public function deleteRepository(string $owner, string $repositoryName): bool
     {
         throw new Exception('deleteRepository() is not supported by ' . $this->getName());
-    }
-
-    #[\Override]
-    public function supportsRepositoryCreation(): bool
-    {
-        return false;
     }
 
     #[\Override]
@@ -1683,6 +1868,24 @@ class Entire extends Git
     }
 
     /**
+     * The commit two refs last shared, such as where a branch left the
+     * default branch. Each ref is a branch, tag or commit SHA.
+     */
+    public function getMergeBase(string $owner, string $repositoryName, string $commitA, string $commitB): string
+    {
+        $repositoryId = $this->repositoryId($owner, $repositoryName);
+
+        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/git/repos/' . rawurlencode($this->gitRepositoryId($repositoryId)) . '/merge-base', ['commitA' => $commitA, 'commitB' => $commitB]);
+
+        $statusCode = $this->status($response);
+        if ($statusCode >= 400) {
+            throw $this->requestFailed('Failed to find the merge base', $response);
+        }
+
+        return $this->text($this->body($response), 'mergeBaseSHA');
+    }
+
+    /**
      * Get latest opened pull request with specific head branch
      *
      * @return array<mixed>
@@ -1979,67 +2182,138 @@ class Entire extends Git
 
     /**
      * Entire models CI feedback as check runs on a branch, so a check rides
-     * the check run upsert with its name as the stable key - repeated reports
-     * for one name land on one run, in a suite of the same name.
+     * the check run upsert with its key as the stable identity - repeated
+     * reports for one key land on one run, in a suite of its own unless one
+     * is named.
      */
-    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): void
+    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = '', string $key = '', string $suiteKey = ''): void
     {
         $repositoryId = $this->repositoryId($owner, $repositoryName);
+        $path = '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/check-runs';
 
-        $response = $this->dataCall(
-            $repositoryId,
-            self::METHOD_POST,
-            '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/check-runs',
-            $this->checkRuns($this->branchContaining($repositoryId, $SHA), $state, $name, $title, $summary, $detailsUrl),
-        );
+        $write = $this->checkRuns($this->branchContaining($repositoryId, $SHA), $state, $name, $title, $summary, $detailsUrl, $suite, $key, $suiteKey);
+        $this->writeCheckRuns($repositoryId, $path, $write);
 
-        $statusCode = $this->status($response);
-        if ($statusCode >= 400) {
+        if ($suite === '' && $suiteKey === '') {
+            return;
+        }
+
+        // Entire evaluates a trail's gate as a write lands, which can be
+        // before it derives the suite's state from its runs, and nothing
+        // evaluates the gate again. A shared suite is therefore stated from
+        // every run under it, read after this run landed: of reports that
+        // finish together, the last to read has seen them all, and Entire
+        // keeps the newest suite state.
+        $readAt = $this->rfc3339Now();
+        $response = $this->dataCall($repositoryId, self::METHOD_GET, $path);
+        if ($this->status($response) >= 400) {
+            throw $this->requestFailed('Failed to list check runs', $response);
+        }
+
+        $runs = [];
+        foreach ($this->nested($this->body($response), 'check_runs') as $run) {
+            if (\is_array($run) && $this->text($run, 'suite_key') === $this->text($write['check_suite'], 'key')) {
+                $runs[$this->text($run, 'key')] = $run;
+            }
+        }
+        $run = $write['check_runs'][0];
+        $runs[$this->text($run, 'key')] = $run;
+
+        $this->writeCheckRuns($repositoryId, $path, [
+            'branch' => $write['branch'],
+            'check_suite' => [...$write['check_suite'], ...$this->suiteState($runs, $readAt)],
+            'check_runs' => [],
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $write
+     */
+    protected function writeCheckRuns(string $repositoryId, string $path, array $write): void
+    {
+        $response = $this->dataCall($repositoryId, self::METHOD_POST, $path, $write);
+
+        if ($this->status($response) >= 400) {
             throw $this->requestFailed('Failed to update commit status', $response);
         }
     }
 
     /**
-     * The check run write for one report: a suite and its single run, keyed
-     * by the check's name and both carrying the state.
+     * A suite's state from its runs: queued or running while any run is,
+     * otherwise completed with the worst conclusion among them.
+     *
+     * @param array<array<mixed>> $runs
+     * @return array<string, string>
+     */
+    protected function suiteState(array $runs, string $at): array
+    {
+        $state = ['external_updated_at' => $at];
+
+        $statuses = array_map(fn (array $run): string => $this->text($run, 'status'), $runs);
+        if (array_diff($statuses, ['completed']) !== []) {
+            return [...$state, 'status' => array_diff($statuses, ['queued']) === [] ? 'queued' : 'in_progress'];
+        }
+
+        $conclusions = array_map(fn (array $run): string => $this->text($run, 'conclusion'), $runs);
+        $conclusion = 'neutral';
+        foreach (self::SUITE_CONCLUSIONS as $candidate) {
+            if (\in_array($candidate, $conclusions, true)) {
+                $conclusion = $candidate;
+                break;
+            }
+        }
+
+        return [...$state, 'status' => 'completed', 'conclusion' => $conclusion, 'completed_at' => $at];
+    }
+
+    /**
+     * The check run write for one report: its run, keyed by the check's key
+     * or else its name, filed under the named suite or a suite of its own.
+     * A suite of its own carries the run's state; a shared one is stated
+     * afterwards from all its runs, see updateCheck().
      *
      * @return array{branch: string, check_suite: array<string, mixed>, check_runs: list<array<string, mixed>>}
      */
-    protected function checkRuns(string $branch, string $state, string $name, string $title, string $summary, string $detailsUrl): array
+    protected function checkRuns(string $branch, string $state, string $name, string $title, string $summary, string $detailsUrl, string $suite = '', string $key = '', string $suiteKey = ''): array
     {
-        $key = $name === '' || $name === '0' ? 'default' : $name;
+        $name = $name === '' || $name === '0' ? 'default' : $name;
+        $key = $key === '' ? $name : $key;
+        $shared = $suite !== '' || $suiteKey !== '';
+        $suiteKey = $suiteKey === '' ? ($suite === '' ? $key : $suite) : $suiteKey;
+        $suite = $suite === '' ? $name : $suite;
         $now = $this->rfc3339Now();
         [$status, $conclusion] = self::CHECK_STATES[$state] ?? ['completed', 'failure'];
 
         $run = [
             'key' => $key,
-            'name' => $key,
+            'name' => $name,
             'status' => $status,
-            // The name is the run's identity, so its attempt id can stay stable too
+            // The key is the run's identity, so its attempt id can stay stable too
             'external_id' => $key,
             'external_updated_at' => $now,
         ];
-        // A suite reports status and external_updated_at together or not at all
-        $suite = $run;
 
         if ($conclusion !== null) {
-            $run['conclusion'] = $suite['conclusion'] = $conclusion;
-            $run['completed_at'] = $suite['completed_at'] = $now;
+            $run['conclusion'] = $conclusion;
+            $run['completed_at'] = $now;
         }
 
         if ($title !== '') {
             $run['output'] = ['title' => mb_strimwidth($title, 0, 255), 'summary' => $summary === '' ? $title : $summary];
         }
 
-        // Entire takes only an https details URL without credentials; a
-        // plain-http one (a local console) is left off rather than refused
-        if (str_starts_with($detailsUrl, 'https://') && !str_contains(substr($detailsUrl, 8), '@')) {
-            $run['details_url'] = $suite['details_url'] = $detailsUrl;
+        if ($this->isLink($detailsUrl)) {
+            $run['details_url'] = $detailsUrl;
+        }
+
+        $checkSuite = ['key' => $suiteKey, 'name' => $suite, 'external_id' => $suiteKey];
+        if (!$shared) {
+            $checkSuite = [...$checkSuite, ...$this->suiteState([$run], $now)];
         }
 
         return [
             'branch' => $branch,
-            'check_suite' => $suite,
+            'check_suite' => $checkSuite,
             'check_runs' => [$run],
         ];
     }
@@ -2049,6 +2323,10 @@ class Entire extends Git
      */
     protected function branchContaining(string $repositoryId, string $commitHash): string
     {
+        if (isset($this->branches[$commitHash])) {
+            return $this->branches[$commitHash];
+        }
+
         $response = $this->dataCall(
             $repositoryId,
             self::METHOD_POST,
@@ -2068,7 +2346,77 @@ class Entire extends Git
             throw new Exception("No branch contains commit {$commitHash}");
         }
 
-        return str_starts_with($branch, 'refs/heads/') ? substr($branch, \strlen('refs/heads/')) : $branch;
+        return $this->branches[$commitHash] = str_starts_with($branch, 'refs/heads/') ? substr($branch, \strlen('refs/heads/')) : $branch;
+    }
+
+    /**
+     * Whether Entire takes a URL as a link: https, without credentials. A
+     * plain-http one, such as a local console, is left off rather than
+     * refused.
+     */
+    protected function isLink(string $url): bool
+    {
+        return str_starts_with($url, 'https://') && !str_contains(substr($url, 8), '@');
+    }
+
+    /**
+     * Reports a deployed resource on a commit through Entire's deployments
+     * API, which shows it on every change holding the commit. The key keeps
+     * one entry per resource across reports and commits, ordered by when
+     * each was made. A token the installation has not granted deployments
+     * reports none.
+     */
+    public function updateDeployment(string $owner, string $repositoryName, string $SHA, string $key, string $name, string $state, string $environment = 'preview', string $url = '', string $logsUrl = '', string $type = '', string $groupKey = '', string $groupName = ''): void
+    {
+        if ($this->permissions !== null && !isset($this->permissions['deployments'])) {
+            return;
+        }
+
+        $repositoryId = $this->repositoryId($owner, $repositoryName);
+        $now = $this->rfc3339Now();
+        [$status, $conclusion] = self::DEPLOYMENT_STATES[$state] ?? ['completed', 'failure'];
+
+        $deployment = [
+            'key' => $key,
+            'name' => $name,
+            'status' => $status,
+            'environment' => $environment,
+            'external_updated_at' => $now,
+        ];
+
+        if ($conclusion !== null) {
+            $deployment['conclusion'] = $conclusion;
+            $deployment['completed_at'] = $now;
+        }
+
+        if ($type !== '') {
+            $deployment['type'] = $type;
+        }
+
+        if ($groupKey !== '') {
+            $deployment['group'] = ['key' => $groupKey, 'name' => $groupName === '' ? $groupKey : $groupName];
+        }
+
+        // An inactive resource offers no links
+        if ($status !== 'inactive' && $this->isLink($url)) {
+            $deployment['environment_url'] = $url;
+        }
+
+        if ($status !== 'inactive' && $this->isLink($logsUrl)) {
+            $deployment['logs_url'] = $logsUrl;
+        }
+
+        $response = $this->dataCall(
+            $repositoryId,
+            self::METHOD_POST,
+            '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/deployments',
+            ['branch' => $this->branchContaining($repositoryId, $SHA), 'deployments' => [$deployment]],
+            version: 'v0',
+        );
+
+        if ($this->status($response) >= 400) {
+            throw $this->requestFailed('Failed to report deployment', $response);
+        }
     }
 
     /**
@@ -2131,17 +2479,20 @@ class Entire extends Git
 
     public function getRepositoryUrl(string $owner, string $repositoryName): string
     {
-        return "{$this->webEndpoint}/et/{$owner}/{$repositoryName}";
+        return "{$this->webEndpoint}/" . $this->webOwner($this->canonicalOwner($owner, $repositoryName)) . "/{$repositoryName}";
     }
 
     public function getOrganizationUrl(string $owner): string
     {
-        return "{$this->webEndpoint}/et/{$owner}";
+        return "{$this->webEndpoint}/" . $this->webOwner($owner);
     }
 
+    /**
+     * A branch's commits, which is how Entire shows a branch.
+     */
     public function getBranchUrl(string $owner, string $repositoryName, string $branch): string
     {
-        return $this->getRepositoryUrl($owner, $repositoryName) . "/tree/{$branch}";
+        return $this->getRepositoryUrl($owner, $repositoryName) . '/commits/' . rawurlencode($branch);
     }
 
     public function getCommitUrl(string $owner, string $repositoryName, string $commitHash): string
@@ -2149,9 +2500,15 @@ class Entire extends Git
         return $this->getRepositoryUrl($owner, $repositoryName) . "/commit/{$commitHash}";
     }
 
+    /**
+     * A file as {ref}/{path}, the way other providers' blob addresses take
+     * it; Entire names the ref in the query.
+     */
     public function getFileUrl(string $owner, string $repositoryName, string $reference): string
     {
-        return $this->getRepositoryUrl($owner, $repositoryName) . "/blob/{$reference}";
+        [$ref, $path] = array_pad(explode('/', $reference, 2), 2, '');
+
+        return $this->getRepositoryUrl($owner, $repositoryName) . "/files/{$path}?ref=" . rawurlencode($ref);
     }
 
     public function getPullRequestUrl(string $owner, string $repositoryName, int $pullRequestNumber): string
