@@ -19,7 +19,7 @@ class Base extends Action
 {
     public const string SECRET_HEADER = 'x-appwrite-reviews-secret';
 
-    protected function authenticate(Request $request, Authorization $authorization): void
+    protected function authenticate(Request $request): void
     {
         $secret = System::getEnv('_APP_REVIEWS_SECRET', '');
         $provided = $request->getHeaderLine(self::SECRET_HEADER, '');
@@ -28,9 +28,6 @@ class Base extends Action
         if ($secret === '' || !\hash_equals($secret, $provided)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid reviews secret.');
         }
-
-        // The secret is trusted like an API key: review rows carry no permissions of their own.
-        $authorization->setStatus(false);
     }
 
     protected function getProject(string $projectId, Database $dbForPlatform, Authorization $authorization): Document
@@ -44,9 +41,9 @@ class Base extends Action
         return $project;
     }
 
-    protected function getReview(string $reviewId, Database $dbForProject): Document
+    protected function getReview(string $reviewId, Database $dbForProject, Authorization $authorization): Document
     {
-        $review = $dbForProject->getDocument('reviews', $reviewId);
+        $review = $authorization->skip(fn () => $dbForProject->getDocument('reviews', $reviewId));
 
         if ($review->isEmpty()) {
             throw new Exception(Exception::REVIEW_NOT_FOUND);

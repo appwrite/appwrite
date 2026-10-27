@@ -35,6 +35,9 @@ class Create extends Base
             ->desc('Create review usage')
             ->groups(['api'])
             ->label('scope', 'public')
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->param('reviewId', '', new UID(), 'Review ID.')
             ->param('projectId', '', new UID(), 'Project ID.')
             ->param('usage', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Model calls, each with role, provider, model, inputTokens, outputTokens, durationMs and optional cachedInputTokens and reasoningTokens.')
@@ -56,11 +59,11 @@ class Create extends Base
         callable $getProjectDB,
         Authorization $authorization,
     ): void {
-        $this->authenticate($request, $authorization);
+        $this->authenticate($request);
 
         $project = $this->getProject($projectId, $dbForPlatform, $authorization);
         $dbForProject = $getProjectDB($project);
-        $review = $this->getReview($reviewId, $dbForProject);
+        $review = $this->getReview($reviewId, $dbForProject, $authorization);
 
         $documents = [];
         foreach ($usage as $index => $call) {

@@ -34,6 +34,9 @@ class Create extends Base
             ->desc('Create repository token')
             ->groups(['api'])
             ->label('scope', 'public')
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->param('repositoryId', '', new UID(), 'Repository ID.')
             ->param('projectId', '', new UID(), 'Project ID.')
             ->inject('request')
@@ -53,7 +56,7 @@ class Create extends Base
         Authorization $authorization,
         VcsFactory $vcsFactory,
     ): void {
-        $this->authenticate($request, $authorization);
+        $this->authenticate($request);
 
         $repository = $authorization->skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId));
 

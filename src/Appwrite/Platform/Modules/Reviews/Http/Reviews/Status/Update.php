@@ -43,6 +43,9 @@ class Update extends Base
             ->desc('Update review status')
             ->groups(['api'])
             ->label('scope', 'public')
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->param('reviewId', '', new UID(), 'Review ID.')
             ->param('projectId', '', new UID(), 'Project ID.')
             ->param('status', '', new WhiteList(['processing', 'completed', 'skipped', 'failed'], true), 'Review status.')
@@ -80,11 +83,11 @@ class Update extends Base
         callable $getProjectDB,
         Authorization $authorization,
     ): void {
-        $this->authenticate($request, $authorization);
+        $this->authenticate($request);
 
         $project = $this->getProject($projectId, $dbForPlatform, $authorization);
         $dbForProject = $getProjectDB($project);
-        $review = $this->getReview($reviewId, $dbForProject);
+        $review = $this->getReview($reviewId, $dbForProject, $authorization);
 
         // processing may repeat: a job redelivered after a crash starts again.
         if (!\in_array($review->getAttribute('status'), ['queued', 'processing'], true)) {
