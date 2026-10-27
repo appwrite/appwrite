@@ -135,6 +135,32 @@ describe('API explorer auth storage', () => {
     })
   })
 
+  test('keeps stored preferences when legacy keys cannot be removed', () => {
+    const storage = memoryStorage()
+    storage.setItem(
+      API_EXPLORER_AUTH_LOCAL_STORAGE_KEY,
+      JSON.stringify({
+        'read-only-project': {
+          platform: 'server',
+          serverAuth: { mode: 'ephemeral', manualApiKey: 'standard_legacy' },
+        },
+      }),
+    )
+    setGlobal('localStorage', {
+      ...storage,
+      setItem: () => {
+        throw new DOMException('Storage is full', 'QuotaExceededError')
+      },
+    })
+
+    expect(
+      resolveApiExplorerAuthSnapshot('read-only-project', 'client'),
+    ).toMatchObject({
+      platform: 'server',
+      serverAuth: { mode: 'ephemeral', manualApiKey: '' },
+    })
+  })
+
   test('falls back to defaults when storage cannot be read', () => {
     Object.defineProperty(globalThis, 'localStorage', {
       configurable: true,

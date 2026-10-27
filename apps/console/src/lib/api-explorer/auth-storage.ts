@@ -132,7 +132,11 @@ function readStoragePayload(): ApiExplorerAuthStoragePayload {
         withoutKeys(entry),
       ]),
     )
-    writeStoragePayload(scrubbed)
+    try {
+      writeStoragePayload(scrubbed)
+    } catch {
+      /* quota / read-only storage */
+    }
     return scrubbed
   } catch {
     return {}
