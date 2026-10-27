@@ -13,6 +13,7 @@ use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
 use Psr\Http\Message\UriInterface;
+use Swoole\Coroutine\System as Resolver;
 use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
@@ -418,22 +419,44 @@ class Webhooks extends Action
     }
 
     /**
-     * A client that connects only to the address checked for the URL's host, whatever DNS answers later.
+     * A client that connects only to the addresses checked for the URL's host, whatever DNS answers later.
+     * The host resolves through the container's own resolver, as cURL would resolve it.
      *
      * @throws \InvalidArgumentException When the host does not resolve or resolves to an address the destination does not allow
      */
     private function client(UriInterface $uri, PublicHostname $publicHostname): Client
     {
         $host = \strtolower(\trim($uri->getHost(), '[]'));
-        $address = $publicHostname->address($host);
-        $options = [];
+        $literal = \filter_var($host, FILTER_VALIDATE_IP) !== false;
+        $destinations = $publicHostname->getDestinations();
+        $addresses = $literal ? [$host] : \array_values(\array_unique([
+            ...(Resolver::getaddrinfo($host, AF_INET) ?: []),
+            ...(Resolver::getaddrinfo($host, AF_INET6) ?: []),
+        ]));
 
-        if (\filter_var($host, FILTER_VALIDATE_IP) === false) {
-            $port = $uri->getPort() ?? ($uri->getScheme() === 'https' ? 443 : 80);
-            $options[\CURLOPT_RESOLVE] = ["{$host}:{$port}:" . (\str_contains($address, ':') ? "[{$address}]" : $address)];
+        if ($addresses === []) {
+            throw new \InvalidArgumentException("Hostname {$host} does not resolve.");
         }
 
-        return new Client(new CurlAdapter(options: $options), $publicHostname->getDestinations());
+        foreach ($addresses as $address) {
+            if (!$destinations->allows($address)) {
+                throw new \InvalidArgumentException($literal
+                    ? "Address {$host} is in a private or reserved range."
+                    : "Hostname {$host} resolves to private or reserved address {$address}.");
+            }
+        }
+
+        $options = [];
+
+        if (!$literal) {
+            $port = $uri->getPort() ?? ($uri->getScheme() === 'https' ? 443 : 80);
+            $options[\CURLOPT_RESOLVE] = ["{$host}:{$port}:" . \implode(',', \array_map(
+                fn (string $address): string => \str_contains($address, ':') ? "[{$address}]" : $address,
+                $addresses,
+            ))];
+        }
+
+        return new Client(new CurlAdapter(options: $options), $destinations);
     }
 
     /**

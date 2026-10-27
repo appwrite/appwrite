@@ -77,13 +77,14 @@ final class WebhooksCustomServerTest extends Scope
             $this->assertSame(201, $user['headers']['status-code']);
 
             $this->assertEventually(function () use ($webhookId) {
-                $this->assertSame(1, $this->getWebhook($webhookId)['body']['attempts']);
-            }, 15000, 500);
+                $webhook = $this->getWebhook($webhookId)['body'];
+                $this->assertSame(1, $webhook['attempts']);
 
-            $logs = (string) $this->getWebhook($webhookId)['body']['logs'];
-            $this->assertStringContainsString('resolves to private or reserved address 127.0.0.2', $logs);
-            $this->assertStringNotContainsString('not an allowed destination', $logs);
-            $this->assertStringNotContainsString('connect', \strtolower($logs));
+                $logs = (string) $webhook['logs'];
+                $this->assertStringContainsString('resolves to private or reserved address 127.0.0.2', $logs);
+                $this->assertStringNotContainsString('not an allowed destination', $logs);
+                $this->assertStringNotContainsString('connect', \strtolower($logs));
+            }, 15000, 500);
         } finally {
             $this->deleteWebhook($webhookId);
         }
