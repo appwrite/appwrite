@@ -34,6 +34,8 @@ use Appwrite\Platform\Modules\Messaging\Http\Providers\Smtp\Create as CreateSmtp
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Smtp\Update as UpdateSmtpProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Telesign\Create as CreateTelesignProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Telesign\Update as UpdateTelesignProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Telnyx\Create as CreateTelnyxProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Telnyx\Update as UpdateTelnyxProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Textmagic\Create as CreateTextmagicProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Textmagic\Update as UpdateTextmagicProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Twilio\Create as CreateTwilioProvider;
@@ -73,6 +75,8 @@ class Http extends Service
         $this->addAction(UpdateMsg91Provider::getName(), new UpdateMsg91Provider());
         $this->addAction(CreateTelesignProvider::getName(), new CreateTelesignProvider());
         $this->addAction(UpdateTelesignProvider::getName(), new UpdateTelesignProvider());
+        $this->addAction(CreateTelnyxProvider::getName(), new CreateTelnyxProvider());
+        $this->addAction(UpdateTelnyxProvider::getName(), new UpdateTelnyxProvider());
         $this->addAction(CreateTextmagicProvider::getName(), new CreateTextmagicProvider());
         $this->addAction(UpdateTextmagicProvider::getName(), new UpdateTextmagicProvider());
         $this->addAction(CreateTwilioProvider::getName(), new CreateTwilioProvider());

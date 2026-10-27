@@ -1473,6 +1473,138 @@ trait MessagingBase
         $this->assertEquals('Appwrite', $response['body']['options']['from']);
     }
 
+    public function testCreateTelnyxProvider(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/telnyx', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'Telnyx1',
+            'apiKey' => 'my-apikey',
+            'from' => '+123456789',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('Telnyx1', $response['body']['name']);
+        $this->assertEquals('telnyx', $response['body']['provider']);
+        $this->assertEquals('sms', $response['body']['type']);
+        $this->assertTrue($response['body']['enabled']);
+        $this->assertEquals('+123456789', $response['body']['options']['from']);
+
+        // Missing credentials leave the provider disabled
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/telnyx', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'Telnyx2',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['enabled']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/telnyx', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'Telnyx3',
+            'from' => 'not-a-phone',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdateTelnyxProvider(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/telnyx', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'Telnyx1',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $this->assertFalse($provider['body']['enabled']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/telnyx/' . $provider['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('provider_missing_credentials', $response['body']['type']);
+
+        $twilio = $this->client->call(Client::METHOD_POST, '/messaging/providers/twilio', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'Twilio',
+        ]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/telnyx/' . $twilio['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'Telnyx',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('provider_incorrect_type', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/telnyx/' . Id::unique(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'Telnyx',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/telnyx/' . $provider['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'Telnyx2',
+            'apiKey' => 'my-apikey',
+            'from' => '+123456789',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Telnyx2', $response['body']['name']);
+        $this->assertTrue($response['body']['enabled']);
+        $this->assertEquals('+123456789', $response['body']['options']['from']);
+    }
+
     public function testUpdateProviderMissingCredentialsThrows(): void
     {
         // Create new FCM provider with no serviceAccountJSON
