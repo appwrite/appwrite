@@ -2155,7 +2155,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
     name: 'appwrite-browser',
     block: `  appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.9
+    image: appwrite/browser:0.3.10
     networks:
       - browser
     environment:
