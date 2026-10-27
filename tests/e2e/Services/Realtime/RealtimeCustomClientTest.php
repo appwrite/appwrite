@@ -15,6 +15,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
+use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -857,6 +858,206 @@ final class RealtimeCustomClientTest extends Scope
         self::$user[$projectId]['email'] = 'torsten@appwrite.io';
         self::$user[$projectId]['session'] = $refreshedSession['cookies']['a_session_' . $projectId];
         self::$user[$projectId]['sessionId'] = $refreshedSession['body']['$id'];
+    }
+
+    public function testConnectionLimitPerUser(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => \uniqid() . 'limit@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/jwts', $server);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+        $headers = [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $clients = [];
+        for ($i = 0; $i < APP_LIMIT_REALTIME_CONNECTIONS; $i++) {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        }
+
+        // Guests are not held to the per-user limit.
+        $guest = $this->getWebsocket(['documents'], ['origin' => 'http://localhost']);
+        $this->assertSame('connected', \json_decode($guest->receive(), true)['type'] ?? null);
+        $guest->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getWebsocket(['documents'], $headers);
+        // The client connects on its first receive, so read the error before waiting for the close.
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type'] ?? null);
+        $this->assertSame(1008, $response['data']['code'] ?? null);
+        $this->assertSame('Too many open connections. Close an existing connection and try again.', $response['data']['message'] ?? null);
+        $this->receiveUntilClosed($client);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Closing a connection frees its slot once the server sees the close.
+        \array_pop($clients)->close();
+        $this->assertEventually(function () use ($headers, &$clients): void {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        });
+
+        foreach ($clients as $client) {
+            $client->close();
+        }
+    }
+
+    public function testConnectionLimitPerGuest(): void
+    {
+        // Opening this many connections from one address would trip the abuse limit on new connections first.
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            $this->markTestSkipped('Abuse limits are enabled.');
+        }
+
+        $headers = ['origin' => 'http://localhost'];
+
+        /**
+         * Test for FAILURE
+         */
+        // Earlier tests may still hold guest connections from this address, so open until one is refused.
+        $clients = [];
+        $refused = null;
+        for ($i = 0; $i <= APP_LIMIT_REALTIME_GUEST_CONNECTIONS; $i++) {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $response = \json_decode($client->receive(), true);
+            if (($response['type'] ?? null) !== 'connected') {
+                $refused = $response;
+                $this->receiveUntilClosed($client);
+                break;
+            }
+            $clients[] = $client;
+        }
+
+        $this->assertNotNull($refused, 'Guest connections from one address were not limited.');
+        $this->assertSame('error', $refused['type'] ?? null);
+        $this->assertSame(1008, $refused['data']['code'] ?? null);
+        $this->assertSame('Too many open connections. Close an existing connection and try again.', $refused['data']['message'] ?? null);
+
+        /**
+         * Test for SUCCESS
+         */
+        \array_pop($clients)->close();
+        $this->assertEventually(function () use ($headers, &$clients): void {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        });
+
+        foreach ($clients as $client) {
+            $client->close();
+        }
+    }
+
+    public function testDenyRealtimeGuestsPolicy(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $guest = ['origin' => 'http://localhost'];
+        $policy = fn (bool $enabled) => $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-realtime-guests', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['enabled' => $enabled]);
+
+        $this->assertSame(200, $policy(true)['headers']['status-code']);
+
+        // The guest cap test before this one closes many connections at once, which can hold up new ones for a few seconds.
+
+        try {
+            /**
+             * Test for FAILURE
+             */
+            $client = $this->getWebsocket(['documents'], $guest, timeout: 10);
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('error', $response['type'] ?? null);
+            $this->assertSame(1008, $response['data']['code'] ?? null);
+            $this->assertSame('This project does not allow guests to subscribe. Sign in first.', $response['data']['message'] ?? null);
+            $this->receiveUntilClosed($client);
+
+            // Over a message the guest is refused but stays connected, so it can still sign in.
+            $client = $this->getWebsocket([], $guest, timeout: 10);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $client->send(\json_encode(['type' => 'subscribe', 'data' => [['channels' => ['documents']]]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('error', $response['type'] ?? null);
+            $this->assertSame(401, $response['data']['code'] ?? null);
+            $this->assertSame('This project does not allow guests to subscribe. Sign in first.', $response['data']['message'] ?? null);
+
+            /**
+             * Test for SUCCESS
+             */
+            // Signing in over the same connection lets it subscribe.
+            $client->send(\json_encode(['type' => 'authentication', 'data' => ['session' => $this->getUser()['session']]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('authentication', $response['data']['to'] ?? null);
+            $this->assertTrue($response['data']['success'] ?? false);
+            $client->send(\json_encode(['type' => 'subscribe', 'data' => [['channels' => ['documents']]]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('subscribe', $response['data']['to'] ?? null);
+            $this->assertTrue($response['data']['success'] ?? false);
+            $client->close();
+
+            $client = $this->getWebsocket(['documents'], [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $this->getUser()['session'],
+            ], timeout: 10);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $client->close();
+        } finally {
+            $policy(false);
+        }
+
+        $client = $this->getWebsocket(['documents'], $guest, timeout: 10);
+        $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+        $client->close();
+    }
+
+    public function testConnectionChannelLimit(): void
+    {
+        $headers = ['origin' => 'http://localhost'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, APP_LIMIT_REALTIME_CHANNELS));
+        $client = $this->getWebsocket($channels, $headers);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type'] ?? null);
+        $this->assertCount(APP_LIMIT_REALTIME_CHANNELS, $response['data']['channels']);
+        $client->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $channels[] = 'documents.' . (APP_LIMIT_REALTIME_CHANNELS + 1);
+        $client = $this->getWebsocket($channels, $headers);
+        // The client connects on its first receive, so read the error before waiting for the close.
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type'] ?? null);
+        $this->assertSame(1008, $response['data']['code'] ?? null);
+        $this->assertSame('channels must contain at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels.', $response['data']['message'] ?? null);
+        $this->receiveUntilClosed($client);
     }
 
     public function testConnectionRequiresAllFactors(): void
