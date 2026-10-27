@@ -65,45 +65,100 @@ function formatPatternList(patterns: string[]): string {
   return `${quoted.slice(0, 3).join(', ')}, and ${patterns.length - 3} more`
 }
 
+function isWildcardPattern(pattern: string): boolean {
+  return pattern.includes('*') || pattern.includes('?') || pattern.includes('[')
+}
+
 /**
- * Splits trigger patterns into the ones that include and the `!` ones that
- * exclude, without their `!`. With exclusions alone, everything else
- * triggers, as the server's Globstar matching does.
+ * Trigger patterns as the server's Globstar matches them. Exclusions alone
+ * leave everything else matching. Otherwise a literal inclusion always
+ * matches, and among the other patterns the last one that matches decides,
+ * so an exclusion before any inclusion changes nothing. An exclusion is the
+ * text after its `!`, untrimmed, as the server reads it.
  */
-function splitTriggerPatterns(patterns: string[]): {
-  included: string[]
-  excluded: string[]
+function triggerRules(patterns: string[]): {
+  excludedOnly: string[] | null
+  literals: string[]
+  steps: { exclude: boolean; patterns: string[] }[]
 } {
   const normalized = normalizeTriggerPatterns(patterns)
-  return {
-    included: normalized.filter((pattern) => !pattern.startsWith('!')),
-    excluded: normalized
-      .filter((pattern) => pattern.startsWith('!'))
-      .map((pattern) => pattern.slice(1).trim()),
+  if (normalized.every((pattern) => pattern.startsWith('!'))) {
+    return {
+      excludedOnly: normalized.map((pattern) => pattern.slice(1)),
+      literals: [],
+      steps: [],
+    }
   }
+
+  // Without exclusions every inclusion simply matches
+  if (!normalized.some((pattern) => pattern.startsWith('!'))) {
+    return {
+      excludedOnly: null,
+      literals: [],
+      steps: [{ exclude: false, patterns: normalized }],
+    }
+  }
+
+  const literals: string[] = []
+  const steps: { exclude: boolean; patterns: string[] }[] = []
+  for (const pattern of normalized) {
+    const exclude = pattern.startsWith('!')
+    if (!exclude && !isWildcardPattern(pattern)) {
+      literals.push(pattern)
+      continue
+    }
+    if (exclude && steps.length === 0) continue
+
+    const last = steps[steps.length - 1]
+    const value = exclude ? pattern.slice(1) : pattern
+    if (last && last.exclude === exclude) {
+      last.patterns.push(value)
+    } else {
+      steps.push({ exclude, patterns: [value] })
+    }
+  }
+
+  return { excludedOnly: null, literals, steps }
+}
+
+function describeRules(
+  rules: ReturnType<typeof triggerRules>,
+  matching: string,
+): string {
+  const parts = rules.steps.map((step, index) =>
+    index === 0
+      ? `${matching} ${formatPatternList(step.patterns)}`
+      : `${step.exclude ? 'except' : 'but including'} ${formatPatternList(step.patterns)}`,
+  )
+  if (rules.literals.length > 0) {
+    parts.push(
+      parts.length === 0
+        ? `${matching} ${formatPatternList(rules.literals)}`
+        : `and always ${formatPatternList(rules.literals)}`,
+    )
+  }
+  return parts.join(', ')
 }
 
 export function describeTriggerBehavior(
   branches: string[],
   paths: string[],
 ): string {
-  const branchPatterns = splitTriggerPatterns(branches)
-  const pathPatterns = splitTriggerPatterns(paths)
+  const branchRules = triggerRules(branches)
+  const pathRules = triggerRules(paths)
 
-  const branchExcept =
-    branchPatterns.excluded.length > 0
-      ? ` except ${formatPatternList(branchPatterns.excluded)}`
-      : ''
   const branchPart =
-    branchPatterns.included.length === 0
-      ? `All branches${branchExcept}`
-      : `Only branches matching ${formatPatternList(branchPatterns.included)}${branchExcept ? `,${branchExcept}` : ''}`
+    branchRules.excludedOnly === null
+      ? describeRules(branchRules, 'Only branches matching')
+      : branchRules.excludedOnly.length > 0
+        ? `All branches except ${formatPatternList(branchRules.excludedOnly)}`
+        : 'All branches'
 
   const pathPart =
-    pathPatterns.included.length > 0
-      ? `only paths matching ${formatPatternList(pathPatterns.included)}${pathPatterns.excluded.length > 0 ? `, except ${formatPatternList(pathPatterns.excluded)}` : ''}`
-      : pathPatterns.excluded.length > 0
-        ? `changes outside ${formatPatternList(pathPatterns.excluded)}`
+    pathRules.excludedOnly === null
+      ? describeRules(pathRules, 'only paths matching')
+      : pathRules.excludedOnly.length > 0
+        ? `changes outside ${formatPatternList(pathRules.excludedOnly)}`
         : 'all file changes'
 
   return `${branchPart} trigger deployments on ${pathPart}.`
