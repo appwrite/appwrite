@@ -106,27 +106,35 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
     $url = $platform['consoleUrl'] ?? '';
     $platformHostnames = $platform['hostnames'] ?? [];
 
-    if ($rule->isEmpty()) {
-        $denyDomains = [];
-        $denyEnvVars = [
-            System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
-            System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
-            System::getEnv('_APP_DOMAIN_SITES', ''),
-        ];
-        foreach ($denyEnvVars as $denyEnvVar) {
-            foreach (\explode(',', $denyEnvVar) as $denyDomain) {
-                if (empty($denyDomain)) {
-                    continue;
-                }
-                $denyDomains[] = $denyDomain;
+    $denyDomains = [];
+    $denyEnvVars = [
+        System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+        System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+        System::getEnv('_APP_DOMAIN_SITES', ''),
+    ];
+    foreach ($denyEnvVars as $denyEnvVar) {
+        foreach (\explode(',', $denyEnvVar) as $denyDomain) {
+            if (empty($denyDomain)) {
+                continue;
             }
+            $denyDomains[] = $denyDomain;
         }
+    }
 
+    // Reserved base domains are never served, even by a rule that claims one
+    if (\in_array($host, $denyDomains, true)) {
+        throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
+    }
+
+    // Fallback hosts are one level deep, so a rule saved before that limit cannot serve a deeper one
+    foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '')) as $fallbackDomain) {
+        if (!$rule->isEmpty() && !empty($fallbackDomain) && \str_ends_with($host, '.' . $fallbackDomain) && \str_contains(\substr($host, 0, -\strlen($fallbackDomain) - 1), '.')) {
+            throw new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
+        }
+    }
+
+    if ($rule->isEmpty()) {
         foreach ($denyDomains as $denyDomain) {
-            if ($host === $denyDomain) {
-                throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
-            }
-
             if (\str_ends_with($host, $denyDomain)) {
                 $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
 
