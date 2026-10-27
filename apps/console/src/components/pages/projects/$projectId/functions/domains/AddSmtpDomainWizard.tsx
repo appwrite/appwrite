@@ -48,7 +48,7 @@ export function AddSmtpDomainWizard() {
   const { project } = useProject(projectId)
   const { data: func } = useProjectFunction(projectId, functionId)
   const { features } = useConsoleProfile()
-  const enabled = features.functionEmailDomains
+  const enabled = features.functionEmail
 
   const createMutation = useCreateSmtpDomainRule(projectId)
   const verifyMutation = useVerifyDomain(projectId, project?.region)
@@ -83,7 +83,7 @@ export function AddSmtpDomainWizard() {
     // useConsoleProfile applies debug overrides only after mount, so its
     // first render reports the flag as off; read the flag directly here or
     // the wizard closes right after it opens.
-    if (!isFeatureEnabled('functionEmailDomains')) {
+    if (!isFeatureEnabled('functionEmail')) {
       navigate({
         to: '/projects/$projectId/functions/$functionId/domains',
         params: { projectId: projectId!, functionId: functionId! },

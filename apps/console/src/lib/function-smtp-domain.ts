@@ -38,18 +38,19 @@ export function getSmtpRecordName(domain: string): string {
   return normalized.slice(0, -(apex.length + 1))
 }
 
-/** SMTP rules share the HTTP rules list; `protocol` tells them apart. */
 /**
  * Extra list queries for views that only want web (HTTP) domains. Filtering
  * on the server keeps email rows from taking up the fetched page. Only sent
- * behind the email domains flag, the only case where SMTP rules exist.
+ * behind the function email flag: self-hosted rules have no `protocol`
+ * attribute to query.
  */
 export function webDomainQueries(): string[] {
-  return isFeatureEnabled('functionEmailDomains')
+  return isFeatureEnabled('functionEmail')
     ? [Query.equal('protocol', ['http'])]
     : []
 }
 
+/** SMTP rules share the HTTP rules list; `protocol` tells them apart. */
 export function isSmtpRule(rule: Models.ProxyRule): rule is SmtpProxyRule {
   return (rule as SmtpProxyRule).protocol === 'smtp'
 }

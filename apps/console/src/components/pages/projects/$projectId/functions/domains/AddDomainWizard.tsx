@@ -273,7 +273,7 @@ export function AddDomainWizard() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {features.functionEmailDomains ? (
+        {features.functionEmail ? (
           <DomainTypeCard
             value="http"
             onChange={(type) => {
