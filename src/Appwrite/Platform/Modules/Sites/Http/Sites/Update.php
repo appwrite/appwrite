@@ -295,6 +295,8 @@ class Update extends Base
                 && $repository->getAttribute('providerRepositoryId') === $providerRepositoryId
                 && $repository->getAttribute('installationInternalId') !== $installation->getSequence()
             ) {
+                $this->resolveInstallationRepository($vcsFactory->fromInstallation($installation), $installation, $providerRepositoryId);
+
                 $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document([
                     'installationId' => $installation->getId(),
                     'installationInternalId' => $installation->getSequence(),
