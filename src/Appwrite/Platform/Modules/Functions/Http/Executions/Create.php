@@ -111,6 +111,7 @@ class Create extends Base
             ->inject('publisherForDeletes')
             ->inject('executionsRetentionCount')
             ->inject('bus')
+            ->inject('mode')
             ->callback($this->action(...));
     }
 
@@ -139,6 +140,7 @@ class Create extends Base
         DeletePublisher $publisherForDeletes,
         int $executionsRetentionCount,
         Bus $bus,
+        string $mode,
     ) {
         $path ??= '/';
         $async = \strval($async) === 'true' || \strval($async) === '1';
@@ -286,11 +288,12 @@ class Create extends Base
         $execution = new Document([
             '$id' => $executionId,
             // Grant read only to a genuine project user. In admin mode $user is
-            // the console user, and stamping user:{consoleUserId} here leaks the
-            // execution — logs and errors included — to a project user who
-            // signs up with the colliding id over realtime. A privileged or key
-            // caller reads the execution through its own authority instead.
-            '$permissions' => (!$user->isEmpty() && !$isPrivilegedUser && !$isAPIKey)
+            // the console user (any org role, not only privileged ones), and
+            // stamping user:{consoleUserId} here leaks the execution — logs and
+            // errors included — to a project user who signs up with the
+            // colliding id over realtime. An admin-mode or key caller reads the
+            // execution through its own authority instead.
+            '$permissions' => (!$user->isEmpty() && $mode !== APP_MODE_ADMIN)
                 ? [Permission::read(Role::user($user->getId()))]
                 : [],
             '$createdAt' => DateTime::now(),
