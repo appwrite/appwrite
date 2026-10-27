@@ -119,8 +119,7 @@ class Screenshots extends Action
                 Query::equal("projectInternalId", [$project->getSequence()]),
                 Query::equal("type", ["deployment"]),
                 Query::equal('deploymentInternalId', [$deployment->getSequence()]),
-                // A manual rule's domain is the project's own server, which would receive the key.
-                Query::equal('trigger', ['deployment']),
+                // A custom domain is the project's own server, which would receive the key.
                 Query::equal('owner', ['Appwrite']),
             ]);
 
