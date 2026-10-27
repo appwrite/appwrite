@@ -43,7 +43,7 @@ Entire is available as a Git provider on [Appwrite Cloud](/sign-up). The self-ho
 # Prerequisites
 
 - An [Appwrite Cloud](/sign-up) account with a project.
-- An [Entire account](https://entire.com/login) and an organization you can create projects in.
+- An [Entire account](https://entire.com/login).
 - The [Entire CLI](https://docs.entire.com/installation), installed and signed in with `entire login`.
 
 # How to implement
@@ -63,24 +63,25 @@ entire repo remote add origin --override /et/acme/storefront
 git push -u origin main
 ```
 
-You can also create the project and the repository on Entire. Entire's [repository docs](https://docs.entire.com/guides/repositories/repository) cover regions in more detail.
+Here the project belongs to the `acme-org` organization. To own it with your account instead, pass `--owner github:<handle> --owner-type account`. You can also create the project and the repository on Entire. Entire's [repository docs](https://docs.entire.com/guides/repositories/repository) cover regions in more detail.
 
-If your code lives on GitHub, you don't have to move it. Create a [GitHub repository mirror](https://docs.entire.com/guides/repositories/mirrors) on Entire, and Appwrite deploys from the mirror. A mirror belongs to no Entire project, so when you connect Entire in the next step, choose the mirror's GitHub owner instead. The mirror then appears under `gh/<owner>` in the repository picker. Appwrite only deploys pushes that go through Entire, which forwards them to GitHub, so point your local clone at the mirror and push there:
+If your code lives on GitHub, you don't have to move it. Create a [GitHub repository mirror](https://docs.entire.com/guides/repositories/mirrors) on Entire, and Appwrite deploys from the mirror. Mirroring needs an Entire account linked to GitHub and the [Entire GitHub App](https://docs.entire.com/guides/repositories/github-app-access) with access to the repository. A mirror belongs to no Entire project, so when you connect Entire in the next step, choose the mirror's GitHub owner instead. The mirror then appears under `gh/<owner>` in the repository picker.
 
 ```bash
 entire repo mirror add /gh/acme/storefront
 entire repo remote add origin --override /gh/acme/storefront
-git push -u origin main
 ```
 
-To move a mirrored repository off GitHub, [detach it](https://docs.entire.com/guides/repositories/repository) into an Entire project. The old `/gh/` address then reports that the repository has moved, so point your clone at the new one:
+GitHub stays the source of truth. Entire syncs pushes made on GitHub to the mirror within seconds, and Appwrite deploys them. Entire protects a mirror's default branch, so push your production branch to GitHub. Other branches can go to either remote, since Entire forwards pushes through the mirror to GitHub.
+
+To move a mirrored repository off GitHub, [detach it](https://docs.entire.com/guides/repositories/repository) into an Entire project in the same region as the mirror. Without `--cluster`, `entire repo mirror add` places the mirror in `aws-us-east-2`, so create the target project with `--region us`. Run the detach with `--dry-run` first to check its requirements. The old `/gh/` address stops resolving afterwards, so point your clone at the new one:
 
 ```bash
 entire repo mirror detach /gh/acme/storefront --into /et/acme/storefront
 entire repo remote add origin --override /et/acme/storefront
 ```
 
-The repository then deploys like any other repository in that project, and GitHub stops syncing.
+GitHub stops syncing, and the installation for the GitHub owner no longer covers the repository. Connect Entire again, choose the new project, and reconnect each Site and Function to the repository so later pushes deploy.
 
 ## Step 2: Connect Entire to your Appwrite project
 
@@ -104,7 +105,7 @@ Appwrite reads the `package.json` in the root directory, detects the framework, 
 
 To deploy a function, go to **Functions** and click **Create function**. Under **Connect Git repository**, choose your Entire project, find your repository, and click **Connect**. Appwrite detects the runtime from the repository. Set the **Root directory** and the **Entrypoint**, then click **Create and deploy**.
 
-To start from a template instead, pick one when you create the site or function. Under **Git repository**, choose **Create new repository**, pick your Entire project under **Organization**, enter a **Repository name**, and click **Create**. Appwrite creates a private repository in that project, commits the template into it, and deploys it.
+To start from a template instead, pick one when you create the site or function, and choose **Connect your repository**. Under **Git repository**, choose **Create new repository**, pick your Entire project under **Organization**, enter a **Repository name**, and click **Create**. Appwrite creates a private repository in that project, commits the template into it, and deploys it.
 
 ## Step 4: Push to deploy
 
@@ -112,7 +113,7 @@ From now on, every push to the repository creates a deployment. Pushes to the pr
 
 ![The deployments list with a branch deployment ready and the main deployment active](/images/integrations/deployments-entire/deployments-list.avif)
 
-Appwrite reports each build back to the commit on Entire as a check run. The check moves from starting to building to succeeded or failed, and its summary links to the deployment in the Console and, for Sites, to the running preview. In the Console, each deployment links back to its repository, branch, and commit on Entire.
+Appwrite reports each build back to the commit on Entire as a check run. The check moves from starting to building to succeeded or failed, and its summary links to the deployment in the Console and, for Sites, to the running preview. When the branch has a trail, the check shows under its **Appwrite** gate. In the Console, each deployment links back to its repository, branch, and commit on Entire.
 
 [Branch and path filters](/blog/post/announcing-git-deployment-triggers), root directories, install and build commands, and environment variables work exactly as they do for any Git-connected Site or Function. Set filters under **Settings** > **Build** > **Triggers**. Path filters match from the repository root, so a site and a function in the same repository can each rebuild only when their own files change.
 

@@ -40,7 +40,7 @@ Under the hood, Appwrite installs as a plugin on your Entire project. Entire not
 # Prerequisites
 
 - An [Appwrite Cloud](/sign-in) account with a project.
-- An [Entire account](https://entire.com/login) and an organization you can create projects in.
+- An [Entire account](https://entire.com/login).
 - The [Entire CLI](https://docs.entire.com/installation), installed and signed in with `entire login`. Its installer also adds `git-remote-entire`, the helper Git calls for `entire://` remotes, so plain `git push` works.
 - Node.js, if you want to build the example site locally.
 
@@ -59,7 +59,7 @@ entire repo create storefront --project acme
 entire repo view /et/acme/storefront
 ```
 
-Project names are 3 to 32 characters of lowercase letters, numbers, and hyphens, and they must be unique across Entire. `entire repo view` prints the repository's region and its clone URL, which uses Entire's `entire://` scheme:
+Here the project belongs to the `acme-org` organization. To own it with your account instead, pass `--owner github:<handle> --owner-type account`. Project names are 3 to 32 characters of lowercase letters, numbers, and hyphens, and they must be unique across Entire. `entire repo view` prints the repository's region and its clone URL, which uses Entire's `entire://` scheme:
 
 ```txt
 CLUSTER                     ROLE     CLONE URL                                                STATUS
@@ -168,7 +168,7 @@ Entire notifies Appwrite of the push. Appwrite creates a deployment, builds it, 
 
 ![The active deployment of the storefront-web site with the updated copy and acme/storefront as the source](/images/blog/deploy-from-entire-to-appwrite/active-deployment.avif)
 
-Each deployment links back to Entire: clicking its commit message opens that commit on entire.com. Appwrite also reports the build to Entire as a check run on the commit, named after your site and your Appwrite project, with the result and a link to the deployment.
+Each deployment links back to Entire: clicking its commit message opens that commit on entire.com. Appwrite also reports the build to Entire as a check run on the commit, with the result and a link to the deployment. When the branch has a trail, the check shows under its **Appwrite** gate.
 
 # Step 5: Preview a branch before it ships
 

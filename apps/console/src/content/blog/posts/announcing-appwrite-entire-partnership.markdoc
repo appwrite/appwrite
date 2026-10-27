@@ -37,7 +37,7 @@ Entire handles the repository side of this, and Appwrite handles what happens af
 
 Entire is a Git forge built for working with coding agents. When an agent commits, Entire saves the session that produced the commit next to it, so anyone on the team can later read the conversation behind a change. Repositories live on Entire's own Git network, in regions close to your team, and work happens in **trails**, Entire's version of a pull request, which follow a branch until it ships.
 
-If your code is on GitHub today, it can stay there. Entire can mirror a GitHub repository and keep GitHub as the source of truth, so agents clone from the nearest Entire region while every push through the mirror is forwarded to GitHub. Appwrite deploys from those mirrors too.
+If your code is on GitHub today, it can stay there. Entire can mirror a GitHub repository and keep GitHub as the source of truth, so agents clone from the nearest Entire region while pushes through the mirror are forwarded to GitHub. Appwrite deploys from those mirrors too.
 
 Appwrite is an open-source developer platform with authentication, databases, storage, serverless functions, realtime, messaging, and web hosting in one place. [Sites](/docs/products/sites) and [Functions](/docs/products/functions) deploy straight from Git: a push becomes a build, and a build becomes a live site or API.
 
