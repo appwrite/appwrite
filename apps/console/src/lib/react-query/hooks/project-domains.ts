@@ -230,8 +230,10 @@ export function useVerifyDomain(
       return await projectSdk.proxy.updateRuleStatus({ ruleId })
     },
     onSuccess: async () => {
+      // Every proxy rule list of this project: project, site, function and deployment keys hold projectId third
       await queryClient.refetchQueries({
         queryKey: ['proxy-rules'],
+        predicate: (query) => query.queryKey[2] === projectId,
       })
     },
   })
