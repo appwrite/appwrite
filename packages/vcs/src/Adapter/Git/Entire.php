@@ -190,6 +190,12 @@ class Entire extends Git
     protected string $jwtToken = '';
 
     /**
+     * The plugin's private key, kept to sign a plugin JWT for another core:
+     * a project's home core, which alone creates its repositories.
+     */
+    protected string $privateKey = '';
+
+    /**
      * The permissions the installation token was granted, as resource =>
      * access; a token cached before they were recorded has none listed.
      *
@@ -300,6 +306,7 @@ class Entire extends Git
 
         $this->installationId = $installationId;
         $this->plugin = $appId;
+        $this->privateKey = $privateKey;
 
         // A plugin JWT lives five minutes and costs one signature, so every
         // instance signs its own; only the minted access token is worth
@@ -397,7 +404,7 @@ class Entire extends Git
      * core's STS endpoint as audience, and the plugin and installation it
      * acts for. The key is registered as a PEM, so no kid names it.
      */
-    protected function generatePluginJwt(string $privateKey, string $plugin): string
+    protected function generatePluginJwt(string $privateKey, string $plugin, string $core = ''): string
     {
         $secretKey = $this->ed25519SecretKey($privateKey);
 
@@ -405,7 +412,7 @@ class Entire extends Git
         $header = ['alg' => 'EdDSA', 'typ' => 'JWT'];
         $claims = [
             'iss' => $this->issuer,
-            'aud' => $this->coreEndpoint . '/api/authz/sts',
+            'aud' => ($core === '' ? $this->coreEndpoint : $core) . '/api/authz/sts',
             'plugin_id' => $plugin,
             'installation_id' => $this->installationId,
             'iat' => $iat,
@@ -1492,6 +1499,13 @@ class Entire extends Git
 
         $response = $this->call(self::METHOD_POST, '/repos', ['Authorization' => "Bearer {$this->accessToken}"], ['name' => $repositoryName]);
 
+        // Only the project's home core creates its repositories; another
+        // jurisdiction's core names it
+        $homeCore = $this->text($this->body($response), 'home_core_url');
+        if ($this->status($response) === 421 && $homeCore !== '' && $this->isTrustedCore($homeCore)) {
+            $response = $this->createOnCore(rtrim($homeCore, '/'), $repositoryName);
+        }
+
         $statusCode = $this->status($response);
         if ($statusCode === 409) {
             throw new Exception("A repository named {$repositoryName} already exists in {$owner}.", $statusCode);
@@ -1529,6 +1543,28 @@ class Entire extends Git
             'private' => true,
             'pushed_at' => '',
         ];
+    }
+
+    /**
+     * Creates a repository on another core: the project's home core, when
+     * the core this adapter talks to is another jurisdiction's. A token is
+     * valid only on the core that minted it, so that core mints one for
+     * creation alone.
+     *
+     * @return array<mixed>
+     */
+    protected function createOnCore(string $core, string $repositoryName): array
+    {
+        $jwt = $this->generatePluginJwt($this->privateKey, $this->plugin, $core);
+        $path = '/plugins/' . rawurlencode($this->plugin) . '/installations/' . rawurlencode($this->installationId) . '/access-tokens';
+        $minted = $this->callAt($core . '/api/v1', self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $jwt], ['permissions' => ['repositories' => 'create']]);
+
+        $token = $this->text($this->body($minted), 'token');
+        if ($token === '') {
+            throw $this->requestFailed('Failed to retrieve access token from Entire API', $minted);
+        }
+
+        return $this->callAt($core . '/api/v1', self::METHOD_POST, '/repos', ['Authorization' => "Bearer {$token}"], ['name' => $repositoryName]);
     }
 
     /**
@@ -2887,7 +2923,7 @@ class Entire extends Git
     {
         $statusCode = $this->status($response);
         $body = $this->body($response);
-        $message = trim($this->text($body, 'code') . ' ' . ($this->text($body, 'detail') ?: $this->text($body, 'title')));
+        $message = trim($this->text($body, 'code') . ' ' . ($this->text($body, 'detail') ?: $this->text($body, 'error') ?: $this->text($body, 'title')));
 
         return new Exception(
             "{$action}: HTTP {$statusCode}" . ($message !== '' ? " ({$message})" : ''),
