@@ -8,6 +8,7 @@ use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Presences\State as PresenceState;
+use Appwrite\Realtime\EventTailRegistry;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
@@ -41,6 +42,7 @@ class Authentication extends Action
             ->inject('publisherForUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
+            ->inject('eventTailRegistry')
             ->callback($this->action(...));
     }
 
@@ -60,6 +62,7 @@ class Authentication extends Action
         UsagePublisher $publisherForUsage,
         QueueEvent $queueForEvents,
         QueueRealtime $queueForRealtime,
+        EventTailRegistry $eventTailRegistry,
     ): array {
         $store = new Store();
         $store->decode($session);
@@ -141,6 +144,9 @@ class Authentication extends Action
                 );
             }
         }
+
+        // Tails live outside the subscription tree, so drop those the new identity may not read.
+        $eventTailRegistry->revalidateConnection($connectionId, $roles);
 
         if ($authorization !== null) {
             $realtime->connections[$connectionId]['authorization'] = $authorization;

@@ -746,6 +746,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 } elseif ($event['permissionsChanged']) {
                     // `projects.{projectId}.sessions.delete`: every connection of the named
                     // project re-validates its session against the new invalidation timestamp.
+                    // `projects.{projectId}.update.team`: every tail of the project is
+                    // re-authorized against the project's new read roles.
                     // The project is taken from the `projects.<id>` channel, as no single
                     // userId covers all connections.
                     $targetProjectId = '';
@@ -781,6 +783,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 $closing[$connection] = true;
                             }
                         }
+
+                        $eventTailRegistry->reauthorizeProject(
+                            $targetProjectId,
+                            $targetProject->getPermissionsByType(PermissionType::Read),
+                            fn (int $connection): array => $realtime->connections[$connection]['roles'] ?? [],
+                        );
                     }
                 }
 

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Projects\Http\Projects\Team;
 
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Action;
 use Appwrite\SDK\AuthType;
@@ -52,10 +53,11 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('targetUser')
+            ->inject('queueForRealtime')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform, User $targetUser): void
+    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform, User $targetUser, Realtime $queueForRealtime): void
     {
         $project = $dbForPlatform->getDocument('projects', $projectId);
         $team = $dbForPlatform->getDocument('teams', $teamId);
@@ -104,6 +106,16 @@ class Update extends Action
         foreach ($vcsComments as $vcsComment) {
             $dbForPlatform->updateDocument('vcsComments', $vcsComment->getId(), new Document(['$permissions' => $permissions]));
         }
+
+        $queueForRealtime
+            ->setProject($project)
+            ->setEvent('projects.[projectId].update.team')
+            ->setParam('projectId', $project->getId())
+            ->setPayload([
+                '$id' => $project->getId(),
+                'teamId' => $teamId,
+            ])
+            ->trigger();
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }
