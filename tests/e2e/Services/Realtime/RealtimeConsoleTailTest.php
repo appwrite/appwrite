@@ -27,7 +27,7 @@ final class RealtimeConsoleTailTest extends Scope
         $otherProjectId = $this->createOrganizationProject($headers, $teamId);
 
         $member = $this->createConsoleAccount();
-        $this->addOrganizationMember($headers, $teamId, $member['email'], ['project-' . $otherProjectId . '-developer']);
+        $this->addOrganizationMember($headers, $teamId, $member, ['project-' . $otherProjectId . '-developer']);
 
         /**
          * Test for SUCCESS
@@ -61,7 +61,7 @@ final class RealtimeConsoleTailTest extends Scope
         $projectId = $this->createOrganizationProject($headers, $teamId);
 
         $member = $this->createConsoleAccount();
-        $membershipId = $this->addOrganizationMember($headers, $teamId, $member['email'], ['developer']);
+        $membershipId = $this->addOrganizationMember($headers, $teamId, $member, ['developer']);
 
         $client = $this->getConsoleWebsocket($member['session']);
         $response = $this->subscribe($client, ['memberships', 'console.tail.' . $projectId]);
@@ -203,8 +203,9 @@ final class RealtimeConsoleTailTest extends Scope
         ];
     }
 
-    private function addOrganizationMember(array $headers, string $teamId, string $email, array $roles): string
+    private function addOrganizationMember(array $headers, string $teamId, array $member, array $roles): string
     {
+        $email = $member['email'];
         $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $headers, [
             'email' => $email,
             'roles' => $roles,
@@ -217,10 +218,12 @@ final class RealtimeConsoleTailTest extends Scope
         });
         $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
 
+        // Signed in, as accepting signed out claims the unverified account and revokes its session
         $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['body']['$id'] . '/status', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $member['session'],
         ], [
             'userId' => $tokens['userId'],
             'secret' => $tokens['secret'],

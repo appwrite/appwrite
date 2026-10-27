@@ -4896,7 +4896,8 @@ final class AccountCustomClientTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $secret = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($data['email'])['html'])['secret'];
+        $mail = $this->getLastEmailByAddress($data['email']);
+        $secret = substr($mail['text'], strpos($mail['text'], '&secret=', 0) + 8, 64);
 
         /**
          * Test for SUCCESS
