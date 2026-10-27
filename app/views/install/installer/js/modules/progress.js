@@ -30,35 +30,16 @@
     let sseSessionDetails = null;
     const csrfToken = document.querySelector('meta[name="appwrite-installer-csrf"]')?.getAttribute('content') || '';
 
-    const installerSecret = (() => {
-        const params = new URLSearchParams(window.location.search);
-        const fromQuery = params.get('secret') || '';
-        if (fromQuery) {
-            try {
-                sessionStorage.setItem('appwrite-installer-secret', fromQuery);
-            } catch (error) {
-                // ignore quota / private-mode failures
-            }
-            params.delete('secret');
-            const query = params.toString();
-            const next = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`;
-            history.replaceState({}, '', next);
-            return fromQuery;
-        }
-        try {
-            return sessionStorage.getItem('appwrite-installer-secret') || '';
-        } catch (error) {
-            return '';
-        }
-    })();
+    try {
+        sessionStorage.removeItem('appwrite-installer-secret');
+    } catch (error) {
+        // Ignore unavailable session storage; the installer session is cookie-based.
+    }
 
     const withCsrfHeader = (headers = {}) => {
         const next = { ...headers };
         if (csrfToken) {
             next['X-Appwrite-Installer-CSRF'] = csrfToken;
-        }
-        if (installerSecret) {
-            next['X-Appwrite-Installer-Secret'] = installerSecret;
         }
         return next;
     };

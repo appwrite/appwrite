@@ -34,8 +34,6 @@
       "src/Appwrite/Platform/Tasks/Vars.php",
       "src/Appwrite/Platform/Tasks/Version.php",
       "src/Appwrite/Platform/Tasks/Migrate.php",
-      "src/Appwrite/Platform/Installer/",
-      "app/views/install/",
       "src/Appwrite/Migration/",
       "src/Appwrite/SDK/Specification/Format",
       "packages/openapi/",
@@ -170,6 +168,16 @@
       "functional": true,
       "processes": null,
       "paths": ["src/Appwrite/Platform/Modules/Health/"]
+    },
+    {
+      "name": "Installer",
+      "runner": "e2e",
+      "functional": false,
+      "processes": 1,
+      "paths": [
+        "src/Appwrite/Platform/Installer/",
+        "app/views/install/"
+      ]
     },
     {
       "name": "Advisor",
