@@ -697,16 +697,23 @@ class Create extends Action
                 'status' => 'queued',
             ])));
         } catch (DuplicateException) {
-            // A redelivered comment queues again only if its first attempt failed to.
-            $review = $authorization->skip(fn () => $dbForProject->getDocument('reviews', 'mention-' . $commentId));
-            if ($review->getAttribute('status') !== 'failed') {
+            // A redelivered comment queues again only if its first attempt failed to. The row lock
+            // lets one of two concurrent redeliveries take it back from failed.
+            $review = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $commentId): ?Document {
+                $review = $dbForProject->getDocument('reviews', 'mention-' . $commentId, forUpdate: true);
+                if ($review->getAttribute('status') !== 'failed') {
+                    return null;
+                }
+
+                return $dbForProject->updateDocument('reviews', $review->getId(), new Document([
+                    'status' => 'queued',
+                    'reason' => '',
+                ]));
+            }));
+
+            if ($review === null) {
                 return;
             }
-
-            $review = $authorization->skip(fn () => $dbForProject->updateDocument('reviews', $review->getId(), new Document([
-                'status' => 'queued',
-                'reason' => '',
-            ])));
         }
 
         try {
