@@ -91,6 +91,7 @@ final class Connection
     private Authenticator $auth;
     private ServerInfo $serverInfo;
     private ConnectionOptions $options;
+    private bool $tlsRequired = false;
 
     /** @var array<string, Subscription> */
     private array $subscriptions = [];
@@ -134,6 +135,7 @@ final class Connection
 
         $conn = new self();
         $conn->options = $options;
+        $conn->tlsRequired = self::requiresTls($options);
         $conn->auth = $conn->resolveAuthenticator($options);
         $conn->serverPool = $conn->buildServerPool($options);
         $conn->doConnect();
@@ -701,8 +703,8 @@ final class Connection
         if ($this->options->transportFactory instanceof \Closure) {
             $this->transport = ($this->options->transportFactory)($scheme);
         } elseif ($scheme === 'ws' || $scheme === 'wss') {
-            $this->transport = new WebSocketTransport($scheme === 'wss', $this->tlsOptions());
-        } elseif ($scheme === 'tls' || $this->options->tls) {
+            $this->transport = new WebSocketTransport($scheme === 'wss' || $this->tlsRequired, $this->tlsOptions());
+        } elseif ($scheme === 'tls' || $this->tlsRequired) {
             $this->transport = new TlsTransport($this->tlsOptions());
         } else {
             $this->transport = new TcpTransport();
@@ -726,12 +728,10 @@ final class Connection
         }
 
         // TLS upgrade over a plaintext TCP connection: when the server requires
-        // TLS, or when the caller opted in and the server advertises it is
-        // available. A TlsTransport / custom transport handles its own TLS.
+        // TLS, or when the caller requires it whatever the server advertises.
+        // A TlsTransport / custom transport handles its own TLS.
         if ($this->transport instanceof TcpTransport && $scheme !== 'tls') {
-            $wantsUpgrade = $this->serverInfo->tlsRequired
-                || ($this->options->tls && $this->serverInfo->tlsAvailable);
-            if ($wantsUpgrade) {
+            if ($this->serverInfo->tlsRequired || $this->tlsRequired) {
                 $this->transport->upgradeTls($this->tlsOptions());
             }
         }
@@ -1342,9 +1342,27 @@ final class Connection
     private function normalizeUrl(string $url): string
     {
         if (!preg_match('#^(nats|tls|ws|wss)://#', $url)) {
-            return 'nats://' . $url;
+            return ($this->tlsRequired ? 'tls://' : 'nats://') . $url;
         }
         return $url;
+    }
+
+    /**
+     * Servers learned from INFO connect_urls carry no scheme, so they inherit this.
+     */
+    private static function requiresTls(ConnectionOptions $options): bool
+    {
+        if ($options->tls) {
+            return true;
+        }
+
+        foreach ($options->servers as $server) {
+            if (preg_match('#^(tls|wss)://#', $server)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

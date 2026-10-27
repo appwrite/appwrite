@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\NATS\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
 use Utopia\NATS\ConnectionOptions;
@@ -67,6 +68,48 @@ final class ConnectionTlsAndAuthTest extends TestCase
         $this->assertFalse($ssl['verify_peer']);
         $this->assertFalse($ssl['verify_peer_name']);
         $this->assertSame('example.com', $ssl['peer_name']);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, bool, string}>
+     */
+    public static function discoveredServerSchemeProvider(): \Iterator
+    {
+        yield 'tls scheme' => ['tls://seed:4222', false, 'tls'];
+        yield 'wss scheme' => ['wss://seed:443', false, 'tls'];
+        yield 'tls option' => ['nats://seed:4222', true, 'tls'];
+        yield 'plaintext' => ['nats://seed:4222', false, 'nats'];
+    }
+
+    #[DataProvider('discoveredServerSchemeProvider')]
+    public function testDiscoveredServerInheritsRequiredTls(string $server, bool $tls, string $expected): void
+    {
+        /** @var list<string> $schemes */
+        $schemes = [];
+        /** @var list<FakeTransport> $transports */
+        $transports = [];
+        $factory = function (string $scheme) use (&$schemes, &$transports): FakeTransport {
+            $schemes[] = $scheme;
+            $transports[] = $transport = new FakeTransport(['connect_urls' => ['peer:4222']]);
+
+            return $transport;
+        };
+
+        $conn = Connection::connect(new ConnectionOptions(
+            servers: $server,
+            tls: $tls,
+            noRandomize: true,
+            transportFactory: $factory,
+        ));
+
+        $transports[0]->pushInbound('INFO {"server_id":"FAKE","ldm":true}' . "\r\n");
+        $conn->processMessage(1.0);
+
+        $this->assertCount(2, $transports);
+        $this->assertSame('peer', $transports[1]->host);
+        $this->assertSame($expected, $schemes[1]);
+
+        $conn->close();
     }
 
     public function testTokenProviderResolvedAtConnect(): void
