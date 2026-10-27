@@ -1,5 +1,5 @@
 import { Query, type Models } from '@appwrite.io/console'
-import { isFeatureEnabled } from '@/lib/console-profiles'
+import { isCloudProfile, isFeatureEnabled } from '@/lib/console-profiles'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 
 /**
@@ -40,12 +40,12 @@ export function getSmtpRecordName(domain: string): string {
 
 /**
  * Extra list queries for views that only want web (HTTP) domains. Filtering
- * on the server keeps email rows from taking up the fetched page. Only sent
- * behind the function email flag: self-hosted rules have no `protocol`
- * attribute to query.
+ * on the server keeps email rows from taking up the fetched page. Only sent on
+ * Cloud behind the function email flag: self-hosted rules have no
+ * `protocol` attribute to query, even with the flag turned on in debug.
  */
 export function webDomainQueries(): string[] {
-  return isFeatureEnabled('functionEmail')
+  return isCloudProfile() && isFeatureEnabled('functionEmail')
     ? [Query.equal('protocol', ['http'])]
     : []
 }
