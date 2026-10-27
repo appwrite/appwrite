@@ -34,7 +34,7 @@ Each push to a connected repository can create a deployment:
 - **Any other branch:** the deployment builds but stays inactive. Sites get [preview links](/docs/products/sites/previews) for the branch and the commit, which only members of your Appwrite organization can open.
 - **Every build:** Appwrite reports the result to the commit on Entire as a check run, unless **Silent mode** is on.
 
-Appwrite asks Entire for read access to repository contents and write access to checks, and only for the repositories you select. It cannot create or delete repositories on Entire.
+Appwrite asks Entire to read and write repository contents, write checks on commits, and create repositories in the project. It only reaches the repositories you select, plus any it creates for you, and it cannot delete repositories on Entire.
 
 {% info title="Available on Appwrite Cloud" %}
 Entire is available as a Git provider on [Appwrite Cloud](/sign-up). The self-hosted Appwrite Console does not offer new Entire connections.
@@ -52,7 +52,7 @@ To deploy from Entire to Appwrite, there are several steps you must complete:
 
 ## Step 1: Create or mirror a repository on Entire
 
-Appwrite can't create repositories on Entire, so create the repository and push your code before you connect it. Entire repositories live inside projects, and each Appwrite installation connects to one Entire project, so keep the repositories you plan to deploy in the same project when you can.
+To deploy code you already have, create the repository and push your code before you connect it. If you start from an Appwrite template instead, Appwrite can create the repository for you, as described in Step 3. Entire repositories live inside projects, and each Appwrite installation connects to one Entire project, so keep the repositories you plan to deploy in the same project when you can.
 
 Create a project and a repository with the Entire CLI, then point your local project at the repository and push:
 
@@ -65,7 +65,7 @@ git push -u origin main
 
 You can also create the project and the repository on Entire. Entire's [repository docs](https://docs.entire.com/guides/repositories/repository) cover regions in more detail.
 
-If your code lives on GitHub, you don't have to move it. Create a [GitHub repository mirror](https://docs.entire.com/guides/repositories/mirrors) on Entire, and Appwrite deploys from the mirror. A mirror belongs to no Entire project, so when you connect Entire in the next step, choose the mirror's GitHub owner instead. The mirror then appears under that owner in the repository picker. Appwrite only deploys pushes that go through Entire, which forwards them to GitHub, so point your local clone at the mirror and push there:
+If your code lives on GitHub, you don't have to move it. Create a [GitHub repository mirror](https://docs.entire.com/guides/repositories/mirrors) on Entire, and Appwrite deploys from the mirror. A mirror belongs to no Entire project, so when you connect Entire in the next step, choose the mirror's GitHub owner instead. The mirror then appears under `gh/<owner>` in the repository picker. Appwrite only deploys pushes that go through Entire, which forwards them to GitHub, so point your local clone at the mirror and push there:
 
 ```bash
 entire repo mirror add /gh/acme/storefront
@@ -104,6 +104,8 @@ Appwrite reads the `package.json` in the root directory, detects the framework, 
 
 To deploy a function, go to **Functions** and click **Create function**. Under **Connect Git repository**, choose your Entire project, find your repository, and click **Connect**. Appwrite detects the runtime from the repository. Set the **Root directory** and the **Entrypoint**, then click **Create and deploy**.
 
+To start from a template instead, pick one when you create the site or function. Under **Git repository**, choose **Create new repository**, pick your Entire project under **Organization**, enter a **Repository name**, and click **Create**. Appwrite creates a private repository in that project, commits the template into it, and deploys it.
+
 ## Step 4: Push to deploy
 
 From now on, every push to the repository creates a deployment. Pushes to the production branch build and activate, replacing the previous production deployment. Pushes to any other branch build without activating, so production keeps serving the previous version until you click **Activate**. In the **Deployments** list, a branch deployment shows as **Ready** while the production deployment stays **Active**.
@@ -125,9 +127,9 @@ For the full walkthrough, from creating the repository to branch previews and pa
 # Troubleshooting Entire deployments
 
 - **The repository isn't listed.** Add it to the installation as described in [Manage the Entire connection](#manage-the-entire-connection), then click **Refresh repositories** in the wizard.
-- **There is no option to create a repository.** The wizard only offers **Create new repository** for providers that support it. For Entire, create the repository on Entire first, push your code, and connect it.
+- **Appwrite can't create the repository.** The installation needs Entire's permission to create repositories. Accept Appwrite's updated permissions on Entire if it asks for them, or create the repository on Entire and connect it instead. A name that's already taken in the project fails too.
 - **The framework shows as Other.** Appwrite detects the framework from the `package.json` in the root directory. If your app lives in a subfolder, set the **Root directory** to that folder, and if Appwrite still doesn't recognize the framework, select it yourself.
-- **A push didn't create a deployment.** Check that the repository is connected to the Site or Function, that the branch matches the branch filters, and that at least one changed file matches the path filters. The first push of a new branch has no previous commit to compare against, so it deploys regardless of path filters.
+- **A push didn't create a deployment.** Check that the repository is connected to the Site or Function, that the branch matches the branch filters, and that at least one changed file matches the path filters. For the first push of a new branch, Appwrite compares it with the point where it branched off the default branch.
 - **No check runs appear on the commit.** Silent mode stops Appwrite from reporting builds back to Entire. Turn it off in the site or function's Git settings.
 - **The build fails.** Open the deployment in the Console and read the build logs. Most failures come from a root directory that doesn't contain the app, or a build command that doesn't match the package manager.
 
