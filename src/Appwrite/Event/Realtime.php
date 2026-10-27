@@ -4,6 +4,7 @@ namespace Appwrite\Event;
 
 use Appwrite\Messaging\Adapter;
 use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
+use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
@@ -155,13 +156,15 @@ class Realtime extends Event
      * reaches whoever claimed the same ID, not the intended audience:
      *
      * - The console copy of a project-flavored event (an execution's `user:{id}`
-     *   read roles) is re-addressed to the project's organization, which is the
-     *   audience the console actually subscribes with. This matches the HTTP
-     *   read boundary exactly: the console reads executions in admin mode, where
-     *   `isPrivileged` drops the per-execution permission filter (see
-     *   Functions/Http/Executions/Get.php), so every org member can already read
-     *   every execution over HTTP. The org team role neither broadens nor
-     *   narrows that set — it just carries the same audience over realtime.
+     *   read roles) is re-addressed to the project organization's privileged
+     *   roles. The console reads these resources in admin mode, where only a
+     *   privileged member — owner, developer or admin per `User::isPrivileged`
+     *   (see Functions/Http/Executions/Get.php) — bypasses the per-resource
+     *   permission filter; a plain member could not GET the execution. The bare
+     *   `team:{teamId}` role is held by every member and would broaden delivery
+     *   past that boundary, so the copy is addressed to the dimensioned
+     *   privileged roles (`team:{teamId}/owner`, …), which a console connection
+     *   holds (User::getRoles) exactly when it would pass the HTTP check.
      * - The project copy of a console-flavored event (rules and the like, keyed
      *   `team:{orgTeamId}`) is dropped: admin-mode connections subscribe with
      *   bare membership roles and never matched it, so only a project team
@@ -176,8 +179,15 @@ class Realtime extends Event
 
         if ($subscriber === 'console' && $project->getId() !== 'console' && $targetProjectId !== 'console') {
             $teamId = $project->getAttribute('teamId');
+            if (empty($teamId)) {
+                return null;
+            }
 
-            return empty($teamId) ? null : [Role::team($teamId)->toString()];
+            return [
+                Role::team($teamId, User::ROLE_OWNER)->toString(),
+                Role::team($teamId, User::ROLE_DEVELOPER)->toString(),
+                Role::team($teamId, User::ROLE_ADMIN)->toString(),
+            ];
         }
 
         if ($subscriber !== 'console' && $targetProjectId === 'console') {

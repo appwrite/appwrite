@@ -34,15 +34,21 @@ final class RealtimeTest extends TestCase
         ]));
     }
 
-    public function testConsoleCopyOfProjectEventIsAddressedToOrganization(): void
+    public function testConsoleCopyOfProjectEventIsAddressedToPrivilegedRoles(): void
     {
         // An execution event's roles are the execution's read permissions:
         // project-user identities. On the console tree `user:{id}` names a
         // console user instead, which anyone can mint with a colliding custom
-        // ID, so the console copy must be re-addressed to the organization.
+        // ID. The console copy is addressed to the org's privileged roles —
+        // exactly who bypasses the per-execution permission filter in admin
+        // mode — not the bare team role every member holds.
         $roles = $this->event->resolveRoles('console', ['user:victim'], null);
 
-        $this->assertSame(['team:org-team'], $roles);
+        $this->assertSame([
+            'team:org-team/owner',
+            'team:org-team/developer',
+            'team:org-team/admin',
+        ], $roles);
     }
 
     public function testConsoleCopyIsSkippedWithoutOrganization(): void
