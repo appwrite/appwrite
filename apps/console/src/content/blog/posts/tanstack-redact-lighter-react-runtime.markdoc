@@ -18,7 +18,7 @@ faqs:
   - question: "Does TanStack Redact support concurrent rendering?"
     answer: "No. Redact renders synchronously and leaves out React's concurrent features such as time slicing and interruptible renders. That keeps the runtime smaller, but expensive updates can block user input until rendering finishes."
   - question: "Can I deploy a TanStack Start app that uses Redact on Appwrite Sites?"
-    answer: "Appwrite Sites supports TanStack Start 1.0 with server-side rendering, server functions, and API routes. Redact-enabled builds are not separately verified, so test the production build for compatibility before you deploy."
+    answer: "Yes. TanStack Start apps that use Redact build and run on Appwrite Sites with server-side rendering, server functions, and API routes. Add Redact as described in its Start guide and keep the build settings Appwrite detects: `./dist` as the output directory, or `./.output` if your app uses the Nitro plugin."
 ---
 
 TanStack has released version 0.2.0 of TanStack Redact, a smaller alternative to React and React DOM in the browser. The release brings stable integrations for TanStack Start, Vite, Vinext, and Next.js, with bundle size reductions of up to 70.5% in TanStack's benchmarks, without requiring changes to existing React application code.
@@ -97,7 +97,7 @@ TanStack Redact 0.2.0 supports four framework and build environments.
 
 | Framework | Integration |
 | --- | --- |
-| TanStack Start | Integrates through its Vite build configuration |
+| TanStack Start | Redact handles server rendering and hydration; Start keeps routing and server functions |
 | Vite | Redirects supported React imports to Redact |
 | Vinext | Uses React for server rendering and Redact in the browser |
 | Next.js | Supports App Router and Pages Router with Redact handling client rendering |
@@ -164,7 +164,7 @@ Reducing frontend JavaScript is one part of optimizing a web application. Develo
 
 Appwrite Sites already supports **TanStack Start 1.0**, including server-side rendering, server functions, and API routes. Developers can connect their Git repository, configure their build, and deploy a TanStack Start application on Appwrite.
 
-With Redact supporting TanStack Start, developers experimenting with smaller React runtimes can also explore this combination, provided they test the resulting build for compatibility. Appwrite's documented TanStack Start support doesn't independently verify Redact-enabled deployments.
+TanStack Start apps that use Redact deploy to Appwrite Sites with no extra configuration. Redact renders pages on the server and in the browser, and server functions and API routes keep working. Add Redact to `vite.config.ts` as described in its [Start guide](https://tanstack.com/redact/latest/docs/start), and keep the build settings Appwrite detects: `./dist` as the output directory, or `./.output` if your app uses the Nitro plugin.
 
 Read our [TanStack Start announcement](/blog/post/tanstack-start-stable-appwrite-sites) for more details, or [create a free Appwrite project](https://cloud.appwrite.io/) to start building and deploying your application.
 
