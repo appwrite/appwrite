@@ -2182,18 +2182,19 @@ class Entire extends Git
 
     /**
      * Entire models CI feedback as check runs on a branch, so a check rides
-     * the check run upsert with its name as the stable key - repeated reports
-     * for one name land on one run, in a suite of the same name.
+     * the check run upsert with its key as the stable identity - repeated
+     * reports for one key land on one run, in a suite of its own unless one
+     * is named.
      */
-    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = ''): void
+    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = '', string $key = '', string $suiteKey = ''): void
     {
         $repositoryId = $this->repositoryId($owner, $repositoryName);
         $path = '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/check-runs';
 
-        $write = $this->checkRuns($this->branchContaining($repositoryId, $SHA), $state, $name, $title, $summary, $detailsUrl, $suite);
+        $write = $this->checkRuns($this->branchContaining($repositoryId, $SHA), $state, $name, $title, $summary, $detailsUrl, $suite, $key, $suiteKey);
         $this->writeCheckRuns($repositoryId, $path, $write);
 
-        if ($suite === '') {
+        if ($suite === '' && $suiteKey === '') {
             return;
         }
 
@@ -2211,7 +2212,7 @@ class Entire extends Git
 
         $runs = [];
         foreach ($this->nested($this->body($response), 'check_runs') as $run) {
-            if (\is_array($run) && $this->text($run, 'suite_key') === $suite) {
+            if (\is_array($run) && $this->text($run, 'suite_key') === $this->text($write['check_suite'], 'key')) {
                 $runs[$this->text($run, 'key')] = $run;
             }
         }
@@ -2266,25 +2267,28 @@ class Entire extends Git
     }
 
     /**
-     * The check run write for one report: its run, keyed by the check's
-     * name, filed under the named suite or a suite of its own. A suite of
-     * its own carries the run's state; a shared one is stated afterwards
-     * from all its runs, see updateCheck().
+     * The check run write for one report: its run, keyed by the check's key
+     * or else its name, filed under the named suite or a suite of its own.
+     * A suite of its own carries the run's state; a shared one is stated
+     * afterwards from all its runs, see updateCheck().
      *
      * @return array{branch: string, check_suite: array<string, mixed>, check_runs: list<array<string, mixed>>}
      */
-    protected function checkRuns(string $branch, string $state, string $name, string $title, string $summary, string $detailsUrl, string $suite = ''): array
+    protected function checkRuns(string $branch, string $state, string $name, string $title, string $summary, string $detailsUrl, string $suite = '', string $key = '', string $suiteKey = ''): array
     {
-        $key = $name === '' || $name === '0' ? 'default' : $name;
-        $suiteKey = $suite === '' ? $key : $suite;
+        $name = $name === '' || $name === '0' ? 'default' : $name;
+        $key = $key === '' ? $name : $key;
+        $shared = $suite !== '' || $suiteKey !== '';
+        $suiteKey = $suiteKey === '' ? ($suite === '' ? $key : $suite) : $suiteKey;
+        $suite = $suite === '' ? $name : $suite;
         $now = $this->rfc3339Now();
         [$status, $conclusion] = self::CHECK_STATES[$state] ?? ['completed', 'failure'];
 
         $run = [
             'key' => $key,
-            'name' => $key,
+            'name' => $name,
             'status' => $status,
-            // The name is the run's identity, so its attempt id can stay stable too
+            // The key is the run's identity, so its attempt id can stay stable too
             'external_id' => $key,
             'external_updated_at' => $now,
         ];
@@ -2302,8 +2306,8 @@ class Entire extends Git
             $run['details_url'] = $detailsUrl;
         }
 
-        $checkSuite = ['key' => $suiteKey, 'name' => $suiteKey, 'external_id' => $suiteKey];
-        if ($suite === '') {
+        $checkSuite = ['key' => $suiteKey, 'name' => $suite, 'external_id' => $suiteKey];
+        if (!$shared) {
             $checkSuite = [...$checkSuite, ...$this->suiteState([$run], $now)];
         }
 

@@ -192,8 +192,21 @@ final class GitAction
         }
 
         // A check is the resource, filed under its project; it answers whether
-        // the build passed, so it links to the build's logs
-        $vcs->updateCheck($owner, $repositoryName, $commitHash, self::state($status), $resource->getAttribute('name'), $title, '- ' . \implode("\n- ", $lines), $consoleUrl, $project->getAttribute('name'));
+        // the build passed, so it links to the build's logs. Names can repeat,
+        // so the IDs key them
+        $vcs->updateCheck(
+            $owner,
+            $repositoryName,
+            $commitHash,
+            self::state($status),
+            $resource->getAttribute('name'),
+            $title,
+            '- ' . \implode("\n- ", $lines),
+            $consoleUrl,
+            suite: $project->getAttribute('name'),
+            key: "{$project->getId()}/{$collection}/{$resource->getId()}",
+            suiteKey: $project->getId(),
+        );
     }
 
     /**
@@ -227,7 +240,7 @@ final class GitAction
             $owner,
             $repositoryName,
             $commitHash,
-            key: "{$project->getId()}/{$resource->getId()}",
+            key: "{$project->getId()}/{$collection}/{$resource->getId()}",
             name: $resource->getAttribute('name'),
             state: $deleted ? 'inactive' : self::state($status),
             // A production branch's build is the one that goes live

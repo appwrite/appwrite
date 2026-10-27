@@ -29,7 +29,7 @@ final class GitActionTest extends TestCase
         // The deployment shows where the site runs and where its build logs are
         $this->assertCount(1, $this->deployments);
         $deployment = $this->deployments[0];
-        $this->assertSame('production/landing', $deployment['key']);
+        $this->assertSame('production/sites/landing', $deployment['key']);
         $this->assertSame('Landing', $deployment['name']);
         $this->assertSame('success', $deployment['state']);
         $this->assertSame('preview', $deployment['environment']);
@@ -39,9 +39,17 @@ final class GitActionTest extends TestCase
         $this->assertSame('production', $deployment['groupKey']);
         $this->assertSame('Production', $deployment['groupName']);
 
-        // The check answers whether the build passed, so it links to the logs
+        // The check answers whether the build passed, so it links to the logs;
+        // names can repeat across projects and resources, so IDs key it
         $this->assertCount(1, $this->checks);
-        $this->assertSame(['state' => 'success', 'name' => 'Landing', 'detailsUrl' => $logs, 'suite' => 'Production'], $this->checks[0]);
+        $this->assertSame([
+            'state' => 'success',
+            'name' => 'Landing',
+            'detailsUrl' => $logs,
+            'suite' => 'Production',
+            'key' => 'production/sites/landing',
+            'suiteKey' => 'production',
+        ], $this->checks[0]);
     }
 
     public function testAProductionFunctionBuildHasNoPreview(): void
@@ -83,8 +91,8 @@ final class GitActionTest extends TestCase
                 'groupName' => $groupName,
             ];
         });
-        $vcs->method('updateCheck')->willReturnCallback(function (string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = ''): void {
-            $this->checks[] = ['state' => $state, 'name' => $name, 'detailsUrl' => $detailsUrl, 'suite' => $suite];
+        $vcs->method('updateCheck')->willReturnCallback(function (string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = '', string $key = '', string $suiteKey = ''): void {
+            $this->checks[] = ['state' => $state, 'name' => $name, 'detailsUrl' => $detailsUrl, 'suite' => $suite, 'key' => $key, 'suiteKey' => $suiteKey];
         });
 
         return $vcs;

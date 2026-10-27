@@ -330,9 +330,10 @@ abstract class Adapter
      * description and drops the summary; queued is pending there, and the
      * suite joins the name as "Site (Project)". A provider with check runs
      * overrides this to carry the summary and a conclusion, and files the
-     * run under its suite.
+     * run under its suite. The key and suite key identify the check and its
+     * suite where their names can repeat; they default to the names.
      */
-    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = ''): void
+    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = '', string $key = '', string $suiteKey = ''): void
     {
         $context = $suite === '' ? $name : "{$name} ({$suite})";
         $this->updateCommitStatus($repositoryName, $SHA, $owner, $state === 'queued' ? 'pending' : $state, $title, $detailsUrl, $context);
@@ -340,7 +341,7 @@ abstract class Adapter
 
     /**
      * Reports a deployed resource on a commit: where it runs and where its
-     * build logs are, kept as one entry per key across reports and commits.
+     * build logs are, kept as one entry per key on each commit.
      * state can be one of: queued, pending, success, failure, error,
      * cancelled, inactive (the resource no longer exists); environment is
      * preview or production; the group gathers resources, such as those of

@@ -35,9 +35,9 @@ class CheckRunsEntire extends Entire
     /**
      * @return array{branch: string, check_suite: array<string, mixed>, check_runs: list<array<string, mixed>>}
      */
-    public function write(string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = ''): array
+    public function write(string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = '', string $key = '', string $suiteKey = ''): array
     {
-        return $this->checkRuns('main', $state, $name, $title, $summary, $detailsUrl, $suite);
+        return $this->checkRuns('main', $state, $name, $title, $summary, $detailsUrl, $suite, $key, $suiteKey);
     }
 }
 
@@ -945,6 +945,21 @@ final class EntireTest extends TestCase
 
         // Five mints and no report
         $this->assertCount(5, $adapter->requested);
+    }
+
+    public function testCheckRunsAreKeyedApartFromTheirNames(): void
+    {
+        $adapter = new CheckRunsEntire(new Cache(new None()));
+
+        // Two projects named alike, each with a site named alike
+        $production = $adapter->write('success', 'Landing', 'Build succeeded.', suite: 'Atlas', key: 'production/sites/landing', suiteKey: 'production');
+        $staging = $adapter->write('failure', 'Landing', 'Build failed.', suite: 'Atlas', key: 'staging/sites/landing', suiteKey: 'staging');
+
+        $this->assertSame(['key' => 'production', 'name' => 'Atlas', 'external_id' => 'production'], $production['check_suite']);
+        $this->assertSame('staging', $staging['check_suite']['key']);
+        $this->assertSame('production/sites/landing', $production['check_runs'][0]['key']);
+        $this->assertSame('staging/sites/landing', $staging['check_runs'][0]['external_id']);
+        $this->assertSame('Landing', $staging['check_runs'][0]['name']);
     }
 
     public function testSharedSuiteIsStatedFromEveryRun(): void
