@@ -32,6 +32,7 @@ use Utopia\System\System;
 class Webhooks extends Action
 {
     private const MAX_FILE_SIZE = 5242880; // 5 MB
+    private const TIMEOUT = 15;
 
     public static function getName(): string
     {
@@ -185,8 +186,8 @@ class Webhooks extends Action
             );
 
             $client = $this->client($request->getUri(), $publicHostname)
-                ->withTimeout(15)
-                ->withConnectTimeout(15)
+                ->withTimeout(self::TIMEOUT)
+                ->withConnectTimeout(self::TIMEOUT)
                 ->withSslVerification($webhook->getAttribute('security', true));
 
             if (!empty($httpUser) && !empty($httpPass)) {
@@ -430,9 +431,11 @@ class Webhooks extends Action
         $literal = \filter_var($host, FILTER_VALIDATE_IP) !== false;
         $destinations = $publicHostname->getDestinations();
         // getaddrinfo() needs a socket type and a service; any port works for the lookup
+        // Both lookups share the connect timeout, so a slow resolver cannot hold the worker
+        $deadline = \microtime(true) + self::TIMEOUT;
         $addresses = $literal ? [$host] : \array_values(\array_unique([
-            ...(Resolver::getaddrinfo($host, AF_INET, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: []),
-            ...(Resolver::getaddrinfo($host, AF_INET6, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: []),
+            ...(Resolver::getaddrinfo($host, AF_INET, SOCK_STREAM, STREAM_IPPROTO_TCP, '80', self::TIMEOUT) ?: []),
+            ...(Resolver::getaddrinfo($host, AF_INET6, SOCK_STREAM, STREAM_IPPROTO_TCP, '80', \max(0.001, $deadline - \microtime(true))) ?: []),
         ]));
 
         if ($addresses === []) {
