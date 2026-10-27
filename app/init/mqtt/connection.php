@@ -80,7 +80,7 @@ return function (Container $container): void {
                 if (
                     $user->isEmpty()
                     || $user->getAttribute('status', true) === false // blocked account
-                    || ($sessionId !== '' && (!$user->sessionActive($sessionId) || !$user->sessionFactorsMet($sessionId)))
+                    || ($sessionId !== '' && (!$user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null) || !$user->sessionFactorsMet($sessionId)))
                 ) {
                     return [];
                 }
@@ -102,7 +102,7 @@ return function (Container $container): void {
 
                 /** @var User $user */
                 $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
-                $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+                $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
                 if (
                     $user->isEmpty()
@@ -185,7 +185,7 @@ return function (Container $container): void {
 
             $sessionId = $identity['sessionId'] ?? '';
 
-            return $sessionId === '' || ($user->sessionActive($sessionId) && $user->sessionFactorsMet($sessionId));
+            return $sessionId === '' || ($user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null) && $user->sessionFactorsMet($sessionId));
         };
     }, []);
 };

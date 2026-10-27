@@ -3862,6 +3862,95 @@ final class SitesCustomServerTest extends Scope
         $this->assertSame(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
+        // Failure: Confirmed membership for another project only
+        $otherProjectId = Id::unique();
+        $scopedEmail = \uniqid() . 'scoped@appwrite.io';
+        $scopedUser = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => Id::unique(),
+            'email' => $scopedEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $scopedUser['headers']['status-code']);
+
+        $scopedMembership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], [
+            'email' => $scopedEmail,
+            'roles' => ['project-' . $otherProjectId . '-developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $scopedMembership['headers']['status-code']);
+        $this->assertFalse($scopedMembership['body']['confirm']);
+
+        $invite = $this->getLastEmailByAddress($scopedEmail, function (array $email): void {
+            $this->assertStringContainsString('/join-us', (string) ($email['html'] ?? ''));
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
+
+        $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $scopedMembership['body']['$id'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => $tokens['userId'],
+            'secret' => $tokens['secret'],
+        ]);
+        $this->assertSame(200, $confirm['headers']['status-code']);
+        $this->assertTrue($confirm['body']['confirm']);
+
+        $scopedSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $scopedEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $scopedSession['headers']['status-code']);
+
+        $scopedJwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $scopedSession['cookies']['a_session_console'],
+            'x-appwrite-project' => 'console',
+        ], []);
+        $this->assertSame(201, $scopedJwt['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $scopedJwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+
+        // Success: Same member after granting this project's developer role
+        $roleUpdate = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $scopedMembership['body']['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], [
+            'roles' => ['project-' . $this->getProject()['$id'] . '-developer'],
+        ]);
+        $this->assertSame(200, $roleUpdate['headers']['status-code']);
+
+        $this->assertEventually(function () use ($proxyClient, $scopedJwt) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+                'cookie' => 'a_jwt_console=' . $scopedJwt['body']['jwt']
+            ], followRedirects: false);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertStringContainsString('Contact page', (string) $response['body']);
+            $this->assertStringContainsString('Preview by', (string) $response['body']);
+        });
+
         // Failure: Session missing (old bad, new ok)
         $session = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', array_merge([
             'origin' => 'http://localhost',

@@ -1576,6 +1576,111 @@ final class RealtimeCustomClientTest extends Scope
         $assertClosed($client);
     }
 
+    public function testImpersonationRequiresAllFactors(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $password = 'password123';
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $client = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $targetId = Id::unique();
+        $target = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $targetId,
+            'email' => 'factors-target-' . $targetId . '@example.com',
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $target['headers']['status-code']);
+
+        $actorId = Id::unique();
+        $actorEmail = 'factors-actor-' . $actorId . '@example.com';
+        $actor = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $actorId,
+            'email' => $actorEmail,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $actor['headers']['status-code']);
+
+        $impersonator = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $server, [
+            'impersonator' => true,
+        ]);
+        $this->assertSame(200, $impersonator['headers']['status-code']);
+
+        $impersonate = function (array $headers) use ($targetId): array {
+            $connection = $this->getWebsocket(['account'], [
+                'origin' => 'http://localhost',
+                'x-appwrite-impersonate-user-id' => $targetId,
+                ...$headers,
+            ]);
+
+            return [$connection, \json_decode($connection->receive(), true)];
+        };
+
+        /**
+         * Test for SUCCESS
+         */
+        $signIn = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $client, [
+            'email' => $actorEmail,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $signIn['headers']['status-code']);
+
+        [$complete, $response] = $impersonate([
+            'cookie' => 'a_session_' . $projectId . '=' . $signIn['cookies']['a_session_' . $projectId],
+        ]);
+        $this->assertSame('connected', $response['type']);
+        $this->assertSame($targetId, $response['data']['user']['$id']);
+        $complete->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/verification', $server, [
+            'emailVerification' => true,
+        ]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/mfa', $server, [
+            'mfa' => true,
+        ]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        $signIn = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $client, [
+            'email' => $actorEmail,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $signIn['headers']['status-code']);
+        $cookie = 'a_session_' . $projectId . '=' . $signIn['cookies']['a_session_' . $projectId];
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [...$client, 'cookie' => $cookie]);
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        [$pending, $response] = $impersonate(['cookie' => $cookie]);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user'], 'A session missing a factor impersonated a user over realtime.');
+
+        $name = $this->client->call(Client::METHOD_PATCH, '/users/' . $targetId . '/name', $server, [
+            'name' => 'Factors ' . $targetId,
+        ]);
+        $this->assertSame(200, $name['headers']['status-code']);
+
+        try {
+            $frame = $pending->receive();
+            $this->fail('A session missing a factor received the impersonated user\'s event: ' . $frame);
+        } catch (TimeoutException) {
+            // No event reached the connection
+        }
+
+        $pending->close();
+    }
+
     public function testImpersonatedConnectionFollowsSessionExtension(): void
     {
         // Its own project: sessions here only last the 60s policy minimum.
