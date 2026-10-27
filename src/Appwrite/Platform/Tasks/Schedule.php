@@ -126,7 +126,7 @@ class Schedule extends Action
         // The process outlives any one loop, so nothing else restarts a loop
         // that throws or returns: its schedules would silently stop firing.
         Co::create(function () use ($name, $task): never {
-            while (true) {
+            for (;;) {
                 Span::init('schedule.combined.loop');
                 Span::add('loop', $name);
                 $error = null;
