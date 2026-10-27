@@ -184,15 +184,15 @@ final class StoreTest extends TestCase
         $projectDelete = (string) $client->requests[0]->getBody();
         $this->assertStringContainsString('DELETE FROM', $projectDelete);
         $this->assertStringContainsString('projectId = {projectId:String}', $projectDelete);
+        $this->assertStringContainsString('SETTINGS lightweight_deletes_sync = 2', $projectDelete);
         $this->assertStringContainsString('name="param_projectId"', $projectDelete);
-        $this->assertStringNotContainsString('lightweight_deletes_sync', $projectDelete);
 
         $resourceDelete = (string) $client->requests[1]->getBody();
         $this->assertStringContainsString('resourceInternalId = {resourceInternalId:String}', $resourceDelete);
         $this->assertStringContainsString('resourceType = {resourceType:String}', $resourceDelete);
         $this->assertStringContainsString('name="param_resourceInternalId"', $resourceDelete);
         $this->assertStringContainsString('name="param_resourceType"', $resourceDelete);
-        $this->assertStringNotContainsString('lightweight_deletes_sync', $resourceDelete);
+        $this->assertStringContainsString('SETTINGS lightweight_deletes_sync = 2', $resourceDelete);
     }
 
     public function testGetById(): void

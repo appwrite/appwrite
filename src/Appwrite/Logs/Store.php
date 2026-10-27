@@ -344,8 +344,9 @@ class Store
         }
 
         $where = \implode(' AND ', $conditions);
+        // Wait for the rows to be masked, whatever the server profile defaults to.
         $this->query(
-            'DELETE FROM ' . $this->table() . " WHERE {$where}",
+            'DELETE FROM ' . $this->table() . " WHERE {$where} SETTINGS lightweight_deletes_sync = 2",
             $params
         );
     }
