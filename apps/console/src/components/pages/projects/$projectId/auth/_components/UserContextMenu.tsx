@@ -13,6 +13,7 @@ import {
   Target,
   Activity,
 } from 'lucide-react'
+import { MessagingProviderType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import {
   ContextMenu,
@@ -47,6 +48,7 @@ import {
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { SendMessageContextSub } from '../../messaging/_components/SendMessageMenu'
 import { useT } from '@/lib/i18n/translate'
 
 export type UserContextMenuUser = {
@@ -57,6 +59,7 @@ export type UserContextMenuUser = {
   emailVerification?: boolean | null
   phoneVerification?: boolean | null
   status?: boolean | null
+  targets?: { providerType: string }[]
 }
 
 interface UserContextMenuProps {
@@ -76,6 +79,16 @@ export function UserContextMenu({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const hasName = !!user.name
+  const targetTypes = new Set(
+    (user.targets ?? []).map((target) => target.providerType),
+  )
+  const channelsWithoutTargets = user.targets
+    ? Object.fromEntries(
+        Object.values(MessagingProviderType)
+          .filter((type) => !targetTypes.has(type))
+          .map((type) => [type, 'No targets for this channel']),
+      )
+    : undefined
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteProjectUser(projectId, user.$id),
@@ -137,6 +150,11 @@ export function UserContextMenu({
             <ContextMenuIcon icon={Activity} />
             {t('Sessions')}
           </ContextMenuItem>
+          <SendMessageContextSub
+            projectId={projectId}
+            users={[user.$id]}
+            unavailable={channelsWithoutTargets}
+          />
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>

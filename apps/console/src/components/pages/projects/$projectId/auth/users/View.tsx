@@ -40,6 +40,7 @@ import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
+import { SendMessageMenu } from '../../messaging/_components/SendMessageMenu'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
@@ -383,6 +384,14 @@ export function View() {
   }
 
   const userName = user.name || '-'
+  const targetTypes = new Set(
+    (user.targets ?? []).map((target) => target.providerType),
+  )
+  const channelsWithoutTargets = Object.fromEntries(
+    Object.values(MessagingProviderType)
+      .filter((type) => !targetTypes.has(type))
+      .map((type) => [type, 'No targets for this channel']),
+  )
   const displayName = user.name || user.email || user.phone || t('Anonymous')
 
   const handleDeleteAllSessions = () => {
@@ -417,23 +426,30 @@ export function View() {
         showFilters={false}
         fullWidthBorder
         beforeCreateButtons={
-          activeTab === 'sessions' &&
-          !sessionsLoading &&
-          sessions.length > 0 ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 w-9 p-0 text-[13px] @[640px]:w-auto @[640px]:px-3"
-              onClick={() => setDeleteAllSessionsDialogOpen(true)}
-              disabled={deleteAllSessions.isPending}
-              aria-label={t('Delete all sessions')}
-            >
-              <LogOut className="h-4 w-4 shrink-0 @[640px]:me-1.5" />
-              <span className="hidden @[640px]:inline">
-                {t('Delete all sessions')}
-              </span>
-            </Button>
-          ) : undefined
+          <>
+            <SendMessageMenu
+              projectId={projectId!}
+              users={[user.$id]}
+              unavailable={channelsWithoutTargets}
+            />
+            {activeTab === 'sessions' &&
+            !sessionsLoading &&
+            sessions.length > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 w-9 p-0 text-[13px] @[640px]:w-auto @[640px]:px-3"
+                onClick={() => setDeleteAllSessionsDialogOpen(true)}
+                disabled={deleteAllSessions.isPending}
+                aria-label={t('Delete all sessions')}
+              >
+                <LogOut className="h-4 w-4 shrink-0 @[640px]:me-1.5" />
+                <span className="hidden @[640px]:inline">
+                  {t('Delete all sessions')}
+                </span>
+              </Button>
+            ) : null}
+          </>
         }
         createLabel={
           activeTab === 'memberships' ? t('Create membership') : undefined

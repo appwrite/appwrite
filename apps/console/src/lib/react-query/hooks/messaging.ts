@@ -6,12 +6,14 @@
 
 import {
   useQuery,
+  useMutation,
+  useQueryClient,
   queryOptions,
   keepPreviousData,
   type QueryClient,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query } from '@appwrite.io/console'
+import { ID, MessagingProviderType, Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -842,5 +844,52 @@ export function messagingTargetPickerUsersQueryOptions(
     enabled: !!projectId,
     staleTime: 30 * 1000,
     retry: false,
+  })
+}
+
+// ============================================================================
+// MUTATIONS
+// ============================================================================
+
+/** Create an empty draft message, optionally addressed to topics or users. */
+export function useCreateDraftMessage(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: {
+      type: MessagingProviderType
+      topics?: string[]
+      users?: string[]
+    }): Promise<Models.Message> => {
+      const messaging = sdk.forProject(projectId!).messaging
+      const recipients = {
+        messageId: ID.unique(),
+        topics: input.topics ?? [],
+        users: input.users ?? [],
+        targets: [],
+        draft: true,
+      }
+      switch (input.type) {
+        case MessagingProviderType.Email:
+          return messaging.createEmail({
+            ...recipients,
+            subject: 'Untitled email',
+            content: ' ',
+            html: false,
+          })
+        case MessagingProviderType.Sms:
+          return messaging.createSMS({ ...recipients, content: ' ' })
+        case MessagingProviderType.Push:
+          return messaging.createPush({
+            ...recipients,
+            title: 'Untitled notification',
+            body: ' ',
+          })
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['messages', 'project', projectId],
+      })
+    },
   })
 }

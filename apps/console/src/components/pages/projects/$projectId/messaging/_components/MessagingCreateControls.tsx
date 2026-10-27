@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ChevronDown, Mail, Phone, Bell, Plus } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ID } from '@appwrite.io/console'
+import { ID, MessagingProviderType } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -26,6 +26,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { sdk } from '@/lib/appwrite/sdk'
+import { useCreateDraftMessage } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
@@ -59,86 +60,23 @@ export function MessagingCreateControls({
   const [topicDialogOpen, setTopicDialogOpen] = useState(false)
   const [topicName, setTopicName] = useState('')
 
-  const createDraftEmail = useMutation({
-    mutationFn: async () => {
-      if (!projectId) throw new Error('Missing project')
-      const messageId = ID.unique()
-      const projectSdk = sdk.forProject(projectId)
-      return projectSdk.messaging.createEmail({
-        messageId,
-        subject: 'Untitled email',
-        content: ' ',
-        topics: [],
-        users: [],
-        targets: [],
-        draft: true,
-        html: false,
-      })
-    },
-    onSuccess: (msg) => {
-      queryClient.refetchQueries({ queryKey: ['messages', 'project', projectId] })
-      toast.success(t('Draft message created'))
-      navigate({
-        to: '/projects/$projectId/messaging/$messageId',
-        params: { projectId: projectId!, messageId: msg.$id },
-      })
-    },
-    onError: (e: Error) =>
-      toast.error(getErrorMessage(e) || t('Could not create message')),
-  })
+  const createDraft = useCreateDraftMessage(projectId)
 
-  const createDraftSms = useMutation({
-    mutationFn: async () => {
-      if (!projectId) throw new Error('Missing project')
-      const messageId = ID.unique()
-      const projectSdk = sdk.forProject(projectId)
-      return projectSdk.messaging.createSMS({
-        messageId,
-        content: ' ',
-        topics: [],
-        users: [],
-        targets: [],
-        draft: true,
-      })
-    },
-    onSuccess: (msg) => {
-      queryClient.refetchQueries({ queryKey: ['messages', 'project', projectId] })
-      toast.success(t('Draft message created'))
-      navigate({
-        to: '/projects/$projectId/messaging/$messageId',
-        params: { projectId: projectId!, messageId: msg.$id },
-      })
-    },
-    onError: (e: Error) =>
-      toast.error(getErrorMessage(e) || t('Could not create message')),
-  })
-
-  const createDraftPush = useMutation({
-    mutationFn: async () => {
-      if (!projectId) throw new Error('Missing project')
-      const messageId = ID.unique()
-      const projectSdk = sdk.forProject(projectId)
-      return projectSdk.messaging.createPush({
-        messageId,
-        title: 'Untitled notification',
-        body: ' ',
-        topics: [],
-        users: [],
-        targets: [],
-        draft: true,
-      })
-    },
-    onSuccess: (msg) => {
-      queryClient.refetchQueries({ queryKey: ['messages', 'project', projectId] })
-      toast.success(t('Draft message created'))
-      navigate({
-        to: '/projects/$projectId/messaging/$messageId',
-        params: { projectId: projectId!, messageId: msg.$id },
-      })
-    },
-    onError: (e: Error) =>
-      toast.error(getErrorMessage(e) || t('Could not create message')),
-  })
+  const startDraft = (type: MessagingProviderType) =>
+    createDraft.mutate(
+      { type },
+      {
+        onSuccess: (msg) => {
+          toast.success(t('Draft message created'))
+          navigate({
+            to: '/projects/$projectId/messaging/$messageId',
+            params: { projectId: projectId!, messageId: msg.$id },
+          })
+        },
+        onError: (e: Error) =>
+          toast.error(getErrorMessage(e) || t('Could not create message')),
+      },
+    )
 
   const createTopicMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -163,10 +101,7 @@ export function MessagingCreateControls({
       toast.error(getErrorMessage(e) || t('Could not create topic')),
   })
 
-  const busy =
-    createDraftEmail.isPending ||
-    createDraftSms.isPending ||
-    createDraftPush.isPending
+  const busy = createDraft.isPending
 
   if (!projectId) return null
 
@@ -326,21 +261,21 @@ export function MessagingCreateControls({
         className="w-48"
 >
         <DropdownMenuItem
-          onSelect={() => createDraftEmail.mutate()}
+          onSelect={() => startDraft(MessagingProviderType.Email)}
           disabled={busy}
 >
           <Mail className="me-2 h-4 w-4 text-muted-foreground" />
           {t('Email')}
         </DropdownMenuItem>
         <DropdownMenuItem
-          onSelect={() => createDraftSms.mutate()}
+          onSelect={() => startDraft(MessagingProviderType.Sms)}
           disabled={busy}
 >
           <Phone className="me-2 h-4 w-4 text-muted-foreground" />
           {t('SMS')}
         </DropdownMenuItem>
         <DropdownMenuItem
-          onSelect={() => createDraftPush.mutate()}
+          onSelect={() => startDraft(MessagingProviderType.Push)}
           disabled={busy}
 >
           <Bell className="me-2 h-4 w-4 text-muted-foreground" />

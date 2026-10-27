@@ -113,7 +113,9 @@ import { PasskeysPolicies } from './policies/Passkeys'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { formatRelativeDuration } from '@/lib/i18n/relative-time'
+import { MessagingProviderType } from '@appwrite.io/console'
 import { UserContextMenu } from './_components/UserContextMenu'
+import { SendMessageMenu } from '../messaging/_components/SendMessageMenu'
 import { TeamContextMenu } from './_components/TeamContextMenu'
 import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
 import {
@@ -868,6 +870,18 @@ export function View({
     bulkDeleteMutation.mutate(Array.from(selectedUsers))
   }
 
+  // Selection is cleared on page change, so every selected user is on this page.
+  const selectedTargetTypes = new Set(
+    paginatedUsers
+      .filter((user) => selectedUsers.has(user.$id))
+      .flatMap((user) => user.targets.map((target) => target.providerType)),
+  )
+  const channelsWithoutSelectedTargets = Object.fromEntries(
+    Object.values(MessagingProviderType)
+      .filter((type) => !selectedTargetTypes.has(type))
+      .map((type) => [type, 'No targets for this channel']),
+  )
+
   const toggleUser = (userId: string) => {
     const newSelected = new Set(selectedUsers)
     if (newSelected.has(userId)) {
@@ -1565,6 +1579,7 @@ export function View({
                                 emailVerification: user.emailVerification,
                                 phoneVerification: user.phoneVerification,
                                 status: user.status as boolean | null,
+                                targets: user.targets,
                               }}
                             >
                               <TableRow
@@ -1903,6 +1918,7 @@ export function View({
                           emailVerification: user.emailVerification,
                           phoneVerification: user.phoneVerification,
                           status: user.status as boolean | null,
+                          targets: user.targets,
                         }}
                       >
                         <Link
@@ -1972,6 +1988,12 @@ export function View({
                     >
                       {t('Cancel')}
                     </Button>
+                    <SendMessageMenu
+                      projectId={projectId!}
+                      users={Array.from(selectedUsers)}
+                      unavailable={channelsWithoutSelectedTargets}
+                      layout="inline"
+                    />
                     <Button
                       variant="destructive"
                       size="sm"
