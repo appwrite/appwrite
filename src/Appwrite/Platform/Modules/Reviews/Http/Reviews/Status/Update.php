@@ -104,11 +104,16 @@ class Update extends Base
         };
         $update->setAttribute('status', $status);
 
-        if ($status === 'completed') {
-            $this->createFindings($review, $findings, $dbForProject, $authorization);
-        }
+        $documents = $status === 'completed' ? $this->prepareFindings($review, $findings) : [];
 
-        $authorization->skip(fn () => $dbForProject->updateDocument('reviews', $review->getId(), $update));
+        // One transaction, so a failed status write leaves no findings behind for a retry to duplicate.
+        $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $review, $update, $documents) {
+            if (!empty($documents)) {
+                $dbForProject->createDocuments('reviewFindings', $documents);
+            }
+
+            $dbForProject->updateDocument('reviews', $review->getId(), $update);
+        }));
 
         $response->noContent();
     }
@@ -143,8 +148,9 @@ class Update extends Base
 
     /**
      * @param array<array<string, mixed>> $findings
+     * @return array<Document>
      */
-    private function createFindings(Document $review, array $findings, Database $dbForProject, Authorization $authorization): void
+    private function prepareFindings(Document $review, array $findings): array
     {
         $documents = [];
 
@@ -186,8 +192,6 @@ class Update extends Base
             ]);
         }
 
-        if (!empty($documents)) {
-            $authorization->skip(fn () => $dbForProject->createDocuments('reviewFindings', $documents));
-        }
+        return $documents;
     }
 }

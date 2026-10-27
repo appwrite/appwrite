@@ -1448,6 +1448,15 @@ return [
                 'filter' => 'token'
             ],
             [
+                'name' => '_APP_REVIEWS_SECRET',
+                'description' => 'The secret the code review service sends in the `X-Appwrite-Reviews-Secret` header to report results and request installation tokens. The internal review routes reject every call when this is empty. **Keep it a secret**.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => 'token'
+            ],
+            [
                 'name' => '_APP_JOBS_ENDPOINT',
                 'description' => 'Internal Appwrite endpoint the jobs-service (and the containers it spawns) use to reach the API over the Docker network for presigned artifact + callback URLs.',
                 'introduction' => '1.9.0',

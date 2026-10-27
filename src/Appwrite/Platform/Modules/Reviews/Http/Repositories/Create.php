@@ -9,6 +9,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -42,7 +43,7 @@ class Create extends Action
             ->label('audits.event', 'repository.create')
             ->label('audits.resource', 'repository/{response.$id}')
             ->param('installationId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Appwrite installation ID the repository is connected through.', false, ['dbForPlatform'])
-            ->param('providerRepositoryId', '', new Text(128), 'GitHub repository ID.')
+            ->param('providerRepositoryId', '', new Text(20), 'GitHub repository ID.')
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -60,6 +61,11 @@ class Create extends Action
         Authorization $authorization,
         VcsFactory $vcsFactory,
     ): void {
+        // GitHub repository ids are numeric, and this one becomes part of the row's id.
+        if (!\ctype_digit($providerRepositoryId)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "providerRepositoryId" must be a numeric GitHub repository ID.');
+        }
+
         $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $installationId));
 
         if ($installation->isEmpty() || $installation->getAttribute('projectId') !== $project->getId()) {
@@ -92,20 +98,26 @@ class Create extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $repository = $authorization->skip(fn () => $dbForPlatform->createDocument('repositories', new Document([
-            '$id' => Id::unique(),
-            '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
-            'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getSequence(),
-            'projectId' => $project->getId(),
-            'projectInternalId' => $project->getSequence(),
-            'providerRepositoryId' => $providerRepositoryId,
-            // Reviews belong to the project rather than to one of its resources.
-            'resourceId' => $project->getId(),
-            'resourceInternalId' => $project->getSequence(),
-            'resourceType' => RESOURCE_TYPE_REVIEWS,
-            'providerPullRequestIds' => [],
-        ])));
+        // The id is derived from the GitHub repository, so two concurrent creates collide on it
+        // instead of both passing the check above.
+        try {
+            $repository = $authorization->skip(fn () => $dbForPlatform->createDocument('repositories', new Document([
+                '$id' => Id::custom('reviews-' . $providerRepositoryId),
+                '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
+                'installationId' => $installation->getId(),
+                'installationInternalId' => $installation->getSequence(),
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getSequence(),
+                'providerRepositoryId' => $providerRepositoryId,
+                // Reviews belong to the project rather than to one of its resources.
+                'resourceId' => $project->getId(),
+                'resourceInternalId' => $project->getSequence(),
+                'resourceType' => RESOURCE_TYPE_REVIEWS,
+                'providerPullRequestIds' => [],
+            ])));
+        } catch (DuplicateException) {
+            throw new Exception(Exception::REVIEW_REPOSITORY_ALREADY_EXISTS);
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

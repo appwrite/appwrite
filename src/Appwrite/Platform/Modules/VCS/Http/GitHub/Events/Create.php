@@ -488,7 +488,7 @@ class Create extends Action
                 ])));
 
                 try {
-                    $publisherForReviews->enqueue(new ReviewMessage(
+                    $queued = $publisherForReviews->enqueue(new ReviewMessage(
                         reviewId: $review->getId(),
                         repository: [
                             'projectId' => $project->getId(),
@@ -504,6 +504,10 @@ class Create extends Action
                         headSha: $providerCommitHash,
                         trigger: ['kind' => $trigger],
                     ));
+
+                    if ($queued === false) {
+                        throw new \Exception('The broker rejected the review message.');
+                    }
                 } catch (\Throwable $error) {
                     // Left queued, the review would absorb every later push without running.
                     $authorization->skip(fn () => $dbForProject->updateDocument('reviews', $review->getId(), new Document([

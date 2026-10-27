@@ -621,6 +621,8 @@ return [
         ],
         'indexes' => [
             Index::key(key: '_key_repository_pullRequest_status', attributes: ['repositoryInternalId', 'providerPullRequestId', 'status']),
+            // Public filters go by the repository's public id, not its internal one.
+            Index::key(key: '_key_repositoryId_pullRequest', attributes: ['repositoryId', 'providerPullRequestId']),
             Index::key(key: '_key_status', attributes: ['status']),
         ],
     ],
