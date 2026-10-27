@@ -107,6 +107,18 @@ final class PropertiesTest extends TestCase
         $this->assertSame('PAYLOAD', substr($wire, $offset));
     }
 
+    public function testTruncatedBlockThrows(): void
+    {
+        $this->expectExceptionMessage('Malformed MQTT property block');
+        Properties::parse("\x0A\x01\x01", 0);
+    }
+
+    public function testPropertyOverrunningBlockThrows(): void
+    {
+        $this->expectExceptionMessage('Malformed MQTT property block');
+        Properties::parse("\x02\x11\x00\x00\x00\x00", 0);
+    }
+
     public function testUnknownPropertyIdThrows(): void
     {
         $this->expectException(\RuntimeException::class);

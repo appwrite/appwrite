@@ -80,12 +80,19 @@ class Properties
         [$length, $lenBytes] = Packet::decodeLength($data, $offset);
         $offset += $lenBytes;
         $end = $offset + $length;
+        if ($end > strlen($data)) {
+            throw new \RuntimeException('Malformed MQTT property block');
+        }
 
         while ($offset < $end) {
             $id = ord($data[$offset]);
             $offset++;
             [$value, $offset] = self::readValue($id, $data, $offset);
             $properties->add(new Property($id, $value));
+        }
+
+        if ($offset !== $end) {
+            throw new \RuntimeException('Malformed MQTT property block');
         }
 
         return [$properties, $offset];
