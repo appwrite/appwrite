@@ -218,6 +218,7 @@ services:
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
       - _APP_JOBS_ENDPOINT
+      - _APP_REVIEWS_SECRET
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_LOCKING_ENABLED

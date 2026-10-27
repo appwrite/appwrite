@@ -587,4 +587,104 @@ return [
             Index::key(key: '_key_captionInternalId', attributes: ['captionInternalId']),
         ],
     ],
+
+    // Code reviews of a repository's pull requests. Appwrite queues them; the review service
+    // (appwrite-labs/hansi) runs them and reports progress and results back.
+    'reviews' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviews'),
+        'name' => 'Reviews',
+        'attributes' => [
+            // The `repositories` row (platform database) that turned reviews on.
+            Attribute::string(key: 'repositoryId', required: true),
+            Attribute::string(key: 'repositoryInternalId', required: true),
+            Attribute::string(key: 'providerRepositoryId', required: true),
+            Attribute::string(key: 'providerRepositoryOwner'),
+            Attribute::string(key: 'providerRepositoryName'),
+            Attribute::string(key: 'providerPullRequestId', required: true),
+            // The head the review was queued for, replaced by the head it actually reviews.
+            Attribute::string(key: 'providerCommitHash', size: 64, required: true),
+            Attribute::string(key: 'providerBaseCommitHash', size: 64),
+            // opened, synchronize, ready_for_review, retry or mention.
+            Attribute::string(key: 'trigger', size: 32, required: true),
+            Attribute::string(key: 'providerCommentId'),
+            // queued, processing, completed, skipped or failed.
+            Attribute::string(key: 'status', size: 16, required: true),
+            Attribute::string(key: 'verdict', size: 32),
+            Attribute::string(key: 'tier', size: 8),
+            Attribute::text(key: 'summary', size: 65535),
+            // Why a review was skipped or failed, shown to the project's users.
+            Attribute::string(key: 'reason', size: 2048),
+            Attribute::string(key: 'providerReviewId'),
+            Attribute::datetime(key: 'startedAt'),
+            Attribute::datetime(key: 'completedAt'),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_repository_pullRequest_status', attributes: ['repositoryInternalId', 'providerPullRequestId', 'status']),
+            Index::key(key: '_key_status', attributes: ['status']),
+        ],
+    ],
+
+    'reviewFindings' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewFindings'),
+        'name' => 'Review Findings',
+        'attributes' => [
+            Attribute::string(key: 'reviewId', required: true),
+            Attribute::string(key: 'reviewInternalId', required: true),
+            Attribute::string(key: 'path', size: 2048, required: true),
+            Attribute::integer(key: 'startLine', signed: false, required: true),
+            Attribute::integer(key: 'endLine', signed: false, required: true),
+            Attribute::string(key: 'severity', size: 16, required: true),
+            Attribute::string(key: 'category', size: 64, required: true),
+            Attribute::string(key: 'title', size: 1024, required: true),
+            Attribute::text(key: 'body', size: 65535, required: true),
+            // The inline comment the finding was posted as.
+            Attribute::string(key: 'providerCommentId'),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),
+        ],
+    ],
+
+    // The agent's trace, step by step, for following a review live.
+    'reviewEvents' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewEvents'),
+        'name' => 'Review Events',
+        'attributes' => [
+            Attribute::string(key: 'reviewId', required: true),
+            Attribute::string(key: 'reviewInternalId', required: true),
+            Attribute::string(key: 'type', size: 64, required: true),
+            Attribute::datetime(key: 'time', required: true),
+            Attribute::string(key: 'data', size: 65535, default: new stdClass(), filters: [Filter::Json]),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),
+        ],
+    ],
+
+    // One row per model call, for metering what a review cost.
+    'reviewUsage' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewUsage'),
+        'name' => 'Review Usage',
+        'attributes' => [
+            Attribute::string(key: 'reviewId', required: true),
+            Attribute::string(key: 'reviewInternalId', required: true),
+            // review, verify, subagent, chat, ...
+            Attribute::string(key: 'role', size: 32, required: true),
+            Attribute::string(key: 'provider', size: 64, required: true),
+            Attribute::string(key: 'model', size: 128, required: true),
+            Attribute::integer(key: 'inputTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            Attribute::integer(key: 'outputTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            Attribute::integer(key: 'cachedInputTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            Attribute::integer(key: 'reasoningTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            // Milliseconds.
+            Attribute::integer(key: 'duration', width: IntegerWidth::Bits64, signed: false, default: 0),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),
+        ],
+    ],
 ];

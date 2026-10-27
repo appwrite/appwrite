@@ -347,6 +347,72 @@ final class GitHubTest extends Base
         $this->assertSame('appwrite', $adapter->getOwnerName('1234'));
     }
 
+    public function testCreateAccessTokenLimitsItToTheRepositories(): void
+    {
+        $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_scoped', 'expires_at' => '2026-10-27T16:00:00Z']);
+
+        $token = $adapter->createAccessToken([42]);
+
+        $this->assertSame(['token' => 'ghs_scoped', 'expiresAt' => '2026-10-27T16:00:00Z'], $token);
+        $this->assertSame('POST', $adapter->captured['method']);
+        $this->assertSame('/app/installations/1234/access_tokens', $adapter->captured['path']);
+        $this->assertSame('Bearer app-token', $adapter->captured['headers']['Authorization']);
+        $this->assertSame(['repository_ids' => [42]], $adapter->captured['params']);
+    }
+
+    public function testCreateAccessTokenWithoutRepositoriesCoversTheInstallation(): void
+    {
+        $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_all', 'expires_at' => '2026-10-27T16:00:00Z']);
+
+        $adapter->createAccessToken();
+
+        $this->assertSame([], $adapter->captured['params']);
+    }
+
+    public function testCreateAccessTokenThrowsWhenGitHubRefuses(): void
+    {
+        $adapter = $this->accessTokenResponse(422, ['message' => 'There is at least one repository that does not exist or is not accessible to the parent installation.', 'token' => 'leaked']);
+
+        try {
+            $adapter->createAccessToken([42]);
+            $this->fail('Expected the refusal to throw.');
+        } catch (\Exception $error) {
+            $this->assertSame(422, $error->getCode());
+            $this->assertStringContainsString('not accessible', $error->getMessage());
+            $this->assertStringNotContainsString('leaked', $error->getMessage());
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $body
+     */
+    private function accessTokenResponse(int $status, array $body): GitHub
+    {
+        return new class ($status, $body) extends GitHub {
+            protected string $jwtToken = 'app-token';
+
+            protected string $installationId = '1234';
+
+            /** @var array<string, mixed> */
+            public array $captured = [];
+
+            /**
+             * @param array<string, mixed> $body
+             */
+            public function __construct(private readonly int $status, private readonly array $body)
+            {
+                parent::__construct(new Cache(new None()));
+            }
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->captured = ['method' => $method, 'path' => $path, 'headers' => $headers, 'params' => $params];
+
+                return ['body' => $this->body, 'headers' => ['status-code' => $this->status]];
+            }
+        };
+    }
+
     /**
      * @param array<string, mixed> $body
      */

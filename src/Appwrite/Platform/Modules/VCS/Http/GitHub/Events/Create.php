@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Events;
 
+use Appwrite\Event\Message\Review as ReviewMessage;
+use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
@@ -12,7 +14,9 @@ use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
@@ -49,6 +53,7 @@ class Create extends Action
             ->inject('getProjectDB')
             ->inject('deploymentsFactory')
             ->inject('platform')
+            ->inject('publisherForReviews')
             ->callback($this->action(...));
     }
 
@@ -62,7 +67,8 @@ class Create extends Action
         Bus $bus,
         callable $getProjectDB,
         callable $deploymentsFactory,
-        array $platform
+        array $platform,
+        ReviewPublisher $publisherForReviews,
     ) {
         $vcs = $vcsFactory->fromProvider('github');
 
@@ -88,6 +94,11 @@ class Create extends Action
         $parsedPayloads = $vcs->getEvents($event, $payload);
 
         foreach ($parsedPayloads as $parsedPayload) {
+            // Before the deployments, which may throw; queueing a review never does.
+            if ($event === GitHub::EVENT_PULL_REQUEST) {
+                $this->queueReviews($parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews);
+            }
+
             match ($event) {
                 GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
                 GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
@@ -285,8 +296,8 @@ class Create extends Action
         Span::add('vcs.github.event.branch', $providerBranch);
         Span::add('vcs.github.event.installation.id', $providerInstallationId);
 
-        // Find associated repositories
-        $repositories = $this->findRepositories($providerRepositoryId, [], $dbForPlatform, $authorization);
+        // Find associated repositories; code review has its own path, see queueReviews()
+        $repositories = $this->findRepositories($providerRepositoryId, [Query::equal('resourceType', ['function', 'site'])], $dbForPlatform, $authorization);
 
         // Only the region hosting a linked project acts on the event, so every other region skips building the adapter.
         $isLinked = \array_any($repositories, function (Document $repository) use ($dbForPlatform, $authorization) {
@@ -346,7 +357,7 @@ class Create extends Action
                 return;
             }
 
-            $repositories = $this->findRepositories($providerRepositoryId, [Query::orderDesc('$createdAt')], $dbForPlatform, $authorization);
+            $repositories = $this->findRepositories($providerRepositoryId, [Query::equal('resourceType', ['function', 'site']), Query::orderDesc('$createdAt')], $dbForPlatform, $authorization);
 
             // Only the region hosting a linked project acts on the event, so every other region skips the GitHub calls below.
             $isLinked = \array_any($repositories, function (Document $repository) use ($dbForPlatform, $authorization) {
@@ -405,6 +416,105 @@ class Create extends Action
                         $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['providerPullRequestIds' => $providerPullRequestIds])));
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Queues a review of the pull request for each project that has code review on for the
+     * repository. A review that is still queued for the pull request absorbs the new head
+     * instead, so a burst of pushes costs one review; the service reviews the head it finds.
+     */
+    private function queueReviews(
+        array $parsedPayload,
+        Database $dbForPlatform,
+        Authorization $authorization,
+        callable $getProjectDB,
+        ReviewPublisher $publisherForReviews,
+    ): void {
+        // Drafts are queued too: the service decides from the repository's own config.
+        $trigger = match ($parsedPayload['action'] ?? '') {
+            'opened', 'reopened' => 'opened',
+            'synchronize' => 'synchronize',
+            'ready_for_review' => 'ready_for_review',
+            default => null,
+        };
+        if ($trigger === null) {
+            return;
+        }
+
+        $providerRepositoryId = $parsedPayload['repositoryId'] ?? '';
+        $providerPullRequestId = \strval($parsedPayload['pullRequestNumber'] ?? '');
+        $providerCommitHash = $parsedPayload['commitHash'] ?? '';
+
+        $repositories = $this->findRepositories($providerRepositoryId, [Query::equal('resourceType', [RESOURCE_TYPE_REVIEWS])], $dbForPlatform, $authorization);
+
+        foreach ($repositories as $repository) {
+            try {
+                $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
+                if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
+                    continue;
+                }
+
+                $dbForProject = $getProjectDB($project);
+
+                // A queued review older than this was lost on the way (dead-lettered, or the
+                // service never answered); coalescing into it would silence the pull request.
+                $pending = $authorization->skip(fn () => $dbForProject->findOne('reviews', [
+                    Query::equal('repositoryInternalId', [$repository->getSequence()]),
+                    Query::equal('providerPullRequestId', [$providerPullRequestId]),
+                    Query::equal('status', ['queued']),
+                    Query::greaterThan('$createdAt', DateTime::addSeconds(new \DateTime(), -APP_REVIEWS_QUEUED_TTL)),
+                ]));
+
+                if (!$pending->isEmpty()) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('reviews', $pending->getId(), new Document([
+                        'providerCommitHash' => $providerCommitHash,
+                    ])));
+                    continue;
+                }
+
+                $review = $authorization->skip(fn () => $dbForProject->createDocument('reviews', new Document([
+                    '$id' => Id::unique(),
+                    'repositoryId' => $repository->getId(),
+                    'repositoryInternalId' => $repository->getSequence(),
+                    'providerRepositoryId' => $providerRepositoryId,
+                    'providerRepositoryOwner' => $parsedPayload['owner'] ?? '',
+                    'providerRepositoryName' => $parsedPayload['repositoryName'] ?? '',
+                    'providerPullRequestId' => $providerPullRequestId,
+                    'providerCommitHash' => $providerCommitHash,
+                    'trigger' => $trigger,
+                    'status' => 'queued',
+                ])));
+
+                try {
+                    $publisherForReviews->enqueue(new ReviewMessage(
+                        reviewId: $review->getId(),
+                        repository: [
+                            'projectId' => $project->getId(),
+                            'projectInternalId' => $project->getSequence(),
+                            'repositoryId' => $repository->getId(),
+                            'installationId' => $repository->getAttribute('installationId', ''),
+                            'providerInstallationId' => $parsedPayload['installationId'] ?? '',
+                            'providerRepositoryId' => $providerRepositoryId,
+                            'owner' => $parsedPayload['owner'] ?? '',
+                            'name' => $parsedPayload['repositoryName'] ?? '',
+                        ],
+                        pullNumber: (int) $providerPullRequestId,
+                        headSha: $providerCommitHash,
+                        trigger: ['kind' => $trigger],
+                    ));
+                } catch (\Throwable $error) {
+                    // Left queued, the review would absorb every later push without running.
+                    $authorization->skip(fn () => $dbForProject->updateDocument('reviews', $review->getId(), new Document([
+                        'status' => 'failed',
+                        'reason' => 'The review could not be queued.',
+                    ])));
+
+                    throw $error;
+                }
+            } catch (\Throwable $error) {
+                Console::warning("Failed to queue review for repository '{$repository->getId()}': " . $error->getMessage());
             }
         }
     }

@@ -690,6 +690,34 @@ class GitHub extends Git
     }
 
     /**
+     * Create an installation access token for a service that acts on the installation's
+     * repositories itself, limited to the given repositories when any are named.
+     *
+     * @param array<int> $repositoryIds
+     * @return array{token: string, expiresAt: string}
+     *
+     * @throws Exception
+     */
+    public function createAccessToken(array $repositoryIds = []): array
+    {
+        $params = $repositoryIds === [] ? [] : ['repository_ids' => $repositoryIds];
+
+        $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->jwtToken], $params);
+        $responseBody = $response['body'] ?? [];
+        $statusCode = $response['headers']['status-code'] ?? 0;
+
+        if (!\is_array($responseBody) || !\is_string($responseBody['token'] ?? null) || !\is_string($responseBody['expires_at'] ?? null)) {
+            $safeBody = \is_array($responseBody) ? json_encode(array_intersect_key($responseBody, array_flip(['message', 'documentation_url']))) : '';
+            throw new Exception('Failed to create access token from GitHub API. Status: ' . $statusCode . '. Response: ' . $safeBody, $statusCode);
+        }
+
+        return [
+            'token' => $responseBody['token'],
+            'expiresAt' => $responseBody['expires_at'],
+        ];
+    }
+
+    /**
      * Get user
      *
      * @return array<mixed>

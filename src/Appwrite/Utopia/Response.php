@@ -363,6 +363,13 @@ class Response extends SwooleResponse
     public const MODEL_REPORT = 'report';
     public const MODEL_REPORT_LIST = 'reportList';
 
+    // Reviews
+    public const MODEL_REVIEW = 'review';
+    public const MODEL_REVIEW_LIST = 'reviewList';
+    public const MODEL_REVIEW_FINDING = 'reviewFinding';
+    public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
+    public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
+
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
     public const MODEL_CONSOLE_OAUTH2_PROVIDER_PARAMETER = 'consoleOAuth2ProviderParameter';

@@ -1630,4 +1630,21 @@ return [
         'description' => 'Report with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
+
+    /** Reviews */
+    Exception::REVIEW_NOT_FOUND => [
+        'name' => Exception::REVIEW_NOT_FOUND,
+        'description' => 'Review with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REVIEW_STATUS_INVALID => [
+        'name' => Exception::REVIEW_STATUS_INVALID,
+        'description' => 'The review has already ended and its status can no longer change.',
+        'code' => 409,
+    ],
+    Exception::REVIEW_REPOSITORY_ALREADY_EXISTS => [
+        'name' => Exception::REVIEW_REPOSITORY_ALREADY_EXISTS,
+        'description' => 'Code review is already on for this repository, in this project or another one. A repository is reviewed by one project only.',
+        'code' => 409,
+    ],
 ];

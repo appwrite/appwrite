@@ -207,6 +207,9 @@ use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntime;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntimeList;
 use Appwrite\Utopia\Response\Model\Report;
 use Appwrite\Utopia\Response\Model\ResourceToken;
+use Appwrite\Utopia\Response\Model\Review;
+use Appwrite\Utopia\Response\Model\ReviewFinding;
+use Appwrite\Utopia\Response\Model\ReviewRepository;
 use Appwrite\Utopia\Response\Model\Row;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
@@ -315,6 +318,8 @@ Response::setModel(new BaseList('VectorsDB Collections List', Response::MODEL_VE
 Response::setModel(new BaseList('Embedding list', Response::MODEL_EMBEDDING_LIST, 'embeddings', Response::MODEL_EMBEDDING));
 Response::setModel(new BaseList('Insights List', Response::MODEL_INSIGHT_LIST, 'insights', Response::MODEL_INSIGHT));
 Response::setModel(new BaseList('Reports List', Response::MODEL_REPORT_LIST, 'reports', Response::MODEL_REPORT));
+Response::setModel(new BaseList('Reviews List', Response::MODEL_REVIEW_LIST, 'reviews', Response::MODEL_REVIEW));
+Response::setModel(new BaseList('Review Repositories List', Response::MODEL_REVIEW_REPOSITORY_LIST, 'repositories', Response::MODEL_REVIEW_REPOSITORY));
 
 // Entities
 Response::setModel(new Database());
@@ -555,6 +560,9 @@ Response::setModel(new MigrationFirebaseProject());
 Response::setModel(new Insight());
 Response::setModel(new InsightCTA());
 Response::setModel(new Report());
+Response::setModel(new Review());
+Response::setModel(new ReviewFinding());
+Response::setModel(new ReviewRepository());
 
 // Tests (keep last)
 Response::setModel(new Mock());
