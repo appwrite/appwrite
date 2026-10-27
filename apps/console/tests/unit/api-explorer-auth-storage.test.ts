@@ -21,12 +21,23 @@ function memoryStorage(): Storage {
   }
 }
 
-const globals = globalThis as Record<string, unknown>
-const originals = {
-  window: globals.window,
-  document: globals.document,
-  localStorage: globals.localStorage,
-  sessionStorage: globals.sessionStorage,
+const GLOBAL_NAMES = [
+  'window',
+  'document',
+  'localStorage',
+  'sessionStorage',
+] as const
+
+const originals = GLOBAL_NAMES.map((name) =>
+  Object.getOwnPropertyDescriptor(globalThis, name),
+)
+
+function setGlobal(name: (typeof GLOBAL_NAMES)[number], value: unknown) {
+  Object.defineProperty(globalThis, name, {
+    value,
+    configurable: true,
+    writable: true,
+  })
 }
 
 const projectId = 'explorer-project'
@@ -46,16 +57,26 @@ function persistKeys() {
 }
 
 beforeEach(() => {
-  globals.window = Object.assign(new EventTarget(), {
-    location: { hostname: 'cloud.appwrite.io' },
-  })
-  globals.document = { cookie: '' }
-  globals.localStorage = memoryStorage()
-  globals.sessionStorage = memoryStorage()
+  setGlobal(
+    'window',
+    Object.assign(new EventTarget(), {
+      location: { hostname: 'cloud.appwrite.io' },
+    }),
+  )
+  setGlobal('document', { cookie: '' })
+  setGlobal('localStorage', memoryStorage())
+  setGlobal('sessionStorage', memoryStorage())
 })
 
 afterEach(() => {
-  Object.assign(globals, originals)
+  GLOBAL_NAMES.forEach((name, index) => {
+    const original = originals[index]
+    if (original) {
+      Object.defineProperty(globalThis, name, original)
+    } else {
+      delete (globalThis as Record<string, unknown>)[name]
+    }
+  })
 })
 
 describe('API explorer auth storage', () => {
