@@ -25,6 +25,8 @@ final class FormatTest extends TestCase
         yield 'avif compatible with a heif major brand' => [self::fileType('mif1', ['avif', 'mif1']), Format::Avif];
         yield 'heic' => [self::fileType('heic', ['mif1', 'heic']), Format::Heic];
         yield 'heif' => [self::fileType('mif1', ['mif1', 'heic']), Format::Heic];
+        yield 'avif with an extended box size' => [self::extendedFileType('avif', ['avif', 'mif1']), Format::Avif];
+        yield 'heic with an extended box size' => [self::extendedFileType('heic', ['mif1', 'heic']), Format::Heic];
     }
 
     #[DataProvider('signatureProvider')]
@@ -42,6 +44,7 @@ final class FormatTest extends TestCase
         yield 'riff without webp' => ["RIFF\0\0\0\0AVI LIST"];
         yield 'mp4' => [self::fileType('isom', ['isom', 'mp41'])];
         yield 'brand past the file type box' => [self::fileType('isom', ['isom']) . 'avif'];
+        yield 'brand past an extended file type box' => [self::extendedFileType('isom', ['isom']) . 'avif'];
     }
 
     #[DataProvider('unsupportedProvider')]
@@ -85,5 +88,15 @@ final class FormatTest extends TestCase
         $box = $major . "\0\0\0\0" . \implode('', $compatible);
 
         return \pack('N', \strlen($box) + 8) . 'ftyp' . $box;
+    }
+
+    /**
+     * @param list<string> $compatible
+     */
+    private static function extendedFileType(string $major, array $compatible): string
+    {
+        $box = $major . "\0\0\0\0" . \implode('', $compatible);
+
+        return \pack('N', 1) . 'ftyp' . \pack('J', \strlen($box) + 16) . $box;
     }
 }

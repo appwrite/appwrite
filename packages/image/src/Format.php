@@ -17,9 +17,14 @@ enum Format: string
 
     private const HEIC_BRANDS = ['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'hevm', 'hevs', 'mif1', 'msf1'];
 
-    private const MAJOR_BRAND_OFFSET = 8;
+    private const HEADER_LENGTH = 8;
 
-    private const MINOR_VERSION_OFFSET = 12;
+    /**
+     * A box size of 1 means a 64-bit size follows the box type, so the brands start after it.
+     */
+    private const EXTENDED_SIZE = 1;
+
+    private const EXTENDED_HEADER_LENGTH = 16;
 
     private const BRAND_LENGTH = 4;
 
@@ -50,13 +55,18 @@ enum Format: string
      */
     private static function fromBrands(string $data): self
     {
-        $header = \unpack('Nsize', $data);
-        $size = \is_array($header) && \is_int($header['size'] ?? null) ? $header['size'] : 0;
+        $size = self::readSize($data, 'N', 0);
+        $start = self::HEADER_LENGTH;
+        if ($size === self::EXTENDED_SIZE) {
+            $size = self::readSize($data, 'J', self::HEADER_LENGTH);
+            $start = self::EXTENDED_HEADER_LENGTH;
+        }
         $end = \min($size, self::FILE_TYPE_BOX_LIMIT, \strlen($data));
+        $minorVersion = $start + self::BRAND_LENGTH;
 
         $heic = false;
-        for ($offset = self::MAJOR_BRAND_OFFSET; $offset + self::BRAND_LENGTH <= $end; $offset += self::BRAND_LENGTH) {
-            if ($offset === self::MINOR_VERSION_OFFSET) {
+        for ($offset = $start; $offset + self::BRAND_LENGTH <= $end; $offset += self::BRAND_LENGTH) {
+            if ($offset === $minorVersion) {
                 continue;
             }
 
@@ -69,5 +79,16 @@ enum Format: string
         }
 
         return $heic ? self::Heic : throw new Exception('Unsupported image format');
+    }
+
+    private static function readSize(string $data, string $format, int $offset): int
+    {
+        if (\strlen($data) < $offset + ($format === 'J' ? 8 : 4)) {
+            return 0;
+        }
+
+        $size = \unpack($format . 'size', $data, $offset);
+
+        return \is_array($size) && \is_int($size['size'] ?? null) ? $size['size'] : 0;
     }
 }
