@@ -314,6 +314,7 @@ class Functions extends Action
                     eventData: null,
                     executionId: $execution->getId(),
                     createdAt: $execution->getCreatedAt(),
+                    permissions: $execution->getPermissions(),
                 );
                 break;
             case 'schedule':
@@ -348,7 +349,8 @@ class Functions extends Action
                     jwt: $jwt,
                     event: null,
                     eventData: null,
-                    executionId: $execution->getId()
+                    executionId: $execution->getId(),
+                    permissions: $execution->getPermissions(),
                 );
                 break;
         }
@@ -566,6 +568,7 @@ class Functions extends Action
         ?string $eventData = null,
         ?string $executionId = null,
         ?string $createdAt = null,
+        ?array $permissions = null,
     ): void {
         $user ??= new Document();
         $headers = Headers::stripReserved($headers, ['x-appwrite-client-ip']);
@@ -648,9 +651,16 @@ class Functions extends Action
         }
 
         $now = DateTime::now();
+        // Reuse the read permission the caller already resolved (empty for an
+        // admin-mode request, where user:{id} is a console id that would leak
+        // the execution to a colliding project user). Fall back to the user
+        // only for triggers that resolve none (e.g. events), where the user is
+        // a genuine project user.
+        $executionPermissions = $permissions
+            ?? ($user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))]);
         $execution = new Document([
             '$id' => $executionId,
-            '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
+            '$permissions' => $executionPermissions,
             '$createdAt' => $createdAt ?: $now,
             '$updatedAt' => $now,
             'resourceInternalId' => $function->getSequence(),
