@@ -90,6 +90,11 @@ class Migrations extends Action
      */
     protected array $sourceReport = [];
 
+    /**
+     * Size of the migrations collection's resourceData column
+     */
+    private const RESOURCE_DATA_SIZE = 131070;
+
     public static function getName(): string
     {
         return 'migrations';
@@ -684,7 +689,11 @@ class Migrations extends Action
                 $transfer->runWithResourceSelector(
                     $migration->getAttribute('resources'),
                     function ($resources) use ($migration, $transfer, $project, $queueForRealtime) {
-                        $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
+                        // The cache lists every resource moved so far except rows, and a migration
+                        // of hundreds of tables outgrows the column it is written to; the counters
+                        // still say how far it got, so the detail is dropped rather than the migration
+                        $resourceData = \json_encode($transfer->getCache()) ?: '{}';
+                        $migration->setAttribute('resourceData', \strlen($resourceData) > self::RESOURCE_DATA_SIZE ? '{}' : $resourceData);
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
