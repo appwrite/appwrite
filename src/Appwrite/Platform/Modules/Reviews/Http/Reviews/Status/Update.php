@@ -43,9 +43,10 @@ class Update extends Base
             ->desc('Update review status')
             ->groups(['api'])
             ->label('scope', 'public')
-            // {url} is the route pattern, so the key is per project: the review service calls
-            // from one address for every project.
-            ->label('abuse-key', 'url:{url},projectId:{param-projectId}')
+            // Keyed on the caller's address: the limit runs before the secret is checked, so any
+            // request param would let an unauthenticated caller pick a fresh bucket. {url} is the
+            // route pattern, so the review service gets one bucket per route for every project.
+            ->label('abuse-key', 'url:{url},ip:{ip}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 10)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->param('reviewId', '', new UID(), 'Review ID.')
