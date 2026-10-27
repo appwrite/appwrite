@@ -379,6 +379,12 @@ Http::init()
             $response->setHideCredentials(true);
         }
 
+        // Reading users is not authority over their credentials. Standard keys are exempt: user migrations read hashes with users.read
+        $isStandardKey = ! empty($apiKey) && $apiKey->getType() !== API_KEY_OAUTH2;
+        if (\in_array('users.read', $scopes, true) && ! \in_array('users.write', $scopes, true) && ! $isStandardKey) {
+            $response->setHideCredentials(true);
+        }
+
         $authorization->addRole($role);
         $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
         foreach ($rolesSource->getRoles($authorization) as $authRole) {
