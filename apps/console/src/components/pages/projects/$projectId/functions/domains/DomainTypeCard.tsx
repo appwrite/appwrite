@@ -3,7 +3,7 @@
  *
  * Card-style choice between a web (HTTP) and an email (SMTP) domain at the
  * top of the function's Add domain wizard, in the same style as
- * DomainTargetCard. Only rendered behind the `functionEmailDomains` flag.
+ * DomainTargetCard. Only rendered on Cloud.
  */
 
 import { Globe, Mail } from 'lucide-react'
