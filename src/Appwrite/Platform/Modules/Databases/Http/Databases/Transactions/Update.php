@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
+use Appwrite\Databases\ListCache;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -63,6 +64,9 @@ class Update extends Action
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: 'transactions',
@@ -274,12 +278,10 @@ class Update extends Action
                             $data = $this->parseOperators($data, $collection);
                         }
 
-                        if ($action === 'delete' && $documentId && empty($data)) {
+                        if ($action === 'delete' && $documentId) {
                             $doc = $dbForDatabases->getDocument($collectionId, $documentId);
-                            if (!$doc->isEmpty()) {
-                                $operation['data'] = $doc->getArrayCopy();
-                                $data = $operation['data'];
-                            }
+                            $operation['data'] = $doc->isEmpty() ? [] : $doc->getArrayCopy();
+                            $data = $operation['data'];
                         }
 
                         if (!\in_array($action, ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
@@ -333,7 +335,10 @@ class Update extends Action
 
                 // Every write purges its cached rows, nested and cascaded rows included, inside a savepoint of
                 // this transaction, so a read before COMMIT can cache the old row again. Purge them again after COMMIT.
-                $purged = $dbForDatabases->getCache()->recordPurges(fn () => $dbForDatabases->withTransaction($commit));
+                $purged = ListCache::purged(
+                    $this->getPermissionListCaches($dbForProject, $authorization, $operations),
+                    fn () => $dbForDatabases->getCache()->recordPurges(fn () => $dbForDatabases->withTransaction($commit)),
+                );
             } catch (NotFoundException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -618,6 +623,57 @@ class Update extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    /**
+     * The cached list responses of each collection with document security that an operation sets document
+     * permissions in.
+     *
+     * @param array<Document> $operations
+     * @return array<string, ListCache>
+     */
+    private function getPermissionListCaches(Database $dbForProject, Authorization $authorization, array $operations): array
+    {
+        $caches = [];
+
+        foreach ($operations as $operation) {
+            $data = $operation['data'] instanceof Document ? $operation['data']->getArrayCopy() : $operation['data'];
+            $key = $operation['databaseInternalId'] . ':' . $operation['collectionInternalId'];
+
+            if (isset($caches[$key]) || !$this->setsPermissions($operation['action'], $data)) {
+                continue;
+            }
+
+            $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                fn () => $dbForProject->findOne('databases', [
+                    Query::equal('$sequence', [$operation['databaseInternalId']])
+                ]),
+                APP_DATABASES_SUBQUERIES
+            ));
+
+            $collection = $authorization->skip(fn () => $dbForProject->skipFilters(
+                fn () => $dbForProject->findOne('database_' . $operation['databaseInternalId'], [
+                    Query::equal('$sequence', [$operation['collectionInternalId']])
+                ]),
+                APP_COLLECTIONS_SUBQUERIES
+            ));
+
+            if ($collection->getAttribute('documentSecurity', false)) {
+                $caches[$key] = $this->getListCache($dbForProject, $database, $collection->getId());
+            }
+        }
+
+        return $caches;
+    }
+
+    private function setsPermissions(string $action, mixed $data): bool
+    {
+        return match ($action) {
+            'update', 'upsert' => isset($data['$permissions']),
+            'bulkUpdate' => isset($data['data']['$permissions']),
+            'bulkUpsert' => \array_any($data, fn (mixed $document): bool => isset($document['$permissions'])),
+            default => false,
+        };
     }
 
     private function queueCleanup(DeletePublisher $publisherForDeletes, Document $project, Document $transaction): void

@@ -101,7 +101,7 @@ class Create extends Base
             }
             $bucket = $this->bucket($dbForProject, $bucketId);
             $uploadId = \bin2hex(\random_bytes(16));
-            $this->createMultipartUpload($dbForProject, $cache, $project, $deviceForFiles, $bucket, $key, $uploadId, $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
+            $this->createMultipartUpload($locks, $dbForProject, $cache, $project, $deviceForFiles, $bucket, $key, $uploadId, $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
             $this->sendXml($response, S3Xml::initiateMultipart($bucketId, $key, $uploadId));
             return;
         }
@@ -140,9 +140,9 @@ class Create extends Base
             // SDKs upload parts of one upload concurrently; the cached parts map
             // and device chunk bookkeeping are read-modify-write, so load and
             // save must share the upload's critical section.
-            $locks($this->multipartLockKey($project, $uploadId), 600, function () use ($cache, $project, $deviceForFiles, $uploadId, $bucketId, $key, $partNumber, $body, $etag): void {
+            $locks($this->multipartLockKey($project, $uploadId), 600, function () use ($cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag): void {
                 $upload = $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
-                $this->uploadMultipartPart($cache, $project, $deviceForFiles, $upload, $partNumber, $body, $etag);
+                $this->uploadMultipartPart($cache, $project, $deviceForFiles, $bucket, $upload, $partNumber, $body, $etag);
             }, timeout: 120.0);
             if ($copySource !== '') {
                 $this->sendXml($response, S3Xml::copyPart($etag));
@@ -222,11 +222,7 @@ class Create extends Base
         $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->addHeader('ETag', '"' . $file->getAttribute('signature', '') . '"');
-        $sse = (string) ($file->getAttribute('metadata', [])['serverSideEncryption'] ?? '');
-        if ($sse !== '') {
-            $response->addHeader('x-amz-server-side-encryption', $sse);
-        }
-        $response->send('');
+            ->addHeader('ETag', '"' . $file->getAttribute('signature', '') . '"')
+            ->send('');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
+use Appwrite\Databases\ListCache;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Adapter;
@@ -228,11 +229,12 @@ class Action extends AppwriteAction
     /**
      * Hash field for a single variation of a cached list response.
      *
-     * Scoped by the collection schema (attributes + indexes), the caller's
-     * authorization roles, the exact query set, and the field type — so users
-     * with different permissions never share entries.
+     * Scoped by the collection schema (attributes + indexes), its permissions
+     * and documentSecurity, the caller's authorization roles, the exact query
+     * set, and the field type — so users with different permissions never
+     * share entries and permission changes take effect immediately.
      *
-     * @param Document $collection Collection document (for schema hash)
+     * @param Document $collection Collection document (for schema and permissions hash)
      * @param array<mixed> $roles Caller authorization roles
      * @param array<Query|string> $queries Queries for this list call
      * @param string $type LIST_CACHE_FIELD_DOCUMENTS, LIST_CACHE_FIELD_TOTAL or LIST_CACHE_FIELD_OPERATIONS
@@ -242,6 +244,8 @@ class Action extends AppwriteAction
         $schemaHash = \md5(
             \json_encode($collection->getAttribute('attributes', []))
             . \json_encode($collection->getAttribute('indexes', []))
+            . \json_encode($collection->getPermissions())
+            . \json_encode($collection->getAttribute('documentSecurity', false))
         );
 
         $serialized = \array_map(
@@ -258,14 +262,39 @@ class Action extends AppwriteAction
         );
     }
 
+    protected function getListCache(Database $dbForProject, Document $database, string $collectionId): ListCache
+    {
+        return new ListCache($dbForProject->getCache(), $this->getListCacheKey($dbForProject, $database, $collectionId));
+    }
+
     /**
-     * Purge every cached list response for a collection.
+     * Purge every cached list response for a collection and change its version.
      *
      * One DEL on the collection's Redis hash, clearing all variations at once.
      */
     protected function purgeListCache(Database $dbForProject, Document $database, string $collectionId): bool
     {
-        return $dbForProject->getCache()->purge($this->getListCacheKey($dbForProject, $database, $collectionId));
+        return $this->getListCache($dbForProject, $database, $collectionId)->purge();
+    }
+
+    /**
+     * Run a write, purging the collection's cached list responses before and after it when it sets document
+     * permissions.
+     *
+     * Only a collection with document security reads through document permissions, so only its cached responses can
+     * keep serving rows to a caller whose read was revoked.
+     *
+     * @template T
+     * @param callable(): T $write
+     * @return T
+     */
+    protected function withPermissionPurge(Database $dbForProject, Document $database, Document $collection, bool $setsPermissions, callable $write): mixed
+    {
+        $caches = $setsPermissions && $collection->getAttribute('documentSecurity', false)
+            ? [$this->getListCache($dbForProject, $database, $collection->getId())]
+            : [];
+
+        return ListCache::purged($caches, $write);
     }
 
     /**

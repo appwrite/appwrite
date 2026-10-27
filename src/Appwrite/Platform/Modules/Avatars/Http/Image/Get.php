@@ -36,6 +36,9 @@ class Get extends Action
             ->desc('Get image from URL')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
+            ->label('abuse-key', 'url:{url},ip:{ip}')
+            ->label('abuse-limit', 60)
+            ->label('abuse-time', 60)
             ->label('cache', true)
             ->label('cache.resource', 'avatar/image')
             ->label('sdk', new Method(
@@ -73,9 +76,7 @@ class Get extends Action
         }
 
         try {
-            $res = $clientForAvatars
-                ->withTimeout(15)
-                ->sendRequest((new RequestFactory())->createRequest(RequestMethod::GET, $url));
+            $res = $clientForAvatars->sendRequest((new RequestFactory())->createRequest(RequestMethod::GET, $url));
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -86,7 +87,7 @@ class Get extends Action
 
         try {
             $image = new Image((string) $res->getBody());
-        } catch (\ImagickException) {
+        } catch (\Exception) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 

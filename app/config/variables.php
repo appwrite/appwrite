@@ -217,7 +217,7 @@ return [
             ],
             [
                 'name' => '_APP_DNS_EXTERNAL',
-                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source or an avatar URL before Appwrite fetches it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
+                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source, an avatar URL or a project\'s SMTP server before Appwrite connects to it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
                 'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
@@ -226,7 +226,7 @@ return [
             ],
             [
                 'name' => '_APP_ALLOWED_INTERNAL_ADDRESSES',
-                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
+                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars) or connecting to a project\'s SMTP server (project SMTP and messaging SMTP providers). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
                 'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
@@ -450,6 +450,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_MEMORY_LIMIT',
+                'description' => 'PHP memory limit of each Appwrite process, including the API, Realtime, workers and tasks. Accepts any PHP memory_limit value, such as \'2G\', or \'-1\' for no limit. Raise it when a Realtime container holds thousands of connections. By default, set to \'512M\'.',
+                'introduction' => '2.6.2',
+                'default' => '512M',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_SESSION_ALERTS',
                 'description' => 'This option allows you configure if a new login in the Appwrite Console should send an alert email to the user. It\'s disabled by default with value "disabled", and to enable it, pass value "enabled".',
                 'introduction' => '1.6.0',
@@ -517,6 +526,33 @@ return [
                 'description' => "DSN of the service the password pwned project policy asks whether a password has been breached. The scheme picks the adapter. Nothing is asked until you set it: the default, `none://localhost`, reports every password as safe, so the policy protects nothing until this points at a service.\n\nOptions:\n- None: `none://localhost` — the default. Reports every password as safe without asking anyone, for a server that must not or cannot reach a breach service\n- Have I Been Pwned: `hibp://localhost` — the public range API, which only ever receives the first five characters of the password SHA-1 hash. No other detail is read from the DSN\n- [Appwrite Pwned](https://github.com/appwrite-labs/pwned): `appwrite://SECRET@appwrite-pwned/v1/detection` — a service you run yourself, which answers from its own copy of the Have I Been Pwned corpus, so nothing about the password leaves your network. It receives only the SHA-1 hash of the password, never the password itself, authenticated with `SECRET` as a Bearer token, which must match the service's `APPWRITE_PWNED_SECRET`. That hash is unsalted, so only point it at a service on your own network or behind TLS. The path defaults to `v1/detection` and the connection is plain HTTP unless you add `?tls=true`\n- Testing: `mock://localhost` — reports a fixed list of passwords as breached without leaving the process. Refused on a production server, since it would report every real password as safe",
                 'introduction' => '2.3.0',
                 'default' => 'none://localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_SUBSCRIPTIONS',
+                'description' => 'Maximum number of subscriptions one realtime connection can hold. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_CHANNELS',
+                'description' => 'Maximum number of channels one realtime connection can subscribe to, counted across all of its subscriptions. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_QUERIES',
+                'description' => 'Maximum number of queries one realtime connection can hold, counted across all of its subscriptions and including queries nested in and/or. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -589,6 +625,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_MAX_CONNECTIONS',
+                'description' => 'Maximum number of connections the bundled PostgreSQL server accepts. Every API worker and worker coroutine holds its own connections, so raise it on hosts with many cores. Default value is: 500.',
+                'introduction' => '2.7.0',
+                'default' => '500',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_DB_ADAPTER_DOCUMENTSDB',
@@ -1353,7 +1398,7 @@ return [
                 'default' => 'your-secret-key',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => 'token'
             ],
             [
                 'name' => '_APP_EXECUTOR_HOST',

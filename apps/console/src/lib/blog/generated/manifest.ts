@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "tanstack-redact-lighter-react-runtime",
+    "href": "/blog/post/tanstack-redact-lighter-react-runtime",
+    "title": "TanStack Redact brings a lighter React runtime",
+    "description": "TanStack Redact 0.2.0 swaps React's browser runtime at build time, cutting bundles by up to 70.5% across TanStack Start, Vite, Vinext, and Next.js.",
+    "date": "2026-10-27",
+    "lastUpdated": "2026-10-27",
+    "timeToRead": 6,
+    "author": "aishwari",
+    "category": "news",
+    "featured": false,
+    "cover": "/images/blog/tanstack-redact-lighter-react-runtime/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-verification-and-recovery-codes",
     "href": "/blog/post/announcing-verification-and-recovery-codes",
     "title": "Announcing 6-digit codes for email verification and password recovery",
@@ -28,6 +42,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/default-deployment-retention/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "emudhra-certificate-compromise-appwrite",
+    "href": "/blog/post/emudhra-certificate-compromise-appwrite",
+    "title": "eMudhra certificate compromise: Appwrite is patched",
+    "description": "Appwrite Cloud and self-hosted Appwrite 2.6.0 and 1.9.8 now reject the compromised eMudhra certificate chains. Here's what we changed and how to upgrade.",
+    "date": "2026-10-22",
+    "lastUpdated": "2026-10-22",
+    "timeToRead": 4,
+    "author": "chirag-aggarwal",
+    "category": "security",
+    "featured": false,
+    "cover": "/images/blog/emudhra-certificate-compromise-appwrite/cover.avif",
     "hasCover": true
   },
   {
