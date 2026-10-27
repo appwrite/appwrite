@@ -77,14 +77,13 @@ class Get extends Base
                 return;
             }
             if ($this->hasQuery($request, 'uploads')) {
-                $this->sendXml($response, S3Xml::listMultipartUploads($bucketId, $this->getMultipartUploads($cache, $project, $bucket)));
+                $this->sendXml($response, S3Xml::listMultipartUploads($bucketId, $this->getMultipartUploads($locks, $cache, $dbForProject, $project, $deviceForFiles, $bucket)));
                 return;
             }
 
-            $files = $dbForProject->getAuthorization()->skip(fn () => \iterator_to_array($dbForProject->cursor('bucket_' . $bucket->getSequence(), [
+            $files = $this->uniqueObjects($dbForProject->getAuthorization()->skip(fn () => \iterator_to_array($dbForProject->cursor('bucket_' . $bucket->getSequence(), [
                 Query::orderAsc('$sequence'),
-            ], batchSize: 1000), false));
-            $this->assertUniqueObjectKeys($files);
+            ], batchSize: 1000), false)));
             if ($this->query($request, 'list-type') === '2') {
                 $this->sendXml($response, S3Xml::listObjectsV2(
                     $bucketId,
@@ -194,10 +193,6 @@ class Get extends Base
                 $metadata = $file->getAttribute('metadata', []);
                 foreach (($metadata['userMetadata'] ?? []) as $name => $value) {
                     $response->addHeader('x-amz-meta-' . $name, (string) $value);
-                }
-                $sse = (string) ($metadata['serverSideEncryption'] ?? '');
-                if ($sse !== '') {
-                    $response->addHeader('x-amz-server-side-encryption', $sse);
                 }
 
                 foreach ([

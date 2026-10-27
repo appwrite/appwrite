@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\Key;
-use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
@@ -16,6 +15,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Locking\Lock;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Reference\Renderer;
@@ -29,6 +29,7 @@ use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -559,12 +560,7 @@ Http::init()
         // Step 12: Validate MFA requirements
         // $session belongs to $user, who stays the impersonator while impersonating, so the
         // impersonator's MFA applies and the target's is never asked of them.
-        $mfaEnabled = $user->getAttribute('mfa', false);
-        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
-        $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
-        $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
+        $minimumFactors = $user->getMinimumFactors();
 
         // Step 13: Handle Multi-Factor Authentication
         if (! in_array('mfa', $route->getGroups())) {
@@ -616,7 +612,7 @@ Http::init()
                     '{userId}' => (string) $user->getId(),
                     '{userAgent}' => (string) $request->getUserAgent(''),
                     '{ip}' => (string) $request->getIP(),
-                    '{url}' => $request->getHostname() . $route->getPath(),
+                    '{url}' => $route->getPath(),
                     '{method}' => (string) $request->getMethod(),
                     '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
                 ];
@@ -872,7 +868,8 @@ Http::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->inject('mqtt')
+    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject, Mqtt $mqtt) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
 
         if ($sessionLimit === 0) {
@@ -902,6 +899,12 @@ Http::shutdown()
         }
 
         $dbForProject->purgeCachedDocument('users', $userId);
+
+        try {
+            $mqtt->revoke($project->getId(), $userId);
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
     });
 
 Http::shutdown()
@@ -1000,7 +1003,7 @@ Http::shutdown()
                 '{userId}' => (string) $user->getId(),
                 '{userAgent}' => (string) $request->getUserAgent(''),
                 '{ip}' => (string) $request->getIP(),
-                '{url}' => $request->getHostname() . $route->getPath(),
+                '{url}' => $route->getPath(),
                 '{method}' => (string) $request->getMethod(),
                 '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
             ];
@@ -1214,6 +1217,7 @@ Http::shutdown()
 Http::shutdown()
     ->groups(['api'])
     ->inject('route')
+    ->inject('params')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -1223,7 +1227,7 @@ Http::shutdown()
     ->inject('apiKey')
     ->inject('mode')
     ->inject('lock')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode, Lock $lock) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode, Lock $lock) {
         /**
          * Persist completed onboarding stage after usage shutdown so a schema/write failure here
          * cannot suppress RequestCompleted or usage metrics on the same request.
@@ -1283,7 +1287,7 @@ Http::shutdown()
 
         // Organization routes act on the project named in the path, not on the console project.
         if ($project->getId() === 'console') {
-            $projectId = (string) ($route->getParamsValues()['projectId'] ?? '');
+            $projectId = (string) ($params['projectId'] ?? '');
             if ($projectId === '') {
                 return;
             }

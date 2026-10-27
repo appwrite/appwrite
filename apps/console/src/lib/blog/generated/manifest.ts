@@ -31,6 +31,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "tanstack-redact-lighter-react-runtime",
+    "href": "/blog/post/tanstack-redact-lighter-react-runtime",
+    "title": "TanStack Redact brings a lighter React runtime",
+    "description": "TanStack Redact 0.2.0 swaps React's browser runtime at build time, cutting bundles by up to 70.5% across TanStack Start, Vite, Vinext, and Next.js.",
+    "date": "2026-10-27",
+    "lastUpdated": "2026-10-27",
+    "timeToRead": 6,
+    "author": "atharva",
+    "category": "news",
+    "featured": false,
+    "cover": "/images/blog/tanstack-redact-lighter-react-runtime/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-verification-and-recovery-codes",
     "href": "/blog/post/announcing-verification-and-recovery-codes",
     "title": "Announcing 6-digit codes for email verification and password recovery",

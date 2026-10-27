@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { isRemovedBlogPost, parseBlogFrontmatter } from '../src/lib/blog/frontmatter'
 import { parseChangelogFrontmatter } from '../src/lib/changelog/frontmatter'
 import { DOCS_PAGES } from '../src/lib/docs/generated/manifest'
+import { isFeatureGatedDocsSlugHidden } from '../src/lib/docs/feature-gated-docs'
 import {
   buildAgentSkillsDiscoveryDocument,
   buildAiCatalogDocument,
@@ -216,6 +217,9 @@ async function generateLlmsFullTxt(): Promise<string> {
   }
 
   const sections = DOCS_PAGES.map((page) => {
+    if (isFeatureGatedDocsSlugHidden(page.slug, { deferPartnersOnServer: true })) {
+      return null
+    }
     const raw = contentBySlug.get(page.slug)
     if (!raw) return null
 

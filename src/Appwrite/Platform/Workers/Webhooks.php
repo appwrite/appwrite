@@ -80,6 +80,12 @@ class Webhooks extends Action
 
         Span::add('project.id', $project->getId());
 
+        // Deleted, or replaced by a project created under the same ID, after the event was queued.
+        if ($project->isEmpty()) {
+            Span::add('webhooks.skipped', 'project_not_found');
+            return;
+        }
+
         // A redelivery retries only the webhooks that failed. When the record of the others
         // cannot be read they are sent to again: a receiver can drop a repeat by its delivery
         // id, while a skipped delivery is lost. A message redriven from the dead letters starts
@@ -176,7 +182,7 @@ class Webhooks extends Action
                     'X-' . APP_NAME . '-Webhook-Id' => $webhook->getId(),
                     'X-' . APP_NAME . '-Webhook-Delivery-Id' => $deliveryId,
                     'X-' . APP_NAME . '-Webhook-Events' => implode(',', $events),
-                    'X-' . APP_NAME . '-Webhook-Name' => $webhook->getAttribute('name', ''),
+                    'X-' . APP_NAME . '-Webhook-Name' => $this->stripControlCharacters((string) $webhook->getAttribute('name', '')),
                     'X-' . APP_NAME . '-Webhook-User-Id' => $user->getId(),
                     'X-' . APP_NAME . '-Webhook-Project-Id' => $project->getId(),
                     'X-' . APP_NAME . '-Webhook-Signature' => $signature,
@@ -405,5 +411,18 @@ class Webhooks extends Action
         }
 
         return false;
+    }
+
+    /**
+     * Header values cannot carry control characters, so a name with line breaks is sent without them.
+     */
+    private function stripControlCharacters(string $value): string
+    {
+        $controls = [\chr(127) => ''];
+        for ($code = 0; $code < 32; $code++) {
+            $controls[\chr($code)] = '';
+        }
+
+        return strtr($value, $controls);
     }
 }

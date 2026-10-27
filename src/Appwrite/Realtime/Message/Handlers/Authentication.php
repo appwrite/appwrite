@@ -8,6 +8,7 @@ use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Presences\State as PresenceState;
+use Appwrite\Realtime\EventTailRegistry;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
@@ -33,6 +34,7 @@ class Authentication extends Action
             ->inject('connectionId')
             ->inject('realtime')
             ->inject('database')
+            ->inject('dbForConsole')
             ->inject('register')
             ->inject('response')
             ->inject('presenceState')
@@ -40,6 +42,7 @@ class Authentication extends Action
             ->inject('publisherForUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
+            ->inject('eventTailRegistry')
             ->callback($this->action(...));
     }
 
@@ -51,6 +54,7 @@ class Authentication extends Action
         int $connectionId,
         Realtime $realtime,
         Database $database,
+        Database $dbForConsole,
         Registry $register,
         Response $response,
         PresenceState $presenceState,
@@ -58,6 +62,7 @@ class Authentication extends Action
         UsagePublisher $publisherForUsage,
         QueueEvent $queueForEvents,
         QueueRealtime $queueForRealtime,
+        EventTailRegistry $eventTailRegistry,
     ): array {
         $store = new Store();
         $store->decode($session);
@@ -74,25 +79,54 @@ class Authentication extends Action
         $proofForToken = new Token();
         $proofForToken->setHash(new Sha());
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $authorization = $realtime->connections[$connectionId]['authorization'] ?? null;
+        $impersonatedUserId = $realtime->connections[$connectionId]['impersonatedUserId'] ?? null;
+        $projectId = $realtime->connections[$connectionId]['projectId'] ?? null;
+
+        $invalidatedAt = null;
+
+        if ($projectId !== null && $projectId !== '') {
+            // The message scope resolves the connection's project, except on the
+            // console project, where the user lives in the platform database.
+            $invalidatedAtProject = ($project !== null && !$project->isEmpty())
+                ? $project
+                : $dbForConsole->getAuthorization()->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+
+            $invalidatedAt = $invalidatedAtProject->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
+        }
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $invalidatedAt);
 
         if (empty($user->getId()) || $sessionId === false) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
         }
 
-        $roles = $user->getRoles($database->getAuthorization());
+        if ($user->getAttribute('status') === false) {
+            throw new Exception(Exception::USER_BLOCKED);
+        }
 
-        $authorization = $realtime->connections[$connectionId]['authorization'] ?? null;
-        $impersonatedUserId = $realtime->connections[$connectionId]['impersonatedUserId'] ?? null;
-        $projectId = $realtime->connections[$connectionId]['projectId'] ?? null;
+        if (!$user->sessionFactorsMet($sessionId)) {
+            throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
+        }
+
+        $roles = $user->getRoles($database->getAuthorization());
 
         if ($impersonatedUserId !== null) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Cannot re-authenticate on an impersonated connection.');
+        }
+        // The lookups above can yield; onClose drops the entry first, so a closed socket is never counted.
+        if (!isset($realtime->connections[$connectionId])) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Connection is closed.');
+        }
+        // Counted before any state changes, so a rejected switch leaves the connection as it was.
+        if (!empty($projectId) && !$realtime->addConnection($connectionId, $projectId, $user->getId(), APP_LIMIT_REALTIME_CONNECTIONS)) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many open connections. Close an existing connection and try again.');
         }
         // Capture the pre-auth userId and presence hold before unsubscribe() clears the
         // connection entry, so we can rebind account channels and carry or release the hold.
         $previousUserId = $realtime->connections[$connectionId]['userId'] ?? '';
         $presenceHold = $realtime->connections[$connectionId]['presence'] ?? null;
+        $limits = $realtime->connections[$connectionId]['limits'] ?? null;
 
         $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
         $meta = $realtime->getSubscriptionMetadata($connectionId);
@@ -118,7 +152,15 @@ class Authentication extends Action
                     $user->getId(),
                 );
             }
+
+            // A connection without subscriptions has nothing to re-subscribe, so record its project, roles and user here.
+            if (!isset($realtime->connections[$connectionId])) {
+                $realtime->subscribe($projectId, $connectionId, '', $roles, [], [], $user->getId());
+            }
         }
+
+        // Tails live outside the subscription tree, so drop those the new identity may not read.
+        $eventTailRegistry->revalidateConnection($connectionId, $roles);
 
         if ($authorization !== null) {
             $realtime->connections[$connectionId]['authorization'] = $authorization;
@@ -127,6 +169,9 @@ class Authentication extends Action
             $realtime->connections[$connectionId]['expire'] = $user->getSessionExpiry($sessionId);
             // Now authenticated by this session, not by any JWT it was opened with.
             $realtime->connections[$connectionId]['jwtExpire'] = null;
+        }
+        if ($limits !== null) {
+            $realtime->connections[$connectionId]['limits'] = $limits;
         }
 
         // Same user with the entry restored keeps its hold; otherwise this socket gives it up --
