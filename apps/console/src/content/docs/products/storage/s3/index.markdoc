@@ -221,7 +221,7 @@ The following object operations are supported.
 
 | Operation | Description |
 | --- | --- |
-| `PutObject` | Upload an object, replacing anything already stored under that key. Returns an `ETag`. Honors `Content-Type`, `x-amz-meta-*` user metadata, and `x-amz-server-side-encryption`. |
+| `PutObject` | Upload an object, replacing anything already stored under that key. Returns an `ETag`. Honors `Content-Type` and `x-amz-meta-*` user metadata. The `x-amz-server-side-encryption` header is accepted and ignored. |
 | `GetObject` | Download an object. Supports `Range` requests (HTTP 206), and the `If-None-Match` (HTTP 304) and `If-Match` (HTTP 412) conditional headers. |
 | `HeadObject` | Retrieve an object's metadata (size, content type, `ETag`, user metadata) without the body. |
 | `CopyObject` | Copy an object using the `x-amz-copy-source` header. Supports `x-amz-metadata-directive: REPLACE` to replace metadata. |
@@ -370,7 +370,6 @@ These response headers are exposed to browser JavaScript, so client code can rea
 | `Accept-Ranges`, `Content-Range` | Range request support, and the byte range returned. |
 | `ETag` | The object's entity tag, for conditional requests and integrity checks. |
 | `Last-Modified` | When the object was last written. |
-| `x-amz-server-side-encryption` | The server-side encryption applied to the object. |
 
 Browser requests may send the standard content and caching headers, including `Content-Type`, `Range`, and `Cache-Control`. Custom `x-amz-*` request headers are not permitted cross-origin, so set user metadata such as `x-amz-meta-*` from a server-side client rather than from the browser.
 
@@ -396,6 +395,7 @@ The S3 API targets the operations most clients depend on. Keep the following in 
 - **No folder resource or folder markers.** Folders are virtual: they are `/`-separated prefixes in object keys, browsed by listing with `delimiter=/`. See [Folders](#folders). Using any other delimiter value or uploading a folder-marker object (a key ending in `/`) returns `NotImplemented` (HTTP 501).
 - **Prefer `ListObjectsV2` for large buckets.** `ListObjects` returns every matching object in a single response, while `ListObjectsV2` honors `max-keys` (capped at 1000) and paginates with `IsTruncated` and a `NextContinuationToken`. No objects are silently dropped.
 - **No bucket CORS configuration.** The `cors` bucket sub-resource is not implemented. It is not needed to call the endpoint from a browser: cross-origin requests are allowed from any origin by default. See [Browser access](#browser-access).
+- **No server-side encryption.** Objects written over the S3 API are not encrypted by the gateway. An `x-amz-server-side-encryption` request header is accepted and ignored, and responses never include it.
 - **Unsupported S3 features.** Object tagging, lifecycle, bucket policies and policy status, encryption configuration, ownership controls, notifications, versioning, object locking, and restores are not supported. Any request carrying a sub-resource or query parameter the API does not implement returns `NotImplemented` (HTTP 501) rather than being partially applied.
 
 # Error responses {% #error-responses %}

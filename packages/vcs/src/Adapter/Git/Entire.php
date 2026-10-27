@@ -74,13 +74,14 @@ class Entire extends Git
     public const PERMISSIONS = ['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write', 'repositories' => 'create'];
 
     /**
-     * What a mint asks for when Entire refuses PERMISSIONS, in order: an
-     * installation not yet updated to a permission, or a plugin that does
-     * not declare it, is refused it. Installations accept a plugin's
-     * permissions as they were added, so these are the sets the plugin
-     * declared before, newest first; discussions may go away on their own.
-     * Entire mints only the exact set an installation holds, so a set that
-     * succeeds is the right one.
+     * What a mint asks for when Entire refuses PERMISSIONS, in order. Entire
+     * mints an installation-wide token only for the exact set the
+     * installation holds: it refuses a permission not accepted yet or not
+     * declared by the plugin, and answers repository_required for fewer.
+     * Installations accept a plugin's permissions as they were added, so
+     * these are the sets the plugin declared before, newest first;
+     * discussions may go away on their own. A set that succeeds is always
+     * the right one.
      */
     protected const FALLBACK_PERMISSIONS = [
         ['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'repositories' => 'create'],
@@ -92,10 +93,10 @@ class Entire extends Git
     ];
 
     /**
-     * Mint refusals a smaller permission set can get past. Entire also
+     * Mint refusals a different permission set can get past. Entire also
      * answers coverage_changed for a permission not accepted yet.
      */
-    protected const FALLBACK_CODES = ['permission_not_accepted', 'unsupported_permission', 'coverage_changed'];
+    protected const FALLBACK_CODES = ['permission_not_accepted', 'unsupported_permission', 'coverage_changed', 'repository_required'];
 
     /**
      * How often, and how many times, a created repository is looked for
@@ -320,9 +321,8 @@ class Entire extends Git
      *
      * Signs an EdDSA plugin JWT and exchanges it for an installation access
      * token covering every selected repository with every registered
-     * permission. Entire refuses a permission the installation has not
-     * accepted and one the plugin does not declare, so the mint falls back
-     * through FALLBACK_PERMISSIONS.
+     * permission. Entire refuses a set the installation does not hold
+     * exactly, so the mint falls back through FALLBACK_PERMISSIONS.
      */
     protected function generateAccessToken(string $privateKey, ?string $appId): void
     {
@@ -2566,37 +2566,6 @@ class Entire extends Git
     }
 
     /**
-     * The repository path a caller-supplied file path names, normalized
-     * lexically. Rejects a path that climbs out of the checkout through
-     * `..` segments, which would otherwise write onto the host filesystem.
-     */
-    protected function confinedPath(string $filepath): string
-    {
-        $segments = [];
-        foreach (explode('/', str_replace('\\', '/', $filepath)) as $segment) {
-            if ($segment === '') {
-                continue;
-            }
-            if ($segment === '.') {
-                continue;
-            }
-            if ($segment === '..') {
-                if (array_pop($segments) === null) {
-                    throw new Exception("File path escapes the repository: {$filepath}");
-                }
-                continue;
-            }
-            $segments[] = $segment;
-        }
-
-        if ($segments === []) {
-            throw new Exception("File path names no file: {$filepath}");
-        }
-
-        return implode('/', $segments);
-    }
-
-    /**
      * Create a file in a repository
      *
      * Entire has no contents-write API - content changes travel over git -
@@ -2629,26 +2598,7 @@ class Entire extends Git
                 $this->execute($this->git($directory)->argument('checkout')->flag('-q')->argument('FETCH_HEAD'), 'Checking out the branch tip');
             }
 
-            $absolute = $directory . '/' . $relative;
-            $parent = \dirname($absolute);
-            if (!is_dir($parent) && !mkdir($parent, 0777, true)) {
-                throw new Exception("Failed to create directory for {$filepath}");
-            }
-
-            // Lexical confinement is not enough once the checkout itself
-            // carries symlinks: a linked directory or file would carry the
-            // write outside, so resolve the parent and refuse link targets
-            $checkout = realpath($directory);
-            $resolvedParent = realpath($parent);
-            if ($checkout === false || $resolvedParent === false
-                || !str_starts_with($resolvedParent . '/', $checkout . '/')
-                || is_link($absolute)) {
-                throw new Exception("File path escapes the repository: {$filepath}");
-            }
-
-            if (file_put_contents($absolute, $content) === false) {
-                throw new Exception("Failed to write {$filepath}");
-            }
+            $this->writeCheckoutFile($directory, $relative, $content);
 
             $this->execute($this->git($directory)->argument('add')->argument('--')->argument($relative), 'Staging the file');
             $this->execute($this->git($directory)->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('commit')->flag('-q')->option('-m', $message), 'Committing the file');

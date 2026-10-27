@@ -9,6 +9,8 @@ use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
+use Appwrite\Vcs\Checkout;
+use Appwrite\Vcs\Checkout\Exception as CheckoutException;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\Validator\Directory;
 use Exception;
@@ -57,44 +59,15 @@ class Builds extends Action
     }
 
     /**
-     * Resolves a repository directory inside its checkout, refusing symbolic
-     * links and anything that resolves outside it.
-     *
      * @throws BuildException
      */
     private function confine(string $checkout, string $directory, bool $create = false): string
     {
-        $root = \realpath($checkout);
-        if ($root === false) {
-            throw new BuildException('Repository checkout is missing.');
+        try {
+            return (new Checkout($checkout))->resolve($directory, $create);
+        } catch (CheckoutException $exception) {
+            throw new BuildException($exception->getMessage(), previous: $exception);
         }
-
-        $path = $root;
-        foreach (\explode('/', $directory) as $segment) {
-            if ($segment === '' || $segment === '.') {
-                continue;
-            }
-            if ($segment === '..') {
-                throw new BuildException('Root directory must stay inside the repository.');
-            }
-
-            $path .= '/' . $segment;
-            if (\is_link($path)) {
-                throw new BuildException('Root directory "' . $directory . '" must not be a symbolic link.');
-            }
-            if (!\file_exists($path) && (!$create || !\mkdir($path))) {
-                throw new BuildException('Root directory "' . $directory . '" not found in the repository.');
-            }
-            if (!\is_dir($path)) {
-                throw new BuildException('Root directory "' . $directory . '" must be a directory.');
-            }
-        }
-
-        if (\realpath($path) !== $path) {
-            throw new BuildException('Root directory must stay inside the repository.');
-        }
-
-        return $path;
     }
 
     /**
