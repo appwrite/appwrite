@@ -3053,6 +3053,9 @@
         "project.updateDenyFreeEmailPolicy": [
             "enabled"
         ],
+        "project.updateDenyRealtimeGuestsPolicy": [
+            "enabled"
+        ],
         "project.updateEmailTemplate": [
             "templateId",
             "locale",
@@ -7113,6 +7116,9 @@
             "enabled"
         ],
         "project.updateDenyFreeEmailPolicy": [
+            "enabled"
+        ],
+        "project.updateDenyRealtimeGuestsPolicy": [
             "enabled"
         ],
         "project.updateEmailTemplate": [

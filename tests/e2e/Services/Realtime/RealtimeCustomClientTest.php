@@ -970,6 +970,69 @@ final class RealtimeCustomClientTest extends Scope
         }
     }
 
+    public function testDenyRealtimeGuestsPolicy(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $guest = ['origin' => 'http://localhost'];
+        $policy = fn (bool $enabled) => $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-realtime-guests', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['enabled' => $enabled]);
+
+        $this->assertSame(200, $policy(true)['headers']['status-code']);
+
+        // The guest cap test before this one closes many connections at once, which can hold up new ones for a few seconds.
+
+        try {
+            /**
+             * Test for FAILURE
+             */
+            $client = $this->getWebsocket(['documents'], $guest, timeout: 10);
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('error', $response['type'] ?? null);
+            $this->assertSame(1008, $response['data']['code'] ?? null);
+            $this->assertSame('This project does not allow guests to subscribe. Sign in first.', $response['data']['message'] ?? null);
+            $this->receiveUntilClosed($client);
+
+            // Over a message the guest is refused but stays connected, so it can still sign in.
+            $client = $this->getWebsocket([], $guest, timeout: 10);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $client->send(\json_encode(['type' => 'subscribe', 'data' => [['channels' => ['documents']]]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('error', $response['type'] ?? null);
+            $this->assertSame(401, $response['data']['code'] ?? null);
+            $this->assertSame('This project does not allow guests to subscribe. Sign in first.', $response['data']['message'] ?? null);
+
+            /**
+             * Test for SUCCESS
+             */
+            // Signing in over the same connection lets it subscribe.
+            $client->send(\json_encode(['type' => 'authentication', 'data' => ['session' => $this->getUser()['session']]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('authentication', $response['data']['to'] ?? null);
+            $this->assertTrue($response['data']['success'] ?? false);
+            $client->send(\json_encode(['type' => 'subscribe', 'data' => [['channels' => ['documents']]]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('subscribe', $response['data']['to'] ?? null);
+            $this->assertTrue($response['data']['success'] ?? false);
+            $client->close();
+
+            $client = $this->getWebsocket(['documents'], [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $this->getUser()['session'],
+            ], timeout: 10);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $client->close();
+        } finally {
+            $policy(false);
+        }
+
+        $client = $this->getWebsocket(['documents'], $guest, timeout: 10);
+        $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+        $client->close();
+    }
+
     public function testConnectionChannelLimit(): void
     {
         $headers = ['origin' => 'http://localhost'];

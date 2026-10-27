@@ -1164,6 +1164,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $names = array_keys($channels);
         $subscriptionMode = 'url';
 
+        if ($isGuest && ($project->getAttribute('auths', [])['realtimeGuests'] ?? false)) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'This project does not allow guests to subscribe. Sign in first.');
+        }
+
         try {
             $subscriptions = Realtime::constructSubscriptions(
                 $names,

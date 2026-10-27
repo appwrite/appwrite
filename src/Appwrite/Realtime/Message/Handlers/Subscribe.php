@@ -9,6 +9,7 @@ use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Realtime\Message\Validators\SubscribePayload as SubscribePayloadValidator;
 use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Id;
 use Utopia\Database\PermissionType;
@@ -32,6 +33,7 @@ class Subscribe extends Action
             ->inject('projectId')
             ->inject('eventTailRegistry')
             ->inject('dbForConsole')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -47,8 +49,14 @@ class Subscribe extends Action
         ?string $projectId,
         EventTailRegistry $eventTailRegistry,
         Database $dbForConsole,
+        ?Document $project,
     ): array {
         $roles = $realtime->connections[$connectionId]['roles'] ?? [Role::guests()->toString()];
+
+        // A guest may still sign in over this connection, so it is not closed.
+        if (\in_array(Role::guests()->toString(), $roles, true) && ($project?->getAttribute('auths', [])['realtimeGuests'] ?? false)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'This project does not allow guests to subscribe. Sign in first.');
+        }
         $userId = $realtime->connections[$connectionId]['userId'] ?? '';
 
         $parsedPayloads = [];

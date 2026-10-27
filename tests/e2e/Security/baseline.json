@@ -420,6 +420,7 @@
         "PATCH /v1/project/policies/deny-corporate-email",
         "PATCH /v1/project/policies/deny-disposable-email",
         "PATCH /v1/project/policies/deny-free-email",
+        "PATCH /v1/project/policies/deny-realtime-guests",
         "PATCH /v1/project/policies/membership-privacy",
         "PATCH /v1/project/policies/mfa-factors",
         "PATCH /v1/project/policies/passkey",
