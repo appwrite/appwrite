@@ -31,3 +31,9 @@ Terms used across this library. Use these words in code, tests, and commits.
 **Annotated enumeration** — an OAS 3.1 `oneOf` or `anyOf` whose members are string `const` (or one-element `enum`) schemas, optionally with `title`/`description`. Mapped onto `StringSchema` (`enum`, `enumName` from the composite title, `enumKeys` from branch titles, `open` when composed with an unconstrained string). Exposed on `CompositeSchema` as `stringEnum()` without collapsing the union tree.
 
 **Extension** — any `x-`-prefixed key. Captured on every model that can carry one; never interpreted. Enum type and value names come from `title`.
+
+## Generation
+
+**Rule** — what a value may contain for a code generator to print it unescaped and still have it read as that value. Stricter than OpenAPI: a valid document can fail a rule.
+
+**Unsafe value** — a value that fails its rule. `Generation\Validator` reports the first one with its location.

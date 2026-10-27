@@ -326,6 +326,41 @@ Local non-schema references needed to build typed objects are resolved with cycl
 
 External file and URL references are not resolved. The parser never performs implicit filesystem or network access.
 
+## Code generation
+
+A code generator prints names and values from the specification into source: an operation ID becomes a method name, a path and an enum value land between quotes. `Generation\Validator` refuses a specification whose values would not stay values when printed unescaped, such as a quote in a path, `$` inside a property name or a line break in an enum title. Parsing never applies these rules; a generator calls the validator itself:
+
+```php
+use Utopia\OpenAPI\Exception\UnsafeValue;
+use Utopia\OpenAPI\Generation\Validator;
+
+try {
+    Validator::validate($specification);
+} catch (UnsafeValue $exception) {
+    echo $exception->location; // #/paths/~1users~1{userId}/get/operationId
+}
+```
+
+Each check is a `Generation\Rule` case, so a generator can apply the same rule to a value the specification does not model, such as a name in a vendor extension:
+
+```php
+use Utopia\OpenAPI\Generation\Rule;
+
+Rule::Name->accepts($alias);
+```
+
+| Rule | Applies to | Accepts |
+| --- | --- | --- |
+| `Name` | Tags, operation IDs, schema and security scheme names | Letters, digits, `_` and `-` |
+| `Field` | Parameter and property names | `Name`, with an optional leading `$` |
+| `Path` | Paths | An absolute path of RFC 3986 path characters, without `$`, `%`, `*`, `&` or quotes |
+| `Url` | Server URLs | `http` and `https` URLs without whitespace, quotes, backslashes or `$` |
+| `Title` | `info.title` | Letters, digits, spaces, `_` and `-` |
+| `Version` | `info.version` | Letters, digits, `.`, `+`, `_` and `-` |
+| `MediaType` | Request and response media types | RFC 9110 tokens as `type/subtype; name=value`, or empty |
+| `EnumValue` | String enum values | Anything but quotes, backticks, backslashes, `$` and line breaks |
+| `EnumName` | Enum titles | Anything but line breaks |
+
 ## Error handling
 
 All public exceptions implement `Utopia\OpenAPI\Exception\OpenAPIException`:
@@ -335,6 +370,7 @@ All public exceptions implement `Utopia\OpenAPI\Exception\OpenAPIException`:
 - `UnsupportedVersion` — the declared OpenAPI version is unsupported
 - `ReferenceNotFound` — a required local reference does not exist
 - `CircularReference` — an invalid non-schema reference cycle was encountered
+- `UnsafeValue` — `Generation\Validator` found a value a code generator cannot print unescaped
 
 ```php
 use Utopia\OpenAPI\Exception\OpenAPIException;
