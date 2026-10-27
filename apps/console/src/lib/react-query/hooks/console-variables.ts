@@ -63,6 +63,7 @@ export function useConsoleVariables(region?: string) {
     storageLimit: vars?._APP_STORAGE_LIMIT,
     // Undefined until loaded (or on older servers): callers treat undefined
     // as "no capability info", not as "no provider supports it".
+    vcsProviders: vars?._APP_VCS_PROVIDERS,
     vcsProvidersWithRepositoryCreation:
       vars?._APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION,
     vcsProvidersWithPublicRepositories:

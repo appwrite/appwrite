@@ -3,6 +3,7 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -744,6 +745,28 @@ readonly class Deployments
     }
 
     /**
+     * Removes the deployment's directory on the builds device: the artifact,
+     * the staged source and anything else the build left there. On the local
+     * device the build can write the directory, so it is removed only when it
+     * is not reached through a symbolic link. True once nothing is left there.
+     */
+    public static function deleteBuildDirectory(Device $deviceForBuilds, string $deploymentId): bool
+    {
+        $directory = $deviceForBuilds->getPath($deploymentId);
+        if ($deviceForBuilds->getType() === DeviceType::Local) {
+            if (!\file_exists($directory) && !\is_link($directory)) {
+                return true;
+            }
+
+            if (\realpath($directory) !== $directory) {
+                return false;
+            }
+        }
+
+        return $deviceForBuilds->deletePath($deploymentId);
+    }
+
+    /**
      * The artifact filename build.sh produces for the configured compression.
      */
     public static function artifact(): string
@@ -972,6 +995,7 @@ readonly class Deployments
         }
 
         $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
             'projectSequence' => $project->getSequence(),
             'scopes' => static::scopes($resource),

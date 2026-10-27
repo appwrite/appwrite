@@ -222,11 +222,7 @@ class Create extends Base
         $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->addHeader('ETag', '"' . $file->getAttribute('signature', '') . '"');
-        $sse = (string) ($file->getAttribute('metadata', [])['serverSideEncryption'] ?? '');
-        if ($sse !== '') {
-            $response->addHeader('x-amz-server-side-encryption', $sse);
-        }
-        $response->send('');
+            ->addHeader('ETag', '"' . $file->getAttribute('signature', '') . '"')
+            ->send('');
     }
 }

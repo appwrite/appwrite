@@ -7,6 +7,7 @@ import { useProject } from '@/lib/react-query/hooks'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
+import { redactUrl } from '@/lib/sentry/redact-url'
 import {
   captureExceptionWithContext,
   isSentryReportingEnabled,
@@ -69,13 +70,13 @@ export function SentryContextProvider({
   const orgIdFromUrl = extractOrgId(location.pathname)
   const currentOrgId = projectId
     ? (project?.teamId ?? undefined)
-    : (orgIdFromUrl ??
-        (accountUser?.prefs?.organization as string | undefined))
+    : (orgIdFromUrl ?? (accountUser?.prefs?.organization as string | undefined))
 
   // Use shared plan query so we don't duplicate API calls (loader already fetches on project pages)
   const { data: orgPlan } = useQuery({
     ...organizationPlanQueryOptions(currentOrgId),
-    enabled: !!currentOrgId && typeof window !== 'undefined' && features.billing,
+    enabled:
+      !!currentOrgId && typeof window !== 'undefined' && features.billing,
   })
 
   const skipMarketing = isMarketingPage({ pathname: location.pathname })
@@ -129,7 +130,7 @@ export function SentryContextProvider({
           projectId: routeProjectId,
           orgId,
           service,
-          fullUrl: location.href,
+          fullUrl: redactUrl(location.href),
         })
 
         if (routeProjectId) {
