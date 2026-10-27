@@ -194,10 +194,6 @@ class Get extends Base
                 foreach (($metadata['userMetadata'] ?? []) as $name => $value) {
                     $response->addHeader('x-amz-meta-' . $name, (string) $value);
                 }
-                $sse = (string) ($metadata['serverSideEncryption'] ?? '');
-                if ($sse !== '') {
-                    $response->addHeader('x-amz-server-side-encryption', $sse);
-                }
 
                 foreach ([
                     'cacheControl' => 'Cache-Control',

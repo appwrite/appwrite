@@ -374,6 +374,79 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']); // domain available as site is deleted
     }
 
+    public function testProjectUserCannotReadRules(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Test Site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'domain' => Id::unique() . '.' . $sitesDomain,
+            'siteId' => $siteId,
+        ]);
+        $this->assertSame(201, $rule['headers']['status-code']);
+        $ruleId = $rule['body']['$id'];
+
+        $email = 'rules-reader-' . Id::unique() . '@localhost.test';
+        $account = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $userHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ];
+
+        // Test for FAILURE
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', $userHeaders);
+        $this->assertSame(401, $rules['headers']['status-code']);
+        $this->assertArrayNotHasKey('rules', $rules['body']);
+
+        $read = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, $userHeaders);
+        $this->assertSame(401, $read['headers']['status-code']);
+        $this->assertArrayNotHasKey('domain', $read['body']);
+
+        // Test for SUCCESS
+        $read = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+        $this->assertSame(200, $read['headers']['status-code']);
+        $this->assertSame($rule['body']['domain'], $read['body']['domain']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testVariables(): void
     {
         $site = $this->createSite([
@@ -3862,6 +3935,95 @@ final class SitesCustomServerTest extends Scope
         $this->assertSame(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
+        // Failure: Confirmed membership for another project only
+        $otherProjectId = Id::unique();
+        $scopedEmail = \uniqid() . 'scoped@appwrite.io';
+        $scopedUser = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => Id::unique(),
+            'email' => $scopedEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $scopedUser['headers']['status-code']);
+
+        $scopedMembership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], [
+            'email' => $scopedEmail,
+            'roles' => ['project-' . $otherProjectId . '-developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $scopedMembership['headers']['status-code']);
+        $this->assertFalse($scopedMembership['body']['confirm']);
+
+        $invite = $this->getLastEmailByAddress($scopedEmail, function (array $email): void {
+            $this->assertStringContainsString('/join-us', (string) ($email['html'] ?? ''));
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
+
+        $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $scopedMembership['body']['$id'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => $tokens['userId'],
+            'secret' => $tokens['secret'],
+        ]);
+        $this->assertSame(200, $confirm['headers']['status-code']);
+        $this->assertTrue($confirm['body']['confirm']);
+
+        $scopedSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $scopedEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $scopedSession['headers']['status-code']);
+
+        $scopedJwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $scopedSession['cookies']['a_session_console'],
+            'x-appwrite-project' => 'console',
+        ], []);
+        $this->assertSame(201, $scopedJwt['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $scopedJwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+
+        // Success: Same member after granting this project's developer role
+        $roleUpdate = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $scopedMembership['body']['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], [
+            'roles' => ['project-' . $this->getProject()['$id'] . '-developer'],
+        ]);
+        $this->assertSame(200, $roleUpdate['headers']['status-code']);
+
+        $this->assertEventually(function () use ($proxyClient, $scopedJwt) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+                'cookie' => 'a_jwt_console=' . $scopedJwt['body']['jwt']
+            ], followRedirects: false);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertStringContainsString('Contact page', (string) $response['body']);
+            $this->assertStringContainsString('Preview by', (string) $response['body']);
+        });
+
         // Failure: Session missing (old bad, new ok)
         $session = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', array_merge([
             'origin' => 'http://localhost',
@@ -4011,12 +4173,14 @@ final class SitesCustomServerTest extends Scope
                 'theme=dark',
             ]);
 
-            $this->assertEventually(function () use ($proxyClient, $cookie) {
+            $this->assertEventually(function () use ($proxyClient, $cookie, $secret) {
                 $response = $proxyClient->call(Client::METHOD_GET, '/cookie-header', [
                     'cookie' => $cookie,
+                    'x-fallback-cookies' => \json_encode(['a_session_console' => $secret]),
                 ], followRedirects: false);
                 $this->assertSame(200, $response['headers']['status-code']);
                 $this->assertSame('theme=dark', $response['body']['cookie']);
+                $this->assertNull($response['body']['fallbackCookies']);
             });
         } finally {
             if ($siteId !== '') {

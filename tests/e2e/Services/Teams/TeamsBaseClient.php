@@ -433,6 +433,51 @@ trait TeamsBaseClient
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testNonOwnerMemberCannotInviteAndLeavesNoAccountBehind(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+
+        // A confirmed, non-owner member (role 'developer', not 'owner').
+        $membershipData = $this->createAndAcceptMembershipHelper($teamUid, $teamData['teamName']);
+        $memberSession = $membershipData['session'];
+
+        $victimEmail = uniqid() . 'victim@localhost.test';
+
+        /**
+         * The non-owner member invites an email nobody has registered yet.
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $memberSession,
+        ], [
+            'email' => $victimEmail,
+            'name' => 'Victim',
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * No account was created for the rejected invite: registering the
+         * same email afterward must succeed rather than fail with
+         * USER_ALREADY_EXISTS.
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => 'unique()',
+            'email' => $victimEmail,
+            'password' => 'password',
+            'name' => 'Victim'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+    }
+
     public function testCreateTeamMembershipCustomId(): void
     {
         $teamData = $this->createTeamHelper();

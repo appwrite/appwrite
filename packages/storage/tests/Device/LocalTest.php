@@ -645,6 +645,28 @@ final class LocalTest extends TestCase
         $this->assertFalse($this->object->exists($dir));
     }
 
+    public function testRecursiveDeleteDoesNotFollowSymlinks(): void
+    {
+        $outside = $this->object->getPath('symlink-delete-outside');
+        $this->assertTrue($this->object->createDirectory($outside));
+        $this->object->write($outside . DIRECTORY_SEPARATOR . 'kept.txt', new Stream('Hello World'));
+
+        foreach (['symlink-delete-path', 'symlink-delete'] as $name) {
+            $dir = $this->object->getPath($name);
+            $this->assertTrue($this->object->createDirectory($dir));
+            $this->assertTrue(\symlink($outside, $dir . DIRECTORY_SEPARATOR . 'link'));
+        }
+
+        $this->assertTrue($this->object->deletePath('symlink-delete-path'));
+        $this->assertTrue($this->object->delete($this->object->getPath('symlink-delete'), true));
+
+        $this->assertFalse($this->object->exists($this->object->getPath('symlink-delete-path')));
+        $this->assertFalse($this->object->exists($this->object->getPath('symlink-delete')));
+        $this->assertSame('Hello World', \file_get_contents($outside . DIRECTORY_SEPARATOR . 'kept.txt'));
+
+        $this->assertTrue($this->object->deletePath('symlink-delete-outside'));
+    }
+
     // -------------------------------------------------------------------------
     // joinChunks tests
     // -------------------------------------------------------------------------

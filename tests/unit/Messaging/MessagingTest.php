@@ -6,8 +6,10 @@ namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Database\RuntimeQuery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
@@ -813,6 +815,245 @@ final class MessagingTest extends TestCase
         $this->assertSame([2], $realtime->getUserConnections('1', 'A'));
     }
 
+    public function testConstructSubscriptionsLimitsSubscriptions(): void
+    {
+        $select = Query::select(['*'])->toString();
+        $slots = \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS, [$select]);
+
+        $subscriptions = Realtime::constructSubscriptions(['documents'], fn () => $slots);
+        $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS, $subscriptions);
+
+        // A channel without queries joins slot 0, which already exists.
+        $subscriptions = Realtime::constructSubscriptions(['documents', 'files'], fn (string $key) => $key === 'documents' ? \array_slice($slots, 1) : null);
+        $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS - 1, $subscriptions);
+        $this->assertSame(['documents', 'files'], $subscriptions[0]['channels']);
+
+        // ...but cannot add a slot past the limit.
+        $offset = \array_combine(\range(1, APP_LIMIT_REALTIME_SUBSCRIPTIONS), $slots);
+        try {
+            Realtime::constructSubscriptions(['documents', 'files'], fn (string $key) => $key === 'documents' ? $offset : null);
+            $this->fail('Expected the subscription limit to be enforced.');
+        } catch (QueryException $e) {
+            $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.', $e->getMessage());
+        }
+
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.');
+        Realtime::constructSubscriptions(['documents'], fn () => [...$slots, [$select]]);
+    }
+
+    public function testConstructSubscriptionsLimitsTotals(): void
+    {
+        $select = Query::select(['*'])->toString();
+        $channels = ['documents.1', 'documents.2', 'documents.3'];
+
+        // One channel can appear in every slot, so channels are counted per subscription.
+        $this->assertCount(3, Realtime::constructSubscriptions($channels, fn () => \array_fill(0, 3, [$select]), maxChannels: 9));
+
+        try {
+            Realtime::constructSubscriptions($channels, fn () => \array_fill(0, 4, [$select]), maxChannels: 9);
+            $this->fail('Expected the channel total to be enforced.');
+        } catch (QueryException $e) {
+            $this->assertSame('Connection must have at most 9 channels across its subscriptions.', $e->getMessage());
+        }
+
+        // Queries are counted across subscriptions.
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('Connection must have at most 5 queries across its subscriptions.');
+        Realtime::constructSubscriptions(['documents'], fn () => \array_fill(0, 2, \array_fill(0, 3, $select)), maxQueries: 5);
+    }
+
+    public function testConstructSubscriptionsUsesConnectionLimits(): void
+    {
+        $select = Query::select(['*'])->toString();
+        $this->assertCount(2, Realtime::constructSubscriptions(['documents'], fn () => [[$select], [$select]], 2, 3, 4));
+
+        foreach ([
+            'Connection must have at most 2 subscriptions.' => fn () => Realtime::constructSubscriptions(['documents'], fn () => [[$select], [$select], [$select]], 2, 3, 4),
+            'Connection must have at most 3 channels across its subscriptions.' => fn () => Realtime::constructSubscriptions(['a', 'b'], fn () => [[$select], [$select]], 2, 3, 4),
+            'Connection must have at most 4 queries across its subscriptions.' => fn () => Realtime::constructSubscriptions(['documents'], fn () => [[$select, $select], [$select, $select, $select]], 2, 3, 4),
+        ] as $message => $construct) {
+            try {
+                $construct();
+                $this->fail('Expected: ' . $message);
+            } catch (QueryException $e) {
+                $this->assertSame($message, $e->getMessage());
+            }
+        }
+    }
+
+    public function testSubscribeKeepsLimits(): void
+    {
+        $realtime = new Realtime();
+        $role = Role::user(Id::custom('A'))->toString();
+        $limits = ['subscriptions' => 5, 'channels' => 100, 'queries' => 100];
+
+        $realtime->subscribe('1', 1, '', [$role], [], [], 'A');
+        $realtime->connections[1]['limits'] = $limits;
+        $realtime->subscribe('1', 1, 'sub', [$role], ['documents'], [], 'A');
+
+        $this->assertSame($limits, $realtime->connections[1]['limits']);
+    }
+
+    public function testConvertQueriesLimitsQuerySize(): void
+    {
+        $values = \array_map(fn (int $i) => 'v' . $i, \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE));
+        $this->assertCount(1, Realtime::convertQueries([Query::equal('id', $values)->toString()]));
+
+        // Four or() of 24 equals are 100 queries once the nested ones are counted.
+        $or = fn () => Query::or(\array_map(fn (int $i) => Query::equal('f' . $i, ['x']), \range(1, 24)))->toString();
+        $nested = [$or(), $or(), $or(), $or()];
+        $this->assertSame(APP_LIMIT_ARRAY_PARAMS_SIZE, Realtime::countQueries(Realtime::convertQueries($nested)));
+
+        foreach ([
+            'A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.' => [Query::equal('id', [...$values, 'one more'])->toString()],
+            'A query must be at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.' => [Query::equal('id', [\str_repeat('x', APP_LIMIT_ARRAY_ELEMENT_SIZE)])->toString()],
+            'A subscription must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries, counting the ones nested in and/or.' => [...$nested, Query::equal('a', ['b'])->toString()],
+        ] as $message => $queries) {
+            try {
+                Realtime::convertQueries($queries);
+                $this->fail('Expected: ' . $message);
+            } catch (QueryException $e) {
+                $this->assertSame($message, $e->getMessage());
+            }
+        }
+    }
+
+    public function testCountQueriesIncludesNested(): void
+    {
+        $this->assertSame(0, Realtime::countQueries([]));
+        $this->assertSame(2, Realtime::countQueries([Query::equal('a', ['x']), Query::equal('b', ['y'])]));
+        $this->assertSame(4, Realtime::countQueries([
+            Query::and([Query::equal('a', ['x']), Query::or([Query::equal('b', ['y'])])]),
+        ]));
+    }
+
+    public function testSubscribeAgainReplacesQueriesOnEveryChannel(): void
+    {
+        $realtime = new Realtime();
+        $role = Role::user(Id::custom('A'))->toString();
+
+        $realtime->subscribe('1', 1, 'sub', [$role], ['documents'], [Query::equal('status', ['old'])], 'A');
+        $realtime->subscribe('1', 1, 'sub', [$role], ['files'], [Query::equal('status', ['new'])], 'A');
+
+        $meta = $realtime->getSubscriptionMetadata(1);
+        $this->assertEqualsCanonicalizing(['documents', 'files'], $meta['sub']['channels']);
+        $this->assertSame([Query::equal('status', ['new'])->toString()], $meta['sub']['queries']);
+        $this->assertSame(1, $meta['sub']['count']);
+
+        // An event on the older channel is now matched by the new queries.
+        $event = fn (string $status) => [
+            'project' => '1',
+            'roles' => [$role],
+            'data' => ['channels' => ['documents'], 'payload' => ['status' => $status]],
+        ];
+        $this->assertEmpty($realtime->getSubscribers($event('old')));
+        $this->assertArrayHasKey(1, $realtime->getSubscribers($event('new')));
+
+        // Without channels, it only replaces the queries.
+        $realtime->subscribe('1', 1, 'sub', [$role], [], [Query::equal('status', ['newer'])], 'A');
+        $this->assertEqualsCanonicalizing(['documents', 'files'], $realtime->getSubscriptionMetadata(1)['sub']['channels']);
+        $this->assertArrayHasKey(1, $realtime->getSubscribers($event('newer')));
+        $this->assertEmpty($realtime->getSubscribers($event('new')));
+    }
+
+    public function testConstructSubscriptionsLimitsQueries(): void
+    {
+        $select = Query::select(['*'])->toString();
+
+        $subscriptions = Realtime::constructSubscriptions(['documents'], fn () => [\array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE, $select)], maxQueries: APP_LIMIT_ARRAY_PARAMS_SIZE);
+        $this->assertCount(APP_LIMIT_ARRAY_PARAMS_SIZE, $subscriptions[0]['queries']);
+
+        // Rejected before the queries are parsed, so even unparsable ones never reach the parser.
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.');
+        Realtime::constructSubscriptions(['documents'], fn () => [\array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE + 1, 'not a query')]);
+    }
+
+    public function testAddConnectionLimitsUserConnections(): void
+    {
+        $realtime = new Realtime();
+
+        $this->assertTrue($realtime->addConnection(1, '1', 'A', 2));
+        $this->assertTrue($realtime->addConnection(2, '1', 'A', 2));
+        $this->assertFalse($realtime->addConnection(3, '1', 'A', 2));
+
+        // Counted per project user: another project or user has its own allowance.
+        $this->assertTrue($realtime->addConnection(3, '2', 'A', 2));
+        $this->assertTrue($realtime->addConnection(4, '1', 'B', 2));
+
+        // Guests are not counted.
+        $this->assertTrue($realtime->addConnection(5, '1', '', 2));
+        $this->assertTrue($realtime->addConnection(6, '1', '', 2));
+        $this->assertTrue($realtime->addConnection(7, '1', '', 2));
+
+        // Counting a connection again for the same user does not use up the allowance.
+        $this->assertTrue($realtime->addConnection(1, '1', 'A', 2));
+        $this->assertFalse($realtime->addConnection(8, '1', 'A', 2));
+
+        // Closing frees a slot, and closing twice frees only one.
+        $realtime->removeConnection(1);
+        $realtime->removeConnection(1);
+        $this->assertTrue($realtime->addConnection(8, '1', 'A', 2));
+        $this->assertFalse($realtime->addConnection(9, '1', 'A', 2));
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string}>
+     */
+    public static function guestOwners(): \Iterator
+    {
+        yield 'IPv4' => ['203.0.113.7', 'ip:203.0.113.7'];
+        yield 'IPv6 is grouped by /64' => ['2001:db8:1:2:3:4:5:6', 'ip:2001:db8:1:2::/64'];
+        yield 'another address in the same /64' => ['2001:db8:1:2:ffff::1', 'ip:2001:db8:1:2::/64'];
+        yield 'IPv4 through a dual-stack socket' => ['::ffff:203.0.113.7', 'ip:203.0.113.7'];
+        yield 'unknown address' => ['', ''];
+        yield 'not an address' => ['localhost', ''];
+    }
+
+    #[DataProvider('guestOwners')]
+    public function testGetGuestOwner(string $ip, string $expected): void
+    {
+        $this->assertSame($expected, Realtime::getGuestOwner($ip));
+    }
+
+    public function testAddConnectionCountsGuestsByAddress(): void
+    {
+        $realtime = new Realtime();
+        $guest = Realtime::getGuestOwner('2001:db8:1:2::1');
+
+        $this->assertTrue($realtime->addConnection(1, '1', $guest, 2));
+        $this->assertTrue($realtime->addConnection(2, '1', Realtime::getGuestOwner('2001:db8:1:2::2'), 2));
+        $this->assertFalse($realtime->addConnection(3, '1', Realtime::getGuestOwner('2001:db8:1:2::3'), 2));
+
+        // Another network has its own allowance.
+        $this->assertTrue($realtime->addConnection(3, '1', Realtime::getGuestOwner('2001:db8:1:3::1'), 2));
+
+        // Signing in moves the connection from its address to its user, freeing the guest slot.
+        $this->assertTrue($realtime->addConnection(1, '1', 'A', 2));
+        $this->assertTrue($realtime->addConnection(4, '1', $guest, 2));
+    }
+
+    public function testAddConnectionMovesConnectionBetweenUsers(): void
+    {
+        $realtime = new Realtime();
+
+        $this->assertTrue($realtime->addConnection(1, '1', 'A', 1));
+        $this->assertTrue($realtime->addConnection(2, '1', 'B', 1));
+
+        // Switching to a user with no slot left is refused, and the connection stays with A.
+        $this->assertFalse($realtime->addConnection(1, '1', 'B', 1));
+        $this->assertFalse($realtime->addConnection(3, '1', 'A', 1));
+
+        // Switching to a user with room frees the slot it held.
+        $this->assertTrue($realtime->addConnection(1, '1', 'C', 1));
+        $this->assertTrue($realtime->addConnection(3, '1', 'A', 1));
+
+        // Becoming a guest frees it too.
+        $this->assertTrue($realtime->addConnection(1, '1', '', 1));
+        $this->assertTrue($realtime->addConnection(4, '1', 'C', 1));
+    }
+
     public function testGetImpersonatorConnections(): void
     {
         $realtime = new Realtime();
@@ -1335,6 +1576,56 @@ final class MessagingTest extends TestCase
 
         $this->assertNotEmpty($result['permissionsChanged']);
         $this->assertSame([Role::team('team123')->toString()], $result['roles']);
+    }
+
+    public static function consoleProjectEvents(): \Iterator
+    {
+        yield 'rules' => ['rules.rule1.create'];
+        yield 'projects' => ['projects.project1.update'];
+        yield 'attributes' => ['databases.database1.collections.collection1.attributes.attribute1.create'];
+        yield 'columns' => ['tablesdb.database1.tables.table1.columns.column1.update'];
+        yield 'indexes' => ['documentsdb.database1.collections.collection1.indexes.index1.delete'];
+    }
+
+    #[DataProvider('consoleProjectEvents')]
+    public function testFromPayloadConsoleProjectEventsReachOnlyProjectReaders(string $event): void
+    {
+        $project = new Document([
+            '$id' => Id::custom('project1'),
+            'teamId' => 'org1',
+            '$permissions' => [
+                Permission::read(Role::team('org1', 'owner')),
+                Permission::read(Role::team('org1', 'project-project1-developer')),
+                Permission::update(Role::team('org1', 'owner')),
+            ],
+        ]);
+
+        $result = Realtime::fromPayload(
+            event: $event,
+            payload: new Document(['$id' => Id::custom('resource1')]),
+            project: $project,
+        );
+
+        $this->assertSame('console', $result['projectId']);
+        $this->assertSame([
+            Role::team('org1', 'owner')->toString(),
+            Role::team('org1', 'project-project1-developer')->toString(),
+        ], $result['roles']);
+
+        $realtime = new Realtime();
+        $realtime->subscribe('console', 1, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project2-developer')->toString()], ['console']);
+        $realtime->subscribe('console', 2, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project1-developer')->toString()], ['console']);
+
+        $receivers = $realtime->getSubscribers([
+            'project' => 'console',
+            'roles' => $result['roles'],
+            'data' => [
+                'channels' => $result['channels'],
+                'payload' => ['$id' => 'resource1'],
+            ],
+        ]);
+
+        $this->assertSame([2], \array_keys($receivers), 'A member scoped to another project received the event.');
     }
 
     public function testFromPayloadMigrationsReachOnlyProjectReaders(): void

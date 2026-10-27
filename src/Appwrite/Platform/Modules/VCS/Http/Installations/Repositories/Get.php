@@ -106,7 +106,10 @@ class Get extends Action
 
         $repository['id'] = \strval($repository['id']);
         $repository['pushedAt'] = $repository['pushed_at'] ?? '';
-        $repository['organization'] = $installation->getAttribute('organization', '');
+        // Entire names each repository's owner, as a mirrors project holds several GitHub owners
+        $repository['organization'] = \is_string($repository['organization'] ?? null) && $repository['organization'] !== ''
+            ? $repository['organization']
+            : $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
         $repository['defaultBranch'] =  $repository['default_branch'] ?? '';
         $repository['authorized'] = $authorized;
