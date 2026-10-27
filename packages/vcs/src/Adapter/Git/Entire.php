@@ -2207,37 +2207,6 @@ class Entire extends Git
     }
 
     /**
-     * The repository path a caller-supplied file path names, normalized
-     * lexically. Rejects a path that climbs out of the checkout through
-     * `..` segments, which would otherwise write onto the host filesystem.
-     */
-    protected function confinedPath(string $filepath): string
-    {
-        $segments = [];
-        foreach (explode('/', str_replace('\\', '/', $filepath)) as $segment) {
-            if ($segment === '') {
-                continue;
-            }
-            if ($segment === '.') {
-                continue;
-            }
-            if ($segment === '..') {
-                if (array_pop($segments) === null) {
-                    throw new Exception("File path escapes the repository: {$filepath}");
-                }
-                continue;
-            }
-            $segments[] = $segment;
-        }
-
-        if ($segments === []) {
-            throw new Exception("File path names no file: {$filepath}");
-        }
-
-        return implode('/', $segments);
-    }
-
-    /**
      * Create a file in a repository
      *
      * Entire has no contents-write API - content changes travel over git -
@@ -2270,26 +2239,7 @@ class Entire extends Git
                 $this->execute($this->git($directory)->argument('checkout')->flag('-q')->argument('FETCH_HEAD'), 'Checking out the branch tip');
             }
 
-            $absolute = $directory . '/' . $relative;
-            $parent = \dirname($absolute);
-            if (!is_dir($parent) && !mkdir($parent, 0777, true)) {
-                throw new Exception("Failed to create directory for {$filepath}");
-            }
-
-            // Lexical confinement is not enough once the checkout itself
-            // carries symlinks: a linked directory or file would carry the
-            // write outside, so resolve the parent and refuse link targets
-            $checkout = realpath($directory);
-            $resolvedParent = realpath($parent);
-            if ($checkout === false || $resolvedParent === false
-                || !str_starts_with($resolvedParent . '/', $checkout . '/')
-                || is_link($absolute)) {
-                throw new Exception("File path escapes the repository: {$filepath}");
-            }
-
-            if (file_put_contents($absolute, $content) === false) {
-                throw new Exception("Failed to write {$filepath}");
-            }
+            $this->writeCheckoutFile($directory, $relative, $content);
 
             $this->execute($this->git($directory)->argument('add')->argument('--')->argument($relative), 'Staging the file');
             $this->execute($this->git($directory)->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('commit')->flag('-q')->option('-m', $message), 'Committing the file');
