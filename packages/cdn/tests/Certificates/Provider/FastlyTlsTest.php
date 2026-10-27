@@ -99,8 +99,56 @@ final class FastlyTlsTest extends TestCase
         ]);
 
         $provider = new FastlyTls('token', 'tls-config-id', 'certainly', $client);
-        $this->assertSame('2027-01-02 00:00:00.000', $provider->issueCertificate('cert', 'example.com', null));
+        // A week before expiry, by when Fastly should have renewed it
+        $this->assertSame('2027-01-25 00:00:00.000', $provider->issueCertificate('cert', 'example.com', null));
         $this->assertSame([['domain' => 'example.com', 'certificate' => 'cert_1']], $this->activations($client));
+    }
+
+    #[DataProvider('renewals')]
+    public function testStuckRenewalIsReportedBeforeExpiry(string $state, int $daysLeft, string $status): void
+    {
+        $subscription = $this->subscription(
+            state: $state,
+            authorizationState: 'passing',
+            certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']],
+            expiries: ['cert_1' => $daysLeft],
+        );
+        $provider = new FastlyTls('token', '', 'certainly', new TestClient([$this->json($subscription), $this->json($subscription)]));
+
+        $this->assertSame($status, $provider->getCertificateStatus('example.com', null));
+        // Fastly still owns the renewal, so there is nothing to order
+        $this->assertFalse($provider->isRenewRequired('example.com', null));
+    }
+
+    /** @return iterable<string, array{string, int, string}> */
+    public static function renewals(): iterable
+    {
+        yield 'issued, renewal not due yet' => ['issued', 20, Status::ISSUED];
+        yield 'renewing, renewal not due yet' => ['renewing', 20, Status::RENEWING];
+        yield 'issued, close to expiry' => ['issued', 5, Status::EXPIRING];
+        yield 'renewing, close to expiry' => ['renewing', 5, Status::EXPIRING];
+        yield 'issued, expired' => ['issued', -1, Status::EXPIRING];
+        yield 'retried after expiry' => ['pending', -8, Status::EXPIRING];
+    }
+
+    public function testRenewedCertificateIsNotExpiring(): void
+    {
+        // The subscription keeps the certificate it replaced until that one expires
+        $client = new TestClient([$this->json($this->subscription(
+            state: 'renewing',
+            authorizationState: 'passing',
+            certificates: [['type' => 'tls_certificate', 'id' => 'cert_old'], ['type' => 'tls_certificate', 'id' => 'cert_new']],
+            expiries: ['cert_old' => 2, 'cert_new' => 30],
+        ))]);
+
+        $this->assertSame(Status::RENEWING, new FastlyTls('token', '', 'certainly', $client)->getCertificateStatus('example.com', null));
+    }
+
+    public function testRenewIsRequiredWithoutASubscription(): void
+    {
+        $client = new TestClient([$this->json(['data' => []])]);
+
+        $this->assertTrue(new FastlyTls('token', 'tls-config-id', 'certainly', $client)->isRenewRequired('example.com', null));
     }
 
     public function testRetriesFailedSubscriptionWithForce(): void
@@ -488,10 +536,16 @@ final class FastlyTlsTest extends TestCase
      * @param list<array{type:string,instructions:string}> $warnings
      * @param list<mixed>|null $challenges
      * @param list<array{type:string,id:string}> $certificates
+     * @param array<string, int> $expiries Days until each included certificate expires, by certificate ID
      * @return array<string, mixed>
      */
-    private function subscription(string $state = 'pending', string $authorizationState = 'blocked', array $warnings = [], ?array $challenges = null, array $certificates = []): array
+    private function subscription(string $state = 'pending', string $authorizationState = 'blocked', array $warnings = [], ?array $challenges = null, array $certificates = [], array $expiries = []): array
     {
+        $included = [];
+        foreach ($expiries as $id => $days) {
+            $included[] = ['id' => $id, 'type' => 'tls_certificate', 'attributes' => ['not_after' => gmdate('Y-m-d\TH:i:s\Z', time() + $days * 24 * 60 * 60)]];
+        }
+
         return [
             'data' => [[
                 'id' => 'sub_123',
@@ -517,7 +571,7 @@ final class FastlyTlsTest extends TestCase
                     'warnings' => $warnings,
                 ],
                 'relationships' => ['tls_domain' => ['data' => ['id' => 'example.com', 'type' => 'tls_domain']]],
-            ]],
+            ], ...$included],
         ];
     }
 

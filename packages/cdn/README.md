@@ -175,6 +175,8 @@ $renewRequired = $certificates->isRenewRequired('cdn.example.com', null);
 
 `getCertificateStatus()` returns a `Certificates\Status` constant. Fastly keeps a subscription `pending` while it waits for the domain owner to prove ownership, so the provider also reads the subscription's TLS authorizations: when one is `blocked`, or the subscription has `failed`, it throws `Exception\Certificate` instead of returning a status. The exception carries `getStatus()` (`Status::BLOCKED` or `Status::FAILED`), `getChallenges()` (the DNS records to create, as `Certificates\Challenge` values with a `type`, `recordType`, `recordName` and `values`) and `getWarnings()` (Fastly's own instructions, such as a record that conflicts with a challenge). `FastlyTls::CHALLENGE_MANAGED_DNS` is the `_acme-challenge` CNAME challenge, the one that proves ownership without pointing the domain itself at Fastly.
 
+Fastly renews certificates on its own, but marks a subscription `failed` only a week after its certificate expired. When the newest certificate expires within a week and Fastly has not replaced it, `getCertificateStatus()` returns `Status::EXPIRING`. Alert on it rather than issue again: Fastly accepts a retry only once the subscription has failed. `isRenewRequired()` is true only when issuing does something: no subscription or a failed one, or, for `Fastly`, a domain missing from domain management or attached to another service.
+
 ```php
 use Utopia\Cdn\Exception\Certificate as CertificateException;
 
