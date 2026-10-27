@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\Id;
 
 final class TeamsCustomClientTest extends Scope
 {
@@ -526,5 +527,83 @@ final class TeamsCustomClientTest extends Scope
 
         $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertEquals(2, $team['body']['total']);
+    }
+
+    public function testMembershipWritesFollowPrivacy(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper();
+        $email = \uniqid() . 'private@localhost.test';
+        $name = 'Private Member';
+        $consoleHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => $name,
+        ]);
+        $this->assertSame(201, $account['headers']['status-code']);
+
+        $privacy = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/memberships-privacy', $consoleHeaders, [
+            'userName' => false,
+            'userEmail' => false,
+            'mfa' => false,
+        ]);
+        $this->assertSame(200, $privacy['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - hidden details stay hidden in write responses
+         */
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', $headers, [
+            'userId' => $account['body']['$id'],
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+        $this->assertSame('', $membership['body']['userName']);
+        $this->assertSame('', $membership['body']['userEmail']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, '/teams/' . $team['teamUid'] . '/memberships/' . $membership['body']['$id'], $headers, [
+            'roles' => ['editor'],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('', $updated['body']['userName']);
+        $this->assertSame('', $updated['body']['userEmail']);
+
+        /**
+         * Test for SUCCESS - shown details are returned
+         */
+        $privacy = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/memberships-privacy', $consoleHeaders, [
+            'userName' => true,
+            'userEmail' => true,
+            'mfa' => false,
+        ]);
+        $this->assertSame(200, $privacy['headers']['status-code']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, '/teams/' . $team['teamUid'] . '/memberships/' . $membership['body']['$id'], $headers, [
+            'roles' => ['developer'],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame($name, $updated['body']['userName']);
+        $this->assertSame($email, $updated['body']['userEmail']);
+
+        $privacy = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/memberships-privacy', $consoleHeaders, [
+            'userName' => false,
+            'userEmail' => false,
+            'mfa' => false,
+        ]);
+        $this->assertSame(200, $privacy['headers']['status-code']);
     }
 }
