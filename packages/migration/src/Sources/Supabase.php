@@ -568,7 +568,8 @@ class Supabase extends NHost
                 'GET',
                 '/storage/v1/object/'.
                     rawurlencode($file->getBucket()->getOriginalId()).'/'.rawurlencode($file->getFileName()),
-                ['range' => "bytes=$start-$end"]
+                ['range' => "bytes=$start-$end"],
+                decode: false
             );
 
             // Send the chunk to the callback function

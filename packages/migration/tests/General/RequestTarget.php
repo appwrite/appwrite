@@ -37,10 +37,11 @@ final class RequestTarget extends Target
 
     /**
      * @param  array<string, mixed>  $params
+     * @param  array<string, string>  $headers
      * @return array<mixed>|string
      */
-    public function request(string $method, string $path, array $params = []): array|string
+    public function request(string $method, string $path, array $params = [], array $headers = [], bool $decode = true): array|string
     {
-        return $this->call($method, $path, [], $params);
+        return $this->call($method, $path, $headers, $params, decode: $decode);
     }
 }

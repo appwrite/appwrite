@@ -949,7 +949,8 @@ class NHost extends Source
             $chunkData = $this->call(
                 'GET',
                 $fileUrl,
-                ['range' => "bytes=$start-$end"]
+                ['range' => "bytes=$start-$end"],
+                decode: false
             );
 
             $file->setData($chunkData)

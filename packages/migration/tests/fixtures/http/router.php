@@ -23,4 +23,17 @@ if ($path === '/redirect') {
     return;
 }
 
+// A stored file served with its own mime type and no charset, like a storage download.
+if ($path === '/download') {
+    $body = '{"stored":"as a file"}';
+    if (\preg_match('/^bytes=(\d+)-(\d+)$/', $_SERVER['HTTP_RANGE'] ?? '', $range) === 1) {
+        $body = \substr($body, (int) $range[1], (int) $range[2] - (int) $range[1] + 1);
+        \http_response_code(206);
+    }
+    \header('Content-Type: application/json');
+    echo $body;
+
+    return;
+}
+
 \http_response_code(404);
