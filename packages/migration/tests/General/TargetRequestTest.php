@@ -133,6 +133,10 @@ final class TargetRequestTest extends TestCase
 
     public function testCompressedResponseDecodingPastTheLimitIsAbandoned(): void
     {
+        if (\version_compare(\curl_version()['version'], '8.22.0', '<')) {
+            $this->markTestSkipped('Older libcurl checks the size cap against the encoded bytes only.');
+        }
+
         $this->expectException(\Exception::class);
 
         $this->target($this->server->getURL())->request('GET', '/compressed');

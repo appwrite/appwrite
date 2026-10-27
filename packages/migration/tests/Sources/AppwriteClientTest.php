@@ -155,6 +155,10 @@ final class AppwriteClientTest extends TestCase
 
     public function testCompressedResponseDecodingPastTheLimitIsAbandoned(): void
     {
+        if (\version_compare(\curl_version()['version'], '8.22.0', '<')) {
+            $this->markTestSkipped('Older libcurl checks the size cap against the encoded bytes only.');
+        }
+
         $this->expectException(AppwriteException::class);
 
         $this->client($this->server->getURL())->call(Client::METHOD_GET, '/compressed');
