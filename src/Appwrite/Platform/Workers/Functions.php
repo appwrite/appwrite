@@ -258,6 +258,7 @@ class Functions extends Action
                             event: $events[0],
                             eventData: \json_encode($eventData) ?: null,
                             executionId: null,
+                            permissions: $functionMessage->executionPermissions,
                             executionStore: $executionStore,
                         );
                         $handled[] = $function->getId();

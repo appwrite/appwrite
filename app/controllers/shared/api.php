@@ -918,7 +918,8 @@ Http::shutdown()
     ->inject('queueForRealtime')
     ->inject('dbForProject')
     ->inject('eventProcessor')
-    ->action(function (Route $route, Response $response, Document $project, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, EventProcessor $eventProcessor) {
+    ->inject('mode')
+    ->action(function (Route $route, Response $response, Document $project, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, EventProcessor $eventProcessor, string $mode) {
         if (empty($queueForEvents->getEvent())) {
             return;
         }
@@ -958,6 +959,12 @@ Http::shutdown()
                         payload: $queueForEvents->getPayload(),
                         platform: $queueForEvents->getPlatform(),
                         database: $queueForEvents->getContext('database'),
+                        // In admin mode the event user is the console account, so
+                        // its id must not become the execution's read permission
+                        // (a colliding project user could then read it). Resolve
+                        // to no read permission; a normal caller lets the worker
+                        // grant the triggering project user.
+                        executionPermissions: $mode === APP_MODE_ADMIN ? [] : null,
                     ));
                     break;
                 }
