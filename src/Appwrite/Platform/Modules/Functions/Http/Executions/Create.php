@@ -285,7 +285,14 @@ class Create extends Base
 
         $execution = new Document([
             '$id' => $executionId,
-            '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
+            // Grant read only to a genuine project user. In admin mode $user is
+            // the console user, and stamping user:{consoleUserId} here leaks the
+            // execution — logs and errors included — to a project user who
+            // signs up with the colliding id over realtime. A privileged or key
+            // caller reads the execution through its own authority instead.
+            '$permissions' => (!$user->isEmpty() && !$isPrivilegedUser && !$isAPIKey)
+                ? [Permission::read(Role::user($user->getId()))]
+                : [],
             '$createdAt' => DateTime::now(),
             '$updatedAt' => DateTime::now(),
             'resourceInternalId' => $function->getSequence(),
