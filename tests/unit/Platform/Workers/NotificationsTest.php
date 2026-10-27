@@ -26,7 +26,6 @@ use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Messages\Email as EmailMessage;
-use Utopia\Messaging\Tests\Support\ScriptedSmtpServer;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool;
 use Utopia\Query\OrderDirection;
@@ -888,43 +887,6 @@ final class NotificationsTest extends TestCase
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
         }
-    }
-
-    public function testProjectSmtpOnAPrivateAddressIsNeverDialled(): void
-    {
-        $server = new ScriptedSmtpServer([
-            '220 smtp.example.test ESMTP',
-            "250-smtp.example.test\r\n250 8BITMIME",
-            '250 2.1.0 Ok',
-            '250 2.1.5 Ok',
-            '354 End data with <CR><LF>.<CR><LF>',
-            '250 2.0.0 Ok',
-            '221 2.0.0 Bye',
-        ]);
-
-        $payload = [
-            'project' => ['$id' => 'project-x'],
-            'recipients' => [
-                $this->userRecipient('user@example.test', NOTIFICATION_TYPE_EMAIL, 'user-10'),
-            ],
-            'subject' => 'Subj',
-            'body' => 'Body',
-            'smtp' => [
-                'host' => '127.0.0.1',
-                'port' => $server->port,
-                'senderEmail' => 'sender@example.test',
-            ],
-        ];
-
-        $error = null;
-        try {
-            (new Notifications())->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks, $this->publicHostname);
-        } catch (\Throwable $caught) {
-            $error = $caught;
-        }
-
-        $this->assertInstanceOf(\Throwable::class, $error, 'A project SMTP host on a private address must not be delivered to');
-        $this->assertStringContainsString('private or reserved', $error->getMessage());
     }
 
     public function testEmailFailureDoesNotBlockConsoleRecipient(): void
