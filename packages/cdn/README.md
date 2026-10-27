@@ -96,6 +96,45 @@ Keys are sent as given, in the request body, batched up to 256 per request. A Fa
 
 `purgeZone()` purges everything on the service (`purge_all`), which Fastly documents as taking up to two minutes, being incompatible with soft purge, and likely to spike origin traffic on a busy service. Prefer `purgeDomain()` or `purgeKeys()`.
 
+### CloudFront
+
+```php
+<?php
+
+use Utopia\Cdn\Cache;
+use Utopia\Cdn\Cache\Adapter\CloudFront;
+
+$cache = new Cache(new CloudFront(
+    accessKeyId: 'YOUR_ACCESS_KEY_ID',
+    secretAccessKey: 'YOUR_SECRET_ACCESS_KEY',
+    domainKeyPrefix: 'domain-',
+    tenantId: 'YOUR_DISTRIBUTION_TENANT_ID', // only for purgeKeys() and purgeZone()
+));
+
+// Looks up the distribution tenant serving example.com, then invalidates both paths on it.
+$cache->purgePaths('example.com', [
+    '/files/hero.png',
+    '/files/*',
+]);
+
+// Invalidates the cache tag "domain-example.com" on the tenant serving example.com.
+$cache->purgeDomain('example.com');
+
+// Invalidates both cache tags on the configured tenant.
+$cache->purgeKeys([
+    'host-deadbeef',
+    'deployment-12345',
+]);
+```
+
+The adapter targets [multi-tenant distributions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-config-options.html), which are invalidated one [distribution tenant](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateInvalidationForDistributionTenant.html) at a time. `purgePaths()` and `purgeDomain()` find the tenant from the domain (`GetDistributionTenantByDomain`), so one adapter serves every domain; a domain no tenant serves has nothing cached on CloudFront and its purge does nothing. `purgeKeys()` and `purgeZone()` carry no domain, so they need `tenantId` and raise `Exception\UnsupportedOperation` without it. A tenant's cache is shared by all of its domains, so a path purge reaches every domain on the tenant.
+
+Keys are [cache tags](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/invalidation-by-tags.html), sent as `#`-prefixed invalidation paths. They only match responses whose tags the origin listed in the header named by the distribution's `CacheTagConfig`, at most 50 per response. Like Fastly, `purgeDomain()` needs `domainKeyPrefix` to know which tag stands for a domain; pass `''` when the tag is the bare hostname. A tag CloudFront cannot store (empty, over 256 characters, or anything but visible ASCII without commas) raises `InvalidArgumentException` before anything is sent.
+
+`purgeZone()` invalidates `/*` on the tenant.
+
+Paths and tags are batched at `PATHS_PER_PURGE` and `KEYS_PER_PURGE`, both 150, which is CloudFront's default quota of paths or tags processed per second; consecutive batches of one purge are `batchInterval` milliseconds apart (1000 by default). A batch CloudFront throttles (`Throttling`, `TooManyInvalidationsInProgress` or HTTP 429) is resent up to `THROTTLE_RETRIES` (3) times, waiting `batchInterval`, then twice and four times as long; any other rejection fails the purge straight away. Requests are signed with AWS Signature Version 4 by `Aws\Signature`, which also accepts a session token for temporary credentials (`sessionToken`).
+
 ### Cache balancing
 
 `Cache\Adapter\Balancer` turns provider selection into configuration. Every provider is declared once as an option, filters decide which options a purge applies to, and the purge then reaches **all** of them — content cached by two providers has to be evicted from both.
@@ -144,7 +183,7 @@ Options stay ordinary balancer options, so `run()` still picks a single one thro
 
 `Cache\Adapter` declares the four purges every adapter offers — `purgePaths()`, `purgeDomain()`, `purgeKeys()` and `purgeZone()` — so a caller never has to know which provider is behind it. Providers differ in what they expose natively, and the adapter absorbs the difference: Cloudflare purges a hostname directly, while Fastly maps the same call onto a surrogate key. Where an adapter cannot serve an operation with the configuration it was given it raises `Exception\UnsupportedOperation`, rather than quietly doing something wider.
 
-Adapters name things alike, with provider-specific numbers behind the same names: `KEYS_PER_PURGE` is how many cache keys one request may carry, 256 on Fastly and 30 on Cloudflare. Only Cloudflare declares `PATHS_PER_PURGE`, because a Fastly URL purge takes one URL and has nothing to batch.
+Adapters name things alike, with provider-specific numbers behind the same names: `KEYS_PER_PURGE` is how many cache keys one request may carry, 256 on Fastly, 30 on Cloudflare and 150 on CloudFront. Only Cloudflare and CloudFront declare `PATHS_PER_PURGE`, because a Fastly URL purge takes one URL and has nothing to batch.
 
 ## Certificates
 
@@ -237,6 +276,7 @@ $certificates = new Certificates(new Proxy(
 
 - [x] [Cloudflare](https://www.cloudflare.com/)
 - [x] [Fastly](https://www.fastly.com/)
+- [x] [Amazon CloudFront](https://aws.amazon.com/cloudfront/) (multi-tenant distributions)
 
 ### Certificates
 
