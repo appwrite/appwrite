@@ -23,13 +23,13 @@ faqs:
     answer: "No. Unless Silent mode is on, Appwrite reports each build to Entire as a check run on the commit instead, and the deployment itself, with its logs and preview, lives in the Appwrite Console."
 ---
 
-Entire keeps your code and the agent sessions behind it in one repository. Appwrite runs that code. With Entire now an Appwrite Git provider, you can connect the two once and let every push deploy.
+Entire is a Git forge built for coding agents: it stores the agent session behind each change alongside the code. Appwrite supports Entire as a Git provider, so once you connect an Entire project, every push to a connected repository builds and deploys your site or function.
 
 This guide deploys a React web app with [Appwrite Sites](/docs/products/sites) and a Node.js API with [Appwrite Functions](/docs/products/functions) from a single Entire repository. By the end, pushes to `main` update production, pushes to other branches produce private previews, and path filters keep the site and the function from rebuilding each other.
 
 # How deploying from Entire to Appwrite works
 
-To deploy from Entire, connect your Entire project to Appwrite from **Project settings** > **Git configuration**, approve the installation on entire.com, then create a Site or Function from one of the project's repositories. From then on, every push to that repository triggers a build:
+To deploy from Entire, you must connect your Entire project to Appwrite from **Project settings** > **Git configuration**, approve the installation on entire.com, then create a Site or Function from one of the project's repositories. From then on, every push to that repository triggers a build:
 
 - **Production branch:** the deployment builds and activates.
 - **Any other branch:** the deployment builds but stays inactive. Sites get preview URLs for the branch and the commit.
