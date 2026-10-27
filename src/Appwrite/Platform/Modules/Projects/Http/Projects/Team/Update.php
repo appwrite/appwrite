@@ -86,6 +86,16 @@ class Update extends Action
         ]));
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
+        $queueForRealtime
+            ->setProject($project)
+            ->setEvent('projects.[projectId].update.team')
+            ->setParam('projectId', $project->getId())
+            ->setPayload([
+                '$id' => $project->getId(),
+                'teamId' => $teamId,
+            ])
+            ->trigger();
+
         $installations = $dbForPlatform->find('installations', [
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
@@ -106,16 +116,6 @@ class Update extends Action
         foreach ($vcsComments as $vcsComment) {
             $dbForPlatform->updateDocument('vcsComments', $vcsComment->getId(), new Document(['$permissions' => $permissions]));
         }
-
-        $queueForRealtime
-            ->setProject($project)
-            ->setEvent('projects.[projectId].update.team')
-            ->setParam('projectId', $project->getId())
-            ->setPayload([
-                '$id' => $project->getId(),
-                'teamId' => $teamId,
-            ])
-            ->trigger();
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }
