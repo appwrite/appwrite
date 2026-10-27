@@ -845,24 +845,54 @@ final class MessagingTest extends TestCase
     public function testConstructSubscriptionsLimitsTotals(): void
     {
         $select = Query::select(['*'])->toString();
+        $channels = ['documents.1', 'documents.2', 'documents.3'];
 
         // One channel can appear in every slot, so channels are counted per subscription.
-        $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, 3));
-        $slots = \array_fill(0, 33, [$select]);
-        $subscriptions = Realtime::constructSubscriptions($channels, fn () => $slots);
-        $this->assertCount(33, $subscriptions);
+        $this->assertCount(3, Realtime::constructSubscriptions($channels, fn () => \array_fill(0, 3, [$select]), maxChannels: 9));
 
         try {
-            Realtime::constructSubscriptions($channels, fn () => \array_fill(0, 34, [$select]));
+            Realtime::constructSubscriptions($channels, fn () => \array_fill(0, 4, [$select]), maxChannels: 9);
             $this->fail('Expected the channel total to be enforced.');
         } catch (QueryException $e) {
-            $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels across its subscriptions.', $e->getMessage());
+            $this->assertSame('Connection must have at most 9 channels across its subscriptions.', $e->getMessage());
         }
 
         // Queries are counted across subscriptions.
         $this->expectException(QueryException::class);
-        $this->expectExceptionMessage('Connection must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries across its subscriptions.');
-        Realtime::constructSubscriptions(['documents'], fn () => \array_fill(0, 2, \array_fill(0, 51, $select)));
+        $this->expectExceptionMessage('Connection must have at most 5 queries across its subscriptions.');
+        Realtime::constructSubscriptions(['documents'], fn () => \array_fill(0, 2, \array_fill(0, 3, $select)), maxQueries: 5);
+    }
+
+    public function testConstructSubscriptionsUsesConnectionLimits(): void
+    {
+        $select = Query::select(['*'])->toString();
+        $this->assertCount(2, Realtime::constructSubscriptions(['documents'], fn () => [[$select], [$select]], 2, 3, 4));
+
+        foreach ([
+            'Connection must have at most 2 subscriptions.' => fn () => Realtime::constructSubscriptions(['documents'], fn () => [[$select], [$select], [$select]], 2, 3, 4),
+            'Connection must have at most 3 channels across its subscriptions.' => fn () => Realtime::constructSubscriptions(['a', 'b'], fn () => [[$select], [$select]], 2, 3, 4),
+            'Connection must have at most 4 queries across its subscriptions.' => fn () => Realtime::constructSubscriptions(['documents'], fn () => [[$select, $select], [$select, $select, $select]], 2, 3, 4),
+        ] as $message => $construct) {
+            try {
+                $construct();
+                $this->fail('Expected: ' . $message);
+            } catch (QueryException $e) {
+                $this->assertSame($message, $e->getMessage());
+            }
+        }
+    }
+
+    public function testSubscribeKeepsLimits(): void
+    {
+        $realtime = new Realtime();
+        $role = Role::user(Id::custom('A'))->toString();
+        $limits = ['subscriptions' => 5, 'channels' => 100, 'queries' => 100];
+
+        $realtime->subscribe('1', 1, '', [$role], [], [], 'A');
+        $realtime->connections[1]['limits'] = $limits;
+        $realtime->subscribe('1', 1, 'sub', [$role], ['documents'], [], 'A');
+
+        $this->assertSame($limits, $realtime->connections[1]['limits']);
     }
 
     public function testConvertQueriesLimitsQuerySize(): void
@@ -873,12 +903,12 @@ final class MessagingTest extends TestCase
         // Four or() of 24 equals are 100 queries once the nested ones are counted.
         $or = fn () => Query::or(\array_map(fn (int $i) => Query::equal('f' . $i, ['x']), \range(1, 24)))->toString();
         $nested = [$or(), $or(), $or(), $or()];
-        $this->assertSame(APP_LIMIT_REALTIME_QUERIES, Realtime::countQueries(Realtime::convertQueries($nested)));
+        $this->assertSame(APP_LIMIT_ARRAY_PARAMS_SIZE, Realtime::countQueries(Realtime::convertQueries($nested)));
 
         foreach ([
             'A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.' => [Query::equal('id', [...$values, 'one more'])->toString()],
             'A query must be at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.' => [Query::equal('id', [\str_repeat('x', APP_LIMIT_ARRAY_ELEMENT_SIZE)])->toString()],
-            'A subscription must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries, counting the ones nested in and/or.' => [...$nested, Query::equal('a', ['b'])->toString()],
+            'A subscription must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries, counting the ones nested in and/or.' => [...$nested, Query::equal('a', ['b'])->toString()],
         ] as $message => $queries) {
             try {
                 Realtime::convertQueries($queries);
@@ -931,7 +961,7 @@ final class MessagingTest extends TestCase
     {
         $select = Query::select(['*'])->toString();
 
-        $subscriptions = Realtime::constructSubscriptions(['documents'], fn () => [\array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE, $select)]);
+        $subscriptions = Realtime::constructSubscriptions(['documents'], fn () => [\array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE, $select)], maxQueries: APP_LIMIT_ARRAY_PARAMS_SIZE);
         $this->assertCount(APP_LIMIT_ARRAY_PARAMS_SIZE, $subscriptions[0]['queries']);
 
         // Rejected before the queries are parsed, so even unparsable ones never reach the parser.
