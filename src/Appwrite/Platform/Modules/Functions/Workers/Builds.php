@@ -30,6 +30,7 @@ use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
+use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Builds extends Action
 {
@@ -301,7 +302,13 @@ class Builds extends Action
             $rootDirectory = \ltrim($rootDirectory, '/');
 
             $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
-            $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+            try {
+                $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+            } catch (RepositoryNotFound $e) {
+                // The repository moved, was deleted, or left the installation's selection
+                $type = $resource->getCollection() === 'sites' ? 'site' : 'function';
+                throw new BuildException("The repository is no longer available to the Git installation this {$type} deploys from. Reconnect the repository in the {$type}'s Git settings.", previous: $e);
+            }
 
             $cloneOwner = $deployment->getAttribute('providerRepositoryOwner', $owner);
             $cloneRepository = $deployment->getAttribute('providerRepositoryName', $repositoryName);
