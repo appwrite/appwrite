@@ -396,6 +396,9 @@ class Create extends Action
      * installation would build with a token that no longer reaches it. The
      * move stays within the Appwrite project that connected the repository,
      * so it happens only once that project has the new installation too.
+     *
+     * The site or function moves before the repository record, so a delivery
+     * retried after a partial move still finds the record to move.
      */
     private function moveRepository(Document $repository, Document $project, string $providerInstallationId, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB): Document
     {
@@ -418,15 +421,15 @@ class Create extends Action
             'installationInternalId' => $installation->getSequence(),
         ]);
 
-        $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $moved));
-
-        // The site or function follows unless it was connected elsewhere meanwhile
+        // The site or function follows while it is still connected through this record
         $collection = $repository->getAttribute('resourceType') === 'function' ? 'functions' : 'sites';
         $dbForProject = $getProjectDB($project);
         $resource = $authorization->skip(fn () => $dbForProject->getDocument($collection, $repository->getAttribute('resourceId', '')));
-        if ($resource->getAttribute('installationId') === $current->getId() && $resource->getAttribute('providerRepositoryId') === $repository->getAttribute('providerRepositoryId')) {
+        if ($resource->getAttribute('repositoryId') === $repository->getId() && $resource->getAttribute('installationId') !== $installation->getId()) {
             $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), $moved));
         }
+
+        $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $moved));
 
         Span::add('vcs.entire.repository.moved', $repository->getId());
 

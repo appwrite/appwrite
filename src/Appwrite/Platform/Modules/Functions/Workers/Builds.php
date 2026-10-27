@@ -301,8 +301,8 @@ class Builds extends Action
             $rootDirectory = \ltrim($rootDirectory, '.');
             $rootDirectory = \ltrim($rootDirectory, '/');
 
-            $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
             try {
+                $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
                 $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
             } catch (RepositoryNotFound $e) {
                 // The repository moved, was deleted, or left the installation's selection
