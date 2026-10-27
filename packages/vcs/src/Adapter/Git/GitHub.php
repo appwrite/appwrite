@@ -704,7 +704,9 @@ class GitHub extends Git
 
         $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->jwtToken], $params);
         $responseBody = $response['body'] ?? [];
-        $statusCode = $response['headers']['status-code'] ?? 0;
+        $responseHeaders = $response['headers'] ?? [];
+        $statusCode = \is_array($responseHeaders) ? ($responseHeaders['status-code'] ?? 0) : 0;
+        $statusCode = \is_int($statusCode) ? $statusCode : 0;
 
         if (!\is_array($responseBody) || !\is_string($responseBody['token'] ?? null) || !\is_string($responseBody['expires_at'] ?? null)) {
             $safeBody = \is_array($responseBody) ? json_encode(array_intersect_key($responseBody, array_flip(['message', 'documentation_url']))) : '';

@@ -349,29 +349,38 @@ final class GitHubTest extends Base
 
     public function testCreateAccessTokenLimitsItToTheRepositories(): void
     {
-        $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_scoped', 'expires_at' => '2026-10-27T16:00:00Z']);
+        $captured = new \stdClass();
+        $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_scoped', 'expires_at' => '2026-10-27T16:00:00Z'], $captured);
 
         $token = $adapter->createAccessToken([42]);
 
         $this->assertSame(['token' => 'ghs_scoped', 'expiresAt' => '2026-10-27T16:00:00Z'], $token);
-        $this->assertSame('POST', $adapter->captured['method']);
-        $this->assertSame('/app/installations/1234/access_tokens', $adapter->captured['path']);
-        $this->assertSame('Bearer app-token', $adapter->captured['headers']['Authorization']);
-        $this->assertSame(['repository_ids' => [42]], $adapter->captured['params']);
+        $this->assertSame([
+            'method' => 'POST',
+            'path' => '/app/installations/1234/access_tokens',
+            'headers' => ['Authorization' => 'Bearer app-token'],
+            'params' => ['repository_ids' => [42]],
+        ], $captured->request);
     }
 
     public function testCreateAccessTokenWithoutRepositoriesCoversTheInstallation(): void
     {
-        $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_all', 'expires_at' => '2026-10-27T16:00:00Z']);
+        $captured = new \stdClass();
+        $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_all', 'expires_at' => '2026-10-27T16:00:00Z'], $captured);
 
         $adapter->createAccessToken();
 
-        $this->assertSame([], $adapter->captured['params']);
+        $this->assertSame([
+            'method' => 'POST',
+            'path' => '/app/installations/1234/access_tokens',
+            'headers' => ['Authorization' => 'Bearer app-token'],
+            'params' => [],
+        ], $captured->request);
     }
 
     public function testCreateAccessTokenThrowsWhenGitHubRefuses(): void
     {
-        $adapter = $this->accessTokenResponse(422, ['message' => 'There is at least one repository that does not exist or is not accessible to the parent installation.', 'token' => 'leaked']);
+        $adapter = $this->accessTokenResponse(422, ['message' => 'There is at least one repository that does not exist or is not accessible to the parent installation.', 'token' => 'leaked'], new \stdClass());
 
         try {
             $adapter->createAccessToken([42]);
@@ -385,28 +394,26 @@ final class GitHubTest extends Base
 
     /**
      * @param array<string, mixed> $body
+     * @param \stdClass $captured its `request` receives the request the adapter sent
      */
-    private function accessTokenResponse(int $status, array $body): GitHub
+    private function accessTokenResponse(int $status, array $body, \stdClass $captured): GitHub
     {
-        return new class ($status, $body) extends GitHub {
+        return new class ($status, $body, $captured) extends GitHub {
             protected string $jwtToken = 'app-token';
 
             protected string $installationId = '1234';
 
-            /** @var array<string, mixed> */
-            public array $captured = [];
-
             /**
              * @param array<string, mixed> $body
              */
-            public function __construct(private readonly int $status, private readonly array $body)
+            public function __construct(private readonly int $status, private readonly array $body, private readonly \stdClass $captured)
             {
                 parent::__construct(new Cache(new None()));
             }
 
             protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
             {
-                $this->captured = ['method' => $method, 'path' => $path, 'headers' => $headers, 'params' => $params];
+                $this->captured->request = ['method' => $method, 'path' => $path, 'headers' => $headers, 'params' => $params];
 
                 return ['body' => $this->body, 'headers' => ['status-code' => $this->status]];
             }
