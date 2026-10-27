@@ -7,6 +7,7 @@ use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
 use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
+use Utopia\Database\Role;
 
 class Realtime extends Event
 {
@@ -119,13 +120,18 @@ class Realtime extends Event
             : [$target['projectId'] ?? $this->getProject()->getId()];
 
         foreach ($projectIds as $projectId) {
+            $roles = $this->resolveSubscriberRoles($projectId, $target['roles'], $target['projectId'] ?? null);
+            if ($roles === null) {
+                continue;
+            }
+
             try {
                 $this->realtime->send(
                     projectId: $projectId,
                     payload: $this->getRealtimePayload(),
                     events: $allEvents,
                     channels: $target['channels'],
-                    roles: $target['roles'],
+                    roles: $roles,
                     options: [
                         'permissionsChanged' => $target['permissionsChanged'],
                         'userId' => $this->getParam('userId')
@@ -137,5 +143,42 @@ class Realtime extends Event
         }
 
         return true;
+    }
+
+    /**
+     * Resolve the roles a subscriber's copy of this event is addressed with.
+     *
+     * Role names are tree-relative: `user:{id}` names a project user in the
+     * project's subscription tree but a console user in the console tree, and
+     * either identity can be minted by signing up with a colliding custom ID.
+     * A copy delivered across trees with the roles of the other tree therefore
+     * reaches whoever claimed the same ID, not the intended audience:
+     *
+     * - The console copy of a project-flavored event (an execution's `user:{id}`
+     *   read roles) is re-addressed to the project's organization, which is the
+     *   audience the console actually subscribes with.
+     * - The project copy of a console-flavored event (rules and the like, keyed
+     *   `team:{orgTeamId}`) is dropped: admin-mode connections subscribe with
+     *   bare membership roles and never matched it, so only a project team
+     *   minted with the colliding ID could receive it.
+     *
+     * @param array<int, string> $roles roles computed for the event's own tree
+     * @return array<int, string>|null roles for this copy, or null to skip it
+     */
+    protected function resolveSubscriberRoles(string $subscriber, array $roles, ?string $targetProjectId): ?array
+    {
+        $project = $this->getProject();
+
+        if ($subscriber === 'console' && $project->getId() !== 'console' && $targetProjectId !== 'console') {
+            $teamId = $project->getAttribute('teamId');
+
+            return empty($teamId) ? null : [Role::team($teamId)->toString()];
+        }
+
+        if ($subscriber !== 'console' && $targetProjectId === 'console') {
+            return null;
+        }
+
+        return $roles;
     }
 }
