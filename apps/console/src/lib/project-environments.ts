@@ -196,9 +196,17 @@ export function projectEnvironmentCopyResources(
 /**
  * How far a migration got, from its status counters: one object per resource
  * type with how many are pending, processing, succeeded, failed, skipped or
- * warned. Everything counted but pending and processing is done.
+ * warned. Everything counted but pending and processing is done. The API and
+ * realtime deliver the counters as a JSON string, whatever the model says.
  */
 export function migrationProgress(statusCounters: unknown): number {
+  if (typeof statusCounters === 'string') {
+    try {
+      statusCounters = JSON.parse(statusCounters)
+    } catch {
+      return 0
+    }
+  }
   if (!statusCounters || typeof statusCounters !== 'object') return 0
 
   let done = 0

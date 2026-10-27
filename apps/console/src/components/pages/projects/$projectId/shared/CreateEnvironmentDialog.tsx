@@ -291,9 +291,12 @@ export function CreateEnvironmentDialog({
                             id={`environment-copy-${group.id}`}
                             checked={picked.structure}
                             onCheckedChange={(checked) =>
-                              setGroup(group.id, {
-                                structure: checked === true,
-                              })
+                              setGroup(
+                                group.id,
+                                checked === true
+                                  ? { structure: true }
+                                  : { structure: false, data: false },
+                              )
                             }
                             disabled={createEnvironmentMutation.isPending}
                             className="mt-0.5"

@@ -53,15 +53,13 @@ describe('project environment copy', () => {
     expect(projectEnvironmentCopyResources(selection)).toEqual([])
   })
 
-  test('every group names resource types once', () => {
-    const resources = projectEnvironmentCopyResources(
-      Object.fromEntries(
-        PROJECT_ENVIRONMENT_COPY_GROUPS.map((group) => [
-          group.id,
-          { structure: true, data: true },
-        ]),
-      ) as ReturnType<typeof defaultProjectEnvironmentCopySelection>,
-    )
+  test('no resource type belongs to two groups', () => {
+    // Unchecking a group has to take its types out of the request, which it
+    // cannot if another group names them too
+    const resources = PROJECT_ENVIRONMENT_COPY_GROUPS.flatMap((group) => [
+      ...group.resources,
+      ...(group.data?.resources ?? []),
+    ])
 
     expect(new Set(resources).size).toBe(resources.length)
   })
@@ -78,5 +76,16 @@ describe('project environment copy', () => {
     expect(
       migrationProgress({ user: { pending: 0, success: 90, skip: 2 } }),
     ).toBe(100)
+  })
+
+  test('progress reads the counters the API delivers as a JSON string', () => {
+    expect(
+      migrationProgress(
+        JSON.stringify({
+          table: { pending: 1, success: 3, error: 0, skip: 0, processing: 0 },
+        }),
+      ),
+    ).toBe(75)
+    expect(migrationProgress('not json')).toBe(0)
   })
 })

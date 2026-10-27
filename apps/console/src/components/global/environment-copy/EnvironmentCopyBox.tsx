@@ -139,11 +139,12 @@ export function EnvironmentCopyBox({ projectId }: EnvironmentCopyBoxProps) {
   const visible = migrations.filter((m) => !dismissedSet.has(m.$id))
 
   // What the copy brought is in every list of the environment: refresh them all
-  // when a copy seen under way completes, not for one already complete on load
+  // when a copy seen under way completes, not for one already complete on load.
+  // A dismissed card is still a copy under way, so every copy is watched
   const previousStatusRef = useRef<Map<string, string>>(new Map())
 
   useEffect(() => {
-    for (const migration of visible) {
+    for (const migration of migrations) {
       const previous = previousStatusRef.current.get(migration.$id)
       previousStatusRef.current.set(migration.$id, migration.status)
       if (
@@ -157,7 +158,7 @@ export function EnvironmentCopyBox({ projectId }: EnvironmentCopyBoxProps) {
         })
       }
     }
-  }, [visible, projectId, queryClient])
+  }, [migrations, projectId, queryClient])
 
   if (!parentId || visible.length === 0) return null
 
