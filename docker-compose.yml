@@ -1801,7 +1801,7 @@ services:
     profiles:
       - reviews
     container_name: appwrite-hansi
-    image: appwrite/hansi:0.1.0
+    image: ghcr.io/appwrite/hansi:0.1.0
     logging:
       driver: json-file
       options:
