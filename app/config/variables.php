@@ -627,6 +627,15 @@ return [
                 'filter' => 'password'
             ],
             [
+                'name' => '_APP_DB_MAX_CONNECTIONS',
+                'description' => 'Maximum number of connections the bundled PostgreSQL server accepts. Every API worker and worker coroutine holds its own connections, so raise it on hosts with many cores. Default value is: 500.',
+                'introduction' => '2.7.0',
+                'default' => '500',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DB_ADAPTER_DOCUMENTSDB',
                 'description' => 'Engine backing DocumentsDB. Only MongoDB is supported. Default value is: mongodb.',
                 'introduction' => '2.0.0',
