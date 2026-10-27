@@ -896,8 +896,9 @@ final class EntireTest extends TestCase
 
     public function testCreateRepositoryNeedsTheRepositoriesPermission(): void
     {
-        // A token minted before the installation accepted repository creation
-        $adapter = new CoreCallsEntire([], ['contents' => 'read', 'checks' => 'write']);
+        // A cached token without repository creation, and an installation that still has not accepted it
+        $checks = ['contents' => 'read', 'checks' => 'write'];
+        $adapter = new CoreCallsEntire([[201, ['token' => 'fresh', 'expires_at' => '2026-10-27T10:00:00Z', 'permissions' => $checks]]], $checks);
 
         try {
             $adapter->createRepository(self::OWNER, 'pricing-site', true);
@@ -907,7 +908,29 @@ final class EntireTest extends TestCase
             $this->assertStringContainsString('Connect an existing repository', $e->getMessage());
         }
 
-        $this->assertSame([], $adapter->calls);
+        // One fresh mint, and no creation
+        $this->assertCount(1, $adapter->calls);
+        $this->assertStringEndsWith('/access-tokens', $adapter->calls[0]['path']);
+    }
+
+    public function testCreateRepositoryRefreshesATokenCachedBeforeThePermission(): void
+    {
+        // The installation accepted repository creation after its token was cached
+        $adapter = new CoreCallsEntire([
+            [201, ['token' => 'fresh', 'expires_at' => '2026-10-27T10:00:00Z', 'permissions' => Entire::PERMISSIONS]],
+            [201, ['repositoryId' => 'repo_01M5NEW', 'name' => 'pricing-site', 'owningProjectId' => '01M4ZC', 'state' => 'provisioning']],
+            [200, ['repositories' => [[
+                'id' => 'repo_01M5NEW',
+                'full_name' => 'et/' . self::OWNER . '/pricing-site',
+                'placements' => [['region' => 'aws-eu-central-1', 'role' => 'processing_primary', 'api_base_url' => self::CELL]],
+            ]], 'next_cursor' => '']],
+        ], ['contents' => 'read', 'checks' => 'write']);
+
+        $repository = $adapter->createRepository(self::OWNER, 'pricing-site', true);
+
+        $this->assertStringEndsWith('/access-tokens', $adapter->calls[0]['path']);
+        $this->assertSame(['method' => 'POST', 'path' => '/repos', 'params' => ['name' => 'pricing-site']], $adapter->calls[1]);
+        $this->assertSame('repo_01M5NEW', $repository['id']);
     }
 
     public function testUpdateDeploymentNeedsTheDeploymentsPermission(): void

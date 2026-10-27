@@ -198,6 +198,12 @@ class Entire extends Git
     protected ?array $permissions = null;
 
     /**
+     * Whether this instance minted its token, rather than reusing a cached
+     * one that may predate permissions the installation accepted since.
+     */
+    protected bool $minted = false;
+
+    /**
      * The branch holding each commit a check or deployment named, memoized
      * per instance since one report writes both.
      *
@@ -321,8 +327,7 @@ class Entire extends Git
      *
      * Signs an EdDSA plugin JWT and exchanges it for an installation access
      * token covering every selected repository with every registered
-     * permission. Entire refuses a set the installation does not hold
-     * exactly, so the mint falls back through FALLBACK_PERMISSIONS.
+     * permission.
      */
     protected function generateAccessToken(string $privateKey, ?string $appId): void
     {
@@ -331,8 +336,17 @@ class Entire extends Git
         }
 
         $this->jwtToken = $this->generatePluginJwt($privateKey, $appId);
+        $this->mintAccessToken();
+    }
 
-        $path = '/plugins/' . rawurlencode($appId) . '/installations/' . rawurlencode($this->installationId) . '/access-tokens';
+    /**
+     * Exchanges the plugin JWT for an installation access token and caches
+     * it. Entire refuses a set the installation does not hold exactly, so
+     * the mint falls back through FALLBACK_PERMISSIONS.
+     */
+    protected function mintAccessToken(): void
+    {
+        $path = '/plugins/' . rawurlencode($this->plugin) . '/installations/' . rawurlencode($this->installationId) . '/access-tokens';
         foreach ([self::PERMISSIONS, ...self::FALLBACK_PERMISSIONS] as $permissions) {
             $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => $permissions]);
 
@@ -350,6 +364,7 @@ class Entire extends Git
 
         $this->accessToken = $this->text($responseBody, 'token');
         $this->permissions = $this->grantedPermissions($responseBody['permissions'] ?? []);
+        $this->minted = true;
 
         $expiresAt = strtotime($this->text($responseBody, 'expires_at'));
 
@@ -1466,6 +1481,11 @@ class Entire extends Git
      */
     public function createRepository(string $owner, string $repositoryName, bool $private): array
     {
+        // A cached token may predate the installation accepting repository creation
+        if ($this->permissions !== null && !isset($this->permissions['repositories']) && !$this->minted) {
+            $this->mintAccessToken();
+        }
+
         if ($this->permissions !== null && !isset($this->permissions['repositories'])) {
             throw new Exception('This Entire installation cannot create repositories yet. Connect an existing repository, or accept the plugin\'s updated permissions in Entire if it asks for them.', 403);
         }
