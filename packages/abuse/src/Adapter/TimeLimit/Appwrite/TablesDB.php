@@ -22,6 +22,8 @@ final readonly class TablesDB extends TimeLimit
 
     public const string TABLE_LOCK = 'lock'; // Lock table created to allow performant check of setup
 
+    private const string LIMIT_EXCEEDED = 'column_limit_exceeded';
+
     private TablesDBService $tablesDB;
 
     public function __construct(string $key, int $limit, int $seconds, Client $client, private string $databaseId)
@@ -87,9 +89,17 @@ final readonly class TablesDB extends TimeLimit
             return $count;
         }
 
-        $this->tablesDB->incrementRowColumn($this->databaseId, self::TABLE_ID, $row->id, 'count', 1);
+        try {
+            $row = $this->tablesDB->incrementRowColumn($this->databaseId, self::TABLE_ID, $row->id, 'count', 1, $this->limit);
+        } catch (AppwriteException $error) {
+            if ($error->getType() !== self::LIMIT_EXCEEDED) {
+                throw $error;
+            }
 
-        return $count;
+            return $this->limit;
+        }
+
+        return $this->parseCount($row->data['count'] ?? 0) - 1;
     }
 
     /**
