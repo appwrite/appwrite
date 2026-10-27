@@ -95,6 +95,31 @@ class Base extends Action
     }
 
     /**
+     * Owner and name of a repository linked through the installation.
+     *
+     * @return array{0: string, 1: string}
+     */
+    protected function resolveInstallationRepository(Git $adapter, Document $installation, string $providerRepositoryId): array
+    {
+        try {
+            $owner = $adapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int) $providerRepositoryId);
+            $repositoryName = $adapter->getRepositoryName($providerRepositoryId);
+
+            // Installation-wide webhooks are matched by repository id, so the repository must belong to this installation's owner
+            if (\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $adapter->getSupportedWebhookScopes(), true)) {
+                $repository = $adapter->getRepository($owner, $repositoryName);
+                if (\strval($repository['id'] ?? '') !== $providerRepositoryId) {
+                    throw new RepositoryNotFound('Repository not found.');
+                }
+            }
+        } catch (RepositoryNotFound) {
+            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+        }
+
+        return [$owner, $repositoryName];
+    }
+
+    /**
      * Templates can pin a version range (e.g. "0.3.*"); codeload only takes a
      * concrete ref, so resolve a range to the highest matching tag. Templates
      * are public github.com repositories regardless of the resource's own
