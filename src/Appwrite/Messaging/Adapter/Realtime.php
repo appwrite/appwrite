@@ -1068,6 +1068,10 @@ class Realtime extends MessagingAdapter
                 if (($parts[2] ?? '') === 'sessions' && ($parts[3] ?? '') === 'delete') {
                     $permissionsChanged = true;
                 }
+                // A transfer changes who may read the project, so the worker re-authorizes its tails.
+                if (($parts[2] ?? '') === 'update' && ($parts[3] ?? '') === 'team') {
+                    $permissionsChanged = true;
+                }
                 break;
             case 'teams':
                 if ($parts[2] === 'memberships') {
