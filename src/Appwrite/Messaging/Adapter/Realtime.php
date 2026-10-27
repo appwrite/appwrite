@@ -431,6 +431,24 @@ class Realtime extends MessagingAdapter
     }
 
     /**
+     * Connection IDs of every connection in a project, whether or not it
+     * currently subscribes to anything.
+     *
+     * @return array<int, mixed>
+     */
+    public function getProjectConnections(string $projectId): array
+    {
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['projectId'] ?? null) === $projectId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
+    }
+
+    /**
      * Connection IDs of every connection a user opened, in any project, while
      * impersonating someone else.
      *
@@ -899,6 +917,11 @@ class Realtime extends MessagingAdapter
                 $channels[] = 'projects.' . $parts[1];
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                // A project-wide sign-out: every connection of this project re-validates
+                // its session against the new invalidation timestamp in the realtime worker.
+                if (($parts[2] ?? '') === 'sessions' && ($parts[3] ?? '') === 'delete') {
+                    $permissionsChanged = true;
+                }
                 break;
             case 'teams':
                 if ($parts[2] === 'memberships') {

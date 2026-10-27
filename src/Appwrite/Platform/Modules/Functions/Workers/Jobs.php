@@ -6,6 +6,7 @@ use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Detection;
 use Appwrite\Deployment\GitAction;
+use Appwrite\Deployment\Output;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Jobs as JobsMessage;
@@ -159,15 +160,32 @@ class Jobs extends Action
             return;
         }
 
+        $callback = CallbackEvent::tryFrom($event->event);
+        $outputAvailable = null;
+        if ($callback === CallbackEvent::Complete && $deviceForBuilds->getType() !== DeviceType::Local) {
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+            if (!$deployment->isEmpty()
+                && !\in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'], true)
+                && $cache->load(self::key('output', $project, $deploymentId), self::DEDUPE_TTL) === false) {
+                // Do not hold the deployment lock while waiting: the output
+                // and exit callbacks must be free to arrive in the meantime.
+                $outputAvailable = Output::wait($deviceForBuilds, (string) $deployment->getAttribute('buildPath', ''));
+            }
+        }
+
         $failure = null;
 
-        $locks(Deployments::lock($project->getSequence(), $deploymentId), self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
+        $locks(Deployments::lock($project->getSequence(), $deploymentId), self::LOCK_TTL, function () use ($event, $callback, $outputAvailable, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
             if ($event->id !== '') {
                 $key = self::key('event', $project, $event->id);
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
                     return; // already processed
                 }
-                $cache->save($key, true);
+                // Completion may fail on a transient storage/cache error. Do
+                // not suppress its retry before reconciliation has succeeded.
+                if ($callback !== CallbackEvent::Complete) {
+                    $cache->save($key, true);
+                }
             }
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -178,8 +196,20 @@ class Jobs extends Action
             $statusBefore = $deployment->getAttribute('status');
             $durationBefore = $deployment->getAttribute('buildDuration');
 
-            $callback = CallbackEvent::tryFrom($event->event);
             $artifact = $callback === CallbackEvent::Artifact ? JobArtifact::fromArray($event->data) : null;
+
+            if ($outputAvailable === false && $cache->load(self::key('output', $project, $deploymentId), self::DEDUPE_TTL) !== false) {
+                // The output callback may have arrived while we waited, even
+                // if exit has not arrived yet and readiness cannot be joined.
+                $outputAvailable = true;
+            }
+
+            if ($outputAvailable === true) {
+                if ($cache->save(self::key('output', $project, $deploymentId), true) === false) {
+                    throw new \RuntimeException('Failed to record reconciled build output.');
+                }
+                Span::add('build.output.reconciled', true);
+            }
 
             $deployment = match ($callback) {
                 CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
@@ -188,6 +218,12 @@ class Jobs extends Action
                 CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
+
+            if ($outputAvailable === false) {
+                // onComplete may already have finalized via an output callback
+                // received during the wait. finalize() preserves that outcome.
+                $deployment = $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output artifact delivery did not complete.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            }
 
             // Outcome and runtime arrive independently. Publish when the second
             // becomes known, once under the per-deployment callback lock.
@@ -230,10 +266,25 @@ class Jobs extends Action
                 Span::add('artifact.error.code', $artifact->error?->code->value);
                 $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
             }
+
+            if ($callback === CallbackEvent::Complete && $event->id !== '') {
+                if ($cache->save(self::key('event', $project, $event->id), true) === false) {
+                    throw new \RuntimeException('Failed to record processed build completion.');
+                }
+            }
         }, self::LOCK_TIMEOUT);
 
         if ($failure !== null) {
             throw $failure;
+        }
+
+        // Deleted mid-build: the deletes worker has already cleared the build
+        // directory, so output written after it is removed here. Outside the
+        // callback's dedupe, so a redelivery after a failed cleanup tries again.
+        if (CallbackEvent::tryFrom($event->event) !== CallbackEvent::Log
+            && $dbForProject->getDocument('deployments', $deploymentId)->isEmpty()
+            && !Deployments::deleteBuildDirectory($deviceForBuilds, $deploymentId)) {
+            throw new \RuntimeException("Failed to delete the build directory of deleted deployment {$deploymentId}");
         }
     }
 
@@ -509,7 +560,9 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        $cache->save(self::key('complete', $project, $deployment->getId()), true);
+        if ($cache->save(self::key('complete', $project, $deployment->getId()), true) === false) {
+            throw new \RuntimeException('Failed to record build completion.');
+        }
 
         $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
 
@@ -742,15 +795,24 @@ class Jobs extends Action
             $this->updateLatestDeployment($dbForProject, $resource);
         }
 
-        if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
-            $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
-        }
-
+        // The status and the resource's deploymentId commit together, so
+        // executions never reach a deployment that is still building and a
+        // deployment reported ready is already the one they reach. The rules
+        // live in the platform database and are repointed before the commit;
+        // the router keeps serving the active deployment until then.
         if ($applied > 0) {
-            $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
-                Query::equal('$id', [$deployment->getId()]),
-                Query::notEqual('status', 'canceled'),
-            ]);
+            $applied = $dbForProject->withTransaction(function () use ($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus, $success, $terminal): int {
+                $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
+                    Query::equal('$id', [$deployment->getId()]),
+                    Query::notEqual('status', 'canceled'),
+                ]);
+
+                if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
+                    $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+                }
+
+                return $applied;
+            });
             $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         }
 

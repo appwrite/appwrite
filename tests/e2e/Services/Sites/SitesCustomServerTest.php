@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
@@ -3352,6 +3353,7 @@ final class SitesCustomServerTest extends Scope
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
         $apiKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
         ]);
@@ -4004,15 +4006,19 @@ final class SitesCustomServerTest extends Scope
                 'a_jwt_console=' . $jwt['body']['jwt'],
                 'a_session_console=' . $secret,
                 'a_session_console_legacy=' . $secret,
+                'a_session_' . $this->getProject()['$id'] . '=' . $secret,
+                'a_session_' . $this->getProject()['$id'] . '_legacy=' . $secret,
                 'theme=dark',
             ]);
 
-            $this->assertEventually(function () use ($proxyClient, $cookie) {
+            $this->assertEventually(function () use ($proxyClient, $cookie, $secret) {
                 $response = $proxyClient->call(Client::METHOD_GET, '/cookie-header', [
                     'cookie' => $cookie,
+                    'x-fallback-cookies' => \json_encode(['a_session_console' => $secret]),
                 ], followRedirects: false);
                 $this->assertSame(200, $response['headers']['status-code']);
                 $this->assertSame('theme=dark', $response['body']['cookie']);
+                $this->assertNull($response['body']['fallbackCookies']);
             });
         } finally {
             if ($siteId !== '') {
@@ -4185,6 +4191,7 @@ final class SitesCustomServerTest extends Scope
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
         $apiKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
         ]);

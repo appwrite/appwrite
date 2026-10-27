@@ -229,40 +229,42 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     $authorization->addRole(Role::user($user->getId())->toString());
 
+    // Magic URL and email OTP prove the email, a phone OTP proves the phone
+    $verification = match ($verifiedToken->getAttribute('type')) {
+        TOKEN_TYPE_MAGIC_URL, TOKEN_TYPE_EMAIL => 'emailVerification',
+        TOKEN_TYPE_PHONE => 'phoneVerification',
+        default => null,
+    };
+
     // Claim the token and issue the session together: of concurrent exchanges only the one that deletes the token
-    // gets a session, and a failed insert rolls the claim back so the token can be retried
-    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user) {
+    // gets a session, and a failed insert rolls the claim back so the token can be retried. The user row lock
+    // orders this against an address change, which deletes the token and resets the verification it proves
+    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification) {
+        $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+
         if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        return $dbForProject->createDocument('sessions', $session
+        $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
             ]));
+
+        if ($verification !== null) {
+            $dbForProject->updateDocument('users', $user->getId(), new Document([$verification => true]));
+        }
+
+        return $session;
     });
 
+    if ($verification !== null) {
+        $user->setAttribute($verification, true);
+    }
+
     $dbForProject->purgeCachedDocument('users', $user->getId());
-
-    // Magic URL + Email OTP
-    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_MAGIC_URL || $verifiedToken->getAttribute('type') === TOKEN_TYPE_EMAIL) {
-        $user->setAttribute('emailVerification', true);
-    }
-
-    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_PHONE) {
-        $user->setAttribute('phoneVerification', true);
-    }
-
-    try {
-        $dbForProject->updateDocument('users', $user->getId(), new Document([
-            'emailVerification' => $user->getAttribute('emailVerification'),
-            'phoneVerification' => $user->getAttribute('phoneVerification'),
-        ]));
-    } catch (\Throwable $th) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
-    }
 
     $bus->dispatch(new SessionCreated(
         user: $user->getArrayCopy(),
@@ -702,7 +704,9 @@ Http::delete('/v1/account/sessions')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('session')
-    ->action(function (bool $current, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $callingSession) {
+    ->inject('project')
+    ->inject('mqtt')
+    ->action(function (bool $current, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $callingSession, Document $project, Mqtt $mqtt) {
 
         // Nothing to keep (e.g. account API key), so refuse rather than delete every session.
         if (!$current && $callingSession === null) {
@@ -752,6 +756,12 @@ Http::delete('/v1/account/sessions')
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        try {
+            $mqtt->revoke($project->getId(), $user->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
         if ($currentSession instanceof Document) {
             $queueForEvents
@@ -853,7 +863,9 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('session')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $current) {
+    ->inject('project')
+    ->inject('mqtt')
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $current, Document $project, Mqtt $mqtt) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -889,6 +901,12 @@ Http::delete('/v1/account/sessions/:sessionId')
             }
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
+
+            try {
+                $mqtt->revoke($project->getId(), $user->getId());
+            } catch (\Throwable $error) {
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+            }
 
             $queueForEvents
                 ->setParam('userId', $user->getId())
@@ -1406,7 +1424,7 @@ Http::post('/v1/account/sessions/token')
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
+    ->label('abuse-key', ['ip:{ip},userId:{param-userId}', 'projectId:{projectId},url:{url},userId:{param-userId}'])
     ->label('abuse-reset', [201])
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('secret', '', new Text(256), 'Secret of a token generated by login methods. For example, the `createMagicURLToken` or `createPhoneToken` methods.')
@@ -1646,7 +1664,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('authorization')
     ->inject('platform')
     ->inject('clientForOAuth2')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('mqtt')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2, Mqtt $mqtt) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1866,13 +1885,19 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // createSession later. Deleting the current session in that flow would
         // sign the caller out until the exchange, so it is left in place.
         if (empty($state['token'])) {
-            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
             if ($current) { // Replace the current session with the new one.
                 $currentDocument = $dbForProject->getDocument('sessions', $current);
                 if (!$currentDocument->isEmpty()) {
                     $dbForProject->deleteDocument('sessions', $currentDocument->getId());
                     $dbForProject->purgeCachedDocument('users', $user->getId());
+
+                    try {
+                        $mqtt->revoke($project->getId(), $user->getId());
+                    } catch (\Throwable $error) {
+                        Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+                    }
                 }
             }
         }
@@ -3270,7 +3295,7 @@ Http::put('/v1/account/sessions/magic-url')
         ),
     ))
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
+    ->label('abuse-key', ['ip:{ip},userId:{param-userId}', 'projectId:{projectId},url:{url},userId:{param-userId}'])
     ->label('abuse-reset', [201])
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('secret', '', new Text(256), 'Valid verification token.')
@@ -3322,7 +3347,7 @@ Http::put('/v1/account/sessions/phone')
         ),
     ))
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
+    ->label('abuse-key', ['ip:{ip},userId:{param-userId}', 'projectId:{projectId},url:{url},userId:{param-userId}'])
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('request')
@@ -3485,15 +3510,13 @@ Http::post('/v1/account/tokens/phone')
             'ip' => $request->getIP(),
         ]);
 
-        $token = $authorization->skip(fn () => $dbForProject->createDocument('tokens', $token
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($recipient->getId())),
-                Permission::update(Role::user($recipient->getId())),
-                Permission::delete(Role::user($recipient->getId())),
-            ])));
+        $token->setAttribute('$permissions', [
+            Permission::read(Role::user($recipient->getId())),
+            Permission::update(Role::user($recipient->getId())),
+            Permission::delete(Role::user($recipient->getId())),
+        ]);
 
-        $dbForProject->purgeCachedDocument('users', $recipient->getId());
-
+        $sms = null;
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
@@ -3518,14 +3541,33 @@ Http::post('/v1/account/tokens/phone')
                 ],
             ]);
 
-            $publisherForMessaging->enqueue(new MessagingMessage(
+            $sms = new MessagingMessage(
                 type: MESSAGE_SEND_TYPE_INTERNAL,
                 project: $project,
                 message: $messageDoc,
                 recipients: [$phone],
                 providerType: MESSAGE_TYPE_SMS,
-            ));
+            );
+        }
 
+        // Store the token and queue its SMS under the user lock the phone update takes, so a code is never issued or sent for a number that just changed
+        $token = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $recipient, $phone, $token, $sms, $publisherForMessaging) {
+            $current = $dbForProject->getDocument('users', $recipient->getId(), forUpdate: true);
+            if ($current->getAttribute('phone') !== $phone) {
+                throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+            }
+
+            $token = $dbForProject->createDocument('tokens', $token);
+            if ($sms !== null) {
+                $publisherForMessaging->enqueue($sms);
+            }
+
+            return $token;
+        }));
+
+        $dbForProject->purgeCachedDocument('users', $recipient->getId());
+
+        if ($sendSMS) {
             $countryCode = CallingCode::fromPhoneNumber($phone);
             if (!empty($countryCode)) {
                 $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
@@ -3586,13 +3628,18 @@ Http::post('/v1/account/jwts')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('project')
+    ->inject('console')
     ->inject('mode')
-    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, string $mode) {
+    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, Document $console, string $mode) {
         if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
             throw new Exception(Exception::USER_JWT_CREATION_DENIED);
         }
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
 
         if (!$sessionId) {
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
@@ -3712,7 +3759,8 @@ Http::patch('/v1/account/password')
     ->inject('proofForPassword')
     ->inject('pwnedPasswords')
     ->inject('session')
-    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, PasswordPwned $pwnedPasswords, ?Document $current) {
+    ->inject('mqtt')
+    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, PasswordPwned $pwnedPasswords, ?Document $current, Mqtt $mqtt) {
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !$userProofForPassword->verify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -3766,6 +3814,12 @@ Http::patch('/v1/account/password')
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        try {
+            $mqtt->revoke($project->getId(), $user->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3960,6 +4014,15 @@ Http::patch('/v1/account/email')
                             TOKEN_TYPE_EMAIL,
                         ]),
                     ]));
+                    $authorization->skip(fn () => $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::EMAIL]),
+                    ]));
+                    // A pending invite was sent to the old address, so it must not prove the new one
+                    $authorization->skip(fn () => $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('confirm', [false]),
+                    ]));
                 }
 
                 return $user;
@@ -4060,8 +4123,6 @@ Http::patch('/v1/account/phone')
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
-        $oldPhone = $user->getAttribute('phone');
-
         $user
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
@@ -4080,12 +4141,42 @@ Http::patch('/v1/account/phone')
         }
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-            $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldPhone);
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone) {
+                $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
-            }
+                $lockedPhone = $current->getAttribute('phone');
+
+                $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $lockedPhone);
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+                }
+
+                $sequence = $user->getSequence();
+                if ($lockedPhone !== $phone && $sequence !== '' && $sequence !== null) {
+                    $authorization->skip(function () use ($dbForProject, $sequence) {
+                        $dbForProject->deleteDocuments('tokens', [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('type', [TOKEN_TYPE_PHONE]),
+                        ]);
+                        $dbForProject->deleteDocuments('challenges', [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('type', [Type::PHONE]),
+                        ]);
+                        // A pending invite was sent to the old number, so it must not prove the new one
+                        $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('confirm', [false]),
+                        ]);
+                    });
+                }
+
+                return $user;
+            });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
@@ -4495,7 +4586,8 @@ Http::put('/v1/account/recovery')
     ->inject('proofForToken')
 ->inject('authorization')
     ->inject('pwnedPasswords')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords) {
+    ->inject('mqtt')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords, Mqtt $mqtt) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -4582,6 +4674,12 @@ Http::put('/v1/account/recovery')
         }
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        try {
+            $mqtt->revoke($project->getId(), $profile->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
@@ -4909,7 +5007,8 @@ Http::put('/v1/account/recovery/otp')
     ->inject('proofForCode')
     ->inject('authorization')
     ->inject('pwnedPasswords')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords) {
+    ->inject('mqtt')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords, Mqtt $mqtt) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -4996,6 +5095,12 @@ Http::put('/v1/account/recovery/otp')
         }
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        try {
+            $mqtt->revoke($project->getId(), $profile->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
@@ -5440,15 +5545,13 @@ Http::post('/v1/account/verifications/phone')
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
-        $verification = $dbForProject->createDocument('tokens', $verification
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+        $verification->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]);
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
-
+        $sms = null;
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
@@ -5468,14 +5571,33 @@ Http::post('/v1/account/verifications/phone')
                 ],
             ]);
 
-            $publisherForMessaging->enqueue(new MessagingMessage(
+            $sms = new MessagingMessage(
                 type: MESSAGE_SEND_TYPE_INTERNAL,
                 project: $project,
                 message: $messageDoc,
                 recipients: [$user->getAttribute('phone')],
                 providerType: MESSAGE_TYPE_SMS,
-            ));
+            );
+        }
 
+        // Store the token and queue its SMS under the user lock the phone update takes, so a code is never issued or sent for a number that just changed
+        $verification = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone, $verification, $sms, $publisherForMessaging) {
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+            if ($current->getAttribute('phone') !== $phone) {
+                throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+            }
+
+            $verification = $dbForProject->createDocument('tokens', $verification);
+            if ($sms !== null) {
+                $publisherForMessaging->enqueue($sms);
+            }
+
+            return $verification;
+        });
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        if ($sendSMS) {
             $countryCode = CallingCode::fromPhoneNumber($phone);
             if (!empty($countryCode)) {
                 $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
@@ -5543,16 +5665,20 @@ Http::put('/v1/account/verifications/phone')
 
         $authorization->addRole(Role::user($profile->getId())->toString());
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(['phoneVerification' => true]));
-
-        $user->setAttributes($profile->getArrayCopy());
-
         $verificationDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
-        /**
-         * We act like we're updating and validating the verification token but actually we don't need it anymore.
-         */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        // Claim the token under the user row lock a phone change takes, which deletes tokens sent to the old number
+        $profile = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $profile, $verifiedToken) {
+            $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
+
+            return $dbForProject->updateDocument('users', $profile->getId(), new Document(['phoneVerification' => true]));
+        });
+
+        $user->setAttributes($profile->getArrayCopy());
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents

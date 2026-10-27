@@ -992,6 +992,25 @@ export function useUpdateSessionInvalidation(
 }
 
 /**
+ * Hook to sign out every user in the project
+ *
+ * @param projectId - The project ID
+ */
+export function useDeleteProjectSessions(
+  projectId: string | null | undefined,
+) {
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.deleteSessions()
+    },
+  })
+}
+
+/**
  * Hook to update project mock phone numbers
  *
  * @param projectId - The project ID
