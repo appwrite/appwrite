@@ -591,14 +591,15 @@ class Functions extends Action
 
         // Resolve the execution's read permission once, up front, so every row
         // this method may write (the preflight failure rows as well as the run
-        // itself) uses the same trusted, project-scoped decision and never
-        // derives user:{id} from a queued/admin-mode console id. In order:
-        //   1. the permission the HTTP caller already resolved;
-        //   2. the stored row's permission (a scheduled run was persisted with
-        //      the gated value at create time);
-        //   3. the user — only for non-scheduled triggers, which carry a
-        //      genuine project user. A scheduled run never derives from the
-        //      user, so an expired/missing stored row stays private.
+        // itself) uses the same trusted, project-scoped decision. The worker
+        // never derives user:{id} from $user: a queued user can be an
+        // admin-mode console account whose id a colliding project user could
+        // claim. The grant is made only by a trusted caller that knows the
+        // request was not admin mode (the HTTP path and the event fanout pass
+        // it explicitly; a scheduled run carries it on its stored row). In
+        // order: the caller's explicit permission, then the stored row's, then
+        // private — so legacy messages, direct publishers and expired rows all
+        // default to no project-user read rather than a derived one.
         $executionPermissions = $permissions;
         if ($executionPermissions === null && !empty($executionId) && $executionStore !== null) {
             $storedExecution = $executionStore->get($project->getId(), $executionId);
@@ -606,9 +607,7 @@ class Functions extends Action
                 $executionPermissions = $storedExecution->getPermissions();
             }
         }
-        $executionPermissions ??= ($trigger === 'schedule' || $user->isEmpty())
-            ? []
-            : [Permission::read(Role::user($user->getId()))];
+        $executionPermissions ??= [];
 
         $headers = Headers::stripReserved($headers, ['x-appwrite-client-ip']);
         $functionId = $function->getId();

@@ -34,6 +34,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
@@ -959,12 +960,16 @@ Http::shutdown()
                         payload: $queueForEvents->getPayload(),
                         platform: $queueForEvents->getPlatform(),
                         database: $queueForEvents->getContext('database'),
-                        // In admin mode the event user is the console account, so
-                        // its id must not become the execution's read permission
-                        // (a colliding project user could then read it). Resolve
-                        // to no read permission; a normal caller lets the worker
-                        // grant the triggering project user.
-                        executionPermissions: $mode === APP_MODE_ADMIN ? [] : null,
+                        // Resolve the triggered execution's read permission here,
+                        // where admin mode is known. In admin mode the event user
+                        // is the console account, so grant nothing — its id must
+                        // not become a project read permission a colliding project
+                        // user could claim. Otherwise grant the genuine project
+                        // user that triggered the event. The worker never derives
+                        // this itself, so it defaults to private.
+                        executionPermissions: ($mode === APP_MODE_ADMIN || $queueForEvents->getUser()->isEmpty())
+                            ? []
+                            : [Permission::read(Role::user($queueForEvents->getUser()->getId()))],
                     ));
                     break;
                 }
