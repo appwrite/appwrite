@@ -133,7 +133,7 @@ Keys are [cache tags](https://docs.aws.amazon.com/AmazonCloudFront/latest/Develo
 
 `purgeZone()` invalidates `/*` on the tenant.
 
-Paths and tags are batched at `PATHS_PER_PURGE` and `KEYS_PER_PURGE`, both 150, which is CloudFront's default quota of paths or tags processed per second; consecutive batches of one purge are `batchInterval` milliseconds apart (1000 by default). Requests are signed with AWS Signature Version 4 by `Aws\Signature`, which also accepts a session token for temporary credentials (`sessionToken`).
+Paths and tags are batched at `PATHS_PER_PURGE` and `KEYS_PER_PURGE`, both 150, which is CloudFront's default quota of paths or tags processed per second; consecutive batches of one purge are `batchInterval` milliseconds apart (1000 by default). A batch CloudFront throttles (`Throttling`, `TooManyInvalidationsInProgress` or HTTP 429) is resent up to `THROTTLE_RETRIES` (3) times, waiting `batchInterval`, then twice and four times as long; any other rejection fails the purge straight away. Requests are signed with AWS Signature Version 4 by `Aws\Signature`, which also accepts a session token for temporary credentials (`sessionToken`).
 
 ### Cache balancing
 

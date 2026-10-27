@@ -38,8 +38,9 @@ class CloudFront implements Adapter
     public const string API_VERSION = '2020-05-31';
 
     /**
-     * Paths per invalidation. CloudFront processes 150 paths or tags per second by default, so one
-     * batch of 150 a second stays within the quota however many paths a purge carries.
+     * Paths per invalidation. CloudFront's default quota is a rate: 150 paths or tags processed per
+     * second. Sending at most 150 per request, one request per batchInterval, keeps a purge at that
+     * rate; a request CloudFront still throttles is retried, see THROTTLE_RETRIES.
      */
     public const int PATHS_PER_PURGE = 150;
 
@@ -47,6 +48,17 @@ class CloudFront implements Adapter
      * Tags per invalidation. A tag counts as one path towards the same quota.
      */
     public const int KEYS_PER_PURGE = 150;
+
+    /**
+     * Times one invalidation is resent after CloudFront throttles it, waiting twice as long before
+     * each attempt, starting from batchInterval.
+     */
+    public const int THROTTLE_RETRIES = 3;
+
+    /**
+     * Error codes that mean "too much at once, try again", not "this request is wrong".
+     */
+    private const array THROTTLE_CODES = ['Throttling', 'TooManyInvalidationsInProgress', 'TooManyRequests'];
 
     /**
      * CloudFront's documented ceiling for one cache tag.
@@ -186,15 +198,37 @@ class CloudFront implements Adapter
         $path = '/distribution-tenant/' . rawurlencode($tenantId) . '/invalidation';
 
         foreach (array_chunk($items, $batchSize) as $index => $batch) {
-            if ($index > 0 && $this->batchInterval > 0) {
-                usleep($this->batchInterval * 1000);
+            if ($index > 0) {
+                $this->pause($this->batchInterval);
             }
 
-            $result = $this->request(Method::POST, $path, $this->invalidationBatch($batch));
+            // Built once, so a retried batch keeps its caller reference.
+            $body = $this->invalidationBatch($batch);
+            $result = $this->request(Method::POST, $path, $body);
+
+            for ($retry = 0; $retry < self::THROTTLE_RETRIES && $this->isThrottled($result); $retry++) {
+                $this->pause($this->batchInterval * (2 ** $retry));
+                $result = $this->request(Method::POST, $path, $body);
+            }
 
             if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
                 throw new \RuntimeException($this->formatError('invalidation', $result));
             }
+        }
+    }
+
+    /**
+     * @param array{statusCode:int,response:\SimpleXMLElement|string|null,error:string|null} $result
+     */
+    private function isThrottled(array $result): bool
+    {
+        return $result['statusCode'] === 429 || \in_array($this->errorCode($result), self::THROTTLE_CODES, true);
+    }
+
+    private function pause(int $milliseconds): void
+    {
+        if ($milliseconds > 0) {
+            usleep($milliseconds * 1000);
         }
     }
 
