@@ -217,6 +217,23 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('id = {logId:String}', (string) $client->requests[0]->getBody());
     }
 
+    public function testCompilesContainsFilters(): void
+    {
+        $client = new CapturingClient([$this->jsonResponse([])]);
+
+        $this->store($client)->find('project', [
+            Query::contains('message', ['boom', 'fail']),
+            Query::containsAll('message', ['disk', 'full']),
+            Query::notContains('message', ['healthcheck']),
+        ]);
+
+        $body = (string) $client->requests[0]->getBody();
+        $this->assertSame(5, \substr_count($body, 'positionCaseSensitive(message, '));
+        $this->assertSame(1, \substr_count($body, ':String}) = 0'));
+        $this->assertStringContainsString(' OR ', $body);
+        $this->assertStringContainsString(' AND ', $body);
+    }
+
     public function testRejectsInvalidStream(): void
     {
         $this->expectException(\InvalidArgumentException::class);

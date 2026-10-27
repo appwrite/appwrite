@@ -474,10 +474,36 @@ class Store
             QueryMethod::NotStartsWith => "NOT startsWith({$column}, {$parameters[0]})",
             QueryMethod::EndsWith => "endsWith({$column}, {$parameters[0]})",
             QueryMethod::NotEndsWith => "NOT endsWith({$column}, {$parameters[0]})",
+            QueryMethod::Contains => $this->containsSql($column, $parameters, false),
+            QueryMethod::ContainsAny => $this->containsSql($column, $parameters, false),
+            QueryMethod::ContainsAll => $this->containsAllSql($column, $parameters),
+            QueryMethod::NotContains => $this->containsSql($column, $parameters, true),
             QueryMethod::IsNull => "{$column} = ''",
             QueryMethod::IsNotNull => "{$column} != ''",
             default => throw new \InvalidArgumentException("Unsupported runtime log query method: {$method->value}"),
         };
+    }
+
+    /** @param list<string> $parameters */
+    private function containsSql(string $column, array $parameters, bool $negated): string
+    {
+        $parts = \array_map(
+            fn (string $parameter) => "positionCaseSensitive({$column}, {$parameter}) " . ($negated ? '= 0' : '> 0'),
+            $parameters
+        );
+
+        return '(' . \implode($negated ? ' AND ' : ' OR ', $parts) . ')';
+    }
+
+    /** @param list<string> $parameters */
+    private function containsAllSql(string $column, array $parameters): string
+    {
+        $parts = \array_map(
+            fn (string $parameter) => "positionCaseSensitive({$column}, {$parameter}) > 0",
+            $parameters
+        );
+
+        return '(' . \implode(' AND ', $parts) . ')';
     }
 
     /** @param list<Query> $order */
