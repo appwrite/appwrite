@@ -340,6 +340,17 @@ final class FastlyTest extends TestCase
         $this->assertSame('https://api.fastly.com/tls/subscriptions/sub_1?force=true', $client->calls[2]['url']);
     }
 
+    public function testCertificateExpiryDelegatesToTls(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"sub_1","attributes":{"state":"issued"},"relationships":{"tls_certificates":{"data":[{"id":"cert_1","type":"tls_certificate"}]}}}],"included":[{"id":"cert_1","type":"tls_certificate","attributes":{"not_after":"2027-02-01T00:00:00Z"}}]}'),
+        ]);
+
+        $this->assertSame('2027-02-01 00:00:00.000', new Fastly('token', 'service_1', client: $client)->getCertificateExpiry('Example.com', null));
+        $this->assertCount(1, $client->calls);
+        $this->assertStringContainsString('filter%5Btls_domains.id%5D=example.com', $client->calls[0]['url']);
+    }
+
     private function json(string $body, int $status = 200): Response
     {
         return new Response($status, body: new Stream($body));

@@ -111,6 +111,22 @@ class FastlyTls implements Provider
         throw new Certificate($this->describe($domain, $status, $challenges, $warnings), $status, $challenges, $warnings);
     }
 
+    /**
+     * The newest certificate's expiry: the one activated for the domain once
+     * Fastly has renewed it, and the old one, until it is replaced, while a
+     * renewal is stuck.
+     */
+    public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+    {
+        $subscription = $this->findSubscription($domain);
+        $certificate = $subscription === null ? null : $this->newestCertificate($subscription);
+        if ($certificate === null) {
+            return null;
+        }
+
+        return new \DateTimeImmutable('@' . $certificate['expiry'])->format('Y-m-d H:i:s.v');
+    }
+
     public function isRenewRequired(string $domain, ?string $domainType): bool
     {
         $subscription = $this->findSubscription($domain);

@@ -27,6 +27,11 @@ class Certificates
         return $this->provider->getCertificateStatus($domain, $domainType);
     }
 
+    public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+    {
+        return $this->provider->getCertificateExpiry($domain, $domainType);
+    }
+
     public function isRenewRequired(string $domain, ?string $domainType): bool
     {
         return $this->provider->isRenewRequired($domain, $domainType);

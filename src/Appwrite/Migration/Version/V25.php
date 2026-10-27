@@ -573,6 +573,19 @@ class V25 extends Migration
 
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
+
+                case 'certificates':
+                    // The certificate's expiry and its provider's renewal state, shown on proxy rules.
+                    if ($collectionType === 'console') {
+                        $attributes = ['expireDate', 'status'];
+                        try {
+                            $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                        } catch (Throwable $th) {
+                            Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
             }
         }
     }

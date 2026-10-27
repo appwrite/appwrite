@@ -210,6 +210,9 @@ $platformCollections = [
             Attribute::integer(key: 'attempts'),
             Attribute::string(key: 'logs', size: 1000000),
             Attribute::datetime(key: 'updated'),
+            Attribute::datetime(key: 'expireDate'),
+            // Last state the certificate provider reported, or failed once generation gave up; a Utopia\Cdn\Certificates\Status value
+            Attribute::string(key: 'status', size: 16, default: ''),
         ],
         'indexes' => [
             Index::key(key: '_key_domain', attributes: ['domain'], lengths: [255], orders: [OrderDirection::Asc]),
