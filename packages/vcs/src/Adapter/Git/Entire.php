@@ -63,15 +63,20 @@ class Entire extends Git
      * without a repository that asks for less than the installation holds,
      * so a permission is asked for whether or not the plugin still uses it.
      */
-    public const PERMISSIONS = ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write'];
+    public const PERMISSIONS = ['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write', 'repositories' => 'create'];
 
     /**
      * What a mint asks for when Entire refuses PERMISSIONS, in order: an
      * installation not yet updated to a permission, or a plugin that does
-     * not declare it, is refused it. Deployments and discussions come and
-     * go independently; reading contents is the least a token needs.
+     * not declare it, is refused it. Installations accept a plugin's
+     * permissions as they were added, so these are the sets the plugin
+     * declared before, newest first; discussions may go away on their own.
+     * Entire mints only the exact set an installation holds, so a set that
+     * succeeds is the right one.
      */
     protected const FALLBACK_PERMISSIONS = [
+        ['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'repositories' => 'create'],
+        ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write'],
         ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write'],
         ['contents' => 'read', 'checks' => 'write', 'discussions' => 'write'],
         ['contents' => 'read', 'checks' => 'write'],
@@ -79,9 +84,16 @@ class Entire extends Git
     ];
 
     /**
-     * Mint refusals a smaller permission set can get past.
+     * Mint refusals a smaller permission set can get past. Entire also
+     * answers coverage_changed for a permission not accepted yet.
      */
-    protected const FALLBACK_CODES = ['permission_not_accepted', 'unsupported_permission'];
+    protected const FALLBACK_CODES = ['permission_not_accepted', 'unsupported_permission', 'coverage_changed'];
+
+    /**
+     * How often, and how many times, a created repository is looked for
+     * until it has a placement to serve Git and its cell's API from.
+     */
+    protected const PROVISIONING_ATTEMPTS = 30;
 
     /**
      * The conclusions a suite takes from its runs, worst first.
@@ -183,6 +195,11 @@ class Entire extends Git
      * @var array<string, string>
      */
     protected array $branches = [];
+
+    /**
+     * Microseconds between looks for a created repository's placement.
+     */
+    protected int $provisioningInterval = 1_000_000;
 
     protected string $accessToken = '';
 
@@ -1381,14 +1398,60 @@ class Entire extends Git
     /**
      * Create new repository
      *
-     * Creating a repository takes the project's manage grant, which an
-     * installation token does not hold.
+     * Creates the repository in the installation's project through the core,
+     * with a token holding repositories:create. The core answers once the
+     * installation covers the repository, even one limited to selected
+     * repositories, but Git and the repository's cell serve it only once it
+     * is provisioned, so this waits for its placement and gives up waiting
+     * after PROVISIONING_ATTEMPTS. Entire creates every repository private.
      *
-     * @return array<mixed>
+     * @return array<mixed> The repository, as getRepository() reports it
      */
     public function createRepository(string $owner, string $repositoryName, bool $private): array
     {
-        throw new Exception('createRepository() is not supported by ' . $this->getName());
+        if ($this->permissions !== null && !isset($this->permissions['repositories'])) {
+            throw new Exception('This Entire installation cannot create repositories yet. Connect an existing repository, or accept the plugin\'s updated permissions in Entire if it asks for them.', 403);
+        }
+
+        $response = $this->call(self::METHOD_POST, '/repos', ['Authorization' => "Bearer {$this->accessToken}"], ['name' => $repositoryName]);
+
+        $statusCode = $this->status($response);
+        if ($statusCode === 409) {
+            throw new Exception("A repository named {$repositoryName} already exists in {$owner}.", $statusCode);
+        }
+        if ($statusCode >= 400) {
+            throw $this->requestFailed('Failed to create repository', $response);
+        }
+
+        $repositoryId = $this->text($this->body($response), 'repositoryId');
+
+        $created = [];
+        for ($attempt = 0; $attempt < self::PROVISIONING_ATTEMPTS; $attempt++) {
+            // A fresh list each time; a placement appears once provisioning ends
+            $this->repositories = null;
+            foreach ($this->installationRepositories() as $repository) {
+                if ($this->text($repository, 'id') === $repositoryId) {
+                    $created = $repository;
+                }
+            }
+
+            if ($created !== [] && isset($this->dataEndpoints[$repositoryId])) {
+                return $created;
+            }
+
+            usleep($this->provisioningInterval);
+        }
+
+        // Still provisioning: the repository exists, so hand it back; Git
+        // calls on it fail until Entire finishes
+        return $created !== [] ? $created : [
+            'id' => $repositoryId,
+            'name' => $repositoryName,
+            'full_name' => "{$owner}/{$repositoryName}",
+            'organization' => $owner,
+            'private' => true,
+            'pushed_at' => '',
+        ];
     }
 
     /**
@@ -1400,12 +1463,6 @@ class Entire extends Git
     public function deleteRepository(string $owner, string $repositoryName): bool
     {
         throw new Exception('deleteRepository() is not supported by ' . $this->getName());
-    }
-
-    #[\Override]
-    public function supportsRepositoryCreation(): bool
-    {
-        return false;
     }
 
     #[\Override]

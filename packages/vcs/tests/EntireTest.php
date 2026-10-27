@@ -53,6 +53,7 @@ class MintingEntire extends Entire
         'permission_not_accepted' => 403,
         'installation_suspended' => 403,
         'unsupported_permission' => 400,
+        'coverage_changed' => 409,
     ];
 
     /**
@@ -120,6 +121,41 @@ class DataCallsEntire extends Entire
     protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true, string $version = 'v1'): array
     {
         $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params, 'version' => $version];
+        [$status, $body] = array_shift($this->answers) ?? [200, []];
+
+        return ['headers' => ['status-code' => $status], 'body' => $body];
+    }
+}
+
+/**
+ * Entire acting for a known installation whose core calls are answered in
+ * turn from a script and recorded, and which looks for a created
+ * repository's placement without waiting, so creation can be followed.
+ */
+class CreatingEntire extends Entire
+{
+    /**
+     * @var list<array{method: string, path: string, params: array<mixed>}>
+     */
+    public array $calls = [];
+
+    /**
+     * @param list<array{int, array<mixed>}> $answers The status and body each call in turn is answered with
+     * @param array<string, string>|null $permissions The permissions the installation token holds
+     */
+    public function __construct(private array $answers, ?array $permissions = ['contents' => 'write', 'repositories' => 'create'])
+    {
+        parent::__construct(new Cache(new None()));
+        $this->plugin = 'appwrite';
+        $this->installationId = 'ins_01ARZ3NDEKTSV4RRFFQ69G5FAV';
+        $this->permissions = $permissions;
+        $this->provisioningInterval = 0;
+    }
+
+    #[\Override]
+    protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+    {
+        $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params];
         [$status, $body] = array_shift($this->answers) ?? [200, []];
 
         return ['headers' => ['status-code' => $status], 'body' => $body];
@@ -600,7 +636,7 @@ final class EntireTest extends TestCase
         $this->assertSame('entire', $this->adapter->getName());
         $this->assertSame([Entire::WEBHOOK_SCOPE_INSTALLATION], $this->adapter->getSupportedWebhookScopes());
         $this->assertSame('authorization', $this->adapter->getSignatureHeaderName());
-        $this->assertFalse($this->adapter->supportsRepositoryCreation());
+        $this->assertTrue($this->adapter->supportsRepositoryCreation());
         $this->assertFalse($this->adapter->supportsRepositoryDeletion());
         $this->assertFalse($this->adapter->supportsRepositoryArchives());
         $this->assertFalse($this->adapter->supportsCommentImages());
@@ -718,17 +754,75 @@ final class EntireTest extends TestCase
         $this->assertNull($this->param($adapter, 2, 'deployments', 0, 'logs_url'));
     }
 
+    public function testCreateRepositoryWaitsForItsPlacement(): void
+    {
+        $listed = static fn (array $placements): array => [200, ['repositories' => [[
+            'id' => 'repo_01M5NEW',
+            'full_name' => 'et/' . self::OWNER . '/pricing-site',
+            'clone_url' => 'https://aws-eu-central-1.entire.io/et/' . self::OWNER . '/pricing-site.git',
+            'placements' => $placements,
+        ]], 'next_cursor' => '']];
+        $adapter = new CreatingEntire([
+            [201, ['repositoryId' => 'repo_01M5NEW', 'name' => 'pricing-site', 'owningProjectId' => '01M4ZC', 'state' => 'provisioning']],
+            $listed([]),
+            $listed([['region' => 'aws-eu-central-1', 'role' => 'processing_primary', 'api_base_url' => self::CELL]]),
+        ]);
+
+        $repository = $adapter->createRepository(self::OWNER, 'pricing-site', false);
+
+        // The core creates it in the installation's project, named alone
+        $this->assertSame(['method' => 'POST', 'path' => '/repos', 'params' => ['name' => 'pricing-site']], $adapter->calls[0]);
+        // The installation lists it before its placement exists, then with one
+        $this->assertSame('/plugins/appwrite/installations/ins_01ARZ3NDEKTSV4RRFFQ69G5FAV/repositories', $adapter->calls[2]['path']);
+        $this->assertCount(3, $adapter->calls);
+
+        $this->assertSame('repo_01M5NEW', $repository['id']);
+        $this->assertSame('pricing-site', $repository['name']);
+        $this->assertSame(self::OWNER, $repository['organization']);
+        $this->assertTrue($repository['private']);
+    }
+
+    public function testCreateRepositoryNamesAnExistingRepository(): void
+    {
+        $adapter = new CreatingEntire([[409, ['type' => 'https://entire.com/errors/name-in-use', 'title' => 'Conflict']]]);
+
+        try {
+            $adapter->createRepository(self::OWNER, 'pricing-site', true);
+            $this->fail('A taken name must fail');
+        } catch (\Exception $e) {
+            $this->assertSame(409, $e->getCode());
+            $this->assertSame('A repository named pricing-site already exists in ' . self::OWNER . '.', $e->getMessage());
+        }
+    }
+
+    public function testCreateRepositoryNeedsTheRepositoriesPermission(): void
+    {
+        // A token minted before the installation accepted repository creation
+        $adapter = new CreatingEntire([], ['contents' => 'read', 'checks' => 'write']);
+
+        try {
+            $adapter->createRepository(self::OWNER, 'pricing-site', true);
+            $this->fail('Creation without the permission must fail');
+        } catch (\Exception $e) {
+            $this->assertSame(403, $e->getCode());
+            $this->assertStringContainsString('Connect an existing repository', $e->getMessage());
+        }
+
+        $this->assertSame([], $adapter->calls);
+    }
+
     public function testUpdateDeploymentNeedsTheDeploymentsPermission(): void
     {
         // An installation that has not accepted deployments gets a token without them
-        $adapter = new MintingEntire(['permission_not_accepted', 'permission_not_accepted', '']);
+        $refused = 'permission_not_accepted';
+        $adapter = new MintingEntire([$refused, $refused, $refused, $refused, '']);
         $adapter->setIssuer(self::ISSUER);
         $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
 
         $adapter->updateDeployment(self::OWNER, self::REPOSITORY_NAME, self::COMMIT_HASH, 'p/landing', 'Landing', 'success');
 
-        // Three mints and no report
-        $this->assertCount(3, $adapter->requested);
+        // Five mints and no report
+        $this->assertCount(5, $adapter->requested);
     }
 
     public function testSharedSuiteIsStatedFromEveryRun(): void
@@ -816,15 +910,19 @@ final class EntireTest extends TestCase
      */
     public static function mints(): \Iterator
     {
+        $withoutDiscussions = ['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'repositories' => 'create'];
+        $beforeCreation = ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write'];
         $deployments = ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write'];
         $discussions = ['contents' => 'read', 'checks' => 'write', 'discussions' => 'write'];
         $checks = ['contents' => 'read', 'checks' => 'write'];
         $contents = ['contents' => 'read'];
+        $refused = 'permission_not_accepted';
         yield 'every permission accepted' => [[''], [Entire::PERMISSIONS]];
-        yield 'deployments not yet accepted' => [['permission_not_accepted', 'permission_not_accepted', ''], [Entire::PERMISSIONS, $deployments, $discussions]];
-        yield 'discussions no longer declared' => [['unsupported_permission', ''], [Entire::PERMISSIONS, $deployments]];
-        yield 'neither accepted' => [['permission_not_accepted', 'permission_not_accepted', 'permission_not_accepted', ''], [Entire::PERMISSIONS, $deployments, $discussions, $checks]];
-        yield 'contents alone accepted' => [['permission_not_accepted', 'permission_not_accepted', 'permission_not_accepted', 'permission_not_accepted', ''], [Entire::PERMISSIONS, $deployments, $discussions, $checks, $contents]];
+        yield 'discussions no longer declared' => [['unsupported_permission', ''], [Entire::PERMISSIONS, $withoutDiscussions]];
+        yield 'repository creation not yet accepted' => [[$refused, $refused, ''], [Entire::PERMISSIONS, $withoutDiscussions, $beforeCreation]];
+        yield 'not yet accepted, as coverage changed' => [['coverage_changed', 'coverage_changed', ''], [Entire::PERMISSIONS, $withoutDiscussions, $beforeCreation]];
+        yield 'deployments not yet accepted' => [[$refused, $refused, $refused, $refused, ''], [Entire::PERMISSIONS, $withoutDiscussions, $beforeCreation, $deployments, $discussions]];
+        yield 'contents alone accepted' => [[$refused, $refused, $refused, $refused, $refused, $refused, ''], [Entire::PERMISSIONS, $withoutDiscussions, $beforeCreation, $deployments, $discussions, $checks, $contents]];
     }
 
     /**
