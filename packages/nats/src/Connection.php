@@ -91,7 +91,6 @@ final class Connection
     private Authenticator $auth;
     private ServerInfo $serverInfo;
     private ConnectionOptions $options;
-    private bool $tlsRequired = false;
 
     /** @var array<string, Subscription> */
     private array $subscriptions = [];
@@ -135,7 +134,6 @@ final class Connection
 
         $conn = new self();
         $conn->options = $options;
-        $conn->tlsRequired = self::requiresTls($options);
         $conn->auth = $conn->resolveAuthenticator($options);
         $conn->serverPool = $conn->buildServerPool($options);
         $conn->doConnect();
@@ -703,8 +701,8 @@ final class Connection
         if ($this->options->transportFactory instanceof \Closure) {
             $this->transport = ($this->options->transportFactory)($scheme);
         } elseif ($scheme === 'ws' || $scheme === 'wss') {
-            $this->transport = new WebSocketTransport($scheme === 'wss' || $this->tlsRequired, $this->tlsOptions());
-        } elseif ($scheme === 'tls' || $this->tlsRequired) {
+            $this->transport = new WebSocketTransport($scheme === 'wss', $this->tlsOptions());
+        } elseif ($scheme === 'tls' || $this->options->tls) {
             $this->transport = new TlsTransport($this->tlsOptions());
         } else {
             $this->transport = new TcpTransport();
@@ -723,15 +721,15 @@ final class Connection
         // Merge connect_urls into server pool
         foreach ($this->serverInfo->connectUrls as $connectUrl) {
             if (!\in_array($connectUrl, $this->serverPool, true)) {
-                $this->serverPool[] = $this->normalizeUrl($connectUrl);
+                $this->serverPool[] = $this->normalizeUrl($connectUrl, $this->isSecure($scheme));
             }
         }
 
         // TLS upgrade over a plaintext TCP connection: when the server requires
-        // TLS, or when the caller requires it whatever the server advertises.
-        // A TlsTransport / custom transport handles its own TLS.
+        // TLS, or when the caller opted in, whatever the server advertises. A
+        // TlsTransport / custom transport handles its own TLS.
         if ($this->transport instanceof TcpTransport && $scheme !== 'tls') {
-            if ($this->serverInfo->tlsRequired || $this->tlsRequired) {
+            if ($this->serverInfo->tlsRequired || $this->options->tls) {
                 $this->transport->upgradeTls($this->tlsOptions());
             }
         }
@@ -990,8 +988,9 @@ final class Connection
 
             // Async INFO may advertise additional cluster members; fold any new
             // ones into the pool so failover has somewhere to go.
+            $secure = $this->isSecure($this->parseUrl($this->currentServer)['scheme']);
             foreach ($this->serverInfo->connectUrls as $connectUrl) {
-                $normalized = $this->normalizeUrl($connectUrl);
+                $normalized = $this->normalizeUrl($connectUrl, $secure);
                 if (!\in_array($normalized, $this->serverPool, true)) {
                     $this->serverPool[] = $normalized;
                 }
@@ -1339,30 +1338,22 @@ final class Connection
         return $opts;
     }
 
-    private function normalizeUrl(string $url): string
+    /**
+     * Scheme-less URLs come from INFO connect_urls; $secure carries the TLS of
+     * the server that advertised them, so a TLS connection never fails over to
+     * a plaintext one.
+     */
+    private function normalizeUrl(string $url, bool $secure = false): string
     {
         if (!preg_match('#^(nats|tls|ws|wss)://#', $url)) {
-            return ($this->tlsRequired ? 'tls://' : 'nats://') . $url;
+            return ($secure ? 'tls://' : 'nats://') . $url;
         }
         return $url;
     }
 
-    /**
-     * Servers learned from INFO connect_urls carry no scheme, so they inherit this.
-     */
-    private static function requiresTls(ConnectionOptions $options): bool
+    private function isSecure(string $scheme): bool
     {
-        if ($options->tls) {
-            return true;
-        }
-
-        foreach ($options->servers as $server) {
-            if (preg_match('#^(tls|wss)://#', $server)) {
-                return true;
-            }
-        }
-
-        return false;
+        return $scheme === 'tls' || $scheme === 'wss' || $this->options->tls;
     }
 
     /**
