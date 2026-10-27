@@ -3352,12 +3352,34 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+
+        // A key without a project, or for another project, must not open this project's preview.
+        $otherProject = $this->getProject(true);
+        foreach ([
+            [[], []],
+            [['projectId' => $otherProject['$id']], ['x-appwrite-project' => $otherProject['$id']]],
+        ] as [$claims, $headers]) {
+            $foreignKey = $jwtObj->encode(\array_merge([
+                Key::PURPOSE_CLAIM => Key::PURPOSE,
+                'projectCheckDisabled' => true,
+                'previewAuthDisabled' => true,
+                'hostnameOverride' => true,
+            ], $claims));
+            $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: \array_merge([
+                'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $foreignKey,
+                'x-appwrite-hostname' => $deploymentDomain,
+            ], $headers));
+            $this->assertEquals(301, $response['headers']['status-code']);
+            $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+        }
+
         $apiKey = $jwtObj->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
-            'projectCheckDisabled' => true,
+            'projectId' => $this->getProject()['$id'],
             'previewAuthDisabled' => true,
         ]);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -3366,6 +3388,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/non-existing-path', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
         ]);
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -4192,11 +4215,12 @@ final class SitesCustomServerTest extends Scope
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
         $apiKey = $jwtObj->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
-            'projectCheckDisabled' => true,
+            'projectId' => $this->getProject()['$id'],
             'previewAuthDisabled' => true,
         ]);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);

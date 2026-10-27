@@ -119,6 +119,9 @@ class Screenshots extends Action
                 Query::equal("projectInternalId", [$project->getSequence()]),
                 Query::equal("type", ["deployment"]),
                 Query::equal('deploymentInternalId', [$deployment->getSequence()]),
+                // A manual rule's domain is the project's own server, which would receive the key.
+                Query::equal('trigger', ['deployment']),
+                Query::equal('owner', ['Appwrite']),
             ]);
 
             if ($rule->isEmpty()) {
@@ -140,6 +143,8 @@ class Screenshots extends Action
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
             $apiKey = $jwtObj->encode([
                 Key::PURPOSE_CLAIM => Key::PURPOSE,
+                'projectId' => $project->getId(),
+                'projectSequence' => $project->getSequence(),
                 'hostnameOverride' => true,
                 'disabledMetrics' => [
                     METRIC_EXECUTIONS,
@@ -153,13 +158,13 @@ class Screenshots extends Action
                     str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
                 ],
                 'bannerDisabled' => true,
-                'projectCheckDisabled' => true,
                 'previewAuthDisabled' => true,
                 'deploymentStatusIgnored' => true,
                 'runtimeEphemeral' => true,
             ]);
 
             $headers = [
+                'x-appwrite-project' => $project->getId(),
                 'x-appwrite-hostname' => $rule->getAttribute('domain'),
                 'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
             ];

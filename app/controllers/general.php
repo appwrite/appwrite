@@ -147,6 +147,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         fn () => $dbForPlatform->getDocument('projects', $projectId)
     );
 
+    // Preview, status and banner bypasses on a key apply only to the project it was issued for.
+    if ($apiKey !== null && $apiKey->getProjectId() !== $projectId) {
+        $apiKey = null;
+    }
+
     if (!$project->isEmpty() && $project->getId() !== 'console') {
         $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
