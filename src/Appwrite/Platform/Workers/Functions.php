@@ -587,6 +587,28 @@ class Functions extends Action
         ?ExecutionStore $executionStore = null,
     ): void {
         $user ??= new Document();
+
+        // Resolve the execution's read permission once, up front, so every row
+        // this method may write (the preflight failure rows as well as the run
+        // itself) uses the same trusted, project-scoped decision and never
+        // derives user:{id} from a queued/admin-mode console id. In order:
+        //   1. the permission the HTTP caller already resolved;
+        //   2. the stored row's permission (a scheduled run was persisted with
+        //      the gated value at create time);
+        //   3. the user — only for non-scheduled triggers, which carry a
+        //      genuine project user. A scheduled run never derives from the
+        //      user, so an expired/missing stored row stays private.
+        $executionPermissions = $permissions;
+        if ($executionPermissions === null && !empty($executionId) && $executionStore !== null) {
+            $storedExecution = $executionStore->get($project->getId(), $executionId);
+            if (!$storedExecution->isEmpty()) {
+                $executionPermissions = $storedExecution->getPermissions();
+            }
+        }
+        $executionPermissions ??= ($trigger === 'schedule' || $user->isEmpty())
+            ? []
+            : [Permission::read(Role::user($user->getId()))];
+
         $headers = Headers::stripReserved($headers, ['x-appwrite-client-ip']);
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deploymentId', '');
@@ -603,19 +625,19 @@ class Functions extends Action
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $permissions);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $executionPermissions);
             return;
         }
 
         if ($deployment->isEmpty()) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $permissions);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $executionPermissions);
             return;
         }
 
         if ($deployment->getAttribute('status') !== 'ready') {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $permissions);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $executionPermissions);
             return;
         }
 
@@ -667,24 +689,6 @@ class Functions extends Action
         }
 
         $now = DateTime::now();
-        // Resolve the execution's read permission from a trusted, project-scoped
-        // source, never from the queued user id (admin mode carries a console
-        // id that would leak the execution to a colliding project user):
-        //   1. the permission the HTTP caller already resolved, else
-        //   2. the existing row's permission — a scheduled execution was stored
-        //      with the gated value at create time, so this preserves it across
-        //      the id-only requeue rather than re-deriving from the user, else
-        //   3. the user, only when no row exists yet (e.g. event triggers),
-        //      where the user is a genuine project user.
-        $executionPermissions = $permissions;
-        if ($executionPermissions === null && !empty($executionId) && $executionStore !== null) {
-            // Read any existing row (roles: null bypasses the permission filter).
-            $existingExecution = $executionStore->get($project->getId(), $executionId);
-            if (!$existingExecution->isEmpty()) {
-                $executionPermissions = $existingExecution->getPermissions();
-            }
-        }
-        $executionPermissions ??= $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))];
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => $executionPermissions,
