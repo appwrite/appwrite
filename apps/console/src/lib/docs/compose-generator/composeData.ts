@@ -2431,7 +2431,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - postgres
       # Every HTTP worker and worker coroutine pools its own connections; the default of 100 runs out under load
       - -c
-      - max_connections=1000`,
+      - max_connections=\${_APP_DB_MAX_CONNECTIONS:-500}`,
   },
   {
     name: 'appwrite-embedding',
