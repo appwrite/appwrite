@@ -21,6 +21,7 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Permissions;
@@ -155,6 +156,9 @@ class Update extends Action
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if (!$transaction->isEmpty() && $this->isTransactionTypeMismatch($transaction)) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
+            }
             if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
@@ -212,9 +216,17 @@ class Update extends Action
                     $documents[] = $document;
                 }
             };
-            $modified = $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocuments($collectionTableId, new Document($data), $queries, onNext: $onNext));
+            $modified = $this->withPermissionPurge(
+                $dbForProject,
+                $database,
+                $collection,
+                isset($data['$permissions']),
+                fn () => $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocuments($collectionTableId, new Document($data), $queries, onNext: $onNext)),
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
+        } catch (UniqueException $e) {
+            throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {

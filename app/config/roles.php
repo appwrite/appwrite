@@ -35,7 +35,6 @@ $member = [
     'targets.write',
     'subscribers.write',
     'subscribers.read',
-    'rules.read',
 ];
 
 $admins = [
@@ -157,7 +156,6 @@ return [
             'vectorsdb.documents.write',
             'rows.read',
             'rows.write',
-            'embeddings.write',
             'files.read',
             'files.write',
             'locale.read',

@@ -30,6 +30,15 @@ final class FakeTransport implements Transport
      */
     public bool $answerPings = true;
 
+    /** Thrown by connect() when set. */
+    public ?\Throwable $refuse = null;
+
+    /** @var list<string> Hosts connect() refuses, as a server that is down would. */
+    public array $refuseHosts = [];
+
+    /** The host connect() was asked for. */
+    public string $host = '';
+
     private string $inbound = '';
     private bool $connected = false;
 
@@ -40,6 +49,14 @@ final class FakeTransport implements Transport
 
     public function connect(string $host, int $port, float $timeout): void
     {
+        $this->host = $host;
+        if ($this->refuse instanceof \Throwable) {
+            throw $this->refuse;
+        }
+        if (\in_array($host, $this->refuseHosts, true)) {
+            throw new ConnectionException("Failed to connect to tcp://{$host}:{$port}: [111] Connection refused");
+        }
+
         $this->connected = true;
         $this->inbound .= $this->infoLine();
     }

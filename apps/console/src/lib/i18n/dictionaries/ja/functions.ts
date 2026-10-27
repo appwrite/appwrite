@@ -46,6 +46,7 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Connect GitHub': 'GitHub を接続',
   'Connect GitLab': 'GitLab を接続',
   'Connect Bitbucket': 'Bitbucket を接続',
+  'Connect Gitea': 'Gitea を接続',
   'Connect Origin': 'Origin を接続',
   'Connect later': '後で接続',
   'Connect repository': 'リポジトリを接続',
@@ -738,4 +739,22 @@ export const jaFunctionsDictionary: Record<string, string> = {
     'このアドレスでメールを受信するには、メールトリガーを有効にしてください。',
   'Mail is delivered when this function has an active deployment.':
     'この関数にアクティブなデプロイがある場合にメールが配信されます。',
+  // Inbound email (SMTP) custom domains
+  'Email domain verified': 'メールドメインを検証しました',
+  'Failed to add email domain': 'メールドメインの追加に失敗しました',
+  'Verify email domain': 'メールドメインを検証',
+  'Add email domain': 'メールドメインを追加',
+  'Serve HTTP requests on your domain':
+    'ドメインで HTTP リクエストを処理します',
+  'Run on mail sent to any address on your domain':
+    'ドメイン内の任意のアドレスに届いたメールで実行します',
+  'Email domains need the email trigger.':
+    'メールドメインにはメールトリガーが必要です。',
+  'Enable it in settings': '設定で有効にする',
+  'Use a domain or subdomain that receives no other mail, since its MX record will point to Appwrite.':
+    'MX レコードは Appwrite を指すため、他のメールを受信していないドメインまたはサブドメインを使用してください。',
+  'Mail is delivered to Appwrite on port 25, so the MX record must point straight at the value above, not at a proxied hostname.':
+    'メールはポート 25 で Appwrite に配信されるため、MX レコードはプロキシ経由のホスト名ではなく、上記の値を直接指す必要があります。',
+  'This region does not report its mail server yet, so the MX record cannot be shown. Add the TXT record now and come back for the MX record later.':
+    'このリージョンはまだメールサーバーを報告していないため、MX レコードを表示できません。先に TXT レコードを追加し、後で MX レコードを確認してください。',
 }

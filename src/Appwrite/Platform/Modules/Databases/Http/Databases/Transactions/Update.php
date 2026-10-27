@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
+use Appwrite\Databases\ListCache;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -64,6 +65,9 @@ class Update extends Action
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: 'transactions',
@@ -145,7 +149,7 @@ class Update extends Action
         $transaction = ($isAPIKey || $isPrivilegedUser)
             ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
             : $dbForProject->getDocument('transactions', $transactionId);
-        if ($transaction->isEmpty()) {
+        if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
             throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
         if ($transaction->getAttribute('status', '') !== 'pending') {
@@ -267,7 +271,7 @@ class Update extends Action
                         $collection = $collections[$collectionId];
 
                         if (\in_array($action, ['increment', 'decrement'], true) && \is_array($data)) {
-                            $currentAttribute = $this->getAttributeNameFromData($data);
+                            $currentAttribute = TransactionState::attributeOf($data, $this->getAttributeKey());
                             $currentChange = $data['value'] ?? 1;
                         }
 
@@ -275,12 +279,10 @@ class Update extends Action
                             $data = $this->parseOperators($data, $collection);
                         }
 
-                        if ($action === 'delete' && $documentId && empty($data)) {
+                        if ($action === 'delete' && $documentId) {
                             $doc = $dbForDatabases->getDocument($collectionId, $documentId);
-                            if (!$doc->isEmpty()) {
-                                $operation['data'] = $doc->getArrayCopy();
-                                $data = $operation['data'];
-                            }
+                            $operation['data'] = $doc->isEmpty() ? [] : $doc->getArrayCopy();
+                            $data = $operation['data'];
                         }
 
                         if (!\in_array($action, ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
@@ -334,13 +336,16 @@ class Update extends Action
 
                 // Every write purges its cached rows, nested and cascaded rows included, inside a savepoint of
                 // this transaction, so a read before COMMIT can cache the old row again. Purge them again after COMMIT.
-                $purged = $dbForDatabases->getCache()->recordPurges(fn () => $dbForDatabases->withTransaction($commit));
+                $purged = ListCache::purged(
+                    $this->getPermissionListCaches($dbForProject, $authorization, $operations),
+                    fn () => $dbForDatabases->getCache()->recordPurges(fn () => $dbForDatabases->withTransaction($commit)),
+                );
             } catch (NotFoundException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
 
-                throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e, params: [$currentDocumentId ?? 'unknown']);
+                throw new Exception($this->getNotFoundException(), previous: $e, params: [$currentDocumentId ?? 'unknown']);
             } catch (DuplicateException | ConflictException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -371,7 +376,7 @@ class Update extends Action
                 if ($currentChange <= 0) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
                 }
-                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $currentAttribute . '" is not a number');
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, \ucfirst($this->getAttributeKey()) . ' "' . $currentAttribute . '" is not a number');
             } catch (TransactionException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -621,6 +626,57 @@ class Update extends Action
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
     }
 
+    /**
+     * The cached list responses of each collection with document security that an operation sets document
+     * permissions in.
+     *
+     * @param array<Document> $operations
+     * @return array<string, ListCache>
+     */
+    private function getPermissionListCaches(Database $dbForProject, Authorization $authorization, array $operations): array
+    {
+        $caches = [];
+
+        foreach ($operations as $operation) {
+            $data = $operation['data'] instanceof Document ? $operation['data']->getArrayCopy() : $operation['data'];
+            $key = $operation['databaseInternalId'] . ':' . $operation['collectionInternalId'];
+
+            if (isset($caches[$key]) || !$this->setsPermissions($operation['action'], $data)) {
+                continue;
+            }
+
+            $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                fn () => $dbForProject->findOne('databases', [
+                    Query::equal('$sequence', [$operation['databaseInternalId']])
+                ]),
+                APP_DATABASES_SUBQUERIES
+            ));
+
+            $collection = $authorization->skip(fn () => $dbForProject->skipFilters(
+                fn () => $dbForProject->findOne('database_' . $operation['databaseInternalId'], [
+                    Query::equal('$sequence', [$operation['collectionInternalId']])
+                ]),
+                APP_COLLECTIONS_SUBQUERIES
+            ));
+
+            if ($collection->getAttribute('documentSecurity', false)) {
+                $caches[$key] = $this->getListCache($dbForProject, $database, $collection->getId());
+            }
+        }
+
+        return $caches;
+    }
+
+    private function setsPermissions(string $action, mixed $data): bool
+    {
+        return match ($action) {
+            'update', 'upsert' => isset($data['$permissions']),
+            'bulkUpdate' => isset($data['data']['$permissions']),
+            'bulkUpsert' => \array_any($data, fn (mixed $document): bool => isset($document['$permissions'])),
+            default => false,
+        };
+    }
+
     private function queueCleanup(DeletePublisher $publisherForDeletes, Document $project, Document $transaction): void
     {
         try {
@@ -688,7 +744,7 @@ class Update extends Action
         \DateTime $timestamp,
         array &$state
     ): void {
-        if ($documentId && !isset($data['$id'])) {
+        if ($documentId) {
             $data['$id'] = $documentId;
         }
         $dbForDatabases->withRequestTimestamp($timestamp, function () use ($dbForDatabases, $collectionId, $data, &$state) {
@@ -765,6 +821,10 @@ class Update extends Action
         \DateTime $timestamp,
         array &$state
     ): void {
+        if ($documentId) {
+            $data['$id'] = $documentId;
+        }
+
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -839,28 +899,6 @@ class Update extends Action
     }
 
     /**
-     * Get the attribute/column name from data, with fallback for cross-API compatibility
-     *
-     * @param array $data The operation data
-     * @return string The attribute/column name
-     */
-    private function getAttributeNameFromData(array $data): string
-    {
-        $expectedKey = $this->getAttributeKey();
-        if (isset($data[$expectedKey])) {
-            return $data[$expectedKey];
-        }
-
-        // Try the opposite key for cross-API compatibility
-        $fallbackKey = $expectedKey === 'attribute' ? 'column' : 'attribute';
-        if (isset($data[$fallbackKey])) {
-            return $data[$fallbackKey];
-        }
-
-        return '';
-    }
-
-    /**
      * Handle increment operation
      *
      * @param Database $dbForDatabases
@@ -882,7 +920,7 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
-        $attribute = $this->getAttributeNameFromData($data);
+        $attribute = TransactionState::attributeOf($data, $this->getAttributeKey());
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['max'] ?? null);
@@ -916,7 +954,7 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
-        $attribute = $this->getAttributeNameFromData($data);
+        $attribute = TransactionState::attributeOf($data, $this->getAttributeKey());
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['min'] ?? null);

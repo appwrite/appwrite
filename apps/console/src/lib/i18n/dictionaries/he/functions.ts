@@ -109,6 +109,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Connect GitHub': 'חיבור GitHub',
   'Connect GitLab': 'חיבור GitLab',
   'Connect Bitbucket': 'חיבור Bitbucket',
+  'Connect Gitea': 'חיבור Gitea',
   'Connect Origin': 'חיבור Origin',
   'Connect later': 'חיבור מאוחר יותר',
   'Connect repository': 'חיבור repo',
@@ -739,4 +740,21 @@ export const heFunctionsDictionary: Record<string, string> = {
     'דואר נכנס לכתובת הזו יתקבל אחרי שתפעילו את טריגר האימייל.',
   'Mail is delivered when this function has an active deployment.':
     'הדואר נמסר כאשר לפונקציה יש פריסה פעילה.',
+  // Inbound email (SMTP) custom domains
+  'Email domain verified': 'דומיין האימייל אומת',
+  'Failed to add email domain': 'הוספת דומיין האימייל נכשלה',
+  'Verify email domain': 'אימות דומיין אימייל',
+  'Add email domain': 'הוספת דומיין אימייל',
+  'Serve HTTP requests on your domain': 'הגשת בקשות HTTP בדומיין שלכם',
+  'Run on mail sent to any address on your domain':
+    'הרצה על דואר שנשלח לכל כתובת בדומיין שלכם',
+  'Email domains need the email trigger.':
+    'דומייני אימייל דורשים את טריגר האימייל.',
+  'Enable it in settings': 'הפעילו אותו בהגדרות',
+  'Use a domain or subdomain that receives no other mail, since its MX record will point to Appwrite.':
+    'השתמשו בדומיין או בתת-דומיין שלא מקבל דואר אחר, כי רשומת ה-MX שלו תצביע אל Appwrite.',
+  'Mail is delivered to Appwrite on port 25, so the MX record must point straight at the value above, not at a proxied hostname.':
+    'הדואר נמסר אל Appwrite בפורט 25, ולכן רשומת ה-MX חייבת להצביע ישירות לערך שלמעלה ולא לשם מארח שעובר דרך פרוקסי.',
+  'This region does not report its mail server yet, so the MX record cannot be shown. Add the TXT record now and come back for the MX record later.':
+    'האזור הזה עדיין לא מדווח על שרת הדואר שלו, ולכן לא ניתן להציג את רשומת ה-MX. הוסיפו עכשיו את רשומת ה-TXT וחזרו מאוחר יותר לרשומת ה-MX.',
 }

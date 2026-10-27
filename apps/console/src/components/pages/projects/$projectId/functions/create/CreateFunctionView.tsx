@@ -41,6 +41,7 @@ import {
   useRepositories,
   useProject,
   useNamespacesForInstallations,
+  useConsoleVariables,
 } from '@/lib/react-query/hooks'
 import {
   CREATE_FUNCTION_WIZARD_BROWSE_LIMIT,
@@ -338,7 +339,8 @@ function RepositorySkeleton({
 export function CreateFunctionView() {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
+  const { vcsProviders } = useConsoleVariables()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { installations, updateFormData } = useFunctionWizard()

@@ -65,6 +65,7 @@ class Attribute extends Resource
     public function jsonSerialize(): array
     {
         return [
+            'description' => $this->description,
             'key' => $this->key,
             'table' => $this->table,
             'type' => $this->getType(),
@@ -100,7 +101,7 @@ class Attribute extends Resource
      */
     public static function fromColumn(Column $column): self
     {
-        return new self(
+        return (new self(
             $column->getKey(),
             $column->getTable(),
             $column->getType(),
@@ -115,7 +116,7 @@ class Attribute extends Resource
             $column->getOptions(),
             $column->getCreatedAt(),
             $column->getUpdatedAt()
-        );
+        ))->setDescription($column->getDescription());
     }
 
     public function getGroup(): string

@@ -33,6 +33,14 @@ return [
         'queueEnv' => '_APP_DELETE_QUEUE_NAME',
         'coroutines' => 8,
     ],
+    // One slot at a time: each job defers behind the deletes backlog, so a
+    // second one would only add to it. A dedicated container sets
+    // _APP_WORKER_MAX_COROUTINES=1 to keep it there.
+    'maintenance' => [
+        'queue' => Event::MAINTENANCE_QUEUE_NAME,
+        'queueEnv' => '_APP_MAINTENANCE_QUEUE_NAME',
+        'coroutines' => 1,
+    ],
     'databases' => [
         'queue' => 'database_db_main',
         'queueEnv' => '_APP_QUEUE_NAME',

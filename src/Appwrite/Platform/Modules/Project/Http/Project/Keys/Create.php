@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -72,12 +73,14 @@ class Create extends Base
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
             ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', optional: false, example: '["users.read"]', enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('expire', null, new Nullable(new Datetime()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the key.', true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
             ->inject('apiKey')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -86,15 +89,27 @@ class Create extends Base
         string $name,
         array $scopes,
         ?string $expire,
+        string $description,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
         ?Key $apiKey,
+        Request $request,
     ) {
+        // A JWT stands in for its session for a few minutes; a key it left behind would outlive it
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         // Dynamic supported for backwards compatibility
         if ($apiKey !== null && \in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_EPHEMERAL, 'dynamic'], true)) {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
+        // A key hands out no more than it holds: no broader scopes and no later expiry
+        if ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $scopes, $expire)) {
             throw new Exception(Exception::KEY_CREATION_DENIED);
         }
 
@@ -107,6 +122,7 @@ class Create extends Base
             'resourceId' => $project->getId(),
             'resourceType' => 'projects',
             'name' => $name,
+            'description' => $description,
             'scopes' => $scopes,
             'expire' => $expire,
             'sdks' => [],
