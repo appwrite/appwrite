@@ -798,15 +798,19 @@ class GitHub extends Git
         $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "Bearer $this->accessToken"]);
 
         $responseHeaders = $response['headers'] ?? [];
-        $statusCode = $responseHeaders['status-code'] ?? 0;
+        $statusCode = \is_array($responseHeaders) ? ($responseHeaders['status-code'] ?? 0) : 0;
+        $statusCode = \is_int($statusCode) ? $statusCode : 0;
         if ($statusCode === 404) {
             return 'none';
         }
         if ($statusCode >= 400) {
-            throw new Exception("Failed to get collaborator permission: HTTP {$statusCode}", $statusCode);
+            throw new Exception('Failed to get collaborator permission: HTTP ' . $statusCode, $statusCode);
         }
 
-        return $response['body']['permission'] ?? 'none';
+        $body = $response['body'] ?? [];
+        $permission = \is_array($body) ? ($body['permission'] ?? 'none') : 'none';
+
+        return \is_string($permission) ? $permission : 'none';
     }
 
     /**
@@ -1460,32 +1464,42 @@ class GitHub extends Git
             case 'issue_comment':
             case 'pull_request_review_comment':
                 $payloadRepository = $payload['repository'] ?? [];
+                $payloadRepository = \is_array($payloadRepository) ? $payloadRepository : [];
                 $payloadRepositoryOwner = $payloadRepository['owner'] ?? [];
+                $payloadRepositoryOwner = \is_array($payloadRepositoryOwner) ? $payloadRepositoryOwner : [];
                 $payloadComment = $payload['comment'] ?? [];
+                $payloadComment = \is_array($payloadComment) ? $payloadComment : [];
                 $payloadCommentUser = $payloadComment['user'] ?? [];
+                $payloadCommentUser = \is_array($payloadCommentUser) ? $payloadCommentUser : [];
 
                 if ($event === 'issue_comment') {
                     $payloadIssue = $payload['issue'] ?? [];
+                    $payloadIssue = \is_array($payloadIssue) ? $payloadIssue : [];
                     // Issues and pull requests share the conversation; only pull requests are of interest.
                     if (empty($payloadIssue['pull_request'])) {
                         return [];
                     }
                     $pullRequestNumber = $payloadIssue['number'] ?? 0;
                 } else {
-                    $pullRequestNumber = ($payload['pull_request'] ?? [])['number'] ?? 0;
+                    $payloadPullRequest = $payload['pull_request'] ?? [];
+                    $pullRequestNumber = \is_array($payloadPullRequest) ? ($payloadPullRequest['number'] ?? 0) : 0;
                 }
 
+                $repositoryId = $payloadRepository['id'] ?? '';
+                $commentId = $payloadComment['id'] ?? 0;
+                // The first comment of a review thread; empty for a thread's first comment.
+                $commentReplyToId = $payloadComment['in_reply_to_id'] ?? 0;
+
                 return [[
-                    'repositoryId' => \strval($payloadRepository['id'] ?? ''),
+                    'repositoryId' => \is_int($repositoryId) || \is_string($repositoryId) ? \strval($repositoryId) : '',
                     'repositoryName' => $payloadRepository['name'] ?? '',
                     'owner' => $payloadRepositoryOwner['login'] ?? '',
                     'installationId' => $installationId,
-                    'pullRequestNumber' => (int) $pullRequestNumber,
+                    'pullRequestNumber' => \is_int($pullRequestNumber) ? $pullRequestNumber : 0,
                     'action' => $payload['action'] ?? '',
-                    'commentId' => (int) ($payloadComment['id'] ?? 0),
+                    'commentId' => \is_int($commentId) ? $commentId : 0,
                     'commentKind' => $event === 'issue_comment' ? 'issue' : 'review',
-                    // The first comment of a review thread; empty for a thread's first comment.
-                    'commentReplyToId' => (int) ($payloadComment['in_reply_to_id'] ?? 0),
+                    'commentReplyToId' => \is_int($commentReplyToId) ? $commentReplyToId : 0,
                     'commentBody' => $payloadComment['body'] ?? '',
                     'commentUrl' => $payloadComment['html_url'] ?? '',
                     'commentAuthor' => $payloadCommentUser['login'] ?? '',

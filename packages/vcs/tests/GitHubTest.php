@@ -470,6 +470,7 @@ final class GitHubTest extends Base
         $adapter = $this->accessTokenResponse(200, ['permission' => 'write', 'role_name' => 'maintain'], $captured);
 
         $this->assertSame('write', $adapter->getCollaboratorPermission('appwrite', 'appwrite', 'octocat'));
+        $this->assertIsArray($captured->request);
         $this->assertSame('GET', $captured->request['method']);
         $this->assertSame('/repos/appwrite/appwrite/collaborators/octocat/permission', $captured->request['path']);
     }
