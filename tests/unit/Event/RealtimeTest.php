@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Event;
 
 use Appwrite\Event\Realtime;
+use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 
@@ -86,5 +87,41 @@ final class RealtimeTest extends TestCase
         $roles = $this->event->resolveRoles('console', ['user:console-user'], null);
 
         $this->assertSame(['user:console-user'], $roles);
+    }
+
+    public function testConsoleCopyOfPrivilegedExecutionGetsPrivilegedRoles(): void
+    {
+        // An admin- or key-invoked execution carries no read role; the console
+        // copy must still reach the org's privileged members.
+        $roles = $this->event->resolveRoles('console', [], null);
+
+        $this->assertSame([
+            'team:org-team/owner',
+            'team:org-team/developer',
+            'team:org-team/admin',
+        ], $roles);
+    }
+
+    public function testProjectCopyOfPrivilegedExecutionReachesNoOne(): void
+    {
+        // No read role → the project copy matches nothing, so a colliding
+        // project user cannot receive an admin-invoked execution.
+        $this->assertSame([], $this->event->resolveRoles('project-a', [], null));
+    }
+
+    public function testExecutionEventKeepsConsoleChannelWithoutReadPermissions(): void
+    {
+        // Without this, fromPayload dropped the whole event when the execution
+        // had no read role, so the console lost live updates for admin- and
+        // key-invoked executions.
+        $target = RealtimeAdapter::fromPayload(
+            'functions.fn1.executions.e1.update',
+            new Document(['$id' => 'e1', 'resourceId' => 'fn1', '$permissions' => []]),
+            new Document(['$id' => 'project-a', 'teamId' => 'org-team']),
+        );
+
+        $this->assertContains('console', $target['channels']);
+        $this->assertContains('executions', $target['channels']);
+        $this->assertSame([], $target['roles']);
     }
 }

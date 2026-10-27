@@ -1151,14 +1151,19 @@ class Realtime extends MessagingAdapter
                 break;
             case 'functions':
                 if ($parts[2] === 'executions') {
-                    if (!empty($payload->getPermissionsByType(PermissionType::Read))) {
-                        $channels[] = 'console';
-                        $channels[] = 'projects.' . $project->getId();
-                        $channels[] = 'executions';
-                        $channels[] = 'executions.' . $payload->getId();
-                        $channels[] = 'functions.' . $payload->getAttribute('resourceId');
-                        $roles = $payload->getPermissionsByType(PermissionType::Read);
-                    }
+                    // Channels are added unconditionally: the console copy is
+                    // re-addressed to the organization's privileged roles in
+                    // Event\Realtime, so it must fire even for an execution with
+                    // no project-user read role (admin- or key-invoked). The
+                    // project copy keeps the execution's read roles, so it
+                    // reaches only the invoking project user and matches nothing
+                    // when there is none.
+                    $channels[] = 'console';
+                    $channels[] = 'projects.' . $project->getId();
+                    $channels[] = 'executions';
+                    $channels[] = 'executions.' . $payload->getId();
+                    $channels[] = 'functions.' . $payload->getAttribute('resourceId');
+                    $roles = $payload->getPermissionsByType(PermissionType::Read);
                 } elseif ($parts[2] === 'deployments') {
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
