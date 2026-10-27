@@ -34,8 +34,10 @@ class Create extends Base
             ->desc('Create repository token')
             ->groups(['api'])
             ->label('scope', 'public')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+            // {url} is the route pattern, so the key is per project: the review service calls
+            // from one address for every project.
+            ->label('abuse-key', 'url:{url},projectId:{param-projectId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 10)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->param('repositoryId', '', new UID(), 'Repository ID.')
             ->param('projectId', '', new UID(), 'Project ID.')
