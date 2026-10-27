@@ -291,24 +291,32 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForDatabases->withPreserveDates(true, function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
-                return $this->withRelationshipTransaction(
-                    $dbForDatabases,
-                    $collection,
-                    [$newDocument],
-                    function (array $documents) use (&$upserted, $dbForDatabases, $collectionTableId) {
-                        $upserted = [];
+            $this->withPermissionPurge(
+                $dbForProject,
+                $database,
+                $collection,
+                $callerProvidedPermissions,
+                function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
+                    return $dbForDatabases->withPreserveDates(true, function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
+                        return $this->withRelationshipTransaction(
+                            $dbForDatabases,
+                            $collection,
+                            [$newDocument],
+                            function (array $documents) use (&$upserted, $dbForDatabases, $collectionTableId) {
+                                $upserted = [];
 
-                        return $dbForDatabases->upsertDocuments(
-                            $collectionTableId,
-                            $documents,
-                            onNext: function (Document $document) use (&$upserted) {
-                                $upserted[] = $document;
-                            },
+                                return $dbForDatabases->upsertDocuments(
+                                    $collectionTableId,
+                                    $documents,
+                                    onNext: function (Document $document) use (&$upserted) {
+                                        $upserted[] = $document;
+                                    },
+                                );
+                            }
                         );
-                    }
-                );
-            });
+                    });
+                },
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (UniqueException $e) {

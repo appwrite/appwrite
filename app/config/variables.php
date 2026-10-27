@@ -452,7 +452,7 @@ return [
             [
                 'name' => '_APP_MEMORY_LIMIT',
                 'description' => 'PHP memory limit of each Appwrite process, including the API, Realtime, workers and tasks. Accepts any PHP memory_limit value, such as \'2G\', or \'-1\' for no limit. Raise it when a Realtime container holds thousands of connections. By default, set to \'512M\'.',
-                'introduction' => '2.5.1',
+                'introduction' => '2.6.2',
                 'default' => '512M',
                 'required' => false,
                 'question' => '',
@@ -529,6 +529,33 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_SUBSCRIPTIONS',
+                'description' => 'Maximum number of subscriptions one realtime connection can hold. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_CHANNELS',
+                'description' => 'Maximum number of channels one realtime connection can subscribe to, counted across all of its subscriptions. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_QUERIES',
+                'description' => 'Maximum number of queries one realtime connection can hold, counted across all of its subscriptions and including queries nested in and/or. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
@@ -598,6 +625,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_MAX_CONNECTIONS',
+                'description' => 'Maximum number of connections the bundled PostgreSQL server accepts. Every API worker and worker coroutine holds its own connections, so raise it on hosts with many cores. Default value is: 500.',
+                'introduction' => '2.7.0',
+                'default' => '500',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_DB_ADAPTER_DOCUMENTSDB',

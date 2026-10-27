@@ -14,6 +14,8 @@ use Utopia\Http\TrustedHeaders;
 #[RequiresPhpExtension('swoole')]
 final class SwooleRequestTest extends TestCase
 {
+    private string $target = '';
+
     /**
      * @return \Iterator<string, array{string, string}>
      */
@@ -209,6 +211,125 @@ final class SwooleRequestTest extends TestCase
         $request = new Request($this->swooleRequest($body, 'multipart/form-data; boundary=' . $boundary));
 
         $this->assertGreaterThanOrEqual(\strlen($body), $request->getSize(), 'the request size must include the uploaded file');
+    }
+
+    /**
+     * A client-supplied `Swoole-Upload-File` part header makes Swoole report any
+     * server path as a ready upload and unlink it when the request is freed
+     * (swoole/swoole-src#6309).
+     */
+    public function testSpoofedUploadIsNeutralized(): void
+    {
+        $swoole = $this->multipartRequest($this->filePart('file', "Swoole-Upload-File: {$this->target}"));
+
+        $this->assertSame($this->target, $this->at($swoole->files, 'file', 'tmp_name'), 'Swoole reports the spoofed path as the upload');
+
+        $request = new Request($swoole);
+        $file = $request->getFiles('file');
+
+        $this->assertSame('', $file['tmp_name']);
+        $this->assertSame(\UPLOAD_ERR_CANT_WRITE, $file['error']);
+        $this->assertSame(0, $file['size']);
+        $this->assertSame([], $swoole->tmpfiles);
+
+        unset($request, $swoole);
+
+        $this->assertFileExists($this->target);
+    }
+
+    public function testSpoofedUploadInsideNestedFieldIsNeutralized(): void
+    {
+        $swoole = $this->multipartRequest(
+            $this->filePart('file[0][part]', "swoole-UPLOAD-file:  {$this->target}"),
+            $this->filePart('file[0][other]'),
+            $this->filePart('empty', filename: '', content: ''),
+        );
+        $request = new Request($swoole);
+        $file = $request->getFiles('file');
+
+        $this->assertSame('', $this->at($file, 'tmp_name', 0, 'part'));
+        $this->assertSame(\UPLOAD_ERR_CANT_WRITE, $this->at($file, 'error', 0, 'part'));
+        $this->assertSame(0, $this->at($file, 'size', 0, 'part'));
+        $this->assertSame([$this->at($file, 'tmp_name', 0, 'other')], $swoole->tmpfiles, 'the genuine sibling stays an upload');
+        $this->assertSame(\UPLOAD_ERR_NO_FILE, $request->getFiles('empty')['error'], 'a failed upload keeps its own error');
+    }
+
+    public function testUploadMentioningTheMarkerStaysIntact(): void
+    {
+        $content = "notes\nSwoole-Upload-File: {$this->target}\n";
+        $swoole = $this->multipartRequest($this->filePart('file', content: $content));
+        $file = new Request($swoole)->getFiles('file');
+
+        $this->assertIsString($file['tmp_name']);
+        $this->assertStringStartsWith('swoole.upfile.', \basename($file['tmp_name']));
+        $this->assertSame(\strlen($content), $file['size']);
+        $this->assertSame([$file['tmp_name']], $swoole->tmpfiles);
+    }
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        $this->target = \sys_get_temp_dir() . '/target-' . \bin2hex(\random_bytes(4));
+        \file_put_contents($this->target, 'secret');
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        if (\is_file($this->target)) {
+            \unlink($this->target);
+        }
+    }
+
+    private function filePart(string $name, string $header = '', string $filename = 'upload.txt', string $content = 'payload'): string
+    {
+        return "Content-Disposition: form-data; name=\"{$name}\"; filename=\"{$filename}\"\r\n"
+            . "Content-Type: text/plain\r\n"
+            . ($header === '' ? '' : "{$header}\r\n")
+            . "\r\n"
+            . $content;
+    }
+
+    /**
+     * Parses a multipart request through Swoole's own parser, which writes uploads to disk.
+     */
+    private function multipartRequest(string ...$parts): SwooleRequest
+    {
+        $boundary = 'upload-boundary';
+        $body = '';
+
+        foreach ($parts as $part) {
+            $body .= "--{$boundary}\r\n{$part}\r\n";
+        }
+
+        $body .= "--{$boundary}--\r\n";
+
+        $request = SwooleRequest::create(['parse_cookie' => false]);
+        \assert($request instanceof SwooleRequest);
+
+        $request->parse(
+            "POST /v1/storage/buckets/files HTTP/1.1\r\n"
+            . "Host: localhost\r\n"
+            . "Content-Type: multipart/form-data; boundary={$boundary}\r\n"
+            . 'Content-Length: ' . \strlen($body) . "\r\n"
+            . "\r\n"
+            . $body,
+        );
+
+        return $request;
+    }
+
+    private function at(mixed $value, int|string ...$keys): mixed
+    {
+        foreach ($keys as $key) {
+            if (! \is_array($value)) {
+                $this->fail('expected an array at ' . $key);
+            }
+
+            $value = $value[$key] ?? null;
+        }
+
+        return $value;
     }
 
     private function swooleRequest(string $body, string $contentType = 'application/json'): SwooleRequest

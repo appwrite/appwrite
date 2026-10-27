@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import { DomainTypeCard } from './DomainTypeCard'
 import {
   VerifySmtpDomainContent,
   dnsPendingVerificationError,
@@ -57,9 +58,11 @@ export function AddSmtpDomainWizard() {
   const [verificationError, setVerificationError] =
     useState<DomainVerificationError | null>(null)
   const [rule, setRule] = useState<SmtpProxyRule | null>(null)
+  const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/functions/${functionId}/domains`
   const isPending =
+    registering ||
     createMutation.isPending ||
     verifyMutation.isPending ||
     deleteMutation.isPending
@@ -90,6 +93,7 @@ export function AddSmtpDomainWizard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isPending) return
     const d = domain.trim().toLowerCase()
     setError('')
     if (!d) {
@@ -97,26 +101,24 @@ export function AddSmtpDomainWizard() {
       return
     }
     if (!isValidDomain(d)) {
-      setError(t('Invalid'))
+      setError(t('Invalid format'))
       return
     }
     if (!emailEnabled) {
-      toast.error(
-        t(
-          'Enable the email trigger under Settings → Executions before adding an email domain.',
-        ),
-      )
       return
     }
 
+    setRegistering(true)
     try {
       await ensureApexDomainInOrganization(project?.teamId ?? '', d)
     } catch (err: unknown) {
       const e = err as { type?: string }
       if (e?.type !== 'domain_already_exists') {
-        toast.error(t('Failed to register domain'))
+        toast.error(getErrorMessage(err, 'Failed to register domain'))
         return
       }
+    } finally {
+      setRegistering(false)
     }
 
     try {
@@ -205,7 +207,7 @@ export function AddSmtpDomainWizard() {
 
   return (
     <WizardLayout
-      title={t('Add email domain')}
+      title={t('Add domain')}
       fallbackPath={fallbackPath}
       fullscreen
       useSidebar={false}
@@ -225,30 +227,35 @@ export function AddSmtpDomainWizard() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {!emailEnabled ? (
-          <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 px-6 py-4">
-            <p className="text-[13px] text-foreground">
-              {t(
-                'Enable the email trigger under Settings → Executions before adding an email domain.',
-              )}
-            </p>
-          </div>
-        ) : null}
+        <DomainTypeCard
+          value="smtp"
+          onChange={(type) => {
+            if (type === 'http') {
+              navigate({
+                to: '/projects/$projectId/functions/$functionId/domains/add',
+                params: { projectId: projectId!, functionId: functionId! },
+                search: {},
+                replace: true,
+              })
+            }
+          }}
+          emailEnabled={emailEnabled}
+          disabled={createMutation.isPending}
+        />
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              {t('Email domain')}
+              {t('Domain')}
             </h3>
-            <p className="text-[13px] text-muted-foreground mt-2">
-              {t(
-                'Mail sent to any address on this domain runs this function. This is separate from HTTP domains and from outbound SMTP for the project.',
-              )}
-            </p>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
-            <Label className="text-[12px]">{t('Domain name')}</Label>
+            <Label htmlFor="email-domain" className="text-[12px] font-medium">
+              {t('Domain name')}
+            </Label>
             <Input
+              id="email-domain"
+              autoFocus
               placeholder="mail.example.com"
               value={domain}
               onChange={(e) => {
@@ -263,7 +270,7 @@ export function AddSmtpDomainWizard() {
             ) : (
               <p className="text-[12px] text-muted-foreground mt-2">
                 {t(
-                  'After adding the domain, publish an MX record and a TXT ownership record, then verify.',
+                  'Use a domain or subdomain that receives no other mail, since its MX record will point to Appwrite.',
                 )}
               </p>
             )}
