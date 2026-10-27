@@ -6,6 +6,7 @@ namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Database\RuntimeQuery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
@@ -1378,6 +1379,48 @@ final class MessagingTest extends TestCase
         ]);
 
         $this->assertSame([3], \array_keys($receivers));
+    }
+
+    public static function deploymentEvents(): \Iterator
+    {
+        yield 'functions' => ['functions.function1.deployments.deployment1.update'];
+        yield 'sites' => ['sites.site1.deployments.deployment1.update'];
+    }
+
+    #[DataProvider('deploymentEvents')]
+    public function testFromPayloadDeploymentsReachOnlyProjectReaders(string $event): void
+    {
+        $project = new Document([
+            '$id' => Id::custom('project1'),
+            'teamId' => 'org1',
+            '$permissions' => [
+                Permission::read(Role::team('org1', 'owner')),
+                Permission::read(Role::team('org1', 'project-project1-developer')),
+            ],
+        ]);
+
+        $result = Realtime::fromPayload(
+            event: $event,
+            payload: new Document(['$id' => Id::custom('deployment1')]),
+            project: $project,
+        );
+
+        $this->assertSame('console', $result['projectId']);
+
+        $realtime = new Realtime();
+        $realtime->subscribe('console', 1, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project2-developer')->toString()], ['console']);
+        $realtime->subscribe('console', 2, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project1-developer')->toString()], ['console']);
+
+        $receivers = $realtime->getSubscribers([
+            'project' => 'console',
+            'roles' => $result['roles'],
+            'data' => [
+                'channels' => $result['channels'],
+                'payload' => ['$id' => 'deployment1'],
+            ],
+        ]);
+
+        $this->assertSame([2], \array_keys($receivers));
     }
 
     public function testFromPayloadDocumentSecurityIncludesPayloadAnyRead(): void

@@ -7,6 +7,7 @@ use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
 use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
+use Utopia\Database\PermissionType;
 
 class Realtime extends Event
 {
@@ -119,13 +120,18 @@ class Realtime extends Event
             : [$target['projectId'] ?? $this->getProject()->getId()];
 
         foreach ($projectIds as $projectId) {
+            // Target roles belong to the project's namespace; in the console they could match an unrelated account with the same ID
+            $roles = $projectId === 'console' && ($target['projectId'] ?? null) !== 'console'
+                ? ($this->getProject()?->getPermissionsByType(PermissionType::Read) ?? [])
+                : $target['roles'];
+
             try {
                 $this->realtime->send(
                     projectId: $projectId,
                     payload: $this->getRealtimePayload(),
                     events: $allEvents,
                     channels: $target['channels'],
-                    roles: $target['roles'],
+                    roles: $roles,
                     options: [
                         'permissionsChanged' => $target['permissionsChanged'],
                         'userId' => $this->getParam('userId')
