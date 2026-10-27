@@ -23,6 +23,11 @@ final class ReviewsConsoleClientTest extends Scope
 
     protected function setupInstallation(): string
     {
+        // Same gate as the VCSGitHub suite: without the GitHub App there is no installation to use.
+        if (System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY') === 'disabled') {
+            $this->markTestSkipped('VCS is not enabled.');
+        }
+
         $projectId = $this->getProject()['$id'];
 
         if (!empty(self::$cachedInstallationId[$projectId])) {
