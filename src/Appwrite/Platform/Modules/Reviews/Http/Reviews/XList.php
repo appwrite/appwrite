@@ -11,7 +11,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -40,7 +39,6 @@ class XList extends Action
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -49,7 +47,6 @@ class XList extends Action
         bool $includeTotal,
         Response $response,
         Database $dbForProject,
-        Authorization $authorization,
     ): void {
         try {
             $queries = Query::parseQueries($queries);
@@ -67,7 +64,7 @@ class XList extends Action
             }
 
             $reviewId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('reviews', $reviewId));
+            $cursorDocument = $dbForProject->getDocument('reviews', $reviewId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Review '{$reviewId}' for the 'cursor' value not found.");
@@ -79,8 +76,8 @@ class XList extends Action
         $filterQueries = Query::groupByType($queries)->filters;
 
         try {
-            $reviews = $authorization->skip(fn () => $dbForProject->find('reviews', $queries));
-            $total = $includeTotal ? $authorization->skip(fn () => $dbForProject->count('reviews', $filterQueries, APP_LIMIT_COUNT)) : 0;
+            $reviews = $dbForProject->find('reviews', $queries);
+            $total = $includeTotal ? $dbForProject->count('reviews', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }

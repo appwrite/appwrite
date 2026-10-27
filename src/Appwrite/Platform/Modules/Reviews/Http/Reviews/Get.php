@@ -7,7 +7,6 @@ use Appwrite\Platform\Action;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
@@ -31,7 +30,6 @@ class Get extends Action
             ->param('reviewId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Review ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -39,18 +37,17 @@ class Get extends Action
         string $reviewId,
         Response $response,
         Database $dbForProject,
-        Authorization $authorization,
     ): void {
-        $review = $authorization->skip(fn () => $dbForProject->getDocument('reviews', $reviewId));
+        $review = $dbForProject->getDocument('reviews', $reviewId);
 
         if ($review->isEmpty()) {
             throw new Exception(Exception::REVIEW_NOT_FOUND);
         }
 
-        $findings = $authorization->skip(fn () => $dbForProject->find('reviewFindings', [
+        $findings = $dbForProject->find('reviewFindings', [
             Query::equal('reviewInternalId', [$review->getSequence()]),
             Query::limit(APP_LIMIT_SUBQUERY),
-        ]));
+        ]);
 
         $review->setAttribute('findings', $findings);
 

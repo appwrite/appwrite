@@ -56,11 +56,11 @@ class Create extends Base
         callable $getProjectDB,
         Authorization $authorization,
     ): void {
-        $this->authenticate($request);
+        $this->authenticate($request, $authorization);
 
         $project = $this->getProject($projectId, $dbForPlatform, $authorization);
         $dbForProject = $getProjectDB($project);
-        $review = $this->getReview($reviewId, $dbForProject, $authorization);
+        $review = $this->getReview($reviewId, $dbForProject);
 
         $documents = [];
         foreach ($usage as $index => $call) {

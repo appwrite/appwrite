@@ -80,11 +80,11 @@ class Update extends Base
         callable $getProjectDB,
         Authorization $authorization,
     ): void {
-        $this->authenticate($request);
+        $this->authenticate($request, $authorization);
 
         $project = $this->getProject($projectId, $dbForPlatform, $authorization);
         $dbForProject = $getProjectDB($project);
-        $review = $this->getReview($reviewId, $dbForProject, $authorization);
+        $review = $this->getReview($reviewId, $dbForProject);
 
         // processing may repeat: a job redelivered after a crash starts again.
         if (!\in_array($review->getAttribute('status'), ['queued', 'processing'], true)) {

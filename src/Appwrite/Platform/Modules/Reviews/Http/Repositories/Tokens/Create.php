@@ -53,7 +53,7 @@ class Create extends Base
         Authorization $authorization,
         VcsFactory $vcsFactory,
     ): void {
-        $this->authenticate($request);
+        $this->authenticate($request, $authorization);
 
         $repository = $authorization->skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId));
 
