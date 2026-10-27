@@ -744,9 +744,6 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Failed to add email domain': 'メールドメインの追加に失敗しました',
   'Verify email domain': 'メールドメインを検証',
   'Add email domain': 'メールドメインを追加',
-  'Email domains': 'メールドメイン',
-  'No email domains yet': 'メールドメインはまだありません',
-  'Email domain has been deleted': 'メールドメインを削除しました',
   'Serve HTTP requests on your domain':
     'ドメインで HTTP リクエストを処理します',
   'Run on mail sent to any address on your domain':
@@ -754,10 +751,6 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Email domains need the email trigger.':
     'メールドメインにはメールトリガーが必要です。',
   'Enable it in settings': '設定で有効にする',
-  'Run this function on mail sent to domains you own.':
-    '所有するドメインに届いたメールでこの関数を実行します。',
-  'Add a domain, publish its MX and TXT records, then verify it to start receiving mail.':
-    'ドメインを追加し、MX レコードと TXT レコードを公開してから検証すると、メールの受信が始まります。',
   'Use a domain or subdomain that receives no other mail, since its MX record will point to Appwrite.':
     'MX レコードは Appwrite を指すため、他のメールを受信していないドメインまたはサブドメインを使用してください。',
   'Mail is delivered to Appwrite on port 25, so the MX record must point straight at the value above, not at a proxied hostname.':
