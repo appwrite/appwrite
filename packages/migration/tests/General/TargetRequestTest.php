@@ -133,7 +133,8 @@ final class TargetRequestTest extends TestCase
 
     public function testCompressedResponseDecodingPastTheLimitIsAbandoned(): void
     {
-        if (\version_compare(\curl_version()['version'], '8.22.0', '<')) {
+        $curl = \curl_version();
+        if ($curl === false || !\is_string($curl['version']) || \version_compare($curl['version'], '8.22.0', '<')) {
             $this->markTestSkipped('Older libcurl checks the size cap against the encoded bytes only.');
         }
 
