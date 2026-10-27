@@ -2469,8 +2469,8 @@ class Appwrite extends Source
             $responseHeaders
         );
 
-        // content-length header missing, file is less than max buffer size
-        if (!array_key_exists('content-length', $responseHeaders)) {
+        // Archives past the server's read buffer stream without content-length
+        if (!array_key_exists('content-length', $responseHeaders) && $deployment->sourceSize === 0) {
             $file = $this->call(
                 'GET',
                 "/functions/{$func->getId()}/deployments/{$deployment->id}/download",
@@ -2502,7 +2502,7 @@ class Appwrite extends Source
             return;
         }
 
-        $fileSize = (int) $responseHeaders['content-length'];
+        $fileSize = (int) ($responseHeaders['content-length'] ?? $deployment->sourceSize);
 
         if ($end >= $fileSize) {
             $end = $fileSize - 1;
@@ -3059,7 +3059,7 @@ class Appwrite extends Source
             $responseHeaders
         );
 
-        if (!\array_key_exists('content-length', $responseHeaders)) {
+        if (!\array_key_exists('content-length', $responseHeaders) && $deployment->sourceSize === 0) {
             $file = $this->call(
                 'GET',
                 "/sites/{$site->getId()}/deployments/{$deployment->id}/download",
@@ -3090,7 +3090,7 @@ class Appwrite extends Source
             return;
         }
 
-        $fileSize = (int) $responseHeaders['content-length'];
+        $fileSize = (int) ($responseHeaders['content-length'] ?? $deployment->sourceSize);
 
         if ($end >= $fileSize) {
             $end = $fileSize - 1;
