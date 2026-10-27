@@ -1,53 +1,79 @@
 import type { Breadcrumb, ErrorEvent } from '@sentry/tanstackstart-react'
 
 const REDACTED = 'redacted'
-const SENSITIVE_SEARCH_PARAMS = ['secret', 'userId', 'token', 'code', 'jwt']
-const BREADCRUMB_URL_FIELDS = ['from', 'to', 'url']
+const CIRCULAR = '[Circular]'
+const QUERY_PARAMETER = /([?&#])([^=&#?\s"'<>]+)=([^&#\s"'<>]*)/g
 
-function redactSearch(search: string): string {
-  const params = new URLSearchParams(search)
-  const sensitive = SENSITIVE_SEARCH_PARAMS.filter((name) => params.has(name))
-  if (sensitive.length === 0) return search
-  for (const name of sensitive) {
-    params.set(name, REDACTED)
-  }
-  return params.toString()
+export function redactUrl(text: string): string {
+  return text.replace(QUERY_PARAMETER, `$1$2=${REDACTED}`)
 }
 
-export function redactUrl(url: string): string {
-  const searchStart = url.indexOf('?')
-  if (searchStart === -1) return url
-  const hashStart = url.indexOf('#', searchStart)
-  const searchEnd = hashStart === -1 ? url.length : hashStart
-  const search = url.slice(searchStart + 1, searchEnd)
-  const redacted = redactSearch(search)
-  if (redacted === search) return url
-  return `${url.slice(0, searchStart)}?${redacted}${url.slice(searchEnd)}`
+function redactQueryString(query: string): string {
+  return redactUrl(`?${query}`).slice(1)
 }
 
-export function redactSentryEvent(event: ErrorEvent): ErrorEvent {
-  const request = event.request
-  if (!request) return event
-  if (request.url) {
-    request.url = redactUrl(request.url)
-  }
-  if (typeof request.query_string === 'string') {
-    request.query_string = redactSearch(request.query_string)
-  }
-  if (request.headers?.Referer) {
-    request.headers.Referer = redactUrl(request.headers.Referer)
-  }
-  return event
+function isPlainObject(value: object): value is Record<string, unknown> {
+  const prototype: unknown = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
+}
+
+function redactValue(value: unknown, ancestors: WeakSet<object>): unknown {
+  if (typeof value === 'string') return redactUrl(value)
+  if (!value || typeof value !== 'object') return value
+  if (ancestors.has(value)) return CIRCULAR
+  if (!Array.isArray(value) && !isPlainObject(value)) return value
+
+  ancestors.add(value)
+  const redacted = Array.isArray(value)
+    ? value.map((item) => redactValue(item, ancestors))
+    : Object.fromEntries(
+        Object.entries(value).map(([key, item]) => [
+          key,
+          redactValue(item, ancestors),
+        ]),
+      )
+  ancestors.delete(value)
+  return redacted
+}
+
+function redact<T>(value: T): T {
+  return redactValue(value, new WeakSet()) as T
 }
 
 export function redactSentryBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb {
-  const data = breadcrumb.data
-  if (!data) return breadcrumb
-  for (const field of BREADCRUMB_URL_FIELDS) {
-    const value = data[field]
-    if (typeof value === 'string') {
-      data[field] = redactUrl(value)
+  return {
+    ...breadcrumb,
+    message:
+      breadcrumb.message === undefined
+        ? undefined
+        : redactUrl(breadcrumb.message),
+    data: redact(breadcrumb.data),
+  }
+}
+
+export function redactSentryEvent(event: ErrorEvent): ErrorEvent {
+  if (event.request) {
+    const { query_string: query, ...request } = event.request
+    event.request = redact(request)
+    if (query !== undefined) {
+      event.request.query_string =
+        typeof query === 'string' ? redactQueryString(query) : REDACTED
     }
   }
-  return breadcrumb
+  if (event.message !== undefined) {
+    event.message = redactUrl(event.message)
+  }
+  if (event.transaction !== undefined) {
+    event.transaction = redactUrl(event.transaction)
+  }
+  for (const exception of event.exception?.values ?? []) {
+    if (exception.value !== undefined) {
+      exception.value = redactUrl(exception.value)
+    }
+  }
+  event.extra = redact(event.extra)
+  event.contexts = redact(event.contexts)
+  event.tags = redact(event.tags)
+  event.breadcrumbs = event.breadcrumbs?.map(redactSentryBreadcrumb)
+  return event
 }
