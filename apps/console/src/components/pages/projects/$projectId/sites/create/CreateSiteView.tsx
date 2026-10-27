@@ -33,6 +33,7 @@ import {
   useRepositories,
   useProject,
   useNamespacesForInstallations,
+  useConsoleVariables,
 } from '@/lib/react-query/hooks'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
@@ -104,7 +105,8 @@ function RepositorySkeleton({
 export function CreateSiteView() {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features)
+  const { vcsProviders } = useConsoleVariables()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { installations, updateFormData, setCurrentPath } = useWizard()

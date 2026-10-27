@@ -9,6 +9,8 @@ use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
+use Appwrite\Vcs\Checkout;
+use Appwrite\Vcs\Checkout\Exception as CheckoutException;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\Validator\Directory;
 use Exception;
@@ -57,44 +59,15 @@ class Builds extends Action
     }
 
     /**
-     * Resolves a repository directory inside its checkout, refusing symbolic
-     * links and anything that resolves outside it.
-     *
      * @throws BuildException
      */
     private function confine(string $checkout, string $directory, bool $create = false): string
     {
-        $root = \realpath($checkout);
-        if ($root === false) {
-            throw new BuildException('Repository checkout is missing.');
+        try {
+            return (new Checkout($checkout))->resolve($directory, $create);
+        } catch (CheckoutException $exception) {
+            throw new BuildException($exception->getMessage(), previous: $exception);
         }
-
-        $path = $root;
-        foreach (\explode('/', $directory) as $segment) {
-            if ($segment === '' || $segment === '.') {
-                continue;
-            }
-            if ($segment === '..') {
-                throw new BuildException('Root directory must stay inside the repository.');
-            }
-
-            $path .= '/' . $segment;
-            if (\is_link($path)) {
-                throw new BuildException('Root directory "' . $directory . '" must not be a symbolic link.');
-            }
-            if (!\file_exists($path) && (!$create || !\mkdir($path))) {
-                throw new BuildException('Root directory "' . $directory . '" not found in the repository.');
-            }
-            if (!\is_dir($path)) {
-                throw new BuildException('Root directory "' . $directory . '" must be a directory.');
-            }
-        }
-
-        if (\realpath($path) !== $path) {
-            throw new BuildException('Root directory must stay inside the repository.');
-        }
-
-        return $path;
     }
 
     /**
@@ -419,14 +392,13 @@ class Builds extends Action
                 }
 
                 // Commit and push
-                $commitMessage = 'Create ' . $resource->getAttribute('name', '') . ' function';
+                $commitMessage = 'Create ' . $resource->getAttribute('name', '') . ' ' . ($resource->getCollection() === 'sites' ? 'site' : 'function');
                 $push = Command::and(
-                    (new Command('git'))->argument('config')->flag('--global')->argument('user.email')->argument(APP_VCS_GITHUB_EMAIL),
-                    (new Command('git'))->argument('config')->flag('--global')->argument('user.name')->argument(APP_VCS_GITHUB_USERNAME),
                     // A branch clone already has the branch; a commit clone is detached
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('checkout')->flag('-B')->argument($branchName),
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('add')->argument('.'),
-                    (new Command('git'))->option('-C', $tmpDirectory)->argument('commit')->option('-m', $commitMessage),
+                    // The author is set for this commit only: concurrent builds writing the global config fail on each other's lock
+                    (new Command('git'))->option('-C', $tmpDirectory)->option('-c', 'user.email=' . APP_VCS_GITHUB_EMAIL)->option('-c', 'user.name=' . APP_VCS_GITHUB_USERNAME)->argument('commit')->option('-m', $commitMessage),
                     // The provider's remote may need more than the clone URL carries
                     $providerAdapter->generatePushCommand($cloneOwner, $cloneRepository, $tmpDirectory, $branchName),
                 );
@@ -447,7 +419,7 @@ class Builds extends Action
                 $deployment->setAttribute('providerCommitHash', $providerCommitHash);
                 $deployment->setAttribute('providerCommitAuthorUrl', APP_VCS_GITHUB_URL);
                 $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
-                $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
+                $deployment->setAttribute('providerCommitMessage', $commitMessage);
                 $deployment->setAttribute('providerCommitUrl', $providerAdapter->getCommitUrl($cloneOwner, $cloneRepository, $providerCommitHash));
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                     'providerCommitHash' => $deployment->getAttribute('providerCommitHash'),

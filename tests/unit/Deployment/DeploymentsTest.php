@@ -283,6 +283,37 @@ final class DeploymentsTest extends TestCase
         }
     }
 
+    public function testDeleteBuildDirectoryReportsWhetherAnythingIsLeft(): void
+    {
+        $base = \realpath(\sys_get_temp_dir()) . '/build-directory-' . \bin2hex(\random_bytes(6));
+        $root = $base . '/app-project1';
+        \mkdir($root . '/deployment1/output', 0o777, true);
+        \mkdir($base . '/outside');
+        \file_put_contents($root . '/deployment1/code.tar.gz', 'artifact');
+        \file_put_contents($root . '/deployment1/output/extra', 'extra');
+        \file_put_contents($base . '/outside/kept', 'kept');
+        \symlink($base . '/outside', $root . '/linked');
+        $device = new Local($root);
+
+        try {
+            $this->assertTrue(Deployments::deleteBuildDirectory($device, 'deployment1'));
+            $this->assertFileDoesNotExist($root . '/deployment1');
+
+            // Nothing left counts as deleted, so a retried cleanup succeeds.
+            $this->assertTrue(Deployments::deleteBuildDirectory($device, 'deployment1'));
+
+            // A directory reached through a symbolic link is refused, not followed.
+            $this->assertFalse(Deployments::deleteBuildDirectory($device, 'linked'));
+            $this->assertSame('kept', \file_get_contents($base . '/outside/kept'));
+        } finally {
+            \unlink($root . '/linked');
+            \unlink($base . '/outside/kept');
+            \rmdir($base . '/outside');
+            \rmdir($root);
+            \rmdir($base);
+        }
+    }
+
     /**
      * @template T
      * @param callable(): T $test

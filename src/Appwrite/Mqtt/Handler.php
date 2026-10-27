@@ -76,10 +76,13 @@ class Handler implements MqttHandler
 
         Span::add('user.id', $identity['userId'] ?? '');
 
-        // Rate-limit CONNECT per user (keyed on userId until the infra surfaces client IP).
+        // Rate-limit CONNECT per user (keyed on project and user until the infra surfaces client IP).
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             $getRedis = $this->container->get('getRedis');
-            $timeLimit = new TimeLimitRedis('mqtt:connect:{userId}', 128, 60, $getRedis())->withParams(['{userId}' => (string) ($identity['userId'] ?? '')]);
+            $timeLimit = new TimeLimitRedis('mqtt:connect:{projectId}:{userId}', 128, 60, $getRedis())->withParams([
+                '{projectId}' => (string) ($identity['projectId'] ?? ''),
+                '{userId}' => (string) ($identity['userId'] ?? ''),
+            ]);
 
             if ($timeLimit->check()->limited) {
                 Span::add('mqtt.result', 'abuse');
@@ -377,6 +380,13 @@ class Handler implements MqttHandler
                 continue;
             }
 
+            // The credential the connection was opened with has expired, as an HTTP request with it would fail.
+            if (!$this->current($connection)) {
+                $this->untrack($connection);
+                $connection->disconnect(Disconnect::NOT_AUTHORIZED, (new Exception(Exception::USER_UNAUTHORIZED))->getMessage());
+                continue;
+            }
+
             $deliveryQos = \min($qos, $grantedQos);
             $connection->publish($topic, $message, qos: $deliveryQos, sequence: $sequence);
             $this->mqtt->messagesDelivered->add(1, ['qos' => $deliveryQos]);
@@ -425,28 +435,41 @@ class Handler implements MqttHandler
         }
     }
 
-    /** Disconnect the user's connections if they lost access; returns how many were disconnected. */
+    /**
+     * Disconnect the user's connections that lost access, each checked against the session and
+     * expiry it was opened with; returns how many were disconnected.
+     */
     public function revoke(string $projectId, string $userId): int
     {
         $this->accessClock->set($projectId, $userId);
 
-        if ($this->connectionsOf($projectId, $userId) === []) {
-            return 0;
-        }
-
-        if ($this->authorized(['projectId' => $projectId, 'userId' => $userId])) {
-            return 0;
-        }
-
         $connections = $this->connectionsOf($projectId, $userId);
-        $reason = (new Exception(Exception::USER_BLOCKED))->getMessage();
+        if ($connections === []) {
+            return 0;
+        }
 
-        foreach ($connections as $connection) {
+        // Connections opened with the same credential share one check.
+        $decisions = [];
+        $revoked = [];
+        foreach ($connections as $fd => $connection) {
+            // The credential only: when a connection is next due for a check does not change the answer.
+            $credential = $connection->identity;
+            unset($credential['recheckAt']);
+            $key = (string) \json_encode($credential);
+            $decisions[$key] ??= $this->authorized($connection->identity);
+            if (!$decisions[$key]) {
+                $revoked[$fd] = $connection;
+            }
+        }
+
+        $reason = (new Exception(Exception::USER_UNAUTHORIZED))->getMessage();
+
+        foreach ($revoked as $connection) {
             $this->untrack($connection);
             $connection->disconnect(Disconnect::NOT_AUTHORIZED, $reason);
         }
 
-        return \count($connections);
+        return \count($revoked);
     }
 
     /**
@@ -499,6 +522,42 @@ class Handler implements MqttHandler
 
             return false;
         }
+    }
+
+    /**
+     * Whether the credential the connection was opened with is still valid. A token's expiry is
+     * final; a session is checked again whenever it falls due, as it may since have been extended,
+     * ended or left short of factors.
+     */
+    private function current(Connection $connection): bool
+    {
+        $now = \time();
+
+        $expire = $connection->identity['expire'] ?? null;
+        // Expired from its exp second on, as the JWT library reads it.
+        if (\is_int($expire) && $expire <= $now) {
+            return false;
+        }
+
+        $recheckAt = $connection->identity['recheckAt'] ?? null;
+        // Due only once past, so a check falling on the expiry second never sees the session still active.
+        if (!\is_int($recheckAt) || $recheckAt >= $now) {
+            return true;
+        }
+
+        if (!$this->authorized($connection->identity)) {
+            return false;
+        }
+
+        // Never past the expiry the session had at connect, which is checked on its own.
+        $recheckAt = $now + APP_MQTT_SESSION_RECHECK;
+        $sessionExpire = $connection->identity['sessionExpire'] ?? null;
+        if (\is_int($sessionExpire) && $sessionExpire >= $now) {
+            $recheckAt = \min($recheckAt, $sessionExpire);
+        }
+        $connection->identity['recheckAt'] = $recheckAt;
+
+        return true;
     }
 
     /** @return array<int, Connection> fd => connection */
