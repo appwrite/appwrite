@@ -660,13 +660,23 @@ class Functions extends Action
         }
 
         $now = DateTime::now();
-        // Reuse the read permission the caller already resolved (empty for an
-        // admin-mode request, where user:{id} is a console id that would leak
-        // the execution to a colliding project user). Fall back to the user
-        // only for triggers that resolve none (e.g. events), where the user is
-        // a genuine project user.
-        $executionPermissions = $permissions
-            ?? ($user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))]);
+        // Resolve the execution's read permission from a trusted, project-scoped
+        // source, never from the queued user id (admin mode carries a console
+        // id that would leak the execution to a colliding project user):
+        //   1. the permission the HTTP caller already resolved, else
+        //   2. the existing row's permission — a scheduled execution was stored
+        //      with the gated value at create time, so this preserves it across
+        //      the id-only requeue rather than re-deriving from the user, else
+        //   3. the user, only when no row exists yet (e.g. event triggers),
+        //      where the user is a genuine project user.
+        $executionPermissions = $permissions;
+        if ($executionPermissions === null && !empty($executionId)) {
+            $existingExecution = $dbForProject->getDocument('executions', $executionId);
+            if (!$existingExecution->isEmpty()) {
+                $executionPermissions = $existingExecution->getPermissions();
+            }
+        }
+        $executionPermissions ??= $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))];
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => $executionPermissions,
