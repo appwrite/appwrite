@@ -86,6 +86,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyAliasedEmail\Upd
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyCorporateEmail\Update as UpdateDenyCorporateEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyDisposableEmail\Update as UpdateDenyDisposableEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyFreeEmail\Update as UpdateDenyFreeEmailPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyRealtimeGuests\Update as UpdateDenyRealtimeGuestsPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\Get as GetPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\MembershipPrivacy\Update as UpdateMembershipPrivacyPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\MFAFactors\Update as UpdateMFAFactorsPolicy;
@@ -204,6 +205,7 @@ class Http extends Service
         $this->addAction(UpdateDenyDisposableEmailPolicy::getName(), new UpdateDenyDisposableEmailPolicy());
         $this->addAction(UpdateDenyFreeEmailPolicy::getName(), new UpdateDenyFreeEmailPolicy());
         $this->addAction(UpdateDenyCorporateEmailPolicy::getName(), new UpdateDenyCorporateEmailPolicy());
+        $this->addAction(UpdateDenyRealtimeGuestsPolicy::getName(), new UpdateDenyRealtimeGuestsPolicy());
 
         // Auth Methods
         $this->addAction(UpdateAuthMethod::getName(), new UpdateAuthMethod());
