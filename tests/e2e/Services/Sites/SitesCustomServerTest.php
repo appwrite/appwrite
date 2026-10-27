@@ -437,7 +437,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayNotHasKey('domain', $read['body']);
 
         // Test for SUCCESS
-        $read =$this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, array_merge([
+        $read = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
