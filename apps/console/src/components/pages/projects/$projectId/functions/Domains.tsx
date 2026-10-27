@@ -92,6 +92,14 @@ export function View() {
   const rulesFromApi = domainsData?.rules || []
   const total = domainsData?.total || 0
 
+  // Deleting the last domain on the last page leaves that page empty; step
+  // back to the last page that still has rows so the table stays reachable.
+  useEffect(() => {
+    if (!domainsData || currentPage === 0) return
+    const lastPage = Math.max(0, Math.ceil(domainsData.total / pageSize) - 1)
+    if (currentPage > lastPage) setCurrentPage(lastPage)
+  }, [domainsData, currentPage, pageSize])
+
   // Keep showing previous results while fetching new filter results (no empty state flash)
   const lastRulesRef = useRef<typeof rulesFromApi>([])
   useEffect(() => {
