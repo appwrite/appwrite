@@ -429,9 +429,10 @@ class Webhooks extends Action
         $host = \strtolower(\trim($uri->getHost(), '[]'));
         $literal = \filter_var($host, FILTER_VALIDATE_IP) !== false;
         $destinations = $publicHostname->getDestinations();
+        // getaddrinfo() needs a socket type and a service; any port works for the lookup
         $addresses = $literal ? [$host] : \array_values(\array_unique([
-            ...(Resolver::getaddrinfo($host, AF_INET) ?: []),
-            ...(Resolver::getaddrinfo($host, AF_INET6) ?: []),
+            ...(Resolver::getaddrinfo($host, AF_INET, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: []),
+            ...(Resolver::getaddrinfo($host, AF_INET6, SOCK_STREAM, STREAM_IPPROTO_TCP, '80') ?: []),
         ]));
 
         if ($addresses === []) {
