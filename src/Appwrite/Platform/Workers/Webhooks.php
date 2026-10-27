@@ -80,6 +80,12 @@ class Webhooks extends Action
 
         Span::add('project.id', $project->getId());
 
+        // Deleted, or replaced by a project created under the same ID, after the event was queued.
+        if ($project->isEmpty()) {
+            Span::add('webhooks.skipped', 'project_not_found');
+            return;
+        }
+
         // A redelivery retries only the webhooks that failed. When the record of the others
         // cannot be read they are sent to again: a receiver can drop a repeat by its delivery
         // id, while a skipped delivery is lost. A message redriven from the dead letters starts

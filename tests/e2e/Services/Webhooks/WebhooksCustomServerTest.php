@@ -127,23 +127,35 @@ final class WebhooksCustomServerTest extends Scope
 
         $this->createProjectWithId($projectId);
 
+        $recreatedUserId = Id::unique();
         $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', $headers, [
             'webhookId' => Id::unique(),
             'name' => 'Recreated',
-            'events' => [$event],
+            'events' => [$event, "users.{$recreatedUserId}.create"],
             'url' => 'http://request-catcher-webhook:5000/',
             'tls' => false,
         ]);
         $this->assertSame(201, $webhook['headers']['status-code']);
         $webhookId = $webhook['body']['$id'];
 
+        // Only the retried event matches this one, and a delivery to it would fail and be recorded on the webhook.
+        $stale = $this->client->call(Client::METHOD_POST, '/webhooks', $headers, [
+            'webhookId' => Id::unique(),
+            'name' => 'Stale',
+            'events' => [$event],
+            'url' => 'http://request-catcher-webhook:5001/',
+            'tls' => false,
+        ]);
+        $this->assertSame(201, $stale['headers']['status-code']);
+        $staleId = $stale['body']['$id'];
+
         try {
             $this->retryFailedWebhooks();
 
             // An event of the new project itself, queued after the retried one, is delivered.
             $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-                'userId' => $userId,
-                'email' => 'recreated-' . $userId . '@localhost.test',
+                'userId' => $recreatedUserId,
+                'email' => 'recreated-' . $recreatedUserId . '@localhost.test',
                 'password' => 'password',
             ]);
             $this->assertSame(201, $user['headers']['status-code']);
@@ -155,10 +167,15 @@ final class WebhooksCustomServerTest extends Scope
             $settled = \microtime(true) + 10;
             while (\microtime(true) < $settled) {
                 $this->assertSame(
-                    ['recreated-' . $userId . '@localhost.test'],
+                    ['recreated-' . $recreatedUserId . '@localhost.test'],
                     \array_map(fn (array $delivery) => $delivery['data']['email'] ?? null, $this->webhookDeliveries($webhookId)),
                     'The event of the deleted project was delivered to the project created under its ID',
                 );
+
+                $staleWebhook = $this->client->call(Client::METHOD_GET, '/webhooks/' . $staleId, $headers);
+                $this->assertSame(200, $staleWebhook['headers']['status-code']);
+                $this->assertSame(0, $staleWebhook['body']['attempts'], 'The event of the deleted project was processed for the project created under its ID');
+                $this->assertSame('', $staleWebhook['body']['logs']);
                 \usleep(1000000);
             }
         } finally {
