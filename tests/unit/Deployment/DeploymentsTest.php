@@ -8,6 +8,7 @@ use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\StreamInterface;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Storage\Device\Local;
@@ -299,7 +300,7 @@ final class DeploymentsTest extends TestCase
             $this->assertNull(Deployments::openArtifact($device, $base . '/secret'));
 
             $artifact = Deployments::openArtifact($device, $root . '/deployment1/code.tar.gz');
-            $this->assertNotNull($artifact);
+            $this->assertInstanceOf(StreamInterface::class, $artifact);
             $this->assertSame(8, $artifact->getSize());
 
             // The build swaps the checked file for a link once the download started
