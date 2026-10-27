@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "Appwrite MCP server now separates reads and writes"
+date: 2026-10-27
+cover: /images/blog/announcing-remote-appwrite-mcp-server/cover.avif
+tags: mcp, ai
+---
+
+The [**Appwrite MCP server**](/docs/tooling/ai/mcp-servers) now runs reads and writes through separate tools, so your AI tool knows which calls change your project before it makes them.
+
+- `appwrite_call_tool` runs **read operations**, such as listing databases or getting a user. It is marked read-only, so AI tools that respect MCP tool annotations can run it without asking you.
+- `appwrite_call_write_tool` runs **every operation that changes your project**, such as creating, updating, or deleting resources. It is marked destructive, so AI tools ask for your approval first, and the model must still pass `confirm_write: true`.
+
+Every tool the server exposes now declares a **title** and all four MCP tool annotations (read-only, destructive, idempotent, and open-world) explicitly, matching the requirements of the Anthropic and OpenAI connector directories.
+
+There is nothing to update. The remote server at `https://mcp.appwrite.io/` picks this up automatically, and your AI tool sees the new tool the next time it connects. To run the local server against a self-hosted instance, upgrade to the latest `mcp-server-appwrite`.
+
+{% arrow_link href="/docs/tooling/ai/mcp-servers" %}
+Read the MCP server docs
+{% /arrow_link %}
