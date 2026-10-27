@@ -6,6 +6,7 @@ namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Database\RuntimeQuery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
@@ -965,6 +966,42 @@ final class MessagingTest extends TestCase
         $realtime->removeConnection(1);
         $this->assertTrue($realtime->addConnection(8, '1', 'A', 2));
         $this->assertFalse($realtime->addConnection(9, '1', 'A', 2));
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string}>
+     */
+    public static function guestOwners(): \Iterator
+    {
+        yield 'IPv4' => ['203.0.113.7', 'ip:203.0.113.7'];
+        yield 'IPv6 is grouped by /64' => ['2001:db8:1:2:3:4:5:6', 'ip:2001:db8:1:2::/64'];
+        yield 'another address in the same /64' => ['2001:db8:1:2:ffff::1', 'ip:2001:db8:1:2::/64'];
+        yield 'IPv4 through a dual-stack socket' => ['::ffff:203.0.113.7', 'ip:203.0.113.7'];
+        yield 'unknown address' => ['', ''];
+        yield 'not an address' => ['localhost', ''];
+    }
+
+    #[DataProvider('guestOwners')]
+    public function testGetGuestOwner(string $ip, string $expected): void
+    {
+        $this->assertSame($expected, Realtime::getGuestOwner($ip));
+    }
+
+    public function testAddConnectionCountsGuestsByAddress(): void
+    {
+        $realtime = new Realtime();
+        $guest = Realtime::getGuestOwner('2001:db8:1:2::1');
+
+        $this->assertTrue($realtime->addConnection(1, '1', $guest, 2));
+        $this->assertTrue($realtime->addConnection(2, '1', Realtime::getGuestOwner('2001:db8:1:2::2'), 2));
+        $this->assertFalse($realtime->addConnection(3, '1', Realtime::getGuestOwner('2001:db8:1:2::3'), 2));
+
+        // Another network has its own allowance.
+        $this->assertTrue($realtime->addConnection(3, '1', Realtime::getGuestOwner('2001:db8:1:3::1'), 2));
+
+        // Signing in moves the connection from its address to its user, freeing the guest slot.
+        $this->assertTrue($realtime->addConnection(1, '1', 'A', 2));
+        $this->assertTrue($realtime->addConnection(4, '1', $guest, 2));
     }
 
     public function testAddConnectionMovesConnectionBetweenUsers(): void

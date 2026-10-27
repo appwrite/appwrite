@@ -15,6 +15,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
+use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -911,6 +912,52 @@ final class RealtimeCustomClientTest extends Scope
          * Test for SUCCESS
          */
         // Closing a connection frees its slot once the server sees the close.
+        \array_pop($clients)->close();
+        $this->assertEventually(function () use ($headers, &$clients): void {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        });
+
+        foreach ($clients as $client) {
+            $client->close();
+        }
+    }
+
+    public function testConnectionLimitPerGuest(): void
+    {
+        // Opening this many connections from one address would trip the abuse limit on new connections first.
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            $this->markTestSkipped('Abuse limits are enabled.');
+        }
+
+        $headers = ['origin' => 'http://localhost'];
+
+        /**
+         * Test for FAILURE
+         */
+        // Earlier tests may still hold guest connections from this address, so open until one is refused.
+        $clients = [];
+        $refused = null;
+        for ($i = 0; $i <= APP_LIMIT_REALTIME_GUEST_CONNECTIONS; $i++) {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $response = \json_decode($client->receive(), true);
+            if (($response['type'] ?? null) !== 'connected') {
+                $refused = $response;
+                $this->receiveUntilClosed($client);
+                break;
+            }
+            $clients[] = $client;
+        }
+
+        $this->assertNotNull($refused, 'Guest connections from one address were not limited.');
+        $this->assertSame('error', $refused['type'] ?? null);
+        $this->assertSame(1008, $refused['data']['code'] ?? null);
+        $this->assertSame('Too many open connections. Close an existing connection and try again.', $refused['data']['message'] ?? null);
+
+        /**
+         * Test for SUCCESS
+         */
         \array_pop($clients)->close();
         $this->assertEventually(function () use ($headers, &$clients): void {
             $client = $this->getWebsocket(['documents'], $headers);
