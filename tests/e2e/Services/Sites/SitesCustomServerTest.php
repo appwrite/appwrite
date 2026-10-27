@@ -374,6 +374,79 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']); // domain available as site is deleted
     }
 
+    public function testProjectUserCannotReadRules(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Test Site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'domain' => Id::unique() . '.' . $sitesDomain,
+            'siteId' => $siteId,
+        ]);
+        $this->assertSame(201, $rule['headers']['status-code']);
+        $ruleId = $rule['body']['$id'];
+
+        $email = 'rules-reader-' . Id::unique() . '@localhost.test';
+        $account = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $userHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ];
+
+        // Test for FAILURE
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', $userHeaders);
+        $this->assertSame(401, $rules['headers']['status-code']);
+        $this->assertArrayNotHasKey('rules', $rules['body']);
+
+        $read = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, $userHeaders);
+        $this->assertSame(401, $read['headers']['status-code']);
+        $this->assertArrayNotHasKey('domain', $read['body']);
+
+        // Test for SUCCESS
+        $read = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+        $this->assertSame(200, $read['headers']['status-code']);
+        $this->assertSame($rule['body']['domain'], $read['body']['domain']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testVariables(): void
     {
         $site = $this->createSite([
