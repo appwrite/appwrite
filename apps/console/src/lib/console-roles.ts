@@ -109,9 +109,6 @@ export function deriveAccessFromRolesScopes(
   // Console roles that predate the Videos API carry no `videos.*` scopes; videos are
   // built from Storage files, so bucket access stands in until the backend grants them.
   const hasVideoScopes = scopes.some((s) => s.startsWith('videos.'))
-  // Same for roles that predate the Reviews API: reviews run on the project's Git
-  // installations, so project read and VCS write stand in for `reviews.*`.
-  const hasReviewScopes = scopes.some((s) => s.startsWith('reviews.'))
 
   return {
     isOwner: roleSet.has('owner'),
@@ -125,7 +122,7 @@ export function deriveAccessFromRolesScopes(
     canSeeTeams: has('teams.read'),
     canSeeSites: has('sites.read'),
     canSeeVideos: hasVideoScopes ? has('videos.read') : has('buckets.read'),
-    canSeeReviews: hasReviewScopes ? has('reviews.read') : has('projects.read'),
+    canSeeReviews: has('reviews.read'),
     canSeeEvents: has('events.read'),
     canSeeBilling: has('billing.read'),
     canWriteProjects: has('projects.write'),
@@ -144,7 +141,7 @@ export function deriveAccessFromRolesScopes(
     canWriteProviders: has('providers.write'),
     canWriteSites: has('sites.write'),
     canWriteVideos: hasVideoScopes ? has('videos.write') : has('buckets.write'),
-    canWriteReviews: hasReviewScopes ? has('reviews.write') : has('vcs.write'),
+    canWriteReviews: has('reviews.write'),
     canWriteDomains: has('domains.write'),
     canWriteExecutions: has('executions.write'),
     canWriteMigrations: has('migrations.write'),

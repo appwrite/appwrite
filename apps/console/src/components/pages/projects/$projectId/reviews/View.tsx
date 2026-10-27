@@ -46,7 +46,11 @@ export function View() {
     requestedPage - 1,
     pageSize,
   )
-  const { reviews, total } = useReviews(
+  const {
+    reviews,
+    total,
+    isLoading: reviewsLoading,
+  } = useReviews(
     activeTab === 'reviews' ? projectId : null,
     displayedPage - 1,
     pageSize,
@@ -93,7 +97,12 @@ export function View() {
     </Button>
   )
 
-  const noRepositories = !repositoriesLoading && repositories.length === 0
+  // Past reviews stay listed after the last repository is removed, so the intro
+  // only shows while there is nothing to list.
+  const noRepositories =
+    !repositoriesLoading &&
+    repositories.length === 0 &&
+    (activeTab === 'repositories' || (!reviewsLoading && total === 0))
 
   return (
     <div className="flex flex-col">
