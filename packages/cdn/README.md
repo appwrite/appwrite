@@ -255,6 +255,35 @@ $cloudflareCertificates = new Cloudflare(
 
 Cloudflare custom-hostname issuance is treated as instant. Certificate status retrieval is not supported by this provider.
 
+### CloudFront certificates
+
+CloudFront certificates are AWS-managed certificates on [distribution tenants](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateDistributionTenant.html) of a multi-tenant distribution. Each domain gets its own tenant, named after the domain, and the tenant asks CloudFront for a certificate. AWS issues it and renews it for as long as the domain points at CloudFront, so there is no ACME account, no private key and nothing to import into ACM.
+
+```php
+use Utopia\Cdn\Certificates\Provider\CloudFront;
+
+$cloudFrontCertificates = new CloudFront(
+    accessKeyId: 'YOUR_ACCESS_KEY_ID',
+    secretAccessKey: 'YOUR_SECRET_ACCESS_KEY',
+    distributionId: 'YOUR_MULTI_TENANT_DISTRIBUTION_ID',
+    connectionGroupId: 'YOUR_CONNECTION_GROUP_ID', // optional; the account's default group otherwise
+);
+```
+
+- `issueCertificate()` creates the tenant with a certificate request, or sends a fresh request when the tenant's certificate failed, timed out, expired or was revoked, and enables a disabled tenant. It returns `null` until the certificate is issued, then a date `CloudFront::RECHECK_INTERVAL` ahead: AWS renews by itself, so the date is only when to look again.
+- `getCertificateStatus()` returns `Status::PENDING` while the certificate waits on validation and `Status::ISSUED` once issued, and throws `Exception\Certificate` with `Status::FAILED` when AWS has stopped trying.
+- `deleteCertificate()` disables the tenant, which CloudFront requires, and deletes it. When the disable has not propagated yet the delete throws, leaving the tenant disabled for a later attempt.
+
+By default the certificate is requested with a `self-hosted` validation token, which lets it be issued while the domain still points at another CDN. Whatever serves the domain then has to answer the certificate authority's request with a redirect to the token:
+
+```php
+foreach ($cloudFrontCertificates->getValidationTokens('cdn.example.com') as $token) {
+    // GET $token->from (http://cdn.example.com/.well-known/pki-validation/…) -> redirect to $token->to
+}
+```
+
+Pass `validationTokenHost: CloudFront::VALIDATION_TOKEN_HOST_CLOUDFRONT` when domains already point at CloudFront and CloudFront should answer itself. Requests are signed with `Aws\Signature` and need `cloudfront:CreateDistributionTenant`, `GetDistributionTenantByDomain`, `UpdateDistributionTenant`, `DeleteDistributionTenant` and `GetManagedCertificateDetails`.
+
 ### Certificate routing
 
 `Certificates\Provider\Proxy` sends `site`, `network`, and `redirect` domains to the network provider, the application domain to its provider, and all other domains to every custom-domain provider.
@@ -281,6 +310,7 @@ $certificates = new Certificates(new Proxy(
 ### Certificates
 
 - [x] [Fastly TLS subscriptions](https://www.fastly.com/documentation/guides/getting-started/domains/securing-domains-with-tls/)
+- [x] [CloudFront distribution tenants with AWS-managed certificates](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_GetManagedCertificateDetails.html)
 - [x] [Cloudflare for SaaS custom hostnames](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/domain-support/create-custom-hostnames/)
 
 ## System requirements
