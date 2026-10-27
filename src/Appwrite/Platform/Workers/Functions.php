@@ -12,6 +12,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Redelivery;
 use Appwrite\Event\Webhook;
+use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -64,6 +65,7 @@ class Functions extends Action
             ->inject('getIsResourceBlocked')
             ->inject('locks')
             ->inject('cache')
+            ->inject('executionStore')
             ->callback($this->action(...));
     }
 
@@ -80,7 +82,8 @@ class Functions extends Action
         Executor $executor,
         callable $getIsResourceBlocked,
         callable $locks,
-        Cache $cache
+        Cache $cache,
+        ExecutionStore $executionStore,
     ): void {
         $this->locks = $locks;
 
@@ -255,6 +258,7 @@ class Functions extends Action
                             event: $events[0],
                             eventData: \json_encode($eventData) ?: null,
                             executionId: null,
+                            executionStore: $executionStore,
                         );
                         $handled[] = $function->getId();
                         Console::success('Triggered function: ' . $events[0]);
@@ -315,6 +319,7 @@ class Functions extends Action
                     executionId: $execution->getId(),
                     createdAt: $execution->getCreatedAt(),
                     permissions: $execution->getPermissions(),
+                    executionStore: $executionStore,
                 );
                 break;
             case 'schedule':
@@ -351,9 +356,10 @@ class Functions extends Action
                     eventData: null,
                     executionId: $execution->getId(),
                     // No permissions passed: the scheduled requeue carries only
-                    // the id, so execute() derives from the user re-fetched by
-                    // userId from this project — the genuine project scheduler —
-                    // instead of an empty list that would wipe their access.
+                    // the id, so execute() reads the stored row's permission
+                    // (gated at create time) from the execution store, rather
+                    // than deriving one from the queued user id.
+                    executionStore: $executionStore,
                 );
                 break;
         }
@@ -578,6 +584,7 @@ class Functions extends Action
         ?string $executionId = null,
         ?string $createdAt = null,
         ?array $permissions = null,
+        ?ExecutionStore $executionStore = null,
     ): void {
         $user ??= new Document();
         $headers = Headers::stripReserved($headers, ['x-appwrite-client-ip']);
@@ -670,8 +677,9 @@ class Functions extends Action
         //   3. the user, only when no row exists yet (e.g. event triggers),
         //      where the user is a genuine project user.
         $executionPermissions = $permissions;
-        if ($executionPermissions === null && !empty($executionId)) {
-            $existingExecution = $dbForProject->getDocument('executions', $executionId);
+        if ($executionPermissions === null && !empty($executionId) && $executionStore !== null) {
+            // Read any existing row (roles: null bypasses the permission filter).
+            $existingExecution = $executionStore->get($project->getId(), $executionId);
             if (!$existingExecution->isEmpty()) {
                 $executionPermissions = $existingExecution->getPermissions();
             }
