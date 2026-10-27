@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 final class ReviewTest extends TestCase
 {
     /**
-     * The review service parses this payload with its own schema (appwrite-labs/hansi,
+     * The review service parses this payload with its own schema (appwrite/hansi,
      * packages/appwrite/src/payload.ts), so the shape is a contract between two codebases.
      */
     public function testPayloadIsTheReviewServiceJob(): void

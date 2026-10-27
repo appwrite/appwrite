@@ -589,7 +589,7 @@ return [
     ],
 
     // Code reviews of a repository's pull requests. Appwrite queues them; the review service
-    // (appwrite-labs/hansi) runs them and reports progress and results back.
+    // (appwrite/hansi) runs them and reports progress and results back.
     'reviews' => [
         '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('reviews'),

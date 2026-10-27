@@ -11,7 +11,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
 /**
- * The internal API the review service (appwrite-labs/hansi) reports through. The service is not
+ * The internal API the review service (appwrite/hansi) reports through. The service is not
  * a project user: it proves itself with the secret both sides share, and names the project in
  * the body, so its calls are never metered as the project's own API requests.
  */

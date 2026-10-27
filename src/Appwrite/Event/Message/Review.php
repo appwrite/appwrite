@@ -3,7 +3,7 @@
 namespace Appwrite\Event\Message;
 
 /**
- * A pull request to review, for the review service (appwrite-labs/hansi). No Appwrite worker
+ * A pull request to review, for the review service (appwrite/hansi). No Appwrite worker
  * consumes it: the service reads the payload as JSON, so its shape is that service's contract
  * (packages/appwrite/src/payload.ts there), not an internal one.
  */
