@@ -1051,13 +1051,8 @@ class Realtime extends MessagingAdapter
                 }
                 break;
             case 'rules':
-                $channels[] = 'console';
-                $channels[] = 'projects.' . $project->getId();
-                $projectId = 'console';
-                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
-                break;
             case 'migrations':
-                // Migrations carry project data, so only those who can read the project receive them.
+                // Rules and migrations carry project data, so only those who can read the project receive them.
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';
@@ -1067,10 +1062,14 @@ class Realtime extends MessagingAdapter
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $parts[1];
                 $projectId = 'console';
-                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                $roles = $project->getPermissionsByType(PermissionType::Read);
                 // A project-wide sign-out: every connection of this project re-validates
                 // its session against the new invalidation timestamp in the realtime worker.
                 if (($parts[2] ?? '') === 'sessions' && ($parts[3] ?? '') === 'delete') {
+                    $permissionsChanged = true;
+                }
+                // A transfer changes who may read the project, so the worker re-authorizes its tails.
+                if (($parts[2] ?? '') === 'update' && ($parts[3] ?? '') === 'team') {
                     $permissionsChanged = true;
                 }
                 break;
@@ -1105,7 +1104,7 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
-                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                    $roles = $project->getPermissionsByType(PermissionType::Read);
                 } elseif (in_array($resource, ['rows', 'documents'])) {
                     if ($database->isEmpty()) {
                         throw new \Exception('Database needs to be passed to Realtime for Document/Row events in the Database.');

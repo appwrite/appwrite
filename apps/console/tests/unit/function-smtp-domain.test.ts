@@ -2,9 +2,8 @@ import { describe, expect, test } from 'bun:test'
 import {
   getSmtpDnsRecords,
   getSmtpRecordName,
-  getSmtpTxtHost,
   needsSmtpDnsVerification,
-  proxyRuleProtocolQuery,
+  isSmtpRule,
   type SmtpProxyRule,
 } from '@/lib/function-smtp-domain'
 import { ProxyRuleStatus, type Models } from '@appwrite.io/console'
@@ -31,12 +30,6 @@ function ruleStub(overrides: Partial<SmtpProxyRule> = {}): SmtpProxyRule {
 }
 
 describe('smtp domain DNS helpers', () => {
-  test('builds ownership TXT host', () => {
-    expect(getSmtpTxtHost('Mail.Example.com')).toBe(
-      '_appwrite.mail.example.com',
-    )
-  })
-
   test('names records relative to the registrable domain', () => {
     expect(getSmtpRecordName('example.com')).toBe('@')
     expect(getSmtpRecordName('mail.example.com')).toBe('mail')
@@ -115,17 +108,10 @@ describe('smtp domain DNS helpers', () => {
   })
 })
 
-describe('smtp rule filtering', () => {
-  test('builds a server-side protocol query', () => {
-    expect(JSON.parse(proxyRuleProtocolQuery('smtp'))).toEqual({
-      method: 'equal',
-      attribute: 'protocol',
-      values: ['smtp'],
-    })
-    expect(JSON.parse(proxyRuleProtocolQuery('http'))).toEqual({
-      method: 'equal',
-      attribute: 'protocol',
-      values: ['http'],
-    })
+describe('smtp rule detection', () => {
+  test('tells SMTP rules apart from HTTP rules', () => {
+    expect(isSmtpRule(ruleStub())).toBe(true)
+    expect(isSmtpRule(ruleStub({ protocol: 'http' }))).toBe(false)
+    expect(isSmtpRule(ruleStub({ protocol: undefined }))).toBe(false)
   })
 })
