@@ -6,7 +6,7 @@ import {
   useRef,
   useContext,
 } from 'react'
-import { isSmtpRule } from '@/lib/function-smtp-domain'
+import { isSmtpRule, webDomainQueries } from '@/lib/function-smtp-domain'
 import {
   openDialogAfterOverlayCloses,
   closeDialogBeforeOverlayUnmount,
@@ -394,14 +394,14 @@ export function View() {
     })
   }, [projectId, functionId, queryClient])
 
-  // Fetch domains for the function (filter by active deployment)
-  // Use same params as domains tab to share cache
+  // Fetch web domains for the function (filter by active deployment)
   const { data: domainsData } = useFunctionDomains(
     projectId,
     functionId,
     0,
     DOMAINS_DEFAULT_PAGE_SIZE,
     '',
+    webDomainQueries(),
   )
 
   // Fetch runtimes to get runtime name

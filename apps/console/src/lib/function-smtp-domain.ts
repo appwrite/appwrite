@@ -1,4 +1,5 @@
-import type { Models } from '@appwrite.io/console'
+import { Query, type Models } from '@appwrite.io/console'
+import { isFeatureEnabled } from '@/lib/console-profiles'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 
 /**
@@ -38,6 +39,17 @@ export function getSmtpRecordName(domain: string): string {
 }
 
 /** SMTP rules share the HTTP rules list; `protocol` tells them apart. */
+/**
+ * Extra list queries for views that only want web (HTTP) domains. Filtering
+ * on the server keeps email rows from taking up the fetched page. Only sent
+ * behind the email domains flag, the only case where SMTP rules exist.
+ */
+export function webDomainQueries(): string[] {
+  return isFeatureEnabled('functionEmailDomains')
+    ? [Query.equal('protocol', ['http'])]
+    : []
+}
+
 export function isSmtpRule(rule: Models.ProxyRule): rule is SmtpProxyRule {
   return (rule as SmtpProxyRule).protocol === 'smtp'
 }
