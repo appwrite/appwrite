@@ -65,22 +65,46 @@ function formatPatternList(patterns: string[]): string {
   return `${quoted.slice(0, 3).join(', ')}, and ${patterns.length - 3} more`
 }
 
+/**
+ * Splits trigger patterns into the ones that include and the `!` ones that
+ * exclude, without their `!`. With exclusions alone, everything else
+ * triggers, as the server's Globstar matching does.
+ */
+function splitTriggerPatterns(patterns: string[]): {
+  included: string[]
+  excluded: string[]
+} {
+  const normalized = normalizeTriggerPatterns(patterns)
+  return {
+    included: normalized.filter((pattern) => !pattern.startsWith('!')),
+    excluded: normalized
+      .filter((pattern) => pattern.startsWith('!'))
+      .map((pattern) => pattern.slice(1).trim()),
+  }
+}
+
 export function describeTriggerBehavior(
   branches: string[],
   paths: string[],
 ): string {
-  const normalizedBranches = normalizeTriggerPatterns(branches)
-  const normalizedPaths = normalizeTriggerPatterns(paths)
+  const branchPatterns = splitTriggerPatterns(branches)
+  const pathPatterns = splitTriggerPatterns(paths)
 
+  const branchExcept =
+    branchPatterns.excluded.length > 0
+      ? ` except ${formatPatternList(branchPatterns.excluded)}`
+      : ''
   const branchPart =
-    normalizedBranches.length === 0
-      ? 'All branches'
-      : `Only branches matching ${formatPatternList(normalizedBranches)}`
+    branchPatterns.included.length === 0
+      ? `All branches${branchExcept}`
+      : `Only branches matching ${formatPatternList(branchPatterns.included)}${branchExcept ? `,${branchExcept}` : ''}`
 
   const pathPart =
-    normalizedPaths.length === 0
-      ? 'all file changes'
-      : `only paths matching ${formatPatternList(normalizedPaths)}`
+    pathPatterns.included.length > 0
+      ? `only paths matching ${formatPatternList(pathPatterns.included)}${pathPatterns.excluded.length > 0 ? `, except ${formatPatternList(pathPatterns.excluded)}` : ''}`
+      : pathPatterns.excluded.length > 0
+        ? `changes outside ${formatPatternList(pathPatterns.excluded)}`
+        : 'all file changes'
 
   return `${branchPart} trigger deployments on ${pathPart}.`
 }
