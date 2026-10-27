@@ -68,17 +68,20 @@ Here the project belongs to the `acme-org` organization. To own it with your acc
 If your code lives on GitHub, you don't have to move it. Create a [GitHub repository mirror](https://docs.entire.com/guides/repositories/mirrors) on Entire, and Appwrite deploys from the mirror. Mirroring needs an Entire account linked to GitHub and the [Entire GitHub App](https://docs.entire.com/guides/repositories/github-app-access) with access to the repository. A mirror belongs to no Entire project, so when you connect Entire in the next step, choose the mirror's GitHub owner instead. The mirror then appears under `gh/<owner>` in the repository picker.
 
 ```bash
-entire repo mirror add /gh/acme/storefront
-entire repo remote add origin --override /gh/acme/storefront
+entire repo mirror add /gh/acme/storefront --cluster aws-us-east-2.entire.io
+entire repo remote add entire /gh/acme/storefront
 ```
 
-GitHub stays the source of truth. Entire syncs pushes made on GitHub to the mirror within seconds, and Appwrite deploys them. Entire protects a mirror's default branch, so push your production branch to GitHub. Other branches can go to either remote, since Entire forwards pushes through the mirror to GitHub.
+`--cluster` sets the region the mirror lives in. Without it, a terminal asks you to pick regions. The second command adds the mirror as a remote named `entire` and leaves `origin` pointing at GitHub.
 
-To move a mirrored repository off GitHub, [detach it](https://docs.entire.com/guides/repositories/repository) into an Entire project in the same region as the mirror. Without `--cluster`, `entire repo mirror add` places the mirror in `aws-us-east-2`, so create the target project with `--region us`. Run the detach with `--dry-run` first to check its requirements. The old `/gh/` address stops resolving afterwards, so point your clone at the new one:
+GitHub stays the source of truth. Entire syncs pushes made on GitHub to the mirror within seconds, and Appwrite deploys them. Entire protects a mirror's default branch, so push your production branch to `origin`. Other branches can go to either remote, since Entire forwards pushes through the mirror to GitHub.
+
+To move a mirrored repository off GitHub, [detach it](https://docs.entire.com/guides/repositories/repository) into an Entire project in the same region as the mirror. For a mirror on `aws-us-east-2`, create the target project with `--region us`. Run the detach with `--dry-run` first to check its requirements, such as the mirror being on a single cluster. The old `/gh/` address stops resolving afterwards, so point `origin` at the new repository and remove the `entire` remote:
 
 ```bash
 entire repo mirror detach /gh/acme/storefront --into /et/acme/storefront
 entire repo remote add origin --override /et/acme/storefront
+git remote remove entire
 ```
 
 GitHub stops syncing, and the installation for the GitHub owner no longer covers the repository. Connect Entire again, choose the new project, and reconnect each Site and Function to the repository so later pushes deploy.
