@@ -453,26 +453,32 @@ SCRIPT;
     /**
      * Write a file at a confined path inside a checkout. Lexical confinement
      * is not enough once the checkout itself carries symlinks: a linked
-     * directory or file would carry the write outside, so resolve the parent
-     * and refuse link targets.
+     * directory or file would carry the write outside. So each missing
+     * directory is created one at a time and every component is refused if it
+     * is a link, before anything is created beneath it.
      */
     protected function writeCheckoutFile(string $directory, string $relative, string $content): void
     {
-        $absolute = $directory . '/' . $relative;
-        $parent = \dirname($absolute);
-        if (!is_dir($parent) && !mkdir($parent, 0777, true)) {
-            throw new Exception("Failed to create directory for {$relative}");
+        $segments = explode('/', $relative);
+        $file = array_pop($segments);
+
+        $path = $directory;
+        foreach ($segments as $segment) {
+            $path .= '/' . $segment;
+            if (is_link($path)) {
+                throw new Exception("File path escapes the repository: {$relative}");
+            }
+            if (!is_dir($path) && (file_exists($path) || !mkdir($path, 0777))) {
+                throw new Exception("Failed to create directory for {$relative}");
+            }
         }
 
-        $checkout = realpath($directory);
-        $resolvedParent = realpath($parent);
-        if ($checkout === false || $resolvedParent === false
-            || !str_starts_with($resolvedParent . '/', $checkout . '/')
-            || is_link($absolute)) {
+        $path .= '/' . $file;
+        if (is_link($path)) {
             throw new Exception("File path escapes the repository: {$relative}");
         }
 
-        if (file_put_contents($absolute, $content) === false) {
+        if (file_put_contents($path, $content) === false) {
             throw new Exception("Failed to write {$relative}");
         }
     }

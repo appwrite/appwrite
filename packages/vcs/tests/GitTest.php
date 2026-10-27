@@ -43,6 +43,20 @@ final class GitTest extends TestCase
         $this->assertFileDoesNotExist($this->root . '/outside/escape.txt');
     }
 
+    public function testRefusesASymlinkedParentBeforeCreatingAnythingBeneathIt(): void
+    {
+        symlink($this->root . '/outside', $this->root . '/checkout/linked');
+
+        try {
+            new CheckoutWriter()->write($this->root . '/checkout', 'linked/new/escape.txt', 'content');
+            $this->fail('A write beneath a linked directory must be refused');
+        } catch (\Exception $error) {
+            $this->assertStringContainsString('escapes the repository', $error->getMessage());
+        }
+
+        $this->assertSame([], array_values(array_diff(scandir($this->root . '/outside') ?: [], ['.', '..'])));
+    }
+
     public function testRefusesASymlinkedFile(): void
     {
         file_put_contents($this->root . '/outside/target.txt', 'original');
