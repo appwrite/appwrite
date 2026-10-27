@@ -511,6 +511,14 @@ class V25 extends Migration
                     $this->createCollection($id);
                     break;
 
+                case 'reviews':
+                case 'reviewFindings':
+                case 'reviewEvents':
+                case 'reviewUsage':
+                    // New in 2.7.0. Created even with reviews disabled, so turning them on later needs no migration.
+                    $this->createCollection($id);
+                    break;
+
                 case 'pushLedger':
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.

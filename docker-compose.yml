@@ -1795,6 +1795,32 @@ services:
       - 1.1.1.1
       - 8.8.8.8
 
+  appwrite-hansi:
+    # Code review for pull requests (appwrite/hansi). Optional: the installer adds it only when
+    # _APP_REVIEWS_SECRET is set, and here it runs only with `--profile reviews`.
+    profiles:
+      - reviews
+    container_name: appwrite-hansi
+    image: appwrite/hansi:0.1.0
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - appwrite
+      - redis
+    environment:
+      - HANSI_APPWRITE_ENDPOINT=http://appwrite/v1
+      - HANSI_APPWRITE_SECRET=${_APP_REVIEWS_SECRET}
+      - HANSI_QUEUE_URL=redis://${_APP_REDIS_HOST:-redis}:${_APP_REDIS_PORT:-6379}
+      - HANSI_REVIEW_MODEL=${_APP_REVIEWS_MODEL}
+      - HANSI_VERIFY_MODEL=${_APP_REVIEWS_VERIFY_MODEL:-${_APP_REVIEWS_MODEL}}
+      - AI_GATEWAY_API_KEY=${_APP_REVIEWS_AI_GATEWAY_KEY}
+
   appwrite-autogravity:
     container_name: appwrite-autogravity
     image: ghcr.io/appwrite/autogravity:0.0.11
