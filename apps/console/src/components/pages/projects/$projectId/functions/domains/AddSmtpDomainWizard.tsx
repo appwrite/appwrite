@@ -38,7 +38,7 @@ import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { isFeatureEnabled } from '@/lib/console-profiles'
+import { isCloudProfile } from '@/lib/console-profiles'
 
 export function AddSmtpDomainWizard() {
   const t = useT()
@@ -47,8 +47,8 @@ export function AddSmtpDomainWizard() {
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
   const { data: func } = useProjectFunction(projectId, functionId)
-  const { features } = useConsoleProfile()
-  const enabled = features.functionEmail
+  // Inbound email is Cloud-only.
+  const { isCloud: enabled } = useConsoleProfile()
 
   const createMutation = useCreateSmtpDomainRule(projectId)
   const verifyMutation = useVerifyDomain(projectId, project?.region)
@@ -80,10 +80,9 @@ export function AddSmtpDomainWizard() {
   }
 
   useEffect(() => {
-    // useConsoleProfile applies debug overrides only after mount, so its
-    // first render reports the flag as off; read the flag directly here or
-    // the wizard closes right after it opens.
-    if (!isFeatureEnabled('functionEmail')) {
+    // useConsoleProfile applies debug overrides only after mount, so read the
+    // profile directly here or a debug override closes the wizard on open.
+    if (!isCloudProfile()) {
       navigate({
         to: '/projects/$projectId/functions/$functionId/domains',
         params: { projectId: projectId!, functionId: functionId! },

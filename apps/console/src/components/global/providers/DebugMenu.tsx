@@ -1773,14 +1773,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
-                'Function email',
-                'Show the Email trigger in function Executions settings and custom email domains on the function Domains tab.',
-                'functionEmail',
-                profileId,
-                features.functionEmail,
-                { category: 'Products' },
-              ),
-              createProfileFeatureFlagItem(
                 'Native DBs: MongoDB',
                 'Enable dedicated MongoDB databases in the databases list.',
                 'nativeDbsMongo',
@@ -2118,7 +2110,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.analytics,
     features.analyticsTrafficFilter,
     features.appwritePush,
-    features.functionEmail,
     features.nativeDbsMongo,
     features.databasePitrRestore,
     features.databaseSpecifications,
