@@ -20,6 +20,7 @@ import {
   useProject,
   useOrganizationScopes,
   useAccountConsents,
+  useConsoleVariables,
 } from '@/lib/react-query/hooks'
 import {
   canSeeProjectNavItem,
@@ -61,6 +62,7 @@ import {
   AlertTriangle,
   Radio,
   ListTree,
+  GitPullRequest,
   type LucideIcon,
 } from 'lucide-react'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
@@ -113,6 +115,7 @@ interface SidebarCopy {
     functions: string
     messaging: string
     videos: string
+    reviews: string
     sites: string
     distribution: string
     activity: string
@@ -289,6 +292,12 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           path: `/projects/${projectId}/firewall`,
         },
         {
+          id: 'reviews',
+          label: sidebarCopy.items.reviews,
+          icon: GitPullRequest,
+          path: `/projects/${projectId}/reviews`,
+        },
+        {
           id: 'advisor',
           label: sidebarCopy.items.advisor,
           icon: ScanSearch,
@@ -336,6 +345,7 @@ export function ConsoleSidebar({
   const { isDebugModeOpen } = useDebugMode()
   const { features, isCloud } = useConsoleProfile()
   const { project } = useProject(projectId)
+  const { reviewsEnabled } = useConsoleVariables(project?.region)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
   )
@@ -367,6 +377,12 @@ export function ConsoleSidebar({
             return (
               features.videos && canSeeProjectNavItem(access, features, item.id)
             )
+          if (item.id === 'reviews')
+            return (
+              features.reviews &&
+              reviewsEnabled &&
+              canSeeProjectNavItem(access, features, item.id)
+            )
           if (item.id === 'agents')
             return (
               showProjectAgents && canShowAgentMcpConnectCta(access, features)
@@ -383,6 +399,7 @@ export function ConsoleSidebar({
     sidebarCopy,
     isCloud,
     showProjectAgents,
+    reviewsEnabled,
   ])
 
   const showOverview = canSeeProjects(access, features)

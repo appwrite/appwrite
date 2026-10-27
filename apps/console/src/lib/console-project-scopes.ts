@@ -19,6 +19,7 @@ import {
   Plug2,
   Bot,
   Video,
+  GitPullRequest,
 } from 'lucide-react'
 
 export function isCloudEnvironment(): boolean {
@@ -81,6 +82,7 @@ function inferAccordionCategoryFromScopeId(scopeId: string): string {
     return 'Messaging'
   }
   if (/^videos\./.test(id)) return 'Videos'
+  if (/^reviews\./.test(id)) return 'Reviews'
   if (/^(sites|log)\./.test(id)) return 'Sites'
   if (/^presences\./.test(id)) return 'Presences'
   if (/^apps\./.test(id)) return 'Apps'
@@ -241,6 +243,7 @@ export function getScopeCategoryIcon(
       return MessageSquare
     }
     if (/^videos\./.test(id)) return Video
+    if (/^reviews\./.test(id)) return GitPullRequest
     if (/^(sites|log)\./.test(id)) return Globe
     if (/^presences\./.test(id)) return UsersRound
     if (/^apps\./.test(id)) return Plug2
