@@ -514,6 +514,7 @@ class V25 extends Migration
                 case 'reviews':
                 case 'reviewFindings':
                 case 'reviewEvents':
+                case 'reviewChats':
                 case 'reviewUsage':
                     // New in 2.7.0. Created even with reviews disabled, so turning them on later needs no migration.
                     $this->createCollection($id);

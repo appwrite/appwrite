@@ -196,6 +196,72 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame(0, $repositories['body']['total']);
     }
 
+    public function testCommentChat(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->setupInstallation();
+        $pullRequest = \random_int(1000, 9_999_999);
+        $handle = System::getEnv('_APP_VCS_GITHUB_APP_NAME', '');
+
+        $repository = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+        ]);
+        $this->assertSame(201, $repository['headers']['status-code']);
+        $repositoryId = $repository['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+
+        // A reply in a review thread is queued without a mention; the service decides if it is for it
+        $reply = \random_int(1_000_000, 9_999_999_999);
+        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $reply, 'Why is this needed?', replyTo: $reply - 1);
+        $this->assertSame(204, $this->createChatUsage($repositoryId, $pullRequest, $reply)['headers']['status-code']);
+
+        if ($handle !== '') {
+            // A mention on the conversation is queued as a question
+            $question = $reply + 1;
+            $this->sendCommentEvent('issue_comment', $pullRequest, $question, '@' . $handle . ' what does this change?');
+            $this->assertSame(204, $this->createChatUsage($repositoryId, $pullRequest, $question)['headers']['status-code']);
+
+            // A redelivery queues nothing more and keeps the same chat
+            $redelivered = $this->sendCommentEvent('issue_comment', $pullRequest, $question, '@' . $handle . ' what does this change?');
+            $this->assertSame(200, $redelivered['headers']['status-code']);
+            $this->assertSame(204, $this->createChatUsage($repositoryId, $pullRequest, $question)['headers']['status-code']);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+
+        // A conversation comment without a mention is not for the reviewer
+        $plain = $reply + 2;
+        $this->sendCommentEvent('issue_comment', $pullRequest, $plain, 'Looks good to me.');
+        $this->assertChatNotQueued($repositoryId, $pullRequest, $plain);
+
+        // Edits, other apps and the first comment of a thread without a mention queue nothing
+        $edited = $reply + 3;
+        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $edited, 'Why?', replyTo: $reply - 1, action: 'edited');
+        $this->assertChatNotQueued($repositoryId, $pullRequest, $edited);
+
+        $bot = $reply + 4;
+        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $bot, 'Why?', replyTo: $reply - 1, authorType: 'Bot');
+        $this->assertChatNotQueued($repositoryId, $pullRequest, $bot);
+
+        $threadStart = $reply + 5;
+        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $threadStart, 'Why?');
+        $this->assertChatNotQueued($repositoryId, $pullRequest, $threadStart);
+
+        // Chat usage is keyed on the pull request and the repository the chat was queued for
+        $this->assertChatNotQueued($repositoryId, $pullRequest + 1, $reply);
+
+        $usage = $this->createChatUsage($repositoryId, $pullRequest, $reply, [['role' => 'chat']]);
+        $this->assertSame(400, $usage['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
+    }
+
     public function testServiceNeedsTheSecret(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -304,6 +370,65 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame(200, $reviews['headers']['status-code']);
 
         return $reviews;
+    }
+
+    private function createChatUsage(string $repositoryId, int $pullRequest, int $commentId, ?array $usage = null): array
+    {
+        return $this->callService(Client::METHOD_POST, '/reviews/repositories/' . $repositoryId . '/usage', [
+            'projectId' => $this->getProject()['$id'],
+            'pullNumber' => $pullRequest,
+            'commentId' => $commentId,
+            'usage' => $usage ?? [
+                ['role' => 'chat', 'provider' => 'anthropic', 'model' => 'claude', 'inputTokens' => 800, 'outputTokens' => 120, 'durationMs' => 2100],
+            ],
+        ]);
+    }
+
+    private function assertChatNotQueued(string $repositoryId, int $pullRequest, int $commentId): void
+    {
+        $usage = $this->createChatUsage($repositoryId, $pullRequest, $commentId);
+        $this->assertSame(404, $usage['headers']['status-code']);
+        $this->assertSame('review_chat_not_found', $usage['body']['type']);
+    }
+
+    private function sendCommentEvent(string $event, int $pullRequest, int $commentId, string $body, ?int $replyTo = null, string $action = 'created', string $authorType = 'User'): array
+    {
+        $comment = [
+            'id' => $commentId,
+            'body' => $body,
+            'html_url' => 'https://github.com/appwrite-test/svelte-starter/pull/' . $pullRequest . '#comment-' . $commentId,
+            'author_association' => 'MEMBER',
+            'user' => ['login' => 'appwrite-test', 'type' => $authorType],
+        ];
+        if ($replyTo !== null) {
+            $comment['in_reply_to_id'] = $replyTo;
+        }
+
+        $payload = [
+            'action' => $action,
+            'comment' => $comment,
+            'repository' => [
+                'id' => (int) $this->providerRepositoryId,
+                'name' => 'svelte-starter',
+                'owner' => ['login' => 'appwrite-test'],
+            ],
+            'installation' => ['id' => (int) $this->providerInstallationId],
+        ];
+        if ($event === 'issue_comment') {
+            $payload['issue'] = ['number' => $pullRequest, 'pull_request' => ['url' => 'https://api.github.com/repos/appwrite-test/svelte-starter/pulls/' . $pullRequest]];
+        } else {
+            $payload['pull_request'] = ['number' => $pullRequest];
+        }
+
+        return $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+            'content-type' => 'application/json',
+            'x-github-event' => $event,
+            'x-hub-signature-256' => 'sha256=' . \hash_hmac(
+                'sha256',
+                \json_encode($payload, JSON_THROW_ON_ERROR),
+                System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', ''),
+            ),
+        ], $payload);
     }
 
     private function sendPullRequestEvent(string $action, int $pullRequest, string $head): array

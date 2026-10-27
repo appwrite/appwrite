@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Reviews\Services;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Create as CreateRepository;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Delete as DeleteRepository;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Tokens\Create as CreateRepositoryToken;
+use Appwrite\Platform\Modules\Reviews\Http\Repositories\Usage\Create as CreateRepositoryUsage;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\XList as ListRepositories;
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\Events\Create as CreateReviewEvents;
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\Get as GetReview;
@@ -31,5 +32,6 @@ class Http extends Service
         $this->addAction(UpdateReviewStatus::getName(), new UpdateReviewStatus());
         $this->addAction(CreateReviewEvents::getName(), new CreateReviewEvents());
         $this->addAction(CreateReviewUsage::getName(), new CreateReviewUsage());
+        $this->addAction(CreateRepositoryUsage::getName(), new CreateRepositoryUsage());
     }
 }

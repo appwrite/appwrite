@@ -1637,6 +1637,11 @@ return [
         'description' => 'Review with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::REVIEW_CHAT_NOT_FOUND => [
+        'name' => Exception::REVIEW_CHAT_NOT_FOUND,
+        'description' => 'No answer was queued for the requested comment on this repository and pull request.',
+        'code' => 404,
+    ],
     Exception::REVIEW_STATUS_INVALID => [
         'name' => Exception::REVIEW_STATUS_INVALID,
         'description' => 'The review has already ended and its status can no longer change.',

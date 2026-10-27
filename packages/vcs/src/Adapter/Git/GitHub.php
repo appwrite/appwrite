@@ -19,6 +19,10 @@ class GitHub extends Git
 
     public const EVENT_INSTALLATION = 'installation';
 
+    public const EVENT_ISSUE_COMMENT = 'issue_comment';
+
+    public const EVENT_PULL_REQUEST_REVIEW_COMMENT = 'pull_request_review_comment';
+
     public const CONTENTS_DIRECTORY = 'dir';
 
     public const CONTENTS_FILE = 'file';
@@ -1427,6 +1431,41 @@ class GitHub extends Git
                     'external' => $external,
                     'pullRequestNumber' => $pullRequestNumber,
                     'action' => $action,
+                ]];
+            case 'issue_comment':
+            case 'pull_request_review_comment':
+                $payloadRepository = $payload['repository'] ?? [];
+                $payloadRepositoryOwner = $payloadRepository['owner'] ?? [];
+                $payloadComment = $payload['comment'] ?? [];
+                $payloadCommentUser = $payloadComment['user'] ?? [];
+
+                if ($event === 'issue_comment') {
+                    $payloadIssue = $payload['issue'] ?? [];
+                    // Issues and pull requests share the conversation; only pull requests are of interest.
+                    if (empty($payloadIssue['pull_request'])) {
+                        return [];
+                    }
+                    $pullRequestNumber = $payloadIssue['number'] ?? 0;
+                } else {
+                    $pullRequestNumber = ($payload['pull_request'] ?? [])['number'] ?? 0;
+                }
+
+                return [[
+                    'repositoryId' => \strval($payloadRepository['id'] ?? ''),
+                    'repositoryName' => $payloadRepository['name'] ?? '',
+                    'owner' => $payloadRepositoryOwner['login'] ?? '',
+                    'installationId' => $installationId,
+                    'pullRequestNumber' => (int) $pullRequestNumber,
+                    'action' => $payload['action'] ?? '',
+                    'commentId' => (int) ($payloadComment['id'] ?? 0),
+                    'commentKind' => $event === 'issue_comment' ? 'issue' : 'review',
+                    // The first comment of a review thread; empty for a thread's first comment.
+                    'commentReplyToId' => (int) ($payloadComment['in_reply_to_id'] ?? 0),
+                    'commentBody' => $payloadComment['body'] ?? '',
+                    'commentUrl' => $payloadComment['html_url'] ?? '',
+                    'commentAuthor' => $payloadCommentUser['login'] ?? '',
+                    'commentAuthorType' => $payloadCommentUser['type'] ?? '',
+                    'commentAuthorAssociation' => $payloadComment['author_association'] ?? '',
                 ]];
             case 'installation':
             case 'installation_repositories':

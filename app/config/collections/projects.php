@@ -666,14 +666,36 @@ return [
         ],
     ],
 
-    // One row per model call, for metering what a review cost.
+    // Comments the review service was asked to answer, one row per GitHub comment: the row's
+    // $id is chat-<commentId>, so a redelivered webhook cannot queue a second answer.
+    'reviewChats' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewChats'),
+        'name' => 'Review Chats',
+        'attributes' => [
+            Attribute::string(key: 'repositoryId', required: true),
+            Attribute::string(key: 'repositoryInternalId', required: true),
+            Attribute::string(key: 'providerPullRequestId', required: true),
+            Attribute::string(key: 'providerCommentId', required: true),
+            // issue (the pull request conversation) or review (a review thread).
+            Attribute::string(key: 'kind', size: 16, required: true),
+            Attribute::string(key: 'author', required: true),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_repositoryInternalId_pullRequest', attributes: ['repositoryInternalId', 'providerPullRequestId']),
+        ],
+    ],
+
+    // One row per model call, for metering what a review or a chat answer cost.
     'reviewUsage' => [
         '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('reviewUsage'),
         'name' => 'Review Usage',
         'attributes' => [
-            Attribute::string(key: 'reviewId', required: true),
-            Attribute::string(key: 'reviewInternalId', required: true),
+            // reviews or reviewChats.
+            Attribute::string(key: 'resourceType', size: 32, required: true),
+            Attribute::string(key: 'resourceId', required: true),
+            Attribute::string(key: 'resourceInternalId', required: true),
             // review, verify, subagent, chat, ...
             Attribute::string(key: 'role', size: 32, required: true),
             Attribute::string(key: 'provider', size: 64, required: true),
@@ -686,7 +708,7 @@ return [
             Attribute::integer(key: 'duration', width: IntegerWidth::Bits64, signed: false, default: 0),
         ],
         'indexes' => [
-            Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),
+            Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceInternalId']),
         ],
     ],
 ];

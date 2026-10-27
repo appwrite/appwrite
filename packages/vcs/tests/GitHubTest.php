@@ -121,6 +121,78 @@ final class GitHubTest extends Base
         $this->assertSame('1234', $result['installationId']);
     }
 
+    public function testGetEventIssueCommentOnPullRequest(): void
+    {
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_ISSUE_COMMENT, $this->commentPayload(GitHub::EVENT_ISSUE_COMMENT));
+
+        $this->assertSame([[
+            'repositoryId' => self::EVENT_REPOSITORY_ID,
+            'repositoryName' => self::EVENT_REPOSITORY_NAME,
+            'owner' => self::EVENT_OWNER,
+            'installationId' => '9876',
+            'pullRequestNumber' => 42,
+            'action' => 'created',
+            'commentId' => 1001,
+            'commentKind' => 'issue',
+            'commentReplyToId' => 0,
+            'commentBody' => '@reviewer why?',
+            'commentUrl' => 'https://github.com/comment/1001',
+            'commentAuthor' => 'octocat',
+            'commentAuthorType' => 'User',
+            'commentAuthorAssociation' => 'MEMBER',
+        ]], $events);
+    }
+
+    public function testGetEventIssueCommentOnIssueIsIgnored(): void
+    {
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_ISSUE_COMMENT, $this->commentPayload(GitHub::EVENT_ISSUE_COMMENT, pullRequest: false));
+
+        $this->assertSame([], $events);
+    }
+
+    public function testGetEventReviewCommentReply(): void
+    {
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_PULL_REQUEST_REVIEW_COMMENT, $this->commentPayload(GitHub::EVENT_PULL_REQUEST_REVIEW_COMMENT, replyTo: 900));
+
+        $this->assertCount(1, $events);
+        $this->assertSame('review', $events[0]['commentKind']);
+        $this->assertSame(42, $events[0]['pullRequestNumber']);
+        $this->assertSame(900, $events[0]['commentReplyToId']);
+    }
+
+    private function commentPayload(string $event, bool $pullRequest = true, ?int $replyTo = null): string
+    {
+        $comment = [
+            'id' => 1001,
+            'body' => '@reviewer why?',
+            'html_url' => 'https://github.com/comment/1001',
+            'author_association' => 'MEMBER',
+            'user' => ['login' => 'octocat', 'type' => 'User'],
+        ];
+        if ($replyTo !== null) {
+            $comment['in_reply_to_id'] = $replyTo;
+        }
+
+        $payload = [
+            'action' => 'created',
+            'comment' => $comment,
+            'repository' => [
+                'id' => (int) self::EVENT_REPOSITORY_ID,
+                'name' => self::EVENT_REPOSITORY_NAME,
+                'owner' => ['login' => self::EVENT_OWNER],
+            ],
+            'installation' => ['id' => 9876],
+        ];
+
+        if ($event === GitHub::EVENT_ISSUE_COMMENT) {
+            $payload['issue'] = ['number' => 42] + ($pullRequest ? ['pull_request' => ['url' => 'https://api.github.com/pulls/42']] : []);
+        } else {
+            $payload['pull_request'] = ['number' => 42];
+        }
+
+        return (string) json_encode($payload);
+    }
+
     public function testUpdateCheckNamesTheStatusAfterItsSuite(): void
     {
         $adapter = new class (new Cache(new None())) extends GitHub {

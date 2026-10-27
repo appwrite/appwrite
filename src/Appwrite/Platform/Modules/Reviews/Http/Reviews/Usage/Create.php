@@ -2,13 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Reviews\Http\Reviews\Usage;
 
-use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Reviews\Base;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -68,49 +65,7 @@ class Create extends Base
         $dbForProject = $getProjectDB($project);
         $review = $this->getReview($reviewId, $dbForProject, $authorization);
 
-        $documents = [];
-        foreach ($usage as $index => $call) {
-            $strings = [
-                'role' => 32,
-                'provider' => 64,
-                'model' => 128,
-            ];
-            $counts = [
-                'inputTokens' => true,
-                'outputTokens' => true,
-                'durationMs' => true,
-                'cachedInputTokens' => false,
-                'reasoningTokens' => false,
-            ];
-
-            $valid = true;
-            foreach ($strings as $key => $size) {
-                $value = $call[$key] ?? null;
-                $valid = $valid && \is_string($value) && $value !== '' && \strlen($value) <= $size;
-            }
-            foreach ($counts as $key => $required) {
-                $value = $call[$key] ?? ($required ? null : 0);
-                $valid = $valid && \is_int($value) && $value >= 0;
-            }
-
-            if (!$valid) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Usage {$index} is invalid: it needs role, provider, model, inputTokens, outputTokens and durationMs, with counts as non-negative integers.");
-            }
-
-            $documents[] = new Document([
-                '$id' => Id::unique(),
-                'reviewId' => $review->getId(),
-                'reviewInternalId' => $review->getSequence(),
-                'role' => $call['role'],
-                'provider' => $call['provider'],
-                'model' => $call['model'],
-                'inputTokens' => $call['inputTokens'],
-                'outputTokens' => $call['outputTokens'],
-                'cachedInputTokens' => $call['cachedInputTokens'] ?? 0,
-                'reasoningTokens' => $call['reasoningTokens'] ?? 0,
-                'duration' => $call['durationMs'],
-            ]);
-        }
+        $documents = $this->prepareUsage($usage, 'reviews', $review);
 
         if (!empty($documents)) {
             $authorization->skip(fn () => $dbForProject->createDocuments('reviewUsage', $documents));

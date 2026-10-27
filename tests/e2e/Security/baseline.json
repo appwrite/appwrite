@@ -609,6 +609,7 @@
         "POST /v1/reviews/:reviewId/usage",
         "POST /v1/reviews/repositories",
         "POST /v1/reviews/repositories/:repositoryId/tokens",
+        "POST /v1/reviews/repositories/:repositoryId/usage",
         "POST /v1/s3",
         "POST /v1/sites",
         "POST /v1/sites/:siteId/deployments",
