@@ -4651,7 +4651,8 @@ Http::put('/v1/account/recovery')
             }
 
             // Recovery proves an unverified email, so whoever registered it keeps no other way in
-            if (!$profile->getAttribute('emailVerification', false)) {
+            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+            if (!$locked->getAttribute('emailVerification', false)) {
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
             }
 
@@ -5077,7 +5078,8 @@ Http::put('/v1/account/recovery/otp')
             }
 
             // Recovery proves an unverified email, so whoever registered it keeps no other way in
-            if (!$profile->getAttribute('emailVerification', false)) {
+            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+            if (!$locked->getAttribute('emailVerification', false)) {
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
             }
 

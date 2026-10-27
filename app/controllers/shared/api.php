@@ -379,9 +379,10 @@ Http::init()
             $response->setHideCredentials(true);
         }
 
-        // Reading users is not authority over their credentials. Standard keys are exempt: user migrations read hashes with users.read
-        $isStandardKey = ! empty($apiKey) && $apiKey->getType() !== API_KEY_OAUTH2;
-        if (\in_array('users.read', $scopes, true) && ! \in_array('users.write', $scopes, true) && ! $isStandardKey) {
+        // Reading users is not authority over their credentials. Minted keys are exempt, as their minter could grant users.write
+        // and user migrations read hashes with users.read; OAuth2 tokens only delegate their holder's role
+        $isMintedKey = ! empty($apiKey) && $apiKey->getType() !== API_KEY_OAUTH2;
+        if (\in_array('users.read', $scopes, true) && ! \in_array('users.write', $scopes, true) && ! $isMintedKey) {
             $response->setHideCredentials(true);
         }
 
