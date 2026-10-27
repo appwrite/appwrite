@@ -1,0 +1,167 @@
+---
+layout: article
+title: Track a Flutter app
+description: Add Appwrite Analytics to a Flutter app. Track screen views with a navigator observer, app lifecycle and engagement time, and your own events on iOS, Android, web, and desktop.
+---
+
+The Appwrite Flutter SDK includes a `Tracking` helper and a `TrackingObserver`. Together they record screen views as your users move through the app, when the app goes to the background and comes back, and how long it stays in the foreground. The same code runs on iOS, Android, web, and desktop.
+
+# Before you start {% #before-you-start %}
+
+You need an [analytics property](/docs/products/analytics/properties) and its property ID, which the Console shows next to the property name.
+
+Your app also needs to be registered in the same project. The Flutter SDK sends your app's platform and package name or bundle ID with every request. Appwrite rejects events from a platform the project has no app for, with a `403` `general_unknown_origin` error. To accept events only from your own package, also add its origin to the property's [allowed origins](/docs/products/analytics/properties#allowed-origins).
+
+1. In your project, open **Apps** and click **Add app**.
+2. Choose **Flutter**, then choose the target you ship, such as **Android** or **iOS**.
+3. Enter the package name or bundle ID, and finish the wizard.
+
+Repeat for each target. For a Flutter web build, add the hostname it runs on.
+
+# Install the SDK {% #install %}
+
+Add the Appwrite SDK to your app.
+
+```sh
+flutter pub add appwrite
+```
+
+# Start tracking {% #start-tracking %}
+
+Create a `Tracking` instance, call `start()`, and add a `TrackingObserver` to your app's navigator.
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+import 'package:flutter/material.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final tracking = Tracking(Analytics(client), '<PROPERTY_ID>');
+
+void main() {
+  tracking.start();
+
+  runApp(
+    MaterialApp(
+      navigatorObservers: [TrackingObserver(tracking)],
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/product': (context) => const ProductScreen(),
+      },
+    ),
+  );
+}
+```
+
+`start()` is safe to call before `runApp()`. Run the app, move between a few screens, then open the property in the Console to see the visit.
+
+# Automatic events {% #automatic-events %}
+
+| Event | When it's sent | Extra data |
+| --- | --- | --- |
+| `screen_view` | When a named route is pushed, popped back to, replaced, or removed | `screen`, `trigger`, and `previous` props |
+| `app_backgrounded` | When the app moves to the background | The seconds the app was in the foreground since it last resumed |
+| `app_foregrounded` | When the app returns to the foreground | None |
+
+`start()` sends the two lifecycle events. Screen views come from the `TrackingObserver`, and each one records the route name as the page path, so `/product` appears under **Pages** on the dashboard.
+
+The `screen_view` props describe the navigation:
+
+- `screen`: the route name.
+- `trigger`: what caused it, one of `push`, `pop`, `replace`, or `remove`.
+- `previous`: the route name the user came from, when it has one.
+
+## Unnamed routes {% #unnamed-routes %}
+
+The observer reads each route's `RouteSettings.name` and skips routes without a name, such as most dialogs and bottom sheets. If you push routes with `MaterialPageRoute`, give them a name.
+
+```client-flutter
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    settings: const RouteSettings(name: '/settings'),
+    builder: (context) => const SettingsScreen(),
+  ),
+);
+```
+
+To name screens another way, pass a `nameExtractor`. Return `null` for any route you don't want to track.
+
+```client-flutter
+TrackingObserver(
+  tracking,
+  nameExtractor: (route) => route is PopupRoute ? null : route.settings.name,
+)
+```
+
+# Count screens as pageviews {% #pageviews %}
+
+Several dashboard figures count `pageview` events only: **Pageviews**, **Views per visit**, **Bounce rate**, and the **Entry pages** and **Exit pages** tabs. With the default `screen_view` name, every visit in an app reads as a bounce with no pageviews.
+
+To fill these figures from your screens, have the observer send screen views as `pageview` events.
+
+```client-flutter
+TrackingObserver(tracking, eventName: 'pageview')
+```
+
+The props stay the same. Visits with two or more screen views then stop counting as bounces, and the first and last screens of each visit appear as entry and exit pages.
+
+# Track screens yourself {% #screen-view %}
+
+For a screen that isn't a route, such as a tab in a `TabBarView`, send the screen view yourself.
+
+```client-flutter
+tracking.screenView('Checkout', className: 'CheckoutSheet');
+```
+
+This sends a `screen_view` event with `screen` and `screenClass` props, recorded under the path `/Checkout`. `screenView()` always uses the `screen_view` name.
+
+# Track custom events {% #custom-events %}
+
+Send your own events with `event()`. Pass `url` with the screen the event belongs to, so the event is recorded under that path.
+
+```client-flutter
+tracking.event(
+  'add_to_cart',
+  url: '/product',
+  props: {'sku': 'TSHIRT-01', 'price': 25},
+);
+```
+
+Prop values can be any type and are stored as text. For naming and limits, see [Track custom events](/docs/products/analytics/custom-events).
+
+# Event URLs {% #event-urls %}
+
+Analytics records every event against a URL. On Flutter web, `Tracking` uses the page's origin. On iOS, Android, and desktop, it uses `app://` and the platform name, so a screen view on Android is recorded as `app://android/product`, with `android` as the hostname. The **Hostnames** tab on the dashboard then splits your traffic by platform.
+
+`app_backgrounded` and `app_foregrounded` don't belong to a screen, so they're recorded under the base URL alone. On Android, they appear as `app://android` on the **Top pages** tab.
+
+To record events under your own base URL, pass `url` to `Tracking`.
+
+```client-flutter
+final tracking = Tracking(
+  Analytics(client),
+  '<PROPERTY_ID>',
+  url: 'https://app.example.com',
+);
+```
+
+# Errors {% #errors %}
+
+`Tracking` never throws and never interrupts your app. When an event fails, it's dropped silently. To check your setup, call `createEvent` on the `Analytics` service once and print the error.
+
+```client-flutter
+try {
+  await Analytics(client).createEvent(
+    propertyId: '<PROPERTY_ID>',
+    name: 'setup_check',
+    url: 'app://setup-check',
+  );
+} on AppwriteException catch (e) {
+  print('${e.code} ${e.type} ${e.message}');
+}
+```
+
+A `403` `general_unknown_origin` error names the package that needs an app under **Apps**. A `404` `analytics_property_not_found` error means the property ID is wrong or the property is turned off.

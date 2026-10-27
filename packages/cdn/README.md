@@ -133,7 +133,7 @@ Keys are [cache tags](https://docs.aws.amazon.com/AmazonCloudFront/latest/Develo
 
 `purgeZone()` invalidates `/*` on the tenant.
 
-Paths and tags are batched at `PATHS_PER_PURGE` and `KEYS_PER_PURGE`, both 150, which is CloudFront's default quota of paths or tags processed per second; consecutive batches of one purge are `batchInterval` milliseconds apart (1000 by default). Requests are signed with AWS Signature Version 4 by `Aws\Signature`, which also accepts a session token for temporary credentials (`sessionToken`).
+Paths and tags are batched at `PATHS_PER_PURGE` and `KEYS_PER_PURGE`, both 150, which is CloudFront's default quota of paths or tags processed per second; consecutive batches of one purge are `batchInterval` milliseconds apart (1000 by default). A batch CloudFront throttles (`Throttling`, `TooManyInvalidationsInProgress` or HTTP 429) is resent up to `THROTTLE_RETRIES` (3) times, waiting `batchInterval`, then twice and four times as long; any other rejection fails the purge straight away. Requests are signed with AWS Signature Version 4 by `Aws\Signature`, which also accepts a session token for temporary credentials (`sessionToken`).
 
 ### Cache balancing
 
@@ -213,6 +213,8 @@ $renewRequired = $certificates->isRenewRequired('cdn.example.com', null);
 `issueCertificate()` returns a renew date when Fastly already has an issued or renewing certificate. For asynchronous states like `pending` or `processing`, it returns `null`.
 
 `getCertificateStatus()` returns a `Certificates\Status` constant. Fastly keeps a subscription `pending` while it waits for the domain owner to prove ownership, so the provider also reads the subscription's TLS authorizations: when one is `blocked`, or the subscription has `failed`, it throws `Exception\Certificate` instead of returning a status. The exception carries `getStatus()` (`Status::BLOCKED` or `Status::FAILED`), `getChallenges()` (the DNS records to create, as `Certificates\Challenge` values with a `type`, `recordType`, `recordName` and `values`) and `getWarnings()` (Fastly's own instructions, such as a record that conflicts with a challenge). `FastlyTls::CHALLENGE_MANAGED_DNS` is the `_acme-challenge` CNAME challenge, the one that proves ownership without pointing the domain itself at Fastly.
+
+Fastly renews certificates on its own, but marks a subscription `failed` only a week after its certificate expired. When the newest certificate expires within a week and Fastly has not replaced it, `getCertificateStatus()` returns `Status::EXPIRING`. Alert on it rather than issue again: Fastly accepts a retry only once the subscription has failed. `isRenewRequired()` is true only when issuing does something: no subscription or a failed one, or, for `Fastly`, a domain missing from domain management or attached to another service.
 
 ```php
 use Utopia\Cdn\Exception\Certificate as CertificateException;

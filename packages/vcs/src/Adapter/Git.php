@@ -416,6 +416,74 @@ SCRIPT;
     }
 
     /**
+     * The repository path a caller-supplied file path names, normalized
+     * lexically. Rejects a path that climbs out of the checkout through `..`
+     * segments, or that reaches into `.git`, whose config and hooks the
+     * following git commands would run.
+     */
+    protected function confinedPath(string $filepath): string
+    {
+        $segments = [];
+        foreach (explode('/', str_replace('\\', '/', $filepath)) as $segment) {
+            if ($segment === '') {
+                continue;
+            }
+            if ($segment === '.') {
+                continue;
+            }
+            if ($segment === '..') {
+                if (array_pop($segments) === null) {
+                    throw new Exception("File path escapes the repository: {$filepath}");
+                }
+                continue;
+            }
+            if (strtolower($segment) === '.git') {
+                throw new Exception("File path names repository metadata: {$filepath}");
+            }
+            $segments[] = $segment;
+        }
+
+        if ($segments === []) {
+            throw new Exception("File path names no file: {$filepath}");
+        }
+
+        return implode('/', $segments);
+    }
+
+    /**
+     * Write a file at a confined path inside a checkout. Lexical confinement
+     * is not enough once the checkout itself carries symlinks: a linked
+     * directory or file would carry the write outside. So each missing
+     * directory is created one at a time and every component is refused if it
+     * is a link, before anything is created beneath it.
+     */
+    protected function writeCheckoutFile(string $directory, string $relative, string $content): void
+    {
+        $segments = explode('/', $relative);
+        $file = array_pop($segments);
+
+        $path = $directory;
+        foreach ($segments as $segment) {
+            $path .= '/' . $segment;
+            if (is_link($path)) {
+                throw new Exception("File path escapes the repository: {$relative}");
+            }
+            if (!is_dir($path) && (file_exists($path) || !mkdir($path, 0777))) {
+                throw new Exception("Failed to create directory for {$relative}");
+            }
+        }
+
+        $path .= '/' . $file;
+        if (is_link($path)) {
+            throw new Exception("File path escapes the repository: {$relative}");
+        }
+
+        if (file_put_contents($path, $content) === false) {
+            throw new Exception("Failed to write {$relative}");
+        }
+    }
+
+    /**
      * git, run against the repository in $directory
      */
     protected function git(string $directory): Command

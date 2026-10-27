@@ -158,12 +158,55 @@ final class CloudFrontTest extends TestCase
         $this->adapter(new TestClient([]))->purgeZone();
     }
 
+    public function testThrottledInvalidationIsRetriedWithTheSameBatch(): void
+    {
+        $client = new TestClient([
+            new Response(400, body: new Stream($this->error('TooManyInvalidationsInProgress', 'Too many in progress.'))),
+            new Response(429, body: new Stream($this->error('Throttling', 'Rate exceeded.'))),
+            $this->created(),
+        ]);
+
+        $this->adapter($client, 'dt_main')->purgeKeys(['key']);
+
+        $this->assertCount(3, $client->calls);
+        $this->assertSame($client->calls[0]['body'], $client->calls[2]['body']);
+    }
+
+    public function testThrottlingThatOutlastsTheRetriesIsReported(): void
+    {
+        $throttled = new Response(400, body: new Stream($this->error('TooManyInvalidationsInProgress', 'Too many in progress.')));
+        $client = new TestClient(array_fill(0, CloudFront::THROTTLE_RETRIES + 1, $throttled));
+
+        try {
+            $this->adapter($client, 'dt_main')->purgeZone();
+            $this->fail('A purge throttled on every attempt must fail');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('TooManyInvalidationsInProgress', $error->getMessage());
+        }
+
+        $this->assertCount(CloudFront::THROTTLE_RETRIES + 1, $client->calls);
+    }
+
+    public function testRejectedInvalidationIsNotRetried(): void
+    {
+        $client = new TestClient([new Response(400, body: new Stream($this->error('InvalidArgument', 'Bad path.')))]);
+
+        try {
+            $this->adapter($client, 'dt_main')->purgeZone();
+            $this->fail('An invalid batch must fail');
+        } catch (\RuntimeException) {
+            // Expected
+        }
+
+        $this->assertCount(1, $client->calls);
+    }
+
     public function testFailedInvalidationReportsCloudFrontsError(): void
     {
-        $client = new TestClient([new Response(400, body: new Stream($this->error('TooManyInvalidationsInProgress', 'Too many in progress.')))]);
+        $client = new TestClient([new Response(400, body: new Stream($this->error('InvalidArgument', 'Bad path.')))]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('CloudFront invalidation failed with status 400: TooManyInvalidationsInProgress: Too many in progress.');
+        $this->expectExceptionMessage('CloudFront invalidation failed with status 400: InvalidArgument: Bad path.');
 
         $this->adapter($client, 'dt_main')->purgeZone();
     }

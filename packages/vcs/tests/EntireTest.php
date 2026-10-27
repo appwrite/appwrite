@@ -574,6 +574,13 @@ final class EntireTest extends TestCase
         $this->adapter->createFile('owner', 'repo', '../escape.txt', 'content');
     }
 
+    public function testCreateFileRejectsGitMetadataPath(): void
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('names repository metadata');
+        $this->adapter->createFile('owner', 'repo', 'docs/../.Git/config', 'content');
+    }
+
     public function testCreateFileRejectsEmptyPath(): void
     {
         $this->expectException(\Exception::class);

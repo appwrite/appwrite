@@ -18,6 +18,7 @@ use Appwrite\Realtime\Message\Handlers\Ping as PingHandler;
 use Appwrite\Realtime\Message\Handlers\Presence as PresenceHandler;
 use Appwrite\Realtime\Message\Handlers\Subscribe as SubscribeHandler;
 use Appwrite\Realtime\Message\Handlers\Unsubscribe as UnsubscribeHandler;
+use Appwrite\Realtime\Usage;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
@@ -311,6 +312,7 @@ if (!function_exists('checkForProjectUsage')) {
 
 $realtime = getRealtime();
 $presenceState = new PresenceState();
+$usage = new Usage(triggerStats(...));
 $eventTailRegistry = new EventTailRegistry(
     rate: (int) System::getEnv('_APP_REALTIME_TAIL_RATE', 50)
 );
@@ -434,7 +436,7 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -483,6 +485,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
         $eventTailRegistry->flush($server);
     });
+
+    // Usage is summed per project and published here, off the open, close and message paths.
+    Timer::tick(1000, fn () => $usage->flush());
 
     Timer::tick(5000, function () use ($server, $realtime, $stats, $unauthorized, $unauthorizedPayloadJson) {
         /**
@@ -599,7 +604,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
                 $event = json_decode($payload, true);
                 $closing = [];
 
@@ -646,7 +651,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         // been delivered.
                         $revoked = static fn (?string $sessionId): bool => $user->isEmpty()
                             || $user->getAttribute('status') === false
-                            || ($sessionId !== null && (!$user->sessionActive($sessionId) || !$user->sessionFactorsMet($sessionId)));
+                            || ($sessionId !== null && (!$user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null) || !$user->sessionFactorsMet($sessionId)));
 
                         foreach ($impersonating as $connection) {
                             $impersonatorSessionId = $realtime->connections[$connection]['impersonator']['sessionId'] ?? null;
@@ -679,6 +684,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
                             $presence = $realtime->connections[$connection]['presence'] ?? null;
                             $jwtExpire = $realtime->connections[$connection]['jwtExpire'] ?? null;
+                            $limits = $realtime->connections[$connection]['limits'] ?? null;
                             // Re-read, as extending the session moves it. An impersonated
                             // connection has no sessionId; its impersonator's events refresh it.
                             $expire = $sessionId !== null
@@ -730,6 +736,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                     $realtime->connections[$connection]['presence'] = $presence;
                                 }
                             }
+                            if ($limits !== null && isset($realtime->connections[$connection])) {
+                                $realtime->connections[$connection]['limits'] = $limits;
+                            }
 
                             $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
                             $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
@@ -742,6 +751,53 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             // the connection no longer holds (membership revoked / project moved).
                             $eventTailRegistry->revalidateConnection($connection, $roles);
                         }
+                    }
+                } elseif ($event['permissionsChanged']) {
+                    // `projects.{projectId}.sessions.delete`: every connection of the named
+                    // project re-validates its session against the new invalidation timestamp.
+                    // `projects.{projectId}.update.team`: every tail of the project is
+                    // re-authorized against the project's new read roles.
+                    // The project is taken from the `projects.<id>` channel, as no single
+                    // userId covers all connections.
+                    $targetProjectId = '';
+                    foreach (($event['data']['channels'] ?? []) as $channel) {
+                        if (\str_starts_with($channel, 'projects.')) {
+                            $targetProjectId = \substr($channel, \strlen('projects.'));
+                            break;
+                        }
+                    }
+
+                    if ($targetProjectId !== '' && $targetProjectId !== 'console') {
+                        $consoleDatabase = getConsoleDB();
+                        $targetProject = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $targetProjectId));
+                        $database = getProjectDB($targetProject);
+                        $invalidatedAt = $targetProject->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
+
+                        foreach ($realtime->getProjectConnections($targetProjectId) as $connection) {
+                            $userId = $realtime->connections[$connection]['userId'] ?? '';
+                            $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
+
+                            if ($userId === '' || $sessionId === null) {
+                                continue; // Guests, keys and admin-mode connections hold no project session to invalidate.
+                            }
+
+                            /** @var User $user */
+                            $user = $database->getDocument('users', $userId);
+
+                            if (
+                                $user->isEmpty()
+                                || $user->getAttribute('status') === false
+                                || !$user->sessionActive($sessionId, $invalidatedAt)
+                            ) {
+                                $closing[$connection] = true;
+                            }
+                        }
+
+                        $eventTailRegistry->reauthorizeProject(
+                            $targetProjectId,
+                            $targetProject->getPermissionsByType(PermissionType::Read),
+                            fn (int $connection): array => $realtime->connections[$connection]['roles'] ?? [],
+                        );
                     }
                 }
 
@@ -814,7 +870,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     if (!empty($projectId)) {
                         // Reached only when $total > 0, and every frame carries the
                         // literal envelope, so outbound bytes are always non-zero.
-                        triggerStats([
+                        $usage->add([
                             METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => $total,
                             METRIC_REALTIME_OUTBOUND => $outboundBytes,
                         ], $projectId);
@@ -883,7 +939,7 @@ $server->onWorkerStop(function (int $workerId) use ($register) {
 // once and the later calls just let the closes it started drain.
 $exitSwept = false;
 
-$adapter->onWorkerExit(function (int $workerId) use ($server, $realtime, &$exitSwept) {
+$adapter->onWorkerExit(function (int $workerId) use ($server, $realtime, $usage, &$exitSwept) {
     if ($exitSwept) {
         return;
     }
@@ -904,6 +960,8 @@ $adapter->onWorkerExit(function (int $workerId) use ($server, $realtime, &$exitS
         }
     }
 
+    Coroutine::getCid() > 0 ? $usage->stop() : Coroutine::create($usage->stop(...));
+
     try {
         realtimeWorkerExit($workerId);
     } catch (\Throwable $th) {
@@ -911,7 +969,7 @@ $adapter->onWorkerExit(function (int $workerId) use ($server, $realtime, &$exitS
     }
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $registerConnectionResources) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $adapter, $register, $stats, &$realtime, $usage, $registerConnectionResources) {
     global $container;
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
@@ -1041,7 +1099,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
         }
 
-        triggerStats([
+        $usage->add([
             METRIC_REALTIME_INBOUND => $rawSize,
         ], $project->getId());
 
@@ -1073,10 +1131,35 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         // Impersonated or not, the connection lasts only as long as the session it runs on.
         $expire = $session !== null ? $user->getSessionExpiry($session->getId()) : null;
 
-        $channels = Realtime::convertChannels($request->getQuery('channels', []), $subscriberId);
+        // The lookups above can yield, so a socket closed meanwhile is never counted.
+        if (!$adapter->getNative()->isEstablished($connection)) {
+            $success = true;
+            return;
+        }
+        // Many people can share one IP, so guests get a higher limit than a single user.
+        $isGuest = $targetUser->getId() === '';
+        $owner = $isGuest ? Realtime::getGuestOwner($request->getIP()) : $targetUser->getId();
+        $limit = $isGuest ? APP_LIMIT_REALTIME_GUEST_CONNECTIONS : APP_LIMIT_REALTIME_CONNECTIONS;
+        if (!$realtime->addConnection($connection, $project->getId(), $owner, $limit)) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many open connections. Close an existing connection and try again.');
+        }
+
+        $plan = $connectionContainer->get('plan');
+        $limits = [
+            'subscriptions' => (int) ($plan['realtimeSubscriptions'] ?? APP_LIMIT_REALTIME_SUBSCRIPTIONS),
+            'channels' => (int) ($plan['realtimeChannels'] ?? APP_LIMIT_REALTIME_CHANNELS),
+            'queries' => (int) ($plan['realtimeQueries'] ?? APP_LIMIT_REALTIME_QUERIES),
+        ];
+
+        $requestedChannels = $request->getQuery('channels', []);
+        if (\is_array($requestedChannels) && \count($requestedChannels) > $limits['channels']) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'channels must contain at most ' . $limits['channels'] . ' channels.');
+        }
+
+        $channels = Realtime::convertChannels($requestedChannels, $subscriberId);
         $channelCount = \count($channels);
 
-        $updateStats = static function (string $projectId, ?string $teamId) use ($register, $stats): void {
+        $updateStats = static function (string $projectId, ?string $teamId) use ($register, $stats, $usage): void {
             $register->get('telemetry.connectionCounter')->add(1);
             $register->get('telemetry.workerClientCounter')->add(1, $register->get('telemetry.workerAttributes'));
             $register->get('telemetry.connectionCreatedCounter')->add(1);
@@ -1088,7 +1171,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $stats->incr($projectId, 'connections');
             $stats->incr($projectId, 'connectionsTotal');
 
-            triggerStats([
+            $usage->add([
                 METRIC_REALTIME_CONNECTIONS => 1,
             ], $projectId);
         };
@@ -1122,8 +1205,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $realtime->connections[$connection]['impersonator'] = $impersonator;
             $realtime->connections[$connection]['expire'] = $expire;
             $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
+            $realtime->connections[$connection]['limits'] = $limits;
             $updateStats($project->getId(), $project->getAttribute('teamId'));
-            triggerStats([
+            $usage->add([
                 METRIC_REALTIME_OUTBOUND => \strlen($connectedPayloadJson),
             ], $project->getId());
             $subscriptionMode = 'message';
@@ -1134,10 +1218,17 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $names = array_keys($channels);
         $subscriptionMode = 'url';
 
+        if ($isGuest && ($project->getAttribute('auths', [])['realtimeGuests'] ?? false)) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'This project does not allow guests to subscribe. Sign in first.');
+        }
+
         try {
             $subscriptions = Realtime::constructSubscriptions(
                 $names,
-                fn ($channel) => $request->getQuery($channel, null)
+                fn ($channel) => $request->getQuery($channel, null),
+                $limits['subscriptions'],
+                $limits['channels'],
+                $limits['queries'],
             );
         } catch (QueryException $e) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
@@ -1187,6 +1278,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $realtime->connections[$connection]['impersonator'] = $impersonator;
         $realtime->connections[$connection]['expire'] = $expire;
         $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
+        $realtime->connections[$connection]['limits'] = $limits;
         $updateStats($project->getId(), $project->getAttribute('teamId'));
 
         $subscriptionCount = \count($subscriptions);
@@ -1194,7 +1286,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $register->get('telemetry.workerSubscriptionCounter')->add(\count($subscriptions), $register->get('telemetry.workerAttributes'));
         }
 
-        triggerStats([
+        $usage->add([
             METRIC_REALTIME_OUTBOUND => \strlen($connectedPayloadJson),
         ], $project->getId());
         $success = true;
@@ -1262,7 +1354,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $messageDispatcher, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
+$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $messageDispatcher, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
     $project = null;
     $authorization = null;
     $projectId = $realtime->connections[$connection]['projectId'] ?? null;
@@ -1355,7 +1447,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         // Record realtime inbound bytes for this project
         // not making this a part of the dispatcher as we need to get the inbound bytes as well even if we dont enter the dispatcher
         if ($project !== null && !$project->isEmpty()) {
-            triggerStats([
+            $usage->add([
                 METRIC_REALTIME_INBOUND => $rawSize,
             ], $project->getId());
         }
@@ -1417,7 +1509,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $outboundBytes += $bytes;
 
             if ($project !== null && !$project->isEmpty()) {
-                triggerStats([
+                $usage->add([
                     METRIC_REALTIME_OUTBOUND => $bytes,
                     METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => 1,
                 ], $project->getId());
@@ -1476,7 +1568,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
     }
 });
 
-$server->onClose(function (int $connection) use ($realtime, $stats, $register, $container, $presenceState, $eventTailRegistry) {
+$server->onClose(function (int $connection) use ($realtime, $stats, $register, $container, $presenceState, $eventTailRegistry, $usage) {
     $projectId = null;
     $userId = null;
     $subscriptionsBeforeClose = 0;
@@ -1546,7 +1638,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
             }
 
             if (!empty($projectId)) {
-                triggerStats([
+                $usage->add([
                     METRIC_REALTIME_CONNECTIONS => -1,
                 ], $projectId);
             }
@@ -1571,6 +1663,8 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
             Console::error('Realtime onClose tail cleanup error: ' . $th->getMessage());
             Span::current()?->setError($th);
         }
+
+        $realtime->removeConnection($connection);
 
         Span::add('realtime.success', $success);
         if (!empty($projectId)) {
