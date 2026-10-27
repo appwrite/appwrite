@@ -419,7 +419,7 @@ class Builds extends Action
                 }
 
                 // Commit and push
-                $commitMessage = 'Create ' . $resource->getAttribute('name', '') . ' function';
+                $commitMessage = 'Create ' . $resource->getAttribute('name', '') . ' ' . ($resource->getCollection() === 'sites' ? 'site' : 'function');
                 $push = Command::and(
                     // A branch clone already has the branch; a commit clone is detached
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('checkout')->flag('-B')->argument($branchName),
@@ -446,7 +446,7 @@ class Builds extends Action
                 $deployment->setAttribute('providerCommitHash', $providerCommitHash);
                 $deployment->setAttribute('providerCommitAuthorUrl', APP_VCS_GITHUB_URL);
                 $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
-                $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
+                $deployment->setAttribute('providerCommitMessage', $commitMessage);
                 $deployment->setAttribute('providerCommitUrl', $providerAdapter->getCommitUrl($cloneOwner, $cloneRepository, $providerCommitHash));
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                     'providerCommitHash' => $deployment->getAttribute('providerCommitHash'),
