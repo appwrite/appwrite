@@ -569,6 +569,9 @@ class Create extends Action
                 'provider' => 'github',
                 'providerInstallationId' => $parsedPayload['installationId'] ?? '',
             ]));
+            if (!$vcs instanceof GitHub) {
+                return;
+            }
 
             try {
                 $pullRequest = $vcs->getPullRequest($parsedPayload['owner'] ?? '', $parsedPayload['repositoryName'] ?? '', $pullNumber);
@@ -581,11 +584,20 @@ class Create extends Action
                 return;
             }
 
-            // A review is a model run the project pays for: people with write access, and the author.
-            $trusted = \in_array($parsedPayload['commentAuthorAssociation'] ?? '', ['OWNER', 'MEMBER', 'COLLABORATOR'], true)
-                || ($pullRequest['user']['login'] ?? null) === ($parsedPayload['commentAuthor'] ?? '');
-            if (!$trusted) {
-                return;
+            // A review is a model run the project pays for: the author, and people with write access.
+            // Association labels don't say that (MEMBER is any org member, COLLABORATOR may be read-only).
+            $author = $parsedPayload['commentAuthor'] ?? '';
+            if (($pullRequest['user']['login'] ?? null) !== $author) {
+                try {
+                    $permission = $vcs->getCollaboratorPermission($parsedPayload['owner'] ?? '', $parsedPayload['repositoryName'] ?? '', $author);
+                } catch (\Throwable $error) {
+                    Console::warning("Failed to read {$author}'s permission for a review request: " . $error->getMessage());
+                    return;
+                }
+
+                if (!\in_array($permission, ['admin', 'write'], true)) {
+                    return;
+                }
             }
         }
 
@@ -685,7 +697,16 @@ class Create extends Action
                 'status' => 'queued',
             ])));
         } catch (DuplicateException) {
-            return;
+            // A redelivered comment queues again only if its first attempt failed to.
+            $review = $authorization->skip(fn () => $dbForProject->getDocument('reviews', 'mention-' . $commentId));
+            if ($review->getAttribute('status') !== 'failed') {
+                return;
+            }
+
+            $review = $authorization->skip(fn () => $dbForProject->updateDocument('reviews', $review->getId(), new Document([
+                'status' => 'queued',
+                'reason' => '',
+            ])));
         }
 
         try {

@@ -1872,7 +1872,7 @@ return [
     ],
     [
         'category' => 'Reviews',
-        'description' => 'AI code review for GitHub pull requests, run by the appwrite/hansi service. Optional: reviews stay off until `_APP_REVIEWS_SECRET` is set, and the installer adds the service only then. The service reads jobs from the Redis queue at `_APP_REDIS_HOST` and `_APP_REDIS_PORT`, so `_APP_REDIS_USER` and `_APP_REDIS_PASS` must not contain `@`, `:` or `/`. It runs reviews read-only, without sandboxes. The GitHub App needs these repository permissions: Contents (read), Pull requests, Issues and Checks (read and write). It must also subscribe to the "Pull request", "Issue comment" and "Pull request review comment" events. Comments that mention the app (`_APP_VCS_GITHUB_APP_NAME`) are answered, and "@app review" asks for a review.',
+        'description' => 'AI code review for GitHub pull requests, run by the appwrite/hansi service. Optional: reviews stay off until `_APP_REVIEWS_SECRET` is set, and the installer adds the service only then. The service reads jobs from the Redis queue at `_APP_REDIS_HOST` and `_APP_REDIS_PORT`, so `_APP_REDIS_USER` and `_APP_REDIS_PASS` go into a URL unescaped and must not contain `@`, `:`, `/`, `?`, `#` or `%`. It runs reviews read-only, without sandboxes. The GitHub App needs these repository permissions: Contents and Metadata (read), Pull requests, Issues and Checks (read and write). It must also subscribe to the "Pull request", "Issue comment" and "Pull request review comment" events. Comments that mention the app (`_APP_VCS_GITHUB_APP_NAME`) are answered, and "@app review" asks for a review.',
         'variables' => [
             [
                 'name' => '_APP_REVIEWS_SECRET',

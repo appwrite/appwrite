@@ -464,6 +464,32 @@ final class GitHubTest extends Base
         }
     }
 
+    public function testGetCollaboratorPermissionReturnsThePermission(): void
+    {
+        $captured = new \stdClass();
+        $adapter = $this->accessTokenResponse(200, ['permission' => 'write', 'role_name' => 'maintain'], $captured);
+
+        $this->assertSame('write', $adapter->getCollaboratorPermission('appwrite', 'appwrite', 'octocat'));
+        $this->assertSame('GET', $captured->request['method']);
+        $this->assertSame('/repos/appwrite/appwrite/collaborators/octocat/permission', $captured->request['path']);
+    }
+
+    public function testGetCollaboratorPermissionIsNoneForAnUnknownUser(): void
+    {
+        $adapter = $this->accessTokenResponse(404, ['message' => 'Not Found'], new \stdClass());
+
+        $this->assertSame('none', $adapter->getCollaboratorPermission('appwrite', 'appwrite', 'ghost'));
+    }
+
+    public function testGetCollaboratorPermissionThrowsWhenGitHubFails(): void
+    {
+        $adapter = $this->accessTokenResponse(500, ['message' => 'Server Error'], new \stdClass());
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionCode(500);
+        $adapter->getCollaboratorPermission('appwrite', 'appwrite', 'octocat');
+    }
+
     /**
      * @param array<string, mixed> $body
      * @param \stdClass $captured its `request` receives the request the adapter sent

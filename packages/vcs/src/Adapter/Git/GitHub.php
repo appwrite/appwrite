@@ -785,6 +785,31 @@ class GitHub extends Git
     }
 
     /**
+     * Get a user's permission on a repository
+     *
+     * @return string admin, write, read or none; none also for a user GitHub does not know
+     *
+     * @throws Exception
+     */
+    public function getCollaboratorPermission(string $owner, string $repositoryName, string $username): string
+    {
+        $url = "/repos/{$owner}/{$repositoryName}/collaborators/{$username}/permission";
+
+        $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "Bearer $this->accessToken"]);
+
+        $responseHeaders = $response['headers'] ?? [];
+        $statusCode = $responseHeaders['status-code'] ?? 0;
+        if ($statusCode === 404) {
+            return 'none';
+        }
+        if ($statusCode >= 400) {
+            throw new Exception("Failed to get collaborator permission: HTTP {$statusCode}", $statusCode);
+        }
+
+        return $response['body']['permission'] ?? 'none';
+    }
+
+    /**
      * Get files changed in a pull request
      *
      * @return array<mixed> List of files changed in the pull request
