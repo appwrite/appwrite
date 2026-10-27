@@ -109,6 +109,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Connect GitHub': 'חיבור GitHub',
   'Connect GitLab': 'חיבור GitLab',
   'Connect Bitbucket': 'חיבור Bitbucket',
+  'Connect Gitea': 'חיבור Gitea',
   'Connect Origin': 'חיבור Origin',
   'Connect later': 'חיבור מאוחר יותר',
   'Connect repository': 'חיבור repo',
