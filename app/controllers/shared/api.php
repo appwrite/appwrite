@@ -699,7 +699,18 @@ Http::init()
         $queueForEvents
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($targetUser);
+            ->setUser($targetUser)
+            // Resolve, where the request mode is known, the read permission any
+            // function execution this event triggers may be granted. In admin
+            // mode the user is the console account, whose id must never become a
+            // project read role (a colliding project user could claim it), so
+            // grant nothing; otherwise grant the genuine triggering project
+            // user. Function publishers forward this instead of deriving it.
+            ->setExecutionPermissions(
+                ($mode === APP_MODE_ADMIN || $targetUser->isEmpty())
+                    ? []
+                    : [Permission::read(Role::user($targetUser->getId()))]
+            );
 
         $auditContext->mode = $mode;
         $auditContext->userAgent = $request->getUserAgent('');
@@ -919,8 +930,7 @@ Http::shutdown()
     ->inject('queueForRealtime')
     ->inject('dbForProject')
     ->inject('eventProcessor')
-    ->inject('mode')
-    ->action(function (Route $route, Response $response, Document $project, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, EventProcessor $eventProcessor, string $mode) {
+    ->action(function (Route $route, Response $response, Document $project, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, EventProcessor $eventProcessor) {
         if (empty($queueForEvents->getEvent())) {
             return;
         }
@@ -960,16 +970,9 @@ Http::shutdown()
                         payload: $queueForEvents->getPayload(),
                         platform: $queueForEvents->getPlatform(),
                         database: $queueForEvents->getContext('database'),
-                        // Resolve the triggered execution's read permission here,
-                        // where admin mode is known. In admin mode the event user
-                        // is the console account, so grant nothing — its id must
-                        // not become a project read permission a colliding project
-                        // user could claim. Otherwise grant the genuine project
-                        // user that triggered the event. The worker never derives
-                        // this itself, so it defaults to private.
-                        executionPermissions: ($mode === APP_MODE_ADMIN || $queueForEvents->getUser()->isEmpty())
-                            ? []
-                            : [Permission::read(Role::user($queueForEvents->getUser()->getId()))],
+                        // Resolved at event init where the request mode is known;
+                        // the worker never derives it, so this is authoritative.
+                        executionPermissions: $queueForEvents->getExecutionPermissions(),
                     ));
                     break;
                 }

@@ -60,6 +60,8 @@ class Event
     protected ?Document $project = null;
     protected ?Document $user = null;
     protected ?string $userId = null;
+    /** @var array<string>|null */
+    protected ?array $executionPermissions = null;
 
     protected bool $paused = false;
 
@@ -196,6 +198,29 @@ class Event
         $this->user = $user;
 
         return $this;
+    }
+
+    /**
+     * Read permission a function execution triggered by this event should be
+     * granted. Resolved once where the request mode is known (admin mode must
+     * not grant the console user's id as a project read role). Null means the
+     * consumer decides; an explicit (possibly empty) list is authoritative.
+     *
+     * @param array<string>|null $permissions
+     */
+    public function setExecutionPermissions(?array $permissions): static
+    {
+        $this->executionPermissions = $permissions;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string>|null
+     */
+    public function getExecutionPermissions(): ?array
+    {
+        return $this->executionPermissions;
     }
 
     /**
@@ -625,6 +650,7 @@ class Event
     {
         $this->project = $event->getProject();
         $this->user = $event->getUser();
+        $this->executionPermissions = $event->getExecutionPermissions();
         $this->payload = $event->getPayload();
         $this->sensitive = $event->sensitive;
         $this->event = $event->getEvent();

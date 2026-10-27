@@ -82,6 +82,7 @@ class Events extends Action
                         userId: $queueForEvents->getUserId(),
                         payload: $queueForEvents->getPayload(),
                         platform: $queueForEvents->getPlatform(),
+                        executionPermissions: $queueForEvents->getExecutionPermissions(),
                     ));
                     break;
                 }

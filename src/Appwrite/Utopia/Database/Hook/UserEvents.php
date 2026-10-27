@@ -63,6 +63,7 @@ class UserEvents implements Lifecycle, Selective
             userId: $this->events->getUserId(),
             payload: $this->events->getPayload(),
             platform: $this->events->getPlatform(),
+            executionPermissions: $this->events->getExecutionPermissions(),
         ));
 
         if (!empty($this->project->getAttribute('webhooks'))) {

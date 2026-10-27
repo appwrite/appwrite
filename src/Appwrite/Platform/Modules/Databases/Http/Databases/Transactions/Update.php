@@ -587,6 +587,7 @@ class Update extends Action
                                     payload: $queueForEvents->getPayload(),
                                     platform: $queueForEvents->getPlatform(),
                                     database: $queueForEvents->getContext('database'),
+                                    executionPermissions: $queueForEvents->getExecutionPermissions(),
                                 ));
                                 break;
                             }

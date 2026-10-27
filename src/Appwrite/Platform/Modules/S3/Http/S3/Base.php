@@ -522,6 +522,7 @@ abstract class Base extends Action
                         userId: $queueForEvents->getUserId(),
                         payload: $queueForEvents->getPayload(),
                         platform: $queueForEvents->getPlatform(),
+                        executionPermissions: $queueForEvents->getExecutionPermissions(),
                     ));
                     break;
                 }
