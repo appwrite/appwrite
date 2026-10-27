@@ -6141,6 +6141,132 @@ trait DatabasesBase
         $this->assertSame('miss', $changed['headers']['x-appwrite-cache']);
     }
 
+    public function testListDocumentsCacheBustedByDocumentPermissionChange(): void
+    {
+        if ($this->getSide() !== 'client') {
+            $this->markTestSkipped('API keys read past document permissions, so only a client caller can lose read access');
+        }
+
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $readable = [Permission::read(Role::user($this->getUser()['$id']))];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Cache Document Permissions',
+            'permissions' => [],
+            $this->getSecurityParam() => true,
+            $this->getSchemaResource() => [
+                ['key' => 'title', 'type' => ColumnType::String->value, 'size' => 64],
+            ],
+        ]);
+
+        $this->assertSame(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['title' => 'Cached'],
+            'permissions' => $readable,
+        ]);
+
+        $this->assertSame(201, $record['headers']['status-code']);
+        $recordId = $record['body']['$id'];
+
+        $list = fn (): array => $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'ttl' => 300,
+        ]);
+
+        $revocations = [
+            'update' => fn (): array => $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $containerId, $recordId), $headers, [
+                'permissions' => [],
+            ]),
+            'bulk update' => fn (): array => $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $containerId), $headers, [
+                'data' => ['$permissions' => []],
+            ]),
+            'transaction' => function () use ($headers, $databaseId, $containerId, $recordId): array {
+                $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+                $this->assertSame(201, $transaction['headers']['status-code']);
+                $transactionId = $transaction['body']['$id'];
+
+                $staged = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $containerId, $recordId), $headers, [
+                    'permissions' => [],
+                    'transactionId' => $transactionId,
+                ]);
+                $this->assertSame(200, $staged['headers']['status-code']);
+
+                return $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+                    'commit' => true,
+                ]);
+            },
+            'upsert' => fn (): array => $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $containerId, $recordId), $headers, [
+                'data' => ['title' => 'Cached'],
+                'permissions' => [],
+            ]),
+            'bulk upsert' => fn (): array => $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $containerId), $headers, [
+                $this->getRecordResource() => [
+                    ['$id' => $recordId, 'title' => 'Cached', '$permissions' => []],
+                ],
+            ]),
+            'transaction bulk upsert' => function () use ($headers, $databaseId, $containerId, $recordId): array {
+                $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+                $this->assertSame(201, $transaction['headers']['status-code']);
+                $transactionId = $transaction['body']['$id'];
+
+                $staged = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $containerId), $headers, [
+                    $this->getRecordResource() => [
+                        ['$id' => $recordId, 'title' => 'Cached', '$permissions' => []],
+                    ],
+                    'transactionId' => $transactionId,
+                ]);
+                $this->assertSame(200, $staged['headers']['status-code']);
+
+                return $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+                    'commit' => true,
+                ]);
+            },
+        ];
+
+        foreach ($revocations as $revocation => $revoke) {
+            $grant = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $containerId, $recordId), $headers, [
+                'permissions' => $readable,
+            ]);
+            $this->assertSame(200, $grant['headers']['status-code']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $this->assertSame('miss', $list()['headers']['x-appwrite-cache'], $revocation);
+            $cached = $list();
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache'], $revocation);
+            $this->assertSame(1, $cached['body']['total'], $revocation);
+            $this->assertSame($recordId, $cached['body'][$this->getRecordResource()][0]['$id'], $revocation);
+
+            $revoked = $revoke();
+            $this->assertSame(200, $revoked['headers']['status-code'], $revocation);
+
+            /**
+             * Test for FAILURE
+             */
+            $denied = $list();
+            $this->assertSame(200, $denied['headers']['status-code'], $revocation);
+            $this->assertSame('miss', $denied['headers']['x-appwrite-cache'], $revocation);
+            $this->assertSame(0, $denied['body']['total'], $revocation);
+            $this->assertSame([], $denied['body'][$this->getRecordResource()], $revocation);
+        }
+    }
+
     public function testListDocumentsCachedWithoutSelectQuery(): void
     {
         if (!$this->getSupportForAttributes()) {

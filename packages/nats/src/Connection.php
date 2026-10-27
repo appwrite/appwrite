@@ -721,17 +721,15 @@ final class Connection
         // Merge connect_urls into server pool
         foreach ($this->serverInfo->connectUrls as $connectUrl) {
             if (!\in_array($connectUrl, $this->serverPool, true)) {
-                $this->serverPool[] = $this->normalizeUrl($connectUrl);
+                $this->serverPool[] = $this->normalizeUrl($connectUrl, $this->isSecure($scheme));
             }
         }
 
         // TLS upgrade over a plaintext TCP connection: when the server requires
-        // TLS, or when the caller opted in and the server advertises it is
-        // available. A TlsTransport / custom transport handles its own TLS.
+        // TLS, or when the caller opted in, whatever the server advertises. A
+        // TlsTransport / custom transport handles its own TLS.
         if ($this->transport instanceof TcpTransport && $scheme !== 'tls') {
-            $wantsUpgrade = $this->serverInfo->tlsRequired
-                || ($this->options->tls && $this->serverInfo->tlsAvailable);
-            if ($wantsUpgrade) {
+            if ($this->serverInfo->tlsRequired || $this->options->tls) {
                 $this->transport->upgradeTls($this->tlsOptions());
             }
         }
@@ -990,8 +988,9 @@ final class Connection
 
             // Async INFO may advertise additional cluster members; fold any new
             // ones into the pool so failover has somewhere to go.
+            $secure = $this->isSecure($this->parseUrl($this->currentServer)['scheme']);
             foreach ($this->serverInfo->connectUrls as $connectUrl) {
-                $normalized = $this->normalizeUrl($connectUrl);
+                $normalized = $this->normalizeUrl($connectUrl, $secure);
                 if (!\in_array($normalized, $this->serverPool, true)) {
                     $this->serverPool[] = $normalized;
                 }
@@ -1339,12 +1338,22 @@ final class Connection
         return $opts;
     }
 
-    private function normalizeUrl(string $url): string
+    /**
+     * Scheme-less URLs come from INFO connect_urls; $secure carries the TLS of
+     * the server that advertised them, so a TLS connection never fails over to
+     * a plaintext one.
+     */
+    private function normalizeUrl(string $url, bool $secure = false): string
     {
         if (!preg_match('#^(nats|tls|ws|wss)://#', $url)) {
-            return 'nats://' . $url;
+            return ($secure ? 'tls://' : 'nats://') . $url;
         }
         return $url;
+    }
+
+    private function isSecure(string $scheme): bool
+    {
+        return $scheme === 'tls' || $scheme === 'wss' || $this->options->tls;
     }
 
     /**

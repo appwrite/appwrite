@@ -64,7 +64,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { isConsoleImpersonationActive } from '@/lib/console-impersonation'
 import {
-  linkPendingSources,
+  linkSignUpSources,
   saveReferrerAndUtmSource,
 } from '@/lib/marketing/utm'
 import { PreLaunchRedirect } from '@/components/global/auth/PreLaunchRedirect'
@@ -578,6 +578,7 @@ function RootAcquisitionSource() {
     typeof window === 'undefined' ? undefined : new URL(window.location.href),
   )
   const accountId = account?.$id
+  const createdAt = account?.$createdAt
   // Retried on verification in case Cloud rejects unverified accounts.
   const emailVerified = account?.emailVerification
   const impersonating = isConsoleImpersonationActive(account)
@@ -586,10 +587,17 @@ function RootAcquisitionSource() {
     if (!auth.isFetched) return
     if (!accountId) {
       saveReferrerAndUtmSource(landingUrl)
-    } else if (!impersonating) {
-      linkPendingSources()
+    } else if (!impersonating && createdAt) {
+      void linkSignUpSources(createdAt)
     }
-  }, [auth.isFetched, accountId, emailVerified, impersonating, landingUrl])
+  }, [
+    auth.isFetched,
+    accountId,
+    createdAt,
+    emailVerified,
+    impersonating,
+    landingUrl,
+  ])
 
   return null
 }
