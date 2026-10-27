@@ -2,7 +2,7 @@
 layout: changelog
 title: "Appwrite MCP server now separates reads and writes"
 date: 2026-10-27
-cover: /images/blog/announcing-remote-appwrite-mcp-server/cover.avif
+cover: /images/changelog/2026-10-27.avif
 tags: mcp, ai
 ---
 
