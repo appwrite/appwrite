@@ -297,28 +297,6 @@
     "TS2551: Property 'osName' does not exist on type 'ActivityEvent'. Did you mean 'hostname'?": 1,
     "TS2551: Property 'osVersion' does not exist on type 'ActivityEvent'. Did you mean 'sdkVersion'?": 2
   },
-  "src/components/pages/projects/$projectId/analytics/View.tsx": {
-    "TS2741: Property 'snippetId' is missing in type 'AnalyticsProperty' but required in type 'Pick<AnalyticsProperty, \"name\" | \"$id\" | \"domain\" | \"snippetId\">'.": 2
-  },
-  "src/components/pages/projects/$projectId/analytics/_components/CustomEventsGuideDialog.tsx": {
-    "TS2339: Property 'snippetId' does not exist on type 'AnalyticsProperty'.": 1
-  },
-  "src/components/pages/projects/$projectId/analytics/_components/InstallTrackingDialog.tsx": {
-    "TS2339: Property 'snippetId' does not exist on type 'AnalyticsProperty'.": 3
-  },
-  "src/components/pages/projects/$projectId/analytics/_components/IntegrationSnippets.tsx": {
-    "TS2339: Property 'snippetId' does not exist on type 'AnalyticsProperty'.": 1
-  },
-  "src/components/pages/projects/$projectId/analytics/_components/PropertyContextMenu.tsx": {
-    "TS2344: Type '\"$id\" | \"domain\" | \"name\" | \"snippetId\"' does not satisfy the constraint 'keyof AnalyticsProperty'.": 1,
-    "TS2345: Argument of type 'unknown' is not assignable to parameter of type 'null | string | undefined'.": 1
-  },
-  "src/components/pages/projects/$projectId/analytics/_components/PropertySettings.tsx": {
-    "TS2339: Property 'snippetId' does not exist on type 'AnalyticsProperty'.": 2
-  },
-  "src/components/pages/projects/$projectId/analytics/add/View.tsx": {
-    "TS2339: Property 'snippetId' does not exist on type 'AnalyticsProperty'.": 3
-  },
   "src/components/pages/projects/$projectId/api-keys/View.tsx": {
     "TS2322: Type 'null | undefined | { keys?: unknown[] | undefined; }' is not assignable to type 'KeyList | null | undefined'.": 1
   },
