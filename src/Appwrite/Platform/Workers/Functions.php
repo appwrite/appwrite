@@ -350,7 +350,10 @@ class Functions extends Action
                     event: null,
                     eventData: null,
                     executionId: $execution->getId(),
-                    permissions: $execution->getPermissions(),
+                    // No permissions passed: the scheduled requeue carries only
+                    // the id, so execute() derives from the user re-fetched by
+                    // userId from this project — the genuine project scheduler —
+                    // instead of an empty list that would wipe their access.
                 );
                 break;
         }
@@ -473,6 +476,7 @@ class Functions extends Action
         Document $user,
         ?string $jwt = null,
         ?string $event = null,
+        ?array $permissions = null,
     ): void {
         $executionId = Id::unique();
         $headers['x-appwrite-execution-id'] = $executionId;
@@ -490,7 +494,12 @@ class Functions extends Action
 
         $execution = new Document([
             '$id' => $executionId,
-            '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
+            // Same gating as the success path: never stamp an admin-mode
+            // console user id onto the failure row (would leak error details to
+            // a colliding project user); fall back to the user only when the
+            // caller resolved no permission (e.g. event triggers).
+            '$permissions' => $permissions
+                ?? ($user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))]),
             'resourceInternalId' => $function->getSequence(),
             'resourceId' => $function->getId(),
             'resourceType' => 'functions',
@@ -587,19 +596,19 @@ class Functions extends Action
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $permissions);
             return;
         }
 
         if ($deployment->isEmpty()) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $permissions);
             return;
         }
 
         if ($deployment->getAttribute('status') !== 'ready') {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $permissions);
             return;
         }
 
