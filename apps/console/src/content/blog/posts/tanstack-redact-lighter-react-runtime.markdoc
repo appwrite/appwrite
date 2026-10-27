@@ -95,12 +95,10 @@ However, synchronous rendering means expensive component updates can block user 
 
 TanStack Redact 0.2.0 supports four framework and build environments.
 
-| Framework | Integration |
-| --- | --- |
-| TanStack Start | Redact handles server rendering and hydration; Start keeps routing and server functions |
-| Vite | Redirects supported React imports to Redact |
-| Vinext | Uses React for server rendering and Redact in the browser |
-| Next.js | Supports App Router and Pages Router with Redact handling client rendering |
+- **TanStack Start.** Redact handles server rendering and hydration, while Start keeps routing and server functions.
+- **Vite.** Redact's plugin redirects supported React imports to Redact.
+- **Vinext.** React handles server rendering, and Redact runs in the browser.
+- **Next.js.** Redact handles client rendering for both the App Router and the Pages Router.
 
 For Next.js and Vinext, React continues handling server rendering and React Server Components, while Redact takes over hydration and rendering in the browser.
 
@@ -166,7 +164,7 @@ Appwrite Sites already supports **TanStack Start 1.0**, including server-side re
 
 TanStack Start apps that use Redact deploy to Appwrite Sites with no extra configuration. Redact renders pages on the server and in the browser, and server functions and API routes keep working. Add Redact to `vite.config.ts` as described in its [Start guide](https://tanstack.com/redact/latest/docs/start), and keep the build settings Appwrite detects: `./dist` as the output directory, or `./.output` if your app uses the Nitro plugin.
 
-Read our [TanStack Start announcement](/blog/post/tanstack-start-stable-appwrite-sites) for more details, or [create a free Appwrite project](https://cloud.appwrite.io/) to start building and deploying your application.
+Read our [TanStack Start announcement](/blog/post/tanstack-start-stable-appwrite-sites) for more details, or [create a free Appwrite project](/sign-up) to start building and deploying your application.
 
 # Resources
 
