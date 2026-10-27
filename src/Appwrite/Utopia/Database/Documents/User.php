@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Database\Documents;
 
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Deletes\Targets;
+use Appwrite\Hooks\Hooks;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
@@ -299,6 +300,9 @@ class User extends Document
                 Query::equal('userInternalId', [$sequence]),
                 Query::notEqual('providerType', MESSAGE_TYPE_EMAIL),
             ]));
+
+            // Editions revoke the credentials they keep in their own collections
+            (new Hooks())->trigger('credentialsRevoked', [$dbForProject, $user, $project]);
 
             $dbForProject->updateDocument('users', $user->getId(), new Document($attributes));
         });
