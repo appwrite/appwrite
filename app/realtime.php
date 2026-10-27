@@ -679,6 +679,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
                             $presence = $realtime->connections[$connection]['presence'] ?? null;
                             $jwtExpire = $realtime->connections[$connection]['jwtExpire'] ?? null;
+                            $limits = $realtime->connections[$connection]['limits'] ?? null;
                             // Re-read, as extending the session moves it. An impersonated
                             // connection has no sessionId; its impersonator's events refresh it.
                             $expire = $sessionId !== null
@@ -729,6 +730,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 if ($presence !== null) {
                                     $realtime->connections[$connection]['presence'] = $presence;
                                 }
+                            }
+                            if ($limits !== null && isset($realtime->connections[$connection])) {
+                                $realtime->connections[$connection]['limits'] = $limits;
                             }
 
                             $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
@@ -950,7 +954,7 @@ $adapter->onWorkerExit(function (int $workerId) use ($server, $realtime, &$exitS
     }
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $registerConnectionResources) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $adapter, $register, $stats, &$realtime, $registerConnectionResources) {
     global $container;
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
@@ -1112,7 +1116,32 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         // Impersonated or not, the connection lasts only as long as the session it runs on.
         $expire = $session !== null ? $user->getSessionExpiry($session->getId()) : null;
 
-        $channels = Realtime::convertChannels($request->getQuery('channels', []), $subscriberId);
+        // The lookups above can yield, so a socket closed meanwhile is never counted.
+        if (!$adapter->getNative()->isEstablished($connection)) {
+            $success = true;
+            return;
+        }
+        // Many people can share one IP, so guests get a higher limit than a single user.
+        $isGuest = $targetUser->getId() === '';
+        $owner = $isGuest ? Realtime::getGuestOwner($request->getIP()) : $targetUser->getId();
+        $limit = $isGuest ? APP_LIMIT_REALTIME_GUEST_CONNECTIONS : APP_LIMIT_REALTIME_CONNECTIONS;
+        if (!$realtime->addConnection($connection, $project->getId(), $owner, $limit)) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Too many open connections. Close an existing connection and try again.');
+        }
+
+        $plan = $connectionContainer->get('plan');
+        $limits = [
+            'subscriptions' => (int) ($plan['realtimeSubscriptions'] ?? APP_LIMIT_REALTIME_SUBSCRIPTIONS),
+            'channels' => (int) ($plan['realtimeChannels'] ?? APP_LIMIT_REALTIME_CHANNELS),
+            'queries' => (int) ($plan['realtimeQueries'] ?? APP_LIMIT_REALTIME_QUERIES),
+        ];
+
+        $requestedChannels = $request->getQuery('channels', []);
+        if (\is_array($requestedChannels) && \count($requestedChannels) > $limits['channels']) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'channels must contain at most ' . $limits['channels'] . ' channels.');
+        }
+
+        $channels = Realtime::convertChannels($requestedChannels, $subscriberId);
         $channelCount = \count($channels);
 
         $updateStats = static function (string $projectId, ?string $teamId) use ($register, $stats): void {
@@ -1161,6 +1190,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $realtime->connections[$connection]['impersonator'] = $impersonator;
             $realtime->connections[$connection]['expire'] = $expire;
             $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
+            $realtime->connections[$connection]['limits'] = $limits;
             $updateStats($project->getId(), $project->getAttribute('teamId'));
             triggerStats([
                 METRIC_REALTIME_OUTBOUND => \strlen($connectedPayloadJson),
@@ -1173,10 +1203,17 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $names = array_keys($channels);
         $subscriptionMode = 'url';
 
+        if ($isGuest && ($project->getAttribute('auths', [])['realtimeGuests'] ?? false)) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'This project does not allow guests to subscribe. Sign in first.');
+        }
+
         try {
             $subscriptions = Realtime::constructSubscriptions(
                 $names,
-                fn ($channel) => $request->getQuery($channel, null)
+                fn ($channel) => $request->getQuery($channel, null),
+                $limits['subscriptions'],
+                $limits['channels'],
+                $limits['queries'],
             );
         } catch (QueryException $e) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
@@ -1226,6 +1263,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $realtime->connections[$connection]['impersonator'] = $impersonator;
         $realtime->connections[$connection]['expire'] = $expire;
         $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
+        $realtime->connections[$connection]['limits'] = $limits;
         $updateStats($project->getId(), $project->getAttribute('teamId'));
 
         $subscriptionCount = \count($subscriptions);
@@ -1610,6 +1648,8 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
             Console::error('Realtime onClose tail cleanup error: ' . $th->getMessage());
             Span::current()?->setError($th);
         }
+
+        $realtime->removeConnection($connection);
 
         Span::add('realtime.success', $success);
         if (!empty($projectId)) {
