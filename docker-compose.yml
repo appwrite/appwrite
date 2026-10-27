@@ -2034,6 +2034,9 @@ services:
       start_period: 10s
     command:
       - postgres
+      # Every HTTP worker and worker coroutine pools its own connections; the default of 100 runs out under load
+      - -c
+      - max_connections=1000
   appwrite-embedding:
     image: appwrite/embedding:0.3.1
     profiles:
