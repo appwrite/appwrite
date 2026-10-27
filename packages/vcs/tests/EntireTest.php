@@ -2,6 +2,7 @@
 
 namespace Utopia\VCS\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
@@ -37,6 +38,89 @@ class CheckRunsEntire extends Entire
     public function write(string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): array
     {
         return $this->checkRuns('main', $state, $name, $title, $summary, $detailsUrl);
+    }
+}
+
+/**
+ * Entire whose token mints are recorded and answered in turn from a script of
+ * error codes ('' mints), so the permission sets a mint tries can be read.
+ */
+class MintingEntire extends Entire
+{
+    protected const array STATUSES = [
+        '' => 201,
+        'permission_not_accepted' => 403,
+        'installation_suspended' => 403,
+        'unsupported_permission' => 400,
+        'repository_required' => 400,
+        'coverage_changed' => 409,
+    ];
+
+    /**
+     * @var list<array<mixed>>
+     */
+    public array $requested = [];
+
+    /**
+     * @param list<string> $codes What each mint in turn is answered with
+     */
+    public function __construct(private array $codes)
+    {
+        parent::__construct(new Cache(new None()));
+    }
+
+    #[\Override]
+    protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+    {
+        $permissions = \is_array($params['permissions'] ?? null) ? $params['permissions'] : [];
+        $this->requested[] = $permissions;
+        $code = $this->code($permissions);
+
+        return [
+            'headers' => ['status-code' => self::STATUSES[$code] ?? 503],
+            'body' => $code === ''
+                ? ['token' => 'token', 'username' => 'x-access-token', 'expires_at' => '2026-10-27T10:00:00Z', 'permissions' => $permissions]
+                : ['code' => $code],
+        ];
+    }
+
+    /**
+     * @param array<mixed> $permissions
+     */
+    protected function code(array $permissions): string
+    {
+        return array_shift($this->codes) ?? 'unavailable';
+    }
+}
+
+/**
+ * Entire answering a mint the way its core does for an installation holding
+ * a given set: only that exact set mints.
+ */
+class HoldingEntire extends MintingEntire
+{
+    /**
+     * @param array<string, string> $held
+     */
+    public function __construct(private readonly array $held)
+    {
+        parent::__construct([]);
+    }
+
+    #[\Override]
+    protected function code(array $permissions): string
+    {
+        if ($permissions == $this->held) {
+            return '';
+        }
+
+        foreach ($permissions as $resource => $access) {
+            if (($this->held[$resource] ?? null) !== $access) {
+                return 'permission_not_accepted';
+            }
+        }
+
+        return 'repository_required';
     }
 }
 
@@ -565,6 +649,103 @@ final class EntireTest extends TestCase
         $plain = $adapter->write('pending', '', '');
         $this->assertSame('default', $plain['check_runs'][0]['key']);
         $this->assertArrayNotHasKey('output', $plain['check_runs'][0]);
+    }
+
+    /**
+     * @return \Iterator<string, array{list<string>, list<array<string, string>>}>
+     */
+    public static function mints(): \Iterator
+    {
+        $withoutDiscussions = ['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'repositories' => 'create'];
+        $beforeCreation = ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write'];
+        $deployments = ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write'];
+        $discussions = ['contents' => 'read', 'checks' => 'write', 'discussions' => 'write'];
+        $checks = ['contents' => 'read', 'checks' => 'write'];
+        $contents = ['contents' => 'read'];
+        $refused = 'permission_not_accepted';
+        yield 'every permission accepted' => [[''], [Entire::PERMISSIONS]];
+        yield 'discussions no longer declared' => [['unsupported_permission', ''], [Entire::PERMISSIONS, $withoutDiscussions]];
+        yield 'discussions no longer held' => [['repository_required', ''], [Entire::PERMISSIONS, $withoutDiscussions]];
+        yield 'repository creation not yet accepted' => [[$refused, $refused, ''], [Entire::PERMISSIONS, $withoutDiscussions, $beforeCreation]];
+        yield 'not yet accepted, as coverage changed' => [['coverage_changed', 'coverage_changed', ''], [Entire::PERMISSIONS, $withoutDiscussions, $beforeCreation]];
+        yield 'deployments not yet accepted' => [[$refused, $refused, $refused, $refused, ''], [Entire::PERMISSIONS, $withoutDiscussions, $beforeCreation, $deployments, $discussions]];
+        yield 'checks alone accepted' => [[$refused, $refused, $refused, $refused, $refused, ''], [Entire::PERMISSIONS, $withoutDiscussions, $beforeCreation, $deployments, $discussions, $checks]];
+        yield 'contents alone accepted' => [[$refused, $refused, $refused, $refused, $refused, $refused, ''], [Entire::PERMISSIONS, $withoutDiscussions, $beforeCreation, $deployments, $discussions, $checks, $contents]];
+    }
+
+    /**
+     * @param list<string> $codes
+     * @param list<array<string, string>> $requested
+     */
+    #[DataProvider('mints')]
+    public function testAccessTokenFallsBackToAcceptedPermissions(array $codes, array $requested): void
+    {
+        $adapter = new MintingEntire($codes);
+        $adapter->setIssuer(self::ISSUER);
+
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+
+        $this->assertSame($requested, $adapter->requested);
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, string>, int}>
+     */
+    public static function installations(): \Iterator
+    {
+        yield 'installed today' => [['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write', 'repositories' => 'create'], 1];
+        yield 'installed before repository creation' => [['contents' => 'read', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write'], 3];
+        yield 'installed before discussions' => [['contents' => 'read', 'checks' => 'write'], 6];
+    }
+
+    /**
+     * @param array<string, string> $held
+     */
+    #[DataProvider('installations')]
+    public function testAccessTokenHasEveryPermissionTheInstallationHolds(array $held, int $mints): void
+    {
+        // A new installation holds every permission the plugin declares, and
+        // Entire refuses a token for less as repository_required
+        $adapter = new HoldingEntire($held);
+        $adapter->setIssuer(self::ISSUER);
+
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+
+        $this->assertCount($mints, $adapter->requested);
+        $this->assertSame($held, end($adapter->requested));
+    }
+
+    public function testAccessTokenRefusalIsNotRetried(): void
+    {
+        // A suspended installation is refused whatever it asks for
+        $adapter = new MintingEntire(['installation_suspended']);
+        $adapter->setIssuer(self::ISSUER);
+
+        try {
+            $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+            $this->fail('A refused mint must fail');
+        } catch (\Exception $e) {
+            $this->assertSame(403, $e->getCode());
+            $this->assertStringContainsString('installation_suspended', $e->getMessage());
+        }
+
+        $this->assertSame([Entire::PERMISSIONS], $adapter->requested);
+    }
+
+    public function testAccessTokenFailsOnceEverySetIsRefused(): void
+    {
+        $adapter = new MintingEntire(array_fill(0, 7, 'repository_required'));
+        $adapter->setIssuer(self::ISSUER);
+
+        try {
+            $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+            $this->fail('A mint refused every set must fail');
+        } catch (\Exception $e) {
+            $this->assertSame(400, $e->getCode());
+            $this->assertStringContainsString('repository_required', $e->getMessage());
+        }
+
+        $this->assertCount(7, $adapter->requested);
     }
 
     public function testCreateFileRejectsEscapingPath(): void

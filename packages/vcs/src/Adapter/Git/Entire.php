@@ -61,7 +61,32 @@ class Entire extends Git
      * The repository permissions the plugin registers, requested as a whole
      * so one token covers every selected repository.
      */
-    public const PERMISSIONS = ['contents' => 'read', 'checks' => 'write'];
+    public const PERMISSIONS = ['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write', 'repositories' => 'create'];
+
+    /**
+     * What a mint asks for when Entire refuses PERMISSIONS, in order. Entire
+     * mints an installation-wide token only for the exact set the
+     * installation holds: it refuses a permission not accepted yet or not
+     * declared by the plugin, and answers repository_required for fewer.
+     * Installations accept a plugin's permissions as they were added, so
+     * these are the sets the plugin declared before, newest first;
+     * discussions may go away on their own. A set that succeeds is always
+     * the right one.
+     */
+    protected const FALLBACK_PERMISSIONS = [
+        ['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'repositories' => 'create'],
+        ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write'],
+        ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write'],
+        ['contents' => 'read', 'checks' => 'write', 'discussions' => 'write'],
+        ['contents' => 'read', 'checks' => 'write'],
+        ['contents' => 'read'],
+    ];
+
+    /**
+     * Mint refusals a different permission set can get past. Entire also
+     * answers coverage_changed for a permission not accepted yet.
+     */
+    protected const FALLBACK_CODES = ['permission_not_accepted', 'unsupported_permission', 'coverage_changed', 'repository_required'];
 
     /**
      * Check run status and conclusion for each state updateCheck() takes.
@@ -244,9 +269,8 @@ class Entire extends Git
      *
      * Signs an EdDSA plugin JWT and exchanges it for an installation access
      * token covering every selected repository with every registered
-     * permission. A plugin registered with fewer permissions than
-     * PERMISSIONS is refused the extra ones, so the mint falls back to
-     * reading contents alone.
+     * permission. Entire refuses a set the installation does not hold
+     * exactly, so the mint falls back through FALLBACK_PERMISSIONS.
      */
     protected function generateAccessToken(string $privateKey, ?string $appId): void
     {
@@ -257,10 +281,12 @@ class Entire extends Git
         $this->jwtToken = $this->generatePluginJwt($privateKey, $appId);
 
         $path = '/plugins/' . rawurlencode($appId) . '/installations/' . rawurlencode($this->installationId) . '/access-tokens';
-        $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => self::PERMISSIONS]);
+        foreach ([self::PERMISSIONS, ...self::FALLBACK_PERMISSIONS] as $permissions) {
+            $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => $permissions]);
 
-        if ($this->status($response) === 400 && $this->text($this->body($response), 'code') === 'unsupported_permission') {
-            $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => ['contents' => 'read']]);
+            if (!\in_array($this->text($this->body($response), 'code'), self::FALLBACK_CODES, true)) {
+                break;
+            }
         }
 
         $responseBody = $this->body($response);
