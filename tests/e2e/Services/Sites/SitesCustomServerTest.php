@@ -4263,6 +4263,7 @@ final class SitesCustomServerTest extends Scope
 
         // deployment is still building error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
