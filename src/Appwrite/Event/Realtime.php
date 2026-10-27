@@ -156,7 +156,12 @@ class Realtime extends Event
      *
      * - The console copy of a project-flavored event (an execution's `user:{id}`
      *   read roles) is re-addressed to the project's organization, which is the
-     *   audience the console actually subscribes with.
+     *   audience the console actually subscribes with. This matches the HTTP
+     *   read boundary exactly: the console reads executions in admin mode, where
+     *   `isPrivileged` drops the per-execution permission filter (see
+     *   Functions/Http/Executions/Get.php), so every org member can already read
+     *   every execution over HTTP. The org team role neither broadens nor
+     *   narrows that set — it just carries the same audience over realtime.
      * - The project copy of a console-flavored event (rules and the like, keyed
      *   `team:{orgTeamId}`) is dropped: admin-mode connections subscribe with
      *   bare membership roles and never matched it, so only a project team
