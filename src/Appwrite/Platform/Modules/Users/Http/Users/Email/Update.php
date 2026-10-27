@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\Email;
 
+use Appwrite\Auth\MFA\Type;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -196,6 +197,15 @@ class Update extends Action
                             TOKEN_TYPE_MAGIC_URL,
                             TOKEN_TYPE_EMAIL,
                         ]),
+                    ]);
+                    $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::EMAIL]),
+                    ]);
+                    // A pending invite was sent to the old address, so it must not prove the new one
+                    $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('confirm', [false]),
                     ]);
                 }
 

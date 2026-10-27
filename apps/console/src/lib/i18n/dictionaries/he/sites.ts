@@ -425,6 +425,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Connect GitHub': 'חיבור GitHub',
   'Connect GitLab': 'חיבור GitLab',
   'Connect Bitbucket': 'חיבור Bitbucket',
+  'Connect Gitea': 'חיבור Gitea',
   'Connect Origin': 'חיבור Origin',
   'Select organization': 'בחירת ארגון',
   'Add account': 'הוספת חשבון',

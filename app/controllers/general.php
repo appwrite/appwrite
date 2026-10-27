@@ -67,8 +67,10 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -249,7 +251,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             - If JWT in cookie is invalid or expired -> not authorized
             - If user is blocked or removed -> not authorized
             - If user's session is removed or expired -> not authorized
-            - If user is not member of team of this deployment -> not authorized
+            - If user lacks read permission on this project -> not authorized
             - If not authorized, redirect to Console redirect UI
             - If authorized, continue as if auth was not required
         */
@@ -281,16 +283,23 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
 
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                $sessionActive = !empty($jwtSessionId) && $user->sessionActive($jwtSessionId);
+                $sessionActive = !empty($jwtSessionId)
+                    && $user->sessionActive($jwtSessionId, Config::getParam('console')['auths']['sessionsInvalidatedAt'] ?? null)
+                    && $user->sessionFactorsMet($jwtSessionId);
 
-                $membershipExists = false;
+                $hasProjectAccess = false;
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && !$user->isEmpty()) {
-                    $teamId = $project->getAttribute('teamId', '');
-                    $membershipExists = \array_any($user->getAttribute('memberships', []), static fn (Document $membership): bool => $membership->getAttribute('teamId') === $teamId && $membership->getAttribute('confirm', false) === true);
+                    // Same project-read check as HTTP admin mode and realtime: confirmed
+                    // membership alone is not enough when the only role is another project.
+                    $projectAuthorization = new Authorization();
+                    foreach ($user->getRoles($projectAuthorization) as $role) {
+                        $projectAuthorization->addRole($role);
+                    }
+                    $hasProjectAccess = $projectAuthorization->isValid(new Input(PermissionType::Read, $project->getPermissionsByType(PermissionType::Read)));
                 }
 
-                if ($userExists && $sessionActive && $membershipExists) {
+                if ($userExists && $sessionActive && $hasProjectAccess) {
                     $authorized = true;
                 }
             }
@@ -326,6 +335,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             static fn (array $values) => \implode(', ', $values),
             $request->getHeadersWithoutCookies($strippedCookies)
         );
+        // Clients without cookie support send their session in this header instead.
+        unset($requestHeaders['x-fallback-cookies']);
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
             if ($type === 'function') {
@@ -411,6 +422,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $jwtExpiry = $resource->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $jwtKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
             'projectSequence' => $project->getSequence(),
             'scopes' => Deployments::scopes($resource)
@@ -1290,7 +1302,8 @@ Http::error()
     ->inject('project')
     ->inject('bus')
     ->inject('authorization')
-    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, Bus $bus, Authorization $authorization) {
+    ->inject('localeCodes')
+    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, Bus $bus, Authorization $authorization, array $localeCodes) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request)?->route;
         $class = \get_class($error);
@@ -1360,7 +1373,10 @@ Http::error()
         }
 
         Span::add('http.hostname', $request->getHostname());
-        Span::add('http.locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
+        $locale = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
+        if (\in_array($locale, $localeCodes, true)) {
+            Span::add('http.locale', $locale);
+        }
         if (Span::current()?->get('project.id') === null) {
             Span::add('project.id', $project->getId());
         }

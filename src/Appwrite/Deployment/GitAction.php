@@ -13,9 +13,10 @@ use Utopia\VCS\Adapter\Git;
 
 /**
  * Reports a deployment build state to the VCS provider: a check on the
- * commit and, for pull-request deployments, the PR comment listing the build
- * with its console and preview links. Shared by both build backends; callers
- * own error handling — a failed report never fails a build.
+ * commit, the deployed resource where the provider shows deployments and,
+ * for pull-request deployments, the PR comment listing the build with its
+ * console and preview links. Shared by both build backends; callers own
+ * error handling — a failed report never fails a build.
  */
 final class GitAction
 {
@@ -39,6 +40,15 @@ final class GitAction
         }
 
         try {
+            // Another deployment of the same commit keeps the resource running it
+            if ($status === 'deleted' && !$dbForProject->findOne('deployments', [
+                Query::equal('resourceInternalId', [$deployment->getAttribute('resourceInternalId', '')]),
+                Query::equal('resourceType', [$deployment->getAttribute('resourceType', '')]),
+                Query::equal('providerCommitHash', [$deployment->getAttribute('providerCommitHash', '')]),
+            ])->isEmpty()) {
+                return;
+            }
+
             $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
             $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
             if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
@@ -82,7 +92,14 @@ final class GitAction
             return;
         }
 
+        // A deleted deployment leaves its check and comment as they were
+        if ($status === 'deleted') {
+            self::deployment($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
+            return;
+        }
+
         self::check($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
+        self::deployment($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
 
         $commentId = $deployment->getAttribute('providerCommentId', '');
         if (empty($commentId)) {
@@ -151,15 +168,6 @@ final class GitAction
             'canceled' => 'Build canceled.',
             default => $status,
         };
-        $state = match ($status) {
-            'waiting' => 'queued',
-            'processing' => 'pending',
-            'ready' => 'success',
-            'failed' => 'failure',
-            'canceled' => 'cancelled',
-            default => $status,
-        };
-
         $lines = [
             ($isSite ? 'Site' : 'Function') . ' ' . $resource->getAttribute('name') . ' in project ' . $project->getAttribute('name'),
             "Deployment {$deployment->getId()}: {$consoleUrl}",
@@ -183,8 +191,81 @@ final class GitAction
             $lines[] = "Preview: {$previewUrl}";
         }
 
-        $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
-        $vcs->updateCheck($owner, $repositoryName, $commitHash, $state, $name, $title, '- ' . \implode("\n- ", $lines), $previewUrl !== '' ? $previewUrl : $consoleUrl);
+        // A check is the resource, filed under its project; it answers whether
+        // the build passed, so it links to the build's logs. Names can repeat,
+        // so the IDs key them
+        $vcs->updateCheck(
+            $owner,
+            $repositoryName,
+            $commitHash,
+            self::state($status),
+            $resource->getAttribute('name'),
+            $title,
+            '- ' . \implode("\n- ", $lines),
+            $consoleUrl,
+            suite: $project->getAttribute('name'),
+            key: "{$project->getId()}/{$collection}/{$resource->getId()}",
+            suiteKey: $project->getId(),
+        );
+    }
+
+    /**
+     * The deployed resource alone, for a provider that shows deployments:
+     * where it runs and where its build logs are, one entry per resource
+     * of a project. A deleted deployment's resource is reported gone.
+     *
+     * @param array<string, mixed> $platform
+     */
+    public static function deployment(
+        string $status,
+        Git $vcs,
+        string $commitHash,
+        string $owner,
+        string $repositoryName,
+        Document $project,
+        Document $resource,
+        Document $deployment,
+        Database $dbForPlatform,
+        array $platform,
+    ): void {
+        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true) {
+            return;
+        }
+
+        $isSite = $resource->getCollection() === 'sites';
+        $collection = $isSite ? 'sites' : 'functions';
+        $deleted = $status === 'deleted';
+
+        $vcs->updateDeployment(
+            $owner,
+            $repositoryName,
+            $commitHash,
+            key: "{$project->getId()}/{$collection}/{$resource->getId()}",
+            name: $resource->getAttribute('name'),
+            state: $deleted ? 'inactive' : self::state($status),
+            // A production branch's build is the one that goes live
+            environment: $deployment->getAttribute('activate', false) === true ? 'production' : 'preview',
+            url: $isSite && !$deleted ? self::previewUrl(self::rule($project, $deployment, $dbForPlatform)) : '',
+            logsUrl: ($platform['consoleUrl'] ?? '') . "/projects/{$project->getId()}/{$collection}/{$resource->getId()}/deployments/{$deployment->getId()}",
+            type: $isSite ? 'site' : 'function',
+            groupKey: $project->getId(),
+            groupName: $project->getAttribute('name'),
+        );
+    }
+
+    /**
+     * The provider state of a deployment status.
+     */
+    private static function state(string $status): string
+    {
+        return match ($status) {
+            'waiting' => 'queued',
+            'processing', 'building' => 'pending',
+            'ready' => 'success',
+            'failed' => 'failure',
+            'canceled' => 'cancelled',
+            default => $status,
+        };
     }
 
     /**

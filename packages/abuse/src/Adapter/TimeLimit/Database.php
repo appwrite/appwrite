@@ -10,6 +10,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Index;
 use Utopia\Database\IntegerWidth;
@@ -101,9 +102,13 @@ final readonly class Database extends TimeLimit
                 return $count;
             }
 
-            $this->db->increaseDocumentAttribute(self::COLLECTION, $document->getId(), 'count');
+            try {
+                $document = $this->db->increaseDocumentAttribute(self::COLLECTION, $document->getId(), 'count', 1, $this->limit);
+            } catch (LimitException) {
+                return $this->limit;
+            }
 
-            return $count;
+            return $this->parseCount($document->getAttribute('count', 0)) - 1;
         });
     }
 

@@ -1,21 +1,15 @@
 import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { Copy, Check, Loader2, Info, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { toast } from 'sonner'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import {
+  DNS_PROVIDERS_LINK,
+  DnsRecordsTable,
+  DomainVerificationAlert,
   dnsPendingVerificationError,
   type DomainVerificationError,
 } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
@@ -28,16 +22,19 @@ interface VerifySmtpDomainContentProps {
   rule: SmtpProxyRule
   region?: string
   verificationError?: DomainVerificationError | string | null
+  /** Omit the card wrapper, for a dialog that provides its own container. */
+  noCard?: boolean
 }
 
 /**
- * MX + ownership TXT instructions for custom inbound email domains.
- * Distinct from HTTP VerifyDomainContent (CNAME / nameservers / TLS).
+ * MX + ownership TXT instructions for custom inbound email domains. Same
+ * layout as the HTTP VerifyDomainContent (CNAME / nameservers / TLS).
  */
 export function VerifySmtpDomainContent({
   rule,
   region,
   verificationError,
+  noCard,
 }: VerifySmtpDomainContentProps) {
   const t = useT()
   const [copiedField, setCopiedField] = useState<string | null>(null)
@@ -56,13 +53,6 @@ export function VerifySmtpDomainContent({
     setTimeout(() => setCopiedField(null), 2000)
   }
 
-  const structuredError =
-    verificationError && typeof verificationError !== 'string'
-      ? verificationError
-      : null
-  const stringError =
-    typeof verificationError === 'string' ? verificationError : null
-
   if (isLoading) {
     return (
       <div className="flex min-h-[180px] items-center justify-center">
@@ -71,116 +61,90 @@ export function VerifySmtpDomainContent({
     )
   }
 
+  const instructions = (
+    <>
+      <p className="text-[13px] text-muted-foreground">
+        {t(
+          'Add the following record(s) to your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.',
+        )}
+      </p>
+      {!mxTarget ? (
+        <Alert
+          variant="default"
+          className="border-red-500/30 bg-red-500/10 [&>svg]:text-red-600 dark:[&>svg]:text-red-400"
+        >
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-[13px] text-red-600 dark:text-red-400">
+            {t(
+              'This region does not report its mail server yet, so the MX record cannot be shown. Add the TXT record now and come back for the MX record later.',
+            )}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {records.length > 0 ? (
+        <DnsRecordsTable
+          records={records}
+          onCopy={handleCopy}
+          copiedField={copiedField}
+          showTtl={true}
+          showPriority={!!mxTarget}
+        />
+      ) : null}
+      <Alert
+        variant="default"
+        className="border-border bg-muted/30 [&>svg]:text-muted-foreground"
+      >
+        <Info className="h-4 w-4" />
+        <AlertDescription className="text-[13px] text-muted-foreground">
+          {t(
+            'Mail is delivered to Appwrite on port 25, so the MX record must point straight at the value above, not at a proxied hostname.',
+          )}
+        </AlertDescription>
+      </Alert>
+    </>
+  )
+
+  const providers = (
+    <p className="text-[13px] text-muted-foreground">
+      {t('A list of domain providers and their DNS settings is available')}{' '}
+      <DocsRouteLink
+        className="inline-flex items-center gap-0.5 font-medium text-foreground underline hover:no-underline"
+        href={DNS_PROVIDERS_LINK}
+      >
+        {t('here')}
+        <ExternalLink className="h-3 w-3 shrink-0" />
+      </DocsRouteLink>
+      .
+    </p>
+  )
+
+  if (noCard) {
+    return (
+      <div className="space-y-4">
+        <DomainVerificationAlert error={verificationError} />
+        {instructions}
+        {providers}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
+      <DomainVerificationAlert error={verificationError} />
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            {t('DNS records')}
+            {t('Verification')}
           </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            {t(
-              'Point MX at Appwrite SMTP and prove ownership with a TXT record. No TLS certificate is issued for email domains.',
-            )}
-          </p>
-          <p className="text-[13px] text-muted-foreground mt-1 font-mono">
+          <p className="text-[13px] text-muted-foreground font-mono mt-2">
             {rule.domain}
           </p>
         </div>
         <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-4">
-          {!mxTarget ? (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>{t('MX target unavailable')}</AlertTitle>
-              <AlertDescription>
-                {t(
-                  'This region does not report its mail server target yet, so the MX record cannot be shown here.',
-                )}
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          {records.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t('Type')}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t('Name')}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t('Value')}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[72px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {records.map((record) => {
-                  const fieldKey = `${record.type}-${record.name}`
-                  return (
-                    <TableRow key={fieldKey}>
-                      <TableCell className="px-4 py-3">
-                        <Badge variant="secondary" className="text-[10px]">
-                          {record.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 font-mono text-[13px]">
-                        {record.name}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 font-mono text-[13px] break-all">
-                        {record.value}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-end">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => handleCopy(record.value, fieldKey)}
-                          aria-label={t('Copy')}
-                        >
-                          {copiedField === fieldKey ? (
-                            <Check className="h-3.5 w-3.5" />
-                          ) : (
-                            <Copy className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          ) : null}
-
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertTitle>{t('Propagation')}</AlertTitle>
-            <AlertDescription>
-              {t(
-                'DNS changes can take up to 48 hours. The MX record must point straight at Appwrite on TCP port 25, not through a proxy.',
-              )}
-            </AlertDescription>
-          </Alert>
-        </div>
+        <div className="px-6 py-4 space-y-3">{instructions}</div>
+        <div className="border-t border-border" />
+        <div className="px-6 py-4">{providers}</div>
       </div>
-
-      {structuredError ? (
-        <Alert variant={structuredError.pending ? 'default' : 'destructive'}>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>{structuredError.title}</AlertTitle>
-          <AlertDescription>{structuredError.message}</AlertDescription>
-        </Alert>
-      ) : null}
-      {stringError ? (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>{t('Verification failed')}</AlertTitle>
-          <AlertDescription>{stringError}</AlertDescription>
-        </Alert>
-      ) : null}
     </div>
   )
 }

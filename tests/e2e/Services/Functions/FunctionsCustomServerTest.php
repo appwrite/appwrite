@@ -2818,6 +2818,45 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(404, $deployment['headers']['status-code']);
     }
 
+    public function testDeleteDeploymentDuringBuild(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Test Delete Deployment During Build',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            // Keeps the build running while the deployment is deleted.
+            'commands' => 'sleep 10',
+        ]);
+
+        $deployment = $this->createDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true,
+        ]);
+        $this->assertSame(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $deploymentId): void {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertSame('building', $deployment['body']['status']);
+        }, 100000, 250);
+
+        $response = $this->deleteDeployment($functionId, $deploymentId);
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        // Past the point where a build left running writes its output.
+        \sleep(15);
+
+        $builds = getDevice(APP_STORAGE_BUILDS . '/app-' . $this->getProject()['$id']);
+        $this->assertEventually(function () use ($builds, $deploymentId): void {
+            \clearstatcache();
+            $this->assertSame([], $builds->listFiles($builds->getPath($deploymentId))->files, 'Deleting a deployment mid-build left build files behind');
+        }, 60000, 500);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testDeleteFunction(): void
     {
         // Create fresh function for this test since we delete it
