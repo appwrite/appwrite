@@ -402,7 +402,8 @@ final class NotificationsTest extends TestCase
                 'name' => 'Legacy User',
                 'subject' => 'Hello {{name}}',
                 'body' => 'Body {{name}}',
-                'variables' => ['name' => 'Legacy'],
+                'bodyTemplate' => __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
+                'variables' => ['name' => 'Legacy & Co'],
                 'customMailOptions' => [
                     'senderEmail' => 'sender@example.test',
                     'senderName' => 'Custom Sender',
@@ -422,7 +423,9 @@ final class NotificationsTest extends TestCase
         $message = $spy->captured;
         $this->assertSame('legacy@example.test', $message->getTo()[0]['email'] ?? '');
         $this->assertSame('Legacy User', $message->getTo()[0]['name'] ?? '');
-        $this->assertSame('Hello Legacy', $message->getSubject());
+        $this->assertSame('Hello Legacy & Co', $message->getSubject());
+        $this->assertStringContainsString('<h1>Hello Legacy &amp; Co</h1>', $message->getContent());
+        $this->assertStringContainsString('Body Legacy &amp; Co', $message->getContent());
         $this->assertSame('sender@example.test', $message->getFromEmail());
         $this->assertSame('Custom Sender', $message->getFromName());
         $this->assertSame('reply@example.test', $message->getReplyToEmail());

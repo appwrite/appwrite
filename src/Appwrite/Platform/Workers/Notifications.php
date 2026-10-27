@@ -235,7 +235,7 @@ class Notifications extends Action
 
         $subjectTemplate = Template::fromString($subject);
         foreach ($variables as $key => $value) {
-            $subjectTemplate->setParam('{{' . $key . '}}', $value);
+            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
         $subject = \strip_tags($subjectTemplate->render());
 
