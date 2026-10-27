@@ -377,6 +377,9 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_CONSOLE_HOSTNAMES
       - _APP_REALTIME_TAIL_RATE
+      - _APP_LIMIT_REALTIME_SUBSCRIPTIONS
+      - _APP_LIMIT_REALTIME_CHANNELS
+      - _APP_LIMIT_REALTIME_QUERIES
       - _APP_OPENSSL_KEY_V1
       - _APP_TRUSTED_HEADERS
       - _APP_TRUSTED_PROXIES
@@ -2425,7 +2428,10 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       retries: 10
       start_period: 10s
     command:
-      - postgres`,
+      - postgres
+      # Every HTTP worker and worker coroutine pools its own connections; the default of 100 runs out under load
+      - -c
+      - max_connections=\${_APP_DB_MAX_CONNECTIONS:-500}`,
   },
   {
     name: 'appwrite-embedding',
