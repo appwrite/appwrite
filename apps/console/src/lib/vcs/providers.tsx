@@ -54,7 +54,7 @@ export function OriginIcon({ className }: { className?: string }) {
 }
 
 export function EntireIcon({ className }: { className?: string }) {
-  // Entire's mark, as served by entire.io's own favicon.svg
+  // Entire's mark, as served by entire.com's own favicon.svg
   return (
     <svg
       viewBox="0 0 32 32"
@@ -122,8 +122,8 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
     id: 'entire',
     label: 'Entire',
     Icon: EntireIcon,
-    // Entire repositories belong to a project, browsed under /et/<project>
-    baseUrl: (organization) => `https://entire.io/et/${organization}`,
+    baseUrl: (organization) =>
+      `https://entire.com/${entireOwnerPath(organization)}`,
   },
   origin: {
     id: 'origin',
@@ -214,12 +214,23 @@ export function getKnownVcsProvider(provider?: string): VcsProviderMeta | null {
 }
 
 /**
- * Whether a repository URL is hosted on Entire. Compares the parsed host, so
- * a URL that only mentions entire.io in its path or another host is not one.
+ * Entire's web path for an owner. A repository belongs to a project, browsed
+ * under /et/<project>; a GitHub mirror's owner already names its forge, as
+ * gh/<owner>, and is browsed there.
+ */
+export function entireOwnerPath(owner: string): string {
+  return owner.startsWith('gh/') ? owner : `et/${owner}`
+}
+
+/**
+ * Whether a repository URL is hosted on Entire: on entire.com, or on
+ * entire.io, which older deployments recorded and which only redirects to
+ * entire.com. Compares the parsed host, so a URL that only mentions Entire in
+ * its path or another host is not one.
  */
 export function isEntireRepositoryUrl(url: string): boolean {
   try {
-    return new URL(url).hostname === 'entire.io'
+    return ['entire.com', 'entire.io'].includes(new URL(url).hostname)
   } catch {
     return false
   }
@@ -289,7 +300,7 @@ export function getProviderPullRequestUrl(params: {
       return `https://cursor.com/codebase/${owner}/${repo}/pull/${id}`
     case 'entire':
       // Entire's pull requests are trails
-      return `https://entire.io/et/${owner}/${repo}/trails/${id}`
+      return `https://entire.com/${entireOwnerPath(owner)}/${repo}/trails/${id}`
     default:
       return null
   }

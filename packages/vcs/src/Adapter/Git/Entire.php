@@ -11,7 +11,7 @@ use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 /**
- * Adapter for Entire (entire.io), the agent-native Git host.
+ * Adapter for Entire (entire.com), the agent-native Git host.
  *
  * Entire plugins authenticate like GitHub Apps: an Ed25519-signed (EdDSA)
  * plugin JWT is exchanged on a control plane ("core") for an installation
@@ -28,6 +28,14 @@ use Utopia\VCS\Exception\RepositoryNotFound;
  */
 class Entire extends Git
 {
+    /**
+     * The forges a repository path names: Entire-native repositories and
+     * GitHub mirrors.
+     */
+    public const FORGE_ENTIRE = 'et';
+
+    public const FORGE_GITHUB = 'gh';
+
     public const EVENT_REF_CREATED = 'ref.created';
 
     public const EVENT_REF_UPDATED = 'ref.updated';
@@ -166,9 +174,9 @@ class Entire extends Git
     protected string $issuer = '';
 
     /**
-     * Browser-facing host.
+     * Browser-facing host; entire.io only redirects here.
      */
-    protected string $webEndpoint = 'https://entire.io';
+    protected string $webEndpoint = 'https://entire.com';
 
     /**
      * Plugin slug: the {plugin} segment of the plugin API paths and the
@@ -1057,11 +1065,12 @@ class Entire extends Git
      */
     public function searchRepositories(string $owner, int $page, int $per_page, string $search = ''): array
     {
+        // Every repository the installation covers is one to offer: a
+        // GitHub mirrors project holds several owners' mirrors, so the
+        // single owner a consumer resolves for the installation narrows
+        // nothing
         $repositories = [];
         foreach ($this->installationRepositories() as $repository) {
-            if ($owner !== '' && strtolower($this->text($repository, 'organization')) !== strtolower($owner)) {
-                continue;
-            }
             if ($search !== '' && stripos($this->text($repository, 'name'), $search) === false) {
                 continue;
             }
@@ -1176,7 +1185,15 @@ class Entire extends Git
     protected function normalizeRepository(array $repository): array
     {
         $fullName = $this->text($repository, 'full_name');
-        [$owner, $name] = $this->splitPath($fullName);
+        $path = $this->text($repository, 'path');
+        [$owner, $name] = $this->splitPath($fullName !== '' ? $fullName : $path);
+
+        // The full name keeps the owner's own spelling but not its forge,
+        // which the path carries: a GitHub mirror is /gh/{owner}/{repo}
+        $mirror = str_starts_with($this->splitPath($path)[0], self::FORGE_GITHUB . '/');
+        if ($mirror && !str_starts_with($owner, self::FORGE_GITHUB . '/')) {
+            $owner = self::FORGE_GITHUB . '/' . $owner;
+        }
         $id = $this->text($repository, 'id');
 
         $apiBaseUrl = '';
@@ -1219,16 +1236,43 @@ class Entire extends Git
      */
     protected function repository(string $owner, string $repositoryName): array
     {
+        $named = [];
         foreach ($this->installationRepositories() as $repository) {
-            if (
-                strtolower($this->text($repository, 'organization')) === strtolower($owner)
-                && strtolower($this->text($repository, 'name')) === strtolower($repositoryName)
-            ) {
+            if (strtolower($this->text($repository, 'name')) !== strtolower($repositoryName)) {
+                continue;
+            }
+            if (strtolower($this->text($repository, 'organization')) === strtolower($owner)) {
                 return $repository;
             }
+            $named[] = $repository;
+        }
+
+        // Consumers resolve one owner per installation, which a mirrors
+        // project with several GitHub owners does not have; a name the
+        // installation holds once still names one repository
+        if (\count($named) === 1) {
+            return $named[0];
         }
 
         throw new RepositoryNotFound('Repository not found.');
+    }
+
+    /**
+     * The owner a repository's web addresses go under: the installation's
+     * own record of it once its repositories are listed, the owner given
+     * otherwise.
+     */
+    protected function canonicalOwner(string $owner, string $repositoryName): string
+    {
+        if ($this->repositories === null) {
+            return $owner;
+        }
+
+        try {
+            return $this->text($this->repository($owner, $repositoryName), 'organization') ?: $owner;
+        } catch (RepositoryNotFound) {
+            return $owner;
+        }
     }
 
     protected function repositoryId(string $owner, string $repositoryName): string
@@ -1237,8 +1281,12 @@ class Entire extends Git
     }
 
     /**
-     * The owner and name a repository path carries: et/{project}/{repo} or
-     * gh/{owner}/{repo}, with or without the forge prefix.
+     * The owner and name a repository path carries. An Entire-native
+     * repository is et/{project}/{repo}, or {project}/{repo} without its
+     * forge, and its owner is the project. A GitHub mirror is
+     * gh/{owner}/{repo}, and its owner keeps the forge, gh/{owner}, because
+     * Entire addresses it there and a GitHub owner can share its name with
+     * a project. A clone URL's host comes before the path and is dropped.
      *
      * @return array{string, string}
      */
@@ -1250,14 +1298,23 @@ class Entire extends Git
         }
 
         $segments = explode('/', $path);
-        if (\count($segments) >= 3) {
-            $segments = \array_slice($segments, -2);
-        }
-        if (\count($segments) !== 2) {
+        if (\count($segments) < 2) {
             return ['', ''];
         }
 
-        return [$segments[0], $segments[1]];
+        [$owner, $name] = \array_slice($segments, -2);
+        $forge = \count($segments) >= 3 ? $segments[\count($segments) - 3] : self::FORGE_ENTIRE;
+
+        return [$forge === self::FORGE_GITHUB ? self::FORGE_GITHUB . '/' . $owner : $owner, $name];
+    }
+
+    /**
+     * The web path of an owner: et/{project}, or gh/{owner} for GitHub
+     * mirrors, whose owner already names its forge.
+     */
+    protected function webOwner(string $owner): string
+    {
+        return str_starts_with($owner, self::FORGE_GITHUB . '/') ? $owner : self::FORGE_ENTIRE . '/' . $owner;
     }
 
     /**
@@ -2398,17 +2455,20 @@ class Entire extends Git
 
     public function getRepositoryUrl(string $owner, string $repositoryName): string
     {
-        return "{$this->webEndpoint}/et/{$owner}/{$repositoryName}";
+        return "{$this->webEndpoint}/" . $this->webOwner($this->canonicalOwner($owner, $repositoryName)) . "/{$repositoryName}";
     }
 
     public function getOrganizationUrl(string $owner): string
     {
-        return "{$this->webEndpoint}/et/{$owner}";
+        return "{$this->webEndpoint}/" . $this->webOwner($owner);
     }
 
+    /**
+     * A branch's commits, which is how Entire shows a branch.
+     */
     public function getBranchUrl(string $owner, string $repositoryName, string $branch): string
     {
-        return $this->getRepositoryUrl($owner, $repositoryName) . "/tree/{$branch}";
+        return $this->getRepositoryUrl($owner, $repositoryName) . '/commits/' . rawurlencode($branch);
     }
 
     public function getCommitUrl(string $owner, string $repositoryName, string $commitHash): string
@@ -2416,9 +2476,15 @@ class Entire extends Git
         return $this->getRepositoryUrl($owner, $repositoryName) . "/commit/{$commitHash}";
     }
 
+    /**
+     * A file as {ref}/{path}, the way other providers' blob addresses take
+     * it; Entire names the ref in the query.
+     */
     public function getFileUrl(string $owner, string $repositoryName, string $reference): string
     {
-        return $this->getRepositoryUrl($owner, $repositoryName) . "/blob/{$reference}";
+        [$ref, $path] = array_pad(explode('/', $reference, 2), 2, '');
+
+        return $this->getRepositoryUrl($owner, $repositoryName) . "/files/{$path}?ref=" . rawurlencode($ref);
     }
 
     public function getPullRequestUrl(string $owner, string $repositoryName, int $pullRequestNumber): string

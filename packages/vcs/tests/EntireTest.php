@@ -130,9 +130,10 @@ class DataCallsEntire extends Entire
 /**
  * Entire acting for a known installation whose core calls are answered in
  * turn from a script and recorded, and which looks for a created
- * repository's placement without waiting, so creation can be followed.
+ * repository's placement without waiting, so creation and the
+ * installation's repository list can be followed.
  */
-class CreatingEntire extends Entire
+class CoreCallsEntire extends Entire
 {
     /**
      * @var list<array{method: string, path: string, params: array<mixed>}>
@@ -338,12 +339,13 @@ final class EntireTest extends TestCase
         parse_str($parsed['query'] ?? '', $params);
 
         $this->assertSame('https', $parsed['scheme'] ?? '');
-        $this->assertSame('entire.io', $parsed['host'] ?? '');
+        // entire.io only redirects to entire.com
+        $this->assertSame('entire.com', $parsed['host'] ?? '');
         $this->assertSame('/plugins/appwrite/install', $parsed['path'] ?? '');
         $this->assertSame('https://appwrite.test/v1/vcs/entire/callback', $params['redirect_uri'] ?? '');
         $this->assertSame('{"projectId":"p1"}', $params['state'] ?? '');
 
-        $this->assertSame('https://entire.io/plugins/appwrite/install', $this->adapter->getInstallUrl(self::PLUGIN));
+        $this->assertSame('https://entire.com/plugins/appwrite/install', $this->adapter->getInstallUrl(self::PLUGIN));
     }
 
     public function testVerifyReceipt(): void
@@ -526,9 +528,58 @@ final class EntireTest extends TestCase
         $this->assertFalse($event['external']);
         // Deliveries carry no file lists
         $this->assertSame([], $event['affectedFiles']);
-        $this->assertSame('https://entire.io/et/test-project/test-repo', $event['repositoryUrl']);
-        $this->assertSame('https://entire.io/et/test-project/test-repo/tree/main', $event['branchUrl']);
-        $this->assertSame('https://entire.io/et/test-project/test-repo/commit/' . self::COMMIT_HASH, $event['headCommitUrl']);
+        $this->assertSame('https://entire.com/et/test-project/test-repo', $event['repositoryUrl']);
+        $this->assertSame('https://entire.com/et/test-project/test-repo/commits/main', $event['branchUrl']);
+        $this->assertSame('https://entire.com/et/test-project/test-repo/commit/' . self::COMMIT_HASH, $event['headCommitUrl']);
+    }
+
+    public function testGetEventFromAGithubMirror(): void
+    {
+        $payload = array_replace_recursive($this->refPayload('ref.updated', 'refs/heads/main'), [
+            'event' => ['payload' => ['repository' => ['path' => '/gh/octocat/hello-world']]],
+        ]);
+
+        $event = $this->adapter->getEvents('ref.updated', (string) json_encode($payload))[0];
+
+        // The mirror keeps its forge in its owner, and its links go under gh
+        $this->assertSame('gh/octocat', $event['owner']);
+        $this->assertSame('hello-world', $event['repositoryName']);
+        $this->assertSame('https://entire.com/gh/octocat/hello-world', $event['repositoryUrl']);
+        $this->assertSame('https://entire.com/gh/octocat/hello-world/commits/main', $event['branchUrl']);
+        $this->assertSame('https://entire.com/gh/octocat/hello-world/commit/' . self::COMMIT_HASH, $event['headCommitUrl']);
+    }
+
+    public function testMirrorsOfSeveralGithubOwners(): void
+    {
+        // As Entire lists a mirror: the full name without its forge, the
+        // path with it and in lower case
+        $mirror = static fn (string $id, string $fullName): array => [
+            'id' => $id,
+            'full_name' => $fullName,
+            'path' => '/gh/' . strtolower($fullName),
+            'entire_clone_url' => 'entire://aws-eu-central-1.entire.io/gh/' . strtolower($fullName),
+            'placements' => [['role' => 'processing_primary', 'api_base_url' => self::CELL]],
+        ];
+        $adapter = new CoreCallsEntire([[200, ['repositories' => [
+            $mirror('repo_01M5HELLO', 'Octocat/hello-world'),
+            $mirror('repo_01M5DOCS', 'appwrite/docs'),
+        ], 'next_cursor' => '']]]);
+
+        // The installation's owner is its first mirror's, spelled as GitHub does, with its forge
+        $this->assertSame('gh/Octocat', $adapter->getOwnerName(self::INSTALLATION_ID));
+
+        // Both owners' mirrors are offered under it
+        $listed = $adapter->searchRepositories('gh/Octocat', 1, 10);
+        $this->assertSame(2, $listed['total']);
+        $this->assertSame(['gh/Octocat', 'gh/appwrite'], array_column($listed['items'], 'organization'));
+
+        // A repository is found by its name under the installation's owner, and links under its own
+        $this->assertSame('entire://aws-eu-central-1.entire.io/gh/appwrite/docs', $adapter->getRepositoryCloneUrl('gh/Octocat', 'docs'));
+        $this->assertSame('https://entire.com/gh/appwrite/docs', $adapter->getRepositoryUrl('gh/Octocat', 'docs'));
+        $this->assertSame('https://entire.com/gh/Octocat/hello-world/commit/abc', $adapter->getCommitUrl('gh/octocat', 'hello-world', 'abc'));
+
+        // The repository list was read once
+        $this->assertCount(1, $adapter->calls);
     }
 
     public function testGetEventRefLifecycle(): void
@@ -623,12 +674,21 @@ final class EntireTest extends TestCase
 
     public function testUrls(): void
     {
-        $this->assertSame('https://entire.io/et/acme', $this->adapter->getOrganizationUrl('acme'));
-        $this->assertSame('https://entire.io/et/acme/api', $this->adapter->getRepositoryUrl('acme', 'api'));
-        $this->assertSame('https://entire.io/et/acme/api/tree/main', $this->adapter->getBranchUrl('acme', 'api', 'main'));
-        $this->assertSame('https://entire.io/et/acme/api/commit/abc', $this->adapter->getCommitUrl('acme', 'api', 'abc'));
-        $this->assertSame('https://entire.io/et/acme/api/blob/main', $this->adapter->getFileUrl('acme', 'api', 'main'));
-        $this->assertSame('https://entire.io/et/acme/api/trails/7', $this->adapter->getPullRequestUrl('acme', 'api', 7));
+        // An Entire-native repository, under its project
+        $this->assertSame('https://entire.com/et/acme', $this->adapter->getOrganizationUrl('acme'));
+        $this->assertSame('https://entire.com/et/acme/api', $this->adapter->getRepositoryUrl('acme', 'api'));
+        $this->assertSame('https://entire.com/et/acme/api/commits/main', $this->adapter->getBranchUrl('acme', 'api', 'main'));
+        $this->assertSame('https://entire.com/et/acme/api/commits/feature%2Fpricing', $this->adapter->getBranchUrl('acme', 'api', 'feature/pricing'));
+        $this->assertSame('https://entire.com/et/acme/api/commit/abc', $this->adapter->getCommitUrl('acme', 'api', 'abc'));
+        $this->assertSame('https://entire.com/et/acme/api/files/docs/guide.md?ref=main', $this->adapter->getFileUrl('acme', 'api', 'main/docs/guide.md'));
+        $this->assertSame('https://entire.com/et/acme/api/trails/7', $this->adapter->getPullRequestUrl('acme', 'api', 7));
+
+        // A GitHub mirror, whose owner names its forge
+        $this->assertSame('https://entire.com/gh/octocat', $this->adapter->getOrganizationUrl('gh/octocat'));
+        $this->assertSame('https://entire.com/gh/octocat/hello-world', $this->adapter->getRepositoryUrl('gh/octocat', 'hello-world'));
+        $this->assertSame('https://entire.com/gh/octocat/hello-world/commits/main', $this->adapter->getBranchUrl('gh/octocat', 'hello-world', 'main'));
+        $this->assertSame('https://entire.com/gh/octocat/hello-world/commit/abc', $this->adapter->getCommitUrl('gh/octocat', 'hello-world', 'abc'));
+        $this->assertSame('https://entire.com/gh/octocat/hello-world/trails/7', $this->adapter->getPullRequestUrl('gh/octocat', 'hello-world', 7));
     }
 
     public function testCapabilities(): void
@@ -762,7 +822,7 @@ final class EntireTest extends TestCase
             'clone_url' => 'https://aws-eu-central-1.entire.io/et/' . self::OWNER . '/pricing-site.git',
             'placements' => $placements,
         ]], 'next_cursor' => '']];
-        $adapter = new CreatingEntire([
+        $adapter = new CoreCallsEntire([
             [201, ['repositoryId' => 'repo_01M5NEW', 'name' => 'pricing-site', 'owningProjectId' => '01M4ZC', 'state' => 'provisioning']],
             $listed([]),
             $listed([['region' => 'aws-eu-central-1', 'role' => 'processing_primary', 'api_base_url' => self::CELL]]),
@@ -784,7 +844,7 @@ final class EntireTest extends TestCase
 
     public function testCreateRepositoryNamesAnExistingRepository(): void
     {
-        $adapter = new CreatingEntire([[409, ['type' => 'https://entire.com/errors/name-in-use', 'title' => 'Conflict']]]);
+        $adapter = new CoreCallsEntire([[409, ['type' => 'https://entire.com/errors/name-in-use', 'title' => 'Conflict']]]);
 
         try {
             $adapter->createRepository(self::OWNER, 'pricing-site', true);
@@ -798,7 +858,7 @@ final class EntireTest extends TestCase
     public function testCreateRepositoryNeedsTheRepositoriesPermission(): void
     {
         // A token minted before the installation accepted repository creation
-        $adapter = new CreatingEntire([], ['contents' => 'read', 'checks' => 'write']);
+        $adapter = new CoreCallsEntire([], ['contents' => 'read', 'checks' => 'write']);
 
         try {
             $adapter->createRepository(self::OWNER, 'pricing-site', true);
