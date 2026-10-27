@@ -52,6 +52,59 @@ final class ImageTest extends TestCase
         return substr($jpeg, 0, 2) . $segment . substr($jpeg, 2);
     }
 
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function unsupportedFormatProvider(): iterable
+    {
+        yield 'pixel enumeration text' => ["# ImageMagick pixel enumeration: 1,1,255,srgb\n0,0: (255,0,0)  #FF0000  red\n"];
+        yield 'portable pixmap' => ["P3\n1 1\n255\n255 0 0\n"];
+        yield 'vector graphics' => ["push graphic-context\nviewbox 0 0 1 1\npop graphic-context\n"];
+        yield 'svg' => ['<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>'];
+        yield 'postscript' => ["%!PS-Adobe-3.0\nshowpage\n"];
+        yield 'empty' => [''];
+    }
+
+    #[DataProvider('unsupportedFormatProvider')]
+    public function testRejectsFormatsOutsideTheAllowList(string $data): void
+    {
+        $this->expectExceptionMessage('Unsupported image format');
+
+        new Image($data);
+    }
+
+    public function testAvifInput(): void
+    {
+        $this->requireEncoder('AVIF');
+
+        $source = new \Imagick();
+        $source->newImage(20, 10, 'red');
+        $source->setImageFormat('avif');
+
+        $image = new Image($source->getImageBlob());
+        $image->crop(10, 10);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output('png') ?? '');
+        $this->assertSame(10, $output->getImageWidth());
+        $this->assertSame(10, $output->getImageHeight());
+    }
+
+    public function testHeicInput(): void
+    {
+        if (\Imagick::queryFormats('HEIC') === []) {
+            self::markTestSkipped('The HEIC decoder is not available.');
+        }
+
+        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.heic') ?: '');
+        $image->crop(50, 50);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output('png') ?? '');
+        $this->assertSame(50, $output->getImageWidth());
+        $this->assertSame(50, $output->getImageHeight());
+    }
+
     public function testJpeg(): void
     {
         $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
