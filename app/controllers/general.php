@@ -126,6 +126,13 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
     }
 
+    // Fallback hosts are one level deep, so a rule saved before that limit cannot serve a deeper one
+    foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '')) as $fallbackDomain) {
+        if (!empty($fallbackDomain) && \str_ends_with($host, '.' . $fallbackDomain) && \str_contains(\substr($host, 0, -\strlen($fallbackDomain) - 1), '.')) {
+            throw new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
+        }
+    }
+
     if ($rule->isEmpty()) {
         foreach ($denyDomains as $denyDomain) {
             if (\str_ends_with($host, $denyDomain)) {
