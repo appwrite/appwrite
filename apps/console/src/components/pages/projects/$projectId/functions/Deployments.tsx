@@ -6,6 +6,7 @@ import {
   useRef,
   useContext,
 } from 'react'
+import { isSmtpRule } from '@/lib/function-smtp-domain'
 import {
   openDialogAfterOverlayCloses,
   closeDialogBeforeOverlayUnmount,
@@ -415,8 +416,11 @@ export function View() {
   // Filter domains for active deployment and sort by length (shortest first), limit to 3
   const activeDomains = useMemo(() => {
     const filtered =
-      domainsData?.rules?.filter((rule) =>
-        proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
+      domainsData?.rules?.filter(
+        (rule) =>
+          // Email (SMTP) rules share the list but have no web URL.
+          !isSmtpRule(rule) &&
+          proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
@@ -425,8 +429,10 @@ export function View() {
 
   // Check if there are more domains than displayed
   const totalActiveDomains =
-    domainsData?.rules?.filter((rule) =>
-      proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
+    domainsData?.rules?.filter(
+      (rule) =>
+        !isSmtpRule(rule) &&
+        proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
     ).length || 0
   const hasMoreDomains = totalActiveDomains > activeDomains.length
 

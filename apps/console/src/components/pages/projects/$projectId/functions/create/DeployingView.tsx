@@ -5,6 +5,7 @@
  * Reuses BuildLogsCard from sites. Evolves when status becomes ready or failed.
  */
 
+import { isSmtpRule } from '@/lib/function-smtp-domain'
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
@@ -72,7 +73,10 @@ export function DeployingView({
     0,
     10,
   )
-  const domains = domainsData?.rules ?? []
+  // Email (SMTP) rules share the list but have no web URL to open.
+  const domains = (domainsData?.rules ?? []).filter(
+    (rule) => !isSmtpRule(rule),
+  )
 
   const [status, setStatus] = useState<string>('building')
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
