@@ -1,4 +1,4 @@
-import { Query, type Models } from '@appwrite.io/console'
+import type { Models } from '@appwrite.io/console'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 
 /**
@@ -24,11 +24,6 @@ export type SmtpDnsRecord = {
   priority?: number
 }
 
-/** Absolute TXT hostname Cloud checks during SMTP verification. */
-export function getSmtpTxtHost(domain: string): string {
-  return `_appwrite.${domain.trim().toLowerCase()}`
-}
-
 /**
  * DNS provider "Name" for a domain: `@` for an apex domain, otherwise the
  * labels in front of the registrable domain (`mail` for `mail.example.com`).
@@ -42,17 +37,9 @@ export function getSmtpRecordName(domain: string): string {
   return normalized.slice(0, -(apex.length + 1))
 }
 
-/**
- * Server-side `protocol` filter for the proxy rules list (Cloud only).
- *
- * Cloud overrides `listRules` to accept `protocol` in queries, and a schema
- * patch backfills existing rules to `protocol='http'` before this Console
- * feature ships. Filtering on the server keeps limit/offset and `total`
- * correct for each protocol. Self-hosted rules have no `protocol` attribute,
- * so callers must only send this on Cloud.
- */
-export function proxyRuleProtocolQuery(protocol: 'http' | 'smtp'): string {
-  return Query.equal('protocol', [protocol])
+/** SMTP rules share the HTTP rules list; `protocol` tells them apart. */
+export function isSmtpRule(rule: Models.ProxyRule): rule is SmtpProxyRule {
+  return (rule as SmtpProxyRule).protocol === 'smtp'
 }
 
 export function needsSmtpDnsVerification(

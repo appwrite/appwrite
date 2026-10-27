@@ -6,7 +6,8 @@ import {
   RefreshCw,
   Trash2,
   ExternalLink,
-  Globe} from 'lucide-react'
+  Globe,
+  Mail} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
@@ -43,12 +44,11 @@ import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { domainUrl } from '@/lib/domains/url'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { SmtpDomainsSection } from './domains/SmtpDomainsSection'
+import { isSmtpRule } from '@/lib/function-smtp-domain'
+import { VerifySmtpDomain } from './domains/VerifySmtpDomain'
 
 export function View() {
   const t = useT()
-  const { features } = useConsoleProfile()
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as {
@@ -59,6 +59,7 @@ export function View() {
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [verifyOpen, setVerifyOpen] = useState(false)
+  const [smtpVerifyOpen, setSmtpVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
@@ -119,7 +120,11 @@ export function View() {
   const handleRetry = (rule: Models.ProxyRule) => {
     openDialogAfterOverlayCloses(() => {
       setSelectedRule(rule)
-      setVerifyOpen(true)
+      if (isSmtpRule(rule)) {
+        setSmtpVerifyOpen(true)
+      } else {
+        setVerifyOpen(true)
+      }
     })
   }
 
@@ -197,6 +202,8 @@ export function View() {
               <TableBody>
                 {rules.map((rule) => {
                   const statusConfig = getDomainStatusBadgeConfig(rule.status)
+                  const isEmail = isSmtpRule(rule)
+                  const showLogs = rule.status !== 'verified'
 
                   return (
                     <ProxyRuleContextMenu
@@ -211,18 +218,27 @@ export function View() {
                     >
                       <TableRow>
                         <TableCell className="px-4 py-3">
-                          <a
-                            href={domainUrl(rule.domain)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"
-                          >
-                            {rule.domain}
-                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                          </a>
+                          {isEmail ? (
+                            <span className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium">
+                              {rule.domain}
+                              <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                            </span>
+                          ) : (
+                            <a
+                              href={domainUrl(rule.domain)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"
+                            >
+                              {rule.domain}
+                              <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                            </a>
+                          )}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-[13px]">
-                          {rule.redirectUrl ? (
+                          {isEmail ? (
+                            <span>{t('Email')}</span>
+                          ) : rule.redirectUrl ? (
                             <span>
                               {t('Redirect to')} {rule.redirectUrl}
                             </span>
@@ -253,7 +269,7 @@ export function View() {
                               )}
                               {t(statusConfig.label)}
                             </Badge>
-                            {rule.status !== 'verified' && (
+                            {showLogs && (
                               <Button
                                 variant="link"
                                 size="sm"
@@ -289,7 +305,7 @@ export function View() {
                                 <RowActionsMenuTrigger />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {rule.status !== 'verified' && (
+                                {showLogs && (
                                   <DropdownMenuItem
                                     onClick={() => handleViewLogs(rule)}
                                   >
@@ -369,9 +385,18 @@ export function View() {
   return (
     <>
       {domainsContent}
-      {features.functionEmailDomains ? <SmtpDomainsSection /> : null}
       {selectedRule && (
         <>
+          {isSmtpRule(selectedRule) ? (
+            <VerifySmtpDomain
+              open={smtpVerifyOpen}
+              onOpenChange={setSmtpVerifyOpen}
+              projectId={projectId ?? ''}
+              region={project?.region}
+              rule={selectedRule}
+              onVerifySuccess={() => setSelectedRule(null)}
+            />
+          ) : null}
           <VerifyDomain
             open={verifyOpen}
             onOpenChange={setVerifyOpen}

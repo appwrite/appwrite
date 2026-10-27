@@ -38,6 +38,7 @@ import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isFeatureEnabled } from '@/lib/console-profiles'
 
 export function AddSmtpDomainWizard() {
   const t = useT()
@@ -79,13 +80,16 @@ export function AddSmtpDomainWizard() {
   }
 
   useEffect(() => {
-    if (!enabled) {
+    // useConsoleProfile applies debug overrides only after mount, so its
+    // first render reports the flag as off; read the flag directly here or
+    // the wizard closes right after it opens.
+    if (!isFeatureEnabled('functionEmailDomains')) {
       navigate({
         to: '/projects/$projectId/functions/$functionId/domains',
         params: { projectId: projectId!, functionId: functionId! },
       })
     }
-  }, [enabled, navigate, projectId, functionId])
+  }, [navigate, projectId, functionId])
 
   if (!enabled) {
     return null
@@ -128,7 +132,7 @@ export function AddSmtpDomainWizard() {
       })
       if (created.status === 'verified') {
         await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'smtp', 'function', projectId, functionId],
+          queryKey: ['proxy-rules', 'function', projectId, functionId],
         })
         toast.success(t('Email domain verified'))
         leave()
@@ -149,7 +153,7 @@ export function AddSmtpDomainWizard() {
       )) as SmtpProxyRule
       if (updated.status === 'verified') {
         await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'smtp', 'function', projectId, functionId],
+          queryKey: ['proxy-rules', 'function', projectId, functionId],
         })
         toast.success(t('Email domain verified'))
         leave()
