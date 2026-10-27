@@ -1449,12 +1449,12 @@ return [
             ],
             [
                 'name' => '_APP_REVIEWS_SECRET',
-                'description' => 'The secret the code review service sends in the `X-Appwrite-Reviews-Secret` header to report results and request installation tokens. The internal review routes reject every call when this is empty. **Keep it a secret**.',
+                'description' => 'Enables code reviews. The secret the code review service sends in the `X-Appwrite-Reviews-Secret` header to report results and request installation tokens. Leave it empty to keep reviews disabled: repositories cannot be enrolled, pull requests queue no reviews and the internal review routes reject every call. **Keep it a secret**.',
                 'introduction' => '2.7.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => 'token'
+                'filter' => ''
             ],
             [
                 'name' => '_APP_JOBS_ENDPOINT',

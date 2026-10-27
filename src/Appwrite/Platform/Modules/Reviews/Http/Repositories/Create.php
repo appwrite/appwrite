@@ -15,6 +15,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 
@@ -61,6 +62,11 @@ class Create extends Action
         Authorization $authorization,
         VcsFactory $vcsFactory,
     ): void {
+        // Reviews are optional on self-hosted: without the secret no review service is running.
+        if (System::getEnv('_APP_REVIEWS_SECRET', '') === '') {
+            throw new Exception(Exception::GENERAL_SERVICE_DISABLED, 'Reviews are disabled on this instance. Set _APP_REVIEWS_SECRET and run the review service to enable them.');
+        }
+
         // GitHub repository ids are numeric, and this one becomes part of the row's id.
         if (!\ctype_digit($providerRepositoryId)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "providerRepositoryId" must be a numeric GitHub repository ID.');

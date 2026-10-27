@@ -95,7 +95,8 @@ class Create extends Action
 
         foreach ($parsedPayloads as $parsedPayload) {
             // Before the deployments, which may throw; queueing a review never does.
-            if ($event === GitHub::EVENT_PULL_REQUEST) {
+            // Without the secret no review service runs (optional on self-hosted), so nothing would consume the job.
+            if ($event === GitHub::EVENT_PULL_REQUEST && System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
                 $this->queueReviews($parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews);
             }
 
