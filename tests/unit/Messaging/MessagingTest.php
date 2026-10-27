@@ -6,6 +6,7 @@ namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Database\RuntimeQuery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
@@ -1335,6 +1336,56 @@ final class MessagingTest extends TestCase
 
         $this->assertNotEmpty($result['permissionsChanged']);
         $this->assertSame([Role::team('team123')->toString()], $result['roles']);
+    }
+
+    public static function consoleProjectEvents(): \Iterator
+    {
+        yield 'rules' => ['rules.rule1.create'];
+        yield 'projects' => ['projects.project1.update'];
+        yield 'attributes' => ['databases.database1.collections.collection1.attributes.attribute1.create'];
+        yield 'columns' => ['tablesdb.database1.tables.table1.columns.column1.update'];
+        yield 'indexes' => ['documentsdb.database1.collections.collection1.indexes.index1.delete'];
+    }
+
+    #[DataProvider('consoleProjectEvents')]
+    public function testFromPayloadConsoleProjectEventsReachOnlyProjectReaders(string $event): void
+    {
+        $project = new Document([
+            '$id' => Id::custom('project1'),
+            'teamId' => 'org1',
+            '$permissions' => [
+                Permission::read(Role::team('org1', 'owner')),
+                Permission::read(Role::team('org1', 'project-project1-developer')),
+                Permission::update(Role::team('org1', 'owner')),
+            ],
+        ]);
+
+        $result = Realtime::fromPayload(
+            event: $event,
+            payload: new Document(['$id' => Id::custom('resource1')]),
+            project: $project,
+        );
+
+        $this->assertSame('console', $result['projectId']);
+        $this->assertSame([
+            Role::team('org1', 'owner')->toString(),
+            Role::team('org1', 'project-project1-developer')->toString(),
+        ], $result['roles']);
+
+        $realtime = new Realtime();
+        $realtime->subscribe('console', 1, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project2-developer')->toString()], ['console']);
+        $realtime->subscribe('console', 2, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project1-developer')->toString()], ['console']);
+
+        $receivers = $realtime->getSubscribers([
+            'project' => 'console',
+            'roles' => $result['roles'],
+            'data' => [
+                'channels' => $result['channels'],
+                'payload' => ['$id' => 'resource1'],
+            ],
+        ]);
+
+        $this->assertSame([2], \array_keys($receivers), 'A member scoped to another project received the event.');
     }
 
     public function testFromPayloadMigrationsReachOnlyProjectReaders(): void
