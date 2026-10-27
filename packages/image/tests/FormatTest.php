@@ -52,6 +52,31 @@ final class FormatTest extends TestCase
         Format::detect($data);
     }
 
+    public function testDetectReadsOnlyTheStartOfAnOversizedFileTypeBox(): void
+    {
+        $brands = \str_repeat('isom', 5_000_000);
+        $data = \pack('N', 8 + \strlen($brands) + 4) . 'ftyp' . $brands . 'avif';
+
+        \memory_reset_peak_usage();
+        $baseline = \memory_get_peak_usage();
+
+        try {
+            Format::detect($data);
+            $this->fail('An oversized file type box without a supported brand near its start must be refused');
+        } catch (\Exception $exception) {
+            $this->assertSame('Unsupported image format', $exception->getMessage());
+        }
+
+        $this->assertLessThan(1024 * 1024, \memory_get_peak_usage() - $baseline);
+    }
+
+    public function testDetectFindsABrandAtTheStartOfAnOversizedFileTypeBox(): void
+    {
+        $box = 'mif1' . "\0\0\0\0" . 'avif' . \str_repeat('isom', 5_000_000);
+
+        $this->assertSame(Format::Avif, Format::detect(\pack('N', \strlen($box) + 8) . 'ftyp' . $box));
+    }
+
     /**
      * @param list<string> $compatible
      */

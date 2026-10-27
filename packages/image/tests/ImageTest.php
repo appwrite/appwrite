@@ -38,6 +38,16 @@ final class ImageTest extends TestCase
         }
     }
 
+    private function requireDecoder(string $format, string $data): void
+    {
+        try {
+            $probe = new \Imagick();
+            $probe->readImageBlob($data);
+        } catch (\ImagickException $exception) {
+            self::markTestSkipped("The {$format} decoder is not usable: {$exception->getMessage()}");
+        }
+    }
+
     private function jpegWithExifOrientation(int $orientation): string
     {
         $source = new \Imagick();
@@ -92,11 +102,10 @@ final class ImageTest extends TestCase
 
     public function testHeicInput(): void
     {
-        if (\Imagick::queryFormats('HEIC') === []) {
-            self::markTestSkipped('The HEIC decoder is not available.');
-        }
+        $heic = file_get_contents(__DIR__ . '/resources/resize/100x100.heic') ?: '';
+        $this->requireDecoder('HEIC', $heic);
 
-        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.heic') ?: '');
+        $image = new Image($heic);
         $image->crop(50, 50);
 
         $output = new \Imagick();

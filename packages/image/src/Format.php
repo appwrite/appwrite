@@ -17,6 +17,17 @@ enum Format: string
 
     private const HEIC_BRANDS = ['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'hevm', 'hevs', 'mif1', 'msf1'];
 
+    private const MAJOR_BRAND_OFFSET = 8;
+
+    private const MINOR_VERSION_OFFSET = 12;
+
+    private const BRAND_LENGTH = 4;
+
+    /**
+     * Upper bound on the bytes of a file type box that are inspected; real boxes hold a handful of brands.
+     */
+    private const FILE_TYPE_BOX_LIMIT = 4096;
+
     /**
      * Identify the format from the file signature, so only decoders for these formats ever see the data.
      *
@@ -41,13 +52,22 @@ enum Format: string
     {
         $header = \unpack('Nsize', $data);
         $size = \is_array($header) && \is_int($header['size'] ?? null) ? $header['size'] : 0;
-        $box = \substr($data, 8, \max(0, $size - 8));
-        $brands = \str_split(\substr($box, 0, 4) . \substr($box, 8), 4);
+        $end = \min($size, self::FILE_TYPE_BOX_LIMIT, \strlen($data));
 
-        return match (true) {
-            \array_intersect($brands, self::AVIF_BRANDS) !== [] => self::Avif,
-            \array_intersect($brands, self::HEIC_BRANDS) !== [] => self::Heic,
-            default => throw new Exception('Unsupported image format'),
-        };
+        $heic = false;
+        for ($offset = self::MAJOR_BRAND_OFFSET; $offset + self::BRAND_LENGTH <= $end; $offset += self::BRAND_LENGTH) {
+            if ($offset === self::MINOR_VERSION_OFFSET) {
+                continue;
+            }
+
+            $brand = \substr($data, $offset, self::BRAND_LENGTH);
+            if (\in_array($brand, self::AVIF_BRANDS, true)) {
+                return self::Avif;
+            }
+
+            $heic = $heic || \in_array($brand, self::HEIC_BRANDS, true);
+        }
+
+        return $heic ? self::Heic : throw new Exception('Unsupported image format');
     }
 }
