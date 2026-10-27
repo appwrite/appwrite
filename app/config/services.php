@@ -211,6 +211,20 @@ return [
         'icon' => '',
         'platforms' => ['server', 'console'],
     ],
+    'reviews' => [
+        'key' => 'reviews',
+        'name' => 'Reviews',
+        'subtitle' => 'The Reviews service allows you to manage AI code review for your GitHub repositories.',
+        'description' => '',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['server', 'console'],
+    ],
     'tokens' => [
         'key' => 'tokens',
         'name' => 'Tokens',

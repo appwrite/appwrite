@@ -5,6 +5,9 @@ namespace Appwrite\Platform\Modules\Reviews\Http\Repositories;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Permission;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
@@ -21,7 +24,6 @@ use Utopia\VCS\Adapter\Git\GitHub;
 
 /**
  * Turns code review on for a repository: from now on its pull requests are queued for review.
- * Not in the SDKs yet; the Console section that calls it adds the SDK method.
  */
 class Create extends Action
 {
@@ -43,6 +45,21 @@ class Create extends Action
             ->label('scope', 'reviews.write')
             ->label('audits.event', 'repository.create')
             ->label('audits.resource', 'repository/{response.$id}')
+            ->label('sdk', new Method(
+                namespace: 'reviews',
+                group: 'repositories',
+                name: 'createRepository',
+                description: <<<EOT
+                Turn on code review for a GitHub repository connected through one of the project's installations. From then on, its pull requests are reviewed when they are opened or updated. A repository can be reviewed by one project only.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_REVIEW_REPOSITORY,
+                    )
+                ],
+            ))
             ->param('installationId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Appwrite installation ID the repository is connected through.', false, ['dbForPlatform'])
             ->param('providerRepositoryId', '', new Text(20), 'GitHub repository ID.')
             ->inject('response')

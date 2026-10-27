@@ -4,6 +4,9 @@ namespace Appwrite\Platform\Modules\Reviews\Http\Reviews;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Reviews;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -35,6 +38,21 @@ class XList extends Action
             ->desc('List reviews')
             ->groups(['api', 'reviews'])
             ->label('scope', 'reviews.read')
+            ->label('sdk', new Method(
+                namespace: 'reviews',
+                group: 'reviews',
+                name: 'list',
+                description: <<<EOT
+                List the code reviews of the project. Reviews are returned without their findings; get a review to read them. You can use the query params to filter your results.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_REVIEW_LIST,
+                    )
+                ],
+            ))
             ->param('queries', [], new Reviews(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Reviews::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')

@@ -109,6 +109,8 @@ class Get extends Action
             '_APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION' => $providersWithRepositoryCreation,
             '_APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES' => $providersWithPublicRepositories,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
+            // Reviews are optional on self-hosted: they run only once the review service has a secret.
+            '_APP_REVIEWS_ENABLED' => System::getEnv('_APP_REVIEWS_SECRET', '') !== '',
             '_APP_DOMAIN_SITES' => $platform['sitesDomain'],
             '_APP_DOMAIN_FUNCTIONS' => $platform['functionsDomain'],
             '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS'),

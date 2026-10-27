@@ -4,6 +4,10 @@ namespace Appwrite\Platform\Modules\Reviews\Http\Repositories;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -33,6 +37,22 @@ class Delete extends Action
             ->label('scope', 'reviews.write')
             ->label('audits.event', 'repository.delete')
             ->label('audits.resource', 'repository/{request.repositoryId}')
+            ->label('sdk', new Method(
+                namespace: 'reviews',
+                group: 'repositories',
+                name: 'deleteRepository',
+                description: <<<EOT
+                Turn off code review for a repository. Its past reviews stay in the project.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
+            ))
             ->param('repositoryId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Repository ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('project')
