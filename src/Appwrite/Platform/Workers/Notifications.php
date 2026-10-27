@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Messaging\Adapter\Console as ConsoleAdapter;
 use Appwrite\Utopia\Messaging\Adapter\Webhook as WebhookAdapter;
@@ -44,6 +46,8 @@ class Notifications extends Action
         '/b' => '</strong>',
     ];
 
+    private PublicHostname $publicHostname;
+
     public static function getName(): string
     {
         return 'notifications';
@@ -59,11 +63,14 @@ class Notifications extends Action
             ->inject('dbForPlatform')
             ->inject('platform')
             ->inject('clientForWebhooks')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname): void
     {
+        $this->publicHostname = $publicHostname;
+
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -306,21 +313,6 @@ class Notifications extends Action
             $body = $this->injectTrackingLogo($body, $messageId, $recipient['channel'], $recipientHash, $project, $trackingSecret);
         }
 
-        // A pooled adapter belongs to this send alone; a project's own SMTP is
-        // dialled for it and closed after.
-        $adapter = empty($smtp) ? null : new SMTP(
-            host: $smtp['host'],
-            port: (int) $smtp['port'],
-            username: $smtp['username'] ?? '',
-            password: $smtp['password'] ?? '',
-            smtpSecure: $smtp['secure'] ?? '',
-            smtpAutoTLS: false,
-            xMailer: 'Appwrite Mailer',
-            timeout: 10,
-            keepAlive: false,
-            timelimit: 30,
-        );
-
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $defaultFromName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
@@ -373,6 +365,22 @@ class Notifications extends Action
                 replyToEmail: $replyTo,
                 attachments: $attachments,
                 html: true,
+            );
+
+            // A pooled adapter belongs to this send alone; a project's own SMTP is
+            // dialled for it, on the addresses just checked, and closed after.
+            $adapter = empty($smtp) ? null : new SMTP(
+                host: $smtp['host'],
+                port: (int) $smtp['port'],
+                username: $smtp['username'] ?? '',
+                password: $smtp['password'] ?? '',
+                smtpSecure: $smtp['secure'] ?? '',
+                smtpAutoTLS: false,
+                xMailer: 'Appwrite Mailer',
+                timeout: 10,
+                keepAlive: false,
+                timelimit: 30,
+                addresses: new Host($this->publicHostname)->addresses($smtp['host']),
             );
 
             $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
