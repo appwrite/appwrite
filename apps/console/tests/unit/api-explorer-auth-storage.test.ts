@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import {
   API_EXPLORER_AUTH_LOCAL_STORAGE_KEY,
-  API_EXPLORER_KEYS_SESSION_STORAGE_KEY,
   resolveApiExplorerAuthSnapshot,
   writeApiExplorerAuthToStorage,
 } from '@/lib/api-explorer/auth-storage'
@@ -80,13 +79,14 @@ afterEach(() => {
 })
 
 describe('API explorer auth storage', () => {
-  test('keeps API keys out of localStorage', () => {
+  test('keeps API keys out of browser storage', () => {
     persistKeys()
 
     const stored = localStorage.getItem(API_EXPLORER_AUTH_LOCAL_STORAGE_KEY)
     expect(stored).not.toBeNull()
     expect(stored).not.toContain('standard_manual')
     expect(stored).not.toContain('ephemeral_key')
+    expect(sessionStorage.length).toBe(0)
 
     expect(resolveApiExplorerAuthSnapshot(projectId, 'client')).toEqual({
       platform: 'server',
@@ -101,20 +101,61 @@ describe('API explorer auth storage', () => {
     })
   })
 
-  test('ignores API keys left in localStorage', () => {
+  test('removes API keys left in localStorage for every project', () => {
     localStorage.setItem(
       API_EXPLORER_AUTH_LOCAL_STORAGE_KEY,
       JSON.stringify({
-        [projectId]: {
+        'legacy-project': {
           serverAuth: { mode: 'manual', manualApiKey: 'standard_legacy' },
+        },
+        'other-project': {
+          platform: 'server',
+          serverAuth: {
+            mode: 'ephemeral',
+            ephemeralApiKey: 'ephemeral_legacy',
+            ephemeralKeyScopes: ['users.read'],
+          },
         },
       }),
     )
 
     expect(
-      resolveApiExplorerAuthSnapshot(projectId, 'client').serverAuth
+      resolveApiExplorerAuthSnapshot('legacy-project', 'client').serverAuth
         .manualApiKey,
     ).toBe('')
+
+    const stored = localStorage.getItem(API_EXPLORER_AUTH_LOCAL_STORAGE_KEY)
+    expect(stored).not.toContain('standard_legacy')
+    expect(stored).not.toContain('ephemeral_legacy')
+    expect(
+      resolveApiExplorerAuthSnapshot('other-project', 'client'),
+    ).toMatchObject({
+      platform: 'server',
+      serverAuth: { mode: 'ephemeral', ephemeralKeyScopes: ['users.read'] },
+    })
+  })
+
+  test('falls back to defaults when storage cannot be read', () => {
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      get: () => {
+        throw new DOMException('Storage is disabled', 'SecurityError')
+      },
+    })
+
+    expect(
+      resolveApiExplorerAuthSnapshot('unreadable-project', 'client'),
+    ).toEqual({
+      platform: 'client',
+      clientAuth: { mode: 'guest', userId: '' },
+      serverAuth: {
+        mode: 'manual',
+        manualApiKey: '',
+        ephemeralApiKey: '',
+        ephemeralDraftScopes: [],
+        ephemeralKeyScopes: [],
+      },
+    })
   })
 
   test('sign-out clears the stored API keys', () => {
@@ -123,9 +164,6 @@ describe('API explorer auth storage', () => {
     clearConsoleSessionLocally()
 
     expect(localStorage.getItem(API_EXPLORER_AUTH_LOCAL_STORAGE_KEY)).toBeNull()
-    expect(
-      sessionStorage.getItem(API_EXPLORER_KEYS_SESSION_STORAGE_KEY),
-    ).toBeNull()
     const { serverAuth } = resolveApiExplorerAuthSnapshot(projectId, 'client')
     expect(serverAuth.manualApiKey).toBe('')
     expect(serverAuth.ephemeralApiKey).toBe('')
