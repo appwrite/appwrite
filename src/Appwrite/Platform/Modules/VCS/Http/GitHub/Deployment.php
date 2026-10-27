@@ -198,10 +198,9 @@ trait Deployment
 
                     $commentStatus = $existingDeployment->getAttribute('status', 'waiting');
 
-                    // This pass deploys nothing, so the comment links the deployment the push made
-                    if (!$existingDeployment->isEmpty()) {
-                        $deploymentId = $existingDeployment->getId();
-                    }
+                    // This pass deploys nothing, so the comment links the deployment the
+                    // push made; without one, it links none
+                    $deploymentId = $existingDeployment->getId();
 
                     if ($resource->getCollection() === 'sites' && !$existingDeployment->isEmpty()) {
                         $previewRule = $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
