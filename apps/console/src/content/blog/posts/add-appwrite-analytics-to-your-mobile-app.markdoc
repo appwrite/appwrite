@@ -102,16 +102,17 @@ dependencies {
 
 {% tabsitem #android title="Android (Kotlin)" %}
 
-Add the Appwrite SDK and the AndroidX lifecycle library to `app/build.gradle.kts`. The lifecycle library tells the app when it goes to the background:
+Add the Appwrite SDK, the AndroidX lifecycle library, and Navigation Compose to `app/build.gradle.kts`. The lifecycle library tells the app when it goes to the background, and the screen view example uses Navigation Compose:
 
 ```kotlin
 dependencies {
     implementation("io.appwrite:sdk-for-android:31.0.1")
     implementation("androidx.lifecycle:lifecycle-process:2.9.4")
+    implementation("androidx.navigation:navigation-compose:2.9.5")
 }
 ```
 
-The SDK needs `compileSdk` 37 or later. The screen view example in this tutorial also uses Navigation Compose.
+The SDK needs `compileSdk` 37 or later.
 
 {% /tabsitem %}
 
