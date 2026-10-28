@@ -203,7 +203,10 @@ trait ErrorMessages
         ]);
 
         // Cloud plans can cap a batch below APP_DATABASE_QUERY_MAX_VALUES, so the duplicate lookup is never reached.
-        if (($response['body']['type'] ?? null) === Exception::GENERAL_ARGUMENT_INVALID) {
+        if (
+            ($response['body']['type'] ?? null) === Exception::GENERAL_ARGUMENT_INVALID
+            && \str_contains($response['body']['message'] ?? '', 'no longer than')
+        ) {
             $this->markTestSkipped('This plan caps a batch write below ' . \count($records) . ' records.');
         }
 
