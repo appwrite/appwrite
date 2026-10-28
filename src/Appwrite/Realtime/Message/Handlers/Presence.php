@@ -144,6 +144,9 @@ class Presence extends Action
             'userId' => $userId,
             'sequence' => (string) $presence->getSequence(),
         ];
+        if ($counted) {
+            $presenceState->recordHold($database->getCache(), $connectionId, $projectId, $userId, (string) $presence->getSequence());
+        }
 
         // Usage +1 only on actual creation (user came online), not on an increment.
         if ($created) {

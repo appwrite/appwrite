@@ -10,6 +10,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Throwable;
+use Utopia\Cache\Cache;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -31,6 +32,16 @@ class State
     public const LIST_CACHE_FIELD_PRESENCES = 'presences';
     public const LIST_CACHE_FIELD_TOTAL = 'total';
     public const COLLECTION_ID = 'presenceLogs';
+
+    /**
+     * @param string $host the realtime server; its counted holds are recorded under it
+     * @param string $boot this run of that server, so the next run can tell its leftovers apart
+     */
+    public function __construct(
+        private readonly string $host = '',
+        private readonly string $boot = '',
+    ) {
+    }
 
     public function setPermissions(
         Document $document,
@@ -206,6 +217,56 @@ class State
         } catch (ConflictException $e) {
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
         }
+    }
+
+    /**
+     * Records a counted hold of one of this server's sockets. A crash runs no onClose, so the
+     * next run of this server releases what this recorded; other servers' holds are never touched.
+     */
+    public function recordHold(Cache $cache, int $connection, string $projectId, string $userId, string $sequence): void
+    {
+        try {
+            $cache->save('presence-holds:' . $this->host, [
+                'projectId' => $projectId,
+                'userId' => $userId,
+                'sequence' => $sequence,
+            ], $this->boot . ':' . $connection);
+        } catch (Throwable $th) {
+            Span::current()?->setError($th);
+        }
+    }
+
+    public function forgetHold(Cache $cache, int $connection): void
+    {
+        try {
+            $cache->purge('presence-holds:' . $this->host, $this->boot . ':' . $connection);
+        } catch (Throwable $th) {
+            Span::current()?->setError($th);
+        }
+    }
+
+    /**
+     * Removes and returns the holds recorded by this server's previous runs. Their sockets died
+     * with that run, so each still counts on its presence row until it is released.
+     *
+     * @return array<array{projectId: string, userId: string, sequence: string}>
+     */
+    public function takeOrphanedHolds(Cache $cache): array
+    {
+        $key = 'presence-holds:' . $this->host;
+        $orphans = [];
+        // Holds live as long as their socket, so no age makes one stale.
+        foreach ($cache->loadMany($key, 10 * 365 * 24 * 60 * 60) as $field => $hold) {
+            if (\str_starts_with((string) $field, $this->boot . ':')) {
+                continue;
+            }
+            $cache->purge($key, (string) $field);
+            if (\is_array($hold)) {
+                $orphans[] = $hold;
+            }
+        }
+
+        return $orphans;
     }
 
     /**
