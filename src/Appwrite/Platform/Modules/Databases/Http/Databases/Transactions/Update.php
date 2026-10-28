@@ -164,8 +164,12 @@ class Update extends Action
             $operations = [];
             $totalOperations = 0;
             $databaseOperations = [];
+            // Set by reference inside the commit closure, so the catch blocks below can read them
+            /** @var ?string $currentDocumentId */
             $currentDocumentId = null;
+            /** @var ?string $currentAttribute */
             $currentAttribute = null;
+            /** @var int|float|null $currentChange */
             $currentChange = null;
 
             $claim = function () use ($dbForProject, $transactionId) {
