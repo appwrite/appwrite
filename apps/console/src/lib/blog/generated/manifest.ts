@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-function-email-triggers",
+    "href": "/blog/post/announcing-function-email-triggers",
+    "title": "Announcing email triggers for Appwrite Functions",
+    "description": "Appwrite Functions can now execute when an email arrives. Each function has a built-in email address, and you can connect your own domain with MX and TXT records.",
+    "date": "2026-10-28",
+    "lastUpdated": "2026-10-28",
+    "timeToRead": 6,
+    "author": "torsten-dittmann",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-function-email-triggers/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-entire-partnership",
     "href": "/blog/post/announcing-appwrite-entire-partnership",
     "title": "Appwrite partners with Entire to deploy Sites and Functions",
@@ -550,20 +564,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "featured": true,
     "unlisted": false,
     "cover": "/images/blog/announcing-appwrite-chatgpt-plugin/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-function-email-triggers",
-    "href": "/blog/post/announcing-function-email-triggers",
-    "title": "Announcing email triggers for Appwrite Functions",
-    "description": "Appwrite Functions can now execute when an email arrives. Each function has a built-in email address, and you can connect your own domain with MX and TXT records.",
-    "date": "2026-09-23",
-    "lastUpdated": "2026-09-23",
-    "timeToRead": 6,
-    "author": "torsten-dittmann",
-    "category": "announcements",
-    "featured": false,
-    "cover": "/images/blog/announcing-function-email-triggers/cover.avif",
     "hasCover": true
   },
   {

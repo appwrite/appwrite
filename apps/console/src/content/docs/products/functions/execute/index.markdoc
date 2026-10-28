@@ -39,7 +39,7 @@ Asynchronous executions are created via:
 - [Email triggers](/docs/products/functions/email) (when an email arrives at an address of the function)
 
 Asynchronous executions:
-- Have no timeout limitations beyond your function's configured timeout
+- Have no timeout limitations beyond your function's configured timeout, except [email executions](/docs/products/functions/email#limits)
 - Are ideal for background processing and event-driven workflows
 
 {% info title="Response body storage" %}
@@ -551,7 +551,7 @@ You can use one of the following events.
 
 # Email {% #email %}
 
-Functions can execute when an email arrives at the built-in address of the function or at a custom domain that you connect to it.
+After you turn on the email trigger of a function, it can execute when an email arrives at its built-in address or at a custom domain that you connect to it.
 The execution receives the parsed email as JSON in `request.body`, and the `x-appwrite-trigger` header is `email`.
 
 {% arrow_link href="/docs/products/functions/email" %}

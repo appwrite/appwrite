@@ -3035,7 +3035,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Email triggers",
     "description": "Execute Appwrite Functions when your app receives email. Use the built-in address of each function or connect your own domain.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/functions/environment-variables",

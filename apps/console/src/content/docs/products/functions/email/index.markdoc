@@ -14,11 +14,13 @@ Email triggers only receive email. To send email from your app, use [Messaging](
 
 # How email triggers work {% #how-email-triggers-work %}
 
-- Each email that arrives at a connected address creates one [asynchronous execution](/docs/products/functions/execute#asynchronous-executions).
+- The email trigger is off by default. A function receives email only after you [turn on its email trigger](#built-in-address).
+- Each email that arrives at an address of the function creates one [asynchronous execution](/docs/products/functions/execute#asynchronous-executions).
 - The execution is a `POST` request to the `/` path of your function, and the `x-appwrite-trigger` header is `email`.
-- When one email is sent to more than one address of the same function, the function executes one time and receives all of these addresses.
+- When one email is sent to more than one address of the same function, the function executes one time, and `envelope.to` lists all of these addresses. If the email also goes to addresses of other functions, each of those functions executes one time.
 - Appwrite accepts the email before your function executes. A failed execution does not send an error to the sender.
-- Appwrite rejects email that is sent to a function without an active deployment.
+- Appwrite rejects the email, and the sending mail server returns it to the sender, when the function has the email trigger turned off, is disabled, or has no active deployment, or when the custom domain is not verified.
+- Anyone who knows an address of your function can send email to it. The execute permissions of the function do not apply to email executions, so treat each email as untrusted input.
 
 # Built-in address {% #built-in-address %}
 
@@ -26,9 +28,11 @@ Email triggers only receive email. To send email from your app, use [Messaging](
 **SMTP-DOCS-TODO screenshot:built-in-address.** Capture the **Domains** tab of a function that shows the built-in email address card. Light and dark, 1460x822 viewport at 2x, screenshot mode on. Save as `/images/docs/functions/email/built-in-address.avif` and `/images/docs/functions/email/dark/built-in-address.avif`, then replace this block with `only_light` and `only_dark` image tags.
 {% /info %}
 
-Each function has a built-in email address that ends with `<FUNCTION_ID>.appwrite.email`.
-You can use any name before the `@`. For example, `support@<FUNCTION_ID>.appwrite.email` and `invoices@<FUNCTION_ID>.appwrite.email` both execute the same function, and the function can read which address received the email.
+Each function has a built-in address in the form `<FUNCTION_ID>@<PROJECT_ID>.appwrite.email`.
 You do not need to configure DNS records for the built-in address.
+
+To give the same function more than one address, add a name and a `+` before the function ID.
+For example, `support+<FUNCTION_ID>@<PROJECT_ID>.appwrite.email` and `invoices+<FUNCTION_ID>@<PROJECT_ID>.appwrite.email` both execute the same function, and the function can read which address received the email from `envelope.to`.
 
 {% info title="SMTP-DOCS-TODO: Console steps pending (built-in-address)" %}
 **SMTP-DOCS-TODO steps:built-in-address.** Confirm these steps against the released Console, then remove this block.
@@ -46,13 +50,18 @@ You do not need to configure DNS records for the built-in address.
 
 You can connect a domain that you own, such as `mail.example.com`, to your function.
 Email to any address at this domain executes the function.
+Use a domain or subdomain that receives no other email, because its `MX` record sends all of its email to Appwrite.
+Turn on the email trigger of the function before you add the domain.
 
-To verify that you own the domain, add two DNS records at your domain registrar:
+Add these two records at your DNS provider.
+The `MX` record sends the email of the domain to Appwrite, and the `TXT` record proves that you own the domain.
 
 | Type | Name | Value |
 | ---- | ---- | ----- |
-| `MX` | `mail.example.com` | The Appwrite mail server that the Console shows |
-| `TXT` | `_appwrite.mail.example.com` | `appwrite-domain-verification=<TOKEN>` from the Console |
+| `MX` | `mail` | The Appwrite mail server that the Console shows. Any priority works. |
+| `TXT` | `_appwrite.mail` | Your project ID |
+
+The names are relative to your domain's DNS zone, as most DNS providers expect them. For an apex domain, such as `example.com`, use `@` for the `MX` record and `_appwrite` for the `TXT` record.
 
 Appwrite executes the function only after it verifies the domain. DNS records can take up to 48 hours to propagate.
 
@@ -60,21 +69,23 @@ Appwrite executes the function only after it verifies the domain. DNS records ca
 **SMTP-DOCS-TODO steps:custom-domain.** The Console does not have this flow yet. Write the numbered steps to add an email domain, copy the DNS records, and verify the domain. Then remove this block.
 {% /info %}
 
-A domain can receive email and HTTP requests at the same time.
-For example, `support.example.com` can serve a site and also send its email to a function, because the email rule and the HTTP rule are separate.
+Appwrite keeps the email rule and the HTTP rule of a domain separate, so one domain can have both.
+DNS does not allow an `MX` record on a name that has a `CNAME` record. If a site or function uses a `CNAME` record on `support.example.com`, receive email on another subdomain, such as `mail.example.com`.
 
 # Handle an email {% #handle-an-email %}
 
 Appwrite sends these [headers](/docs/products/functions/develop#headers) with each email execution:
 
 - `x-appwrite-trigger`: `email`
-- `x-appwrite-email-id`: the unique ID of the email. Use it to detect duplicate emails.
+- `x-appwrite-email-id`: the ID of the email delivery. It is the same as the `id` field of the request body.
 - `x-appwrite-email-domain`: the domain that received the email.
 - `x-appwrite-email-recipient`: the first address of your function that received the email.
 
+Email executions do not receive the `x-appwrite-execution-id`, `x-appwrite-client-ip`, or location headers.
+
 The request body contains the email as JSON.
-This example saves each email as a row in a table.
-It uses the email ID as the row ID, so a duplicate email does not create a second row.
+This example saves each email as a row in a table that has `from` and `subject` columns and a `mediumtext` column named `text`, because the body of an email can be up to 8 MB.
+It uses the email `id` as the row ID, so a second execution for the same delivery does not create a second row.
 Give the function the `rows.write` scope so that its [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key) can create rows.
 
 {% multicode %}
@@ -684,10 +695,10 @@ The request body of an email execution has this format:
   "id": "5f0c2a9e3b7d4e1f8a6c0b2d4e6f8a1c",
   "envelope": {
     "from": "walter@example.net",
-    "to": ["support@6a51290fe3d0727e293a.appwrite.email"]
+    "to": ["support+6a51290fe3d0727e293a@6a5128c4001f2d3e8a7b.appwrite.email"]
   },
   "from": "Walter O'Brien <walter@example.net>",
-  "to": "support@6a51290fe3d0727e293a.appwrite.email",
+  "to": "support+6a51290fe3d0727e293a@6a5128c4001f2d3e8a7b.appwrite.email",
   "cc": "",
   "replyTo": "",
   "subject": "Order 1042 did not arrive",
@@ -696,9 +707,11 @@ The request body of an email execution has this format:
   "text": "Hi, my order 1042 did not arrive yet.",
   "html": "<p>Hi, my order 1042 did not arrive yet.</p>",
   "headers": {
-    "subject": ["Order 1042 did not arrive"],
-    "in-reply-to": [],
-    "references": []
+    "message-id": ["<CAF3x9k2@mail.example.net>"],
+    "date": ["Wed, 23 Sep 2026 09:14:02 +0000"],
+    "from": ["Walter O'Brien <walter@example.net>"],
+    "to": ["support+6a51290fe3d0727e293a@6a5128c4001f2d3e8a7b.appwrite.email"],
+    "subject": ["Order 1042 did not arrive"]
   },
   "attachments": [
     {
@@ -708,38 +721,34 @@ The request body of an email execution has this format:
       "contentId": "",
       "disposition": "attachment",
       "size": 48213,
-      "url": "https://<REGION>.cloud.appwrite.io/v1/smtp/deliveries/5f0c2a9e3b7d4e1f8a6c0b2d4e6f8a1c/files/attachment-0?token=<TOKEN>"
+      "url": "http://edge.edge.svc.cluster.local/v1/smtp/deliveries/5f0c2a9e3b7d4e1f8a6c0b2d4e6f8a1c/files/attachment-0?token=<TOKEN>"
     }
   ],
   "raw": {
     "size": 67402,
     "contentType": "message/rfc822",
-    "url": "https://<REGION>.cloud.appwrite.io/v1/smtp/deliveries/5f0c2a9e3b7d4e1f8a6c0b2d4e6f8a1c/files/raw?token=<TOKEN>"
+    "url": "http://edge.edge.svc.cluster.local/v1/smtp/deliveries/5f0c2a9e3b7d4e1f8a6c0b2d4e6f8a1c/files/raw?token=<TOKEN>"
   },
   "transport": {
     "remoteIp": "203.0.113.10",
     "helo": "mail.example.net",
-    "tls": true
+    "tls": false
   },
-  "receivedAt": "2026-09-23T09:14:03Z"
+  "receivedAt": "2026-09-23T09:14:03.482913571Z"
 }
 ```
 
-{% info title="SMTP-DOCS-TODO: Verify download URL host" %}
-**SMTP-DOCS-TODO verify:download-url-host.** The `url` host in this example is a guess. Replace it with the host that Appwrite Cloud returns, then remove this block.
-{% /info %}
-
-- `id`: the unique ID of the email. It is the same value as the `x-appwrite-email-id` header.
-- `envelope.from`: the sender address that the sending mail server reported.
+- `id`: the ID of the email delivery. It is the same value as the `x-appwrite-email-id` header.
+- `envelope.from`: the sender address that the sending mail server reported. It is empty for bounce messages and other automatic replies.
 - `envelope.to`: the addresses of your function that received the email.
 - `from`, `to`, `cc`, and `replyTo`: the values of these headers in the email.
 - `subject`, `messageId`, and `date`: the values of these headers in the email.
 - `text` and `html`: the plain text and HTML versions of the email body. A value is empty when the email does not have that version.
-- `headers`: a selection of email headers. The keys are lowercase, and each value is a list: `message-id`, `date`, `from`, `to`, `cc`, `reply-to`, `subject`, `in-reply-to`, and `references`.
-- `attachments`: the files that are attached to the email. Each attachment has a download `url`.
+- `headers`: these email headers, when the email has them: `message-id`, `date`, `from`, `to`, `cc`, `reply-to`, `subject`, `in-reply-to`, and `references`. The keys are lowercase, and each value is a list of the raw header values. A header that the email does not have is not in the object.
+- `attachments`: the attached files and the inline parts of the email, such as embedded images. An inline part has a `contentId`. Each attachment has a download `url`.
 - `raw`: the original email as an `.eml` file, with a download `url`.
-- `transport`: the IP address of the sending mail server, the name that it gave, and whether the connection used TLS.
-- `receivedAt`: the time when Appwrite received the email.
+- `transport`: details of the SMTP connection: the IP address that connected, the name that the sending server gave in its `HELO` greeting, and whether the connection used TLS.
+- `receivedAt`: the time when Appwrite received the email, as an RFC 3339 timestamp in UTC that can include fractions of a second.
 
 The values of `envelope.to` and `to` can be different.
 For example, an email that you receive as a BCC recipient or as a forwarded email shows your address only in `envelope.to`.
@@ -747,27 +756,27 @@ For example, an email that you receive as a BCC recipient or as a forwarded emai
 # Attachments and the original email {% #attachments %}
 
 Each attachment has a `url` that downloads the file. The `raw.url` value downloads the original email as an `.eml` file.
+Request these URLs from your function as they are. They point to an internal Appwrite address that only your function's runtime can reach.
 
-These URLs expire **5 minutes** after the execution starts.
+The URLs expire **15 minutes** after Appwrite creates them, right before the execution starts.
 Download the files at the start of your function.
 To keep a file for a longer time, upload it to [Storage](/docs/products/storage).
 
 # Duplicate emails {% #duplicate-emails %}
 
-Appwrite can deliver the same email to your function more than one time.
-For example, the sending mail server can send the email again when its connection fails.
+Your function can receive the same email more than one time.
 
-Use the email `id` to detect a duplicate.
-The [example function](#handle-an-email) uses the `id` as the row ID, so Appwrite rejects a second row for the same email with a `409` error.
+If Appwrite executes the function again for the same delivery, for example after an internal failure, both executions have the same `id`.
+The [example function](#handle-an-email) uses the `id` as the row ID, so Appwrite rejects a second row for the same delivery with a `409` error.
+
+If the sending mail server sends the email again, for example because its connection closed before Appwrite confirmed the email, Appwrite treats it as a new delivery with a new `id`.
+To detect these duplicates too, also compare the `messageId` value when the email has one.
 
 # Limits {% #limits %}
-
-{% info title="SMTP-DOCS-TODO: Verify limits" %}
-**SMTP-DOCS-TODO verify:limits.** These values come from the current implementation and can change for each plan. Confirm them before release, then remove this block.
-{% /info %}
 
 - Maximum size of an email, including attachments: 25 MB.
 - Maximum size of the email body after decoding: 8 MB.
 - Maximum number of recipients for each email: 50.
-- Maximum number of MIME parts for each email: 200.
-- Maximum duration of an email execution: 60 seconds. This limit applies even when the timeout of your function is longer.
+- Maximum number of MIME parts for each email: 200, nested at most 5 levels deep.
+- Addresses with non-ASCII characters are not supported.
+- Duration of an email execution: plan for the function to finish within 60 seconds. Appwrite can stop an email execution after 60 seconds, even when the timeout of your function is longer.
