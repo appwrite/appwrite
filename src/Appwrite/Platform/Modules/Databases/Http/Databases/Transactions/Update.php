@@ -166,40 +166,17 @@ class Update extends Action
             $totalOperations = 0;
             $databaseOperations = [];
             $bulkDocuments = [];
+            // Set by reference inside the commit closure, so the catch blocks below can read them
+            /** @var ?string $currentDocumentId */
             $currentDocumentId = null;
+            /** @var ?string $currentAttribute */
             $currentAttribute = null;
+            /** @var int|float|null $currentChange */
             $currentChange = null;
 
-            $firstOperation = $authorization->skip(fn () => $dbForProject->findOne('transactionLogs', [
-                Query::equal('transactionInternalId', [$transaction->getSequence()]),
-                Query::orderAsc(),
-            ]));
-
-            if ($firstOperation->isEmpty()) {
-                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
-                    'transactions',
-                    $transactionId,
-                    new Document(['status' => 'committed'])
-                ));
-
-                $this->queueCleanup($publisherForDeletes, $project, $transaction);
-
-                $response
-                    ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-                    ->dynamic($transaction, $this->getResponseModel());
-
-                return;
-            }
-
-            $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                Query::equal('$sequence', [$firstOperation['databaseInternalId']])
-            ]));
-            $databaseDsn = $databaseDoc->getAttribute('database') ?: $project->getAttribute('database');
-
-            $dbForDatabases = $getDatabasesDB($databaseDoc);
-
             $claim = function () use ($dbForProject, $transactionId) {
-                // Re-read under a lock, a concurrent commit of the same transaction must not apply its operations twice
+                // Re-read under a lock, a concurrent commit of the same transaction must not apply its operations twice,
+                // and staging, which takes the same lock, must not add operations after they are read below
                 $current = $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
 
                 if ($current->getAttribute('status', '') !== 'pending') {
@@ -217,7 +194,36 @@ class Update extends Action
                 throw new Exception(Exception::TRANSACTION_NOT_READY);
             }
 
+            // The transaction is claimed, so any failure from here on must mark it failed rather than leave it committing
             try {
+                $firstOperation = $authorization->skip(fn () => $dbForProject->findOne('transactionLogs', [
+                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                    Query::orderAsc(),
+                ]));
+
+                if ($firstOperation->isEmpty()) {
+                    $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+                        'transactions',
+                        $transactionId,
+                        new Document(['status' => 'committed'])
+                    ));
+
+                    $this->queueCleanup($publisherForDeletes, $project, $transaction);
+
+                    $response
+                        ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
+                        ->dynamic($transaction, $this->getResponseModel());
+
+                    return;
+                }
+
+                $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                    Query::equal('$sequence', [$firstOperation['databaseInternalId']])
+                ]));
+                $databaseDsn = $databaseDoc->getAttribute('database') ?: $project->getAttribute('database');
+
+                $dbForDatabases = $getDatabasesDB($databaseDoc);
+
                 $operations = $authorization->skip(fn () => $dbForProject->find('transactionLogs', [
                     Query::equal('transactionInternalId', [$transaction->getSequence()]),
                     Query::orderAsc(),
