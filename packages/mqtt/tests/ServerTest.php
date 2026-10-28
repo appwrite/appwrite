@@ -143,7 +143,8 @@ final class ServerTest extends TestCase
         $this->assertSame(Packet::CONNACK, $packet->type);
         [$properties] = Properties::parse($packet->body, 2);
         $value = $properties->get(Property::SERVER_KEEP_ALIVE);
+        $this->assertTrue($value === null || \is_int($value), 'Server Keep Alive is not an integer');
 
-        return $value === null ? null : (int) $value;
+        return $value;
     }
 }
