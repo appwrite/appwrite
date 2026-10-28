@@ -542,50 +542,8 @@ class Migrations extends Action
      */
     protected function getAPIKeyScopes(): array
     {
-        return [
-            'users.read',
-            'users.write',
-            'teams.read',
-            'teams.write',
-            'buckets.read',
-            'buckets.write',
-            'files.read',
-            'files.write',
-            'functions.read',
-            'functions.write',
-            'sites.read',
-            'sites.write',
-            'tokens.read',
-            'tokens.write',
-            'providers.read',
-            'providers.write',
-            'topics.read',
-            'topics.write',
-            'subscribers.read',
-            'subscribers.write',
-            'messages.read',
-            'messages.write',
-            'targets.read',
-            'targets.write',
-            'webhooks.read',
-            'webhooks.write',
-            'rules.read',
-            'rules.write',
-            'project.read',
-            'project.write',
-            'keys.read',
-            'keys.write',
-            'platforms.read',
-            'platforms.write',
-            'mocks.read',
-            'mocks.write',
-            'project.policies.read',
-            'project.policies.write',
-            'project.oauth2.read',
-            'project.oauth2.write',
-            'templates.read',
-            'templates.write',
-        ];
+        // Every project scope, so migrated functions and sites can keep theirs
+        return \array_keys(Config::getParam('projectScopes', []));
     }
 
     /**
@@ -1155,12 +1113,7 @@ class Migrations extends Action
             ->setParam('{{hello}}', $hello)
             ->setParam('{{footer}}', $footer)
             ->setParam('{{thanks}}', $thanks)
-            ->setParam('{{signature}}', $signature)
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name'))
-            ->setParam('{{user}}', $user->getAttribute('name', $user->getAttribute('email')))
-            ->setParam('{{type}}', $exportType)
-            ->setParam('{{size}}', $success ? '' : (string)$sizeMB);
+            ->setParam('{{signature}}', $signature);
 
         if ($success) {
             $message
@@ -1181,6 +1134,9 @@ class Migrations extends Action
             'privacy' => $platform['privacyUrl'],
             'platform' => $platform['platformName'],
             'type' => $exportType,
+            'project' => $project->getAttribute('name'),
+            'user' => $user->getAttribute('name', $user->getAttribute('email')),
+            'size' => $success ? '' : (string) $sizeMB,
         ];
 
         $publisherForMails->enqueue(new MailMessage(

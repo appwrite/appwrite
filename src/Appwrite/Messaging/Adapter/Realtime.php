@@ -1164,10 +1164,11 @@ class Realtime extends MessagingAdapter
                         $roles = $payload->getPermissionsByType(PermissionType::Read);
                     }
                 } elseif ($parts[2] === 'deployments') {
+                    // Build logs are project data; a member scoped to a sibling project must not receive them
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
-                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                    $roles = $project->getPermissionsByType(PermissionType::Read);
                 }
 
                 break;
@@ -1176,7 +1177,7 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
-                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                    $roles = $project->getPermissionsByType(PermissionType::Read);
                 }
                 break;
             case 'reports':
