@@ -653,13 +653,24 @@ class Deletes extends Action
             ];
 
             try {
-                foreach ($retention->passes($dbForProject, $resourceQueries, $requested, $now) as $pass) {
-                    $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+                $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+                $passesQueries = $this->deploymentRetentionQueries(
+                    $dbForPlatform,
+                    $dbForProject,
+                    $project,
+                    $resource,
+                    $resourceQueries,
+                );
 
-                    $queries = $resourceQueries;
-                    foreach ($this->deploymentIdsProtectedFromRetention($dbForPlatform, $dbForProject, $project, $resource) as $deploymentId) {
-                        $queries[] = Query::notEqual('$id', $deploymentId);
-                    }
+                foreach ($retention->passes($dbForProject, $passesQueries, $requested, $now) as $pass) {
+                    $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+                    $queries = $this->deploymentRetentionQueries(
+                        $dbForPlatform,
+                        $dbForProject,
+                        $project,
+                        $resource,
+                        $resourceQueries,
+                    );
 
                     $this->retireDeployments($pass->reason, [...$queries, ...$pass->queries], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
                 }
@@ -737,6 +748,27 @@ class Deletes extends Action
         );
 
         return \array_values(\array_unique($kept));
+    }
+
+    /**
+     * Resource-scoped deployment queries with protected builds excluded from retention passes.
+     *
+     * @param list<Query> $resourceQueries
+     * @return list<Query>
+     */
+    private function deploymentRetentionQueries(
+        Database $dbForPlatform,
+        Database $dbForProject,
+        Document $project,
+        Document $resource,
+        array $resourceQueries,
+    ): array {
+        $queries = $resourceQueries;
+        foreach ($this->deploymentIdsProtectedFromRetention($dbForPlatform, $dbForProject, $project, $resource) as $deploymentId) {
+            $queries[] = Query::notEqual('$id', $deploymentId);
+        }
+
+        return $queries;
     }
 
     /**
