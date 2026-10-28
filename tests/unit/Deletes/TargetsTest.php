@@ -148,6 +148,20 @@ final class TargetsTest extends TestCase
         $this->assertSame([], $this->pubsub->published, 'MQTT only delivers to push targets; an email target has nothing for a broker to revoke.');
     }
 
+    public function testCollapsesTwoTargetsOfTheSameUserAndTopicIntoOneRevoke(): void
+    {
+        $topic = $this->createTopic();
+        [$targetA] = $this->subscribe($topic, 'user-1', 'push-a');
+        [$targetB] = $this->subscribe($topic, 'user-1', 'push-b');
+
+        // Two different targets (e.g. two devices) of the same user subscribed to the same
+        // topic: each row is independently valid, but Targets::delete() processes both targets
+        // in one sweep, so the dedup must collapse them into a single revoke, not two.
+        Targets::delete($this->database, Query::equal('$sequence', [$targetA->getSequence(), $targetB->getSequence()]), $this->mqtt(), 'project-1');
+
+        $this->assertCount(1, $this->pubsub->published);
+    }
+
     public function testWithoutAnMqttAdapterDeletionStillSucceeds(): void
     {
         $topic = $this->createTopic();

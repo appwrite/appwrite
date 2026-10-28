@@ -4,8 +4,8 @@ namespace Appwrite\Utopia\Database\Documents;
 
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Deletes\Targets;
-use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
