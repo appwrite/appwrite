@@ -32,12 +32,11 @@ The email trigger is off by default, so you turn it on for each function that sh
 
 Appwrite handles each email in this order:
 
-1. Checks each recipient address when the sending mail server names it. The address must belong to an enabled function that has the email trigger on and an active deployment, and a custom domain must be verified.
+1. Checks that each recipient address belongs to a function that has the email trigger on and an active deployment. An address on a custom domain also needs a verified domain.
 2. Receives the email over SMTP.
 3. Parses the headers, the plain text body, the HTML body, and the attachments.
-4. Stores the original email, each attachment, and the parsed email.
-5. Confirms receipt to the sending mail server.
-6. Executes the function in the background with the parsed email as the request body.
+4. Stores the original email, each attachment, and the parsed email, then confirms receipt to the sending mail server.
+5. Executes the function in the background with the parsed email as the request body.
 
 The function receives JSON, so it needs no MIME parser and no mail server of its own.
 
