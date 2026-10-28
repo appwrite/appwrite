@@ -6,8 +6,8 @@ namespace Utopia\Image\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Image\Format;
 use Utopia\Image\Exception\UnsupportedFormatException;
+use Utopia\Image\Format;
 
 final class FormatTest extends TestCase
 {
