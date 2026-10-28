@@ -1621,4 +1621,10 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Build on top of Appwrite': 'Appwrite の上に構築する',
   'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
     'API キーを貼り付ける代わりに、同意に基づくスコープ付きのアクセスで Appwrite ユーザーがプロジェクトを接続できる OAuth2 アプリを作成できます。マーケットプレイスに公開して、あらゆる組織に見つけてもらいましょう。',
+  'Set up auto-pay': '自動支払いを設定',
+  'Auto-pay is set up': '自動支払いを設定しました',
+  'Failed to set up auto-pay': '自動支払いの設定に失敗しました',
+  'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
+    'このカードでは、自動支払いのたびに銀行が OTP を求めます。自動支払いを設定すると、$150 までの支払いは OTP なしで処理されます。',
+  'Only the card owner can set up auto-pay': 'カードの所有者のみが自動支払いを設定できます',
 }
