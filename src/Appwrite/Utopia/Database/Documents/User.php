@@ -226,6 +226,22 @@ class User extends Document
         return $session !== null && \count($session->getAttribute('factors', [])) >= $this->getMinimumFactors();
     }
 
+    /**
+     * Roles of the user's confirmed membership of a team, or none when it is not a member.
+     *
+     * @return array<string>
+     */
+    public function getMembershipRoles(string $teamId): array
+    {
+        foreach ($this->getAttribute('memberships', []) as $membership) {
+            if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
+                return $membership->getAttribute('roles', []);
+            }
+        }
+
+        return [];
+    }
+
     private function getSession(string $sessionId): ?Document
     {
         return \array_find($this->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $sessionId);

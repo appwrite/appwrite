@@ -86,6 +86,8 @@ class Realtime extends MessagingAdapter
      *      'sessionId' -> [SESSION_ID] the session the connection was opened with, if any
      *      'impersonatedUserId' -> [USER_ID] when opened on that user's behalf
      *      'impersonator' -> ['projectId' => ..., 'userId' => ..., 'sessionId' => ...] who opened it then
+     *      'admin' -> ['userId' => ..., 'teamId' => ..., 'roles' => [...]] the console user an admin-mode
+     *                 connection runs as, and the membership that granted it access
      *      'expire' -> [UNIX_TIMESTAMP] when that session expires, if any
      *      'jwtExpire' -> [UNIX_TIMESTAMP] when the JWT the connection was opened with expires, if any
      *      'limits' -> ['subscriptions' => int, 'channels' => int, 'queries' => int] from its project's plan
@@ -218,7 +220,7 @@ class Realtime extends MessagingAdapter
 
         // Recorded once by the connection handler or a presence write; every later (re)subscribe
         // keeps it, so a `subscribe` message after a presence message never drops the hold stash.
-        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire', 'presence', 'limits'] as $key) {
+        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'admin', 'expire', 'jwtExpire', 'presence', 'limits'] as $key) {
             if (\array_key_exists($key, $existing)) {
                 $entry[$key] = $existing[$key];
             }
@@ -550,6 +552,27 @@ class Realtime extends MessagingAdapter
         foreach ($this->connections as $connectionId => $connection) {
             $impersonator = $connection['impersonator'] ?? null;
             if (($impersonator['projectId'] ?? null) === $projectId && ($impersonator['userId'] ?? null) === $userId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
+    }
+
+    /**
+     * Connection IDs of every admin-mode connection a console user opened, in any project.
+     *
+     * @return array<int, mixed>
+     */
+    public function getAdminConnections(string $userId): array
+    {
+        if ($userId === '') {
+            return [];
+        }
+
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['admin']['userId'] ?? null) === $userId) {
                 $connections[] = $connectionId;
             }
         }

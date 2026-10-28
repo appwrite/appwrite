@@ -11,7 +11,8 @@ use Utopia\Database\PermissionType;
 
 class Realtime extends Event
 {
-    public const CONSOLE_ALLOWLIST = ['presences', 'teams'];
+    // Account events reach realtime so a console user's connections end with their session.
+    public const CONSOLE_ALLOWLIST = ['presences', 'teams', 'account'];
 
     protected array $subscribers = [];
 
