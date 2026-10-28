@@ -47,7 +47,7 @@ export function AddDomainWizard() {
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
   const { data: func } = useProjectFunction(projectId, functionId)
-  const { features } = useConsoleProfile()
+  const { isCloud } = useConsoleProfile()
 
   const createMutation = useCreateFunctionDomainRule(projectId)
   const verifyMutation = useVerifyDomain(projectId, project?.region)
@@ -273,7 +273,7 @@ export function AddDomainWizard() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {features.functionEmailDomains ? (
+        {isCloud ? (
           <DomainTypeCard
             value="http"
             onChange={(type) => {

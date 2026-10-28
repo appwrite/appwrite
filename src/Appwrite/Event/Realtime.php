@@ -115,20 +115,16 @@ class Realtime extends Event
             bucket: $bucket,
         );
 
-        $project = $this->getProject();
-
         $projectIds = !empty($this->getSubscribers())
             ? $this->getSubscribers()
-            : [$target['projectId'] ?? $project->getId()];
+            : [$target['projectId'] ?? $this->getProject()->getId()];
+
+        $project = $this->getProject();
 
         foreach ($projectIds as $projectId) {
-            // A resource's own read roles (e.g. an execution's user:{id}) are
-            // meaningful only in its project's subscription tree. Delivered to
-            // the console tree the same role matches an unrelated console
-            // account with that id, so the console copy is re-addressed to the
-            // project's read roles — the org members who may actually read it.
-            $roles = $projectId === 'console' && $project->getId() !== 'console' && ($target['projectId'] ?? null) !== 'console'
-                ? $project->getPermissionsByType(PermissionType::Read)
+            // A project's roles mean nothing in the console, where they could match an unrelated account with the same ID
+            $roles = $projectId === 'console' && $project?->getId() !== 'console' && ($target['projectId'] ?? null) !== 'console'
+                ? ($project?->getPermissionsByType(PermissionType::Read) ?? [])
                 : $target['roles'];
 
             try {
