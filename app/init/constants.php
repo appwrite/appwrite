@@ -47,6 +47,7 @@ const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
 const APP_LIMIT_REALTIME_CONNECTIONS = 32; // Maximum open realtime connections per project user on one worker
 const APP_LIMIT_REALTIME_GUEST_CONNECTIONS = 128; // Maximum open realtime guest connections per IP, or IPv6 /64, per project on one worker
 const APP_LIMIT_MQTT_FILTERS = 100; // Maximum topic filters in one MQTT SUBSCRIBE
+const APP_LIMIT_MQTT_KEEP_ALIVE = 1200; // Longest MQTT keep-alive in seconds the broker honours, also used for a client that disables it
 
 const APP_PROJECTS_SUBQUERIES = [
     'subQueryKeys',

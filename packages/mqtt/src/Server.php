@@ -51,12 +51,16 @@ class Server
     /** @var callable|null */
     private $onStop = null;
 
-    /** @param int $maxFilters most topic filters one SUBSCRIBE may carry; 0 for no limit */
+    /**
+     * @param int $maxFilters most topic filters one SUBSCRIBE may carry; 0 for no limit
+     * @param int $maxKeepAlive longest keep-alive in seconds the broker honours, also used for a client that disables it; 0 for no limit
+     */
     public function __construct(
         private readonly Adapter $adapter,
         private readonly Handler $handler,
         private readonly Store $store = new Store(),
         private readonly int $maxFilters = 0,
+        private readonly int $maxKeepAlive = 0,
     ) {
         $this->setTelemetry(new NoTelemetry());
     }
@@ -186,12 +190,22 @@ class Server
                 $connect = Connect::decode($packet->body);
                 $connection->protocol = $connect->protocolLevel;
                 $connection->cleanStart = $connect->cleanStart;
-                $connection->keepAlive = $connect->keepAlive;
+                $connection->keepAlive = $this->keepAlive($connect->keepAlive);
                 $connection->setClientId($connect->clientId);
 
                 $result = $this->handler->onConnect($connect, $connection);
                 if ($connection->closed) {
                     break;
+                }
+
+                // MQTT 5.0 3.2.2.3.14: the client must use the Server Keep Alive instead of its own.
+                if ($result instanceof Connack && $result->accepted() && $connection->protocol >= V5::PROTOCOL_LEVEL && $connection->keepAlive !== $connect->keepAlive) {
+                    $properties = new Properties();
+                    foreach ($result->properties?->all() ?? [] as $property) {
+                        $properties->add($property);
+                    }
+                    $properties->add(new Property(Property::SERVER_KEEP_ALIVE, $connection->keepAlive));
+                    $result = Connack::accept($result->sessionPresent, $properties);
                 }
 
                 $this->adapter->send($connection->fd, $this->encode($result, $connection->protocol));
@@ -295,6 +309,20 @@ class Server
         if ($connection !== null) {
             $connection->closed = true;
         }
+    }
+
+    /**
+     * The keep-alive the broker enforces: the client's, lowered to maxKeepAlive, which also replaces
+     * a disabled (0) one so an idle client is still reaped. 3.1.1 cannot announce it, but lets a server
+     * disconnect an inactive client whatever its keep-alive (3.1.2.10).
+     */
+    private function keepAlive(int $requested): int
+    {
+        if ($this->maxKeepAlive <= 0) {
+            return $requested;
+        }
+
+        return $requested === 0 ? $this->maxKeepAlive : \min($requested, $this->maxKeepAlive);
     }
 
     private function refreshKeepAlive(Connection $connection): void

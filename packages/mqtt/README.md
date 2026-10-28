@@ -214,6 +214,12 @@ $adapter = new Adapter\Swoole([
 
 A WebSocket message may carry several or partial MQTT packets, so the adapter reassembles whole packets before dispatch and pushes binary frames on send. Keep-alive reaping is intrinsic to MQTT and runs inside the adapter: every inbound packet re-arms a connection's deadline, and a client silent past `keepAlive × 1.5` is closed, surfacing as `onDisconnect(null, ...)`.
 
+Two optional `Server` limits bound what one client can hold: `maxFilters` disconnects a client whose SUBSCRIBE carries more topic filters (Quota exceeded on 5.0), and `maxKeepAlive` lowers a longer keep-alive and replaces a disabled one (`0`), announcing it to 5.0 clients as Server Keep Alive, so an idle client is still reaped:
+
+```php
+$server = new Server($adapter, new Broker(), maxFilters: 100, maxKeepAlive: 1200);
+```
+
 ## Telemetry
 
 Pass a [utopia-php/telemetry](https://github.com/utopia-php/telemetry) adapter to record broker metrics — packets received by type, connections opened and active, and subscriptions granted or denied. It defaults to a no-op adapter.
