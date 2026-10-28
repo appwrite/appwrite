@@ -34,6 +34,8 @@ class Key
         protected bool $deploymentStatusIgnored = false,
         protected bool $runtimeEphemeral = false,
         protected ?string $expire = null,
+        protected string $hostname = '',
+        protected string $deploymentId = '',
     ) {
     }
 
@@ -156,6 +158,22 @@ class Key
         return $this->runtimeEphemeral;
     }
 
+    public function getHostname(): string
+    {
+        return $this->hostname;
+    }
+
+    /**
+     * Whether the router may apply this key's preview grants to the rule.
+     */
+    public function isBoundTo(Document $rule): bool
+    {
+        return $this->hostname !== ''
+            && $this->deploymentId !== ''
+            && $this->hostname === $rule->getAttribute('domain', '')
+            && $this->deploymentId === $rule->getAttribute('deploymentId', '');
+    }
+
     /**
      * @param array<Document> $keys
      */
@@ -230,6 +248,8 @@ class Key
                 $previewAuthDisabled = $payload['previewAuthDisabled'] ?? false;
                 $deploymentStatusIgnored = $payload['deploymentStatusIgnored'] ?? false;
                 $runtimeEphemeral = $payload['runtimeEphemeral'] ?? false;
+                $hostname = $payload['hostname'] ?? '';
+                $deploymentId = $payload['deploymentId'] ?? '';
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
                 $expire = isset($payload['exp']) ? DateTime::format((new \DateTime())->setTimestamp((int) $payload['exp'])) : null;
 
@@ -260,6 +280,8 @@ class Key
                     $deploymentStatusIgnored,
                     $runtimeEphemeral,
                     $expire,
+                    $hostname,
+                    $deploymentId,
                 );
             case API_KEY_STANDARD:
                 $key = self::find($project->getAttribute('keys', []), $key);

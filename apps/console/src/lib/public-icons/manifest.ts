@@ -58,6 +58,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'elysia.svg',
   'emergent.svg',
   'empty.svg',
+  'entire.svg',
   'etsy.svg',
   'facebook.svg',
   'fastapi.svg',
