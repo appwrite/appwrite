@@ -55,7 +55,7 @@ parameters:
 			path: src/Destinations/Appwrite.php
 
 		-
-			message: '#^Cannot access offset ''canonicalEmails''\|''corporateEmails''\|''disposableEmails''\|''freeEmails''\|''membershipsUserAccessedAt''\|''mfaFactors''\|''passkeyRpId''\|''passwordPwned''\|''passwordRotation''\|''passwordStrength'' on mixed\.$#'
+			message: '#^Cannot access offset ''canonicalEmails''\|''corporateEmails''\|''disposableEmails''\|''freeEmails''\|''membershipsUserAccessedAt''\|''mfaFactors''\|''passkeyRpId''\|''passwordPwned''\|''passwordRotation''\|''passwordStrength''\|''realtimeGuests'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: src/Destinations/Appwrite.php
@@ -1352,6 +1352,12 @@ parameters:
 
 		-
 			message: '#^Parameter \$createdAt of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Auth/Policies.php
+
+		-
+			message: '#^Parameter \$denyRealtimeGuests of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects bool\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Resources/Auth/Policies.php
