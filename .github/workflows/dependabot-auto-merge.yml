@@ -1,48 +1,23 @@
 name: Dependabot auto-merge
 
-on: pull_request
+# Approves and merges Dependabot patch and minor updates once every check has passed.
+# Runs after each workflow a pull request triggers; the shared gate waits for all of them.
+on:
+  workflow_run:
+    workflows:
+      - 'CI'
+      - 'CodeQL'
+      - 'Console'
+      - 'SDK Preview'
+    types:
+      - completed
 
-permissions: {}
+permissions:
+  checks: read
+  contents: write
+  pull-requests: write
+  statuses: read
 
 jobs:
-  auto-merge:
-    if: github.event.pull_request.user.login == 'dependabot[bot]'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Fetch Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      # Auto-merge only waits for checks the base branch requires, so skip it until every gate below is required.
-      - name: Check required status checks on the base branch
-        id: protection
-        run: |
-          required=$( {
-            gh api "repos/$REPOSITORY/branches/$BASE" --jq '.protection.required_status_checks.contexts // [] | .[]'
-            gh api "repos/$REPOSITORY/rules/branches/$BASE" --jq '.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context'
-          } )
-          missing=""
-          for check in CI Console CodeQL Hansi; do
-            grep -qxF "$check" <<< "$required" || missing="$missing $check"
-          done
-          if [ -z "$missing" ]; then
-            echo "required=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::$BASE does not require:$missing. Auto-merge is not enabled."
-          fi
-        env:
-          REPOSITORY: ${{ github.repository }}
-          BASE: ${{ github.event.pull_request.base.ref }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Enable auto-merge for patch and minor updates
-        if: steps.protection.outputs.required == 'true' && (steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor')
-        run: gh pr merge --auto --merge "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  dependabot:
+    uses: appwrite/.github/.github/workflows/dependabot-auto-merge.yml@d559a62c510dc7eccf274dda83b0a42f89b0bc06 # main
