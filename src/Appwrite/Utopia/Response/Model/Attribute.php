@@ -16,6 +16,12 @@ class Attribute extends Model
                 'default' => '',
                 'example' => 'fullName',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the attribute.',
+                'default' => '',
+                'example' => 'Name shown on the public profile.',
+            ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute type.',

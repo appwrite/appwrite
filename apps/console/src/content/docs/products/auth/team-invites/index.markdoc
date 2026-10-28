@@ -450,23 +450,23 @@ client.set_key('<API_KEY>')
 
 teams = Teams(client)
 
-// Get all teams
+# Get all teams
 teams_list = teams.list()
 
-// Iterate through teams to find memberships
-for team in teams_list['teams']:
-    response = teams.list_memberships(team_id=team['$id'])
+# Iterate through teams to find memberships
+for team in teams_list.teams:
+    response = teams.list_memberships(team_id=team.id)
 
-    // Find membership for specific user
+    # Find membership for specific user
     user_membership = next(
-        (m for m in response['memberships'] if m['userId'] == '<USER_ID>'),
+        (m for m in response.memberships if m.userid == '<USER_ID>'),
         None
     )
 
     if user_membership:
-        print(f"Team: {team['name']}")
-        print(f"Joined: {user_membership['joined']}") # null if invited, timestamp if joined
-        print(f"Roles: {user_membership['roles']}")
+        print(f"Team: {team.name}")
+        print(f"Joined: {user_membership.joined}") # empty if invited, timestamp if joined
+        print(f"Roles: {user_membership.roles}")
 ```
 ```server-swift
 import Appwrite
@@ -484,7 +484,7 @@ let teamsList = try await teams.list()
 // Iterate through teams to find memberships
 for team in teamsList.teams {
     let response = try await teams.listMemberships(
-        teamId: team.$id
+        teamId: team.id
     )
 
     // Find membership for specific user
@@ -511,7 +511,7 @@ val teamsList = teams.list()
 
 // Iterate through teams to find memberships
 teamsList.teams.forEach { team ->
-    val response = teams.listMemberships(teamId = team.$id)
+    val response = teams.listMemberships(teamId = team.id)
 
     // Find membership for specific user
     val userMembership = response.memberships.find {

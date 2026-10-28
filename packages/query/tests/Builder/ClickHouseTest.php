@@ -4657,6 +4657,12 @@ class ClickHouseTest extends TestCase
         new Builder()->from('t')->filter([Query::elemMatch('attr', [Query::equal('x', [1])])])->build();
     }
 
+    public function testFilterRelationshipThrowsException(): void
+    {
+        $this->expectException(UnsupportedException::class);
+        new Builder()->from('t')->filter([Query::relationship('attr', [Query::equal('x', [1])])])->build();
+    }
+
     public function testSampleZero(): void
     {
         $this->expectException(ValidationException::class);

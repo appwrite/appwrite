@@ -42,6 +42,7 @@ final class Notification extends Base
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         $recipients = $this->recipients;
@@ -79,6 +80,7 @@ final class Notification extends Base
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(

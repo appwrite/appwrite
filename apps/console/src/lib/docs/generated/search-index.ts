@@ -457,7 +457,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting",
     "title": "Self-hosting",
     "description": "Set up your self-hosted Appwrite instance easily. Read the installation guide to configure and deploy Appwrite on your infrastructure for complete control.",
-    "excerpt": "Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a Docker CLI. Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud. Appwrite is open source. Peek at the Docker files, services, and the rest of the stack in the appwrite/appwrite repository. If you are migrating from an older version of Appwrite, you need to follow the migration…",
+    "excerpt": "Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a Docker CLI, or on your own Kubernetes cluster with the official Helm chart. Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud. Appwrite is open source. Peek at the Docker files, services, and the rest of the stack in the appwrite/appwrite repository. If you are migrating from…",
     "breadcrumbs": [
       "Self-hosting",
       "Getting started",
@@ -523,7 +523,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting/configuration/sites",
     "title": "Sites",
     "description": "Harness the full power of self-hosted sites with Appwrite. Explore site deployment, management, and integration in your self-hosted environment.",
-    "excerpt": "This guide covers how to configure sites in your self-hosted Appwrite instance. For GitHub repository integration with sites, see the version control configuration. Configure sites runtimes Not all site runtimes are enabled by default. Enable the runtimes that you need and disable unused runtimes to save disk space on your server. To enable a runtime, add it to the environment variable as a comma-separated list. The three runtimes currently available for Sites are the Static, Node.js 22, and Flutter 3.41…",
+    "excerpt": "This guide covers how to configure sites in your self-hosted Appwrite instance. For GitHub repository integration with sites, see the version control configuration. Configure sites runtimes Not all site runtimes are enabled by default. Enable the runtimes that you need and disable unused runtimes to save disk space on your server. To enable a runtime, add it to the environment variable as a comma-separated list. Any runtime on the runtimes list can be enabled here. Flutter and Static are for…",
     "breadcrumbs": [
       "Self-hosting",
       "Configuration",
@@ -589,7 +589,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting/installation",
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
-    "excerpt": "This guide will walk you through installing Appwrite on your server using Docker. Appwrite is designed to run on any operating system that supports Docker. System requirements Before installing Appwrite, ensure your system meets these minimum requirements: - **2 CPU cores** - **4GB of RAM** - **2GB of swap memory** - **Operating system** that supports Docker - **Docker Compose Version 2** Install with Docker The easiest way to install Appwrite is using our Docker installer. The installer launches a web-based…",
+    "excerpt": "This guide will walk you through installing Appwrite on your server using Docker. Appwrite is designed to run on any operating system that supports Docker. To install Appwrite on a Kubernetes cluster instead of a single Docker host, use the official Helm chart. System requirements Before installing Appwrite, ensure your system meets these minimum requirements: - **2 CPU cores** - **4GB of RAM** - **2GB of swap memory** - **Operating system** that supports Docker - **Docker Compose Version 2** Install…",
     "breadcrumbs": [
       "Self-hosting",
       "Getting started",
@@ -671,6 +671,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Self-hosting",
       "Platform deployment",
       "Google Cloud"
+    ]
+  },
+  {
+    "slug": "advanced/self-hosting/platforms/kubernetes",
+    "title": "Kubernetes",
+    "description": "Install self-hosted Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, ClickHouse, and S3 storage.",
+    "excerpt": "The official Appwrite Helm chart installs self-hosted Appwrite on your own Kubernetes cluster, and upgrades it with Helm. It deploys the API, console, realtime, workers, and schedulers, plus the routes your ingress controller or Gateway needs to reach them. A plain install includes everything Appwrite needs, PostgreSQL, Redis, and ClickHouse included, so you can try it on an empty cluster. For production, you replace each of those with a managed service, one at a time. The chart is published to…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Platform deployment",
+      "Kubernetes"
     ]
   },
   {
@@ -1780,6 +1791,225 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/analytics",
+    "title": "Analytics",
+    "description": "See who visits your websites and apps with Appwrite Analytics. Track pageviews and custom events without cookies, and see where visitors come from, what they view, and how much of your traffic comes from bots and AI.",
+    "excerpt": "Appwrite **Analytics** shows how people find and use your websites and apps. Add tracking with the Web or Flutter SDK, or send events over REST. Each property's dashboard then shows your visitors, where they came from, the pages they viewed, where they are, and the devices they use, next to the events you define, such as signups and purchases. Analytics works without cookies or identifiers stored on the visitor's device, and labels traffic from search crawlers, AI crawlers, AI assistants,…",
+    "breadcrumbs": [
+      "products",
+      "Analytics"
+    ]
+  },
+  {
+    "slug": "products/analytics/bots",
+    "title": "Bots and AI traffic",
+    "description": "How Appwrite Analytics recognizes bots, AI crawlers, and AI assistants from their user agent, where they appear on the dashboard, and how they count toward your plan.",
+    "excerpt": "Not every visit comes from a person. Search engines index your pages, AI companies crawl them for training and answers, social sites fetch link previews, and monitors check that your site is up. Appwrite recognizes these clients from their user agent and labels their events, so you can see how much of your traffic is automated and who sends it. How bots are recognized Appwrite checks the user agent of every event: the browser's header, or the your server or…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Bots and AI traffic"
+    ]
+  },
+  {
+    "slug": "products/analytics/custom-events",
+    "title": "Track custom events",
+    "description": "Record the actions that matter to your product in Appwrite Analytics, such as signups and purchases, with event names and props from the browser, Flutter, or your server.",
+    "excerpt": "Pageviews show where people go. Custom events show what they do there: a signup, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional props, and appears in the **Custom events** card on the property's dashboard. Send an event Send a custom event with the tracking helper on the client, or with from your server. These examples continue from the setup in Track a website, Track a Flutter app, and Track events from your…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Track custom events"
+    ]
+  },
+  {
+    "slug": "products/analytics/dashboard",
+    "title": "Dashboard",
+    "description": "A tour of the Appwrite Analytics dashboard, from the metrics and chart to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
+    "excerpt": "Each property has a dashboard on its **Analytics** tab. It shows the property's traffic for the date range you pick: the headline metrics, a chart over time, and cards that break visits down by where they came from, what they viewed, and who sent them. Metrics and chart The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. Each tab shows the total for the…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Dashboard"
+    ]
+  },
+  {
+    "slug": "products/analytics/events",
+    "title": "Events",
+    "description": "Events are the records every Appwrite Analytics metric is built from. Learn which events the tracking helpers send, how custom events differ, and what Appwrite adds to each event.",
+    "excerpt": "An event is one thing that happened in your app: a page was viewed, a link was clicked, a purchase completed. Every figure on an analytics dashboard, from visitors to bounce rate, is calculated from the events a property receives. Each event has a name and the URL it happened on. It can also carry a referrer, the viewport width, scroll depth, engagement time, and custom props. Automatic events The tracking helpers in the Web and Flutter SDKs send these…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Events"
+    ]
+  },
+  {
+    "slug": "products/analytics/export",
+    "title": "Export a report",
+    "description": "Download Appwrite Analytics data as a PDF report to share, or as CSV files to analyze in a spreadsheet, using the dashboard's date range, filters, and comparison.",
+    "excerpt": "Export a property's analytics to share them with people who don't use Appwrite, or to work with the numbers in a spreadsheet. An export contains what the dashboard shows: the same date range, filters, and comparison period. Export from the dashboard 1. Open the property's dashboard. 2. Set the date range, filters, and comparison you want in the export. See Filter and compare traffic. 3. Click **Export** and select **PDF report** or **CSV data**. The file downloads with a name…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Export a report"
+    ]
+  },
+  {
+    "slug": "products/analytics/filters",
+    "title": "Filter and compare traffic",
+    "description": "Narrow the Appwrite Analytics dashboard to the traffic you care about with filters, save filters for later, and compare a date range with an earlier period.",
+    "excerpt": "Filters narrow the whole dashboard to traffic that matches, such as visitors from search engines or visits to one page. Comparisons show how a date range differs from an earlier one. You can use both together, for example to see whether search traffic grew compared with last month. Filter from a card The quickest way to filter is from a card. Click a row, such as on the **Channels** tab of **Traffic sources**, and every metric, the chart, and the…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Filter and compare traffic"
+    ]
+  },
+  {
+    "slug": "products/analytics/firewall",
+    "title": "Block traffic with Firewall",
+    "description": "Turn what Appwrite Analytics shows into Firewall rules for a site. Block a country, serve only one country, or deny a bot or a page, starting from the dashboard.",
+    "excerpt": "Analytics shows who visits your site, and Firewall decides who reaches it. When a property tracks a site hosted on Appwrite Sites, you can start a Firewall rule for that site from a country, region, city, hostname, page, or bot on the dashboard. Before you start - The property must be linked to the site: its domain has to be one of the site's domains. See Properties. - You need permission to create Firewall rules in the project. Start a…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Block traffic with Firewall"
+    ]
+  },
+  {
+    "slug": "products/analytics/flutter",
+    "title": "Track a Flutter app",
+    "description": "Add Appwrite Analytics to a Flutter app. Track screen views with a navigator observer, app lifecycle and engagement time, and your own events on iOS, Android, web, and desktop.",
+    "excerpt": "The Appwrite Flutter SDK includes a helper and a . Together they record screen views as your users move through the app, when the app goes to the background and comes back, and how long it stays in the foreground. The same code runs on iOS, Android, web, and desktop. Before you start You need an analytics property and its property ID, which the Console shows next to the property name. Your app also needs to be registered in the…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Track a Flutter app"
+    ]
+  },
+  {
+    "slug": "products/analytics/limits",
+    "title": "Limits and retention",
+    "description": "Appwrite Analytics plan limits for events, properties, and data retention, and the size limits for events, properties, and metric queries.",
+    "excerpt": "This page lists how many events Appwrite Analytics accepts on each plan and how far back you can see them, and the size limits that apply to every event and request. Plan limits | | Free | Pro | Enterprise | | --- | --- | --- | --- | | Events | 50K per month | 100K per month | Custom | | Additional events | Not available | $3 per 100K events | Custom | | Properties |…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Limits and retention"
+    ]
+  },
+  {
+    "slug": "products/analytics/metrics",
+    "title": "Metrics",
+    "description": "How Appwrite Analytics calculates visitors, visits, pageviews, bounce rate, visit duration, and engagement time, which breakdowns it offers, and how to read metrics from your own code.",
+    "excerpt": "Every figure on an analytics dashboard comes from the events your property receives. This page defines each metric and breakdown, and shows how to read the same numbers from your own code. Dashboard metrics The row of metrics at the top of the dashboard covers the selected date range. - **Unique visitors**: distinct visitors in the range. Someone who returns several times counts once. - **Visits**: visits that started in the range. A visit that started earlier doesn't count, even…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Metrics"
+    ]
+  },
+  {
+    "slug": "products/analytics/own-domain",
+    "title": "Serve tracking from your domain",
+    "description": "Send Appwrite Analytics events through a domain you own, with a custom API domain or a small proxy on your site, so tracking requests stay first-party.",
+    "excerpt": "The tracking helpers send events to your project's Appwrite endpoint, such as . Ad blockers and privacy extensions decide what to block from filter lists, which name tracking hosts and URL patterns. When your events go to a domain you own, list entries written for third-party hosts don't apply to them. The **Ad blockers** card in a property's **Settings** tab offers two ways to do this. | | Custom domain | Proxy | | --- | --- | --- |…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Serve tracking from your domain"
+    ]
+  },
+  {
+    "slug": "products/analytics/privacy",
+    "title": "Privacy",
+    "description": "What Appwrite Analytics collects and stores for each event, how visitor IDs work without cookies, and the controls you have over tracking and data.",
+    "excerpt": "Appwrite Analytics works without cookies and doesn't store IP addresses. This page lists what it collects, what it keeps, and the controls you have, so you can describe your analytics accurately to your users. No cookies or device storage Appwrite doesn't set cookies for analytics, and the tracking helpers in the Web and Flutter SDKs don't keep identifiers on the device. In the browser, the Web helper doesn't write to , , or any other storage. Each event is a…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Privacy"
+    ]
+  },
+  {
+    "slug": "products/analytics/properties",
+    "title": "Properties",
+    "description": "A property collects Appwrite Analytics events for one website or app. Create properties, control which origins can send events, link a property to a site, and turn off or delete a property.",
+    "excerpt": "A property is one website or app you track. Every event belongs to a property, and each property has its own dashboard, settings, and property ID. A project can hold several properties, for example one for your marketing site and one for your mobile app. Your tracking code and the Analytics API identify a property by its property ID. The Console shows it next to the property name, with a button to copy it. Properties in a project Open **Analytics**…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Properties"
+    ]
+  },
+  {
+    "slug": "products/analytics/quick-start",
+    "title": "Start with Analytics",
+    "description": "Track your first website visit with Appwrite Analytics. Create a property, add the Web SDK's tracking helper to your site, and see the visit on the dashboard.",
+    "excerpt": "In this quick start you create an analytics property, add tracking to a website with the Appwrite Web SDK, and see your first visit on the dashboard. Add your site to the project Appwrite accepts events from a browser only when the site's hostname belongs to one of the project's apps. If your site isn't one yet, add it. 1. Sign in to Appwrite Cloud and open a project. 2. Open **Apps** in the sidebar and click **Add app**. 3.…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Start with Analytics"
+    ]
+  },
+  {
+    "slug": "products/analytics/rest",
+    "title": "Send events over REST",
+    "description": "Send Appwrite Analytics events with a plain HTTP request from any platform, including native iOS and Android apps, games, and command-line tools.",
+    "excerpt": "Any client that can make an HTTP request can send analytics events. Use REST when your platform has no tracking helper, such as a native iOS or Android app, a game engine, a smart TV app, or a command-line tool. Each event is one request to your property. Client-side events need no API key. Send an event Send the event name and the URL it happened on. Appwrite responds with . An event named counts as a pageview. Any other…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Send events over REST"
+    ]
+  },
+  {
+    "slug": "products/analytics/server-side",
+    "title": "Track events from your server",
+    "description": "Send Appwrite Analytics events from your backend with an API key, and attach server-side actions such as purchases to the visitor who made them.",
+    "excerpt": "Some of the events you care about happen on your server: an order that completes, a subscription that renews, a job that finishes. Send these from your backend with an API key. When you pass the visitor's IP address and user agent, the event joins that visitor's visit, next to the pageviews their browser sent. Create an API key Server-side events use an API key with the scope. 1. In your project, open **API Keys** and click **Create API key**.…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Track events from your server"
+    ]
+  },
+  {
+    "slug": "products/analytics/sources",
+    "title": "Traffic sources",
+    "description": "How Appwrite Analytics works out where visitors come from, with channels, referring sources, and UTM campaign parameters.",
+    "excerpt": "The **Traffic sources** card on the dashboard shows where visitors came from in three ways: the type of source as a **channel**, the referring site as a **source**, and the UTM tags on the link they followed as a **campaign**. Appwrite works these out from two fields of each event: the referrer, which is the page a visitor came from, and the event URL. The Web helper sends the browser's referrer with every pageview. In a single-page app, the browser…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Traffic sources"
+    ]
+  },
+  {
+    "slug": "products/analytics/visitors",
+    "title": "Visitors and sessions",
+    "description": "How Appwrite Analytics identifies visitors without cookies, groups their events into visits, and works out bounces, entry and exit pages, visit duration, and live visitors.",
+    "excerpt": "Appwrite Analytics counts people and their visits without cookies or anything else stored on their device. It works out who sent each event from the request itself, then groups each visitor's events into visits. Visitors Appwrite gives every event a visitor ID: a one-way hash of three values from the request. - The IP address the event came from. - The header of the browser or app. - The hostname of the event's URL. Events with the same three values…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Visitors and sessions"
+    ]
+  },
+  {
+    "slug": "products/analytics/web",
+    "title": "Track a website",
+    "description": "Add Appwrite Analytics to a website or web app with the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
+    "excerpt": "The Appwrite Web SDK includes a helper that records visits from the browser. A call to tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line. Before you start You need an analytics property and its property ID, which the Console shows next to the property name. Your site also needs a Web app in the same project. Browsers send an header with every event, and Appwrite accepts events…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Track a website"
+    ]
+  },
+  {
     "slug": "products/auth",
     "title": "Authentication",
     "description": "Explore Appwrite's powerful authentication solutions. Learn how to implement secure user authentication, manage user identities, and enhance your application's security.\"",
@@ -2220,6 +2450,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/auth/passkeys",
+    "title": "Passkeys",
+    "description": "Let users sign up and sign in with a passkey, a key pair stored on their device and unlocked with Face ID, Touch ID, a fingerprint, or a device PIN, on the web, Android, and Apple platforms.",
+    "excerpt": "A passkey replaces a password with a key pair that lives on the user's device or in their password manager, such as iCloud Keychain or Google Password Manager. The user unlocks it with Face ID, Touch ID, a fingerprint, or the device PIN. The private key never leaves the device, and the public key that Appwrite stores is useless to an attacker. A passkey only works on the domain it was created for, so a look-alike phishing site cannot use…",
+    "breadcrumbs": [
+      "Auth",
+      "Guides",
+      "Passkeys"
+    ]
+  },
+  {
     "slug": "products/auth/phone-sms",
     "title": "Phone (SMS) login",
     "description": "Enhance security with SMS and phone authentication in Appwrite. Add multi-factor authentication via SMS, verify phone numbers, and protect user accounts.",
@@ -2355,7 +2596,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/verify-user",
     "title": "Verify user",
     "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
-    "excerpt": "User verification in Appwrite allows you to verify user email addresses and phone numbers. Users don't need to be verified to log in, but you can restrict resource access to verified users only using permissions. Verify email To verify a user's email, first ensure the user is logged in so that the verification email can be sent to the user who created the account. Then, send the verification email specifying a redirect URL. The verification secrets will be appended as…",
+    "excerpt": "User verification in Appwrite allows you to verify user email addresses and phone numbers. Users don't need to be verified to log in, but you can restrict resource access to verified users only using permissions. Verify email You can verify a user's email with a link or with a code. A link suits web apps, because the user opens it and lands on a verification page in your app. A code suits mobile apps, desktop apps, and any app without…",
     "breadcrumbs": [
       "Auth",
       "Guides",
@@ -2388,7 +2629,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/avatars/favicons",
     "title": "Favicons",
     "description": "Fetch favicons from remote websites for link previews and bookmark displays.",
-    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | | width…",
+    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | Favicon retrieval…",
     "breadcrumbs": [
       "Avatars",
       "Concepts",
@@ -5189,7 +5430,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/sites/quick-start/tanstack-start",
     "title": "Deploy a TanStack Start app to Appwrite Sites",
     "description": "Learn how to setup and deploy TanStack Start apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a TanStack Start app or setup the TanStack Start starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository…",
+    "excerpt": "First, you must either create a TanStack Start app or setup the TanStack Start starter template. Open your terminal, and run the following command. When the CLI asks for a deployment adapter, select **Nitro (agnostic)** or **None**. Appwrite Sites runs both. The adapter sets the output directory you confirm in step 3. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project.…",
     "breadcrumbs": [
       "Sites",
       "Start with Sites",
@@ -5561,7 +5802,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "quick-starts/react-native",
     "title": "Start with React Native",
     "description": "Discover how to leverage Appwrite's powerful backend to help you build React Native apps for iOS, Android and other native platforms.",
-    "excerpt": "Learn how to setup your first React Native project powered by Appwrite. The React Native SDK is still in . Proceed with caution if you plan to use this SDK in production. Looking to start with React for web? Follow the React quickstart and React tutorial flows. Create a React Native project using npx. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**,…",
+    "excerpt": "Learn how to setup your first React Native project powered by Appwrite. Looking to start with React for web? Follow the React quickstart and React tutorial flows. Create a React Native project using npx. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Android app** or a **Apple app**. Add your app **name** and **Bundle ID**. You can find your **Bundle…",
     "breadcrumbs": [
       "Quick start",
       "Mobile and native",
@@ -5794,6 +6035,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Tooling",
       "IDEs",
       "OpenCode"
+    ]
+  },
+  {
+    "slug": "tooling/ai/agents/pi",
+    "title": "Pi",
+    "description": "Learn how you can add the Appwrite MCP server to Pi to interact with both the Appwrite API and documentation, and to react to events in your project.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Pi, a terminal coding agent, for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so you don't run a server on your machine. If you don't have Pi yet, install it from your terminal on macOS or Linux. On Windows, or to install with npm, see pi.dev. Pi connects to the server…",
+    "breadcrumbs": [
+      "Tooling",
+      "IDEs",
+      "Pi"
     ]
   },
   {
@@ -6313,7 +6565,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/command-center",
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
-    "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. The Command Center is enhanced with AI capabilities and is the home of the Appwrite assistant. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows…",
+    "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows and Linux devices or by clicking the search icon in the Console top navigation bar. A…",
     "breadcrumbs": [
       "Tooling",
       "Getting started",
@@ -6764,7 +7016,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/astro-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a Astro project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new route to handle the redirect. The method returns a URL to the OAuth provider. After authentication the OAuth provider redirects the user back to the route with the and URL query parameters. Create a new route…",
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new route to handle the redirect. The method returns a URL to the OAuth provider. After authentication the OAuth provider redirects the user back to the route with the , and URL query parameters. The is the…",
     "breadcrumbs": [
       "Astro SSR",
       "Steps",
@@ -7039,7 +7291,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/nuxt-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a Nuxt project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the and URL query parameters. Handle the callback…",
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the , and URL query parameters. The is…",
     "breadcrumbs": [
       "Nuxt SSR",
       "Steps",
@@ -7611,7 +7863,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the and URL query parameters. Handle the callback…",
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the , and URL query parameters. The is…",
     "breadcrumbs": [
       "SvelteKit SSR",
       "Steps",

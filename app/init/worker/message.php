@@ -2,8 +2,10 @@
 
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\Retention;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\ProjectContext;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
@@ -19,8 +21,10 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Pools\Group;
+use Utopia\Queue\Message;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
+use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
@@ -41,35 +45,43 @@ return function (Container $container): void {
         return $authorization;
     }, []);
 
-    $container->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
+    $container->set('databaseFactory', fn (Registry $register, Group $pools, Cache $cache, Authorization $authorization) => $register->get('databaseFactory')(
         $pools,
         $cache,
         $authorization
-    ), ['pools', 'cache', 'authorization']);
+    ), ['register', 'pools', 'cache', 'authorization']);
 
     $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(), ['databaseFactory']);
 
-    $container->set('projectContext', function ($message) {
-        $payload = $message->getPayload() ?? [];
+    $container->set('projectContext', function (Message $message): ProjectContext {
+        $payload = $message->getPayload();
         $project = $payload['project'] ?? [];
 
         return ProjectContext::fromArray(\is_array($project) ? $project : []);
     }, ['message']);
 
-    $container->set('project', function ($message, Database $dbForPlatform) {
-        $payload = $message->getPayload() ?? [];
+    $container->set('project', function (Message $message, ProjectContext $projectContext, Document $console, Database $dbForPlatform) {
+        $payload = $message->getPayload();
         $project = new Document($payload['project'] ?? []);
 
-        if ($project->isEmpty() || $project->getId() === 'console') {
+        if ($project->isEmpty()) {
             return $project;
+        }
+
+        if ($project->getId() === 'console') {
+            return new Document($console->getArrayCopy());
         }
 
         $project = $dbForPlatform->getDocument('projects', $project->getId());
 
         Span::add('project.id', $project->getId());
 
+        if ($projectContext->sequence !== '' && (string) $project->getSequence() !== $projectContext->sequence) {
+            return new Document();
+        }
+
         return $project;
-    }, ['message', 'dbForPlatform']);
+    }, ['message', 'projectContext', 'console', 'dbForPlatform']);
 
     $container->set('dbForProject', fn (DatabaseFactory $databaseFactory, Document $project, Database $dbForPlatform) => $project->isEmpty() || $project->getId() === 'console'
         ? $dbForPlatform
@@ -80,8 +92,13 @@ return function (Container $container): void {
 
     $container->set('getProjectDB', function (DatabaseFactory $databaseFactory, Database $dbForPlatform) {
         return function (Document $project) use ($databaseFactory, $dbForPlatform): Database {
-            if ($project->isEmpty() || $project->getId() === 'console') {
+            if ($project->getId() === 'console') {
                 return $dbForPlatform;
+            }
+
+            // An empty project is one deleted after the job was queued, never the platform.
+            if ($project->isEmpty()) {
+                throw new \Exception('Project not found');
             }
 
             return $databaseFactory->project(
@@ -91,19 +108,19 @@ return function (Container $container): void {
         };
     }, ['databaseFactory', 'dbForPlatform']);
 
-    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project) {
-        return function (Document $database, ?Document $projectDocument = null) use ($databaseFactory, $project): Database {
-            $projectDocument ??= $project;
+    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $messageProject) {
+        return function (Document $database, ?Document $project = null) use ($databaseFactory, $messageProject): Database {
+            $project ??= $messageProject;
 
             // Backwards-compatibility: older or seeded legacy databases may not have a DSN stored
             // in the "database" attribute. In that case, fall back to the project's database DSN.
             $databaseConfig = $database->getAttribute('database', '') === ''
-                ? new Document(\array_merge($database->getArrayCopy(), ['database' => $projectDocument->getAttribute('database', '')]))
+                ? new Document(\array_merge($database->getArrayCopy(), ['database' => $project->getAttribute('database', '')]))
                 : $database;
 
             return $databaseFactory->tenant(
                 $databaseConfig,
-                $projectDocument,
+                $project,
                 APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
             );
         };
@@ -173,9 +190,9 @@ return function (Container $container): void {
 
     // Only the Builds worker uses this, handing template-into-repo pushes to
     // the jobs-service.
-    $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
-        return new Deployments($jobs, $dbForProject, $project, $platform);
-    }, ['jobs', 'dbForProject', 'project', 'platform']);
+    $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform, BuildPublisher $publisherForBuilds) {
+        return new Deployments($jobs, $dbForProject, $project, $platform, $publisherForBuilds);
+    }, ['jobs', 'dbForProject', 'project', 'platform', 'publisherForBuilds']);
 
     $container->set('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
         return function (Document $project) use ($dbForPlatform, $getProjectDB) {
@@ -199,4 +216,6 @@ return function (Container $container): void {
 
         return (int) ($plan['executionsRetentionCount'] ?? 100);
     }, ['project', 'plan']);
+
+    $container->set('deploymentRetention', fn (): Retention => new Retention(), []);
 };

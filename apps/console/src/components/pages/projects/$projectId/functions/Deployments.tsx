@@ -6,6 +6,7 @@ import {
   useRef,
   useContext,
 } from 'react'
+import { isSmtpRule, webDomainQueries } from '@/lib/function-smtp-domain'
 import {
   openDialogAfterOverlayCloses,
   closeDialogBeforeOverlayUnmount,
@@ -129,7 +130,7 @@ import {
 } from '@/lib/specifications'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import { getVcsProvider, isEntireRepositoryUrl } from '@/lib/vcs/providers'
 import { DeploymentDownloadType, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.index'
@@ -176,6 +177,10 @@ function detectVcsProvider(
       const { label, Icon } = getVcsProvider('origin')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
+    if (isEntireRepositoryUrl(url)) {
+      const { label, Icon } = getVcsProvider('entire')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
   }
 
   // Check for vcsProvider field (if available)
@@ -195,6 +200,10 @@ function detectVcsProvider(
     }
     if (provider === 'origin') {
       const { label, Icon } = getVcsProvider('origin')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (provider === 'entire') {
+      const { label, Icon } = getVcsProvider('entire')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
@@ -385,14 +394,14 @@ export function View() {
     })
   }, [projectId, functionId, queryClient])
 
-  // Fetch domains for the function (filter by active deployment)
-  // Use same params as domains tab to share cache
+  // Fetch web domains for the function (filter by active deployment)
   const { data: domainsData } = useFunctionDomains(
     projectId,
     functionId,
     0,
     DOMAINS_DEFAULT_PAGE_SIZE,
     '',
+    webDomainQueries(),
   )
 
   // Fetch runtimes to get runtime name
@@ -407,8 +416,11 @@ export function View() {
   // Filter domains for active deployment and sort by length (shortest first), limit to 3
   const activeDomains = useMemo(() => {
     const filtered =
-      domainsData?.rules?.filter((rule) =>
-        proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
+      domainsData?.rules?.filter(
+        (rule) =>
+          // Email (SMTP) rules share the list but have no web URL.
+          !isSmtpRule(rule) &&
+          proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
@@ -417,8 +429,10 @@ export function View() {
 
   // Check if there are more domains than displayed
   const totalActiveDomains =
-    domainsData?.rules?.filter((rule) =>
-      proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
+    domainsData?.rules?.filter(
+      (rule) =>
+        !isSmtpRule(rule) &&
+        proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
     ).length || 0
   const hasMoreDomains = totalActiveDomains > activeDomains.length
 
@@ -1806,8 +1820,11 @@ export function View() {
                                         toast.success(
                                           t('Deployment rebuild started'),
                                         )
-                                      } catch {
-                                        toast.error(t('Failed to redeploy'))
+                                      } catch (error) {
+                                        toast.error(
+                                          (error instanceof Error && error.message) ||
+                                            t('Failed to redeploy'),
+                                        )
                                       }
                                     }}
                                   >

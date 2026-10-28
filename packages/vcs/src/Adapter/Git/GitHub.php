@@ -1013,7 +1013,12 @@ class GitHub extends Git
         $url = "/repos/$owner/$repositoryName/statuses/$commitHash";
 
         $body = [
-            'state' => $state,
+            // A commit status knows no queue or cancellation
+            'state' => match ($state) {
+                'queued', 'in_progress' => 'pending',
+                'cancelled' => 'error',
+                default => $state,
+            },
             'target_url' => $target_url,
             'description' => $description,
             'context' => $context,
@@ -1301,7 +1306,8 @@ class GitHub extends Git
                 $branchDeleted = $payload['deleted'] ?? false;
                 $repositoryId = \strval($payloadRepository['id'] ?? '');
                 $repositoryName = $payloadRepository['name'] ?? '';
-                $branch = str_replace('refs/heads/', '', $payload['ref'] ?? '');
+                $ref = \is_string($payload['ref'] ?? null) ? $payload['ref'] : '';
+                $branch = str_starts_with($ref, 'refs/heads/') ? substr($ref, \strlen('refs/heads/')) : $ref;
                 $repositoryUrl = $payloadRepository['html_url'] ?? '';
                 $branchUrl = !empty($repositoryUrl) && !empty($branch) ? $repositoryUrl . '/tree/' . $branch : '';
                 $commitHash = $payload['after'] ?? '';

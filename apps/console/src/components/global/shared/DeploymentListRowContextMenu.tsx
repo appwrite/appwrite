@@ -367,8 +367,11 @@ export function DeploymentListRowContextMenu({
                   invalidateAfterSiteMutation()
                 }
                 toast.success(t('Deployment rebuild started'))
-              } catch {
-                toast.error(t('Failed to redeploy'))
+              } catch (error) {
+                toast.error(
+                  (error instanceof Error && error.message) ||
+                    t('Failed to redeploy'),
+                )
               }
             }}
           >
