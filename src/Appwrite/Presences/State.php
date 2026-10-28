@@ -226,7 +226,7 @@ class State
     private const HOLD_TTL = 30 * 24 * 60 * 60;
 
     /**
-     * Records a counted hold of one of this server's sockets. A crash runs no onClose, so the
+     * Records the counted hold of one of this server's sockets. A crash runs no onClose, so the
      * next run of this server releases what this recorded; other servers' holds are never touched.
      */
     public function recordHold(Cache $cache, int $connection, string $projectId, string $userId, string $sequence): void
@@ -272,13 +272,24 @@ class State
         return $orphans;
     }
 
+    /**
+     * A record left after its hold was released would release that hold again on the next
+     * restart, so a failed purge is retried.
+     */
     public function forgetOrphanedHold(Cache $cache, string $field): void
     {
-        try {
-            $cache->purge('presence-holds:' . $this->host, $field);
-        } catch (Throwable $th) {
-            Span::current()?->setError($th);
+        for ($attempt = 1; $attempt <= 3; $attempt++) {
+            try {
+                // False only means the record was already gone.
+                $cache->purge('presence-holds:' . $this->host, $field);
+
+                return;
+            } catch (Throwable $th) {
+                Span::current()?->setError($th);
+            }
         }
+
+        Span::add('presence.hold.forgotten', false);
     }
 
     /**
