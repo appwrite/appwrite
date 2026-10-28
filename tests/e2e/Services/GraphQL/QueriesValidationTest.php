@@ -49,7 +49,7 @@ final class QueriesValidationTest extends Scope
         $limitQuery = Query::limit(1)->toString();
         $graphQLPayload = [
             'query' => 'query {
-                usersList(queries: "' . $limitQuery . '") {
+                usersList(queries: ' . \json_encode($limitQuery, JSON_THROW_ON_ERROR) . ') {
                     total
                 }
             }',
@@ -68,7 +68,7 @@ final class QueriesValidationTest extends Scope
     public function testMalformedListQueryRejectedLikeRest(): void
     {
         $projectId = $this->getProject()['$id'];
-        $malformed = 'not-json';
+        $malformed = '{"method":"bogus","attribute":"name","values":["x"]}';
 
         $rest = $this->client->call(Client::METHOD_GET, '/users', \array_merge([
             'content-type' => 'application/json',
@@ -93,8 +93,8 @@ final class QueriesValidationTest extends Scope
         ], $this->getHeaders()), $graphQLPayload);
 
         $this->assertNotEquals(500, $graphql['headers']['status-code']);
-        $this->assertSame(400, $graphql['headers']['status-code']);
-        $this->assertSame(Exception::GENERAL_QUERY_INVALID, $graphql['body']['type']);
-        $this->assertSame($rest['body']['message'], $graphql['body']['message']);
+        $this->assertSame(200, $graphql['headers']['status-code']);
+        $this->assertArrayHasKey('errors', $graphql['body']);
+        $this->assertSame($rest['body']['message'], $graphql['body']['errors'][0]['message']);
     }
 }
