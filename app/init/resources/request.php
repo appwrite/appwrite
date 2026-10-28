@@ -156,7 +156,8 @@ return function (Container $context): void {
     $context->set('auditContext', fn () => new AuditContext(), []);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {
-        if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
+        // A blocked actor keeps no capability, so the blocked check sees the actor
+        if ($user->isEmpty() || !$user->getAttribute('impersonator', false) || $user->getAttribute('status') === false) {
             return new Document();
         }
 
