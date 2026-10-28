@@ -21,4 +21,4 @@ permissions:
 
 jobs:
   dependabot:
-    uses: appwrite/.github/.github/workflows/dependabot-auto-merge.yml@d559a62c510dc7eccf274dda83b0a42f89b0bc06 # main
+    uses: appwrite/.github/.github/workflows/dependabot-auto-merge.yml@9c5284d897bd0f37e9e91913b6fa48205b340663 # main
