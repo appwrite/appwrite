@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 
 use Appwrite\Auth\MFA\Type;
+use Appwrite\Bus\Events\CredentialsRevoked;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -16,6 +17,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -80,10 +82,11 @@ class Update extends Action
             ->inject('proofForToken')
             ->inject('domainVerification')
             ->inject('cookieDomain')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain, Bus $bus)
     {
         $protocol = $request->getProtocol();
 
@@ -158,7 +161,8 @@ class Update extends Action
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
         }
 
-        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, &$session) {
+        $claimed = false;
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, &$session, &$claimed) {
             // Lock the user first, as an address change does, so a voided invite cannot slip through
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
 
@@ -190,6 +194,7 @@ class Update extends Action
             if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false)) {
                 $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
+                $claimed = true;
             }
 
             if ($verification !== null) {
@@ -255,6 +260,13 @@ class Update extends Action
         }
 
         $dbForProject->purgeCachedDocument('users', $targetUser->getId());
+
+        if ($claimed) {
+            $bus->dispatch(new CredentialsRevoked(
+                user: $targetUser->getArrayCopy(),
+                project: $project->getArrayCopy(),
+            ));
+        }
 
         $queueForEvents
             ->setParam('userId', $targetUser->getId())

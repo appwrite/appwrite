@@ -12,6 +12,7 @@ use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Bus\Events\CredentialsRevoked;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Deletes\Identities as DeleteIdentities;
 use Appwrite\Deletes\Targets as DeleteTargets;
@@ -239,7 +240,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     // Claim the token and issue the session together: of concurrent exchanges only the one that deletes the token
     // gets a session, and a failed insert rolls the claim back so the token can be retried. The user row lock
     // orders this against an address change, which deletes the token and resets the verification it proves
-    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project) {
+    $claimed = false;
+    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project, &$claimed) {
         $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
 
         if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
@@ -250,6 +252,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         if ($verification !== null && !$locked->getAttribute($verification, false)) {
             $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
             $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
+            $claimed = true;
         }
 
         $session = $dbForProject->createDocument('sessions', $session
@@ -271,6 +274,13 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     }
 
     $dbForProject->purgeCachedDocument('users', $user->getId());
+
+    if ($claimed) {
+        $bus->dispatch(new CredentialsRevoked(
+            user: $user->getArrayCopy(),
+            project: $project->getArrayCopy(),
+        ));
+    }
 
     $bus->dispatch(new SessionCreated(
         user: $user->getArrayCopy(),
@@ -1671,7 +1681,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('platform')
     ->inject('clientForOAuth2')
     ->inject('mqtt')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2, Mqtt $mqtt) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('bus')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2, Mqtt $mqtt, Bus $bus) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1988,6 +1999,11 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $user->setAttributes($userWithEmail->getArrayCopy());
                     if (!$user->getAttribute('emailVerification', false)) {
                         $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
+                        $dbForProject->purgeCachedDocument('users', $user->getId());
+                        $bus->dispatch(new CredentialsRevoked(
+                            user: $user->getArrayCopy(),
+                            project: $project->getArrayCopy(),
+                        ));
                     }
                     // The provider verified this address, or its canonical form on the same domain
                     if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
@@ -4593,7 +4609,8 @@ Http::put('/v1/account/recovery')
 ->inject('authorization')
     ->inject('pwnedPasswords')
     ->inject('mqtt')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords, Mqtt $mqtt) {
+    ->inject('bus')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords, Mqtt $mqtt, Bus $bus) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -4645,7 +4662,8 @@ Http::put('/v1/account/recovery')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword) {
+        $claimed = false;
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, &$claimed) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
@@ -4655,6 +4673,7 @@ Http::put('/v1/account/recovery')
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
             if (!$locked->getAttribute('emailVerification', false)) {
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
+                $claimed = true;
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
@@ -4686,6 +4705,13 @@ Http::put('/v1/account/recovery')
         }
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        if ($claimed) {
+            $bus->dispatch(new CredentialsRevoked(
+                user: $profile->getArrayCopy(),
+                project: $project->getArrayCopy(),
+            ));
+        }
 
         try {
             $mqtt->revoke($project->getId(), $profile->getId());
@@ -5020,7 +5046,8 @@ Http::put('/v1/account/recovery/otp')
     ->inject('authorization')
     ->inject('pwnedPasswords')
     ->inject('mqtt')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords, Mqtt $mqtt) {
+    ->inject('bus')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords, Mqtt $mqtt, Bus $bus) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -5072,7 +5099,8 @@ Http::put('/v1/account/recovery/otp')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword) {
+        $claimed = false;
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, &$claimed) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
@@ -5082,6 +5110,7 @@ Http::put('/v1/account/recovery/otp')
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
             if (!$locked->getAttribute('emailVerification', false)) {
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
+                $claimed = true;
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
@@ -5113,6 +5142,13 @@ Http::put('/v1/account/recovery/otp')
         }
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        if ($claimed) {
+            $bus->dispatch(new CredentialsRevoked(
+                user: $profile->getArrayCopy(),
+                project: $project->getArrayCopy(),
+            ));
+        }
 
         try {
             $mqtt->revoke($project->getId(), $profile->getId());
