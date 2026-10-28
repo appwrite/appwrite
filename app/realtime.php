@@ -439,54 +439,53 @@ $unauthorizedPayloadJson = json_encode([
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $container, $stats, $realtime, $presenceState, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
-    // A crash or kill runs no onClose, so the holds this server's previous run left counted
-    // would keep their users online. Release them, retrying until every release goes through.
-    if ($workerId === 0) {
-        $releaseOrphanedHolds = function () use (&$releaseOrphanedHolds, $container, $presenceState): void {
-            $failed = false;
+    // A crash or a killed worker runs no onClose, so the holds it left counted would keep their
+    // users online. Release them, retrying until every release goes through. Worker 0 alone takes
+    // the previous runs' holds, so the workers starting together do not race for them.
+    $releaseOrphanedHolds = function () use (&$releaseOrphanedHolds, $workerId, $container, $presenceState): void {
+        $failed = false;
+
+        try {
+            $holds = $presenceState->getOrphanedHolds(getCache(), previousRuns: $workerId === 0);
+        } catch (Throwable $th) {
+            Console::error('Realtime orphaned presence holds: ' . $th->getMessage());
+            $holds = [];
+            $failed = true;
+        }
+
+        foreach ($holds as $field => $hold) {
+            $span = Span::init('realtime.boot.presenceCleanup');
+            Span::add('project.id', $hold['projectId']);
+            Span::add('user.id', $hold['userId']);
 
             try {
-                $holds = $presenceState->getOrphanedHolds(getCache());
-            } catch (Throwable $th) {
-                Console::error('Realtime orphaned presence holds: ' . $th->getMessage());
-                $holds = [];
-                $failed = true;
-            }
-
-            foreach ($holds as $field => $hold) {
-                $span = Span::init('realtime.boot.presenceCleanup');
-                Span::add('project.id', $hold['projectId']);
-                Span::add('user.id', $hold['userId']);
-
-                try {
-                    $dbForPlatform = getConsoleDB();
-                    $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $hold['projectId']));
-                    if (!$project->isEmpty()) {
-                        $dbForProject = getProjectDB($project);
-                        $deleted = $presenceState->releaseConnectionForUser($dbForProject, $hold['userId'], $hold['sequence']);
-                        if ($deleted !== null) {
-                            /** @var UsagePublisher $publisherForUsage */
-                            $publisherForUsage = $container->get('publisherForUsage');
-                            $presenceState->triggerPresenceDeleted($dbForProject, $project, $hold['userId'], $deleted, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
-                        }
+                $dbForPlatform = getConsoleDB();
+                $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $hold['projectId']));
+                if (!$project->isEmpty()) {
+                    $dbForProject = getProjectDB($project);
+                    $deleted = $presenceState->releaseConnectionForUser($dbForProject, $hold['userId'], $hold['sequence']);
+                    if ($deleted !== null) {
+                        /** @var UsagePublisher $publisherForUsage */
+                        $publisherForUsage = $container->get('publisherForUsage');
+                        $presenceState->triggerPresenceDeleted($dbForProject, $project, $hold['userId'], $deleted, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
                     }
-
-                    $presenceState->forgetOrphanedHold(getCache(), $field);
-                } catch (Throwable $th) {
-                    $span->setError($th);
-                    $failed = true;
-                } finally {
-                    $span->finish();
                 }
-            }
 
-            if ($failed) {
-                Timer::after(60000, $releaseOrphanedHolds);
+                $presenceState->forgetOrphanedHold(getCache(), $field);
+            } catch (Throwable $th) {
+                $span->setError($th);
+                $failed = true;
+            } finally {
+                $span->finish();
             }
-        };
+        }
 
-        Timer::after(10000, $releaseOrphanedHolds);
-    }
+        if ($failed) {
+            Timer::after(60000, $releaseOrphanedHolds);
+        }
+    };
+
+    Timer::after(10000, $releaseOrphanedHolds);
 
     $telemetry = getTelemetry($workerId);
     $realtimeDelayBuckets = [100, 250, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500, 10000, 15000, 30000];
