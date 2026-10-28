@@ -1155,12 +1155,7 @@ class Migrations extends Action
             ->setParam('{{hello}}', $hello)
             ->setParam('{{footer}}', $footer)
             ->setParam('{{thanks}}', $thanks)
-            ->setParam('{{signature}}', $signature)
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name'))
-            ->setParam('{{user}}', $user->getAttribute('name', $user->getAttribute('email')))
-            ->setParam('{{type}}', $exportType)
-            ->setParam('{{size}}', $success ? '' : (string)$sizeMB);
+            ->setParam('{{signature}}', $signature);
 
         if ($success) {
             $message
@@ -1181,6 +1176,9 @@ class Migrations extends Action
             'privacy' => $platform['privacyUrl'],
             'platform' => $platform['platformName'],
             'type' => $exportType,
+            'project' => $project->getAttribute('name'),
+            'user' => $user->getAttribute('name', $user->getAttribute('email')),
+            'size' => $success ? '' : (string) $sizeMB,
         ];
 
         $publisherForMails->enqueue(new MailMessage(
