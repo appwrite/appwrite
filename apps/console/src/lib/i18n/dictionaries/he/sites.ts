@@ -186,11 +186,13 @@ export const heSitesDictionary: Record<string, string> = {
 
   // Settings: name card
   Name: 'שם',
-  'Site name used for identification': 'שם האתר המשמש לזיהוי',
+  'Name and description used to identify this site':
+    'השם והתיאור שמזהים את האתר הזה',
+  'What is this site for?': 'למה האתר הזה משמש?',
   'Enter site name': 'הזינו שם אתר',
   Update: 'עדכון',
-  'Site name updated successfully': 'שם האתר עודכן בהצלחה',
-  'Failed to update site name': 'עדכון שם האתר נכשל',
+  'Site updated successfully': 'האתר עודכן בהצלחה',
+  'Failed to update site': 'עדכון האתר נכשל',
   'Site name is required': 'נדרש שם אתר',
 
   // Settings: status card
