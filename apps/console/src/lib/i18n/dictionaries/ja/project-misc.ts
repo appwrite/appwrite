@@ -644,7 +644,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Property: 'プロパティ',
   properties: 'プロパティ',
   'Property ID': 'プロパティ ID',
-  'Snippet ID': 'スニペット ID',
   'No properties yet': 'プロパティがまだありません',
   'Create your first property to start tracking analytics for a website or app':
     '最初のプロパティを作成して、ウェブサイトやアプリのアナリティクス計測を開始しましょう',
@@ -746,7 +745,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Identifiers and timestamps for this property.':
     'このプロパティの識別子とタイムスタンプ。',
   'Property ID:': 'プロパティ ID:',
-  'Snippet ID:': 'スニペット ID:',
   'Events are reaching Appwrite.': 'イベントが Appwrite に届いています。',
   'Install the code and load a page. Checks every few seconds.':
     'コードを導入してページを読み込んでください。数秒ごとに確認します。',
@@ -2003,8 +2001,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'It will stop receiving events immediately. This action cannot be undone.':
     'イベントの受信はすぐに停止します。この操作は元に戻せません。',
   'Last deployed:': '最終デプロイ:',
-  'Leave blank to keep current password unchanged.':
-    '空欄のままにすると、現在のパスワードは変更されません。',
+  'Leave blank to keep the current password. Re-enter it when changing the host, port, or secure protocol.':
+    '空欄のままにすると、現在のパスワードが保持されます。ホスト、ポート、またはセキュアプロトコルを変更する場合は、パスワードを再入力してください。',
   'Leave blank to keep existing': '空欄のままにすると既存の値を保持',
   'Leave empty to auto-generate': '空欄の場合は自動生成',
   'Leave empty to clear the whole project':
@@ -3575,4 +3573,19 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このリンクを受け取れるのはこの組織だけです。',
   'This transfer is reserved for an organization you are not part of:':
     'この転送は、あなたが所属していない組織専用です:',
+  'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
+    '非アクティブなデプロイの保持期間を選択します。アクティブなデプロイとカスタムドメインに紐づくデプロイは常に保持されます。',
+  'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':
+    '2026年11月5日から、Appwrite Cloud では非アクティブなデプロイがデフォルトで30日後に削除されます。履歴をより長く残すには、それまでに保持期間を延長して「更新」をクリックしてください。',
+  'Retention limits are unavailable. Try reloading this page.':
+    '保持期間の上限を取得できません。ページを再読み込みしてください。',
+  'Your plan keeps up to 100 inactive deployments for up to 90 days.':
+    'ご利用のプランでは、非アクティブなデプロイを最大100件、最長90日間保持できます。',
+  'Your plan allows retention for up to 3 years.':
+    'ご利用のプランでは最長3年間保持できます。',
+  'Your organization has a custom retention policy.':
+    '組織にはカスタムの保持ポリシーが適用されています。',
+  'Your saved retention exceeds your plan limit. Save a supported period to update it.':
+    '保存済みの保持期間がプランの上限を超えています。対応する期間を選択して保存してください。',
+  '3 Years': '3 年',
 }

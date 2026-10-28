@@ -59,8 +59,8 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@79eecfa07bef2761d4ed806524c68df52f19c7f0",
-    "@appwrite.io/specs": "github:appwrite/specs#5d0161216cc26eb898388e9c6ee51ecaae567c48",
+    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@72189c489364c30b89f2cac2d07c21f5b269f32f",
+    "@appwrite.io/specs": "github:appwrite/specs#83b9f17549a0735f29ec89600160ee9cdc9ededd",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -158,7 +158,7 @@
     "tw-animate-css": "^1.3.6",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^5.1.4",
-    "zod": "^4.1.11"
+    "zod": "^4.6.7"
   },
   "overrides": {
     "react": "19.1.1",
@@ -166,7 +166,7 @@
     "use-sync-external-store": "^1.6.0",
     "@tanstack/react-store": "^0.11.2",
     "@tanstack/store": "^0.11.2",
-    "dompurify": "^3.4.16",
+    "dompurify": "^3.4.17",
     "sharp": "^0.35.5"
   },
   "pnpm": {
@@ -175,7 +175,7 @@
       "react-dom": "19.1.1",
       "@tanstack/react-store": "^0.11.2",
       "@tanstack/store": "^0.11.2",
-      "dompurify": "^3.4.16",
+      "dompurify": "^3.4.17",
       "sharp": "^0.35.5"
     }
   },

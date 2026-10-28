@@ -27,6 +27,13 @@ services:
     dns:
       - 127.0.0.11
       - 172.16.238.100
+    extra_hosts:
+      - rebinding.webapp.com:host-gateway
+      - private.appwrite.test:172.16.238.250
+    networks:
+      appwrite:
+        ipv4_address: 172.16.238.250
+      browser:
     entrypoint:
       - php
       - -e
@@ -78,6 +85,9 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./packages:/usr/src/code/packages
+    extra_hosts:
+      - rebinding.webapp.com:host-gateway
+      - private.appwrite.test:172.16.238.250
     depends_on:
       - request-catcher-sms
       - request-catcher-webhook
@@ -215,6 +225,19 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./packages:/usr/src/code/packages
+  appwrite-worker-maintenance:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-mails:
     build:
       context: .
@@ -272,6 +295,9 @@ services:
       - ./src:/usr/src/code/src
       - ./packages:/usr/src/code/packages
       - ./tests:/usr/src/code/tests
+    extra_hosts:
+      - rebinding.webapp.com:host-gateway
+      - private.appwrite.test:172.16.238.250
   appwrite-task-maintenance:
     build:
       context: .
@@ -325,6 +351,32 @@ services:
       - ./src:/usr/src/code/src
       - ./packages:/usr/src/code/packages
   appwrite-task-scheduler-messages:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-task-scheduler-maintenance:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-task-stats-resources:
     build:
       context: .
       target: development

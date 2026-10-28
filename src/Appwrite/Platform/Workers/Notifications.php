@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Messaging\Adapter\Console as ConsoleAdapter;
 use Appwrite\Utopia\Messaging\Adapter\Webhook as WebhookAdapter;
@@ -32,7 +34,9 @@ use Utopia\System\System;
 class Notifications extends Action
 {
     protected int $previewMaxLen = 150;
-    protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
+    // Zero-width non-joiner + no-break space only: spam filters such as rspamd treat these as
+    // preview padding, while direction marks (U+200E, U+200F) count as hidden text (HIDDEN_TEXT).
+    protected string $whitespaceCodes = '&#x200C;&nbsp;';
 
     /**
      * @var array<string, string>
@@ -41,6 +45,8 @@ class Notifications extends Action
         'b' => '<strong>',
         '/b' => '</strong>',
     ];
+
+    private PublicHostname $publicHostname;
 
     public static function getName(): string
     {
@@ -57,11 +63,14 @@ class Notifications extends Action
             ->inject('dbForPlatform')
             ->inject('platform')
             ->inject('clientForWebhooks')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname): void
     {
+        $this->publicHostname = $publicHostname;
+
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -245,7 +254,7 @@ class Notifications extends Action
         $bodyTemplate = Template::fromFile($bodyTemplate);
         $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
+            $bodyTemplate->setParam('{{' . $key . '}}', $value);
         }
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
@@ -259,9 +268,10 @@ class Notifications extends Action
             }
             $preview = \strip_tags($previewTemplate->render());
 
-            $previewLen = \strlen($preview);
+            // Pad up to previewMaxLen characters; each padding unit is two characters
+            $previewLen = \mb_strlen($preview);
             if ($previewLen < $this->previewMaxLen) {
-                $previewWhitespace = \str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+                $previewWhitespace = \str_repeat($this->whitespaceCodes, \intdiv($this->previewMaxLen - $previewLen, 2));
             }
         }
 
@@ -281,21 +291,6 @@ class Notifications extends Action
         if ($messageId !== '' && !empty($trackingSecret)) {
             $body = $this->injectTrackingLogo($body, $messageId, $recipient['channel'], $recipientHash, $project, $trackingSecret);
         }
-
-        // A pooled adapter belongs to this send alone; a project's own SMTP is
-        // dialled for it and closed after.
-        $adapter = empty($smtp) ? null : new SMTP(
-            host: $smtp['host'],
-            port: (int) $smtp['port'],
-            username: $smtp['username'] ?? '',
-            password: $smtp['password'] ?? '',
-            smtpSecure: $smtp['secure'] ?? '',
-            smtpAutoTLS: false,
-            xMailer: 'Appwrite Mailer',
-            timeout: 10,
-            keepAlive: false,
-            timelimit: 30,
-        );
 
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $defaultFromName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
@@ -349,6 +344,22 @@ class Notifications extends Action
                 replyToEmail: $replyTo,
                 attachments: $attachments,
                 html: true,
+            );
+
+            // A pooled adapter belongs to this send alone; a project's own SMTP is
+            // dialled for it, on the addresses just checked, and closed after.
+            $adapter = empty($smtp) ? null : new SMTP(
+                host: $smtp['host'],
+                port: (int) $smtp['port'],
+                username: $smtp['username'] ?? '',
+                password: $smtp['password'] ?? '',
+                smtpSecure: $smtp['secure'] ?? '',
+                smtpAutoTLS: false,
+                xMailer: 'Appwrite Mailer',
+                timeout: 10,
+                keepAlive: false,
+                timelimit: 30,
+                addresses: new Host($this->publicHostname)->addresses($smtp['host']),
             );
 
             $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);

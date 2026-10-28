@@ -74,6 +74,11 @@ return [
         'description' => 'The breached password service could not be reached, so the password could not be verified. Please try again later.',
         'code' => 503,
     ],
+    Exception::GENERAL_CACHE_UNAVAILABLE => [
+        'name' => Exception::GENERAL_CACHE_UNAVAILABLE,
+        'description' => "The cache could not confirm the request's changes, so they may or may not have been applied. Read the affected resources back before retrying.",
+        'code' => 503,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
@@ -663,7 +668,7 @@ return [
     ],
     Exception::PROVIDER_REPOSITORY_NOT_FOUND => [
         'name' => Exception::PROVIDER_REPOSITORY_NOT_FOUND,
-        'description' => 'VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, and if it belongs to installationId you provided.',
+        'description' => 'VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, and if the installation you provided still has access to it.',
         'code' => 404,
     ],
     Exception::REPOSITORY_NOT_FOUND => [
@@ -1334,7 +1339,7 @@ return [
     ],
     Exception::KEY_CREATION_DENIED => [
         'name' => Exception::KEY_CREATION_DENIED,
-        'description' => 'An API key cannot be created from a request authorized with an API key. Authenticate with a session instead. To create a short-lived key from a server, use the ephemeral key endpoint.',
+        'description' => 'This request cannot create or change the key. A JWT cannot create or change keys, an API key cannot create another stored API key, and a key never gives out scopes it does not hold or an expiry later than its own. Authenticate with a session instead, or use the ephemeral key endpoint for a short-lived key within your key\'s grant.',
         'code' => 403,
     ],
     Exception::PLATFORM_NOT_FOUND => [

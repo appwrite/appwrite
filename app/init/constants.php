@@ -44,6 +44,8 @@ const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element 
 const APP_LIMIT_ROLE_LENGTH = 81; // Maximum length of a team role: `project-<projectId>-<role>` is 9 template characters around two 36-character IDs
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
+const APP_LIMIT_REALTIME_CONNECTIONS = 32; // Maximum open realtime connections per project user on one worker
+const APP_LIMIT_REALTIME_GUEST_CONNECTIONS = 128; // Maximum open realtime guest connections per IP, or IPv6 /64, per project on one worker
 
 const APP_PROJECTS_SUBQUERIES = [
     'subQueryKeys',
@@ -92,6 +94,9 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 // Default maximum batch size for database operations. Self-hosted operators can raise this
 // for their own hardware; on Cloud the plan's databasesBatchSize takes precedence.
 \define('APP_LIMIT_DATABASE_BATCH', \max(1, (int) System::getEnv('_APP_LIMIT_DATABASE_BATCH', 100)));
+\define('APP_LIMIT_REALTIME_SUBSCRIPTIONS', \max(1, (int) System::getEnv('_APP_LIMIT_REALTIME_SUBSCRIPTIONS', 100))); // Per realtime connection
+\define('APP_LIMIT_REALTIME_CHANNELS', \max(1, (int) System::getEnv('_APP_LIMIT_REALTIME_CHANNELS', 100))); // Across all subscriptions of a realtime connection
+\define('APP_LIMIT_REALTIME_QUERIES', \max(1, (int) System::getEnv('_APP_LIMIT_REALTIME_QUERIES', 100))); // Across all subscriptions of a realtime connection, counting nested ones
 const APP_LIMIT_DATABASE_TRANSACTION = 100; // Default maximum operations per transaction
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
@@ -100,7 +105,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.5.0';
+const APP_VERSION_STABLE = '2.6.2';
 const APP_READINESS_MARKER = '/tmp/.appwrite-ready';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -356,6 +361,8 @@ const MESSAGE_TYPE_PUSH = 'push';
 // Message providers
 const MESSAGE_PROVIDER_APPWRITE = 'appwrite';
 const APP_PUSH_LEDGER_RETENTION = 60 * 60 * 24 * 7;
+const APP_MQTT_SESSION_RECHECK = 60; // Seconds between checks of the session an MQTT connection runs on
+const APP_PUSH_IMAGE_TOKEN_DURATION = 60 * 60 * 24 * 15;
 // Notification types
 const NOTIFICATION_TYPE_EMAIL = MESSAGE_TYPE_EMAIL;
 const NOTIFICATION_TYPE_SMS = MESSAGE_TYPE_SMS;

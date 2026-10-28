@@ -15,6 +15,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Filename;
 use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
@@ -131,6 +132,9 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
+    /**
+     * @return Document|null The file, when this request completed its upload
+     */
     public function action(
         string $bucketId,
         string $fileId,
@@ -148,7 +152,7 @@ class Create extends Action
         Authorization $authorization,
         callable $locks,
         ExiftoolClient $exiftool
-    ) {
+    ): ?Document {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = $user->isKey($authorization->getRoles());
@@ -248,6 +252,11 @@ class Create extends Action
             $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
         }
 
+        $filename = new Filename(0, 0);
+        if (!$filename->isValid($fileName)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $filename->getDescription());
+        }
+
         /**
          * Validators
          */
@@ -278,6 +287,7 @@ class Create extends Action
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         $completed = false;
+        $finished = null;
         // True when prepareUpload created the pending document in this request.
         // Finalize still sees that document, but it is not a resume.
         $createdInRequest = false;
@@ -364,7 +374,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user, &$finished): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -404,9 +414,11 @@ class Create extends Action
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalize($path, $chunks, $metadata);
+                // Reuse one metadata snapshot instead of separate backend HEADs.
+                $info = $deviceForFiles->getFileInfo($path);
 
                 // A chunk can carry more or fewer bytes than its range announces.
-                if (!empty($contentRange) && $deviceForFiles->getFileSize($path) !== $fileSize) {
+                if (!empty($contentRange) && $info->size !== $fileSize) {
                     $removed = $deviceForFiles->delete($path);
 
                     if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
@@ -450,7 +462,7 @@ class Create extends Action
                     }
                 }
 
-                $mimeType = $deviceForFiles->getFileMimeType($path); // Get mime-type before compression and encryption
+                $mimeType = $info->mimeType ?? $deviceForFiles->getFileMimeType($path);
                 $formats = Config::getParam('storage-formats');
 
                 if (\in_array($mimeType, $formats['ambiguous'], true)) {
@@ -460,9 +472,10 @@ class Create extends Action
                 // Strip before hashing so the signature and sizes describe the file we store.
                 if ($bucket->getAttribute('stripMetadata', false) && $fileSize <= APP_STORAGE_READ_BUFFER && \in_array($mimeType, self::METADATA_MIME_TYPES, true)) {
                     $fileSize = $this->stripMetadata($exiftool, $deviceForFiles, $path, $mimeType) ?? $fileSize;
+                    $info = $deviceForFiles->getFileInfo($path);
                 }
 
-                $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
+                $fileHash = $info->etag ?? $deviceForFiles->getFileHash($path); // Before compression and encryption.
                 $data = '';
                 $iv = '';
                 $tag = null;
@@ -502,7 +515,7 @@ class Create extends Action
                     }
                 }
 
-                $sizeActual = $deviceForFiles->getFileSize($path);
+                $sizeActual = !empty($data) ? \strlen($data) : $info->size;
 
                 $openSSLVersion = null;
                 $openSSLCipher = null;
@@ -571,8 +584,7 @@ class Create extends Action
                     ])));
                 }
 
-                // Trigger after create success hook
-                $this->afterCreateSuccess($file);
+                $finished = $file;
             } else {
                 /**
                  * Skip authorization in updateDocument.
@@ -645,16 +657,8 @@ class Create extends Action
             $response->addHeader('Retry-After', '5');
             throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'File upload is busy. Try again.');
         }
-    }
 
-    /**
-     * Hook to run after file is created successfully
-     *
-     * @param Document $file
-     * @return void
-     */
-    protected function afterCreateSuccess(Document $file)
-    {
+        return $finished;
     }
 
     /**

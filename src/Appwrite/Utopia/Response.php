@@ -19,6 +19,9 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
  */
 class Response extends SwooleResponse
 {
+    public const string DISPOSITION_INLINE = 'inline';
+    public const string DISPOSITION_ATTACHMENT = 'attachment';
+
     // General
     public const MODEL_NONE = 'none';
     public const MODEL_ANY = 'any';
@@ -283,6 +286,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_DENY_DISPOSABLE_EMAIL = 'policyDenyDisposableEmail';
     public const MODEL_POLICY_DENY_FREE_EMAIL = 'policyDenyFreeEmail';
     public const MODEL_POLICY_DENY_CORPORATE_EMAIL = 'policyDenyCorporateEmail';
+    public const MODEL_POLICY_DENY_REALTIME_GUESTS = 'policyDenyRealtimeGuests';
     public const MODEL_POLICY_PASSKEY = 'policyPasskey';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
@@ -386,6 +390,8 @@ class Response extends SwooleResponse
      * @var bool
      */
     protected bool $showSensitive = false;
+
+    protected bool $hideCredentials = false;
 
     /**
      * @var array<string, Model>
@@ -618,6 +624,10 @@ class Response extends SwooleResponse
                 }
             }
 
+            if ($rule['credential'] && ($this->hideCredentials || $this->impersonatorUser !== null)) {
+                $data->setAttribute($key, $rule['default'] ?? '');
+            }
+
             if ($rule['type'] === Model::TYPE_DATETIME) {
                 $data->setAttribute($key, $rule['array']
                     ? \array_map(Model::formatDatetime(...), $data[$key])
@@ -802,8 +812,39 @@ class Response extends SwooleResponse
         $this->user = $user;
     }
 
+    public function setHideCredentials(bool $hideCredentials): void
+    {
+        $this->hideCredentials = $hideCredentials;
+    }
+
     public function setImpersonatorUser(Document $impersonatorUser): void
     {
         $this->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
+    }
+
+    /**
+     * RFC 6266 disposition with a printable ASCII fallback and an RFC 5987 UTF-8 name.
+     */
+    public function setContentDisposition(string $type, string $filename): static
+    {
+        $fallback = '';
+        $length = \strlen($filename);
+        for ($i = 0; $i < $length; $i++) {
+            $char = $filename[$i];
+            $code = \ord($char);
+            if ($code >= 0xC0) {
+                $fallback .= '_';
+                continue;
+            }
+            if ($code < 32 || $code >= 127 || $char === '"' || $char === '\\' || $char === ';') {
+                continue;
+            }
+            $fallback .= $char;
+        }
+
+        $fallback = $fallback !== '' ? $fallback : 'download';
+        $encoded = \rawurlencode($filename !== '' ? $filename : 'download');
+
+        return $this->setHeader('Content-Disposition', $type . '; filename="' . $fallback . '"; filename*=UTF-8\'\'' . $encoded);
     }
 }

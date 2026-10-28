@@ -16,6 +16,7 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
+use Appwrite\Vcs\Validator\Directory;
 use Executor\Executor;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -30,6 +31,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -91,7 +93,7 @@ class Update extends Base
             ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the function', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
-            ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
+            ->param('providerRootDirectory', '', new Directory(), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', null, fn (array $plan) => new Nullable(new Specification(
@@ -124,6 +126,7 @@ class Update extends Base
             ->inject('executor')
             ->inject('authorization')
             ->inject('platform')
+            ->inject('deviceForBuilds')
             ->callback($this->action(...));
     }
 
@@ -165,7 +168,8 @@ class Update extends Base
         RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         Authorization $authorization,
-        array $platform
+        array $platform,
+        ?Device $deviceForBuilds = null,
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -328,6 +332,7 @@ class Update extends Base
             }
         }
 
+        $previous = $function;
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
@@ -358,6 +363,8 @@ class Update extends Base
             'runtimeSpecification' => $runtimeSpecification,
             'search' => implode(' ', [$functionId, $name, $description, $runtime]),
         ])));
+
+        $this->deleteStaleBuildCache($deviceForBuilds, $project->getId(), $previous, $function);
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
