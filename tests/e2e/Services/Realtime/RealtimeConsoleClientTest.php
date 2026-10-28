@@ -1508,7 +1508,7 @@ final class RealtimeConsoleClientTest extends Scope
         ]));
         $response = \json_decode($client->receive(), true);
         $this->assertSame('error', $response['type']);
-        $this->assertStringContainsString('admin-mode', $response['data']['message']);
+        $this->assertStringContainsString('admin-mode', (string) $response['data']['message']);
 
         // Moving the project to another organization ends the connection.
         $otherTeam = $this->createTeamFixture($rootHeaders, [
