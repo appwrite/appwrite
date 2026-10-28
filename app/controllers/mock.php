@@ -1,1 +1,1 @@
-LOAD_MOCK_FROM_TMP
+file:///workspace/app/controllers/mock.php

@@ -1,1 +1,1 @@
-LOAD_TEST_FROM_TMP
+file:///workspace/tests/e2e/Services/Avatars/AvatarsCustomServerTest.php
