@@ -1376,6 +1376,60 @@ trait MessagingBase
         $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'client_email' field, which identifies the service account used for authentication. or null", $response['body']['message']);
     }
 
+    public function testCreateSMTPProviderPrivateHost(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Outside the dev allowlist of internal addresses
+        foreach (['169.254.169.254', 'tls://10.0.0.1:587', 'smtp.appwrite.io;ssl://[fe80::1]:465'] as $host) {
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+                'providerId' => Id::unique(),
+                'name' => 'Private SMTP',
+                'host' => $host,
+                'port' => 587,
+                'fromEmail' => 'tester@appwrite.io',
+            ]);
+
+            $this->assertSame(400, $response['headers']['status-code'], $host);
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertStringContainsString('private or reserved', $response['body']['message']);
+        }
+    }
+
+    public function testUpdateSMTPProviderPrivateHost(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // A host that does not resolve yet is stored and checked again when a message is sent
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'SMTP',
+            'host' => 'smtp.appwrite.io',
+            'port' => 587,
+            'fromEmail' => 'tester@appwrite.io',
+        ]);
+        $this->assertSame(201, $provider['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/smtp/' . $provider['body']['$id'], $headers, [
+            'host' => '169.254.169.254',
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
+
+        $stored = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $provider['body']['$id'], $headers);
+        $this->assertSame('smtp.appwrite.io', $stored['body']['credentials']['host']);
+    }
+
     public function testCreateTwilioProviderAlphanumericSender(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/twilio', [
@@ -1528,7 +1582,7 @@ trait MessagingBase
         $this->assertEquals('email', $response['body']['type']);
         $this->assertEquals(false, $response['body']['enabled']);
         $this->assertEquals('my-access-key', $response['body']['credentials']['accessKey']);
-        $this->assertEquals('my-secret-key', $response['body']['credentials']['secretKey']);
+        $this->assertArrayNotHasKey('secretKey', $response['body']['credentials']);
         $this->assertEquals('us-east-1', $response['body']['credentials']['region']);
         $this->assertArrayHasKey('fromEmail', $response['body']['options']);
         $this->assertArrayNotHasKey('accessKey', $response['body']['options']);
@@ -1561,7 +1615,7 @@ trait MessagingBase
         $this->assertEquals('SES2', $updateResponse['body']['name']);
         $this->assertEquals('eu-west-1', $updateResponse['body']['credentials']['region']);
         $this->assertEquals('my-access-key', $updateResponse['body']['credentials']['accessKey']);
-        $this->assertEquals('my-secret-key', $updateResponse['body']['credentials']['secretKey']);
+        $this->assertArrayNotHasKey('secretKey', $updateResponse['body']['credentials']);
 
         // Regression: enabling while fromEmail is still empty must be rejected, not silently enabled.
         $enableWithoutFromEmail = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/ses/' . $providerId, $headers, [
@@ -2399,6 +2453,50 @@ trait MessagingBase
         $this->assertSame($subject, $mail['subject']);
     }
 
+    public function testSendEmailThroughUnresolvedSMTPHostFails(): void
+    {
+        // The host is accepted while it does not resolve, and checked again when the message is sent.
+        $project = $this->getProject(true);
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'Unresolved',
+            'host' => 'smtp-' . \uniqid() . '.invalid',
+            'port' => 25,
+            'fromName' => 'Appwrite',
+            'fromEmail' => 'sender@appwrite.io',
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(201, $provider['headers']['status-code']);
+
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => Id::unique(),
+            'emails' => [\uniqid() . '@appwrite.io'],
+            'subject' => 'Unresolved host',
+            'content' => 'Never dialled',
+        ]);
+
+        $this->assertSame(201, $email['headers']['status-code']);
+
+        $messageId = $email['body']['$id'];
+        $this->assertEventually(function () use ($messageId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+            $this->assertSame(MessageStatus::FAILED, $response['body']['status']);
+        }, 30000, 500);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+
+        $this->assertSame(0, $message['body']['deliveredTotal']);
+        $this->assertCount(1, $message['body']['deliveryErrors']);
+        $this->assertStringContainsString('does not resolve', $message['body']['deliveryErrors'][0]);
+    }
+
     public function testCreateDraftPushWithImage(): void
     {
         // Create User 1
@@ -2528,6 +2626,56 @@ trait MessagingBase
         $rejected = $client->call(Client::METHOD_GET, $imageUrl, ['Range' => 'bytes=' . $size . '-']);
 
         $this->assertEquals(416, $rejected['headers']['status-code']);
+
+        // Image token expires fifteen days after delivery.
+        $claims = $this->getImageTokenClaims($imageUrl);
+        $this->assertEqualsWithDelta(\time() + APP_PUSH_IMAGE_TOKEN_DURATION, $claims['exp'], 60);
+
+        $scheduledAt = \time() + 60 * 60 * 24 * 2;
+
+        $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true,
+            'scheduledAt' => \date(\DateTime::ATOM, $scheduledAt),
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+
+        $claims = $this->getImageTokenClaims($updated['body']['data']['image']['url']);
+        $this->assertEqualsWithDelta($scheduledAt + APP_PUSH_IMAGE_TOKEN_DURATION, $claims['exp'], 60);
+
+        $rescheduledAt = \time() + 60 * 60 * 24 * 30;
+
+        $rescheduled = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'scheduledAt' => \date(\DateTime::ATOM, $rescheduledAt),
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(200, $rescheduled['headers']['status-code']);
+
+        $claims = $this->getImageTokenClaims($rescheduled['body']['data']['image']['url']);
+        $this->assertEqualsWithDelta($rescheduledAt + APP_PUSH_IMAGE_TOKEN_DURATION, $claims['exp'], 60);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getImageTokenClaims(string $url): array
+    {
+        \parse_str((string) \parse_url($url, PHP_URL_QUERY), $query);
+        $payload = \explode('.', (string) $query['jwt'])[1];
+        $claims = \json_decode((string) \base64_decode(\strtr($payload, '-_', '+/')), true);
+        $this->assertIsArray($claims);
+
+        return $claims;
     }
 
     public function testCreateDraftPushWithData(): void

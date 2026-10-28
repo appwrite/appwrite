@@ -10,6 +10,8 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Attribute\Update as AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Query\Schema\ColumnType;
@@ -23,6 +25,9 @@ class V25 extends Migration
     {
         Console::info('Migrating collections');
         $this->migrateCollections();
+
+        Console::info('Migrating buckets');
+        $this->migrateBuckets();
 
         Console::info('Migrating documents');
         $this->forEachDocument($this->migrateDocument(...));
@@ -225,6 +230,48 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'transactions':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'type');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"type\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_type');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_type\" from {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        try {
+                            $cursor = null;
+                            do {
+                                $queries = [
+                                    Query::isNull('type'),
+                                    Query::limit($this->limit),
+                                ];
+                                if ($cursor !== null) {
+                                    $queries[] = Query::cursorAfter($cursor);
+                                }
+                                $transactions = $this->dbForProject->find($id, $queries);
+                                foreach ($transactions as $transaction) {
+                                    try {
+                                        $this->dbForProject->updateDocument($id, $transaction->getId(), new Document([
+                                            'type' => DATABASE_TYPE_LEGACY,
+                                        ]));
+                                    } catch (Throwable $th) {
+                                        Console::warning("Failed to backfill \"type\" for transaction {$transaction->getId()}: {$th->getMessage()}");
+                                    }
+                                    $cursor = $transaction;
+                                }
+                            } while (\count($transactions) === $this->limit);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to backfill \"type\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    break;
+
                 case 'databases':
                     if ($collectionType === 'projects') {
                         foreach (['status', 'description'] as $attribute) {
@@ -388,6 +435,31 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'sessions':
+                    // Added in 2.0.0: the GeoIP record stored on every session.
+                    $attributes = [
+                        'continentCode',
+                        'latitude',
+                        'longitude',
+                        'timeZone',
+                        'weatherCode',
+                        'postalCode',
+                        'autonomousSystemNumber',
+                        'autonomousSystemOrganization',
+                        'connectionType',
+                        'connectionUsageType',
+                        'connectionOrganization',
+                        'isp',
+                    ];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'attributes':
                 case 'indexes':
                 case 'variables':
@@ -413,12 +485,62 @@ class V25 extends Migration
                     break;
 
                 case 'presenceLogs':
-                    // Added in 1.9.5 and created only by V24, which an install that ran
-                    // the 1.9.6 migration or upgraded straight from 1.8.x never ran.
+                    // Added in 1.9.5 and created only by V24, which an install that ran the 1.9.6
+                    // migration or upgraded straight from 1.8.x never ran. createCollection() is a
+                    // no-op when it already exists and creates it with connections when it doesn't;
+                    // the attribute-add then covers installs that have it from V24 without the column.
+                    // A Duplicate means createCollection already made the row with connections; any
+                    // other failure propagates so the version is not recorded with a missing attribute.
+                    $this->createCollection($id);
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'connections');
+                    } catch (Duplicate) {
+                        // createCollection already made the row with connections; nothing to add.
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'videos':
+                case 'videosTimelines':
+                case 'videosRenditions':
+                case 'videosRenditionsSegments':
+                case 'videosProfiles':
+                case 'videosCaptions':
+                case 'videosCaptionsSegments':
+                    // New in 2.6.0. The document pass visits these collections even when video APIs are disabled.
+                    $this->createCollection($id);
+                    break;
+
                 case 'pushLedger':
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.
                     $this->createCollection($id);
+                    // Ledger rows are bound to their topic instance. Rows written before the
+                    // binding keep a null topicInternalId and are never replayed; the age-based
+                    // prune removes them. NULLs are distinct under the unique index, so they never
+                    // block a publish. A failure other than an existing attribute or index
+                    // propagates, since publishing needs the attribute and the instance-scoped index.
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'topicInternalId');
+                    } catch (Duplicate) {
+                    }
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_topicInternalId_sequence');
+                    } catch (Duplicate) {
+                    }
+                    try {
+                        $this->dbForProject->deleteIndex($id, '_key_topic_sequence');
+                    } catch (NotFound) {
+                    }
+                    try {
+                        $this->dbForProject->deleteIndex($id, '_key_message_topic');
+                    } catch (NotFound) {
+                    }
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_message_topicInternalId');
+                    } catch (Duplicate) {
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
 
                 case 'buckets':
@@ -452,6 +574,39 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
             }
+        }
+    }
+
+    /**
+     * Added in 2.0.0: the virtual folder a file lives in. A bucket created
+     * before then has no column, so every upload into it drops "folder".
+     */
+    private function migrateBuckets(): void
+    {
+        if ($this->dbForProject->findCollection('buckets') === null) {
+            return;
+        }
+
+        foreach ($this->dbForProject->cursor('buckets', batchSize: 25) as $bucket) {
+            $id = "bucket_{$bucket->getSequence()}";
+            Console::log("Migrating bucket \"{$bucket->getId()}\" ({$bucket->getAttribute('name')})");
+
+            $this->dbForProject->purgeCachedCollection($id);
+
+            try {
+                $this->createAttributesFromCollection($this->dbForProject, $id, ['folder'], 'files');
+            } catch (Throwable $th) {
+                Console::warning("Failed to create attribute \"folder\" in collection {$id}: {$th->getMessage()}");
+            }
+
+            try {
+                $this->createIndexFromCollection($this->dbForProject, $id, '_key_folder', 'files');
+            } catch (Throwable $th) {
+                Console::warning("Failed to create index \"_key_folder\" from {$id}: {$th->getMessage()}");
+            }
+
+            $this->dbForProject->purgeCachedCollection($id);
+            $this->dbForProject->purgeCachedDocument(Database::METADATA, $id);
         }
     }
 
