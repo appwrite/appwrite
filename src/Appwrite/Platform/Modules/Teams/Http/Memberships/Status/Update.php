@@ -186,9 +186,10 @@ class Update extends Action
                 default => null,
             };
 
-            // Accepting while signed out proves an unverified email, so whoever registered it keeps no other way in
-            if (!$hasSession && $verification === 'emailVerification' && !$user->getAttribute('emailVerification', false)) {
-                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
+            // Accepting while signed out proves an unverified email or phone, so whoever registered it keeps no other way in
+            if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false)) {
+                $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
             }
 
             if ($verification !== null) {

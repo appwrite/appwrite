@@ -246,9 +246,10 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        // Proving an unverified email claims the account, so whoever registered it keeps no other way in
-        if ($verification === 'emailVerification' && !$locked->getAttribute('emailVerification', false)) {
-            $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
+        // Proving an unverified email or phone claims the account, so whoever registered it keeps no other way in
+        if ($verification !== null && !$locked->getAttribute($verification, false)) {
+            $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
+            $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
         }
 
         $session = $dbForProject->createDocument('sessions', $session
