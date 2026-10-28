@@ -4048,17 +4048,7 @@ final class SitesCustomServerTest extends Scope
         });
         $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
 
-        $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $scopedMembership['body']['$id'] . '/status', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-        ], [
-            'userId' => $tokens['userId'],
-            'secret' => $tokens['secret'],
-        ]);
-        $this->assertSame(200, $confirm['headers']['status-code']);
-        $this->assertTrue($confirm['body']['confirm']);
-
+        // Signed in, as accepting signed out claims the unverified account and revokes its password
         $scopedSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -4068,6 +4058,18 @@ final class SitesCustomServerTest extends Scope
             'password' => 'password',
         ]);
         $this->assertSame(201, $scopedSession['headers']['status-code']);
+
+        $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $scopedMembership['body']['$id'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $scopedSession['cookies']['a_session_console'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => $tokens['userId'],
+            'secret' => $tokens['secret'],
+        ]);
+        $this->assertSame(200, $confirm['headers']['status-code']);
+        $this->assertTrue($confirm['body']['confirm']);
 
         $scopedJwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
             'origin' => 'http://localhost',

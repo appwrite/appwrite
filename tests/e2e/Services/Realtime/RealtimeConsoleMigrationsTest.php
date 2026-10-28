@@ -39,7 +39,7 @@ final class RealtimeConsoleMigrationsTest extends Scope
         $otherProjectId = $this->createOrganizationProject($headers, $teamId);
 
         $member = $this->createConsoleAccount();
-        $this->addOrganizationMember($headers, $teamId, $member['email'], ['project-' . $otherProjectId . '-developer']);
+        $this->addOrganizationMember($headers, $teamId, $member, ['project-' . $otherProjectId . '-developer']);
 
         $owner = $this->getConsoleWebsocket($this->getRoot()['session']);
         $restricted = $this->getConsoleWebsocket($member['session']);
@@ -151,8 +151,9 @@ final class RealtimeConsoleMigrationsTest extends Scope
         ];
     }
 
-    private function addOrganizationMember(array $headers, string $teamId, string $email, array $roles): void
+    private function addOrganizationMember(array $headers, string $teamId, array $member, array $roles): void
     {
+        $email = $member['email'];
         $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $headers, [
             'email' => $email,
             'roles' => $roles,
@@ -165,10 +166,12 @@ final class RealtimeConsoleMigrationsTest extends Scope
         });
         $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
 
+        // Signed in, as accepting signed out claims the unverified account and revokes its session
         $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['body']['$id'] . '/status', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $member['session'],
         ], [
             'userId' => $tokens['userId'],
             'secret' => $tokens['secret'],
