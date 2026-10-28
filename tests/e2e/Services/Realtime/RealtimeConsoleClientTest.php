@@ -1262,7 +1262,7 @@ final class RealtimeConsoleClientTest extends Scope
         $otherProjectId = $this->createOrganizationProject($rootHeaders, $teamId);
 
         $member = $this->createConsoleAccount();
-        $this->addOrganizationMember($rootHeaders, $teamId, $member['email'], ['project-' . $otherProjectId . '-developer']);
+        $this->addOrganizationMember($rootHeaders, $teamId, $member, ['project-' . $otherProjectId . '-developer']);
 
         $stranger = $this->createConsoleAccount();
 
@@ -1420,8 +1420,9 @@ final class RealtimeConsoleClientTest extends Scope
         ];
     }
 
-    private function addOrganizationMember(array $headers, string $teamId, string $email, array $roles): void
+    private function addOrganizationMember(array $headers, string $teamId, array $member, array $roles): void
     {
+        $email = $member['email'];
         $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $headers, [
             'email' => $email,
             'roles' => $roles,
@@ -1434,14 +1435,157 @@ final class RealtimeConsoleClientTest extends Scope
         });
         $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
 
+        // Signed in, as accepting signed out claims the unverified account and revokes its session
         $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['body']['$id'] . '/status', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $member['session'],
         ], [
             'userId' => $tokens['userId'],
             'secret' => $tokens['secret'],
         ]);
         $this->assertSame(200, $confirm['headers']['status-code']);
+    }
+
+    /**
+     * A function execution is read-scoped to user:{id}, and its realtime event
+     * is also published to the `console` subscription tree. On the console tree
+     * `user:{id}` names a console account, so a console account registered with
+     * the victim project user's id must NOT receive the execution (logs/errors
+     * included). The triggering project user still receives it on their own
+     * project tree.
+     */
+    public function testExecutionDoesNotLeakToCollidingConsoleUser(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $collideId = 'collide' . \bin2hex(\random_bytes(6));
+        $password = 'password-' . \uniqid();
+
+        // Victim: a project user with a chosen id, who will run the execution.
+        $pUser = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], ['userId' => $collideId, 'email' => $collideId . '@project.test', 'password' => $password, 'name' => 'Victim']);
+        $this->assertEquals(201, $pUser['headers']['status-code']);
+
+        $pSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], ['email' => $collideId . '@project.test', 'password' => $password]);
+        $this->assertEquals(201, $pSession['headers']['status-code']);
+        $pCookie = 'a_session_' . $projectId . '=' . $pSession['cookies']['a_session_' . $projectId];
+
+        // Attacker: a console account claiming the SAME id.
+        $cUser = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], ['userId' => $collideId, 'email' => $collideId . '@console.test', 'password' => $password, 'name' => 'Attacker']);
+        $this->assertEquals(201, $cUser['headers']['status-code']);
+        $this->assertSame($collideId, $cUser['body']['$id']);
+
+        $cSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], ['email' => $collideId . '@console.test', 'password' => $password]);
+        $this->assertEquals(201, $cSession['headers']['status-code']);
+        $cCookie = 'a_session_console=' . $cSession['cookies']['a_session_console'];
+
+        // A function the victim can execute.
+        $function = $this->client->call(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['functionId' => Id::unique(), 'name' => 'Leak repro', 'execute' => ['users'], 'runtime' => 'node-22', 'entrypoint' => 'index.js', 'timeout' => 10]);
+        $this->assertEquals(201, $function['headers']['status-code'], 'function: ' . \json_encode($function['body']));
+        $functionId = $function['body']['$id'];
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['code' => $this->packageFunction('timeout'), 'activate' => true]);
+        $this->assertEquals(202, $deployment['headers']['status-code'], 'fnId=' . $functionId . ' deployment: ' . \json_encode($deployment['body']));
+        $deploymentId = $deployment['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $deploymentId, $projectId) {
+            $d = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('ready', $d['body']['status'], \json_encode($d['body']));
+        }, 240000, 500);
+
+        // Attacker subscribes to the console realtime tree's executions channel.
+        $attacker = $this->getWebsocket(
+            channels: ['executions'],
+            headers: ['origin' => 'http://localhost', 'cookie' => $cCookie],
+            projectId: 'console',
+            timeout: 3
+        );
+        $connected = \json_decode($attacker->receive(), true);
+        $this->assertEquals('connected', $connected['type']);
+        $this->assertSame($collideId, $connected['data']['user']['$id'] ?? null);
+
+        // The legitimate audience: the victim project user, on their own project.
+        $legit = $this->getWebsocket(
+            channels: ['executions'],
+            headers: ['origin' => 'http://localhost', 'cookie' => $pCookie],
+            projectId: $projectId,
+            timeout: 15
+        );
+        $this->assertEquals('connected', \json_decode($legit->receive(), true)['type']);
+
+        // Victim triggers an async execution (read-scoped to user:{collideId}).
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $pCookie,
+        ], ['async' => true]);
+        $this->assertEquals(202, $execution['headers']['status-code']);
+        $executionId = $execution['body']['$id'];
+
+        // Positive control: the triggering project user receives it, proving the
+        // event actually fires and is delivered on the project tree.
+        $legitEvent = $this->receiveUntilEvent(
+            $legit,
+            fn (array $m): bool => ($m['type'] ?? null) === 'event'
+                && \in_array('executions.' . $executionId, $m['data']['channels'] ?? [], true),
+            120000
+        );
+        $this->assertSame($executionId, $legitEvent['data']['payload']['$id'] ?? null);
+
+        // The event has fired and reached the legitimate subscriber, so if the
+        // colliding console account were going to receive it, it would be on
+        // the same pub/sub by now. Drain its socket briefly: any execution
+        // frame is the cross-project leak.
+        $attackerLeak = null;
+        $deadline = \microtime(true) + 6;
+        while (\microtime(true) < $deadline) {
+            try {
+                $frame = $attacker->receive();
+            } catch (TimeoutException) {
+                continue;
+            } catch (ConnectionException) {
+                break;
+            }
+            $m = \json_decode($frame, true);
+            if (\is_array($m) && ($m['type'] ?? null) === 'event'
+                && \in_array('executions.' . $executionId, $m['data']['channels'] ?? [], true)) {
+                $attackerLeak = $m;
+                break;
+            }
+        }
+
+        $attacker->close();
+        $legit->close();
+
+        $this->assertNull($attackerLeak, 'Cross-project leak: a colliding console account received another project\'s execution: ' . \json_encode($attackerLeak));
     }
 }

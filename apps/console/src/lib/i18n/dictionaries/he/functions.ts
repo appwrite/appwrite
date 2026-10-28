@@ -72,7 +72,6 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
   Change: 'שינוי',
   chars: 'תווים',
-  'Check your permissions': 'בדקו את ההרשאות שלכם',
   'Choose the directory containing your function code':
     'בחרו את התיקייה שמכילה את קוד הפונקציה שלכם',
   'Choose who can execute this function': 'בחרו מי יכול להריץ את הפונקציה הזו',
@@ -121,8 +120,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Content Delivery Network': 'רשת אספקת תוכן (CDN)',
   Contribute: 'תרומה לפרויקט',
   // pragma: allowlist secret
-  'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.':
-    'קובע אם Appwrite מפרסם תגובות אוטומטיות על קומיטים ב-repo ה-GitHub המחובר שלכם (למשל הערות פריסה על pull requests). פריסות, בדיקות ובניות אינן משתנות; רק תגובות אופציונליות על קומיטים מדולגות כשמצב שקט פעיל.', // pragma: allowlist secret
+  "When on, Appwrite doesn't comment on pull requests or report checks and deployments to your Git provider. Builds and deployments run as usual.":
+    'כשהמצב פעיל, Appwrite לא מוסיף תגובות ל-pull requests ולא מדווח לספק ה-Git שלכם על בדיקות ופריסות. הבנייה והפריסה ממשיכות כרגיל.', // pragma: allowlist secret
   Copy: 'העתקה',
   'Copy as JSON': 'העתקה כ-JSON',
   'Copy gzip (base64)': 'העתקת gzip (base64)',
@@ -189,9 +188,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Detecting runtime...': 'מזהה סביבת ריצה...',
   'Directory containing your function code':
     'תיקייה שמכילה את קוד הפונקציה שלכם',
-  'Disable automated comments on repository commits':
-    'השבתת תגובות אוטומטיות על קומיטים ב-repo',
-  'Disable automated commit comments': 'השבתת תגובות אוטומטיות על קומיטים',
+  'Skip pull request comments, checks and deployment reports':
+    'דילוג על תגובות ב-pull requests, בדיקות ודיווחי פריסה',
   Disabled: 'מושבת',
   'Disabled - less log output per execution.':
     'מושבת - פחות פלט לוגים לכל הרצה.',
@@ -382,7 +380,6 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Maximum time a single execution may run before it is stopped. Use a higher value for slow I/O or heavy work; use a lower value to cap run time. Allowed range is 1–900 seconds.':
     'הזמן המקסימלי שהרצה בודדת יכולה לרוץ לפני שהיא נעצרת. השתמשו בערך גבוה יותר לעבודות כבדות או קלט/פלט איטי; השתמשו בערך נמוך יותר כדי להגביל את זמן הריצה. הטווח המותר הוא 1 עד 900 שניות.',
   Method: 'מתודה',
-  'Missing a repository?': 'חסר לכם repo?',
   'Missing repository connection': 'חסר חיבור ל-repo',
   Monthly: 'חודשי',
   'Monthly on the 1st': 'חודשי ב-1 לחודש',
@@ -757,4 +754,6 @@ export const heFunctionsDictionary: Record<string, string> = {
     'הדואר נמסר אל Appwrite בפורט 25, ולכן רשומת ה-MX חייבת להצביע ישירות לערך שלמעלה ולא לשם מארח שעובר דרך פרוקסי.',
   'This region does not report its mail server yet, so the MX record cannot be shown. Add the TXT record now and come back for the MX record later.':
     'האזור הזה עדיין לא מדווח על שרת הדואר שלו, ולכן לא ניתן להציג את רשומת ה-MX. הוסיפו עכשיו את רשומת ה-TXT וחזרו מאוחר יותר לרשומת ה-MX.',
+  "This function's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
+    'התקנת ה-Git של הפונקציה הזו כבר לא מגיעה ל-repo שלה, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
 }
