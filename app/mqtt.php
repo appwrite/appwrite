@@ -124,6 +124,9 @@ $container->set('getProjectDB', fn () => function (Document $project) use ($regi
     ]);
 }, []);
 
+// The plan a project's MQTT limits come from; none here, so each limit is its APP_LIMIT_MQTT_* default.
+$container->set('getPlan', fn () => fn (string $projectId): array => [], []);
+
 $container->set('getPlanForUser', fn () => fn (Document $project, string $userId): int => (int) System::getEnv('_APP_MQTT_REPLAY_DEPTH', '5'), []);
 
 $container->set('getRedis', fn () => function (): \Redis {

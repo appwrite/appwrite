@@ -38,6 +38,9 @@ final class LimitsTest extends TestCase
 
     private Accounts $accounts;
 
+    /** @var array<string, mixed> the plan every project resolves to */
+    private array $plan = [];
+
     private string|false $previousAbuseOption = false;
 
     protected function setUp(): void
@@ -52,6 +55,7 @@ final class LimitsTest extends TestCase
         $container->set('getRedis', fn (): \Closure => fn (): \Redis => $redis);
         $container->set('authenticator', fn (): \Closure => $this->accounts->authenticate(...));
         $container->set('authorizer', fn (): \Closure => $this->accounts->authorize(...));
+        $container->set('getPlan', fn (): \Closure => fn (string $projectId): array => $this->plan);
 
         $handler = new Handler(
             $container,
@@ -143,6 +147,17 @@ final class LimitsTest extends TestCase
         $this->assertSame(Connack::SUCCESS, $this->connect($overflow + 1, 'user'));
         $this->assertSame(Connack::SUCCESS, $this->connect($overflow + 2, 'other'));
         $this->assertSame(Connack::SUCCESS, $this->connect($overflow + 3, 'user', 'project2'));
+    }
+
+    public function testOpenConnectionsPerUserFollowThePlan(): void
+    {
+        $this->plan = ['mqttConnections' => 2];
+
+        $this->assertSame(Connack::SUCCESS, $this->connect(1, 'user'));
+        $this->assertSame(Connack::SUCCESS, $this->connect(2, 'user'));
+
+        // Test for FAILURE: the plan's limit replaces the default.
+        $this->assertSame(Connack::QUOTA_EXCEEDED, $this->connect(3, 'user'));
     }
 
     public function testRefusedConnectionDoesNotHoldASlot(): void

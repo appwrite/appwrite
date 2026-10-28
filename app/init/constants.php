@@ -46,7 +46,6 @@ const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
 const APP_LIMIT_REALTIME_CONNECTIONS = 32; // Maximum open realtime connections per project user on one worker
 const APP_LIMIT_REALTIME_GUEST_CONNECTIONS = 128; // Maximum open realtime guest connections per IP, or IPv6 /64, per project on one worker
-const APP_LIMIT_MQTT_CONNECTIONS = 32; // Maximum open MQTT connections per project user on one worker
 const APP_LIMIT_MQTT_FILTERS = 100; // Maximum topic filters in one MQTT SUBSCRIBE
 const APP_LIMIT_MQTT_KEEP_ALIVE = 1200; // Longest MQTT keep-alive in seconds the broker honours, also used for a client that disables it
 
@@ -100,6 +99,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 \define('APP_LIMIT_REALTIME_SUBSCRIPTIONS', \max(1, (int) System::getEnv('_APP_LIMIT_REALTIME_SUBSCRIPTIONS', 100))); // Per realtime connection
 \define('APP_LIMIT_REALTIME_CHANNELS', \max(1, (int) System::getEnv('_APP_LIMIT_REALTIME_CHANNELS', 100))); // Across all subscriptions of a realtime connection
 \define('APP_LIMIT_REALTIME_QUERIES', \max(1, (int) System::getEnv('_APP_LIMIT_REALTIME_QUERIES', 100))); // Across all subscriptions of a realtime connection, counting nested ones
+\define('APP_LIMIT_MQTT_CONNECTIONS', \max(1, (int) System::getEnv('_APP_LIMIT_MQTT_CONNECTIONS', 32))); // Open MQTT connections per project user on one worker, unless the plan sets mqttConnections
 const APP_LIMIT_DATABASE_TRANSACTION = 100; // Default maximum operations per transaction
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours

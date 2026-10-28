@@ -92,7 +92,8 @@ class Handler implements MqttHandler
         }
 
         // As realtime caps a user's open connections, so idle sockets cannot pile up toward the broker's limit.
-        if (\count($this->connectionsOf((string) ($identity['projectId'] ?? ''), (string) ($identity['userId'] ?? ''))) > APP_LIMIT_MQTT_CONNECTIONS) {
+        $limit = (int) ($this->getPlan($connection)['mqttConnections'] ?? APP_LIMIT_MQTT_CONNECTIONS);
+        if (\count($this->connectionsOf((string) ($identity['projectId'] ?? ''), (string) ($identity['userId'] ?? ''))) > $limit) {
             $this->untrack($connection);
             Span::add('mqtt.result', 'quota');
             $this->mqtt->connectRefused->add(1, ['reason' => 'connection_limit']);
@@ -913,6 +914,19 @@ class Handler implements MqttHandler
         return 'push:cursor:' . $connection->prefix
             . ':' . ($connection->identity['userId'] ?? '')
             . ':' . $connection->getClientId();
+    }
+
+    /**
+     * The plan of the connection's project, from the `getPlan` resource; a limit it leaves out
+     * falls back to the APP_LIMIT_MQTT_* default.
+     *
+     * @return array<string, mixed>
+     */
+    private function getPlan(Connection $connection): array
+    {
+        $getPlan = $this->container->get('getPlan');
+
+        return $getPlan($connection->prefix);
     }
 
     private function getProjectDB(string $projectId): Database
