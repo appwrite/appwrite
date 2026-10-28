@@ -39,7 +39,7 @@ class SMTP extends EmailAdapter
      * @param int $timelimit SMTP command timelimit in seconds.
      * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. Keep it under the server's idle timeout: a session the server closed inside the threshold fails its send without a retry. 0 probes before every reuse.
      * @param int $restartThreshold Messages a kept session carries before it is replaced. 0 disables.
-     * @param array<string, string> $addresses Host => address to dial it on, as each host appears in $host (e.g. "smtp1.example.com" => "203.0.113.10", "[2001:db8::1]" for IPv6), so the connection lands on an address the caller checked. The certificate is still verified against the host. A host not listed is dialled by name.
+     * @param array<string, string> $addresses Host => address to dial it on, as each host appears in $host (e.g. "smtp1.example.com" => "203.0.113.10", "[2001:db8::1]" for IPv6), so the connection lands on an address the caller checked. The certificate is still verified against the host. When any address is given, a host not listed is refused; with none, every host is dialled by name.
      */
     public function __construct(
         private readonly string $host,
@@ -181,6 +181,13 @@ class SMTP extends EmailAdapter
         $code = 0;
 
         foreach ($this->hosts() as [$host, $port, $encryption]) {
+            // A host the caller did not check is refused rather than dialled by name.
+            if ($this->addresses !== [] && !isset($this->addresses[$host])) {
+                $failures[] = "{$host}:{$port} (no checked address)";
+
+                continue;
+            }
+
             $client = new Client(
                 isset($this->addresses[$host]) ? new Native($this->addresses[$host], $port, new Tls(peerName: \trim($host, '[]'))) : new Native($host, $port),
                 gethostname() ?: 'localhost',

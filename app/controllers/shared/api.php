@@ -379,6 +379,13 @@ Http::init()
             $response->setHideCredentials(true);
         }
 
+        // Reading users is not authority over their credentials. Minted keys are exempt, as their minter could grant users.write
+        // and user migrations read hashes with users.read; OAuth2 tokens only delegate their holder's role
+        $isMintedKey = ! empty($apiKey) && $apiKey->getType() !== API_KEY_OAUTH2;
+        if (\in_array('users.read', $scopes, true) && ! \in_array('users.write', $scopes, true) && ! $isMintedKey) {
+            $response->setHideCredentials(true);
+        }
+
         $authorization->addRole($role);
         $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
         foreach ($rolesSource->getRoles($authorization) as $authRole) {
@@ -619,7 +626,9 @@ Http::init()
 
                 foreach ($request->getParams() as $key => $value) {
                     if (! empty($value)) {
-                        $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                        $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                        // Sign in matches emails case-insensitively, so the limit must too
+                        $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
                     }
                 }
 
@@ -1010,7 +1019,9 @@ Http::shutdown()
 
             foreach ($request->getParams() as $key => $value) {
                 if (! empty($value)) {
-                    $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                    $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                    // Sign in matches emails case-insensitively, so the limit must too
+                    $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
                 }
             }
 

@@ -4965,6 +4965,104 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $login['headers']['status-code']);
     }
 
+    public function testCreateMagicURLSessionRevokesUnverifiedAccountCredentials(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
+            'userId' => $data['id'],
+            'email' => $data['email'],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $mail = $this->getLastEmailByAddress($data['email']);
+        $secret = substr($mail['text'], strpos($mail['text'], '&secret=', 0) + 8, 64);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', $headers, [
+            'userId' => $data['id'],
+            'secret' => $secret,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['emailVerification']);
+
+        /**
+         * Test for FAILURE
+         * The registrant's session and password no longer reach the claimed account.
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ]));
+        $this->assertEquals(401, $account['headers']['status-code']);
+
+        $login = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+        $this->assertEquals(401, $login['headers']['status-code']);
+    }
+
+    public function testUpdateRecoveryRevokesUnverifiedAccountCredentials(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', \array_merge($headers, [
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $data['session'],
+        ]), [
+            'phone' => '+1202' . \random_int(1000000, 9999999),
+            'password' => $data['password'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $data['email'],
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $secret = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($data['email'], function ($email) {
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
+        })['html'])['secret'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $data['id'],
+            'secret' => $secret,
+            'password' => 'recovered-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $this->createSessionCookie($data['email'], 'recovered-password')['headers']);
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['emailVerification']);
+
+        /**
+         * Test for FAILURE
+         * The phone the registrant added is no longer a way in.
+         */
+        $this->assertEmpty($account['body']['phone']);
+    }
+
     public function testCreateOAuth2SessionWithoutEmail(): void
     {
         $provider = 'mock-no-email';

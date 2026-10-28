@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Database\Documents;
 
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Deletes\Targets;
+use Appwrite\Hooks\Hooks;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
@@ -254,13 +255,13 @@ class User extends Document
 
     /**
      * Revoke every way into the account other than its email address: password,
-     * sessions, tokens, MFA factors, passkeys, identities, phone and push targets.
+     * sessions, tokens, MFA factors, passkeys, identities, account keys, phone and push targets.
      *
      * Used when the verified owner of the email claims an account that was
      * registered with it but never verified, so nobody else keeps access.
      * Persists the revocation in one transaction and mirrors it on `$user`.
      */
-    public static function revokeCredentials(Database $dbForProject, Document $user): void
+    public static function revokeCredentials(Database $dbForProject, Document $user, Document $project): void
     {
         $sequence = $user->getSequence();
         if ($sequence === '' || $sequence === null || $user->getAttribute('status') === false) {
@@ -281,10 +282,17 @@ class User extends Document
             'mfaRecoveryCodes' => [],
         ];
 
-        $dbForProject->withTransaction(function () use ($dbForProject, $user, $sequence, $attributes) {
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes) {
             foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
                 $dbForProject->deleteDocuments($collection, [
                     Query::equal('userInternalId', [$sequence]),
+                ]);
+            }
+
+            if ($project->getId() === 'console') {
+                $dbForProject->deleteDocuments('keys', [
+                    Query::equal('resourceType', ['users']),
+                    Query::equal('resourceInternalId', [$sequence]),
                 ]);
             }
 
@@ -292,6 +300,9 @@ class User extends Document
                 Query::equal('userInternalId', [$sequence]),
                 Query::notEqual('providerType', MESSAGE_TYPE_EMAIL),
             ]));
+
+            // Editions revoke the credentials they keep in their own collections
+            (new Hooks())->trigger('credentialsRevoked', [$dbForProject, $user, $project]);
 
             $dbForProject->updateDocument('users', $user->getId(), new Document($attributes));
         });

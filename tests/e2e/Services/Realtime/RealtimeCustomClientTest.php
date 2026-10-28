@@ -3602,6 +3602,24 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertContains("functions.*.executions.*", $responseUpdate['data']['events']);
         $this->assertContains("functions.*", $responseUpdate['data']['events']);
         $this->assertNotEmpty($responseUpdate['data']['payload']);
+        $this->assertArrayNotHasKey('logs', $responseUpdate['data']['payload']);
+        $this->assertArrayNotHasKey('errors', $responseUpdate['data']['payload']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/executions/' . $executionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $responseDelete = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("functions.{$functionId}.executions.{$executionId}.delete", $message['data']['events'] ?? [], true)
+        );
+        $this->assertSame($executionId, $responseDelete['data']['payload']['$id']);
+        $this->assertArrayNotHasKey('logs', $responseDelete['data']['payload']);
+        $this->assertArrayNotHasKey('errors', $responseDelete['data']['payload']);
 
         $client->close();
 
