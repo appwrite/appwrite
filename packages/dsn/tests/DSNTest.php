@@ -206,6 +206,42 @@ class DSNTest extends TestCase
         DSN::from(scheme: 's3', host: $host, path: 'bucket');
     }
 
+    public function testFromRefusesAPasswordWithoutAUser(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        DSN::from(scheme: 's3', host: 'localhost', password: 'secret');
+    }
+
+    /**
+     * @return array<string, array{array<string, string>}>
+     */
+    public static function provideParamsParseStrRewrites(): array
+    {
+        return [
+            'brackets' => [['x[y]' => 'z']],
+            'dot' => [['a.b' => 'c']],
+            'space' => [['a b' => 'c']],
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $params
+     */
+    #[DataProvider('provideParamsParseStrRewrites')]
+    public function testFromRefusesParamsGetParamCannotReadBack(array $params): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        DSN::from(scheme: 's3', host: 'localhost', params: $params);
+    }
+
+    public function testFromParamsReadBack(): void
+    {
+        $dsn = DSN::from(scheme: 's3', host: 'localhost', params: ['region' => 'eu central', 'url' => 'https://x?y=1&z']);
+
+        $this->assertSame('eu central', $dsn->getParam('region'));
+        $this->assertSame('https://x?y=1&z', $dsn->getParam('url'));
+    }
+
     public function testToStringRoundTrips(): void
     {
         $dsn = DSN::from(

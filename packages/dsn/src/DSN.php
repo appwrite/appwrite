@@ -98,6 +98,10 @@ class DSN implements \Stringable
         string $path = '',
         array $params = [],
     ): self {
+        if ($user === null && $password !== null) {
+            throw new \InvalidArgumentException('Unable to build DSN: a password needs a user');
+        }
+
         $dsn = $scheme . '://';
         if ($user !== null) {
             $dsn .= \rawurlencode($user) . ($password === null ? '' : ':' . \rawurlencode($password)) . '@';
@@ -113,13 +117,17 @@ class DSN implements \Stringable
         $parsed = new self($dsn);
         unset($dsn);
 
+        // getParam() reads the query with parse_str, which nests `a[b]` and rewrites `.` and spaces in keys
+        \parse_str($parsed->query ?? '', $query);
+
         if (
             $parsed->scheme !== $scheme
             || $parsed->host !== $host
             || $parsed->user !== $user
-            || $parsed->password !== ($user === null ? null : $password)
+            || $parsed->password !== $password
             || $parsed->port !== ($port === null ? null : (string) $port)
             || $parsed->path !== $path
+            || $query !== $params
         ) {
             throw new \InvalidArgumentException('Unable to build DSN: a part does not survive encoding');
         }
