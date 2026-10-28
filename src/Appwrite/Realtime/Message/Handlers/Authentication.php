@@ -181,7 +181,6 @@ class Authentication extends Action
                 $realtime->connections[$connectionId]['presence'] = $presenceHold;
             } else {
                 unset($realtime->connections[$connectionId]['presence']);
-                $presenceState->forgetHold($database->getCache(), $connectionId);
                 $sequence = (string) ($presenceHold['sequence'] ?? '');
                 if ($project !== null && !$project->isEmpty() && $previousUserId !== '' && $sequence !== '') {
                     $deleted = $presenceState->releaseConnectionForUser($database, (string) $previousUserId, $sequence);
@@ -189,6 +188,7 @@ class Authentication extends Action
                         $presenceState->triggerPresenceDeleted($database, $project, (string) $previousUserId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime);
                     }
                 }
+                $presenceState->forgetHold($database->getCache(), $connectionId);
             }
         }
 

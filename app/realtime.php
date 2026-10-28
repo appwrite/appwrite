@@ -440,17 +440,20 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $contai
     Console::success('Worker ' . $workerId . ' started successfully');
 
     // A crash or kill runs no onClose, so the holds this server's previous run left counted
-    // would keep their users online. Release them once, after the database is reachable.
+    // would keep their users online. Release them, retrying until every release goes through.
     if ($workerId === 0) {
-        Timer::after(10000, function () use ($container, $presenceState): void {
+        $releaseOrphanedHolds = function () use (&$releaseOrphanedHolds, $container, $presenceState): void {
+            $failed = false;
+
             try {
-                $holds = $presenceState->takeOrphanedHolds(getCache());
+                $holds = $presenceState->getOrphanedHolds(getCache());
             } catch (Throwable $th) {
                 Console::error('Realtime orphaned presence holds: ' . $th->getMessage());
-                return;
+                $holds = [];
+                $failed = true;
             }
 
-            foreach ($holds as $hold) {
+            foreach ($holds as $field => $hold) {
                 $span = Span::init('realtime.boot.presenceCleanup');
                 Span::add('project.id', $hold['projectId']);
                 Span::add('user.id', $hold['userId']);
@@ -458,26 +461,31 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $contai
                 try {
                     $dbForPlatform = getConsoleDB();
                     $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $hold['projectId']));
-                    if ($project->isEmpty()) {
-                        continue;
+                    if (!$project->isEmpty()) {
+                        $dbForProject = getProjectDB($project);
+                        $deleted = $presenceState->releaseConnectionForUser($dbForProject, $hold['userId'], $hold['sequence']);
+                        if ($deleted !== null) {
+                            /** @var UsagePublisher $publisherForUsage */
+                            $publisherForUsage = $container->get('publisherForUsage');
+                            $presenceState->triggerPresenceDeleted($dbForProject, $project, $hold['userId'], $deleted, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
+                        }
                     }
 
-                    $dbForProject = getProjectDB($project);
-                    $deleted = $presenceState->releaseConnectionForUser($dbForProject, $hold['userId'], $hold['sequence']);
-                    if ($deleted === null) {
-                        continue;
-                    }
-
-                    /** @var UsagePublisher $publisherForUsage */
-                    $publisherForUsage = $container->get('publisherForUsage');
-                    $presenceState->triggerPresenceDeleted($dbForProject, $project, $hold['userId'], $deleted, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
+                    $presenceState->forgetOrphanedHold(getCache(), $field);
                 } catch (Throwable $th) {
                     $span->setError($th);
+                    $failed = true;
                 } finally {
                     $span->finish();
                 }
             }
-        });
+
+            if ($failed) {
+                Timer::after(60000, $releaseOrphanedHolds);
+            }
+        };
+
+        Timer::after(10000, $releaseOrphanedHolds);
     }
 
     $telemetry = getTelemetry($workerId);
@@ -1654,18 +1662,16 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         Span::add('user.id', $holdUserId);
 
                         try {
-                            // Forget before releasing: an interrupted release then leaves the row to
-                            // expiresAt, where releasing first could let the next boot release it twice.
-                            $presenceState->forgetHold(getCache(), $connection);
-
                             $dbForPlatform = getConsoleDB();
                             $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $holdProjectId));
                             if ($project->isEmpty()) {
+                                $presenceState->forgetHold(getCache(), $connection);
                                 return;
                             }
 
                             $dbForProject = getProjectDB($project);
                             $deleted = $presenceState->releaseConnectionForUser($dbForProject, $holdUserId, $holdSequence);
+                            $presenceState->forgetHold(getCache(), $connection);
                             if ($deleted === null) {
                                 return;
                             }

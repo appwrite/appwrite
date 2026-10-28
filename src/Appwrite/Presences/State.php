@@ -220,53 +220,65 @@ class State
     }
 
     /**
+     * A realtime presence expires 30 days after it is written; a hold record never needs to
+     * outlive the row it counts on.
+     */
+    private const HOLD_TTL = 30 * 24 * 60 * 60;
+
+    /**
      * Records a counted hold of one of this server's sockets. A crash runs no onClose, so the
      * next run of this server releases what this recorded; other servers' holds are never touched.
      */
     public function recordHold(Cache $cache, int $connection, string $projectId, string $userId, string $sequence): void
     {
         try {
-            $cache->save('presence-holds:' . $this->host, [
+            $saved = $cache->save('presence-holds:' . $this->host, [
                 'projectId' => $projectId,
                 'userId' => $userId,
                 'sequence' => $sequence,
-            ], $this->boot . ':' . $connection);
-        } catch (Throwable $th) {
-            Span::current()?->setError($th);
-        }
-    }
-
-    public function forgetHold(Cache $cache, int $connection): void
-    {
-        try {
-            $cache->purge('presence-holds:' . $this->host, $this->boot . ':' . $connection);
+            ], $this->boot . ':' . $connection, self::HOLD_TTL);
+            if ($saved === false) {
+                Span::add('presence.hold.recorded', false);
+            }
         } catch (Throwable $th) {
             Span::current()?->setError($th);
         }
     }
 
     /**
-     * Removes and returns the holds recorded by this server's previous runs. Their sockets died
+     * Forgets a hold once it is released. A hold whose release failed keeps its record, so the
+     * next run of this server releases it.
+     */
+    public function forgetHold(Cache $cache, int $connection): void
+    {
+        $this->forgetOrphanedHold($cache, $this->boot . ':' . $connection);
+    }
+
+    /**
+     * Returns the holds recorded by this server's previous runs, by record. Their sockets died
      * with that run, so each still counts on its presence row until it is released.
      *
-     * @return array<array{projectId: string, userId: string, sequence: string}>
+     * @return array<string, array{projectId: string, userId: string, sequence: string}>
      */
-    public function takeOrphanedHolds(Cache $cache): array
+    public function getOrphanedHolds(Cache $cache): array
     {
-        $key = 'presence-holds:' . $this->host;
         $orphans = [];
-        // Holds live as long as their socket, so no age makes one stale.
-        foreach ($cache->loadMany($key, 10 * 365 * 24 * 60 * 60) as $field => $hold) {
-            if (\str_starts_with((string) $field, $this->boot . ':')) {
-                continue;
-            }
-            $cache->purge($key, (string) $field);
-            if (\is_array($hold)) {
-                $orphans[] = $hold;
+        foreach ($cache->loadMany('presence-holds:' . $this->host, self::HOLD_TTL) as $field => $hold) {
+            if (!\str_starts_with((string) $field, $this->boot . ':') && \is_array($hold)) {
+                $orphans[(string) $field] = $hold;
             }
         }
 
         return $orphans;
+    }
+
+    public function forgetOrphanedHold(Cache $cache, string $field): void
+    {
+        try {
+            $cache->purge('presence-holds:' . $this->host, $field);
+        } catch (Throwable $th) {
+            Span::current()?->setError($th);
+        }
     }
 
     /**
