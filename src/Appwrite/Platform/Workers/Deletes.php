@@ -2158,7 +2158,7 @@ class Deletes extends Action
                             $aborted = false;
                         }
 
-                        // A resumed chunk may own the key once the lease lapses.
+                        // A resumed chunk may own the key once the lease lapses, so check it before every write.
                         if ($lock !== null && !$lock->isHeld()) {
                             return;
                         }
@@ -2180,6 +2180,10 @@ class Deletes extends Action
                                 $deviceForFiles->delete($path, true);
                             } catch (Throwable $th) {
                                 Console::warning('Failed to delete upload ' . $file->getId() . ': ' . $th->getMessage());
+                            }
+
+                            if ($lock !== null && !$lock->isHeld()) {
+                                return;
                             }
                         }
 

@@ -285,6 +285,10 @@ final class DeletesTest extends TestCase
     public function testIdleUploadKeepsItsRowUntilTheAbortRetriesRunOut(): void
     {
         $collections = Config::getParam('collections', []);
+        foreach (['targets', 'sessions', 'tokens', 'challenges', 'transactions', 'transactionLogs', 'presenceLogs', 'pushLedger', 'sites', 'deployments', 'migrations', 'rules'] as $id) {
+            $schema = $collections['console'][$id] ?? $collections['projects'][$id];
+            $this->database->createCollection(Collection::create(id: $id, attributes: $schema['attributes'], indexes: $schema['indexes']));
+        }
         $buckets = $collections['projects']['buckets'];
         $this->database->createCollection(Collection::create(id: 'buckets', attributes: $buckets['attributes'], indexes: $buckets['indexes']));
         $bucket = $this->database->createDocument('buckets', new Document([
@@ -323,8 +327,32 @@ final class DeletesTest extends TestCase
             : throw new \Exception('Abort failed'));
         $device->expects($this->once())->method('delete')->with('/uploads/failing', true);
 
-        $cleanup = new \ReflectionMethod(Deletes::class, 'deleteExpiredUploads');
-        $run = fn () => $cleanup->invoke(new Deletes(), new Document(['$id' => 'project']), fn () => $this->database, $device, null);
+        $project = new Document(['$id' => 'project', '$sequence' => '1']);
+        $message = (new Message())->setPayload([
+            'type' => DELETE_TYPE_MAINTENANCE,
+            'project' => ['$id' => $project->getId(), '$sequence' => $project->getSequence()],
+        ]);
+        $run = fn () => (new Deletes())->action(
+            message: $message,
+            project: $project,
+            dbForPlatform: $this->database,
+            getProjectDB: fn () => $this->database,
+            getDatabasesDB: fn () => $this->database,
+            deviceForFiles: $device,
+            deviceForFunctions: $this->createStub(Device::class),
+            deviceForSites: $this->createStub(Device::class),
+            deviceForBuilds: $this->createStub(Device::class),
+            telemetry: new NoTelemetry(),
+            certificates: $this->createStub(Certificates::class),
+            executor: $this->createStub(Executor::class),
+            executionRetention: DateTime::format(new \DateTime('-14 days')),
+            executionsRetentionCount: 0,
+            deploymentRetention: new Retention(),
+            publisherForDeletes: $this->createStub(DeletePublisher::class),
+            publisherForUsage: $this->createStub(UsagePublisher::class),
+            bus: new Bus(),
+            executionStore: $this->createStub(ExecutionStore::class),
+        );
 
         $run();
         $this->assertTrue($this->database->getDocument($collection, 'missing')->isEmpty(), 'an upload the device no longer has is removed at once');
