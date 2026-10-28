@@ -276,7 +276,7 @@ class SMTP extends EmailAdapter
         return match (true) {
             $exception instanceof TransactionException => $exception->reply->code,
             $exception instanceof NoHostAnswered => $exception->getCode(),
-            $exception instanceof AuthenticationException && $previous instanceof TransactionException => $previous->reply->code,
+            $previous instanceof TransactionException => $previous->reply->code,
             default => 0,
         };
     }

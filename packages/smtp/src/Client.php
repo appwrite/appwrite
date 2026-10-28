@@ -129,9 +129,16 @@ final class Client
         // command state -- so only a transaction failure keeps the connection.
         // exchange() decides that; a dead or desynchronised stream does not.
         // The dot is already written, so a missing reply is not a refusal:
-        // the server may have queued the message.
+        // the server may have queued the message. Nor is a 421, which closes
+        // the channel whether or not the message was taken.
         try {
             $reply = $this->exchange([250]);
+        } catch (TransactionException $exception) {
+            if ($exception->reply->code !== 421) {
+                throw $exception;
+            }
+
+            throw new UnconfirmedException($exception->getMessage(), $exception->getCode(), $exception);
         } catch (ConnectionException|ProtocolException $exception) {
             throw new UnconfirmedException($exception->getMessage(), $exception->getCode(), $exception);
         }
