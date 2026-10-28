@@ -108,6 +108,7 @@ database library it builds on; read the upgrade notes before you upgrade from 2.
 
 ### Fixed
 
+- The transfer cache keys a table by its database's ID and a column, index or row by its database's and table's IDs, so the first tables of two databases no longer share an entry (the second replaced the first, which then got no columns, indexes or rows).
 - Imports into a destination whose database metadata has `status` but no owner attributes.
 - Recovery of databases left `provisioning` or `failed` without an owner.
 - An ownerless database that another migration may still be provisioning is no longer taken over.
