@@ -454,6 +454,16 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $contai
         }
 
         foreach ($holds as $field => $hold) {
+            try {
+                if (!$presenceState->claimOrphanedHold(getCache(), $field)) {
+                    continue;
+                }
+            } catch (Throwable $th) {
+                Console::error('Realtime orphaned presence hold claim: ' . $th->getMessage());
+                $failed = true;
+                continue;
+            }
+
             $span = Span::init('realtime.boot.presenceCleanup');
             Span::add('project.id', $hold['projectId']);
             Span::add('user.id', $hold['userId']);
@@ -470,11 +480,14 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $contai
                         $presenceState->triggerPresenceDeleted($dbForProject, $project, $hold['userId'], $deleted, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
                     }
                 }
-
-                $presenceState->forgetOrphanedHold(getCache(), $field);
             } catch (Throwable $th) {
                 $span->setError($th);
                 $failed = true;
+                try {
+                    $presenceState->restoreOrphanedHold(getCache(), $field, $hold);
+                } catch (Throwable $th) {
+                    $span->setError($th);
+                }
             } finally {
                 $span->finish();
             }

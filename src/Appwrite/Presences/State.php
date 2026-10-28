@@ -257,7 +257,7 @@ class State
     public function forgetHold(Cache $cache, int $connection): void
     {
         if ($this->host !== '') {
-            $this->forgetOrphanedHold($cache, $this->boot . ':' . \getmypid() . ':' . $connection);
+            $this->forgetRecord($cache, $this->boot . ':' . \getmypid() . ':' . $connection);
         }
     }
 
@@ -289,10 +289,30 @@ class State
     }
 
     /**
+     * Takes an orphaned hold's record for the caller to release, and returns whether it got it.
+     * Workers starting together see the same records; only the one that removes a record
+     * releases its hold, so no hold is released twice.
+     */
+    public function claimOrphanedHold(Cache $cache, string $field): bool
+    {
+        return $cache->purge('presence-holds:' . $this->host, $field);
+    }
+
+    /**
+     * Puts back the record of a claimed hold whose release failed, so a later pass retries it.
+     *
+     * @param array{projectId: string, userId: string, sequence: string} $hold
+     */
+    public function restoreOrphanedHold(Cache $cache, string $field, array $hold): void
+    {
+        $cache->save('presence-holds:' . $this->host, $hold, $field, self::HOLD_TTL);
+    }
+
+    /**
      * A record left after its hold was released would release that hold again on the next
      * restart, so a failed purge is retried.
      */
-    public function forgetOrphanedHold(Cache $cache, string $field): void
+    private function forgetRecord(Cache $cache, string $field): void
     {
         for ($attempt = 1; $attempt <= 3; $attempt++) {
             try {
