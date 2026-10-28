@@ -11,6 +11,8 @@ use Appwrite\Role;
 use Appwrite\Screenshots\Client;
 use Appwrite\Screenshots\Exception as ScreenshotsException;
 use Exception;
+use Swoole\Coroutine;
+use Swoole\Coroutine\Channel;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -108,9 +110,6 @@ class Screenshots extends Action
             ->setParam('siteId', $site->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $date = \date('H:i:s');
-        $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n");
-
         $bucket = new Document();
         $files = [];
 
@@ -169,15 +168,15 @@ class Screenshots extends Action
             $framework = Config::getParam('frameworks', [])[$site->getAttribute('framework', '')] ?? null;
             $sleep = $framework['screenshotSleep'] ?? 3000;
 
-            $captures = [];
-            foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
-                $captures[$key] = $screenshots->create(
-                    url: $routerHost . '/',
-                    theme: $theme,
-                    headers: $headers,
-                    sleep: $sleep,
-                );
-            }
+            $date = \date('H:i:s');
+            $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n");
+
+            $captures = $this->captureThemes(
+                $screenshots,
+                $routerHost . '/',
+                $headers,
+                $sleep,
+            );
 
             Span::add('screenshot.count', \count($captures));
 
@@ -343,5 +342,54 @@ class Screenshots extends Action
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())
             ->trigger();
+    }
+
+    /**
+     * Capture light and dark previews. In the Swoole worker both themes are
+     * requested together so a job stays within one HTTP timeout budget; outside
+     * a coroutine (unit tests) they run sequentially.
+     *
+     * @param array<string, string> $headers
+     * @return array<string, string> Keys `screenshotLight` and `screenshotDark`
+     */
+    protected function captureThemes(Client $screenshots, string $url, array $headers, int $sleep): array
+    {
+        $themes = ['screenshotLight' => 'light', 'screenshotDark' => 'dark'];
+
+        if (Coroutine::getCid() === -1) {
+            $captures = [];
+            foreach ($themes as $key => $theme) {
+                $captures[$key] = $screenshots->create($url, $theme, $headers, $sleep);
+            }
+
+            return $captures;
+        }
+
+        $channel = new Channel(\count($themes));
+        $captures = [];
+        $errors = [];
+
+        foreach ($themes as $key => $theme) {
+            \go(function () use ($key, $theme, $screenshots, $url, $headers, $sleep, $channel, &$captures, &$errors) {
+                try {
+                    $captures[$key] = $screenshots->create($url, $theme, $headers, $sleep);
+                } catch (\Throwable $throwable) {
+                    $errors[$key] = $throwable;
+                } finally {
+                    $channel->push(true);
+                }
+            });
+        }
+
+        for ($i = 0, $count = \count($themes); $i < $count; $i++) {
+            $channel->pop();
+        }
+        $channel->close();
+
+        if ($errors !== []) {
+            throw \reset($errors);
+        }
+
+        return $captures;
     }
 }
