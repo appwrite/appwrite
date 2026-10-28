@@ -89,6 +89,7 @@ final class UnsubscribeTest extends TestCase
         $accounts = new Accounts();
         $container->set('authenticator', fn (): \Closure => $accounts->authenticate(...));
         $container->set('authorizer', fn (): \Closure => $accounts->authorize(...));
+        $container->set('getPlan', fn (): \Closure => fn (string $projectId): array => []);
         $container->set('getConsoleDB', fn () => fn (): Database => $this->database, []);
         $container->set('getProjectDB', fn () => fn (Document $project): Database => $this->database, []);
 
