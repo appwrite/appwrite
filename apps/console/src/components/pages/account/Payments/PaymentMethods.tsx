@@ -280,6 +280,7 @@ export function AccountPaymentMethods({
                       onSetupMandate={
                         needsMandate ? handleSetupMandate : undefined
                       }
+                      setupMandatePending={setupMandateMutation.isPending}
                     >
                     <TableRow
                       className={cn(

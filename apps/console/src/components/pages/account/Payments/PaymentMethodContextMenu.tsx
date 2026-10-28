@@ -22,6 +22,7 @@ interface PaymentMethodContextMenuProps {
   onDelete: (method: Models.PaymentMethod) => void
   /** Only set for cards that can take a mandate. */
   onSetupMandate?: (method: Models.PaymentMethod) => void
+  setupMandatePending?: boolean
   children: React.ReactNode
 }
 
@@ -30,6 +31,7 @@ export function PaymentMethodContextMenu({
   onUpdate,
   onDelete,
   onSetupMandate,
+  setupMandatePending,
   children,
 }: PaymentMethodContextMenuProps) {
   const t = useT()
@@ -46,7 +48,10 @@ export function PaymentMethodContextMenu({
           {t('Update')}
         </ContextMenuItem>
         {onSetupMandate && (
-          <ContextMenuItem onSelect={() => onSetupMandate(paymentMethod)}>
+          <ContextMenuItem
+            disabled={setupMandatePending}
+            onSelect={() => onSetupMandate(paymentMethod)}
+          >
             <ContextMenuIcon icon={ShieldCheck} />
             {t('Set up auto-pay')}
           </ContextMenuItem>
