@@ -14,6 +14,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
@@ -72,6 +73,7 @@ class Deletes extends Action
             ->inject('deviceForSites')
             ->inject('deviceForBuilds')
             ->inject('telemetry')
+            ->inject('mqtt')
             ->inject('certificates')
             ->inject('executor')
             ->inject('executionRetention')
@@ -103,6 +105,7 @@ class Deletes extends Action
         Device $deviceForSites,
         Device $deviceForBuilds,
         Telemetry $telemetry,
+        Mqtt $mqtt,
         Provider $certificates,
         Executor $executor,
         string $executionRetention,
@@ -137,6 +140,7 @@ class Deletes extends Action
             $deviceForSites,
             $deviceForBuilds,
             $telemetry,
+            $mqtt,
             $certificates,
             $executor,
             $executionRetention,
@@ -231,6 +235,7 @@ class Deletes extends Action
         Device $deviceForSites,
         Device $deviceForBuilds,
         Telemetry $telemetry,
+        Mqtt $mqtt,
         Provider $certificates,
         Executor $executor,
         string $executionRetention,
@@ -280,7 +285,7 @@ class Deletes extends Action
                         $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor, $bus);
                         break;
                     case DELETE_TYPE_USERS:
-                        $this->deleteUser($getProjectDB, $document, $project);
+                        $this->deleteUser($getProjectDB, $document, $project, $mqtt);
                         break;
                     case DELETE_TYPE_TEAMS:
                         $this->deleteTeam($getProjectDB, $document, $project);
@@ -345,22 +350,22 @@ class Deletes extends Action
                 $this->deleteSchedules($dbForPlatform, $getProjectDB, $datetime);
                 break;
             case DELETE_TYPE_TOPIC:
-                $this->deleteTopic($project, $getProjectDB, $document);
+                $this->deleteTopic($project, $getProjectDB, $document, $mqtt);
                 break;
             case DELETE_TYPE_TARGET:
-                Targets::deleteSubscribers($getProjectDB($project), $document);
+                Targets::deleteSubscribers($getProjectDB($project), $document, $mqtt, $project->getId());
                 break;
             case DELETE_TYPE_EXPIRED_TARGETS:
-                $this->deleteExpiredTargets($project, $getProjectDB);
+                $this->deleteExpiredTargets($project, $getProjectDB, $mqtt);
                 break;
             case DELETE_TYPE_SESSION_TARGETS:
-                $this->deleteSessionTargets($project, $getProjectDB, $document);
+                $this->deleteSessionTargets($project, $getProjectDB, $document, $mqtt);
                 break;
             case DELETE_TYPE_CSV_EXPORTS:
                 $this->deleteOldExports($dbForPlatform, $deviceForFiles);
                 break;
             case DELETE_TYPE_MAINTENANCE:
-                $this->deleteExpiredTargets($project, $getProjectDB);
+                $this->deleteExpiredTargets($project, $getProjectDB, $mqtt);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount, $executionStore);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTokens($project, $getProjectDB);
@@ -536,7 +541,7 @@ class Deletes extends Action
      * @param Document $topic
      * @throws Exception
      */
-    private function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
+    private function deleteTopic(Document $project, callable $getProjectDB, Document $topic, Mqtt $mqtt)
     {
         if ($topic->isEmpty()) {
             Console::error('Failed to delete subscribers. Topic not found');
@@ -551,7 +556,16 @@ class Deletes extends Action
                 Query::equal('topicInternalId', [$topic->getSequence()]),
                 Query::orderAsc(),
             ],
-            $dbForProject
+            $dbForProject,
+            function (Document $subscriber) use ($project, $topic, $mqtt) {
+                // The topic itself is gone, so every subscriber row deleted here is the user's
+                // last one for it; unlike Targets::deleteSubscribers(), no other-row check is needed.
+                try {
+                    $mqtt->revokeTopic($project->getId(), $subscriber->getAttribute('userId'), $topic->getId());
+                } catch (\Throwable $error) {
+                    Console::error('Failed to unsubscribe MQTT connection: ' . $error->getMessage());
+                }
+            }
         );
 
         if ($dbForProject->findCollection('pushLedger') === null) {
@@ -574,16 +588,16 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
+    private function deleteExpiredTargets(Document $project, callable $getProjectDB, Mqtt $mqtt): void
     {
         Console::info('Delete expired targets');
-        Targets::delete($getProjectDB($project), Query::equal('expired', [true]));
+        Targets::delete($getProjectDB($project), Query::equal('expired', [true]), $mqtt, $project->getId());
     }
 
-    private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
+    private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session, Mqtt $mqtt): void
     {
         Console::info('Delete session targets');
-        Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
+        Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]), $mqtt, $project->getId());
     }
 
     private function updateProcessingMigrations(Document $project, callable $getProjectDB): void
@@ -1160,7 +1174,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteUser(callable $getProjectDB, Document $document, Document $project): void
+    private function deleteUser(callable $getProjectDB, Document $document, Document $project, Mqtt $mqtt): void
     {
         $userId = $document->getId();
         $userInternalId = $document->getSequence();
@@ -1218,7 +1232,7 @@ class Deletes extends Action
         Identities::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
 
         // Delete targets
-        Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
+        Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]), $mqtt, $project->getId());
 
         // Delete photos, including files a racing upload or delete left behind.
         // The trailing slash keeps the prefix match from reaching a user whose ID starts the same.

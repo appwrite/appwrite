@@ -89,7 +89,7 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, Mqtt $mqtt) {
 
     // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
     $oauthProvider = null;
@@ -239,7 +239,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     // Claim the token and issue the session together: of concurrent exchanges only the one that deletes the token
     // gets a session, and a failed insert rolls the claim back so the token can be retried. The user row lock
     // orders this against an address change, which deletes the token and resets the verification it proves
-    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project) {
+    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project, $mqtt) {
         $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
 
         if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
@@ -248,7 +248,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
         // Proving an unverified email claims the account, so whoever registered it keeps no other way in
         if ($verification === 'emailVerification' && !$locked->getAttribute('emailVerification', false)) {
-            $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
+            $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $mqtt));
         }
 
         $session = $dbForProject->createDocument('sessions', $session
@@ -1449,6 +1449,7 @@ Http::post('/v1/account/sessions/token')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
+    ->inject('mqtt')
     ->action($createSession);
 
 Http::get('/v1/account/sessions/oauth2/:provider')
@@ -1986,7 +1987,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
                     if (!$user->getAttribute('emailVerification', false)) {
-                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
+                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $mqtt));
                     }
                     // The provider verified this address, or its canonical form on the same domain
                     if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
@@ -3319,10 +3320,11 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
+    ->inject('mqtt')
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization, $mqtt) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization, $mqtt);
     });
 
 Http::put('/v1/account/sessions/phone')
@@ -3371,6 +3373,7 @@ Http::put('/v1/account/sessions/phone')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
+    ->inject('mqtt')
     ->action($createSession);
 
 Http::post('/v1/account/tokens/phone')
@@ -4644,7 +4647,7 @@ Http::put('/v1/account/recovery')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword) {
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, $mqtt) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
@@ -4653,7 +4656,7 @@ Http::put('/v1/account/recovery')
             // Recovery proves an unverified email, so whoever registered it keeps no other way in
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
             if (!$locked->getAttribute('emailVerification', false)) {
-                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project, $mqtt));
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
@@ -5071,7 +5074,7 @@ Http::put('/v1/account/recovery/otp')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword) {
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, $mqtt) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
@@ -5080,7 +5083,7 @@ Http::put('/v1/account/recovery/otp')
             // Recovery proves an unverified email, so whoever registered it keeps no other way in
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
             if (!$locked->getAttribute('emailVerification', false)) {
-                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project, $mqtt));
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
