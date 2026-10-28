@@ -77,6 +77,74 @@ final class RealtimeConsoleTailTest extends Scope
 
         $this->createProjectUser($projectId);
 
+        $this->assertTailStopped($client, 'Tail kept streaming after the membership was removed.');
+
+        $client->close();
+    }
+
+    public function testTailEndsWhenProjectIsTransferred(): void
+    {
+        $headers = $this->getRootHeaders();
+        $teamId = $this->createOrganization($headers);
+        $destinationTeamId = $this->createOrganization($headers);
+        $projectId = $this->createOrganizationProject($headers, $teamId);
+
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($headers, $teamId, $member['email'], ['developer']);
+
+        $client = $this->getConsoleWebsocket($member['session']);
+        $response = $this->subscribe($client, ['console.tail.' . $projectId]);
+        $this->assertTrue($response['data']['success']);
+
+        $this->createProjectUser($projectId);
+        $this->receiveUntilEvent($client, fn (array $message): bool => \in_array('console.tail', $message['data']['events'] ?? [], true));
+
+        $project = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+            'teamId' => $destinationTeamId,
+        ]);
+        $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame($destinationTeamId, $project['body']['teamId']);
+
+        $this->createProjectUser($projectId);
+
+        $this->assertTailStopped($client, 'Tail kept streaming to the previous team after the project was transferred.');
+
+        $client->close();
+    }
+
+    public function testTailEndsWhenConnectionAuthenticatesAsAnotherUser(): void
+    {
+        $headers = $this->getRootHeaders();
+        $teamId = $this->createOrganization($headers);
+        $projectId = $this->createOrganizationProject($headers, $teamId);
+
+        $stranger = $this->createConsoleAccount();
+
+        $client = $this->getConsoleWebsocket($this->getRoot()['session']);
+        $response = $this->subscribe($client, ['console.tail.' . $projectId]);
+        $this->assertTrue($response['data']['success']);
+
+        $this->createProjectUser($projectId);
+        $this->receiveUntilEvent($client, fn (array $message): bool => \in_array('console.tail', $message['data']['events'] ?? [], true));
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => [
+                'session' => $stranger['session'],
+            ],
+        ]));
+        $response = $this->receiveUntilEvent($client, fn (array $message): bool => ($message['data']['to'] ?? '') === 'authentication');
+        $this->assertTrue($response['data']['success']);
+
+        $this->createProjectUser($projectId);
+
+        $this->assertTailStopped($client, 'Tail kept streaming to a connection that authenticated as a user who cannot read the project.');
+
+        $client->close();
+    }
+
+    private function assertTailStopped(WebSocketClient $client, string $message): void
+    {
         $frames = [];
         while (true) {
             try {
@@ -87,10 +155,8 @@ final class RealtimeConsoleTailTest extends Scope
         }
 
         foreach ($frames as $frame) {
-            $this->assertNotContains('console.tail', $frame['data']['events'] ?? [], 'Tail kept streaming after the membership was removed.');
+            $this->assertNotContains('console.tail', $frame['data']['events'] ?? [], $message);
         }
-
-        $client->close();
     }
 
     private function getRootHeaders(): array
