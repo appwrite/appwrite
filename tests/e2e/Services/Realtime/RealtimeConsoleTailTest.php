@@ -90,7 +90,7 @@ final class RealtimeConsoleTailTest extends Scope
         $projectId = $this->createOrganizationProject($headers, $teamId);
 
         $member = $this->createConsoleAccount();
-        $this->addOrganizationMember($headers, $teamId, $member['email'], ['developer']);
+        $this->addOrganizationMember($headers, $teamId, $member, ['developer']);
 
         $client = $this->getConsoleWebsocket($member['session']);
         $response = $this->subscribe($client, ['console.tail.' . $projectId]);
