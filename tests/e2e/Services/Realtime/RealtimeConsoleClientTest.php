@@ -1524,6 +1524,25 @@ final class RealtimeConsoleClientTest extends Scope
 
         $frames = $this->receiveUntilClosed($client);
         $this->assertSame('error', \end($frames)['type'] ?? null);
+
+        // A blocked console user keeps their sessions, but not the connection.
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($rootHeaders, $otherTeam['body']['$id'], $member, ['owner']);
+
+        $client = $this->getAdminWebsocket($projectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        $block = $this->client->call(Client::METHOD_PATCH, '/account/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $member['session'],
+        ]);
+        $this->assertSame(200, $block['headers']['status-code']);
+
+        $frames = $this->receiveUntilClosed($client);
+        $this->assertSame('error', \end($frames)['type'] ?? null);
     }
 
     private function getAdminWebsocket(string $projectId, string $session, array $channels = ['documents']): WebSocketClient
