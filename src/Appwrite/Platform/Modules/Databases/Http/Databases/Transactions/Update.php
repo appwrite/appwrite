@@ -431,7 +431,10 @@ class Update extends Action
                     ->addMetric($this->getDatabasesOperationWriteMetric(), $count);
             }
 
+            // find() is not served from the document cache.
             $dbCache = [];
+            $databaseCache = [];
+            $collectionCache = [];
             foreach ($operations as $operation) {
                 $databaseInternalId = $operation['databaseInternalId'];
                 $collectionInternalId = $operation['collectionInternalId'];
@@ -444,27 +447,15 @@ class Update extends Action
                     $data = $data->getArrayCopy();
                 }
 
-                // using a dbCache so only one time database is set with databaseInternalId
-                if (!isset($dbCache[$databaseInternalId])) {
-                    $databaseDoc = $authorization->skip(fn () => $dbForProject->skipFilters(
-                        fn () => $dbForProject->findOne('databases', [
-                            Query::equal('$sequence', [$databaseInternalId])
-                        ]),
-                        APP_DATABASES_SUBQUERIES
-                    ));
-                    $dbCache[$databaseInternalId] = $getDatabasesDB($databaseDoc);
-                }
-
-                $dbForDatabases = $dbCache[$databaseInternalId];
-
-                $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                $database = $databaseCache[$databaseInternalId] ??= $authorization->skip(fn () => $dbForProject->skipFilters(
                     fn () => $dbForProject->findOne('databases', [
                         Query::equal('$sequence', [$databaseInternalId])
                     ]),
                     APP_DATABASES_SUBQUERIES
                 ));
+                $dbForDatabases = $dbCache[$databaseInternalId] ??= $getDatabasesDB($database);
 
-                $collection = $authorization->skip(fn () => $dbForProject->skipFilters(
+                $collection = $collectionCache[$collectionId] ??= $authorization->skip(fn () => $dbForProject->skipFilters(
                     fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
                         Query::equal('$sequence', [$collectionInternalId])
                     ]),
