@@ -7,6 +7,7 @@ use Override;
 use Utopia\Client\Adapter\Curl\Client as Curl;
 use Utopia\Client\Client as HttpClient;
 use Utopia\Client\Destinations;
+use Utopia\Migration\Target;
 
 class Client extends Base
 {
@@ -51,6 +52,7 @@ class Client extends Base
     {
         $options = [
             CURLOPT_TIMEOUT_MS => 0,
+            CURLOPT_MAXFILESIZE_LARGE => Target::MAX_RESPONSE_SIZE,
             CURLOPT_USERAGENT => php_uname('s').'-'.php_uname('r').':php-'.phpversion(),
             CURLOPT_PROTOCOLS_STR => self::PROTOCOLS,
             CURLOPT_REDIR_PROTOCOLS_STR => self::PROTOCOLS,
