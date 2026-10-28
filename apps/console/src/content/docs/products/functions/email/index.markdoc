@@ -241,7 +241,7 @@ def main(context)
       }
     )
   rescue Appwrite::Exception => e
-    if e.code == 409
+    if e.code.to_i == 409
       context.log("Email #{email['id']} is already saved")
       return context.res.empty
     end
@@ -302,8 +302,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/appwrite/sdk-for-go/appwrite"
-	"github.com/appwrite/sdk-for-go/client"
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/client"
 	"github.com/open-runtimes/types-for-go/v4/openruntimes"
 )
 
@@ -490,8 +490,6 @@ public class Main {
                 "subject", email.get("subject"),
                 "text", email.get("text")
             ),
-            null, // permissions
-            null, // transactionId
             new CoroutineCallback<>((row, error) -> result.complete(error))
         );
 
@@ -516,7 +514,7 @@ import Foundation
 
 func main(context: RuntimeContext) async throws -> RuntimeOutput {
     if context.req.headers["x-appwrite-trigger"] != "email" {
-        return context.res.text("Not an email", 400)
+        return context.res.text("Not an email", statusCode: 400)
     }
 
     let email = context.req.bodyJson
@@ -614,7 +612,7 @@ use openruntimes::{Context, Response};
 use serde_json::{json, Value};
 use std::env;
 
-pub fn main(context: Context) -> Response {
+pub fn main(mut context: Context) -> Response {
     if context.req.headers.get("x-appwrite-trigger").map(String::as_str) != Some("email") {
         return context.res.text("Not an email", Some(400), None);
     }
