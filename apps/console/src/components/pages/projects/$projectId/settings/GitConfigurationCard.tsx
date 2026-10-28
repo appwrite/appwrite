@@ -8,6 +8,7 @@ import {
   useVcsInstallations,
   useDeleteVcsInstallation,
 } from '@/lib/react-query/hooks/vcs'
+import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   closeDialogBeforeOverlayUnmount,
@@ -144,7 +145,8 @@ export function GitConfigurationCard({
 }: GitConfigurationCardProps) {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features)
+  const { vcsProviders } = useConsoleVariables()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
   const queryClient = useQueryClient()
   // Fall back to the GitHub-only helper when a generalized builder isn't provided.
   const vcsAuthUrl = (

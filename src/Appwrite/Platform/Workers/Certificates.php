@@ -41,6 +41,12 @@ class Certificates extends Action
 {
     private const MAX_GENERATION_ATTEMPTS = 5;
 
+    /**
+     * How soon a certificate a delayed provider has not issued yet is checked
+     * again. Without a renew date, maintenance never selects it again.
+     */
+    private const PROVIDER_CHECK_INTERVAL = 60 * 60 * 24;
+
     public static function getName(): string
     {
         return 'certificates';
@@ -337,11 +343,23 @@ class Certificates extends Action
                     return;
                 }
 
+                $status = $certificates->getCertificateStatus($domain->get(), $domainType);
+
+                // The provider owns the renewal and has not finished it; issuing again would not help
+                if ($status === Status::EXPIRING) {
+                    $date = \date('H:i:s');
+                    $logs .= "\033[90m[{$date}] \033[33mSSL certificate expires soon, and the certificate provider has not renewed it yet. We'll check again tomorrow. \033[0m\n";
+                    Console::warning('Certificate for ' . $domain->get() . ' expires soon and its provider has not renewed it');
+                    $certificate->setAttribute('renewDate', DateTime::addSeconds(new \DateTime(), self::PROVIDER_CHECK_INTERVAL));
+                    return;
+                }
+
                 // Wait for the delayed provider's existing order; issuing again below picks up its renew date
-                if (!\in_array($certificates->getCertificateStatus($domain->get(), $domainType), [Status::ISSUED, Status::RENEWING], true)) {
+                if (!\in_array($status, [Status::ISSUED, Status::RENEWING], true)) {
                     $date = \date('H:i:s');
                     $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
                     Console::info('Certificate for ' . $domain->get() . ' is not issued yet');
+                    $certificate->setAttribute('renewDate', DateTime::addSeconds(new \DateTime(), self::PROVIDER_CHECK_INTERVAL));
                     return;
                 }
             }
@@ -360,6 +378,11 @@ class Certificates extends Action
                 // Delayed generation: third-party handles certificate issuance asynchronously
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
                 $certificate->setAttribute('logs', $logs);
+            }
+
+            // A delayed provider has no renew date until it issues, and one already due would be queued on every maintenance run
+            if ($awaitingProvider && ($renewDate === null || $renewDate <= DateTime::now())) {
+                $renewDate = DateTime::addSeconds(new \DateTime(), self::PROVIDER_CHECK_INTERVAL);
             }
 
             $certificate->setAttributes([

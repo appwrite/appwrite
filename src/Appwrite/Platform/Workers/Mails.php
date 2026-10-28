@@ -102,9 +102,37 @@ class Mails extends Action
         $body = $payload['body'];
         $preview = $payload['preview'] ?? '';
 
+        $variables['year'] = date('Y');
+
+        $subjectTemplate = Template::fromString($subject);
+        foreach ($variables as $key => $value) {
+            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+        }
+        // render() will return the subject in <p> tags, so use strip_tags() to remove them
+        $subject = \strip_tags($subjectTemplate->render());
+
+        $heading = $subject;
+        if (!empty($variables['heading'])) {
+            $headingTemplate = Template::fromString($variables['heading']);
+            foreach ($variables as $key => $value) {
+                $headingTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $heading = $headingTemplate->render(useContent: true);
+        }
         $variables['subject'] = $subject;
-        $variables['heading'] = $variables['heading'] ?? $subject;
-        $variables['year'] = date("Y");
+        $variables['heading'] = $heading;
+
+        // Expand the body's placeholders once, so values are inserted literally
+        if (!empty($body)) {
+            $bodyContent = Template::fromString($body);
+            foreach ($variables as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value);
+            }
+            foreach ($this->richTextParams as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $body = $bodyContent->render(useContent: true);
+        }
 
         $attachment = $payload['attachment'] ?? [];
         $bodyTemplate = $payload['bodyTemplate'];
@@ -142,13 +170,6 @@ class Mails extends Action
         $bodyTemplate->setParam('{{previewWhitespace}}', $previewWhitespace, false);
 
         $body = $bodyTemplate->render();
-
-        $subjectTemplate = Template::fromString($subject);
-        foreach ($variables as $key => $value) {
-            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
-        }
-        // render() will return the subject in <p> tags, so use strip_tags() to remove them
-        $subject = \strip_tags($subjectTemplate->render());
 
         $breaker = null;
         if ($type === 'smtp') {
