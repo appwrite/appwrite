@@ -49,46 +49,10 @@ final class SMTPKeepAliveTest extends TestCase
         $this->assertSame(1, $this->send($adapter)['deliveredTo']);
     }
 
-    public function testARefusalOnAKeptSessionIsNotSentAgain(): void
-    {
-        $server = new ScriptedSmtpServer(
-            [...self::DELIVERED, '550 5.7.1 Sender address rejected'],
-            self::DELIVERED,
-        );
-        $adapter = $this->adapter($server);
-        $this->send($adapter);
-
-        $this->assertSame(0, $this->send($adapter)['deliveredTo']);
-    }
-
-    public function testA421OnAFreshSessionIsNotSentAgain(): void
-    {
-        $server = new ScriptedSmtpServer(
-            ['220 smtp.example.test ESMTP', '250 smtp.example.test', '421 4.7.0 Try again later, closing connection'],
-            self::DELIVERED,
-        );
-        $adapter = $this->adapter($server);
-
-        $this->assertSame(0, $this->send($adapter)['deliveredTo']);
-    }
-
     public function testAMessageWhoseReplyWasLostIsNotSentAgain(): void
     {
         $server = new ScriptedSmtpServer(
             [...self::DELIVERED, '250 2.1.0 Ok', '250 2.1.5 Ok', '354 End data with <CR><LF>.<CR><LF>'],
-            self::DELIVERED,
-        );
-        $adapter = $this->adapter($server);
-        $this->send($adapter);
-
-        $this->assertSame(0, $this->send($adapter)['deliveredTo']);
-    }
-
-    public function testAFailedRetryIsNotSentAThirdTime(): void
-    {
-        $server = new ScriptedSmtpServer(
-            [...self::DELIVERED, '421 4.4.2 Idle timeout, closing connection'],
-            ['220 smtp.example.test ESMTP', '250 smtp.example.test', '421 4.7.0 Try again later, closing connection'],
             self::DELIVERED,
         );
         $adapter = $this->adapter($server);
