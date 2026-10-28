@@ -801,7 +801,7 @@ class Jobs extends Action
         // live in the platform database and are repointed before the commit;
         // the router keeps serving the active deployment until then.
         if ($applied > 0) {
-            $applied = $dbForProject->withTransaction(function () use ($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus, $success, $terminal): int {
+            $applied = $dbForProject->withTransaction(function () use ($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus, $success, $terminal, $collection): int {
                 $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
                     Query::equal('$id', [$deployment->getId()]),
                     Query::notEqual('status', 'canceled'),
@@ -809,6 +809,8 @@ class Jobs extends Action
 
                 if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
                     $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+                } elseif ($applied > 0 && $success && $collection !== 'sites' && $deployment->getAttribute('activate') !== true && ! $resource->isEmpty()) {
+                    $this->activateBranchRule($dbForPlatform, $project, $resource, $deployment, $bus);
                 }
 
                 return $applied;
@@ -828,13 +830,6 @@ class Jobs extends Action
                 project: $project,
                 deploymentId: $deployment->getId(),
             ));
-        }
-
-        // A build that is not activated never reaches activate() above, and a
-        // push to a non-production branch never produces an activated one.
-        // Sites get this from activateBranchPreviewRule; functions have none.
-        if ($applied > 0 && $success && $collection !== 'sites' && $deployment->getAttribute('activate') !== true && ! $resource->isEmpty()) {
-            $this->activateBranchRule($dbForPlatform, $project, $resource, $deployment, $bus);
         }
 
         // (Re)activate its schedule so the scheduler enqueues cron executions

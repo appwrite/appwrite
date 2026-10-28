@@ -647,29 +647,7 @@ class Deletes extends Action
 
             $now = new \DateTime();
 
-            $kept = [];
-            $activeDeploymentId = $resource->getAttribute('deploymentId', '');
-            if (!empty($activeDeploymentId)) {
-                $kept[] = $activeDeploymentId;
-            }
-
-            // A custom domain pinned to a branch serves that branch's latest build, which is
-            // rarely the active deployment; deleting the deployment would delete the domain too.
-            $this->listByGroup(
-                'rules',
-                [
-                    Query::equal('projectInternalId', [$project->getSequence()]),
-                    Query::equal('type', ['deployment']),
-                    Query::equal('trigger', ['manual']),
-                    Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
-                    Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
-                    Query::notEqual('deploymentId', ''),
-                ],
-                $dbForPlatform,
-                function (Document $rule) use (&$kept) {
-                    $kept[] = $rule->getAttribute('deploymentId');
-                }
-            );
+            $kept = $this->deploymentIdsProtectedFromRetention($dbForPlatform, $dbForProject, $project, $resource);
 
             $queries = [
                 Query::equal('resourceInternalId', [$resource->getSequence()]),
@@ -702,6 +680,62 @@ class Deletes extends Action
             $dbForProject,
             $removalCallback
         );
+    }
+
+    /**
+     * Deployments retention must never delete while a manual rule still serves them.
+     * Branch-pinned rules follow that branch's newest ready VCS build, which may not
+     * match deploymentId until the build worker repoints the rule.
+     *
+     * @return list<string>
+     */
+    protected function deploymentIdsProtectedFromRetention(Database $dbForPlatform, Database $dbForProject, Document $project, Document $resource): array
+    {
+        $kept = [];
+        $activeDeploymentId = $resource->getAttribute('deploymentId', '');
+        if ($activeDeploymentId !== '') {
+            $kept[] = $activeDeploymentId;
+        }
+
+        $this->listByGroup(
+            'rules',
+            [
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('type', ['deployment']),
+                Query::equal('trigger', ['manual']),
+                Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
+                Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+            ],
+            $dbForPlatform,
+            function (Document $rule) use (&$kept, $dbForProject, $resource): void {
+                $deploymentId = $rule->getAttribute('deploymentId', '');
+                if ($deploymentId !== '') {
+                    $kept[] = $deploymentId;
+                }
+
+                $branch = $rule->getAttribute('deploymentVcsProviderBranch', '');
+                if ($branch === '') {
+                    return;
+                }
+
+                $branchDeployment = $dbForProject->findOne('deployments', [
+                    Query::equal('resourceType', [$resource->getCollection()]),
+                    Query::equal('resourceInternalId', [$resource->getSequence()]),
+                    Query::equal('providerBranch', [$branch]),
+                    Query::equal('status', ['ready']),
+                    Query::isNotNull('installationId'),
+                    Query::notEqual('installationId', ''),
+                    Query::orderDesc('$createdAt'),
+                    Query::orderDesc('$sequence'),
+                ]);
+
+                if (! $branchDeployment->isEmpty()) {
+                    $kept[] = $branchDeployment->getId();
+                }
+            }
+        );
+
+        return \array_values(\array_unique($kept));
     }
 
     /**

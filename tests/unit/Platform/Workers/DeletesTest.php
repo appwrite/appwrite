@@ -286,6 +286,74 @@ final class DeletesTest extends TestCase
         $this->assertSame(1, $scheduler->count(), 'only the schedule of the project that still exists may fire');
     }
 
+    public function testRetentionProtectsBranchPinnedBuildBeforeRuleRepoint(): void
+    {
+        $collections = Config::getParam('collections', []);
+        foreach (['deployments' => $collections['projects']['deployments'], 'functions' => $collections['projects']['functions'], 'rules' => $collections['console']['rules']] as $id => $collection) {
+            $this->database->createCollection(Collection::create(
+                id: $id,
+                attributes: $collection['attributes'],
+                indexes: $collection['indexes'],
+            ));
+        }
+
+        $project = new Document(['$id' => 'project-1', '$sequence' => '7']);
+        $function = new Document([
+            '$id' => 'func-1',
+            '$sequence' => '100',
+            '$collection' => 'functions',
+            'deploymentId' => 'dep-active',
+        ]);
+        $this->database->createDocument('functions', $function);
+
+        $now = new \DateTime();
+        $older = DateTime::addSeconds(clone $now, -7200);
+        $newer = DateTime::addSeconds(clone $now, -3600);
+
+        $this->database->withPreserveDates(true, fn (): Document => $this->database->createDocument('deployments', new Document([
+            '$id' => 'dep-active',
+            '$sequence' => '10',
+            '$createdAt' => $older,
+            '$updatedAt' => $older,
+            'resourceType' => 'functions',
+            'resourceInternalId' => '100',
+            'resourceId' => 'func-1',
+            'providerBranch' => 'main',
+            'installationId' => 'inst-1',
+            'status' => 'ready',
+            'type' => 'vcs',
+        ])));
+
+        $this->database->withPreserveDates(true, fn (): Document => $this->database->createDocument('deployments', new Document([
+            '$id' => 'dep-pinned',
+            '$sequence' => '11',
+            '$createdAt' => $newer,
+            '$updatedAt' => $newer,
+            'resourceType' => 'functions',
+            'resourceInternalId' => '100',
+            'resourceId' => 'func-1',
+            'providerBranch' => 'main',
+            'installationId' => 'inst-1',
+            'status' => 'ready',
+            'type' => 'vcs',
+        ])));
+
+        $this->database->createDocument('rules', new Document([
+            '$id' => 'rule-main',
+            'projectInternalId' => '7',
+            'type' => 'deployment',
+            'trigger' => 'manual',
+            'deploymentResourceType' => 'function',
+            'deploymentResourceInternalId' => '100',
+            'deploymentVcsProviderBranch' => 'main',
+            'deploymentId' => 'dep-active',
+        ]));
+
+        $protected = (new TestDeletes())->protectedFromRetention($this->database, $this->database, $project, $function);
+
+        $this->assertSame(['dep-active', 'dep-pinned'], $protected);
+    }
+
     private function addSchedule(string $projectId, string $functionId): void
     {
         // Projects and functions carry subquery filters into collections this
@@ -331,5 +399,13 @@ final class TestDeletes extends Deletes
     public function stopSchedules(Database $dbForPlatform, string $projectId): void
     {
         $this->deactivateSchedules($dbForPlatform, $projectId);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function protectedFromRetention(Database $dbForPlatform, Database $dbForProject, Document $project, Document $resource): array
+    {
+        return $this->deploymentIdsProtectedFromRetention($dbForPlatform, $dbForProject, $project, $resource);
     }
 }
