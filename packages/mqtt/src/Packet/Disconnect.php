@@ -11,6 +11,7 @@ class Disconnect
     public const NORMAL = 0x00;
     public const PROTOCOL_ERROR = 0x82;
     public const NOT_AUTHORIZED = 0x87;
+    public const QUOTA_EXCEEDED = 0x97;
 
     private function __construct(
         public readonly int $reasonCode = self::NORMAL,

@@ -51,10 +51,12 @@ class Server
     /** @var callable|null */
     private $onStop = null;
 
+    /** @param int $maxFilters most topic filters one SUBSCRIBE may carry; 0 for no limit */
     public function __construct(
         private readonly Adapter $adapter,
         private readonly Handler $handler,
         private readonly Store $store = new Store(),
+        private readonly int $maxFilters = 0,
     ) {
         $this->setTelemetry(new NoTelemetry());
     }
@@ -215,6 +217,11 @@ class Server
 
             case Packet::SUBSCRIBE:
                 $subscribe = Subscribe::decode($packet->body, $connection->protocol);
+                // Every filter costs the handler authorization work, so a packet may carry only so many.
+                if ($this->maxFilters > 0 && \count($subscribe->filters()) > $this->maxFilters) {
+                    $connection->disconnect(Disconnect::QUOTA_EXCEEDED);
+                    break;
+                }
                 $suback = $this->handler->onSubscribe($subscribe, $connection);
                 $this->record($subscribe, $suback, $connection);
                 $this->adapter->send($connection->fd, $this->encodeSuback($suback, $subscribe->packetId, $connection->protocol));

@@ -18,11 +18,13 @@ use Utopia\Mqtt\Packet\Unsuback;
 use Utopia\Mqtt\Packet\Unsubscribe;
 
 /**
- * Accepts every CONNECT and counts them, so a test can assert what reached the handler.
+ * Accepts every CONNECT and grants every filter, counting both, so a test can assert what reached the handler.
  */
 final class AcceptingHandler implements Handler
 {
     public int $connects = 0;
+
+    public int $subscribes = 0;
 
     public string $clientId = '';
 
@@ -41,7 +43,14 @@ final class AcceptingHandler implements Handler
 
     public function onSubscribe(Subscribe $subscribe, Connection $connection): Suback
     {
-        throw new \LogicException('not exercised');
+        $this->subscribes++;
+
+        $suback = new Suback();
+        foreach ($subscribe->filters() as $filter) {
+            $suback->grant($filter->qos);
+        }
+
+        return $suback;
     }
 
     public function onUnsubscribe(Unsubscribe $unsubscribe, Connection $connection): Unsuback
