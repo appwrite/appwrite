@@ -3603,6 +3603,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Alert rules watch your project usage and notify you when a metric crosses the threshold you set.': 'アラートルールはプロジェクトの使用量を監視し、メトリクスが設定したしきい値を超えると通知します。',
   'Get notified when a usage metric crosses a threshold, and again when it recovers.': '使用量のメトリクスがしきい値を超えたとき、そして回復したときに通知を受け取ります。',
   'Appwrite sends a signed POST request when the rule fires and when it resolves.': 'ルールの発生時と解決時に、Appwrite が署名付きの POST リクエストを送信します。',
+  'Could not load resources.': 'リソースを読み込めませんでした。',
   'Use this secret to verify the signature of alert webhook requests. Copy it now.': 'このシークレットでアラート Webhook リクエストの署名を検証します。今すぐコピーしてください。',
   'Permanently delete this rule. It stops evaluating immediately. This action cannot be undone.': 'このルールを完全に削除します。評価はすぐに停止します。この操作は元に戻せません。',
 }
