@@ -41,7 +41,7 @@ A property is one website or app that you track, with its own dashboard. Appwrit
 4. Under **Platform**, select **Web**, **Flutter**, or **REST**. This choice only selects the install snippet that the Console shows next.
 5. Select **Create property**.
 
-The Console then shows the install steps, with your endpoint, project ID, and property ID filled in. The **Set up with AI** card gives you a prompt with the same values for your AI coding tool. The page confirms the first event when it arrives.
+The Console then shows the install steps, with your endpoint, project ID, and property ID filled in. The **Set up with AI** card gives you a ready-made prompt with your endpoint and project ID for your AI coding tool. The page confirms the first event when it arrives.
 
 # Add tracking to your site or app
 
@@ -655,7 +655,7 @@ When the domain of a property is one of the domains of your site on Appwrite Sit
 
 Appwrite Analytics sets no cookies, and the tracking helpers keep no identifiers on the device. Appwrite identifies each visitor with a one-way hash of the IP address, the user agent, and the hostname. It uses the IP address to find the location and to compute the hash, and then discards it. The IP address is not stored with the event.
 
-The Web SDK sends no events for visitors who turn on Do Not Track in their browser. Keep personal data, such as names and email addresses, out of event names, props, and URLs. The [privacy documentation](/docs/products/analytics/privacy) lists everything that Appwrite stores for each event.
+By default, the Web SDK sends no events for visitors who turn on Do Not Track in their browser. Keep personal data, such as names and email addresses, out of event names, props, and URLs. The [privacy documentation](/docs/products/analytics/privacy) lists everything that Appwrite stores for each event.
 
 # Pricing and limits
 
