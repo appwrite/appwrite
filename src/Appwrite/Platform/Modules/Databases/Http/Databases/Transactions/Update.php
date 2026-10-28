@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
+use Appwrite\Databases\ListCache;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -164,6 +165,7 @@ class Update extends Action
             $operations = [];
             $totalOperations = 0;
             $databaseOperations = [];
+            $bulkDocuments = [];
             $currentDocumentId = null;
             $currentAttribute = null;
             $currentChange = null;
@@ -247,7 +249,7 @@ class Update extends Action
                     }
                 }
 
-                $commit = function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, &$currentAttribute, &$currentChange, $collections) {
+                $commit = function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$bulkDocuments, &$currentDocumentId, &$currentAttribute, &$currentChange, $collections) {
                     $state = [];
 
                     foreach ($operations as $operation) {
@@ -288,6 +290,8 @@ class Update extends Action
                             $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + 1;
                         }
 
+                        $bulkDocuments[$operation->getId()] = [];
+
                         switch ($action) {
                             case 'create':
                                 $this->handleCreateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
@@ -308,22 +312,22 @@ class Update extends Action
                                 $this->handleDecrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'bulkCreate':
-                                $count = $this->handleBulkCreateOperation($dbForDatabases, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkCreateOperation($dbForDatabases, $collectionId, $data, $createdAt, $state, $bulkDocuments[$operation->getId()]);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpdate':
-                                $count = $this->handleBulkUpdateOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkUpdateOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state, $bulkDocuments[$operation->getId()]);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpsert':
-                                $count = $this->handleBulkUpsertOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkUpsertOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state, $bulkDocuments[$operation->getId()]);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkDelete':
-                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state, $bulkDocuments[$operation->getId()]);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
@@ -334,7 +338,10 @@ class Update extends Action
 
                 // Every write purges its cached rows, nested and cascaded rows included, inside a savepoint of
                 // this transaction, so a read before COMMIT can cache the old row again. Purge them again after COMMIT.
-                $purged = $dbForDatabases->getCache()->recordPurges(fn () => $dbForDatabases->withTransaction($commit));
+                $purged = ListCache::purged(
+                    $this->getPermissionListCaches($dbForProject, $authorization, $operations),
+                    fn () => $dbForDatabases->getCache()->recordPurges(fn () => $dbForDatabases->withTransaction($commit)),
+                );
             } catch (NotFoundException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -519,9 +526,20 @@ class Update extends Action
                         }
                         break;
                     case 'bulkCreate':
+                        $eventAction = 'create';
+                        $documentsToTrigger = $bulkDocuments[$operation->getId()];
+                        break;
                     case 'bulkUpdate':
+                        $eventAction = 'update';
+                        $documentsToTrigger = $bulkDocuments[$operation->getId()];
+                        break;
                     case 'bulkUpsert':
+                        $eventAction = 'upsert';
+                        $documentsToTrigger = $bulkDocuments[$operation->getId()];
+                        break;
                     case 'bulkDelete':
+                        $eventAction = 'delete';
+                        $documentsToTrigger = $bulkDocuments[$operation->getId()];
                         break;
                 }
 
@@ -619,6 +637,57 @@ class Update extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    /**
+     * The cached list responses of each collection with document security that an operation sets document
+     * permissions in.
+     *
+     * @param array<Document> $operations
+     * @return array<string, ListCache>
+     */
+    private function getPermissionListCaches(Database $dbForProject, Authorization $authorization, array $operations): array
+    {
+        $caches = [];
+
+        foreach ($operations as $operation) {
+            $data = $operation['data'] instanceof Document ? $operation['data']->getArrayCopy() : $operation['data'];
+            $key = $operation['databaseInternalId'] . ':' . $operation['collectionInternalId'];
+
+            if (isset($caches[$key]) || !$this->setsPermissions($operation['action'], $data)) {
+                continue;
+            }
+
+            $database = $authorization->skip(fn () => $dbForProject->skipFilters(
+                fn () => $dbForProject->findOne('databases', [
+                    Query::equal('$sequence', [$operation['databaseInternalId']])
+                ]),
+                APP_DATABASES_SUBQUERIES
+            ));
+
+            $collection = $authorization->skip(fn () => $dbForProject->skipFilters(
+                fn () => $dbForProject->findOne('database_' . $operation['databaseInternalId'], [
+                    Query::equal('$sequence', [$operation['collectionInternalId']])
+                ]),
+                APP_COLLECTIONS_SUBQUERIES
+            ));
+
+            if ($collection->getAttribute('documentSecurity', false)) {
+                $caches[$key] = $this->getListCache($dbForProject, $database, $collection->getId());
+            }
+        }
+
+        return $caches;
+    }
+
+    private function setsPermissions(string $action, mixed $data): bool
+    {
+        return match ($action) {
+            'update', 'upsert' => isset($data['$permissions']),
+            'bulkUpdate' => isset($data['data']['$permissions']),
+            'bulkUpsert' => \array_any($data, fn (mixed $document): bool => isset($document['$permissions'])),
+            default => false,
+        };
     }
 
     private function queueCleanup(DeletePublisher $publisherForDeletes, Document $project, Document $transaction): void
@@ -918,6 +987,7 @@ class Update extends Action
      * @param array $data
      * @param \DateTime $createdAt
      * @param array &$state
+     * @param array<Document> &$affected
      * @return int Number of documents created
      * @throws \Utopia\Database\Exception
      */
@@ -926,10 +996,11 @@ class Update extends Action
         string $collectionId,
         array $data,
         \DateTime $createdAt,
-        array &$state
+        array &$state,
+        array &$affected
     ): int {
         $count = 0;
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state, &$count) {
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state, &$affected, &$count) {
             $documents = \array_map(function ($doc) {
                 return $doc instanceof Document ? $doc : new Document($doc);
             }, $data);
@@ -937,8 +1008,10 @@ class Update extends Action
             $count = $dbForDatabases->createDocuments(
                 $collectionId,
                 $documents,
-                onNext: function (Document $document) use (&$state, $collectionId) {
+                onNext: function (Document $document) use (&$state, &$affected, $collectionId) {
                     $state[$collectionId][$document->getId()] = $document;
+                    // Later operations change state documents in place, so the event keeps a copy
+                    $affected[] = clone $document;
                 }
             );
         });
@@ -954,6 +1027,7 @@ class Update extends Action
      * @param array $data
      * @param \DateTime $createdAt
      * @param array &$state
+     * @param array<string, Document> &$affected
      * @return int Number of documents updated
      * @throws \Utopia\Database\Exception
      * @throws \Utopia\Database\Exception\Query
@@ -965,7 +1039,8 @@ class Update extends Action
         string $collectionId,
         array $data,
         \DateTime $createdAt,
-        array &$state
+        array &$state,
+        array &$affected
     ): int {
         $queries = Query::parseQueries($data['queries'] ?? []);
         $updateData = new Document($data['data']);
@@ -980,7 +1055,7 @@ class Update extends Action
             $collectionId,
             clone $updateData,
             $queries,
-            onNext: function (Document $updated, Document $old) use (&$state, $collectionId, $createdAt, &$dependentDocs) {
+            onNext: function (Document $updated, Document $old) use (&$state, &$affected, $collectionId, $createdAt, &$dependentDocs) {
                 $dependent = isset($state[$collectionId][$updated->getId()]);
 
                 if ($dependent) {
@@ -992,6 +1067,8 @@ class Update extends Action
                     }
                     $state[$collectionId][$updated->getId()] = $updated;
                 }
+
+                $affected[$updated->getId()] = clone $updated;
             }
         );
 
@@ -1008,8 +1085,9 @@ class Update extends Action
                 $dbForDatabases->upsertDocuments(
                     $collectionId,
                     $documentsToRewrite,
-                    onNext: function (Document $upserted) use (&$state, $collectionId) {
+                    onNext: function (Document $upserted) use (&$state, &$affected, $collectionId) {
                         $state[$collectionId][$upserted->getId()] = $upserted;
+                        $affected[$upserted->getId()] = clone $upserted;
                     }
                 );
             }
@@ -1027,6 +1105,7 @@ class Update extends Action
      * @param array $data
      * @param \DateTime $createdAt
      * @param array &$state
+     * @param array<Document> &$affected
      * @return int Number of documents upserted
      * @throws ConflictException
      * @throws \Utopia\Database\Exception
@@ -1037,7 +1116,8 @@ class Update extends Action
         string $collectionId,
         array $data,
         \DateTime $createdAt,
-        array &$state
+        array &$state,
+        array &$affected
     ): int {
         $documents = \array_map(function ($doc) {
             $document = $doc instanceof Document ? $doc : new Document($doc);
@@ -1053,7 +1133,7 @@ class Update extends Action
         $count = $dbForDatabases->upsertDocuments(
             $collectionId,
             $mergedDocuments,
-            onNext: function (Document $upserted, ?Document $old) use (&$state, $collectionId, $createdAt) {
+            onNext: function (Document $upserted, ?Document $old) use (&$state, &$affected, $collectionId, $createdAt) {
                 if ($old !== null) {
                     $dependent = isset($state[$collectionId][$upserted->getId()]);
 
@@ -1066,6 +1146,7 @@ class Update extends Action
                 }
 
                 $state[$collectionId][$upserted->getId()] = $upserted;
+                $affected[] = clone $upserted;
             }
         );
 
@@ -1081,6 +1162,7 @@ class Update extends Action
      * @param array $data
      * @param \DateTime $createdAt
      * @param array &$state
+     * @param array<Document> &$affected
      * @return int Number of documents deleted
      * @throws \Utopia\Database\Exception\Query
      * @throws ConflictException
@@ -1092,14 +1174,15 @@ class Update extends Action
         string $collectionId,
         array $data,
         \DateTime $createdAt,
-        array &$state
+        array &$state,
+        array &$affected
     ): int {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
         $count = $dbForDatabases->deleteDocuments(
             $collectionId,
             $queries,
-            onNext: function (Document $deleted, Document $old) use (&$state, $collectionId, $createdAt) {
+            onNext: function (Document $deleted, Document $old) use (&$state, &$affected, $collectionId, $createdAt) {
                 $dependent = isset($state[$collectionId][$deleted->getId()]);
 
                 if (!$dependent) {
@@ -1112,6 +1195,8 @@ class Update extends Action
                 if (isset($state[$collectionId][$deleted->getId()])) {
                     unset($state[$collectionId][$deleted->getId()]);
                 }
+
+                $affected[] = $deleted;
             }
         );
 

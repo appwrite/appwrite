@@ -430,6 +430,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
     $response = new Response($utopiaResponse->getSwooleResponse());
 
     Span::add('http.method', $request->getMethod());
+    Span::add('http.uri', $request->getURI());
 
     if ($files->isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 45); // 45 days cache
@@ -481,7 +482,14 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             // All good, user is optional information
         }
         Span::add('http.hostname', $request->getHostname());
-        Span::add('http.locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
+        $locale = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
+        $localeCodes = \array_map(
+            fn ($entry) => $entry['code'],
+            Config::getParam('locale-codes', []),
+        );
+        if (\in_array($locale, $localeCodes, true)) {
+            Span::add('http.locale', $locale);
+        }
 
         $sdk = $route?->getLabel("sdk", false);
         if (!empty($sdk)) {
