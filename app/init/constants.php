@@ -514,6 +514,12 @@ const REALTIME_CONCURRENCY_INTERVAL = '5m';
 // sampled is lost for good.
 const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 
+// Each realtime worker publishes a heartbeat to its own pub/sub subscription and
+// shuts down when none has arrived for the timeout.
+const REALTIME_HEARTBEAT_CHANNEL = 'realtime.heartbeat';
+const REALTIME_HEARTBEAT_INTERVAL_SECONDS = 10;
+const REALTIME_HEARTBEAT_TIMEOUT_SECONDS = 60;
+
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
 const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';

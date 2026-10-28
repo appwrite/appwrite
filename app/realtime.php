@@ -468,6 +468,25 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
     $attempts = 0;
     $start = time();
+    $heartbeat = \time();
+
+    // A subscriber can keep a healthy connection and still stop handling messages,
+    // without an error. The heartbeat goes through the same subscription as events,
+    // so its silence means events are not being handled either.
+    Timer::tick(REALTIME_HEARTBEAT_INTERVAL_SECONDS * 1000, function () use ($server, $register, $workerId, &$heartbeat) {
+        $silence = \time() - $heartbeat;
+        if ($silence > REALTIME_HEARTBEAT_TIMEOUT_SECONDS) {
+            Console::error('Pub/sub delivered nothing for ' . $silence . ' seconds (worker: ' . $workerId . '). Shutting down.');
+            $server->shutdown();
+            return;
+        }
+
+        try {
+            (new PubSubPool($register->get('pools')->get('pubsub')))->publish(REALTIME_HEARTBEAT_CHANNEL, (string) $workerId);
+        } catch (Throwable $th) {
+            Console::warning('Pub/sub heartbeat failed: ' . $th->getMessage());
+        }
+    });
 
     // Flush coalesced console live-tail buffers to their connections (~150ms).
     // Must run per-worker: the registry is mutated by this worker's subscribe handler
@@ -594,6 +613,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 sleep(5); // 5 sec delay between connection attempts
             }
             $start = time();
+            // Reconnects are retried below; only a live subscription can go silent.
+            $heartbeat = \time();
 
             $pubsub = new PubSubPool($register->get('pools')->get('pubsub'));
 
@@ -604,7 +625,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
+            $pubsub->subscribe(['realtime', REALTIME_HEARTBEAT_CHANNEL], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, &$heartbeat) {
+                $heartbeat = \time();
+                if ($channel === REALTIME_HEARTBEAT_CHANNEL) {
+                    return;
+                }
+
                 $event = json_decode($payload, true);
                 $closing = [];
 
