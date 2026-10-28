@@ -85,7 +85,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
     return 'overview'
   }, [location.pathname])
 
-  const { features, isCloud } = useConsoleProfile()
+  const { features } = useConsoleProfile()
 
   // Update tabs with route paths
   const tabs: Tab[] = useMemo(
@@ -114,16 +114,12 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         to: '/projects/$projectId/settings/webhooks',
         params: { projectId: projectId as string },
       },
-      ...(isCloud
-        ? [
-            {
-              id: 'alerts',
-              label: t('Alerts'),
-              to: '/projects/$projectId/settings/alerts',
-              params: { projectId: projectId as string },
-            },
-          ]
-        : []),
+      {
+        id: 'alerts',
+        label: t('Alerts'),
+        to: '/projects/$projectId/settings/alerts',
+        params: { projectId: projectId as string },
+      },
       {
         id: 'migrations',
         label: t('Migrations'),
@@ -137,7 +133,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         params: { projectId: projectId as string },
       },
     ],
-    [projectId, t, isCloud],
+    [projectId, t],
   )
 
   const { project } = useProject(projectId)
@@ -270,7 +266,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
             createDisabledTooltip={createDisabledTooltip}
           />
         )}
-        {activeTab === 'alerts' && isCloud && (
+        {activeTab === 'alerts' && (
           <Alerts
             projectId={projectId}
             searchValue={searchValue}

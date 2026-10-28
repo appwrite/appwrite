@@ -35,6 +35,7 @@ import {
   toBytes,
   type ByteUnit,
 } from '@/lib/alerts/metrics'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 
 /** Rule form state; `threshold` is in `byteUnit` for byte metrics. */
@@ -258,6 +259,7 @@ export function RuleFields({
   disabled,
 }: RuleFieldsProps) {
   const t = useT()
+  const { isCloud } = useConsoleProfile()
   const definition = METRICS[form.metric]
   const metrics = metricsFor(form.resourceType)
 
@@ -321,7 +323,10 @@ export function RuleFields({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {RESOURCE_TYPES.map((type) => (
+              {RESOURCE_TYPES.filter(
+                // Dedicated databases exist only on the cloud profile.
+                (type) => isCloud || type.value !== 'dedicatedDatabase',
+              ).map((type) => (
                 <SelectItem key={type.value} value={type.value}>
                   {t(type.label)}
                 </SelectItem>
