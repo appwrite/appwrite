@@ -16,6 +16,7 @@ use Utopia\DI\Container;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\Connack;
 use Utopia\Mqtt\Packet\Disconnect;
+use Utopia\Mqtt\Packet\Specs\V3;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
@@ -38,6 +39,8 @@ final class LimitsTest extends TestCase
 
     private Accounts $accounts;
 
+    private RecordingRedis $redis;
+
     /** @var array<string, mixed> the plan every project resolves to */
     private array $plan = [];
 
@@ -49,7 +52,8 @@ final class LimitsTest extends TestCase
         \putenv(self::ABUSE_OPTION . '=enabled');
 
         $this->accounts = new Accounts();
-        $redis = new RecordingRedis();
+        $this->redis = new RecordingRedis();
+        $redis = $this->redis;
 
         $container = new Container();
         $container->set('getRedis', fn (): \Closure => fn (): \Redis => $redis);
@@ -101,20 +105,52 @@ final class LimitsTest extends TestCase
         $this->assertSame([1], $this->network->closed);
     }
 
-    public function testSubscribeRateIsCountedPerConnection(): void
+    public function testSubscribeRateSurvivesReconnect(): void
     {
         $this->connect(1, 'user');
+        $this->accounts->blocked['user'] = true;
+        for ($packetId = 1; $packetId <= self::SUBSCRIBE_LIMIT; $packetId++) {
+            $this->network->deliver(1, V5::subscribe($packetId, ['news'], Packet::QOS_1));
+        }
+        $this->network->close(1);
+        unset($this->accounts->blocked['user']);
         $this->connect(2, 'user');
         $this->accounts->blocked['user'] = true;
 
-        for ($packetId = 1; $packetId <= self::SUBSCRIBE_LIMIT + 1; $packetId++) {
+        $this->network->deliver(2, V5::subscribe(1, ['news'], Packet::QOS_1));
+
+        // Test for FAILURE: a new connection does not get a fresh budget.
+        $this->assertSame(0, $this->subacks(2));
+        $this->assertSame(Disconnect::MESSAGE_RATE_TOO_HIGH, $this->network->disconnects(2)[0]->reasonCode ?? null);
+    }
+
+    public function testSubscribeRateIsSharedAcrossAUsersConnections(): void
+    {
+        $this->connect(1, 'user');
+        $this->connect(2, 'user');
+        $this->connect(3, 'other');
+        $this->accounts->blocked['user'] = true;
+        $this->accounts->blocked['other'] = true;
+
+        for ($packetId = 1; $packetId <= self::SUBSCRIBE_LIMIT; $packetId++) {
             $this->network->deliver(1, V5::subscribe($packetId, ['news'], Packet::QOS_1));
         }
         $this->network->deliver(2, V5::subscribe(1, ['news'], Packet::QOS_1));
+        $this->network->deliver(3, V5::subscribe(1, ['news'], Packet::QOS_1));
 
-        // Test for SUCCESS: the user's other connection keeps its own budget.
-        $this->assertSame([1], $this->network->closed);
-        $this->assertSame(1, $this->subacks(2));
+        // Test for FAILURE: the user's other connection draws on the same budget.
+        $this->assertSame([2], $this->network->closed);
+        // Test for SUCCESS: another user keeps their own.
+        $this->assertSame(1, $this->subacks(3));
+    }
+
+    public function testSubscribeWithoutAConnectIsRefusedWithoutLimiting(): void
+    {
+        $this->network->deliver(1, V3::subscribe(1, ['news'], Packet::QOS_1));
+
+        // Test for FAILURE: a connection that never completed CONNECT is refused outright.
+        $this->assertSame(0, $this->accounts->authorizations);
+        $this->assertSame([], $this->redis->keys, 'a SUBSCRIBE before CONNECT reached the limiter');
     }
 
     public function testSubscribeRateIsNotLimitedWithAbuseDisabled(): void

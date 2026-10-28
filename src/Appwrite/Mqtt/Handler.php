@@ -217,6 +217,15 @@ class Handler implements MqttHandler
     {
         $suback = new Suback();
 
+        // A connection that never completed CONNECT has no user to authorize or count against.
+        if (($connection->identity['userId'] ?? '') === '') {
+            foreach ($subscribe->filters() as $filter) {
+                $suback->deny();
+            }
+
+            return $suback;
+        }
+
         if ($this->isSubscribeLimited($connection)) {
             Span::add('mqtt.result', 'abuse');
             $connection->disconnect(Disconnect::MESSAGE_RATE_TOO_HIGH, (new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED))->getMessage());
@@ -367,8 +376,9 @@ class Handler implements MqttHandler
     }
 
     /**
-     * Each SUBSCRIBE costs several database reads, so a connection may send 32 a minute, as a
-     * realtime connection may send 32 messages. An fd is only unique on its host, so the key carries both.
+     * Each SUBSCRIBE costs several database reads, so a user may send 32 a minute, as a realtime
+     * connection may send 32 messages. Keyed on the authenticated user, so reconnecting or opening
+     * more connections does not add to the budget.
      */
     private function isSubscribeLimited(Connection $connection): bool
     {
@@ -377,10 +387,9 @@ class Handler implements MqttHandler
         }
 
         $getRedis = $this->container->get('getRedis');
-        $timeLimit = new TimeLimitRedis('mqtt:subscribe:{projectId}:{host}:{fd}', 32, 60, $getRedis())->withParams([
-            '{projectId}' => $connection->prefix,
-            '{host}' => (string) \gethostname(),
-            '{fd}' => (string) $connection->fd,
+        $timeLimit = new TimeLimitRedis('mqtt:subscribe:{projectId}:{userId}', 32, 60, $getRedis())->withParams([
+            '{projectId}' => (string) ($connection->identity['projectId'] ?? ''),
+            '{userId}' => (string) ($connection->identity['userId'] ?? ''),
         ]);
 
         return $timeLimit->check()->limited;
