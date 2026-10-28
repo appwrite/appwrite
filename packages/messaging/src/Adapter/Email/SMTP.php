@@ -12,6 +12,8 @@ use Utopia\SMTP\Client;
 use Utopia\SMTP\Encryption;
 use Utopia\SMTP\Exception\AuthenticationException;
 use Utopia\SMTP\Exception\CapabilityException;
+use Utopia\SMTP\Exception\ConnectionException;
+use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Exception\SmtpException;
 use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message as SmtpMessage;
@@ -37,7 +39,7 @@ class SMTP extends EmailAdapter
      * @param int $timeout SMTP timeout in seconds.
      * @param bool $keepAlive Whether to reuse the SMTP connection across process() calls.
      * @param int $timelimit SMTP command timelimit in seconds.
-     * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. Keep it under the server's idle timeout: a session the server closed inside the threshold fails its send without a retry. 0 probes before every reuse.
+     * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. 0 probes before every reuse. A session the server already closed still fails that command; the message is sent again once, on a new connection.
      * @param int $restartThreshold Messages a kept session carries before it is replaced. 0 disables.
      * @param array<string, string> $addresses Host => address to dial it on, as each host appears in $host (e.g. "smtp1.example.com" => "203.0.113.10", "[2001:db8::1]" for IPv6), so the connection lands on an address the caller checked. The certificate is still verified against the host. When any address is given, a host not listed is refused; with none, every host is dialled by name.
      */
@@ -77,11 +79,20 @@ class SMTP extends EmailAdapter
      */
     protected function process(EmailMessage $message): array
     {
+        return $this->deliver($message, true);
+    }
+
+    /**
+     * @param bool $retry Whether a kept session that dies under this send may be replaced once.
+     * @return array{deliveredTo: int, type: string, results: array<array<string, mixed>>}
+     */
+    private function deliver(EmailMessage $message, bool $retry): array
+    {
         $response = new Response($this->getType());
         $recipients = $this->recipients($message);
 
         try {
-            $client = $this->keepAlive ? $this->client() : $this->dial();
+            [$client, $reused] = $this->open();
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
                 $response->addResult($email, $exception->getMessage(), $this->permanent($exception), $this->code($exception));
@@ -91,6 +102,7 @@ class SMTP extends EmailAdapter
         }
 
         $keep = $this->keepAlive;
+        $stale = false;
 
         try {
             $result = $client->send($this->build($message));
@@ -116,17 +128,29 @@ class SMTP extends EmailAdapter
             }
 
             // A 421 during RCPT ends the session with the transaction.
+            // It is also how a kept socket answers the first command after the
+            // server has closed it, which is before the message is submitted.
             $keep = $keep && is_finite($client->idle());
+            $stale = $retry && $reused && $exception->reply->code === 421;
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
                 $response->addResult($email, $exception->getMessage(), $this->permanent($exception), $this->code($exception));
             }
 
             $keep = false;
+            // A kept socket that died before the dot. An UnconfirmedException
+            // means the dot was written and the server may have the message.
+            $stale = $retry && $reused && ($exception instanceof ConnectionException || $exception instanceof ProtocolException);
         } finally {
             if (!$keep) {
                 $this->drop($client);
             }
+        }
+
+        // The kept socket failed before this message was submitted. The dot
+        // was not written, so this dials once more. A second failure stands.
+        if ($stale) {
+            return $this->deliver($message, false);
         }
 
         return $response->toArray();
@@ -142,18 +166,29 @@ class SMTP extends EmailAdapter
     }
 
     /**
-     * The kept session, or a fresh one when it is spent or the server closed it.
+     * A session for this message, and whether it was kept from an earlier one.
+     *
+     * A fresh dial is not a reuse: a failure there is the server we just
+     * reached, and sending the message again would not be the stale socket.
+     *
+     * @return array{Client, bool}
      */
-    private function client(): Client
+    private function open(): array
     {
-        if ($this->client instanceof Client && $this->reusable($this->client)) {
-            return $this->client;
+        if ($this->keepAlive && $this->client instanceof Client && $this->reusable($this->client)) {
+            return [$this->client, true];
         }
 
         $this->client?->close();
         $this->client = null;
 
-        return $this->client = $this->dial();
+        $client = $this->dial();
+
+        if ($this->keepAlive) {
+            $this->client = $client;
+        }
+
+        return [$client, false];
     }
 
     private function drop(Client $client): void
@@ -251,7 +286,7 @@ class SMTP extends EmailAdapter
         return match (true) {
             $exception instanceof TransactionException => $exception->reply->code,
             $exception instanceof NoHostAnswered => $exception->getCode(),
-            $exception instanceof AuthenticationException && $previous instanceof TransactionException => $previous->reply->code,
+            $previous instanceof TransactionException => $previous->reply->code,
             default => 0,
         };
     }

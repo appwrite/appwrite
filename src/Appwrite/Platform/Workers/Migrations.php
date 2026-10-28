@@ -164,6 +164,30 @@ class Migrations extends Action
             throw new \Exception('Project not found');
         }
 
+        // Skip redeliveries of a migration that already finished or is still running
+        $current = $dbForProject->getDocument('migrations', $migration->getId());
+        $status = $current->getAttribute('status');
+        $running = $status === 'processing'
+            && \strtotime($current->getUpdatedAt()) >= \time() - MIGRATION_STALL_TIMEOUT;
+
+        if ($status === 'completed' || $running) {
+            Console::warning('Migration(' . $migration->getId() . ') is already ' . $status . ', skipping this delivery');
+            return;
+        }
+
+        // Claim it: a concurrent delivery that read the same document conflicts here instead of running it twice.
+        try {
+            $dbForProject->withRequestTimestamp(
+                new \DateTime($current->getUpdatedAt()),
+                fn () => $dbForProject->updateDocument('migrations', $current->getId(), new Document([
+                    'status' => 'processing',
+                ]))
+            );
+        } catch (Conflict) {
+            Console::warning('Migration(' . $migration->getId() . ') was claimed by another delivery, skipping this one');
+            return;
+        }
+
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
