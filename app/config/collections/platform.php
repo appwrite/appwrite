@@ -213,6 +213,8 @@ $platformCollections = [
         ],
         'indexes' => [
             Index::key(key: '_key_domain', attributes: ['domain'], lengths: [255], orders: [OrderDirection::Asc]),
+            // Matches the maintenance walk's order (renewDate, then the $sequence tie-break) and covers its attempts filter
+            Index::key(key: '_key_renewDate_sequence', attributes: ['renewDate', '$sequence', 'attempts'], orders: [OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc]),
         ],
     ],
 
