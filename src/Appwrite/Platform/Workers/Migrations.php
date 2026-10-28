@@ -163,7 +163,7 @@ class Migrations extends Action
             throw new \Exception('Project not found');
         }
 
-        // The queue redelivers a job stranded by a killed worker about a day later; a retry may have rerun its migration by then.
+        // Skip redeliveries of a migration that already finished or is still running
         $current = $dbForProject->getDocument('migrations', $migration->getId());
         $status = $current->getAttribute('status');
         $running = $status === 'processing'
