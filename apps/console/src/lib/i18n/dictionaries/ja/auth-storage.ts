@@ -1779,8 +1779,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
     'OAuth2 クライアントを登録すると、他のプロダクトでユーザーがこのプロジェクトと連携できるようになります。ユーザーの Appwrite アカウントをアプリケーションと連携させたい場合は、代わりに組織でアプリを作成してください。',
   Guests: 'ゲスト',
   'Deny guests': 'ゲストを拒否',
-  'Require a session to subscribe to realtime channels. Guests can still connect and sign in over the connection, but their subscriptions are refused. Channels readable by any role stop updating for signed-out users. Applies to new subscriptions.':
-    'リアルタイムチャネルの購読にセッションを必須にします。ゲストは接続して接続上でサインインできますが、購読は拒否されます。任意のロールが読み取れるチャネルは、サインインしていないユーザーには更新されなくなります。新しい購読に適用されます。',
+  'Require a session to subscribe to realtime channels. Guest connections that list channels are refused, and other guests must sign in before subscribing. Channels readable by any role stop updating for signed-out users. Applies to new subscriptions.':
+    'リアルタイムチャネルの購読にセッションを必須にします。チャネルを指定したゲスト接続は拒否され、それ以外のゲストは購読する前にサインインする必要があります。任意のロールが読み取れるチャネルは、サインインしていないユーザーには更新されなくなります。新しい購読に適用されます。',
   'Updated deny realtime guests policy':
     'リアルタイムのゲスト拒否ポリシーを更新しました',
   'Failed to update deny realtime guests policy':

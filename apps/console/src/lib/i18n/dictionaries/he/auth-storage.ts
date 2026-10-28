@@ -1740,8 +1740,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
     'רשמו לקוחות OAuth2 כדי שמוצרים אחרים יוכלו לאפשר למשתמשים להתחבר עם הפרויקט הזה. כדי לאפשר למשתמשים שלכם לחבר את חשבון ה-Appwrite שלהם לאפליקציה שלכם, צרו אפליקציה תחת הארגון במקום זאת.',
   Guests: 'אורחים',
   'Deny guests': 'חסימת אורחים',
-  'Require a session to subscribe to realtime channels. Guests can still connect and sign in over the connection, but their subscriptions are refused. Channels readable by any role stop updating for signed-out users. Applies to new subscriptions.':
-    'דרישת סשן כדי להירשם לערוצי Realtime. אורחים עדיין יכולים להתחבר ולהיכנס דרך החיבור, אבל ההרשמות שלהם נדחות. ערוצים שכל תפקיד יכול לקרוא מפסיקים להתעדכן עבור משתמשים שלא נכנסו. חל על הרשמות חדשות.',
+  'Require a session to subscribe to realtime channels. Guest connections that list channels are refused, and other guests must sign in before subscribing. Channels readable by any role stop updating for signed-out users. Applies to new subscriptions.':
+    'דרישת סשן כדי להירשם לערוצי Realtime. חיבורי אורחים שמציינים ערוצים נדחים, ואורחים אחרים צריכים להיכנס לפני ההרשמה. ערוצים שכל תפקיד יכול לקרוא מפסיקים להתעדכן עבור משתמשים שלא נכנסו. חל על הרשמות חדשות.',
   'Updated deny realtime guests policy':
     'מדיניות חסימת אורחים ב-Realtime עודכנה',
   'Failed to update deny realtime guests policy':

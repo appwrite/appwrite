@@ -28,7 +28,7 @@ export function RealtimePolicies({ projectId }: RealtimeProps) {
           currentEnabled={security.authDenyRealtimeGuests ?? false}
           title={t('Guests')}
           description={t(
-            'Require a session to subscribe to realtime channels. Guests can still connect and sign in over the connection, but their subscriptions are refused. Channels readable by any role stop updating for signed-out users. Applies to new subscriptions.',
+            'Require a session to subscribe to realtime channels. Guest connections that list channels are refused, and other guests must sign in before subscribing. Channels readable by any role stop updating for signed-out users. Applies to new subscriptions.',
           )}
           switchId="deny-realtime-guests-enabled"
           switchLabel={t('Deny guests')}
