@@ -26,6 +26,9 @@ final class AcceptingHandler implements Handler
 
     public int $subscribes = 0;
 
+    /** When true, onSubscribe drops the connection, as a handler enforcing a limit would. */
+    public bool $closeOnSubscribe = false;
+
     public string $clientId = '';
 
     public function onConnect(Connect $connect, Connection $connection): Connack
@@ -44,6 +47,9 @@ final class AcceptingHandler implements Handler
     public function onSubscribe(Subscribe $subscribe, Connection $connection): Suback
     {
         $this->subscribes++;
+        if ($this->closeOnSubscribe) {
+            $connection->disconnect();
+        }
 
         $suback = new Suback();
         foreach ($subscribe->filters() as $filter) {

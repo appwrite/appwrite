@@ -237,6 +237,9 @@ class Server
                     break;
                 }
                 $suback = $this->handler->onSubscribe($subscribe, $connection);
+                if ($connection->closed) {
+                    break;
+                }
                 $this->record($subscribe, $suback, $connection);
                 $this->adapter->send($connection->fd, $this->encodeSuback($suback, $subscribe->packetId, $connection->protocol));
                 break;

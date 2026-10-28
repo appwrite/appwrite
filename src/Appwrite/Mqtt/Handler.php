@@ -208,6 +208,16 @@ class Handler implements MqttHandler
     {
         $suback = new Suback();
 
+        if ($this->isSubscribeLimited($connection)) {
+            Span::add('mqtt.result', 'abuse');
+            $connection->disconnect(Disconnect::MESSAGE_RATE_TOO_HIGH, (new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED))->getMessage());
+            foreach ($subscribe->filters() as $filter) {
+                $suback->deny();
+            }
+
+            return $suback;
+        }
+
         // The connection's user must still be valid: re-check that it was not blocked or removed
         // since CONNECT. If it is no longer permitted, refuse every filter before any topic gating.
         $authorizer = $this->container->get('authorizer');
@@ -333,6 +343,26 @@ class Handler implements MqttHandler
         }
 
         return $suback;
+    }
+
+    /**
+     * Each SUBSCRIBE costs several database reads, so a connection may send 32 a minute, as a
+     * realtime connection may send 32 messages. An fd is only unique on its host, so the key carries both.
+     */
+    private function isSubscribeLimited(Connection $connection): bool
+    {
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'enabled') {
+            return false;
+        }
+
+        $getRedis = $this->container->get('getRedis');
+        $timeLimit = new TimeLimitRedis('mqtt:subscribe:{projectId}:{host}:{fd}', 32, 60, $getRedis())->withParams([
+            '{projectId}' => $connection->prefix,
+            '{host}' => (string) \gethostname(),
+            '{fd}' => (string) $connection->fd,
+        ]);
+
+        return $timeLimit->check()->limited;
     }
 
     public function onUnsubscribe(Unsubscribe $unsubscribe, Connection $connection): Unsuback

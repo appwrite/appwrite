@@ -60,6 +60,21 @@ final class ServerTest extends TestCase
         $this->assertSame([9], $adapter->closed);
     }
 
+    public function testSubscribeThatClosedTheConnectionIsNotAnswered(): void
+    {
+        $adapter = new RecordingAdapter();
+        $handler = new AcceptingHandler();
+        $handler->closeOnSubscribe = true;
+        (new Server($adapter, $handler))->start();
+
+        $adapter->deliver(9, V5::connect('client-9'), V5::subscribe(1, ['a'], Packet::QOS_1));
+
+        // Test for FAILURE: nothing is written to, or subscribed on, a connection the handler dropped.
+        $this->assertSame(1, $handler->subscribes);
+        $this->assertCount(1, $adapter->sent, 'a SUBACK was written after the handler closed the connection');
+        $this->assertSame([9], $adapter->closed);
+    }
+
     public function testDisabledKeepAliveIsReplacedByTheMaximum(): void
     {
         $timer = new RecordingTimer();
