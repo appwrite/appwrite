@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
@@ -138,6 +139,9 @@ class Screenshots extends Action
 
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
             $apiKey = $jwtObj->encode([
+                Key::PURPOSE_CLAIM => Key::PURPOSE,
+                'hostname' => $rule->getAttribute('domain'),
+                'deploymentId' => $rule->getAttribute('deploymentId'),
                 'hostnameOverride' => true,
                 'disabledMetrics' => [
                     METRIC_EXECUTIONS,

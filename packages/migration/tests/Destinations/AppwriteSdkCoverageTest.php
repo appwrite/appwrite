@@ -43,6 +43,9 @@ class AppwriteSdkCoverageTest extends TestCase
             'url' => 'Members are added by userId; phone, url and name only address an invite.',
             'name' => 'Members are added by userId; phone, url and name only address an invite.',
         ],
+        'Project::createEnvironment' => [
+            'resources' => 'Copies the destination project into the new environment; the source environment holds its own resources in a separate project.',
+        ],
         'Storage::createFile' => [
             'permissions' => 'Only a permission probe calls createFile; uploads are chunked requests in importFile.',
             'folder' => 'Only a permission probe calls createFile; uploads are chunked requests in importFile.',
@@ -98,6 +101,7 @@ class AppwriteSdkCoverageTest extends TestCase
         'updateDenyCorporateEmailPolicy',
         'updateDenyDisposableEmailPolicy',
         'updateDenyFreeEmailPolicy',
+        'updateDenyRealtimeGuestsPolicy',
         'updateMembershipPrivacyPolicy',
         'updateMFAFactorsPolicy',
         'updatePasskeyPolicy',

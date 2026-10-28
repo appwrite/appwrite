@@ -3,12 +3,15 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys\Ephemeral;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime as DatabaseDateTime;
@@ -68,6 +71,8 @@ class Create extends Base
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')
+            ->inject('apiKey')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -77,19 +82,32 @@ class Create extends Base
         Response $response,
         QueueEvent $queueForEvents,
         Document $project,
+        ?Key $apiKey,
+        Request $request,
     ) {
+        $now = new \DateTime();
+        $expire = $now->add(new \DateInterval('PT' . $duration . 'S'))->format('Y-m-d\TH:i:s.u\Z');
+
+        // A JWT stands in for its session for a few minutes; a key it left behind would outlive it
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
+        // A key hands out no more than it holds: no broader scopes and no later expiry
+        if ($apiKey !== null && !$apiKey->mayCreate(API_KEY_EPHEMERAL, $scopes, $expire)) {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         $keyId = Id::unique();
 
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
 
         $secret = $jwt->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
             'projectSequence' => $project->getSequence(),
             'scopes' => $scopes
         ]);
-
-        $now = new \DateTime();
-        $expire = $now->add(new \DateInterval('PT' . $duration . 'S'))->format('Y-m-d\TH:i:s.u\Z');
 
         $key = new Document([
             '$id' => $keyId,

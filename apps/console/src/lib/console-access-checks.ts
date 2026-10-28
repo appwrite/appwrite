@@ -413,12 +413,12 @@ export function canShowOrgApiKeysSettings(
   return !!features.orgApiKeys && canAccessOrgSettingsOAuthOrApiKeys(access)
 }
 
-/** Create/update/delete organization API keys. Same audience as the settings tab. */
+/** Organization key metadata stays visible to developers; only owners manage keys. */
 export function canCreateOrgApiKey(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return canShowOrgApiKeysSettings(access, features)
+  return !!features.orgApiKeys && whenOrgRoles(access, features, access.isOwner)
 }
 
 /**

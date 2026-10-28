@@ -6,7 +6,6 @@ import {
   projectQueryOptions,
   isPostgresEngine,
 } from '@/lib/react-query/hooks'
-import { ensureConsoleSqlApiStatements } from '@/lib/databases/sql-api-statements'
 import { throwRedirectIfDedicatedDatabaseProvisioning } from '@/lib/databases/dedicated-database-provisioning-access'
 import { postgresNav } from '@/lib/postgres-database-routes'
 import { DatabaseTypeUnavailable } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeUnavailable'
@@ -53,24 +52,6 @@ export const Route = createFileRoute(
       location.pathname,
       postgresNav({ projectId, databaseId }).sql(),
     )
-
-    try {
-      const { database: updated, updated: didUpdate } =
-        await ensureConsoleSqlApiStatements(
-          projectId,
-          databaseId,
-          'postgresql',
-          database,
-        )
-      if (didUpdate && updated) {
-        queryClient.setQueryData(
-          postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
-          updated,
-        )
-      }
-    } catch {
-      /* First DDL statement retries if the allow-list PATCH fails here */
-    }
   },
   component: PostgresDatabaseLayout,
 })

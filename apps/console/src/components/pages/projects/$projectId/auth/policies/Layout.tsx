@@ -5,6 +5,7 @@ import {
   Fingerprint,
   KeyRound,
   Mail,
+  Radio,
   Users,
   UsersRound,
 } from 'lucide-react'
@@ -23,6 +24,7 @@ export type PoliciesSubTab =
   | 'memberships'
   | 'passwords'
   | 'passkeys'
+  | 'realtime'
 
 type PoliciesLayoutProps = {
   projectId: string
@@ -95,6 +97,20 @@ const NAV_ITEMS = [
     to: '/projects/$projectId/auth/policies/passkeys' as const,
     icon: Fingerprint,
     keywords: ['passkey', 'webauthn', 'relying party', 'rp id', 'origins'],
+  },
+  {
+    id: 'realtime' as const,
+    label: 'Realtime',
+    to: '/projects/$projectId/auth/policies/realtime' as const,
+    icon: Radio,
+    keywords: [
+      'realtime',
+      'websocket',
+      'subscribe',
+      'guest',
+      'anonymous',
+      'unauthenticated',
+    ],
   },
 ]
 

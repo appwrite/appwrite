@@ -316,13 +316,23 @@ class Redis implements Connection
     /**
      * phpredis errors that mean the socket is gone rather than the command
      * being wrong. Anything else (WRONGTYPE, OOM, ...) is the caller's to see.
+     * A timed-out reply counts too: the socket still holds it, and the next
+     * command would read it as its own.
      */
     private function isTransportError(\RedisException $e): bool
     {
-        return (bool) preg_match(
-            '/went away|Connection (lost|closed|refused)|read error on connection/',
-            $e->getMessage(),
-        );
+        $errors = [
+            'went away',
+            'connection lost',
+            'connection closed',
+            'connection refused',
+            'read error on connection',
+            'protocol error',
+            'timed out',
+        ];
+
+        $message = strtolower($e->getMessage());
+        return array_any($errors, fn (string $needle): bool => str_contains($message, $needle));
     }
 
     protected function getRedis(): \Redis
@@ -339,13 +349,13 @@ class Redis implements Connection
             try {
                 $redis->connect($this->host, $this->port, $connectTimeout);
 
+                if ($this->readTimeout >= 0) {
+                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, $this->readTimeout);
+                }
+
                 if ($this->password !== null && $this->password !== '') {
                     $hasUser = $this->user !== null && $this->user !== '';
                     $redis->auth($hasUser ? [$this->user, $this->password] : $this->password);
-                }
-
-                if ($this->readTimeout >= 0) {
-                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, $this->readTimeout);
                 }
 
                 $this->redis = $redis;

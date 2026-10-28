@@ -15,6 +15,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Locking\Lock;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Reference\Renderer;
@@ -28,6 +29,7 @@ use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -377,6 +379,13 @@ Http::init()
             $response->setHideCredentials(true);
         }
 
+        // Reading users is not authority over their credentials. Minted keys are exempt, as their minter could grant users.write
+        // and user migrations read hashes with users.read; OAuth2 tokens only delegate their holder's role
+        $isMintedKey = ! empty($apiKey) && $apiKey->getType() !== API_KEY_OAUTH2;
+        if (\in_array('users.read', $scopes, true) && ! \in_array('users.write', $scopes, true) && ! $isMintedKey) {
+            $response->setHideCredentials(true);
+        }
+
         $authorization->addRole($role);
         $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
         foreach ($rolesSource->getRoles($authorization) as $authRole) {
@@ -617,7 +626,9 @@ Http::init()
 
                 foreach ($request->getParams() as $key => $value) {
                     if (! empty($value)) {
-                        $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                        $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                        // Sign in matches emails case-insensitively, so the limit must too
+                        $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
                     }
                 }
 
@@ -866,7 +877,8 @@ Http::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->inject('mqtt')
+    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject, Mqtt $mqtt) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
 
         if ($sessionLimit === 0) {
@@ -896,6 +908,12 @@ Http::shutdown()
         }
 
         $dbForProject->purgeCachedDocument('users', $userId);
+
+        try {
+            $mqtt->revoke($project->getId(), $userId);
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
     });
 
 Http::shutdown()
@@ -1001,7 +1019,9 @@ Http::shutdown()
 
             foreach ($request->getParams() as $key => $value) {
                 if (! empty($value)) {
-                    $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                    $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                    // Sign in matches emails case-insensitively, so the limit must too
+                    $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
                 }
             }
 

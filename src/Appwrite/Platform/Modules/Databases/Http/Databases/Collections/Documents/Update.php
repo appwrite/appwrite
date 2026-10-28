@@ -156,9 +156,11 @@ class Update extends Action
             PermissionType::Delete,
         ]);
 
+        $callerProvidedPermissions = !\is_null($permissions);
+
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
-        if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
+        if (!$isAPIKey && !$isPrivilegedUser && $callerProvidedPermissions) {
             foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
@@ -267,9 +269,15 @@ class Update extends Action
         $this->validateTimestamps($data, $dbForDatabases);
 
         try {
-            $document = $dbForDatabases->withRequestTimestamp(
-                $requestTimestamp,
-                fn () => $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocument($collectionTableId, $document->getId(), $newDocument))
+            $document = $this->withPermissionPurge(
+                $dbForProject,
+                $database,
+                $collection,
+                $callerProvidedPermissions,
+                fn () => $dbForDatabases->withRequestTimestamp(
+                    $requestTimestamp,
+                    fn () => $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocument($collectionTableId, $document->getId(), $newDocument))
+                ),
             );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
