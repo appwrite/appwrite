@@ -9,7 +9,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Presences\Mock\ConflictingMemory;
 use Utopia\Cache\Adapter\None as NoCache;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
@@ -19,7 +18,6 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\System\System;
 
 final class StateTest extends TestCase
 {
@@ -30,9 +28,6 @@ final class StateTest extends TestCase
     private ConflictingMemory $adapter;
 
     private int $created = 0;
-
-    /** @var array<array{\Redis, string}> */
-    private array $holdKeys = [];
 
     protected function setUp(): void
     {
@@ -94,13 +89,6 @@ final class StateTest extends TestCase
         $this->assertSame('first', $presence->getId());
         $this->assertSame(1, $this->created);
         $this->assertSame(['online'], $this->statuses());
-    }
-
-    protected function tearDown(): void
-    {
-        foreach ($this->holdKeys as [$redis, $key]) {
-            $redis->del($key);
-        }
     }
 
     public function testRetryThatUpdatesConcurrentPresenceDoesNotReportCreation(): void
@@ -228,86 +216,6 @@ final class StateTest extends TestCase
         $this->assertSame(\md5(\json_encode($this->expectedPermissions($ownerId))), $document->getAttribute('permissionsHash'));
     }
 
-    public function testReleasedHoldIsNotOrphaned(): void
-    {
-        [$cache, $host] = $this->holds();
-        (new State($host, 'previous'))->recordHold($cache, 7, 'project', 'user', '1');
-        (new State($host, 'previous'))->forgetHold($cache, 7);
-
-        $this->assertSame([], (new State($host, 'current'))->getOrphanedHolds($cache, previousRuns: true));
-    }
-
-    public function testPreviousRunHoldsAreOrphanedForWorkerZeroOnly(): void
-    {
-        [$cache, $host] = $this->holds();
-        (new State($host, 'previous'))->recordHold($cache, 7, 'project', 'user', '1');
-        $current = new State($host, 'current');
-
-        $this->assertCount(1, $current->getOrphanedHolds($cache, previousRuns: true));
-        $this->assertSame([], $current->getOrphanedHolds($cache, previousRuns: false));
-    }
-
-    public function testDeadWorkerHoldIsOrphanedForEveryWorker(): void
-    {
-        [$cache, $host, $redis] = $this->holds();
-        $current = new State($host, 'current');
-        $current->recordHold($cache, 7, 'project', 'user', '1');
-        // The same record, written by a worker process that no longer exists.
-        $key = 'presence-holds:' . $host;
-        $redis->hSet($key, 'current:999999:7', $redis->hGet($key, 'current:' . \getmypid() . ':7'));
-        $redis->hDel($key, 'current:' . \getmypid() . ':7');
-
-        $this->assertSame(['current:999999:7'], \array_keys($current->getOrphanedHolds($cache, previousRuns: false)));
-    }
-
-    public function testLiveWorkerHoldIsNotOrphaned(): void
-    {
-        [$cache, $host] = $this->holds();
-        $current = new State($host, 'current');
-        $current->recordHold($cache, 7, 'project', 'user', '1');
-
-        $this->assertSame([], $current->getOrphanedHolds($cache, previousRuns: true));
-    }
-
-    public function testOrphanedHoldIsClaimedOnce(): void
-    {
-        [$cache, $host] = $this->holds();
-        (new State($host, 'previous'))->recordHold($cache, 7, 'project', 'user', '1');
-        $current = new State($host, 'current');
-        $field = \array_key_first($current->getOrphanedHolds($cache, previousRuns: true));
-
-        $this->assertSame([true, false], [
-            $current->claimOrphanedHold($cache, $field),
-            $current->claimOrphanedHold($cache, $field),
-        ]);
-    }
-
-    public function testRestoredHoldIsOrphanedAgain(): void
-    {
-        [$cache, $host] = $this->holds();
-        (new State($host, 'previous'))->recordHold($cache, 7, 'project', 'user', '1');
-        $current = new State($host, 'current');
-        $holds = $current->getOrphanedHolds($cache, previousRuns: true);
-        $field = \array_key_first($holds);
-        $current->claimOrphanedHold($cache, $field);
-
-        $current->restoreOrphanedHold($cache, $field, $holds[$field]);
-
-        $this->assertSame($holds, $current->getOrphanedHolds($cache, previousRuns: true));
-    }
-
-    public function testRecordingAHoldAgainRenewsItsExpiry(): void
-    {
-        [$cache, $host, $redis] = $this->holds();
-        $state = new State($host, 'current');
-        $state->recordHold($cache, 7, 'project', 'user', '1');
-        $redis->expire('presence-holds:' . $host, 60);
-
-        $state->recordHold($cache, 7, 'project', 'user', '1');
-
-        $this->assertGreaterThan(29 * 24 * 60 * 60, $redis->ttl('presence-holds:' . $host));
-    }
-
     /**
      * @return array<int, string>
      */
@@ -367,24 +275,5 @@ final class StateTest extends TestCase
         ]);
 
         return \array_map(static fn (Document $presence): string => $presence->getAttribute('status'), $presences);
-    }
-
-    /**
-     * @return array{Cache, string, \Redis} a cache on the real Redis, and a host of its own
-     */
-    private function holds(): array
-    {
-        $redis = new \Redis();
-        $redis->connect(System::getEnv('_APP_REDIS_HOST', 'redis'), (int) System::getEnv('_APP_REDIS_PORT', '6379'));
-
-        $password = System::getEnv('_APP_REDIS_PASS', '');
-        if ($password !== '') {
-            $redis->auth(\array_filter([System::getEnv('_APP_REDIS_USER', ''), $password]));
-        }
-
-        $host = 'state-test-' . \bin2hex(\random_bytes(8));
-        $this->holdKeys[] = [$redis, 'presence-holds:' . $host];
-
-        return [new Cache(new RedisCache($redis)), $host, $redis];
     }
 }

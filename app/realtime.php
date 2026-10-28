@@ -311,7 +311,7 @@ if (!function_exists('checkForProjectUsage')) {
 }
 
 $realtime = getRealtime();
-$presenceState = new PresenceState(host: \gethostname() ?: '', boot: \uniqid());
+$presenceState = new PresenceState();
 $usage = new Usage(triggerStats(...));
 $eventTailRegistry = new EventTailRegistry(
     rate: (int) System::getEnv('_APP_REALTIME_TAIL_RATE', 50)
@@ -436,69 +436,8 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $container, $stats, $realtime, $presenceState, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
     Console::success('Worker ' . $workerId . ' started successfully');
-
-    // A crash or a killed worker runs no onClose, so the holds it left counted would keep their
-    // users online. Release them, retrying until every release goes through. Worker 0 alone takes
-    // the previous runs' holds, so the workers starting together do not race for them.
-    $releaseOrphanedHolds = function () use (&$releaseOrphanedHolds, $workerId, $container, $presenceState): void {
-        $failed = false;
-
-        try {
-            $holds = $presenceState->getOrphanedHolds(getCache(), previousRuns: $workerId === 0);
-        } catch (Throwable $th) {
-            Console::error('Realtime orphaned presence holds: ' . $th->getMessage());
-            $holds = [];
-            $failed = true;
-        }
-
-        foreach ($holds as $field => $hold) {
-            try {
-                if (!$presenceState->claimOrphanedHold(getCache(), $field)) {
-                    continue;
-                }
-            } catch (Throwable $th) {
-                Console::error('Realtime orphaned presence hold claim: ' . $th->getMessage());
-                $failed = true;
-                continue;
-            }
-
-            $span = Span::init('realtime.boot.presenceCleanup');
-            Span::add('project.id', $hold['projectId']);
-            Span::add('user.id', $hold['userId']);
-
-            try {
-                $dbForPlatform = getConsoleDB();
-                $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $hold['projectId']));
-                if (!$project->isEmpty()) {
-                    $dbForProject = getProjectDB($project);
-                    $deleted = $presenceState->releaseConnectionForUser($dbForProject, $hold['userId'], $hold['sequence']);
-                    if ($deleted !== null) {
-                        /** @var UsagePublisher $publisherForUsage */
-                        $publisherForUsage = $container->get('publisherForUsage');
-                        $presenceState->triggerPresenceDeleted($dbForProject, $project, $hold['userId'], $deleted, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
-                    }
-                }
-            } catch (Throwable $th) {
-                $span->setError($th);
-                $failed = true;
-                try {
-                    $presenceState->restoreOrphanedHold(getCache(), $field, $hold);
-                } catch (Throwable $th) {
-                    $span->setError($th);
-                }
-            } finally {
-                $span->finish();
-            }
-        }
-
-        if ($failed) {
-            Timer::after(60000, $releaseOrphanedHolds);
-        }
-    };
-
-    Timer::after(10000, $releaseOrphanedHolds);
 
     $telemetry = getTelemetry($workerId);
     $realtimeDelayBuckets = [100, 250, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500, 10000, 15000, 30000];
@@ -1668,7 +1607,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
 
                 // This socket gives up its hold; the row is deleted and offline announced at zero.
                 if ($holdProjectId !== '' && $holdProjectId !== 'console' && $holdUserId !== '') {
-                    go(function () use ($connection, $holdProjectId, $holdUserId, $holdSequence, $container, $presenceState): void {
+                    go(function () use ($holdProjectId, $holdUserId, $holdSequence, $container, $presenceState): void {
                         Span::init('realtime.close.presenceCleanup');
                         Span::add('project.id', $holdProjectId);
                         Span::add('user.id', $holdUserId);
@@ -1677,13 +1616,11 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             $dbForPlatform = getConsoleDB();
                             $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $holdProjectId));
                             if ($project->isEmpty()) {
-                                $presenceState->forgetHold(getCache(), $connection);
                                 return;
                             }
 
                             $dbForProject = getProjectDB($project);
                             $deleted = $presenceState->releaseConnectionForUser($dbForProject, $holdUserId, $holdSequence);
-                            $presenceState->forgetHold(getCache(), $connection);
                             if ($deleted === null) {
                                 return;
                             }

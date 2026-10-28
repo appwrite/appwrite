@@ -10,7 +10,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Throwable;
-use Utopia\Cache\Cache;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -32,16 +31,6 @@ class State
     public const LIST_CACHE_FIELD_PRESENCES = 'presences';
     public const LIST_CACHE_FIELD_TOTAL = 'total';
     public const COLLECTION_ID = 'presenceLogs';
-
-    /**
-     * @param string $host the realtime server; its counted holds are recorded under it
-     * @param string $boot this run of that server, so the next run can tell its leftovers apart
-     */
-    public function __construct(
-        private readonly string $host = '',
-        private readonly string $boot = '',
-    ) {
-    }
 
     public function setPermissions(
         Document $document,
@@ -217,115 +206,6 @@ class State
         } catch (ConflictException $e) {
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
         }
-    }
-
-    /**
-     * A realtime presence expires 30 days after it is written; a hold record never needs to
-     * outlive the row it counts on.
-     */
-    private const HOLD_TTL = 30 * 24 * 60 * 60;
-
-    /**
-     * Records the counted hold of one of this server's sockets, under its run and worker process.
-     * A crash or a killed worker runs no onClose, so what this recorded is released once that run
-     * or process is gone; other servers' holds are never touched.
-     */
-    public function recordHold(Cache $cache, int $connection, string $projectId, string $userId, string $sequence): void
-    {
-        if ($this->host === '') {
-            return;
-        }
-
-        try {
-            $saved = $cache->save('presence-holds:' . $this->host, [
-                'projectId' => $projectId,
-                'userId' => $userId,
-                'sequence' => $sequence,
-            ], $this->boot . ':' . \getmypid() . ':' . $connection, self::HOLD_TTL);
-            if ($saved === false) {
-                Span::add('presence.hold.recorded', false);
-            }
-        } catch (Throwable $th) {
-            Span::current()?->setError($th);
-        }
-    }
-
-    /**
-     * Forgets a hold once it is released. A hold whose release failed keeps its record, so the
-     * next run of this server releases it.
-     */
-    public function forgetHold(Cache $cache, int $connection): void
-    {
-        if ($this->host !== '') {
-            $this->forgetRecord($cache, $this->boot . ':' . \getmypid() . ':' . $connection);
-        }
-    }
-
-    /**
-     * Returns, by record, the holds of this run's worker processes that are gone, and with
-     * $previousRuns those of this server's previous runs too. Their sockets lost the state that
-     * would release them on close, so each still counts on its presence row until it is released.
-     *
-     * @return array<string, array{projectId: string, userId: string, sequence: string}>
-     */
-    public function getOrphanedHolds(Cache $cache, bool $previousRuns): array
-    {
-        if ($this->host === '') {
-            return [];
-        }
-
-        $orphans = [];
-        foreach ($cache->loadMany('presence-holds:' . $this->host, self::HOLD_TTL) as $field => $hold) {
-            [$boot, $pid] = \explode(':', (string) $field) + ['', ''];
-            $orphaned = $boot === $this->boot
-                ? !\posix_kill((int) $pid, 0)
-                : $previousRuns;
-            if ($orphaned && \is_array($hold)) {
-                $orphans[(string) $field] = $hold;
-            }
-        }
-
-        return $orphans;
-    }
-
-    /**
-     * Takes an orphaned hold's record for the caller to release, and returns whether it got it.
-     * Workers starting together see the same records; only the one that removes a record
-     * releases its hold, so no hold is released twice.
-     */
-    public function claimOrphanedHold(Cache $cache, string $field): bool
-    {
-        return $cache->purge('presence-holds:' . $this->host, $field);
-    }
-
-    /**
-     * Puts back the record of a claimed hold whose release failed, so a later pass retries it.
-     *
-     * @param array{projectId: string, userId: string, sequence: string} $hold
-     */
-    public function restoreOrphanedHold(Cache $cache, string $field, array $hold): void
-    {
-        $cache->save('presence-holds:' . $this->host, $hold, $field, self::HOLD_TTL);
-    }
-
-    /**
-     * A record left after its hold was released would release that hold again on the next
-     * restart, so a failed purge is retried.
-     */
-    private function forgetRecord(Cache $cache, string $field): void
-    {
-        for ($attempt = 1; $attempt <= 3; $attempt++) {
-            try {
-                // False only means the record was already gone.
-                $cache->purge('presence-holds:' . $this->host, $field);
-
-                return;
-            } catch (Throwable $th) {
-                Span::current()?->setError($th);
-            }
-        }
-
-        Span::add('presence.hold.forgotten', false);
     }
 
     /**

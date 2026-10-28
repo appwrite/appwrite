@@ -144,9 +144,6 @@ class Presence extends Action
             'userId' => $userId,
             'sequence' => (string) $presence->getSequence(),
         ];
-        // Every presence message rewrites the record, so it lives as long as the row it counts on
-        // and a write that failed is retried.
-        $presenceState->recordHold($database->getCache(), $connectionId, $projectId, $userId, (string) $presence->getSequence());
 
         // Usage +1 only on actual creation (user came online), not on an increment.
         if ($created) {

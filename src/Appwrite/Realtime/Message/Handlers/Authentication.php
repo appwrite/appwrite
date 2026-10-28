@@ -188,7 +188,6 @@ class Authentication extends Action
                         $presenceState->triggerPresenceDeleted($database, $project, (string) $previousUserId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime);
                     }
                 }
-                $presenceState->forgetHold($database->getCache(), $connectionId);
             }
         }
 
