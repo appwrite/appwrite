@@ -1654,6 +1654,8 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         Span::add('user.id', $holdUserId);
 
                         try {
+                            // Forget before releasing: an interrupted release then leaves the row to
+                            // expiresAt, where releasing first could let the next boot release it twice.
                             $presenceState->forgetHold(getCache(), $connection);
 
                             $dbForPlatform = getConsoleDB();
