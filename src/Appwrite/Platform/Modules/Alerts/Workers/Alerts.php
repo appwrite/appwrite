@@ -187,7 +187,7 @@ class Alerts extends Action
             : "{$metric} is back to {$shown} in project {$project->getAttribute('name')}.";
 
         if (\in_array(Channel::Webhook->value, $channels, true) && $rule->getAttribute('webhookUrl', '') !== '') {
-            $publisherForNotifications->enqueue(new NotificationMessage(
+            $this->publish($publisherForNotifications, new NotificationMessage(
                 project: $project,
                 recipients: [[
                     'address' => (string) $rule->getAttribute('webhookUrl'),
@@ -255,7 +255,7 @@ class Alerts extends Action
                 ->setParam('{{host}}', (string) ($platform['consoleUrl'] ?? ''))
                 ->setParam('{{path}}', $this->path($project));
 
-            $publisherForNotifications->enqueue(new NotificationMessage(
+            $this->publish($publisherForNotifications, new NotificationMessage(
                 project: $project,
                 recipients: $recipients,
                 template: MAIL_TEMPLATE_ALERT,
@@ -322,5 +322,16 @@ class Alerts extends Action
     private function number(float $value): string
     {
         return \rtrim(\rtrim(\number_format($value, 2, '.', ','), '0'), '.');
+    }
+
+    /**
+     * A message the broker did not accept fails the evaluation, so the rule's new
+     * status is not stored and the next evaluation sees the transition again.
+     */
+    protected function publish(NotificationPublisher $publisherForNotifications, NotificationMessage $message): void
+    {
+        if ($publisherForNotifications->enqueue($message) === false) {
+            throw new \RuntimeException('The notification for the alert rule was not accepted by the queue.');
+        }
     }
 }
