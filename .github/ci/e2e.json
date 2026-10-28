@@ -183,6 +183,7 @@
       "runner": "e2e",
       "functional": true,
       "processes": null,
+      "documentsdb": true,
       "paths": [
         "src/Appwrite/Platform/Modules/Alerts/",
         "src/Appwrite/Alert/",
