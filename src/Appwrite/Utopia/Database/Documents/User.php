@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Database\Documents;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Deletes\Targets;
 use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Hooks\Hooks;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
@@ -140,11 +141,15 @@ class User extends Document
      *
      * @return bool|string
      */
-    public function sessionVerify(string $secret, Token $proofForToken)
+    public function sessionVerify(string $secret, Token $proofForToken, ?string $invalidatedAt)
     {
         $sessions = $this->getAttribute('sessions', []);
 
         foreach ($sessions as $session) {
+            if ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt) {
+                continue;
+            }
+
             if (
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
@@ -165,11 +170,15 @@ class User extends Document
      * Used by JWT authentication, which binds to a session ID rather than a
      * session secret.
      */
-    public function sessionActive(string $sessionId): bool
+    public function sessionActive(string $sessionId, ?string $invalidatedAt): bool
     {
         $session = $this->getSession($sessionId);
 
         if ($session === null) {
+            return false;
+        }
+
+        if ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt) {
             return false;
         }
 
@@ -247,13 +256,13 @@ class User extends Document
 
     /**
      * Revoke every way into the account other than its email address: password,
-     * sessions, tokens, MFA factors, passkeys, identities, phone and push targets.
+     * sessions, tokens, MFA factors, passkeys, identities, account keys, phone and push targets.
      *
      * Used when the verified owner of the email claims an account that was
      * registered with it but never verified, so nobody else keeps access.
      * Persists the revocation in one transaction and mirrors it on `$user`.
      */
-    public static function revokeCredentials(Database $dbForProject, Document $user, ?Mqtt $mqtt = null, ?string $projectId = null): void
+    public static function revokeCredentials(Database $dbForProject, Document $user, Document $project, ?Mqtt $mqtt = null): void
     {
         $sequence = $user->getSequence();
         if ($sequence === '' || $sequence === null || $user->getAttribute('status') === false) {
@@ -274,17 +283,27 @@ class User extends Document
             'mfaRecoveryCodes' => [],
         ];
 
-        $dbForProject->withTransaction(function () use ($dbForProject, $user, $sequence, $attributes, $mqtt, $projectId) {
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes, $mqtt) {
             foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
                 $dbForProject->deleteDocuments($collection, [
                     Query::equal('userInternalId', [$sequence]),
                 ]);
             }
 
+            if ($project->getId() === 'console') {
+                $dbForProject->deleteDocuments('keys', [
+                    Query::equal('resourceType', ['users']),
+                    Query::equal('resourceInternalId', [$sequence]),
+                ]);
+            }
+
             Targets::delete($dbForProject, Query::and([
                 Query::equal('userInternalId', [$sequence]),
                 Query::notEqual('providerType', MESSAGE_TYPE_EMAIL),
-            ]), $mqtt, $projectId);
+            ]), $mqtt, $project->getId());
+
+            // Editions revoke the credentials they keep in their own collections
+            (new Hooks())->trigger('credentialsRevoked', [$dbForProject, $user, $project]);
 
             $dbForProject->updateDocument('users', $user->getId(), new Document($attributes));
         });

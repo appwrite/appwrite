@@ -67,8 +67,10 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -104,27 +106,35 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
     $url = $platform['consoleUrl'] ?? '';
     $platformHostnames = $platform['hostnames'] ?? [];
 
-    if ($rule->isEmpty()) {
-        $denyDomains = [];
-        $denyEnvVars = [
-            System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
-            System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
-            System::getEnv('_APP_DOMAIN_SITES', ''),
-        ];
-        foreach ($denyEnvVars as $denyEnvVar) {
-            foreach (\explode(',', $denyEnvVar) as $denyDomain) {
-                if (empty($denyDomain)) {
-                    continue;
-                }
-                $denyDomains[] = $denyDomain;
+    $denyDomains = [];
+    $denyEnvVars = [
+        System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+        System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+        System::getEnv('_APP_DOMAIN_SITES', ''),
+    ];
+    foreach ($denyEnvVars as $denyEnvVar) {
+        foreach (\explode(',', $denyEnvVar) as $denyDomain) {
+            if (empty($denyDomain)) {
+                continue;
             }
+            $denyDomains[] = $denyDomain;
         }
+    }
 
+    // Reserved base domains are never served, even by a rule that claims one
+    if (\in_array($host, $denyDomains, true)) {
+        throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
+    }
+
+    // Fallback hosts are one level deep, so a rule saved before that limit cannot serve a deeper one
+    foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '')) as $fallbackDomain) {
+        if (!$rule->isEmpty() && !empty($fallbackDomain) && \str_ends_with($host, '.' . $fallbackDomain) && \str_contains(\substr($host, 0, -\strlen($fallbackDomain) - 1), '.')) {
+            throw new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
+        }
+    }
+
+    if ($rule->isEmpty()) {
         foreach ($denyDomains as $denyDomain) {
-            if ($host === $denyDomain) {
-                throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
-            }
-
             if (\str_ends_with($host, $denyDomain)) {
                 $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
 
@@ -140,6 +150,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         // Act as API - no Proxy logic
         return false;
+    }
+
+    // Preview grants only apply to the rule the key was issued for
+    if (!\is_null($apiKey) && !$apiKey->isBoundTo($rule)) {
+        $apiKey = null;
     }
 
     $projectId = $rule->getAttribute('projectId');
@@ -249,7 +264,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             - If JWT in cookie is invalid or expired -> not authorized
             - If user is blocked or removed -> not authorized
             - If user's session is removed or expired -> not authorized
-            - If user is not member of team of this deployment -> not authorized
+            - If user lacks read permission on this project -> not authorized
             - If not authorized, redirect to Console redirect UI
             - If authorized, continue as if auth was not required
         */
@@ -281,16 +296,23 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
 
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                $sessionActive = !empty($jwtSessionId) && $user->sessionActive($jwtSessionId);
+                $sessionActive = !empty($jwtSessionId)
+                    && $user->sessionActive($jwtSessionId, Config::getParam('console')['auths']['sessionsInvalidatedAt'] ?? null)
+                    && $user->sessionFactorsMet($jwtSessionId);
 
-                $membershipExists = false;
+                $hasProjectAccess = false;
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && !$user->isEmpty()) {
-                    $teamId = $project->getAttribute('teamId', '');
-                    $membershipExists = \array_any($user->getAttribute('memberships', []), static fn (Document $membership): bool => $membership->getAttribute('teamId') === $teamId && $membership->getAttribute('confirm', false) === true);
+                    // Same project-read check as HTTP admin mode and realtime: confirmed
+                    // membership alone is not enough when the only role is another project.
+                    $projectAuthorization = new Authorization();
+                    foreach ($user->getRoles($projectAuthorization) as $role) {
+                        $projectAuthorization->addRole($role);
+                    }
+                    $hasProjectAccess = $projectAuthorization->isValid(new Input(PermissionType::Read, $project->getPermissionsByType(PermissionType::Read)));
                 }
 
-                if ($userExists && $sessionActive && $membershipExists) {
+                if ($userExists && $sessionActive && $hasProjectAccess) {
                     $authorized = true;
                 }
             }
@@ -1293,7 +1315,8 @@ Http::error()
     ->inject('project')
     ->inject('bus')
     ->inject('authorization')
-    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, Bus $bus, Authorization $authorization) {
+    ->inject('localeCodes')
+    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, Bus $bus, Authorization $authorization, array $localeCodes) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request)?->route;
         $class = \get_class($error);
@@ -1363,7 +1386,10 @@ Http::error()
         }
 
         Span::add('http.hostname', $request->getHostname());
-        Span::add('http.locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
+        $locale = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
+        if (\in_array($locale, $localeCodes, true)) {
+            Span::add('http.locale', $locale);
+        }
         if (Span::current()?->get('project.id') === null) {
             Span::add('project.id', $project->getId());
         }

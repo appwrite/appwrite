@@ -184,17 +184,25 @@ class Upsert extends Action
         $upserted = [];
 
         try {
-            $modified = $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
-                return $dbForDatabases->upsertDocuments(
-                    $collectionTableId,
-                    $documents,
-                    onNext: function (Document $document) use ($plan, &$upserted) {
-                        if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                            $upserted[] = $document;
-                        }
-                    },
-                );
-            });
+            $modified = $this->withPermissionPurge(
+                $dbForProject,
+                $database,
+                $collection,
+                \array_any($documents, fn (Document $document): bool => $document->offsetExists('$permissions')),
+                function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
+                    return $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
+                        return $dbForDatabases->upsertDocuments(
+                            $collectionTableId,
+                            $documents,
+                            onNext: function (Document $document) use ($plan, &$upserted) {
+                                if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                                    $upserted[] = $document;
+                                }
+                            },
+                        );
+                    });
+                },
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (UniqueException $e) {

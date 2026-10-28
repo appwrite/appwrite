@@ -239,11 +239,16 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     // Claim the token and issue the session together: of concurrent exchanges only the one that deletes the token
     // gets a session, and a failed insert rolls the claim back so the token can be retried. The user row lock
     // orders this against an address change, which deletes the token and resets the verification it proves
-    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification) {
-        $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project) {
+        $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
 
         if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        // Proving an unverified email claims the account, so whoever registered it keeps no other way in
+        if ($verification === 'emailVerification' && !$locked->getAttribute('emailVerification', false)) {
+            $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
         }
 
         $session = $dbForProject->createDocument('sessions', $session
@@ -1059,7 +1064,7 @@ Http::post('/v1/account/sessions/email')
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->label('abuse-key', 'projectId:{projectId},url:{url},email:{param-email}')
     ->label('abuse-reset', [201])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
@@ -1885,7 +1890,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // createSession later. Deleting the current session in that flow would
         // sign the caller out until the exchange, so it is left in place.
         if (empty($state['token'])) {
-            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
             if ($current) { // Replace the current session with the new one.
                 $currentDocument = $dbForProject->getDocument('sessions', $current);
@@ -1981,7 +1986,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
                     if (!$user->getAttribute('emailVerification', false)) {
-                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $mqtt, $project->getId()));
+                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
                     }
                     // The provider verified this address, or its canonical form on the same domain
                     if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
@@ -3628,13 +3633,18 @@ Http::post('/v1/account/jwts')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('project')
+    ->inject('console')
     ->inject('mode')
-    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, string $mode) {
+    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, Document $console, string $mode) {
         if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
             throw new Exception(Exception::USER_JWT_CREATION_DENIED);
         }
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
 
         if (!$sessionId) {
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
@@ -4634,10 +4644,16 @@ Http::put('/v1/account/recovery')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
+            }
+
+            // Recovery proves an unverified email, so whoever registered it keeps no other way in
+            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+            if (!$locked->getAttribute('emailVerification', false)) {
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
@@ -5055,10 +5071,16 @@ Http::put('/v1/account/recovery/otp')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
+            }
+
+            // Recovery proves an unverified email, so whoever registered it keeps no other way in
+            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+            if (!$locked->getAttribute('emailVerification', false)) {
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(

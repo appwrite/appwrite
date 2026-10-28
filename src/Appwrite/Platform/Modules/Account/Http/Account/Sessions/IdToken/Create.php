@@ -216,7 +216,7 @@ class Create extends Action
             $sessionUpgrade = true;
         }
 
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
         if ($user->isEmpty()) {
             $session = $dbForProject->findOne('sessions', [ // Get user by provider id
@@ -433,7 +433,7 @@ class Create extends Action
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
                 if (!$user->getAttribute('emailVerification', false)) {
-                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $mqtt, $project->getId()));
+                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
                 }
                 // The provider verified this address, or its canonical form on the same domain
                 if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
