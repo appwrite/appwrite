@@ -1,1 +1,1 @@
-@file:/tmp/file_0.json
+@file:/tmp/push_file_image.php
