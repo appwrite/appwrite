@@ -144,6 +144,8 @@ class Screenshots extends Action
                 Key::PURPOSE_CLAIM => Key::PURPOSE,
                 'projectId' => $project->getId(),
                 'projectSequence' => $project->getSequence(),
+                'hostname' => $rule->getAttribute('domain'),
+                'deploymentId' => $rule->getAttribute('deploymentId'),
                 'hostnameOverride' => true,
                 'disabledMetrics' => [
                     METRIC_EXECUTIONS,

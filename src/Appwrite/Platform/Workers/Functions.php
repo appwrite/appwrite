@@ -841,7 +841,7 @@ class Functions extends Action
                 ->setEvent('functions.[functionId].executions.[executionId].update')
                 ->setParam('functionId', $function->getId())
                 ->setParam('executionId', $execution->getId())
-                ->setPayload((new Execution())->payload($execution));
+                ->setPayload((new Execution())->payload($execution), sensitive: ['logs', 'errors']);
 
             /** Trigger Webhook */
             $queueForWebhooks

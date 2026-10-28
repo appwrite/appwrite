@@ -349,7 +349,7 @@ function createSource(source: AcquisitionSource): void {
       if (typeof created?.claim === 'string') {
         addPendingSourceClaim(created.claim)
         // The POST can resolve after a fast sign-up already ran the link.
-        if (linkRequested) linkPendingSources()
+        if (linkRequested) void linkPendingSources()
       }
     } catch {
       startedSignatures.delete(signature)
@@ -357,22 +357,21 @@ function createSource(source: AcquisitionSource): void {
   })()
 }
 
-let linkingSources = false
+let linking: Promise<void> | null = null
 let linkRequested = false
 
 /**
  * Attach the sources this browser created as a guest to the signed-in account.
  * Best effort: a failure keeps the claims for the next authenticated load.
  */
-export function linkPendingSources(): void {
-  if (typeof window === 'undefined') return
+export function linkPendingSources(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve()
   linkRequested = true
-  if (linkingSources) return
+  if (linking) return linking
   const claims = readPendingSourceClaims()
-  if (claims.length === 0) return
-  linkingSources = true
+  if (claims.length === 0) return Promise.resolve()
 
-  void (async () => {
+  linking = (async () => {
     let relink = false
     try {
       const { isCloudProfile } = await import('@/lib/console-profiles')
@@ -400,11 +399,36 @@ export function linkPendingSources(): void {
     } catch {
       // Never block sign-up; the claims stay for the next attempt.
     } finally {
-      linkingSources = false
+      linking = null
     }
     // Only after a successful PATCH and write, so a failing endpoint cannot loop.
-    if (relink) linkPendingSources()
+    if (relink) await linkPendingSources()
   })()
+  return linking
+}
+
+const NEW_ACCOUNT_MS = 24 * 60 * 60 * 1000
+
+/**
+ * Sign-in links only for an account created in the last day; a returning
+ * account would otherwise collect a source on every visit.
+ */
+export function linkSignUpSources(accountCreatedAt: string): Promise<void> {
+  if (Date.parse(accountCreatedAt) < Date.now() - NEW_ACCOUNT_MS) {
+    return Promise.resolve()
+  }
+  return linkPendingSources()
+}
+
+/**
+ * Link before a Free to paid change so the server's upgrade alert sees the
+ * latest touch. Bounded so it never holds up the upgrade.
+ */
+export function linkSourcesBeforeUpgrade(timeoutMs = 2000): Promise<void> {
+  return Promise.race([
+    linkPendingSources(),
+    new Promise<void>((resolve) => setTimeout(resolve, timeoutMs)),
+  ])
 }
 
 /**
