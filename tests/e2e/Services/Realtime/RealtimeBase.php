@@ -5,7 +5,9 @@ namespace Tests\E2E\Services\Realtime;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use Swoole\Coroutine;
+use Tests\E2E\Client;
 use Utopia\Database\Document;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
@@ -226,8 +228,7 @@ trait RealtimeBase
 
     public function testConnectionFailureWrongRegion(): void
     {
-        $project = $this->createNewProject();
-        $projectId = $project['$id'];
+        $projectId = $this->createIsolatedProjectForRegionTest();
         $currentRegion = System::getEnv('_APP_REGION', 'default');
         $wrongRegion = $currentRegion === 'default' ? 'fra' : 'default';
 
@@ -280,6 +281,35 @@ trait RealtimeBase
         $this->assertContains('documents', $response['data']['channels']);
 
         $client->close();
+    }
+
+    /**
+     * Create a dedicated project for region tests without relying on ProjectCustom helpers.
+     */
+    private function createIsolatedProjectForRegionTest(): string
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+
+        $team = $this->createTeamFixture($headers, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Region Test ' . Id::unique(),
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+
+        $project = $this->client->call(Client::METHOD_POST, '/projects', $headers, [
+            'projectId' => Id::unique(),
+            'region' => System::getEnv('_APP_REGION', 'default'),
+            'name' => 'Realtime Region Test',
+            'teamId' => $team['body']['$id'],
+        ]);
+        $this->assertSame(201, $project['headers']['status-code']);
+
+        return $project['body']['$id'];
     }
 
     /**
