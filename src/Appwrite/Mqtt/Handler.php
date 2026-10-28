@@ -91,6 +91,14 @@ class Handler implements MqttHandler
             }
         }
 
+        // As realtime caps a user's open connections, so idle sockets cannot pile up toward the broker's limit.
+        if (\count($this->connectionsOf((string) ($identity['projectId'] ?? ''), (string) ($identity['userId'] ?? ''))) > APP_LIMIT_MQTT_CONNECTIONS) {
+            $this->untrack($connection);
+            Span::add('mqtt.result', 'quota');
+            $this->mqtt->connectRefused->add(1, ['reason' => 'connection_limit']);
+            return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod, 'Too many open connections. Close an existing connection and try again.');
+        }
+
         // The per-device session anchor: the client id, or an account-level fallback so reconnects
         // resume the same session (the offline-replay cursor is keyed on it).
         $clientId = $connect->clientId;
@@ -151,9 +159,9 @@ class Handler implements MqttHandler
      * Refuse a CONNECT with an MQTT reason code, echoing the enhanced-auth method (see
      * connackProperties) and carrying the matching Appwrite error message as the Reason String.
      */
-    private function refuseConnect(int $reasonCode, string $error, string $authMethod): Connack
+    private function refuseConnect(int $reasonCode, string $error, string $authMethod, ?string $message = null): Connack
     {
-        return Connack::refuse($reasonCode, $this->connackProperties($authMethod, $error));
+        return Connack::refuse($reasonCode, $this->connackProperties($authMethod, $error, $message));
     }
 
     /**
@@ -162,7 +170,7 @@ class Handler implements MqttHandler
      * HiveMQ) reject it with "Auth method in CONNACK must be present". A refusal also carries the
      * Appwrite error message as the Reason String (0x1F). Returns null when there is nothing to add.
      */
-    private function connackProperties(string $authMethod, ?string $error = null): ?Properties
+    private function connackProperties(string $authMethod, ?string $error = null, ?string $message = null): ?Properties
     {
         $properties = new Properties();
 
@@ -171,7 +179,7 @@ class Handler implements MqttHandler
         }
 
         if ($error !== null) {
-            $properties->add(new Property(Property::REASON_STRING, (new Exception($error))->getMessage()));
+            $properties->add(new Property(Property::REASON_STRING, (new Exception($error, $message))->getMessage()));
         }
 
         return $properties->all() === [] ? null : $properties;

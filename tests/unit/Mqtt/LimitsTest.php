@@ -14,6 +14,7 @@ use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Tests\Unit\Mqtt\Fakes\RecordingRedis;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\Connack;
 use Utopia\Mqtt\Packet\Disconnect;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
@@ -124,6 +125,37 @@ final class LimitsTest extends TestCase
 
         $this->assertSame(self::SUBSCRIBE_LIMIT + 1, $this->subacks(1));
         $this->assertSame([], $this->network->closed);
+    }
+
+    public function testOpenConnectionsPerUserAreCapped(): void
+    {
+        for ($fd = 1; $fd <= APP_LIMIT_MQTT_CONNECTIONS; $fd++) {
+            $this->assertSame(Connack::SUCCESS, $this->connect($fd, 'user'));
+        }
+
+        // Test for FAILURE
+        $overflow = APP_LIMIT_MQTT_CONNECTIONS + 1;
+        $this->assertSame(Connack::QUOTA_EXCEEDED, $this->connect($overflow, 'user'));
+        $this->assertSame([$overflow], $this->network->closed);
+
+        // Test for SUCCESS: closing a connection frees its slot, and others are counted apart.
+        $this->network->close(1);
+        $this->assertSame(Connack::SUCCESS, $this->connect($overflow + 1, 'user'));
+        $this->assertSame(Connack::SUCCESS, $this->connect($overflow + 2, 'other'));
+        $this->assertSame(Connack::SUCCESS, $this->connect($overflow + 3, 'user', 'project2'));
+    }
+
+    public function testRefusedConnectionDoesNotHoldASlot(): void
+    {
+        for ($fd = 1; $fd <= APP_LIMIT_MQTT_CONNECTIONS + 1; $fd++) {
+            $this->connect($fd, 'user');
+        }
+        $this->connect(100, 'user');
+
+        // Test for SUCCESS: a refused CONNECT is never counted, so one close admits exactly one more.
+        $this->network->close(1);
+        $this->assertSame(Connack::SUCCESS, $this->connect(101, 'user'));
+        $this->assertSame(Connack::QUOTA_EXCEEDED, $this->connect(102, 'user'));
     }
 
     /** Open a connection as $userId and return the CONNACK reason code. */
