@@ -122,7 +122,12 @@ export function ConnectRepositorySection({
 }: ConnectRepositorySectionProps) {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features)
+  const {
+    vcsProviders,
+    vcsProvidersWithRepositoryCreation,
+    vcsProvidersWithPublicRepositories,
+  } = useConsoleVariables()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',
@@ -157,10 +162,6 @@ export function ConnectRepositorySection({
     projectId,
     installations,
   )
-  const {
-    vcsProvidersWithRepositoryCreation,
-    vcsProvidersWithPublicRepositories,
-  } = useConsoleVariables()
   const orgOptions = useMemo(
     () => buildVcsOrgOptions(installations, namespacesByInstallation),
     [installations, namespacesByInstallation],

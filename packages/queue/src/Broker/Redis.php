@@ -12,7 +12,6 @@ use Utopia\Queue\Queue;
 
 class Redis implements Synchronous, Consumer
 {
-    private const int POP_TIMEOUT = 2;
     private const int RECONNECT_BACKOFF_MS = 100;
     private const int RECONNECT_MAX_BACKOFF_MS = 5_000;
 
@@ -389,36 +388,37 @@ class Redis implements Synchronous, Consumer
     {
         $start = time();
         $processed = 0;
+        $failed = "{$queue->namespace}.failed.{$queue->name}";
 
         while ($limit === null || $processed < $limit) {
-            $pid = $this->commands->rightPop("{$queue->namespace}.failed.{$queue->name}", self::POP_TIMEOUT);
+            $pid = $this->commands->listRange($failed, 1, -1)[0] ?? null;
 
             // No more jobs to retry
-            if ($pid === false) {
+            if (!\is_string($pid)) {
                 break;
             }
 
             // The payload expired; nothing left to requeue.
             $job = $this->getJob($queue, $pid);
             if ($job === false) {
+                $this->script($this->commands, 'retry', [$failed], [$pid]);
                 continue;
             }
 
-            // Wrapped around to a job this sweep already requeued: put the
-            // claim back and stop.
+            // Wrapped around to a job this sweep already requeued: stop.
             if ($job->getTimestamp() >= $start) {
-                $this->commands->rightPush("{$queue->namespace}.failed.{$queue->name}", $pid);
                 break;
             }
 
             if (($maxAttempts !== null && $job->getAttempts() >= $maxAttempts)
                 || ($newerThan !== null && $job->getTimestamp() < $start - $newerThan)) {
-                $this->commands->leftPush("{$queue->namespace}.dead.{$queue->name}", $pid);
+                $this->script($this->commands, 'retry', [$failed, "{$queue->namespace}.dead.{$queue->name}"], [$pid, $pid]);
                 continue;
             }
 
-            $this->requeue($queue, $job);
-            $processed++;
+            if ($this->requeue($queue, $pid, $job)) {
+                $processed++;
+            }
         }
     }
 
@@ -530,10 +530,15 @@ class Redis implements Synchronous, Consumer
     /**
      * Requeue with a fresh pid and timestamp, carrying the attempt count
      * forward so retry() and reap() can park messages that never succeed.
+     * The failed entry goes in the same step, so a sweep that stops part way
+     * leaves the job failed rather than nowhere.
      */
-    private function requeue(Queue $queue, Message $job): void
+    private function requeue(Queue $queue, string $pid, Message $job): bool
     {
-        $this->commands->leftPush("{$queue->namespace}.queue.{$queue->name}", $this->retryPayload($queue, $job));
+        return $this->script($this->commands, 'retry', [
+            "{$queue->namespace}.failed.{$queue->name}",
+            "{$queue->namespace}.queue.{$queue->name}",
+        ], [$pid, $this->retryPayload($queue, $job)]) === 1;
     }
 
     private function retryPayload(Queue $queue, Message $job): string

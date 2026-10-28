@@ -153,6 +153,20 @@ final class AppwriteClientTest extends TestCase
         $this->assertStringEndsWith(' pinned.invalid:'.$port, $requests[0]);
     }
 
+    public function testCompressedResponseDecodingPastTheLimitIsAbandoned(): void
+    {
+        $curl = \curl_version();
+        if ($curl === false || !\is_string($curl['version']) || \version_compare($curl['version'], '8.22.0', '<')) {
+            $this->markTestSkipped('Older libcurl checks the size cap against the encoded bytes only.');
+        }
+
+        $this->expectException(AppwriteException::class);
+        // The rows export halves its page on this code
+        $this->expectExceptionCode(\CURLE_FILESIZE_EXCEEDED);
+
+        $this->client($this->server->getURL())->call(Client::METHOD_GET, '/compressed');
+    }
+
     private function client(string $endpoint): Client
     {
         $client = new Client();

@@ -303,6 +303,7 @@ class TransactionState
      * @param array<string, array<string, mixed>> $staged
      * @param array<Query> $queries
      * @return array<Document>
+     * @throws Exception\Query
      */
     private function listPlainDocuments(Database $dbForDatabases, string $collectionId, array $staged, array $queries, ParsedQuery $parsed): array
     {
@@ -311,6 +312,9 @@ class TransactionState
         $orders = $this->orders($parsed);
         $limit = $parsed->limit ?? self::DEFAULT_LIMIT;
         $offset = $parsed->offset ?? 0;
+        if ($offset + $limit > APP_LIMIT_COUNT) {
+            throw new Exception\Query('Offset and limit together cannot exceed ' . APP_LIMIT_COUNT . " when reading a transaction's uncommitted changes. Use cursor pagination instead.");
+        }
         $before = $parsed->cursorDirection === CursorDirection::Before;
         $cursor = $random ? null : $parsed->cursor;
 

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Auth\Key;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -126,6 +127,7 @@ class Update extends Base
             ->inject('executor')
             ->inject('authorization')
             ->inject('platform')
+            ->inject('apiKey')
             ->inject('deviceForBuilds')
             ->callback($this->action(...));
     }
@@ -169,6 +171,7 @@ class Update extends Base
         Executor $executor,
         Authorization $authorization,
         array $platform,
+        ?Key $apiKey,
         ?Device $deviceForBuilds = null,
     ) {
         // TODO: If only branch changes, re-deploy
@@ -176,6 +179,11 @@ class Update extends Base
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        // Scopes the function already has stay; only new ones need the key to hold them
+        if ($apiKey !== null && !$apiKey->mayGrant(\array_diff($scopes, $function->getAttribute('scopes', [])))) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
         }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);

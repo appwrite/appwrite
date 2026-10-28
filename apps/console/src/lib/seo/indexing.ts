@@ -71,10 +71,11 @@ export function getCanonicalHostRedirectUrl(
   targetHost: string = CANONICAL_HOST,
 ): string {
   const incoming = new URL(requestUrl)
-  return new URL(
-    `${incoming.pathname}${incoming.search}`,
-    `https://${targetHost}`,
-  ).toString()
+  // Assign path and query rather than resolving them, so a path starting with `//` stays on the target host.
+  const target = new URL(`https://${targetHost}`)
+  target.pathname = incoming.pathname
+  target.search = incoming.search
+  return target.toString()
 }
 
 /** 301 to the mapped host, or null when this request should be served as-is. */
