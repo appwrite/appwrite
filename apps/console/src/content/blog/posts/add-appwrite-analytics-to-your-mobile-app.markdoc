@@ -1,0 +1,592 @@
+---
+layout: post
+title: "How to add Appwrite Analytics to your mobile app"
+description: Add Appwrite Analytics to an Android, iOS, React Native, or Flutter app. Track screen views, time in the app, and custom events, and compare iOS and Android on one dashboard.
+date: 2026-10-28
+cover: /images/blog/add-appwrite-analytics-to-your-mobile-app/cover.avif
+timeToRead: 10
+author: atharva
+category: tutorials
+featured: false
+draft: true
+faqs:
+  - question: "How do I add analytics to a mobile app with Appwrite?"
+    answer: "Register your app's package name or bundle ID under Apps in your Appwrite project, create an analytics property, and install the Appwrite SDK for your platform. Then send a screen_view event each time a screen opens. In Flutter, the Tracking helper and the TrackingObserver send screen views and lifecycle events for you."
+  - question: "Does Appwrite Analytics count screen views as pageviews?"
+    answer: "Yes. Appwrite counts screen_view events as views, the same as pageview events on a website. Screen views fill the Pageviews, Views per visit, and Bounce rate figures, and the entry and exit pages of each visit."
+  - question: "How does Appwrite Analytics measure time spent in an app?"
+    answer: "The app sends an app_backgrounded event when it goes to the background, with engagementTime set to the seconds it was in the foreground. The dashboard shows the average engagement time per visit."
+  - question: "Can one analytics property track both iOS and Android?"
+    answer: "Yes. Each platform sends its events under its own hostname, such as ios or android. The Hostnames tab on the dashboard splits the traffic by platform, and selecting a row filters the whole dashboard to that platform."
+  - question: "Which Appwrite SDKs can send analytics events from a mobile app?"
+    answer: "The Flutter, Android, Apple, and React Native SDKs all include the Analytics service with createEvent(). The Flutter SDK also includes the Tracking helper and the TrackingObserver. Any other platform can send events through the REST API."
+  - question: "Why does my app get a general_unknown_origin error?"
+    answer: "Appwrite accepts events from an app only when its package name or bundle ID belongs to an app in the same project. Add the app under Apps in the Console. In React Native, the value that you pass to setPlatform() must match the registered package name or bundle ID."
+---
+
+Appwrite Analytics shows how people use your mobile app: which screens they open, how long they stay, and what they do on each screen. One property can collect the events of your iOS and Android apps, so one dashboard shows both platforms side by side.
+
+This tutorial adds Appwrite Analytics to an app built with Flutter, Kotlin on Android, SwiftUI on iOS, or React Native. Each code step has a tab for each platform. At the end, the app sends screen views, time in the app, and custom events, and the property's dashboard shows them by screen and by platform.
+
+# How app events appear on the dashboard
+
+Appwrite Analytics records each event against a URL. A website sends the URLs of its pages. An app sends `app://` with the platform and the screen, such as `app://ios/product`. The dashboard reads the platform as the hostname and the screen as the page path.
+
+The examples in this tutorial send three automatic events. These are the events that the Flutter SDK sends, so every platform reports the same way:
+
+| Event | When the app sends it |
+| --- | --- |
+| `screen_view` | When a screen opens, with the screen name in the `screen` prop |
+| `app_backgrounded` | When the app goes to the background, with the seconds it was in the foreground |
+| `app_foregrounded` | When the app comes back to the foreground |
+
+Appwrite counts `screen_view` as a view, the same as `pageview` on a website. Screen views therefore fill the Pageviews, Views per visit, and Bounce rate figures, and the entry and exit pages of each visit. The seconds in `app_backgrounded` fill the Engagement time figure.
+
+# Register your app in your project
+
+Appwrite accepts events from an app only when its package name or bundle ID belongs to an app in your project.
+
+1. In the Appwrite Console, open your project and go to **Apps**.
+2. Select **Add app**.
+3. Select your platform: **Android**, **Apple**, **Flutter**, or **React Native**. For Apple, Flutter, and React Native, also select the target, such as **Android** or **iOS**. Then select **Continue**.
+4. Enter a name and your app's package name or bundle ID, such as `com.example.acmestore`.
+5. Select **Register and continue**.
+
+Repeat these steps for each target that you ship, for example once for Android and once for iOS.
+
+# Create an analytics property
+
+![The Create property page with a name, no domain, and the Flutter platform selected](/images/blog/add-appwrite-analytics-to-your-mobile-app/create-property.avif)
+
+A property collects the events of one app or website, and each property has its own dashboard. Use one property for all platforms of an app, so that the dashboard can compare them.
+
+1. Go to **Analytics** and select **Create property**.
+2. Enter a **Name**, such as `Acme mobile app`.
+3. Leave **Domain** empty. An app has no domain.
+4. Under **Platform**, select **Flutter** for a Flutter app. For Android, iOS, and React Native, select **REST**. This choice only changes the install snippet that the Console shows next.
+5. Select **Create property**.
+
+The Console then shows the install steps for the property, with your property ID. Keep the page open. It confirms the first event that your app sends.
+
+# Install the SDK
+
+Add the Appwrite SDK for your platform:
+
+{% tabs %}
+{% tabsitem #flutter title="Flutter" %}
+
+Add the `appwrite` package to your app:
+
+```sh
+flutter pub add appwrite
+```
+
+On Android, the SDK needs `minSdk` 24 or later and core library desugaring. Set both in `android/app/build.gradle.kts`:
+
+```kotlin
+android {
+    defaultConfig {
+        minSdk = 24
+    }
+    compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+```
+
+{% /tabsitem %}
+
+{% tabsitem #android title="Android (Kotlin)" %}
+
+Add the Appwrite SDK and the AndroidX lifecycle library to `app/build.gradle.kts`. The lifecycle library tells the app when it goes to the background:
+
+```kotlin
+dependencies {
+    implementation("io.appwrite:sdk-for-android:31.0.1")
+    implementation("androidx.lifecycle:lifecycle-process:2.9.4")
+}
+```
+
+The SDK needs `compileSdk` 37 or later. The screen view example in this tutorial also uses Navigation Compose.
+
+{% /tabsitem %}
+
+{% tabsitem #apple title="Apple" %}
+
+In Xcode, select **File** > **Add Package Dependencies**. Enter the package URL, and add the **Appwrite** library to your app target:
+
+```text
+https://github.com/appwrite/sdk-for-apple
+```
+
+{% /tabsitem %}
+
+{% tabsitem #react-native title="React Native" %}
+
+In an Expo app, install the SDK with the file system module and the URL polyfill that it uses:
+
+```sh
+npx expo install react-native-appwrite expo-file-system react-native-url-polyfill
+```
+
+The polyfill must load before any SDK code runs. The root layout in the screen view step imports it on its first line.
+
+{% /tabsitem %}
+{% /tabs %}
+
+# Create the analytics client
+
+Create one analytics client for the whole app, with your endpoint, project ID, and property ID. Copy the endpoint and the project ID from your project's **Settings** page.
+
+{% multicode %}
+```client-flutter
+// lib/main.dart
+import 'package:appwrite/appwrite.dart';
+import 'package:flutter/material.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final tracking = Tracking(Analytics(client), '<PROPERTY_ID>');
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  tracking.start();
+  runApp(const AcmeApp());
+}
+```
+
+```client-android-kotlin
+// AppAnalytics.kt
+import android.content.Context
+import android.util.Log
+import io.appwrite.Client
+import io.appwrite.exceptions.AppwriteException
+import io.appwrite.services.Analytics
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+
+class AppAnalytics(context: Context) {
+    private val client = Client(context)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    private val analytics = Analytics(client)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    fun event(
+        name: String,
+        screen: String = "",
+        props: Map<String, String> = emptyMap(),
+        engagementTime: Long? = null,
+    ) {
+        scope.launch {
+            try {
+                analytics.createEvent(
+                    propertyId = "<PROPERTY_ID>",
+                    name = name,
+                    url = "app://android/$screen",
+                    props = props.flatMap { listOf(it.key, it.value) },
+                    engagementTime = engagementTime,
+                )
+            } catch (e: AppwriteException) {
+                Log.w("AppAnalytics", "Failed to send $name", e)
+            }
+        }
+    }
+
+    fun screenView(screen: String) = event("screen_view", screen, mapOf("screen" to screen))
+}
+```
+
+```client-apple
+// AppAnalytics.swift
+import Appwrite
+import Foundation
+
+@MainActor
+final class AppAnalytics {
+    static let shared = AppAnalytics()
+
+    private let analytics: Analytics
+
+    private init() {
+        let client = Client()
+            .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+            .setProject("<PROJECT_ID>")
+
+        analytics = Analytics(client)
+    }
+
+    func event(
+        _ name: String,
+        screen: String = "",
+        props: [String: String] = [:],
+        engagementTime: Int? = nil
+    ) {
+        Task {
+            do {
+                _ = try await analytics.createEvent(
+                    propertyId: "<PROPERTY_ID>",
+                    name: name,
+                    url: "app://ios/\(screen)",
+                    engagementTime: engagementTime,
+                    props: props.flatMap { [$0.key, $0.value] }
+                )
+            } catch {
+                print("Failed to send \(name): \(error)")
+            }
+        }
+    }
+
+    func screenView(_ screen: String) {
+        event("screen_view", screen: screen, props: ["screen": screen])
+    }
+}
+```
+
+```client-react-native
+// src/lib/analytics.ts
+import { Platform } from 'react-native';
+import { Analytics, Client } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setPlatform('com.example.acmestore');
+
+const analytics = new Analytics(client);
+
+type EventOptions = {
+    path?: string;
+    props?: Record<string, string>;
+    engagementTime?: number;
+};
+
+export function trackEvent(name: string, { path = '/', props = {}, engagementTime }: EventOptions = {}) {
+    analytics
+        .createEvent({
+            propertyId: '<PROPERTY_ID>',
+            name,
+            url: `app://${Platform.OS}${path}`,
+            props: Object.entries(props).flat(),
+            engagementTime,
+        })
+        .catch((error) => console.warn('Failed to send event', error));
+}
+
+export function trackScreen(path: string) {
+    trackEvent('screen_view', { path, props: { screen: path } });
+}
+```
+{% /multicode %}
+
+In Flutter, `Tracking` sends the events, and `start()` turns on the two lifecycle events. Call `WidgetsFlutterBinding.ensureInitialized()` first. The Appwrite client uses Flutter plugins, and plugins need the binding before `runApp()` runs.
+
+On the other platforms, the client wraps the `createEvent()` method of the Analytics service. `event()` sends any event in the background, so a slow network never blocks the interface, and it logs the events that fail. `screenView()` sends a `screen_view` for one screen. `createEvent()` takes props as one flat list of keys and values, such as `["plan", "pro"]`, so the helper turns each key and value of the map into two items of the list.
+
+In React Native, `setPlatform()` takes the package name or bundle ID that you registered under **Apps**. Appwrite uses it to check that the event comes from your app.
+
+On Android, create one `AppAnalytics` in your `Application` class, so that every screen uses the same instance:
+
+```client-android-kotlin
+// AcmeApp.kt
+import android.app.Application
+
+class AcmeApp : Application() {
+    lateinit var analytics: AppAnalytics
+
+    override fun onCreate() {
+        super.onCreate()
+        analytics = AppAnalytics(this)
+    }
+}
+```
+
+Then register the class in `AndroidManifest.xml` with `android:name=".AcmeApp"` on the `<application>` element.
+
+# Track screen views
+
+Send a `screen_view` each time a screen opens. Hook it into your navigation, so that new screens send their views with no extra code:
+
+{% multicode %}
+```client-flutter
+// lib/main.dart
+class AcmeApp extends StatelessWidget {
+  const AcmeApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      navigatorObservers: [TrackingObserver(tracking)],
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/product': (context) => const ProductScreen(),
+      },
+    );
+  }
+}
+```
+
+```client-android-kotlin
+// MainActivity.kt
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val analytics = (application as AcmeApp).analytics
+
+        setContent {
+            val navController = rememberNavController()
+
+            LaunchedEffect(navController) {
+                navController.currentBackStackEntryFlow.collect { entry ->
+                    entry.destination.route?.let { analytics.screenView(it) }
+                }
+            }
+
+            NavHost(navController, startDestination = "home") {
+                composable("home") { HomeScreen(onOpenProduct = { navController.navigate("product") }) }
+                composable("product") { ProductScreen() }
+            }
+        }
+    }
+}
+```
+
+```client-apple
+// ContentView.swift
+import SwiftUI
+
+extension View {
+    func trackScreen(_ screen: String) -> some View {
+        onAppear {
+            AppAnalytics.shared.screenView(screen)
+        }
+    }
+}
+
+struct ContentView: View {
+    var body: some View {
+        NavigationStack {
+            VStack {
+                NavigationLink("Open product") {
+                    ProductView()
+                }
+            }
+            .trackScreen("home")
+        }
+    }
+}
+
+struct ProductView: View {
+    var body: some View {
+        Text("Canvas backpack")
+            .trackScreen("product")
+    }
+}
+```
+
+```client-react-native
+// src/app/_layout.tsx
+import 'react-native-url-polyfill/auto';
+
+import { useEffect } from 'react';
+import { Stack, usePathname } from 'expo-router';
+
+import { trackScreen } from '@/lib/analytics';
+
+export default function RootLayout() {
+    const pathname = usePathname();
+
+    useEffect(() => {
+        trackScreen(pathname);
+    }, [pathname]);
+
+    return <Stack />;
+}
+```
+{% /multicode %}
+
+`HomeScreen` and `ProductScreen` stand for your own screens. Each platform reports a screen again when the user goes back to it:
+
+- **Flutter**: `TrackingObserver` sends a `screen_view` when a named route is pushed, popped back to, replaced, or removed. The `trigger` and `previous` props record how the user got there. Routes without a name, such as most dialogs, send nothing. To track them, see [unnamed routes](/docs/products/analytics/flutter#unnamed-routes).
+- **Android**: `currentBackStackEntryFlow` emits the top screen after every navigation, including the back button. The route name, such as `product`, becomes the path.
+- **iOS**: `onAppear` runs each time a view appears, also when the user returns from the next screen.
+- **React Native**: `usePathname()` from Expo Router changes on every route change, and the path, such as `/product`, becomes the screen.
+
+# Track time in the app
+
+In Flutter, `start()` already sends `app_backgrounded` and `app_foregrounded`, so this step has no Flutter code. On the other platforms, send `app_backgrounded` with the seconds since the app came to the foreground, and `app_foregrounded` when the app returns:
+
+{% multicode %}
+```client-android-kotlin
+// AcmeApp.kt
+import android.app.Application
+import android.os.SystemClock
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
+
+class AcmeApp : Application() {
+    lateinit var analytics: AppAnalytics
+
+    override fun onCreate() {
+        super.onCreate()
+        analytics = AppAnalytics(this)
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            private var foregroundSince = 0L
+
+            override fun onStart(owner: LifecycleOwner) {
+                foregroundSince = SystemClock.elapsedRealtime()
+                analytics.event("app_foregrounded")
+            }
+
+            override fun onStop(owner: LifecycleOwner) {
+                val seconds = (SystemClock.elapsedRealtime() - foregroundSince) / 1000
+                analytics.event("app_backgrounded", engagementTime = seconds)
+            }
+        })
+    }
+}
+```
+
+```client-apple
+// AcmeApp.swift
+import SwiftUI
+
+@main
+struct AcmeApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var foregroundSince = Date()
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .active:
+                foregroundSince = Date()
+                AppAnalytics.shared.event("app_foregrounded")
+            case .background:
+                let seconds = Int(Date().timeIntervalSince(foregroundSince))
+                AppAnalytics.shared.event("app_backgrounded", engagementTime: seconds)
+            default:
+                break
+            }
+        }
+    }
+}
+```
+
+```client-react-native
+// src/lib/analytics.ts
+import { AppState } from 'react-native';
+
+export function trackAppState() {
+    let foregroundSince = Date.now();
+
+    const subscription = AppState.addEventListener('change', (state) => {
+        if (state === 'active') {
+            foregroundSince = Date.now();
+            trackEvent('app_foregrounded');
+        } else if (state === 'background') {
+            const seconds = Math.round((Date.now() - foregroundSince) / 1000);
+            trackEvent('app_backgrounded', { engagementTime: seconds });
+        }
+    });
+
+    return () => subscription.remove();
+}
+```
+{% /multicode %}
+
+On Android, `ProcessLifecycleOwner` reports the whole app, not one activity, so a move between two activities does not count as leaving the app. On iOS, the `scenePhase` of the app changes to `.background` when the user goes to the home screen or to another app.
+
+In React Native, add `trackAppState()` to `src/lib/analytics.ts`, and add `AppState` to its `react-native` import. Then import `trackAppState` in the root layout next to `trackScreen`, and call it once, above the screen view effect: `useEffect(() => trackAppState(), []);`. The function returns the cleanup that removes the listener.
+
+# Track custom events
+
+Screen views show where people go. Custom events record what they do, such as adding a product to the cart or completing a purchase. Send each event where the action completes, with the screen that it belongs to:
+
+{% multicode %}
+```client-flutter
+tracking.event(
+  'add_to_cart',
+  url: '/product',
+  props: {'product': 'canvas-backpack'},
+);
+```
+
+```client-android-kotlin
+analytics.event("add_to_cart", "product", mapOf("product" to "canvas-backpack"))
+```
+
+```client-apple
+AppAnalytics.shared.event("add_to_cart", screen: "product", props: ["product": "canvas-backpack"])
+```
+
+```client-react-native
+trackEvent('add_to_cart', { path: '/product', props: { product: 'canvas-backpack' } });
+```
+{% /multicode %}
+
+Give each event a name in lowercase `snake_case` that describes a finished action, such as `purchase_completed` or `review_posted`. An event takes up to 16 props, and each key and value can be up to 255 characters. Do not put personal data, such as email addresses, in props.
+
+A custom event also shows that the visitor did something. A visit with one screen view and an `add_to_cart` event does not count as a bounce.
+
+# Confirm the first event
+
+![The install page in the Console confirms that the first screen_view arrived](/images/blog/add-appwrite-analytics-to-your-mobile-app/event-received.avif)
+
+Run your app on a device or an emulator. Within a few seconds, the install page in the Console shows **Event received** with the first `screen_view`. Select **Open dashboard** to see the visit.
+
+If no event arrives, look for the failed event in the log. The native examples log it in Logcat with the `AppAnalytics` tag on Android, in the Xcode console on iOS, and as a warning in the Metro terminal in React Native. The error names the cause:
+
+- **`403` with `general_unknown_origin`**: the package name or bundle ID is not an app in your project. In React Native, check the value that you pass to `setPlatform()`.
+- **`404` with `analytics_property_not_found`**: the property ID is wrong, or the property is turned off.
+
+In Flutter, `Tracking` drops a failed event without an error, so that analytics never interrupts your app. To see the error, send one event with `createEvent()` and print the exception, as the [Flutter guide](/docs/products/analytics/flutter#errors) shows.
+
+# Read your app on the dashboard
+
+![The Analytics dashboard for a mobile app with unique visitors, visits, pageviews, and a chart for the last 30 days](/images/blog/add-appwrite-analytics-to-your-mobile-app/dashboard.avif)
+
+Each property has a dashboard on its **Analytics** tab. The top row shows unique visitors, visits, pageviews, views per visit, bounce rate, visit duration, and engagement time for the date range you pick. For an app, pageviews are the screen views, and engagement time comes from `app_backgrounded`. The **online** count in the property header shows the people who used the app in the last five minutes.
+
+## Find the screens people use most
+
+![The Pages card lists the app's screens by path, with the home, product, and search screens at the top](/images/blog/add-appwrite-analytics-to-your-mobile-app/screens.avif)
+
+The **Pages** card lists your screens by path. **Top pages** ranks all screens, **Entry pages** shows the screen where each visit starts, and **Exit pages** shows the screen where it ends. The lifecycle events do not belong to a screen, so the card lists them under `/`.
+
+## Compare iOS and Android
+
+![The Hostnames tab of the Pages card splits the visitors between ios and android](/images/blog/add-appwrite-analytics-to-your-mobile-app/hostnames.avif)
+
+The **Hostnames** tab splits your traffic by platform, because each platform sends its events under its own hostname, such as `ios` or `android`. Select a row to filter the whole dashboard to one platform. The screens, locations, and custom events cards then describe only the users of that platform.
+
+# Resources
+
+- [Appwrite Analytics documentation](/docs/products/analytics)
+- [Track a Flutter app](/docs/products/analytics/flutter)
+- [Send events over REST](/docs/products/analytics/rest)
+- [Track custom events](/docs/products/analytics/custom-events)
+- [Visitors and sessions](/docs/products/analytics/visitors)
+- [How to add Appwrite Analytics to your website](/blog/post/add-appwrite-analytics-to-your-website)

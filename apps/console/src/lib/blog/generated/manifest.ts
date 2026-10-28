@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "add-appwrite-analytics-to-your-mobile-app",
+    "href": "/blog/post/add-appwrite-analytics-to-your-mobile-app",
+    "title": "How to add Appwrite Analytics to your mobile app",
+    "description": "Add Appwrite Analytics to an Android, iOS, React Native, or Flutter app. Track screen views, time in the app, and custom events, and compare iOS and Android on one dashboard.",
+    "date": "2026-10-28",
+    "lastUpdated": "2026-10-28",
+    "timeToRead": 10,
+    "author": "atharva",
+    "category": "tutorials",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/add-appwrite-analytics-to-your-mobile-app/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "add-appwrite-analytics-to-your-website",
     "href": "/blog/post/add-appwrite-analytics-to-your-website",
     "title": "How to add Appwrite Analytics to your website",
