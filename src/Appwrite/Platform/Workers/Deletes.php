@@ -689,7 +689,7 @@ class Deletes extends Action
      *
      * @return list<string>
      */
-    protected function deploymentIdsProtectedFromRetention(Database $dbForPlatform, Database $dbForProject, Document $project, Document $resource): array
+    private function deploymentIdsProtectedFromRetention(Database $dbForPlatform, Database $dbForProject, Document $project, Document $resource): array
     {
         $kept = [];
         $activeDeploymentId = $resource->getAttribute('deploymentId', '');
