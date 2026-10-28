@@ -56,12 +56,10 @@ return [
         'queueEnv' => '_APP_JOBS_QUEUE_NAME',
         'coroutines' => 8,
     ],
-    // Playwright captures are heavy; parallel jobs exceed the per-request HTTP
-    // timeout under CI load and leave buildLogs stuck at "capturing started".
     'screenshots' => [
         'queue' => Event::SCREENSHOTS_QUEUE_NAME,
         'queueEnv' => '_APP_SCREENSHOTS_QUEUE_NAME',
-        'coroutines' => 1,
+        'coroutines' => 8,
     ],
     'certificates' => [
         'queue' => Event::CERTIFICATES_QUEUE_NAME,
