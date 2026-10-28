@@ -149,6 +149,10 @@ final class LimitsTest extends TestCase
         $this->network->deliver(1, V3::subscribe(1, ['news'], Packet::QOS_1));
 
         // Test for FAILURE: a connection that never completed CONNECT is refused outright.
+        $this->assertCount(1, $this->network->sent[1] ?? []);
+        $suback = Packet::parse($this->network->sent[1][0]);
+        $this->assertSame(Packet::SUBACK, $suback->type);
+        $this->assertSame([V3::SUBSCRIBE_FAILURE], \array_values(\unpack('C*', \substr($suback->body, 2)) ?: []), 'a SUBSCRIBE before CONNECT was granted');
         $this->assertSame(0, $this->accounts->authorizations);
         $this->assertSame([], $this->redis->keys, 'a SUBSCRIBE before CONNECT reached the limiter');
     }
