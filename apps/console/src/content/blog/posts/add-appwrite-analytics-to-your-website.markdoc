@@ -19,7 +19,7 @@ faqs:
   - question: "Which events does the Web SDK send automatically?"
     answer: "start() sends pageview, outbound_link, scroll_depth, and engagement_time events. File downloads are opt-in with enableAutoDownloadTracking(), because the file types worth counting depend on the site."
   - question: "How do I track a signup or a purchase?"
-    answer: "Call tracking.track() with an event name, such as signup_completed, and optional props, such as the plan. The event appears in the Custom events card. Selecting it filters the dashboard to that event, so Unique visitors and Visits count the people and visits that triggered it."
+    answer: "Call tracking.track() with an event name, such as signup_completed, and optional props, such as the plan. The event appears in the Custom events card. Selecting it filters the dashboard to that event, so Unique visitors and Visits add up, for each point on the chart, the people and visits that triggered it."
   - question: "Why does my site not send analytics events?"
     answer: "Check the browser console for the Tracking: failed to send event warning. A 403 with general_unknown_origin means the hostname is not a web app in the project. A 404 means the property ID is wrong or the property is off. No request at all means Do Not Track is on in the browser."
 ---
@@ -163,7 +163,7 @@ tracking.track('signup_completed', {
 
 Call `track()` where the action completes, for example after your signup request succeeds. Give each event a name in lowercase `snake_case` that describes a finished action, such as `invite_sent` or `plan_upgraded`. An event takes up to 16 props, and each key and value can be up to 255 characters. Do not put personal data, such as email addresses, in props.
 
-The **Custom events** card on the dashboard lists every event name that your site sends. Select an event to filter the dashboard to it. **Unique visitors** and **Visits** then count the people and the visits that triggered the event, and the **Pages**, **Locations**, and **Technology** cards show where those events happened and on which devices.
+The **Custom events** card on the dashboard lists every event name that your site sends. Select an event to filter the dashboard to it. **Unique visitors** and **Visits** then add up, for each point on the chart, the people and the visits that triggered the event, so a visitor who triggers it on several days counts once for each day. The **Pages**, **Locations**, and **Technology** cards show where those events happened and on which devices.
 
 # Track file downloads
 

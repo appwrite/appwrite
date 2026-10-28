@@ -337,7 +337,7 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPER
 ```
 {% /multicode %}
 
-Each event takes up to 16 props, such as the plan or the source of a signup. The **Custom events** card on the dashboard ranks your events. Select one to filter the dashboard to it. **Unique visitors** and **Visits** then count the people and the visits that triggered the event, and the cards below the chart show where those events happened. Metrics that describe whole visits, such as bounce rate and visit duration, show `-` while an event filter is on.
+Each event takes up to 16 props, such as the plan or the source of a signup. The **Custom events** card on the dashboard ranks your events. Select one to filter the dashboard to it. **Unique visitors** and **Visits** then add up, for each point on the chart, the people and the visits that triggered the event, and the cards below the chart show where those events happened. Metrics that describe whole visits, such as bounce rate and visit duration, show `-` while an event filter is on.
 
 From a server, use an API key with the `analytics.write` scope, and pass the visitor's `ip` and `userAgent` from their request. The event then counts toward the same visitor as the events from their browser, instead of a visit from your server.
 
