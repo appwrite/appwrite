@@ -950,19 +950,19 @@ return function (Container $context): void {
     }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
-        $allowed = false;
+        $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
 
-        if (Http::isDevelopment()) {
-            $allowed = true;
-        } elseif (! \is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
-            $allowed = true;
+        if (empty($host)) {
+            return '';
         }
 
-        if ($allowed) {
-            $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
-            if (! empty($host)) {
-                return $host;
-            }
+        if (Http::isDevelopment()) {
+            return $host;
+        }
+
+        // Keys may only override to the hostname they were issued for
+        if (! \is_null($apiKey) && $apiKey->getHostnameOverride() === true && $apiKey->getHostname() === $host) {
+            return $host;
         }
 
         return '';

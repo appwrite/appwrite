@@ -61,10 +61,13 @@ The MCP server starts in a compact workflow where only a small set of MCP tools 
 
 - `appwrite_get_context` - Returns a summary of your workspace, including your account, organization, and projects
 - `appwrite_search_tools` - Searches the full Appwrite tool catalog at runtime
-- `appwrite_call_tool` - Calls a specific Appwrite tool by name
+- `appwrite_call_tool` - Runs a read operation from the catalog, such as listing or getting resources
+- `appwrite_call_write_tool` - Runs an operation that changes your project, such as creating, updating, or deleting resources. The model must pass `confirm_write: true`
 - `appwrite_search_docs` - Semantically searches the Appwrite documentation
 
-The full Appwrite tool catalog stays internal and is searched at runtime, using less of the model's context.
+The full Appwrite tool catalog stays internal and is searched at runtime, using less of the model's context. Each search result names the tool that runs it.
+
+Every tool declares MCP tool annotations: a title, and whether it is read-only, destructive, idempotent, or reaches external systems. AI tools that read annotations can run reads without asking you, and ask for approval before anything that changes your project.
 
 # Events {% #events %}
 

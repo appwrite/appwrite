@@ -2841,7 +2841,15 @@ trait MigrationsBase
         $this->assertIsArray($completedExecution, 'Timed out waiting for the terminal execution event. Last message: ' . json_encode($lastMessage, JSON_PRETTY_PRINT));
         $this->assertSame('completed', $completedExecution['status'], 'Execution did not complete: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
         $this->assertSame(200, $completedExecution['responseStatusCode'], 'Execution returned an unexpected status: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
-        $this->assertStringContainsString('body-is-test', (string) $completedExecution['logs'], 'Execution completed without the logs it printed: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
+        $this->assertArrayNotHasKey('logs', $completedExecution, 'Realtime sent execution logs to a project user: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
+
+        $stored = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProject['$id'],
+            'x-appwrite-key' => $destinationProject['apiKey'],
+        ]);
+        $this->assertSame(200, $stored['headers']['status-code']);
+        $this->assertStringContainsString('body-is-test', (string) $stored['body']['logs'], 'Execution completed without the logs it printed: ' . json_encode($stored['body'], JSON_PRETTY_PRINT));
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
