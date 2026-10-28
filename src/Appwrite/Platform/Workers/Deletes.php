@@ -924,6 +924,16 @@ class Deletes extends Action
             Console::error('Failed to delete webhooks: ' . $th->getMessage());
         }
 
+        // Delete alert rules
+        try {
+            $this->deleteByGroup('alertRules', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete alert rules: ' . $th->getMessage());
+        }
+
         // Delete VCS Installations
         try {
             $this->deleteByGroup('installations', [

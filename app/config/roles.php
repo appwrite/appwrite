@@ -95,6 +95,8 @@ $admins = [
     'organization.projects.keys.write',
     'webhooks.read',
     'webhooks.write',
+    'alertRules.read',
+    'alertRules.write',
     'project.read',
     'project.write',
     'usage.read',

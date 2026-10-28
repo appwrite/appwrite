@@ -1302,6 +1302,31 @@ return [
         'code' => 502,
         'publish' => false,
     ],
+    Exception::ALERT_RULE_NOT_FOUND => [
+        'name' => Exception::ALERT_RULE_NOT_FOUND,
+        'description' => 'Alert rule with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::ALERT_RULE_ALREADY_EXISTS => [
+        'name' => Exception::ALERT_RULE_ALREADY_EXISTS,
+        'description' => 'Alert rule with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
+    Exception::ALERT_RULE_INVALID_METRIC => [
+        'name' => Exception::ALERT_RULE_INVALID_METRIC,
+        'description' => 'The metric is not available for the selected resource type.',
+        'code' => 400,
+    ],
+    Exception::ALERT_RULE_INVALID_RESOURCE => [
+        'name' => Exception::ALERT_RULE_INVALID_RESOURCE,
+        'description' => 'The resource the alert rule watches could not be found in this project.',
+        'code' => 400,
+    ],
+    Exception::ALERT_RULE_WEBHOOK_URL_MISSING => [
+        'name' => Exception::ALERT_RULE_WEBHOOK_URL_MISSING,
+        'description' => 'A webhook URL is required when the webhook channel is selected.',
+        'code' => 400,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',

@@ -407,6 +407,14 @@ return [
             "Access to create, update, and delete webhooks",
         'category' => 'Other',
     ],
+    'alertRules.read' => [
+        'description' => 'Access to read alert rules',
+        'category' => 'Other',
+    ],
+    'alertRules.write' => [
+        'description' => 'Access to create, update, and delete alert rules',
+        'category' => 'Other',
+    ],
     'locale.read' => [
         'description' => 'Access to use Locale service',
         'category' => 'Other',

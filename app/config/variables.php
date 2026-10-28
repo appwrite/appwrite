@@ -2068,6 +2068,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_ALERTS_INTERVAL',
+                'description' => 'Interval in seconds between two evaluations of each alert rule. Each rule is evaluated once per interval, at a slot spread across it. The default value is 60 seconds.',
+                'introduction' => '2.7.0',
+                'default' => '60',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],

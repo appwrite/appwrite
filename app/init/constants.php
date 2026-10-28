@@ -373,6 +373,7 @@ const NOTIFICATION_TYPE_PUSH = MESSAGE_TYPE_PUSH;
 const NOTIFICATION_TYPE_CONSOLE = 'console';
 const NOTIFICATION_TYPE_WEBHOOK = 'webhook';
 const NOTIFICATION_TRACKING_JWT_TTL = 60 * 60 * 24 * 7;
+const MAIL_TEMPLATE_ALERT = 'alert';
 const MAIL_TEMPLATE_CERTIFICATE_FAILED = 'certificate-failed';
 const MAIL_TEMPLATE_DATA_EXPORT = 'data-export';
 const MAIL_TEMPLATE_INVITATION = 'invitation';
@@ -541,6 +542,7 @@ const RESOURCE_TYPE_TEAMS = 'teams';
 const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 const RESOURCE_TYPE_INSIGHTS = 'insights';
 const RESOURCE_TYPE_REPORTS = 'reports';
+const RESOURCE_TYPE_ALERT_RULES = 'alertRules';
 
 // Insight types — engine-specific so the CTA action can reference the right public API.
 const ADVISOR_INSIGHT_TYPES = [

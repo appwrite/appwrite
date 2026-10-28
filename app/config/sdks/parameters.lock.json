@@ -1140,6 +1140,44 @@
             "queries",
             "total"
         ],
+        "alerts.createRule": [
+            "ruleId",
+            "name",
+            "metric",
+            "comparator",
+            "threshold",
+            "resourceType",
+            "resourceId",
+            "window",
+            "cooldown",
+            "channels",
+            "webhookUrl",
+            "enabled"
+        ],
+        "alerts.deleteRule": [
+            "ruleId"
+        ],
+        "alerts.getRule": [
+            "ruleId"
+        ],
+        "alerts.listRules": [
+            "queries",
+            "total"
+        ],
+        "alerts.updateRule": [
+            "ruleId",
+            "name",
+            "metric",
+            "comparator",
+            "threshold",
+            "resourceType",
+            "resourceId",
+            "window",
+            "cooldown",
+            "channels",
+            "webhookUrl",
+            "enabled"
+        ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
             "code",
@@ -5250,6 +5288,44 @@
         "advisor.listReports": [
             "queries",
             "total"
+        ],
+        "alerts.createRule": [
+            "ruleId",
+            "name",
+            "metric",
+            "comparator",
+            "threshold",
+            "resourceType",
+            "resourceId",
+            "window",
+            "cooldown",
+            "channels",
+            "webhookUrl",
+            "enabled"
+        ],
+        "alerts.deleteRule": [
+            "ruleId"
+        ],
+        "alerts.getRule": [
+            "ruleId"
+        ],
+        "alerts.listRules": [
+            "queries",
+            "total"
+        ],
+        "alerts.updateRule": [
+            "ruleId",
+            "name",
+            "metric",
+            "comparator",
+            "threshold",
+            "resourceType",
+            "resourceId",
+            "window",
+            "cooldown",
+            "channels",
+            "webhookUrl",
+            "enabled"
         ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [

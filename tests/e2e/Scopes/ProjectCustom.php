@@ -160,6 +160,8 @@ trait ProjectCustom
                     'tokens.write',
                     'webhooks.read',
                     'webhooks.write',
+                    'alertRules.read',
+                    'alertRules.write',
                     'project.read',
                     'project.write',
                     'keys.read',

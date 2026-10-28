@@ -1,0 +1,204 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\E2E\Services\Alerts;
+
+use Tests\E2E\Client;
+use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Query;
+use Utopia\System\System;
+
+/**
+ * Drives rules through the real scheduler, usage pipeline, evaluator and
+ * notifications worker. The stack evaluates every `_APP_ALERTS_INTERVAL`
+ * seconds, which the test environment keeps short.
+ */
+final class EvaluationCustomServerTest extends Scope
+{
+    use ProjectCustom;
+    use SideServer;
+
+    private const int TIMEOUT_MS = 180_000;
+
+    public function testRuleFiresAndResolvesThroughEveryChannel(): void
+    {
+        $name = 'Egress ' . \uniqid();
+        $path = '/alerts/' . \uniqid();
+
+        // Traffic for the project, so bandwidth.outbound has something to sum.
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/alerts/rules', $this->headers())['headers']['status-code']);
+        }
+
+        $created = $this->client->call(Client::METHOD_POST, '/alerts/rules', $this->headers(), [
+            'ruleId' => 'unique()',
+            'name' => $name,
+            'metric' => 'bandwidth.outbound',
+            'comparator' => 'greaterThan',
+            'threshold' => 0,
+            'window' => 3600,
+            'cooldown' => 0,
+            'channels' => ['webhook', 'console', 'email'],
+            'webhookUrl' => 'http://request-catcher-webhook:5000' . $path,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $ruleId = $created['body']['$id'];
+        $secret = $created['body']['webhookSecret'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $firing = $this->waitForStatus($ruleId, 'firing');
+        $this->assertGreaterThan(0, $firing['value']);
+        $this->assertNotNull($firing['triggeredAt']);
+        $this->assertNotNull($firing['evaluatedAt']);
+
+        $webhook = $this->waitForWebhook($path, 'firing');
+        $timestamp = $webhook['headers']['X-Appwrite-Webhook-Timestamp'];
+        $this->assertSame(
+            'sha256=' . \hash_hmac('sha256', $timestamp . '.' . $webhook['body'], $secret),
+            $webhook['headers']['X-Appwrite-Webhook-Signature'],
+        );
+        $this->assertSame('Alert firing: ' . $name, $webhook['data']['subject']);
+        $this->assertSame(['alerts.firing'], $webhook['data']['events']);
+        $this->assertSame($ruleId, $webhook['data']['params']['ruleId']);
+        $this->assertSame('firing', $webhook['data']['params']['status']);
+        $this->assertSame('bandwidth.outbound', $webhook['data']['params']['metric']);
+        $this->assertSame($this->getProject()['$id'], $webhook['data']['params']['projectId']);
+        $this->assertGreaterThan(0, $webhook['data']['params']['value']);
+
+        // The project sends its own mail through custom SMTP; an alert is the
+        // platform writing to the organization's owners, so it uses the platform mailer.
+        $email = $this->getLastEmailByAddress($this->getRoot()['email'], function (array $email) use ($name) {
+            $this->assertSame('Alert firing: ' . $name, $email['subject']);
+        });
+        $this->assertSame(System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', 'team@localhost.test'), $email['from'][0]['address']);
+        $this->assertStringContainsString($name, (string) $email['html']);
+
+        $bell = $this->client->call(Client::METHOD_GET, '/notifications', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'queries' => [Query::equal('projectId', [$this->getProject()['$id']])->toString()],
+        ]);
+        $this->assertSame(200, $bell['headers']['status-code']);
+        $this->assertContains('Alert firing: ' . $name, \array_column($bell['body']['notifications'], 'title'));
+
+        // Raising the threshold above any traffic the test made resolves the rule.
+        $updated = $this->client->call(Client::METHOD_PUT, '/alerts/rules/' . $ruleId, $this->headers(), [
+            'threshold' => 1e15,
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $resolved = $this->waitForStatus($ruleId, 'ok');
+        $this->assertSame($firing['triggeredAt'], $resolved['triggeredAt']);
+
+        $webhook = $this->waitForWebhook($path, 'ok');
+        $this->assertSame('Alert resolved: ' . $name, $webhook['data']['subject']);
+        $this->assertSame(['alerts.ok'], $webhook['data']['events']);
+    }
+
+    public function testDocumentsDBReadsReachTheirDatabaseRule(): void
+    {
+        // DocumentsDB reports reads as documentsdb.databases.operations.reads, so
+        // a rule on a DocumentsDB database must read that series, not the TablesDB one.
+        $database = $this->client->call(Client::METHOD_POST, '/documentsdb', $this->headers(), [
+            'databaseId' => 'unique()',
+            'name' => 'Catalog',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', $this->headers(), [
+            'collectionId' => 'unique()',
+            'name' => 'Products',
+            'documentSecurity' => false,
+            'permissions' => [],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $documents = '/documentsdb/' . $databaseId . '/collections/' . $collection['body']['$id'] . '/documents';
+
+        $document = $this->client->call(Client::METHOD_POST, $documents, $this->headers(), [
+            'documentId' => 'unique()',
+            'data' => ['sku' => 'A1'],
+        ]);
+        $this->assertSame(201, $document['headers']['status-code']);
+
+        for ($i = 0; $i < 3; $i++) {
+            $this->assertSame(200, $this->client->call(Client::METHOD_GET, $documents . '/' . $document['body']['$id'], $this->headers())['headers']['status-code']);
+        }
+
+        $created = $this->client->call(Client::METHOD_POST, '/alerts/rules', $this->headers(), [
+            'ruleId' => 'unique()',
+            'name' => 'Catalog reads',
+            'metric' => 'databases.reads',
+            'comparator' => 'greaterThan',
+            'threshold' => 0,
+            'resourceType' => 'database',
+            'resourceId' => $databaseId,
+            'channels' => [],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $firing = $this->waitForStatus($created['body']['$id'], 'firing');
+        $this->assertGreaterThanOrEqual(3, $firing['value']);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function headers(): array
+    {
+        return \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function waitForStatus(string $ruleId, string $status): array
+    {
+        $rule = [];
+        $this->assertEventually(function () use ($ruleId, $status, &$rule) {
+            $response = $this->client->call(Client::METHOD_GET, '/alerts/rules/' . $ruleId, $this->headers());
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame($status, $response['body']['status'], 'Rule ' . $ruleId . ' last evaluated as ' . \json_encode($response['body']));
+            $rule = $response['body'];
+        }, self::TIMEOUT_MS, 2_000);
+
+        return $rule;
+    }
+
+    /**
+     * @return array<string, mixed> the request the catcher recorded, with its raw `body` and decoded `data`
+     */
+    private function waitForWebhook(string $path, string $status): array
+    {
+        $request = [];
+        $this->assertEventually(function () use ($path, $status, &$request) {
+            $request = $this->getLastRequestForProject(
+                $this->getProject()['$id'],
+                self::REQUEST_TYPE_WEBHOOK,
+                ['url' => $path],
+                0,
+                0,
+                function (array $request) use ($status) {
+                    $this->assertSame($status, $request['data']['params']['status'] ?? null);
+                },
+            );
+            $this->assertNotEmpty($request, "No '{$status}' webhook reached {$path}");
+        }, 60_000, 1_000);
+
+        return $request;
+    }
+}

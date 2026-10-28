@@ -341,6 +341,13 @@ class Exception extends \Exception
     public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';
     public const string WEBHOOK_DELIVERY_FAILED = 'webhook_delivery_failed';
 
+    /** Alerts */
+    public const string ALERT_RULE_NOT_FOUND = 'alert_rule_not_found';
+    public const string ALERT_RULE_ALREADY_EXISTS = 'alert_rule_already_exists';
+    public const string ALERT_RULE_INVALID_METRIC = 'alert_rule_invalid_metric';
+    public const string ALERT_RULE_INVALID_RESOURCE = 'alert_rule_invalid_resource';
+    public const string ALERT_RULE_WEBHOOK_URL_MISSING = 'alert_rule_webhook_url_missing';
+
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';
     public const string ROUTER_DOMAIN_NOT_CONFIGURED = 'router_domain_not_configured';

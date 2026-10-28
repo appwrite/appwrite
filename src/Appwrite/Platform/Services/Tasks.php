@@ -9,6 +9,7 @@ use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
 use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\Schedule;
+use Appwrite\Platform\Tasks\ScheduleAlerts;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
 use Appwrite\Platform\Tasks\ScheduleMaintenance;
@@ -39,6 +40,7 @@ class Tasks extends Service
             ->addAction(SSL::getName(), new SSL())
             ->addAction(Screenshot::getName(), new Screenshot())
             ->addAction(Schedule::getName(), new Schedule())
+            ->addAction(ScheduleAlerts::getName(), new ScheduleAlerts())
             ->addAction(ScheduleFunctions::getName(), new ScheduleFunctions())
             ->addAction(ScheduleExecutions::getName(), new ScheduleExecutions())
             ->addAction(ScheduleMaintenance::getName(), new ScheduleMaintenance())
