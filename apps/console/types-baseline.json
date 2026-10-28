@@ -1,1 +1,1 @@
-!python3 -c "print(open('/workspace/apps/console/types-baseline.json', encoding='utf-8').read(), end='')"
+__CURSOR_READ_FILE__:/workspace/apps/console/types-baseline.json
