@@ -647,19 +647,20 @@ class Deletes extends Action
 
             $now = new \DateTime();
 
-            $kept = $this->deploymentIdsProtectedFromRetention($dbForPlatform, $dbForProject, $project, $resource);
-
-            $queries = [
+            $resourceQueries = [
                 Query::equal('resourceInternalId', [$resource->getSequence()]),
                 Query::equal('resourceType', [$resource->getCollection()]),
             ];
 
-            foreach (\array_unique($kept) as $deploymentId) {
-                $queries[] = Query::notEqual('$id', $deploymentId);
-            }
-
             try {
-                foreach ($retention->passes($dbForProject, $queries, $requested, $now) as $pass) {
+                foreach ($retention->passes($dbForProject, $resourceQueries, $requested, $now) as $pass) {
+                    $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+
+                    $queries = $resourceQueries;
+                    foreach ($this->deploymentIdsProtectedFromRetention($dbForPlatform, $dbForProject, $project, $resource) as $deploymentId) {
+                        $queries[] = Query::notEqual('$id', $deploymentId);
+                    }
+
                     $this->retireDeployments($pass->reason, [...$queries, ...$pass->queries], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
                 }
             } catch (Throwable $th) {
