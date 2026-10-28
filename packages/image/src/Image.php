@@ -1,1 +1,1 @@
-@file:/tmp/push_file_image.php
+PLACEHOLDER
