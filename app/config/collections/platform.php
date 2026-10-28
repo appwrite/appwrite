@@ -188,6 +188,7 @@ $platformCollections = [
             Attribute::double(key: 'value'),
             Attribute::datetime(key: 'evaluatedAt'),
             Attribute::datetime(key: 'triggeredAt'),
+            Attribute::boolean(key: 'announced', default: false),
             Attribute::string(key: 'search', size: 2048),
         ],
         'indexes' => [

@@ -103,6 +103,54 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame(['alerts.ok'], $webhook['data']['events']);
     }
 
+    public function testCooldownSuppressesRefiringAndItsResolution(): void
+    {
+        $path = '/alerts/' . \uniqid();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/alerts/rules', $this->headers())['headers']['status-code']);
+        }
+
+        $created = $this->client->call(Client::METHOD_POST, '/alerts/rules', $this->headers(), [
+            'ruleId' => 'unique()',
+            'name' => 'Flapping ' . \uniqid(),
+            'metric' => 'bandwidth.outbound',
+            'comparator' => 'greaterThan',
+            'threshold' => 0,
+            'window' => 3600,
+            'cooldown' => 3600,
+            'channels' => ['webhook'],
+            'webhookUrl' => 'http://request-catcher-webhook:5000' . $path,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $ruleId = $created['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        // First firing and its resolution are announced.
+        $this->waitForStatus($ruleId, 'firing');
+        $this->waitForWebhook($path, 'firing');
+        $this->setThreshold($ruleId, 1e15);
+        $this->waitForStatus($ruleId, 'ok');
+        $this->waitForWebhook($path, 'ok');
+
+        // Firing again inside the cooldown is recorded but not announced, and so is its resolution.
+        $this->setThreshold($ruleId, 0);
+        $refiring = $this->waitForStatus($ruleId, 'firing');
+        $this->setThreshold($ruleId, 1e15);
+        $resolved = $this->waitForStatus($ruleId, 'ok');
+        $this->assertSame($refiring['triggeredAt'], $resolved['triggeredAt']);
+
+        // Give the notifications worker time to deliver anything that was queued.
+        \sleep(10);
+        $statuses = \array_map(
+            fn (array $request) => \json_decode($request['data'] ?? '{}', true)['params']['status'] ?? null,
+            \json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($path)), true) ?: [],
+        );
+        $this->assertSame(['firing', 'ok'], $statuses);
+    }
+
     public function testDocumentsDBReadsReachTheirDatabaseRule(): void
     {
         // DocumentsDB reports reads as documentsdb.databases.operations.reads, so
@@ -161,6 +209,12 @@ final class EvaluationCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders());
+    }
+
+    private function setThreshold(string $ruleId, float $threshold): void
+    {
+        $response = $this->client->call(Client::METHOD_PUT, '/alerts/rules/' . $ruleId, $this->headers(), ['threshold' => $threshold]);
+        $this->assertSame(200, $response['headers']['status-code']);
     }
 
     /**

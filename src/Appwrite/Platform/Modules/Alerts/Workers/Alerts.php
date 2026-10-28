@@ -85,8 +85,10 @@ class Alerts extends Action
     }
 
     /**
-     * Compares a measured value with the rule, stores the result and notifies on a
-     * state change: entering firing (at most once per cooldown) and returning to ok.
+     * Compares a measured value with the rule, stores the result and notifies:
+     * a firing is announced once, as soon as the cooldown since the last
+     * announcement allows (on entering firing, or later while it keeps firing),
+     * and its resolution is announced only if the firing was.
      * Editions that measure rules outside a project's usage call this with their value.
      *
      * @param array<string, mixed> $platform
@@ -114,24 +116,28 @@ class Alerts extends Action
             'evaluatedAt' => $evaluatedAt,
         ]);
 
-        $notify = false;
+        $announced = (bool) $rule->getAttribute('announced', false);
         if ($status !== $previous) {
             $changes->setAttribute('status', $status->value);
+        }
 
-            if ($status === Status::Firing) {
-                // Cooldown counts from the last firing that was notified, so a
-                // rule flapping around its threshold is reported once per cooldown.
-                $triggeredAt = $rule->getAttribute('triggeredAt');
-                $cooled = $triggeredAt === null
-                    || $now->getTimestamp() - (new \DateTimeImmutable($triggeredAt))->getTimestamp() >= (int) $rule->getAttribute('cooldown');
+        $notify = false;
+        if ($status === Status::Firing && !$announced) {
+            // Cooldown counts from the last announced firing, so a rule flapping
+            // around its threshold is reported once per cooldown, and a firing
+            // that started inside the cooldown is reported once it has passed.
+            $triggeredAt = $rule->getAttribute('triggeredAt');
+            $cooled = $triggeredAt === null
+                || $now->getTimestamp() - (new \DateTimeImmutable($triggeredAt))->getTimestamp() >= (int) $rule->getAttribute('cooldown');
 
-                if ($cooled) {
-                    $changes->setAttribute('triggeredAt', $evaluatedAt);
-                    $notify = true;
-                }
-            } else {
+            if ($cooled) {
+                $changes->setAttribute('triggeredAt', $evaluatedAt);
+                $changes->setAttribute('announced', true);
                 $notify = true;
             }
+        } elseif ($status === Status::Ok && $previous === Status::Firing) {
+            $changes->setAttribute('announced', false);
+            $notify = $announced;
         }
 
         // Publish before the new state is stored: if publishing fails, the retry
@@ -189,7 +195,9 @@ class Alerts extends Action
         array $platform,
     ): void {
         $channels = $rule->getAttribute('channels', []);
-        $deduplicationKey = 'alert:' . $rule->getId() . ':' . $status->value . ':' . $changedAt;
+        // Named after the evaluation the decision was made against, so a retried
+        // evaluation of the same state reuses the key instead of sending twice.
+        $deduplicationKey = 'alert:' . $rule->getId() . ':' . $status->value . ':' . ($rule->getAttribute('evaluatedAt') ?? $rule->getCreatedAt());
         $firing = $status === Status::Firing;
         $metric = (string) $rule->getAttribute('metric');
         $parent = [

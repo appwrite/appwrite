@@ -146,15 +146,19 @@ export function toBytes(amount: number, unit: ByteUnit): number {
   return Math.round(amount * scale)
 }
 
-/** Splits a byte threshold into the largest unit it reaches, for editing. */
+/**
+ * Splits a byte threshold into the largest unit it reaches and still converts
+ * back to exactly, for editing, so saving an untouched rule changes nothing.
+ */
 export function fromBytes(bytes: number): { amount: number; unit: ByteUnit } {
-  const entry =
-    [...BYTE_UNITS].reverse().find((candidate) => bytes >= candidate.bytes) ??
-    BYTE_UNITS[0]
-  return {
-    amount: parseFloat((bytes / entry.bytes).toFixed(6)),
-    unit: entry.value,
+  for (const entry of [...BYTE_UNITS].reverse()) {
+    if (bytes < entry.bytes) continue
+    const amount = parseFloat((bytes / entry.bytes).toFixed(6))
+    if (toBytes(amount, entry.value) === bytes) {
+      return { amount, unit: entry.value }
+    }
   }
+  return { amount: bytes / BYTE_UNITS[0].bytes, unit: BYTE_UNITS[0].value }
 }
 
 export function formatMetricValue(metric: AlertMetric, value: number): string {
