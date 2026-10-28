@@ -17,6 +17,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
+use GraphQL\Error\Error as GraphQLError;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Geo\Geo;
@@ -779,14 +780,14 @@ return function (Container $context): void {
                 if (\is_string($rawQueries)) {
                     $rawQueries = [$rawQueries];
                 } else {
-                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Parameter "queries" must be an array of query strings.');
+                    throw new GraphQLError('Parameter "queries" must be an array of query strings.');
                 }
             }
 
             try {
                 $queries = Query::parseQueries($rawQueries);
             } catch (QueryException $e) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+                throw new GraphQLError($e->getMessage());
             }
 
             $query = Query::getByType($queries, [Method::Limit])[0] ?? null;
