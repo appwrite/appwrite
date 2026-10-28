@@ -3535,6 +3535,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Alert rules watch your project usage and notify you when a metric crosses the threshold you set.': 'כללי התראה עוקבים אחר השימוש בפרויקט ומתריעים כשמדד חוצה את הסף שהגדרתם.',
   'Get notified when a usage metric crosses a threshold, and again when it recovers.': 'קבלו התראה כשמדד שימוש חוצה סף, ושוב כשהוא חוזר לתקין.',
   'Appwrite sends a signed POST request when the rule fires and when it resolves.': 'Appwrite שולחת בקשת POST חתומה כשהכלל מופעל וכשהוא נסגר.',
+  'Could not load resources.': 'לא ניתן לטעון את המשאבים.',
   'Use this secret to verify the signature of alert webhook requests. Copy it now.': 'השתמשו בסוד הזה כדי לאמת את החתימה של בקשות ה-webhook של ההתראות. העתיקו אותו עכשיו.',
   'Permanently delete this rule. It stops evaluating immediately. This action cannot be undone.': 'מחיקה לצמיתות של הכלל. הבדיקה שלו נעצרת מיד. פעולה זו אינה ניתנת לביטול.',
 }

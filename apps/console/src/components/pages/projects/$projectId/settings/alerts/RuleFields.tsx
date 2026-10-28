@@ -187,6 +187,21 @@ function ResourcePicker({
         ? (buckets.data?.buckets ?? [])
         : (dedicated.data?.databases ?? [])
 
+  if (query.isError) {
+    return (
+      <div className="flex items-center gap-2 text-[13px] text-destructive">
+        <span>{t('Could not load resources.')}</span>
+        <button
+          type="button"
+          className="underline underline-offset-2"
+          onClick={() => void query.refetch()}
+        >
+          {t('Retry')}
+        </button>
+      </div>
+    )
+  }
+
   if (!query.isLoading && items.length === 0 && !value) {
     return (
       <p className="text-[13px] text-muted-foreground">
