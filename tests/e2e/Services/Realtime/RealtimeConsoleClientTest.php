@@ -1477,6 +1477,53 @@ final class RealtimeConsoleClientTest extends Scope
 
         $frames = $this->receiveUntilClosed($client);
         $this->assertSame('error', \end($frames)['type'] ?? null);
+
+        // A project session cannot take over the connection, which would keep its admin roles.
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($rootHeaders, $teamId, $member, ['owner']);
+
+        $email = \uniqid('realtime-project-', true) . '@localhost.test';
+        $user = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $client = $this->getAdminWebsocket($projectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => ['session' => $session['cookies']['a_session_' . $projectId]],
+        ]));
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertStringContainsString('admin-mode', $response['data']['message']);
+
+        // Moving the project to another organization ends the connection.
+        $otherTeam = $this->createTeamFixture($rootHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Admin Transfer',
+        ]);
+        $this->assertSame(200, $otherTeam['headers']['status-code']);
+
+        $transfer = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $rootHeaders, [
+            'teamId' => $otherTeam['body']['$id'],
+        ]);
+        $this->assertSame(200, $transfer['headers']['status-code']);
+
+        $frames = $this->receiveUntilClosed($client);
+        $this->assertSame('error', \end($frames)['type'] ?? null);
     }
 
     private function getAdminWebsocket(string $projectId, string $session, array $channels = ['documents']): WebSocketClient
