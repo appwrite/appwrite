@@ -54,7 +54,7 @@ To turn on the trigger, open your function in the Appwrite Console, go to **Sett
 
 # Connect a custom domain
 
-You can connect a domain that you own, such as `mail.example.com`. Email to any address at that domain executes your function, so use a domain or subdomain that receives no other email.
+You can connect a domain that you own, such as `mail.example.com`. Every email sent to that domain goes to your function, so use a domain that you don't use for any other email.
 
 Turn on the email trigger first. Then open the **Domains** tab of your function, click **Add domain**, select the **Email** type, enter the domain, and click **Add**. The Console shows two DNS records to add at your DNS provider:
 
@@ -65,7 +65,9 @@ After you add the records, click **Verify**.
 
 ![Verify email domain screen with the MX and TXT records for mail.example.com](/images/blog/announcing-function-email-triggers/custom-domain.avif)
 
-In Appwrite, one domain can receive email for a function and also serve HTTP requests. DNS, however, does not allow an `MX` record on a name that has a `CNAME` record. If a site uses a `CNAME` record on `support.example.com`, receive email on another subdomain, such as `mail.example.com`.
+{% info title="Domains with a CNAME record" %}
+DNS does not allow an `MX` record on a name that has a `CNAME` record. If `support.example.com` already points to a site with a `CNAME` record, receive email on another subdomain, such as `mail.example.com`.
+{% /info %}
 
 # Handle an email in your function
 
@@ -94,7 +96,7 @@ The request body contains the sender, the recipients, the subject, the plain tex
 }
 ```
 
-This example saves each email as a row in a table and uses the email `id` as the row ID. If Appwrite executes the function again for the same delivery, creating the row fails with a `409` error, and the function logs the duplicate and returns. Give the function the `rows.write` scope so that its API key can create rows.
+This example saves each email to a table. It uses the email `id` as the row ID, so a duplicate fails with a `409` error and the function skips it. Give the function the `rows.write` scope so that it can create rows.
 
 {% multicode %}
 ```server-nodejs
@@ -698,7 +700,7 @@ pub fn main(mut context: Context) -> Response {
 
 Plan for two behaviors when you write a function with an email trigger:
 
-- **Duplicates are possible.** The same email can reach your function more than one time. If Appwrite executes the function again for the same delivery, the `id` stays the same. If the sending mail server sends the email again, the second copy gets a new `id`, so also compare `messageId` to skip duplicates.
+- **Duplicates are possible.** Email delivery retries when something fails, so the same email can reach your function more than one time. If Appwrite retries an execution after an internal failure, the retry has the same `id`. If the connection drops before Appwrite confirms that it received the email, the sending mail server sends the email again, and that copy gets a new `id`. Compare both `id` and `messageId` to skip duplicates.
 - **Download URLs expire.** The attachment URLs and the URL of the original email expire 15 minutes after Appwrite creates them. Only the runtime of your function can reach them. Download the files at the start of the function, and upload them to [Storage](/docs/products/storage) if you need them later.
 
 # Use cases

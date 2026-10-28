@@ -58,8 +58,7 @@ The function reads which address received the email from [`envelope.to`](#reques
 # Custom domain {% #custom-domain %}
 
 You can connect a domain that you own, such as `mail.example.com`, to your function.
-Email to any address at this domain executes the function.
-Use a domain or subdomain that receives no other email, because Appwrite receives all email for the domain.
+Every email sent to that domain goes to your function, so use a domain that you don't use for any other email.
 
 A custom domain needs two DNS records.
 The `MX` record sends the domain's email to Appwrite, and the `TXT` record proves that you own the domain.
@@ -96,9 +95,10 @@ To connect a domain:
 If the records have not propagated yet, the domain stays unverified.
 To verify it later, under the **Domains** tab, click **Retry** next to the domain. Then click **Verify**.
 
-In Appwrite, one domain can receive email for a function and also serve HTTP requests.
-DNS, however, does not allow an `MX` record on a name that has a `CNAME` record.
-If a site or function uses a `CNAME` record on `support.example.com`, receive email on another subdomain, such as `mail.example.com`.
+{% info title="Domains with a CNAME record" %}
+DNS does not allow an `MX` record on a name that has a `CNAME` record.
+If `support.example.com` already points to a site or function with a `CNAME` record, receive email on another subdomain, such as `mail.example.com`.
+{% /info %}
 
 # Handle an email {% #handle-an-email %}
 
