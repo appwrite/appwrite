@@ -583,7 +583,6 @@ class TransactionState
         }
     }
 
-
     /**
      * Apply bulk upsert to documents in transaction state
      *
