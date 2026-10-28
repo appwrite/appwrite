@@ -1,1 +1,0 @@
-file:///workspace/tests/e2e/Services/Avatars/AvatarsCustomServerTest.php
