@@ -13,6 +13,7 @@ use Utopia\Database\Role;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
+use Utopia\Registry\Registry;
 
 require_once __DIR__ . '/../../../app/init.php';
 
@@ -20,11 +21,15 @@ final class RealtimeTest extends TestCase
 {
     private PubSubRecorder $recorder;
 
+    private Registry $previousRegister;
+
     protected function setUp(): void
     {
         // trigger() publishes each copy through the adapter's lazy pubsub pool,
-        // resolved from the global registry. Swap it for a synchronous, in-memory
-        // pool so the published copies can be inspected without Redis or Swoole.
+        // resolved from the global registry. Swap the whole registry for a fresh
+        // one with a synchronous, in-memory pool so the published copies can be
+        // inspected without Redis or Swoole, and restore it in tearDown so later
+        // tests keep the process-wide pools (e.g. the lock pool).
         $this->recorder = new PubSubRecorder();
 
         $pool = new Pool(new Stack(), 'pubsub', 1, fn (): PubSubRecorder => $this->recorder, 1.0);
@@ -32,7 +37,15 @@ final class RealtimeTest extends TestCase
         $group->add($pool);
 
         global $register;
-        $register->set('pools', fn (): Group => $group, true);
+        $this->previousRegister = $register;
+        $register = new Registry();
+        $register->set('pools', fn (): Group => $group);
+    }
+
+    protected function tearDown(): void
+    {
+        global $register;
+        $register = $this->previousRegister;
     }
 
     /**
