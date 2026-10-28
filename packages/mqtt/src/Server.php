@@ -202,7 +202,10 @@ class Server
                 if ($result instanceof Connack && $result->accepted() && $connection->protocol >= V5::PROTOCOL_LEVEL && $connection->keepAlive !== $connect->keepAlive) {
                     $properties = new Properties();
                     foreach ($result->properties?->all() ?? [] as $property) {
-                        $properties->add($property);
+                        // The property may appear only once, and the broker enforces its own value.
+                        if ($property->id !== Property::SERVER_KEEP_ALIVE) {
+                            $properties->add($property);
+                        }
                     }
                     $properties->add(new Property(Property::SERVER_KEEP_ALIVE, $connection->keepAlive));
                     $result = Connack::accept($result->sessionPresent, $properties);

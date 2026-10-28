@@ -16,6 +16,7 @@ use Utopia\Mqtt\Packet\Suback;
 use Utopia\Mqtt\Packet\Subscribe;
 use Utopia\Mqtt\Packet\Unsuback;
 use Utopia\Mqtt\Packet\Unsubscribe;
+use Utopia\Mqtt\Properties;
 
 /**
  * Accepts every CONNECT and grants every filter, counting both, so a test can assert what reached the handler.
@@ -31,12 +32,15 @@ final class AcceptingHandler implements Handler
 
     public string $clientId = '';
 
+    /** Properties every CONNACK carries. */
+    public ?Properties $connackProperties = null;
+
     public function onConnect(Connect $connect, Connection $connection): Connack
     {
         $this->connects++;
         $this->clientId = $connection->getClientId();
 
-        return Connack::accept();
+        return Connack::accept(properties: $this->connackProperties);
     }
 
     public function onAuthenticate(Auth $auth, Connection $connection): Connack|Auth|Disconnect

@@ -100,6 +100,26 @@ final class ServerTest extends TestCase
         $this->assertSame(60, $this->serverKeepAlive($adapter->sent[0][1]));
     }
 
+    public function testServerKeepAliveReplacesTheHandlersOwn(): void
+    {
+        $timer = new RecordingTimer();
+        $adapter = new RecordingAdapter($timer);
+        $handler = new AcceptingHandler();
+        $handler->connackProperties = (new Properties())
+            ->add(new Property(Property::SERVER_KEEP_ALIVE, 600))
+            ->add(new Property(Property::AUTHENTICATION_METHOD, 'token'));
+        (new Server($adapter, $handler, maxKeepAlive: 60))->start();
+
+        $adapter->deliver(9, V5::connect('client-9', 0));
+
+        // Server Keep Alive may appear only once, so the enforced value replaces the handler's.
+        [$properties] = Properties::parse(Packet::parse($adapter->sent[0][1])->body, 2);
+        $ids = \array_map(fn (Property $property): int => $property->id, $properties->all());
+        $this->assertSame(1, \count(\array_keys($ids, Property::SERVER_KEEP_ALIVE, true)));
+        $this->assertSame(60, $properties->get(Property::SERVER_KEEP_ALIVE));
+        $this->assertSame('token', $properties->get(Property::AUTHENTICATION_METHOD));
+    }
+
     public function testKeepAliveWithinTheMaximumIsKept(): void
     {
         $timer = new RecordingTimer();
