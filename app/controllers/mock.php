@@ -1,1 +1,1 @@
-@file:/tmp/push_file_mock.php
+PLACEHOLDER_MOCK
