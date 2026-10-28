@@ -43,7 +43,7 @@ class Image
 
     /**
      * @throws \ImagickException
-     * @throws Exception
+     * @throws Exception\UnsupportedFormatException
      */
     public function __construct(string $data)
     {

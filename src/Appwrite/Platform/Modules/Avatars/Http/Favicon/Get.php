@@ -19,6 +19,7 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Client;
 use Utopia\Image\Image;
+use Utopia\Image\Exception\UnsupportedFormatException;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Header;
@@ -195,7 +196,12 @@ class Get extends Action
             return;
         }
 
-        $image = new Image($data);
+        try {
+            $image = new Image($data);
+        } catch (UnsupportedFormatException) {
+            throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
+        }
+
         $image->crop((int) $width, (int) $height);
         $data = $image->output($output, $quality);
 
