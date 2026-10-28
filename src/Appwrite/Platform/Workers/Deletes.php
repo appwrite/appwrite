@@ -654,15 +654,24 @@ class Deletes extends Action
 
             try {
                 $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
-                $passesQueries = $this->deploymentRetentionQueries(
-                    $dbForPlatform,
-                    $dbForProject,
-                    $project,
-                    $resource,
-                    $resourceQueries,
-                );
 
-                foreach ($retention->passes($dbForProject, $passesQueries, $requested, $now) as $pass) {
+                foreach ($retention->passes(
+                    $dbForProject,
+                    $resourceQueries,
+                    $requested,
+                    $now,
+                    function () use ($dbForPlatform, $dbForProject, $project, &$resource, $resourceQueries): array {
+                        $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+
+                        return $this->deploymentRetentionQueries(
+                            $dbForPlatform,
+                            $dbForProject,
+                            $project,
+                            $resource,
+                            $resourceQueries,
+                        );
+                    },
+                ) as $pass) {
                     $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
                     $queries = $this->deploymentRetentionQueries(
                         $dbForPlatform,
