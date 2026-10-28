@@ -621,7 +621,9 @@ Http::init()
                 // Path params are not part of the request input, and the query must not override them.
                 foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
                     if (! empty($value)) {
-                        $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                        $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                        // Sign in matches emails case-insensitively, so the limit must too
+                        $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
                     }
                 }
 
@@ -1013,7 +1015,9 @@ Http::shutdown()
 
             foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
                 if (! empty($value)) {
-                    $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                    $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                    // Sign in matches emails case-insensitively, so the limit must too
+                    $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
                 }
             }
 

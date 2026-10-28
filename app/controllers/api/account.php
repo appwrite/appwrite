@@ -1059,7 +1059,7 @@ Http::post('/v1/account/sessions/email')
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->label('abuse-key', 'projectId:{projectId},url:{url},email:{param-email}')
     ->label('abuse-reset', [201])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
@@ -1885,7 +1885,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // createSession later. Deleting the current session in that flow would
         // sign the caller out until the exchange, so it is left in place.
         if (empty($state['token'])) {
-            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
             if ($current) { // Replace the current session with the new one.
                 $currentDocument = $dbForProject->getDocument('sessions', $current);
@@ -3628,13 +3628,18 @@ Http::post('/v1/account/jwts')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('project')
+    ->inject('console')
     ->inject('mode')
-    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, string $mode) {
+    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, Document $console, string $mode) {
         if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
             throw new Exception(Exception::USER_JWT_CREATION_DENIED);
         }
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
 
         if (!$sessionId) {
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
 use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -12,10 +13,12 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -67,6 +70,11 @@ class Delete extends Action
             ->inject('queueForEvents')
             ->inject('deviceForFunctions')
             ->inject('deployments')
+            ->inject('project')
+            ->inject('dbForPlatform')
+            ->inject('vcsFactory')
+            ->inject('platform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -79,6 +87,11 @@ class Delete extends Action
         Event $queueForEvents,
         Device $deviceForFunctions,
         Deployments $deployments,
+        Document $project,
+        Database $dbForPlatform,
+        VcsFactory $vcsFactory,
+        array $platform,
+        Authorization $authorization,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -150,6 +163,9 @@ class Delete extends Action
                 'deploymentCreatedAt' => '',
             ])));
         }
+
+        // The provider stops offering the deployed resource's links
+        $authorization->skip(fn () => GitAction::report('deleted', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

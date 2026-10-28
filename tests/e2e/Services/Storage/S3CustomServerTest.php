@@ -218,6 +218,50 @@ final class S3CustomServerTest extends Scope
         $this->assertStringContainsString("filename*=UTF-8''" . \rawurlencode($quotedName), $disposition);
     }
 
+    public function testPutObjectServerSideEncryptionNotReported(): void
+    {
+        $bucketId = $this->setupBucket();
+        $encryption = ['x-amz-server-side-encryption' => 'AES256'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $key = Id::unique() . '.txt';
+        $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: 'appwrite', headers: $encryption);
+        $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $put['headers']);
+
+        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+        $this->assertSame(200, $object['headers']['status-code']);
+        $this->assertSame('appwrite', $object['body']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $object['headers']);
+
+        $head = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $key);
+        $this->assertSame(200, $head['headers']['status-code']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $head['headers']);
+
+        $copied = Id::unique() . '.txt';
+        $copy = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $copied, headers: \array_merge($encryption, [
+            'x-amz-copy-source' => $bucketId . '/' . $key,
+            'x-amz-metadata-directive' => 'REPLACE',
+        ]));
+        $this->assertSame(200, $copy['headers']['status-code'], $copy['body']);
+
+        $copiedObject = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $copied);
+        $this->assertSame(200, $copiedObject['headers']['status-code']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $copiedObject['headers']);
+
+        $multipartKey = 'multipart/' . Id::unique() . '.txt';
+        $uploadId = $this->createMultipartUpload($bucketId, $multipartKey, $encryption);
+        $etag = $this->uploadPart($bucketId, $multipartKey, $uploadId, 1, 'appwrite');
+        $complete = $this->completeMultipartUpload($bucketId, $multipartKey, $uploadId, [1 => $etag]);
+        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+
+        $multipartObject = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $multipartKey);
+        $this->assertSame(200, $multipartObject['headers']['status-code']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $multipartObject['headers']);
+    }
+
     public function testPutObjectControlCharacterKey(): void
     {
         $bucketId = $this->setupBucket();
@@ -537,9 +581,12 @@ final class S3CustomServerTest extends Scope
         return $bucket['body']['$id'];
     }
 
-    private function createMultipartUpload(string $bucketId, string $key): string
+    /**
+     * @param array<string, string> $headers
+     */
+    private function createMultipartUpload(string $bucketId, string $key, array $headers = []): string
     {
-        $upload = $this->call(Client::METHOD_POST, '/' . $bucketId . '/' . $key, ['uploads' => '']);
+        $upload = $this->call(Client::METHOD_POST, '/' . $bucketId . '/' . $key, ['uploads' => ''], headers: $headers);
         $this->assertSame(200, $upload['headers']['status-code'], $upload['body']);
 
         return (string) \simplexml_load_string($upload['body'])->UploadId;

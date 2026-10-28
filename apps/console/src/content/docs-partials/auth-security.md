@@ -373,6 +373,12 @@ Session alerts are intentionally skipped in a few situations to avoid redundant 
 
 To toggle session alerts, navigate to **Auth** > **Policies** > **Sessions** > **Session alerts**.
 
+# Force sign out all users {% #force-sign-out-all-users %}
+
+You can immediately sign out every user in your project, for example when responding to a security incident or when credentials may have been compromised. All sessions created before the action are invalidated at once across every client, including sessions used through JWTs, and open realtime connections are closed. Users can sign in again right away, and API keys are not affected.
+
+To force a sign out, navigate to **Auth** > **Settings** > **Force sign out** in the Appwrite Console, or call the Project service's `deleteSessions` endpoint with an API key granted the `users.write` scope.
+
 # Memberships privacy {% #memberships-privacy %}
 
 In certain use cases, your app may not need to share members' personal information with others. You can safeguard privacy by marking specific membership details as private. To configure this setting, navigate to **Auth** > **Policies** > **Memberships** > **Privacy**.

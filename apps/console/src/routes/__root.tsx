@@ -19,6 +19,7 @@ import { getSsrVisitorCountryScript } from '@/lib/ssr-visitor-country'
 import { getLocalePrefetchScript } from '@/lib/locale/prefetch-locale'
 
 import type { QueryClient } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
@@ -61,6 +62,11 @@ import {
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { isConsoleImpersonationActive } from '@/lib/console-impersonation'
+import {
+  linkSignUpSources,
+  saveReferrerAndUtmSource,
+} from '@/lib/marketing/utm'
 import { PreLaunchRedirect } from '@/components/global/auth/PreLaunchRedirect'
 import { SelfHostedRouteRedirect } from '@/components/global/auth/SelfHostedRouteRedirect'
 import {
@@ -561,6 +567,41 @@ function RootBrowserApi() {
   return null
 }
 
+function RootAcquisitionSource() {
+  const auth = useAuth()
+  const account = auth.account as
+    | (Models.User & { impersonatorUserId?: string })
+    | undefined
+  // Client redirects (e.g. guest console paths to /sign-in) can drop the
+  // landing query before the account check settles.
+  const [landingUrl] = useState(() =>
+    typeof window === 'undefined' ? undefined : new URL(window.location.href),
+  )
+  const accountId = account?.$id
+  const createdAt = account?.$createdAt
+  // Retried on verification in case Cloud rejects unverified accounts.
+  const emailVerified = account?.emailVerification
+  const impersonating = isConsoleImpersonationActive(account)
+
+  useEffect(() => {
+    if (!auth.isFetched) return
+    if (!accountId) {
+      saveReferrerAndUtmSource(landingUrl)
+    } else if (!impersonating && createdAt) {
+      void linkSignUpSources(createdAt)
+    }
+  }, [
+    auth.isFetched,
+    accountId,
+    createdAt,
+    emailVerified,
+    impersonating,
+    landingUrl,
+  ])
+
+  return null
+}
+
 function RootAnalyticsTracker() {
   useGlobalAnalyticsTracker()
   return null
@@ -649,6 +690,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <RootInitialLoadCoordinator>
             <RootBrowserApi />
             <RootAnalyticsTracker />
+            <RootAcquisitionSource />
             <RootConsoleScopesPrefetch />
             <ClientThemeProvider>
               <PreLaunchRedirect />

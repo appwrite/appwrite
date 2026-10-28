@@ -647,6 +647,61 @@ final class AbuseTest extends Scope
     }
 
     #[Group('abuseEnabled')]
+    public function testAbuseEmailSessionLimitPerProjectAccount(): void
+    {
+        $email = 'login.' . \bin2hex(\random_bytes(8)) . '@example.com';
+        $password = 'password-' . \bin2hex(\random_bytes(4));
+        $projects = [$this->getProject(), $this->getProject(true)];
+
+        foreach ($projects as $project) {
+            $user = $this->client->call(Client::METHOD_POST, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ], [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => $password,
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+        }
+
+        $headers = fn (array $project): array => [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-forwarded-for' => '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+                'email' => $email,
+                'password' => 'wrong-password',
+            ]);
+            $this->assertSame(401, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+            'email' => \strtoupper($email),
+            'password' => 'wrong-password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'Changing the email case must not reset the limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[1]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code'], 'Another project keeps its own limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+            'email' => $email,
+            'password' => 'wrong-password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A sign in on another project must not reset the limit');
+    }
+
+    #[Group('abuseEnabled')]
     public function testAbuseLimitIgnoresHost(): void
     {
         $headers = [

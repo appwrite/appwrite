@@ -136,13 +136,14 @@ $container->set('getRedis', fn () => function (): \Redis {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
     $port = System::getEnv('_APP_REDIS_PORT', 6379);
     $pass = System::getEnv('_APP_REDIS_PASS', '');
+    $timeout = (float) System::getEnv('_APP_REDIS_TIMEOUT', 3);
 
     $redis = new \Redis();
-    @$redis->pconnect($host, (int)$port);
+    @$redis->pconnect($host, (int)$port, $timeout);
+    $redis->setOption(\Redis::OPT_READ_TIMEOUT, $timeout);
     if ($pass) {
         $redis->auth($pass);
     }
-    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
     return $ctx['redis'] = $redis;
 }, []);

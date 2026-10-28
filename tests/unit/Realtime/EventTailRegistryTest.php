@@ -603,4 +603,42 @@ final class EventTailRegistryTest extends TestCase
 
         $this->assertTrue($registry->isTailed('projA'));
     }
+
+    public function testReauthorizeProjectDropsTailsOfViewersWhoCanNoLongerReadIt(): void
+    {
+        $registry = new EventTailRegistry(rate: 100);
+        $registry->add(1, 'x', 'projA', $this->compile([]), 0.0, ['team:teamA/owner', 'team:teamA/developer']);
+        $registry->add(2, 'x', 'projA', $this->compile([]), 0.0, ['team:teamA/owner', 'team:teamA/developer']);
+        $registry->add(2, 'y', 'projB', $this->compile([]), 0.0, ['team:teamA/owner', 'team:teamA/developer']);
+
+        $roles = [
+            1 => ['user:u1', 'team:teamA', 'team:teamA/developer'],
+            2 => ['user:u2', 'team:teamA', 'team:teamA/owner', 'team:teamB', 'team:teamB/owner'],
+        ];
+        $registry->reauthorizeProject('projA', ['team:teamB/owner', 'team:teamB/developer'], fn (int $connection): array => $roles[$connection]);
+
+        $sent = [];
+        $registry->ingest('projA', ['$type' => 'event'], 0.0);
+        $registry->ingest('projB', ['$type' => 'event'], 0.0);
+        $registry->flush($this->serverWithConn($sent));
+
+        $delivered = \array_map(fn (array $frame): array => [$frame['connId'], $frame['frame']['data']['channels'][0]], $sent);
+        $this->assertSame([
+            [2, EventTailRegistry::channel('projA')],
+            [2, EventTailRegistry::channel('projB')],
+        ], $delivered, 'Only the viewer who can read the project after the transfer keeps its tail.');
+    }
+
+    public function testReauthorizeProjectKeepsTheNewRolesForRevalidation(): void
+    {
+        $registry = new EventTailRegistry(rate: 100);
+        $registry->add(1, 'x', 'projA', $this->compile([]), 0.0, ['team:teamA/owner', 'team:teamA/developer']);
+
+        $registry->reauthorizeProject('projA', ['team:teamB/owner', 'team:teamB/developer'], fn (int $connection): array => ['user:u1', 'team:teamA', 'team:teamA/owner', 'team:teamB', 'team:teamB/owner']);
+        $this->assertTrue($registry->isTailed('projA'));
+
+        $registry->revalidateConnection(1, ['user:u1', 'team:teamA', 'team:teamA/owner']);
+
+        $this->assertFalse($registry->isTailed('projA'), 'A role on the previous team must not keep the tail after leaving the new team.');
+    }
 }

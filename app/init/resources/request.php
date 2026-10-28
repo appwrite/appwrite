@@ -518,10 +518,14 @@ return function (Container $context): void {
             }
         }
 
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
         if (
             ! $user ||
             $user->isEmpty() // Check a document has been found in the DB
-            || ! $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            || ! $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt)
         ) { // Validate user has valid login token
             $user = new User([]);
         }
@@ -561,7 +565,7 @@ return function (Container $context): void {
                 }
             }
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId)) { // Match JWT to active session
+            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId, $sessionsInvalidatedAt)) { // Match JWT to active session
                 $user = new User([]);
             }
         }
@@ -670,13 +674,17 @@ return function (Container $context): void {
         return $project;
     }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath']);
 
-    $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request) {
+    $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request, Document $project, Document $console, string $mode) {
         if ($user->isEmpty()) {
             return;
         }
 
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
         $sessions = $user->getAttribute('sessions', []);
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
 
         $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
         if (! $sessionId && ! empty($authJWT)) {
@@ -688,7 +696,7 @@ return function (Container $context): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId)) {
+            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId, $sessionsInvalidatedAt)) {
                 $sessionId = $jwtSessionId;
             }
         }
@@ -704,7 +712,7 @@ return function (Container $context): void {
         }
 
         return;
-    }, ['user', 'store', 'proofForToken', 'request']);
+    }, ['user', 'store', 'proofForToken', 'request', 'project', 'console', 'mode']);
 
     $context->set('pwnedPasswords', function (Cache $cache) {
         // Nothing is asked until an operator points this at a service
@@ -941,19 +949,19 @@ return function (Container $context): void {
     }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
-        $allowed = false;
+        $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
 
-        if (Http::isDevelopment()) {
-            $allowed = true;
-        } elseif (! \is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
-            $allowed = true;
+        if (empty($host)) {
+            return '';
         }
 
-        if ($allowed) {
-            $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
-            if (! empty($host)) {
-                return $host;
-            }
+        if (Http::isDevelopment()) {
+            return $host;
+        }
+
+        // Keys may only override to the hostname they were issued for
+        if (! \is_null($apiKey) && $apiKey->getHostnameOverride() === true && $apiKey->getHostname() === $host) {
+            return $host;
         }
 
         return '';

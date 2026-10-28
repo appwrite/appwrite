@@ -139,6 +139,17 @@ class Create extends Action
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
+
+        $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
+
+        // Same console rule as membership role updates: organization developer
+        // must not count as privileged enough to invite with arbitrary roles.
+        // Checked before the invitee is looked up or created below, so a
+        // caller who fails this check never causes a user account to exist.
+        if (! $isOwner && ! $isAppUser && ($project->getId() === 'console' || ! $isPrivilegedUser)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
+        }
+
         if (! empty($userId)) {
             $invitee = $dbForProject->getDocument('users', $userId);
             if ($invitee->isEmpty()) {
@@ -278,14 +289,6 @@ class Create extends Action
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
-        }
-
-        $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
-
-        // Same console rule as membership role updates: organization developer
-        // must not count as privileged enough to invite with arbitrary roles.
-        if (! $isOwner && ! $isAppUser && ($project->getId() === 'console' || ! $isPrivilegedUser)) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
         }
 
         $membership = $dbForProject->findOne('memberships', [
@@ -574,13 +577,18 @@ class Create extends Action
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
+        // The privacy policy only hides other members, a member always sees their own details
+        $auths = $project->getAttribute('auths', []);
+        $isVisible = $isPrivilegedUser || $isAppUser
+            || ($user->getSequence() !== null && $invitee->getSequence() === $user->getSequence());
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(
                 $membership
                     ->setAttribute('teamName', $team->getAttribute('name'))
-                    ->setAttribute('userName', $invitee->getAttribute('name'))
-                    ->setAttribute('userEmail', $invitee->getAttribute('email')),
+                    ->setAttribute('userName', $isVisible || ($auths['membershipsUserName'] ?? true) ? $invitee->getAttribute('name') : '')
+                    ->setAttribute('userEmail', $isVisible || ($auths['membershipsUserEmail'] ?? true) ? $invitee->getAttribute('email') : ''),
                 Response::MODEL_MEMBERSHIP
             );
     }

@@ -22,6 +22,7 @@ final class CdnOptionTest extends TestCase
         $this->assertSame('fastly', $option->getProvider());
         $this->assertTrue($option->isEdge());
         $this->assertFalse(new CdnOption($adapter, CdnOption::PROVIDER_CLOUDFLARE)->isEdge());
+        $this->assertSame('cloudfront', new CdnOption($adapter, CdnOption::PROVIDER_CLOUDFRONT)->getProvider());
     }
 
     public function testRejectsStateOverwrittenWithTheWrongType(): void
