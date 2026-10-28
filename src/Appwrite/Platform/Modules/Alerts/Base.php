@@ -60,7 +60,13 @@ class Base extends Action
         Database $dbForProject,
         Authorization $authorization,
     ): array {
-        $collection = Config::getParam('alerts', [])['resources'][$resourceType]['collection'] ?? null;
+        $resource = Config::getParam('alerts', [])['resources'][$resourceType] ?? [];
+
+        if (($resource['project'] ?? true) === false) {
+            throw new Exception(Exception::ALERT_RULE_INVALID_RESOURCE, "Resource type '{$resourceType}' cannot be watched by a project alert rule.");
+        }
+
+        $collection = $resource['collection'] ?? null;
 
         if ($collection === null) {
             return [$project->getId(), (string) $project->getSequence()];

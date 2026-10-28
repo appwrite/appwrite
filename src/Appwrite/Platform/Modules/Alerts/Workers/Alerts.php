@@ -81,6 +81,25 @@ class Alerts extends Action
         $now = new \DateTimeImmutable();
         $value = $this->measure($rule, $project, $dbForProject, $usageConnection, $now);
 
+        $this->evaluate($rule, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $platform);
+    }
+
+    /**
+     * Compares a measured value with the rule, stores the result and notifies on a
+     * state change: entering firing (at most once per cooldown) and returning to ok.
+     * Editions that measure rules outside a project's usage call this with their value.
+     *
+     * @param array<string, mixed> $platform
+     */
+    protected function evaluate(
+        Document $rule,
+        Document $project,
+        float $value,
+        \DateTimeImmutable $now,
+        Database $dbForPlatform,
+        NotificationPublisher $publisherForNotifications,
+        array $platform,
+    ): void {
         $matches = Comparator::from((string) $rule->getAttribute('comparator'))->matches($value, (float) $rule->getAttribute('threshold'));
         $previous = Status::tryFrom((string) $rule->getAttribute('status')) ?? Status::Ok;
         $status = $matches ? Status::Firing : Status::Ok;
@@ -283,7 +302,7 @@ class Alerts extends Action
      *
      * @return list<Document>
      */
-    private function owners(Database $dbForPlatform, string $teamInternalId): array
+    protected function owners(Database $dbForPlatform, string $teamInternalId): array
     {
         $userIds = [];
         $cursor = null;

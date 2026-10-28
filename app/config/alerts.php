@@ -5,7 +5,8 @@
  *
  * `resources` are the resource types a rule points at, each with the project
  * collection its ID is looked up in; `project` needs none, the rule watches the
- * project itself. `metrics` lists the resource types each metric is recorded
+ * project itself. A resource with `'project' => false` is not offered on the
+ * project's alert rule routes, for rules managed somewhere else. `metrics` lists the resource types each metric is recorded
  * for, whether it is a counter summed over the rule's window or a gauge read at
  * its latest sample, and the unit its threshold is written in.
  *
