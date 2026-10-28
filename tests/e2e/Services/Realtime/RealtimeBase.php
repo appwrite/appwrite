@@ -2,10 +2,17 @@
 
 namespace Tests\E2E\Services\Realtime;
 
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Tests\Async\Exceptions\Critical;
+use Swoole\Coroutine;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
+
+use function Swoole\Coroutine\run;
 
 trait RealtimeBase
 {
@@ -217,6 +224,45 @@ trait RealtimeBase
         $client->close();
     }
 
+    public function testConnectionFailureWrongRegion(): void
+    {
+        $project = $this->createNewProject();
+        $projectId = $project['$id'];
+        $currentRegion = System::getEnv('_APP_REGION', 'default');
+        $wrongRegion = $currentRegion === 'default' ? 'fra' : 'default';
+
+        $this->withDatabaseFactory(function (DatabaseFactory $factory) use ($projectId, $wrongRegion): void {
+            $factory->platform()->updateDocument('projects', $projectId, new Document([
+                'region' => $wrongRegion,
+            ]));
+            $factory->platform()->purgeCachedDocument('projects', $projectId);
+        });
+
+        try {
+            $client = $this->getWebsocket(['documents'], projectId: $projectId);
+            $payload = json_decode($client->receive(), true);
+
+            $this->assertArrayHasKey('type', $payload);
+            $this->assertArrayHasKey('data', $payload);
+            $this->assertEquals('error', $payload['type']);
+            $this->assertEquals(401, $payload['data']['code']);
+            $this->assertEquals(
+                'Project is not accessible in this region. Please make sure you are using the correct endpoint',
+                $payload['data']['message']
+            );
+            \usleep(250000);
+            $this->expectException(ConnectionException::class);
+            $client->close();
+        } finally {
+            $this->withDatabaseFactory(function (DatabaseFactory $factory) use ($projectId, $currentRegion): void {
+                $factory->platform()->updateDocument('projects', $projectId, new Document([
+                    'region' => $currentRegion,
+                ]));
+                $factory->platform()->purgeCachedDocument('projects', $projectId);
+            });
+        }
+    }
+
     public function testConnectionRegionCheck(): void
     {
         /**
@@ -234,5 +280,25 @@ trait RealtimeBase
         $this->assertContains('documents', $response['data']['channels']);
 
         $client->close();
+    }
+
+    /**
+     * @param callable(DatabaseFactory): void $callback
+     */
+    private function withDatabaseFactory(callable $callback): void
+    {
+        $read = function () use ($callback): void {
+            global $register;
+            $authorization = new Authorization();
+            $factory = $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), $authorization);
+
+            $authorization->skip(fn () => $callback($factory));
+        };
+
+        if (Coroutine::getCid() >= 0) {
+            $read();
+        } else {
+            run($read);
+        }
     }
 }
