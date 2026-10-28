@@ -6,7 +6,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "announcing-function-email-triggers",
     "href": "/blog/post/announcing-function-email-triggers",
     "title": "Announcing email triggers for Appwrite Functions",
-    "description": "Appwrite Functions can now execute when an email arrives. Each function has a built-in email address, and you can connect your own domain with MX and TXT records.",
+    "description": "Appwrite Functions can now execute when an email arrives. Each function has a built-in email address, and you can connect a custom domain with MX and TXT records.",
     "date": "2026-10-28",
     "lastUpdated": "2026-10-28",
     "timeToRead": 6,

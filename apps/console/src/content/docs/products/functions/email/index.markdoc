@@ -1,104 +1,121 @@
 ---
 layout: article
 title: Email triggers
-description: Execute Appwrite Functions when your app receives email. Use the built-in address of each function or connect your own domain.
+description: Execute an Appwrite Function when an email arrives at its address. Use the built-in address of the function or connect a custom domain.
 difficulty: beginner
 readtime: 6
 ---
 
-Appwrite Functions can execute when an email arrives at an address that is connected to the function.
+An email trigger executes your function when an email arrives at one of the function's addresses.
+Each function has a [built-in address](#built-in-address), and you can also connect a [custom domain](#custom-domain).
 Appwrite receives the email, stores its content and attachments, and executes your function in the background with the parsed email as the request body.
-Your function can save the email to a table, reply to the sender with Messaging, or send the content to another service.
+Your function can save the email to a table, reply to the sender, or send the content to another service.
 
-Email triggers only receive email. To send email from your app, use [Messaging](/docs/products/messaging).
+Email triggers are available on Appwrite Cloud, and they only receive email.
+To send email from your app, such as a reply, use [Messaging](/docs/products/messaging).
 
 # How email triggers work {% #how-email-triggers-work %}
 
-- The email trigger is off by default. A function receives email only after you [turn on its email trigger](#built-in-address).
-- Each email that arrives at an address of the function creates one [asynchronous execution](/docs/products/functions/execute#asynchronous-executions).
-- The execution is a `POST` request to the `/` path of your function, and the `x-appwrite-trigger` header is `email`.
-- When one email is sent to more than one address of the same function, the function executes one time, and `envelope.to` lists all of these addresses. If the email also goes to addresses of other functions, each of those functions executes one time.
-- Appwrite accepts the email before your function executes. A failed execution does not send an error to the sender.
-- Appwrite rejects the email, and the sending mail server returns it to the sender, when the function has the email trigger turned off, is disabled, or has no active deployment, or when the custom domain is not verified.
-- Anyone who knows an address of your function can send email to it. The execute permissions of the function do not apply to email executions, so treat each email as untrusted input.
+- The email trigger is off by default. A function receives email only after you [turn on its email trigger](#turn-on).
+- Appwrite accepts each email before your function executes. The execution is an [asynchronous execution](/docs/products/functions/execute#asynchronous-executions): a `POST` request to the `/` path of your function, with the `x-appwrite-trigger` header set to `email`.
+- Each delivery creates one execution. A delivery is one copy of an email that a mail server hands to Appwrite. If a delivery includes several addresses of the same function, the function executes one time. If it also includes addresses of other functions, each of those functions executes one time.
+- A sending mail server can split one email into several deliveries, for example for addresses at different domains or for more than 50 recipients. Each delivery creates its own execution.
+- A failed execution does not send a bounce message to the sender. If the function cannot start, for example because the project reached a plan limit, no execution appears and Appwrite does not try again.
+- Appwrite rejects an email when the email trigger of the function is off, the function is disabled, the function has no active deployment, or the custom domain is not verified. Appwrite also rejects email to an address that does not belong to a function, and email that exceeds the [limits](#limits). The sending mail server then returns the email to the sender.
 
-# Built-in address {% #built-in-address %}
+{% info title="Treat email as untrusted input" %}
+Anyone who knows one of your function's addresses can send email to it.
+The [execute access](/docs/products/functions/functions#execution-access) of the function does not apply to email executions.
+{% /info %}
 
-Each function has a built-in address in the form `<FUNCTION_ID>@<PROJECT_ID>.appwrite.email`.
-You do not need to configure DNS records for the built-in address.
+# Turn on the email trigger {% #turn-on %}
 
-To give the same function more than one address, add a name and a `+` before the function ID.
-For example, `support+<FUNCTION_ID>@<PROJECT_ID>.appwrite.email` and `invoices+<FUNCTION_ID>@<PROJECT_ID>.appwrite.email` both execute the same function, and the function can read which address received the email from `envelope.to`.
-
-To turn on the email trigger and find the built-in address:
+Turn on the email trigger of a function before it can receive email at its built-in address or at a custom domain.
 
 1. In the Appwrite Console's sidebar, click **Functions**.
 1. Open your function.
 1. Under the **Settings** tab, click **Executions**.
-1. In the **Email** card, turn on **Email trigger** and click **Update**.
-1. Copy the **Default address**.
+1. In the **Email** card, turn on **Email trigger**.
+1. Click **Update**.
 
 {% only_dark %}
-![Email card with the email trigger turned on and the default address](/images/docs/functions/email/dark/built-in-address.avif)
+![Email card with Email trigger turned on and the built-in address under Default address](/images/docs/functions/email/dark/built-in-address.avif)
 {% /only_dark %}
 {% only_light %}
-![Email card with the email trigger turned on and the default address](/images/docs/functions/email/built-in-address.avif)
+![Email card with Email trigger turned on and the built-in address under Default address](/images/docs/functions/email/built-in-address.avif)
 {% /only_light %}
+
+# Built-in address {% #built-in-address %}
+
+Each function has a built-in address in the form `<FUNCTION_ID>@<PROJECT_ID>.appwrite.email`.
+The Console shows it as **Default address** in the **Email** card.
+You do not need to configure DNS records for the built-in address.
+
+To give the same function more than one address, add a name and a `+` before the function ID.
+For example, `support+<FUNCTION_ID>@<PROJECT_ID>.appwrite.email` and `billing+<FUNCTION_ID>@<PROJECT_ID>.appwrite.email` both execute the same function.
+The function reads which address received the email from [`envelope.to`](#request-body).
 
 # Custom domain {% #custom-domain %}
 
 You can connect a domain that you own, such as `mail.example.com`, to your function.
 Email to any address at this domain executes the function.
-Use a domain or subdomain that receives no other email, because its `MX` record sends all of its email to Appwrite.
+Use a domain or subdomain that receives no other email, because Appwrite receives all email for the domain.
 
-Add these two records at your DNS provider.
-The `MX` record sends the email of the domain to Appwrite, and the `TXT` record proves that you own the domain.
+A custom domain needs two DNS records.
+The `MX` record sends the domain's email to Appwrite, and the `TXT` record proves that you own the domain.
+For `mail.example.com`, the records are:
 
 | Type | Name | Value |
 | ---- | ---- | ----- |
 | `MX` | `mail` | The Appwrite mail server that the Console shows. Any priority works. |
 | `TXT` | `_appwrite.mail` | Your project ID |
 
-The names are relative to your domain's DNS zone, as most DNS providers expect them. For an apex domain, such as `example.com`, use `@` for the `MX` record and `_appwrite` for the `TXT` record.
+Most DNS providers expect names relative to your domain's DNS zone, as in this table.
+For an apex domain such as `example.com`, which has no subdomain, use `@` for the `MX` record and `_appwrite` for the `TXT` record.
 
-Appwrite executes the function only after it verifies the domain. DNS records can take up to 48 hours to propagate.
+Email to the domain executes the function only after Appwrite verifies the domain.
+DNS records can take up to 48 hours to propagate.
 
 To connect a domain:
 
-1. Turn on the email trigger of your function, as described in [Built-in address](#built-in-address).
+1. [Turn on the email trigger](#turn-on) of your function.
 1. Under the **Domains** tab of your function, click **Add domain**.
 1. Under **Type**, select **Email**.
-1. Enter your domain in **Domain name**, such as `mail.example.com`, and click **Add**.
-1. Add the `MX` and `TXT` records that the Console shows at your DNS provider.
+1. In **Domain name**, enter your domain, such as `mail.example.com`.
+1. Click **Add**.
+1. At your DNS provider, add the `MX` and `TXT` records that the Console shows.
 1. Click **Verify**.
 
 {% only_dark %}
-![DNS records for a new email domain](/images/docs/functions/email/dark/custom-domain.avif)
+![Verify email domain screen with the MX and TXT records for mail.example.com](/images/docs/functions/email/dark/custom-domain.avif)
 {% /only_dark %}
 {% only_light %}
-![DNS records for a new email domain](/images/docs/functions/email/custom-domain.avif)
+![Verify email domain screen with the MX and TXT records for mail.example.com](/images/docs/functions/email/custom-domain.avif)
 {% /only_light %}
 
-If the records have not propagated yet, the domain stays unverified. Later, under the **Domains** tab, click **Retry** next to the domain, then click **Verify**.
+If the records have not propagated yet, the domain stays unverified.
+To verify it later, under the **Domains** tab, click **Retry** next to the domain. Then click **Verify**.
 
-Appwrite keeps the email rule and the HTTP rule of a domain separate, so one domain can have both.
-DNS does not allow an `MX` record on a name that has a `CNAME` record. If a site or function uses a `CNAME` record on `support.example.com`, receive email on another subdomain, such as `mail.example.com`.
+In Appwrite, one domain can receive email for a function and also serve HTTP requests.
+DNS, however, does not allow an `MX` record on a name that has a `CNAME` record.
+If a site or function uses a `CNAME` record on `support.example.com`, receive email on another subdomain, such as `mail.example.com`.
 
 # Handle an email {% #handle-an-email %}
 
 Appwrite sends these [headers](/docs/products/functions/develop#headers) with each email execution:
 
 - `x-appwrite-trigger`: `email`
-- `x-appwrite-email-id`: the ID of the email delivery. It is the same as the `id` field of the request body.
-- `x-appwrite-email-domain`: the domain that received the email.
-- `x-appwrite-email-recipient`: the first address of your function that received the email.
+- `x-appwrite-email-id`: the delivery ID. It is the same as the `id` field of the request body.
+- `x-appwrite-email-recipient`: the first address of your function in the delivery.
+- `x-appwrite-email-domain`: the domain of the address in `x-appwrite-email-recipient`.
 
-Email executions do not receive the `x-appwrite-execution-id`, `x-appwrite-client-ip`, or location headers.
+Email executions do not receive the `x-appwrite-execution-id`, `x-appwrite-client-ip`, `x-appwrite-country-code`, `x-appwrite-continent-code`, or `x-appwrite-continent-eu` headers.
 
-The request body contains the email as JSON.
-This example saves each email as a row in a table that has `from` and `subject` columns and a `mediumtext` column named `text`, because the body of an email can be up to 8 MB.
-It uses the email `id` as the row ID, so a second execution for the same delivery does not create a second row.
-Give the function the `rows.write` scope so that its [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key) can create rows.
+The request body contains the email as JSON, in the format that [Request body](#request-body) describes.
+This example saves each email as a row in a table.
+The table has `from` and `subject` columns, and a `mediumtext` column named `text` that fits an email body of up to 8 MB.
+The example uses the email `id` as the row ID, so a second execution for the same delivery does not create a second row.
+To let the [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key) of the function create rows, give the function the `rows.write` scope.
 
 {% multicode %}
 ```server-nodejs
@@ -750,27 +767,25 @@ The request body of an email execution has this format:
 }
 ```
 
-- `id`: the ID of the email delivery. It is the same value as the `x-appwrite-email-id` header.
-- `envelope.from`: the sender address that the sending mail server reported. It is empty for bounce messages and other automatic replies.
-- `envelope.to`: the addresses of your function that received the email.
-- `from`, `to`, `cc`, and `replyTo`: the values of these headers in the email.
-- `subject`, `messageId`, and `date`: the values of these headers in the email.
+- `id`: the delivery ID. It is the same as the `x-appwrite-email-id` header.
+- `envelope`: the sender and recipient addresses that the sending mail server gave during the SMTP connection. They can differ from the `from` and `to` headers.
+- `envelope.from`: the sender address in the envelope. It is empty when the sending server uses an empty sender, as bounce messages and many automatic replies do.
+- `envelope.to`: the addresses of your function in the delivery. When you receive an email as a BCC recipient or as a forwarded email, only `envelope.to` shows the address of your function.
+- `from`, `to`, `cc`, `replyTo`, `subject`, `messageId`, and `date`: the values of these headers in the email.
 - `text` and `html`: the plain text and HTML versions of the email body. A value is empty when the email does not have that version.
-- `headers`: these email headers, when the email has them: `message-id`, `date`, `from`, `to`, `cc`, `reply-to`, `subject`, `in-reply-to`, and `references`. The keys are lowercase, and each value is a list of the raw header values. A header that the email does not have is not in the object.
-- `attachments`: the attached files and the inline parts of the email, such as embedded images. An inline part has a `contentId`. Each attachment has a download `url`.
+- `headers`: these email headers: `message-id`, `date`, `from`, `to`, `cc`, `reply-to`, `subject`, `in-reply-to`, and `references`. The keys are lowercase, and each value is a list of the raw header values. A header that the email does not have is not in the object, and when the email has none of these headers, the value is an empty array (`[]`).
+- `attachments`: the attached files and other non-text parts of the email, such as embedded images. Each has an `id`, a `name`, a `contentType`, a `contentId`, a `disposition`, a `size` in bytes, and a download `url`. An image that the HTML body embeds has a `contentId`, which the HTML references as `cid:<contentId>`.
 - `raw`: the original email as an `.eml` file, with a download `url`.
-- `transport`: details of the SMTP connection: the IP address that connected, the name that the sending server gave in its `HELO` greeting, and whether the connection used TLS.
+- `transport`: details of the SMTP connection that delivered the email: `remoteIp`, the name that the sending server gave in its `HELO` or `EHLO` greeting (`helo`), and whether the connection used TLS (`tls`).
 - `receivedAt`: the time when Appwrite received the email, as an RFC 3339 timestamp in UTC that can include fractions of a second.
-
-The values of `envelope.to` and `to` can be different.
-For example, an email that you receive as a BCC recipient or as a forwarded email shows your address only in `envelope.to`.
 
 # Attachments and the original email {% #attachments %}
 
-Each attachment has a `url` that downloads the file. The `raw.url` value downloads the original email as an `.eml` file.
-Request these URLs from your function as they are. They point to an internal Appwrite address that only your function's runtime can reach.
+Each attachment has a `url` that downloads the file, and `raw.url` downloads the original email as an `.eml` file.
+Request these URLs from your function without changing them.
+They point to an internal Appwrite address that only your function's runtime can reach.
 
-The URLs expire **15 minutes** after Appwrite creates them, right before the execution starts.
+Appwrite creates the URLs immediately before the execution starts, and they expire **15 minutes** later.
 Download the files at the start of your function.
 To keep a file for a longer time, upload it to [Storage](/docs/products/storage).
 
@@ -781,14 +796,17 @@ Your function can receive the same email more than one time.
 If Appwrite executes the function again for the same delivery, for example after an internal failure, both executions have the same `id`.
 The [example function](#handle-an-email) uses the `id` as the row ID, so Appwrite rejects a second row for the same delivery with a `409` error.
 
-If the sending mail server sends the email again, for example because its connection closed before Appwrite confirmed the email, Appwrite treats it as a new delivery with a new `id`.
-To detect these duplicates too, also compare the `messageId` value when the email has one.
+The sending mail server can also send the email again, for example when the connection closes before Appwrite confirms the email.
+Appwrite treats the second copy as a new delivery with a new `id`.
+To detect these duplicates, also compare the `messageId` value when the email has one.
 
 # Limits {% #limits %}
 
-- Maximum size of an email, including attachments: 25 MB.
-- Maximum size of the email body after decoding: 8 MB.
-- Maximum number of recipients for each email: 50.
-- Maximum number of MIME parts for each email: 200, nested at most 5 levels deep.
-- Addresses with non-ASCII characters are not supported.
-- Duration of an email execution: plan for the function to finish within 60 seconds. Appwrite can stop an email execution after 60 seconds, even when the timeout of your function is longer.
+| Limit | Value |
+| ----- | ----- |
+| Size of an email as sent, including encoded attachments | 25 MB |
+| Combined size of the plain text and HTML bodies after decoding | 8 MB |
+| Recipients in one delivery | 50. The sending mail server delivers to more recipients later, in a separate delivery. |
+| MIME parts in one email | 200, nested at most 5 levels deep |
+| Addresses with non-ASCII characters | Not supported |
+| Duration of an email execution | Plan for 60 seconds. Appwrite can stop an email execution after 60 seconds, even when the timeout of your function is longer. |
