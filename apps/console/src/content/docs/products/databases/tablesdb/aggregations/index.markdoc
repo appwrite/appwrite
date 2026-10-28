@@ -1,0 +1,289 @@
+---
+layout: article
+title: Aggregations
+description: Count, sum, average, and group TablesDB rows on the server, filter groups with having, list distinct values, and aggregate across joined tables.
+---
+
+**Aggregations** compute values over many rows on the server and return only the result: how many orders were paid, the revenue per country, the average rating of a product. Your app downloads a handful of numbers instead of every row.
+
+Aggregations are [queries](/docs/products/databases/tablesdb/queries). You pass them to `listRows()` in the `queries` array, and combine them with filters, grouping, and [joins](/docs/products/databases/tablesdb/joins).
+
+{% info title="Availability" %}
+Aggregations work in TablesDB on SQL databases. They are not available in DocumentsDB, or on self-hosted installations that use MongoDB. On self-hosted Appwrite, aggregations need version 2.6.0 or later. The aggregation helpers on the `Query` class need Web SDK 29.0.0, Node.js SDK 30.0.1, or later.
+{% /info %}
+
+# Use cases {% #use-cases %}
+
+- **Counters**: Unread messages, open tickets, items in a cart
+- **Dashboards**: Revenue this month, orders per status, sign-ups per country
+- **Leaderboards**: Top customers by spend, top posts by votes
+- **Filter options**: The distinct countries or categories present in a table
+
+# Example tables {% #example-tables %}
+
+The examples on this page use two tables:
+
+| Table ID | Columns |
+|----------|---------|
+| `customers` | `name` (string), `country` (string) |
+| `orders` | `customerId` (string, the `$id` of a customer), `total` (float), `status` (string) |
+
+# Aggregate a table {% #aggregate-a-table %}
+
+To count paid orders and add up their totals, list the `orders` table with a filter and two aggregations:
+
+{% multicode %}
+```client-web
+import { Client, Query, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+const result = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: 'orders',
+    queries: [
+        Query.equal('status', ['paid']),
+        Query.count('*', 'orders'),
+        Query.sum('total', 'revenue')
+    ]
+});
+
+const { orders, revenue } = result.rows[0];
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const result = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: 'orders',
+    queries: [
+        sdk.Query.equal('status', ['paid']),
+        sdk.Query.count('*', 'orders'),
+        sdk.Query.sum('total', 'revenue')
+    ]
+});
+
+const { orders, revenue } = result.rows[0];
+```
+```http
+{"method":"equal","attribute":"status","values":["paid"]}
+{"method":"count","attribute":"*","values":["orders"]}
+{"method":"sum","attribute":"total","values":["revenue"]}
+```
+{% /multicode %}
+
+Without grouping, the result is a single row holding one value per aggregation, and `total` is `1`:
+
+```json
+{
+    "total": 1,
+    "rows": [
+        { "orders": 120, "revenue": 4830.5 }
+    ]
+}
+```
+
+Filters run before the aggregation, so only paid orders are counted and summed.
+
+# Aggregate functions {% #aggregate-functions %}
+
+| Method | Returns |
+|--------|---------|
+| `Query.count(column, alias)` | The number of rows. Pass `'*'` to count every row, or a column to count rows where it is not `null` |
+| `Query.countDistinct(column, alias)` | The number of different values in a column |
+| `Query.sum(column, alias)` | The sum of a numeric column. An integer for integer columns, otherwise a float |
+| `Query.avg(column, alias)` | The average of a numeric column, as a float |
+| `Query.min(column, alias)` | The smallest value, with the column's type. Works on numbers, strings, and datetimes |
+| `Query.max(column, alias)` | The largest value, with the column's type. Works on numbers, strings, and datetimes |
+
+For statistics and bit flags, there are also `Query.stddev()`, `Query.stddevPop()`, `Query.stddevSamp()`, `Query.variance()`, `Query.varPop()`, `Query.varSamp()`, `Query.bitAnd()`, `Query.bitOr()`, and `Query.bitXor()`.
+
+Over an empty set of rows, counts return `0` and every other function returns `null`.
+
+# Name results with aliases {% #aliases %}
+
+The alias, the second argument, is the key the result is returned under. Without one, Appwrite names the result after the function and column, such as `sum_total`, or `count` for `Query.count()`.
+
+Always pass an alias when you sort or filter on a result, so your queries do not depend on the generated name. An alias:
+
+- Starts with a letter or `_`, and contains only letters, digits, and `_`
+- Is up to 63 characters long
+- Is unique among the aggregations in the query, and differs from the columns you group by
+
+# Group rows {% #group-rows %}
+
+`Query.groupBy()` splits rows into groups that share the same values, and runs each aggregation once per group. To get the number of orders and the revenue for each status:
+
+{% multicode %}
+```client-web
+Query.groupBy(['status']),
+Query.count('*', 'orders'),
+Query.sum('total', 'revenue')
+```
+```server-nodejs
+sdk.Query.groupBy(['status']),
+sdk.Query.count('*', 'orders'),
+sdk.Query.sum('total', 'revenue')
+```
+```http
+{"method":"groupBy","values":["status"]}
+{"method":"count","attribute":"*","values":["orders"]}
+{"method":"sum","attribute":"total","values":["revenue"]}
+```
+{% /multicode %}
+
+Each row holds the grouped columns and the aggregations for that group, and `total` is the number of groups:
+
+```json
+{
+    "total": 3,
+    "rows": [
+        { "status": "paid", "orders": 120, "revenue": 4830.5 },
+        { "status": "pending", "orders": 14, "revenue": 512 },
+        { "status": "refunded", "orders": 3, "revenue": 96.75 }
+    ]
+}
+```
+
+You can group by several columns, by system columns such as `$createdAt`, and by joined columns such as `customer.country`. When you group or aggregate, `Query.select()` and ordering can only use grouped columns and aggregation aliases.
+
+# Filter groups {% #filter-groups %}
+
+Filters such as `Query.equal()` run on rows, before they are grouped. To filter on the results of an aggregation, wrap the conditions in `Query.having()`, which runs after grouping. For example, to keep only statuses with more than $1,000 in revenue:
+
+{% multicode %}
+```client-web
+Query.groupBy(['status']),
+Query.sum('total', 'revenue'),
+Query.having([
+    Query.greaterThan('revenue', 1000)
+])
+```
+```server-nodejs
+sdk.Query.groupBy(['status']),
+sdk.Query.sum('total', 'revenue'),
+sdk.Query.having([
+    sdk.Query.greaterThan('revenue', 1000)
+])
+```
+```http
+{"method":"groupBy","values":["status"]}
+{"method":"sum","attribute":"total","values":["revenue"]}
+{"method":"having","values":[{"method":"greaterThan","attribute":"revenue","values":[1000]}]}
+```
+{% /multicode %}
+
+Conditions in `Query.having()` can use aggregation aliases and grouped columns. On an alias, you can use `Query.equal()`, `Query.notEqual()`, `Query.lessThan()`, `Query.lessThanEqual()`, `Query.greaterThan()`, `Query.greaterThanEqual()`, `Query.between()`, `Query.notBetween()`, `Query.isNull()`, and `Query.isNotNull()`.
+
+# Sort and paginate {% #sort-and-paginate %}
+
+Sort groups by an alias or a grouped column, for example `Query.orderDesc('revenue')` to put the highest revenue first.
+
+Use `Query.limit()` and `Query.offset()` to page through groups. Results are limited to 25 rows unless you set a limit. Cursor pagination is not supported with aggregations.
+
+# Distinct values {% #distinct-values %}
+
+`Query.distinct()` removes duplicate rows from a selection. To list each country your customers are in once:
+
+{% multicode %}
+```client-web
+Query.select(['country']),
+Query.distinct()
+```
+```server-nodejs
+sdk.Query.select(['country']),
+sdk.Query.distinct()
+```
+```http
+{"method":"select","values":["country"]}
+{"method":"distinct"}
+```
+{% /multicode %}
+
+`total` is the number of distinct rows. To page through them with a cursor, sort by every selected column.
+
+# Aggregate across tables {% #aggregate-across-tables %}
+
+Combine aggregations with [joins](/docs/products/databases/tablesdb/joins) to report across tables. To find the customers who spent more than $1,000, biggest spenders first:
+
+{% multicode %}
+```client-web
+const result = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: 'customers',
+    queries: [
+        Query.join('orders', 'order', [
+            Query.on('$id', 'customerId')
+        ]),
+        Query.groupBy(['$id', 'name']),
+        Query.sum('order.total', 'spent'),
+        Query.having([
+            Query.greaterThan('spent', 1000)
+        ]),
+        Query.orderDesc('spent'),
+        Query.limit(10)
+    ]
+});
+```
+```server-nodejs
+const result = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: 'customers',
+    queries: [
+        sdk.Query.join('orders', 'order', [
+            sdk.Query.on('$id', 'customerId')
+        ]),
+        sdk.Query.groupBy(['$id', 'name']),
+        sdk.Query.sum('order.total', 'spent'),
+        sdk.Query.having([
+            sdk.Query.greaterThan('spent', 1000)
+        ]),
+        sdk.Query.orderDesc('spent'),
+        sdk.Query.limit(10)
+    ]
+});
+```
+```http
+{"method":"join","attribute":"orders","values":["order",{"method":"on","values":["$id","=","customerId"]}]}
+{"method":"groupBy","values":["$id","name"]}
+{"method":"sum","attribute":"order.total","values":["spent"]}
+{"method":"having","values":[{"method":"greaterThan","attribute":"spent","values":[1000]}]}
+{"method":"orderDesc","attribute":"spent"}
+{"method":"limit","values":[10]}
+```
+{% /multicode %}
+
+Grouping by `$id` as well as `name` keeps two customers with the same name apart. Joined columns keep their alias in the result, so grouping by `order.status` returns rows with an `order.status` key.
+
+# Result rows {% #result-rows %}
+
+Rows from aggregation, grouping, and distinct queries are not full rows from your table. They hold only the columns you group by or select, and the aggregation aliases. System columns such as `$id`, `$createdAt`, and `$permissions` are left out unless you group by or select them. The SDKs fill missing system columns with empty values, so read only the keys you asked for.
+
+# Permissions {% #permissions %}
+
+Aggregations only include rows the caller can read. With [row security](/docs/products/databases/tablesdb/permissions#row-level), the same query can return different counts and sums for different users, and a server SDK with an API key sees every row.
+
+# Limits {% #limits %}
+
+- **Transactions**: Aggregations and grouping cannot run inside a [transaction](/docs/products/databases/tablesdb/transactions), because they cannot read its uncommitted changes. Run them outside the transaction.
+- **Single rows**: `getRow()` does not accept aggregations. Use `listRows()`.
+- **Totals**: `total` counts up to 5,000 groups or rows.
+- **Column types**: `sum`, `avg`, and the other numeric functions need a numeric column. `min` and `max` do not work on boolean, JSON, spatial, vector, or array columns.
+
+Common errors:
+
+| Error | Cause |
+|-------|-------|
+| `general_query_invalid` | An aggregation is malformed: an unsupported column type, an invalid or duplicate alias, a `having` condition on an unknown alias, a cursor, or a `transactionId` |
+| `database_query_out_of_range` | A result is too large for its type, such as a sum that overflows |

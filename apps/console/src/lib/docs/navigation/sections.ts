@@ -1744,6 +1744,14 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/databases/tablesdb/geo-queries',
           },
           {
+            label: 'Joins',
+            href: '/docs/products/databases/tablesdb/joins',
+          },
+          {
+            label: 'Aggregations',
+            href: '/docs/products/databases/tablesdb/aggregations',
+          },
+          {
             label: 'Backups',
             href: '/docs/products/databases/tablesdb/backups',
           },

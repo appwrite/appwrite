@@ -2436,6 +2436,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 1
   },
   {
+    "slug": "products/databases/tablesdb/aggregations",
+    "title": "Aggregations",
+    "description": "Count, sum, average, and group TablesDB rows on the server, filter groups with having, list distinct values, and aggregate across joined tables.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "products/databases/tablesdb/ai-suggestions",
     "title": "AI suggestions",
     "description": "Use AI suggestions to automatically generate database schemas. Learn how to create tables with recommended columns and indexes based on your table name and context.",
@@ -2490,6 +2497,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Query geographic data with distance, intersects, overlaps, and other location-based operations using spatial columns.",
     "layout": "article",
     "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/databases/tablesdb/joins",
+    "title": "Joins",
+    "description": "Combine rows from several tables in one TablesDB query with inner, left, right, full outer, and cross joins, then select, filter, and sort the joined columns.",
+    "layout": "article",
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/databases/tablesdb/legacy/atomic-numeric-operations",
