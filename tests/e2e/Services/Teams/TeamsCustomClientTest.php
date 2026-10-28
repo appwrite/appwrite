@@ -598,6 +598,27 @@ final class TeamsCustomClientTest extends Scope
         $this->assertEquals(2, $team['body']['total']);
     }
 
+    public function testCreateMembershipKeepsRedirectPlaceholders(): void
+    {
+        $team = $this->createTeamHelper('evil.test/x?');
+        $email = \uniqid() . 'invitee@localhost.test';
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/{{team}}/join-us',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $this->assertStringContainsString('href="http://localhost:5000/{{team}}/join-us?', (string) $lastEmail['html']);
+        $this->assertStringNotContainsString('http://localhost:5000/evil.test/x?', (string) $lastEmail['html']);
+    }
+
     public function testMembershipWritesFollowPrivacy(): void
     {
         $projectId = $this->getProject()['$id'];
