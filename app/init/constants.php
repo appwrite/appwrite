@@ -519,6 +519,8 @@ const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 const REALTIME_HEARTBEAT_CHANNEL = 'realtime.heartbeat';
 const REALTIME_HEARTBEAT_INTERVAL_SECONDS = 10;
 const REALTIME_HEARTBEAT_TIMEOUT_SECONDS = 60;
+// Handling one pub/sub event for longer than this is logged with its project.
+const REALTIME_HANDLER_SLOW_SECONDS = 5;
 
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';

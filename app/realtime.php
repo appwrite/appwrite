@@ -469,14 +469,26 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $attempts = 0;
     $start = time();
     $heartbeat = \time();
+    // The event the pub/sub callback is handling, so a stall can name it.
+    $handling = null;
 
     // A subscriber can keep a healthy connection and still stop handling messages,
     // without an error. The heartbeat goes through the same subscription as events,
     // so its silence means events are not being handled either.
-    Timer::tick(REALTIME_HEARTBEAT_INTERVAL_SECONDS * 1000, function () use ($server, $register, $workerId, &$heartbeat) {
+    Timer::tick(REALTIME_HEARTBEAT_INTERVAL_SECONDS * 1000, function () use ($server, $register, $workerId, &$heartbeat, &$handling) {
         $silence = \time() - $heartbeat;
         if ($silence > REALTIME_HEARTBEAT_TIMEOUT_SECONDS) {
             Console::error('Pub/sub delivered nothing for ' . $silence . ' seconds (worker: ' . $workerId . '). Shutting down.');
+            if ($handling !== null) {
+                Console::error('Stuck handling event ' . $handling['event'] . ' for project ' . $handling['project'] . ' since ' . \round(\microtime(true) - $handling['since'], 1) . ' seconds');
+            }
+            foreach (Coroutine::list() as $coroutine) {
+                $frames = [];
+                foreach (Coroutine::getBackTrace($coroutine, DEBUG_BACKTRACE_IGNORE_ARGS) ?: [] as $frame) {
+                    $frames[] = '  ' . ($frame['class'] ?? '') . ($frame['type'] ?? '') . $frame['function'] . ' ' . ($frame['file'] ?? '') . ':' . ($frame['line'] ?? '');
+                }
+                Console::error('Coroutine ' . $coroutine . ":\n" . \implode("\n", $frames));
+            }
             $server->shutdown();
             return;
         }
@@ -625,7 +637,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime', REALTIME_HEARTBEAT_CHANNEL], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, &$heartbeat) {
+            $pubsub->subscribe(['realtime', REALTIME_HEARTBEAT_CHANNEL], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, &$heartbeat, &$handling) {
                 $heartbeat = \time();
                 if ($channel === REALTIME_HEARTBEAT_CHANNEL) {
                     return;
@@ -633,6 +645,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $event = json_decode($payload, true);
                 $closing = [];
+                $handling = [
+                    'project' => $event['project'] ?? '',
+                    'event' => $event['data']['events'][0] ?? '',
+                    'since' => \microtime(true),
+                ];
 
                 $eventTimestamp = $event['data']['timestamp'] ?? null;
                 if (\is_string($eventTimestamp)) {
@@ -940,6 +957,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 if ($tailProjectId !== '' && $eventTailRegistry->isTailed($tailProjectId)) {
                     $eventTailRegistry->ingest($tailProjectId, Realtime::toTailMetadata($event), \microtime(true));
                 }
+
+                $duration = \microtime(true) - $handling['since'];
+                if ($duration > REALTIME_HANDLER_SLOW_SECONDS) {
+                    Console::warning('Slow pub/sub event ' . $handling['event'] . ' for project ' . $handling['project'] . ': ' . \round($duration, 1) . ' seconds (worker: ' . $workerId . ')');
+                }
+                $handling = null;
             });
         } catch (Throwable $th) {
             $span->setError($th);
