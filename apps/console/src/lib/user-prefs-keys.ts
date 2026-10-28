@@ -3899,9 +3899,12 @@ export function parseAnalyticsCardTabsFromPrefs(
   if (typeof raw !== 'string') return {}
   try {
     const parsed = JSON.parse(raw) as unknown
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+      return {}
     const out: Record<string, string> = {}
-    for (const [card, tab] of Object.entries(parsed as Record<string, unknown>)) {
+    for (const [card, tab] of Object.entries(
+      parsed as Record<string, unknown>,
+    )) {
       if (
         ANALYTICS_CARD_TAB_ID_PATTERN.test(card) &&
         typeof tab === 'string' &&
@@ -4434,16 +4437,4 @@ export function mergeRecentImpersonationIntoAccountPrefs(
     ...(prefs ?? {}),
     [USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT]: JSON.stringify(ids),
   }
-}
-
-/**
- * Cloud's passkeys rollout flag on the console user's prefs, set with Cloud's
- * `task-manage-flags`. The console only reads it. Value: `true` when shown.
- */
-export const USER_PREFS_KEY_PASSKEYS_FLAG = 'flags-passkeys'
-
-export function parsePasskeysFlag(
-  prefs: Record<string, unknown> | null | undefined,
-): boolean {
-  return Boolean(prefs?.[USER_PREFS_KEY_PASSKEYS_FLAG])
 }

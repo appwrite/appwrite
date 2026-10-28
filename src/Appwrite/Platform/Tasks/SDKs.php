@@ -26,10 +26,12 @@ use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
+use Appwrite\SDK\Specification\Release;
 use CzProject\GitPhp\Git;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\OpenAPI\Parser;
+use Utopia\OpenAPI\Specification;
 use Utopia\Platform\Action;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -265,20 +267,17 @@ class SDKs extends Action
 
                 Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$version}) ━━━");
                 $specFormat = $language['spec'] ?? 'openapi3';
+                $release = new Release(__DIR__ . '/../../../../app/config/specs', $version);
                 $spec = null;
                 if ($specFormat === 'static') {
                     Console::log('  Using static SDK spec...');
+                    $specification = $release->staticSpecification();
                 } else {
                     Console::log('  Fetching API spec...');
-
-                    $specPath = __DIR__ . '/../../../../app/config/specs/open-api3-' . $version . '-' . $language['family'] . '.json';
-
-                    if (!file_exists($specPath)) {
-                        throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
-                    }
-
-                    $spec = file_get_contents($specPath);
+                    $spec = $release->read($language['family']);
+                    $specification = Parser::parse($spec);
                 }
+                $serverVersion = self::getServerVersion($specification);
 
                 $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
                 $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
@@ -292,7 +291,7 @@ class SDKs extends Action
                 $examples = ($examples) ? \file_get_contents($examples) : '';
                 $changelog = $language['changelog'] ?? '';
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
-                $warning = '**This SDK targets Appwrite server version ' . $version . ' as shipped on Appwrite Cloud.** Self-hosted releases can lag behind Cloud — if you run an older self-hosted build, use a matching older SDK from [previous releases](' . $language['url'] . '/releases) when APIs differ.';
+                $warning = '**This SDK targets Appwrite server version ' . $serverVersion . ' as shipped on Appwrite Cloud.** Self-hosted releases can lag behind Cloud — if you run an older self-hosted build, use a matching older SDK from [previous releases](' . $language['url'] . '/releases) when APIs differ.';
                 $license = 'BSD-3-Clause';
                 $licenseContent = 'Copyright (c) ' . date('Y') . ' Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
@@ -312,8 +311,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Web();
                         if ($platform['key'] === APP_SDK_PLATFORM_CONSOLE) {
                             $config->setNPMPackage('@appwrite.io/console');
+                            $config->setCdnPath('console');
                         } else {
                             $config->setNPMPackage('appwrite');
+                            $config->setCdnPath('web');
                         }
                         break;
                     case 'cli':
@@ -345,8 +346,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'nodejs':
                         $config = new Node();
                         $config->setNPMPackage('node-appwrite');
-                        $warning = $warning . "\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
-                            If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
+                        $warning = $warning . "\n\n> This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code. If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
                         break;
                     case 'python':
                         $config = new Python();
@@ -425,24 +425,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ? '  Generating examples...'
                     : '  Generating SDK...');
 
-                $sdk = new SDK(
-                    $config,
-                    $specFormat === 'static'
-                        ? Parser::parse([
-                            'openapi' => '3.0.0',
-                            'info' => [
-                                'title' => 'Appwrite',
-                                'description' => 'Appwrite backend as a service',
-                                'version' => $version,
-                                'license' => [
-                                    'name' => 'BSD-3-Clause',
-                                    'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
-                                ],
-                            ],
-                            'paths' => [],
-                        ])
-                        : Parser::parse($spec)
-                );
+                $sdk = new SDK($config, $specification);
 
                 $sdk
                     ->setName($language['name'])
@@ -482,6 +465,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     Console::success($examplesOnly
                         ? "  Examples generated at {$result}"
                         : "  SDK generated at {$result}");
+
+                    // Preview SDKs overlay a branch's own spec on the exact spec the published SDK was built from
+                    if (!$examplesOnly && $spec !== null && $key === APP_SDK_PLATFORM_CONSOLE && $language['key'] === 'web') {
+                        $this->addSpec($result, $spec);
+                    }
                 } catch (\Throwable $exception) {
                     Console::error($exception->getMessage());
                 }
@@ -662,6 +650,40 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $this->updateExistingPr($repoName, $gitBranch, $prTitle, $prBody, $platformName, $language['name'], $prUrls, $existingPrUrl);
             }
         }
+    }
+
+    private static function getServerVersion(Specification $specification): string
+    {
+        return \implode('.', \array_slice(\explode('.', $specification->info->version), 0, 2)) . '.x';
+    }
+
+    /**
+     * Ship the spec an SDK was generated from inside its package, as `spec.json`
+     */
+    private function addSpec(string $result, string $spec): void
+    {
+        if (\file_put_contents($result . '/spec.json', $spec) === false) {
+            throw new \Exception('Failed to write ' . $result . '/spec.json');
+        }
+
+        $path = $result . '/package.json';
+        $contents = \file_get_contents($path);
+        if ($contents === false) {
+            throw new \Exception('Failed to read ' . $path);
+        }
+        $package = \json_decode($contents, flags: JSON_THROW_ON_ERROR);
+
+        if (!\in_array('spec.json', $package->files, true)) {
+            $package->files[] = 'spec.json';
+        }
+        $package->exports->{'./spec.json'} = './spec.json';
+
+        $encoded = \json_encode($package, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n";
+        if (\file_put_contents($path, $encoded) === false) {
+            throw new \Exception('Failed to write ' . $path);
+        }
+
+        Console::success('  Spec added at ' . $result . '/spec.json');
     }
 
     private function copyExamples(array $language, string $version, string $result, string $resultExamples): void

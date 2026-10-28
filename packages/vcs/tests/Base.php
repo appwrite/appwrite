@@ -153,6 +153,16 @@ abstract class Base extends TestCase
         );
     }
 
+    public function testGetEventPushKeepsBranchNamedLikeRef(): void
+    {
+        $branch = 'refs/heads/' . static::$defaultBranch;
+
+        $events = $this->vcsAdapter->getEvents(static::$pushEventName, $this->pushPayload($branch));
+
+        $this->assertCount(1, $events);
+        $this->assertSame($branch, $events[0]['branch']);
+    }
+
     public function testGetEventPushDetectsBranchCreated(): void
     {
         $events = $this->vcsAdapter->getEvents(

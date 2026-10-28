@@ -24,19 +24,19 @@ class AlgoArgon2 extends Model
             ->addRule('memoryCost', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Memory used to compute hash.',
-                'default' => '',
+                'default' => 0,
                 'example' => 65536,
             ])
             ->addRule('timeCost', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Amount of time consumed to compute hash',
-                'default' => '',
+                'default' => 0,
                 'example' => 4,
             ])
             ->addRule('threads', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of threads used to compute hash.',
-                'default' => '',
+                'default' => 0,
                 'example' => 3,
             ])
         ;

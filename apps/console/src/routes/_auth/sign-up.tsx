@@ -25,6 +25,7 @@ import {
 } from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { pageTitle } from '@/lib/utils/page-title'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import {
@@ -86,6 +87,7 @@ export const Route = createFileRoute('/_auth/sign-up')({
 
 function SignUpPage() {
   const t = useT()
+  const { features } = useConsoleProfile()
   const search = useSearch({ from: '/_auth/sign-up' })
   const navigate = useNavigate()
   const router = useRouter()
@@ -171,20 +173,6 @@ function SignUpPage() {
       // Cloud requires a verified console account before org/project APIs work.
       // Skip post-auth provisioning until after /verify-email; that page handles it.
       if (requiresConsoleEmailVerification(account)) {
-        try {
-          const verifyUrl = `${window.location.origin}/verify-email${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
-          await sdk.forConsole.account.createEmailVerification({
-            url: verifyUrl,
-          })
-        } catch (err) {
-          console.error('Failed to send verification email:', err)
-          toast.error(
-            getErrorMessage(
-              err,
-              t('Account created but verification email could not be sent'),
-            ),
-          )
-        }
         navigate({
           to: '/verify-email',
           search: search.redirect ? { redirect: search.redirect } : undefined,
@@ -269,7 +257,7 @@ function SignUpPage() {
             skipAccountCreate: options?.skipAccountCreate,
           })
         }
-        onOAuthLogin={handleOAuthLogin}
+        onOAuthLogin={features.accountOAuth ? handleOAuthLogin : undefined}
         isLoading={signUpMutation.isPending || isOpeningMfa}
         oauthLoading={oauthLoading}
         redirect={search.redirect}

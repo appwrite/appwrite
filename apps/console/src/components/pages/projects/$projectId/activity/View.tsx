@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { cn, truncateMiddle } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { formatIpForDisplay } from '@/lib/format-ip'
 import {
   Activity,
@@ -14,13 +14,6 @@ import {
   LogIn,
   LogOut,
   Eye,
-  Database,
-  Users,
-  FileText,
-  Folder,
-  Server,
-  Globe,
-  ListChecks,
   Clock,
   AlertCircle,
 } from '@/lib/icons'
@@ -60,9 +53,14 @@ import {
 } from '@/lib/activity-resource-path'
 import {
   getActivitiesFilterColumns,
+  activityResourceTypeLabel,
   buildFilterQueryString,
   mapToQueryParam,
   queryParamToMap,
+  findCompactFilterKeyInMap,
+  getSelectedActivitySdkSources,
+  toggleActivitySdkSourceInMap,
+  type ActivitySdkSource,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
@@ -73,24 +71,31 @@ import {
   formatActivityLogRetentionLabel,
   getActivityLogRetentionDaysFromPlan,
   getActivityLogRetentionHoursFromPlan,
-  getDefaultActivityDateRangeFromRetentionDays,
+  getDefaultActivityDateRangePreset,
   hasFiniteActivityLogRetention,
 } from '@/lib/activity/activity-log-retention'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
 import { ActivityLogVolumeChart } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogVolumeChart'
-import { ActivityLogRowContextMenu } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogRowContextMenu'
+import { ActivityActiveFilterChips } from '@/components/pages/projects/$projectId/activity/_components/ActivityActiveFilterChips'
+import { ActivitySdkSourceQuickFilters } from '@/components/pages/projects/$projectId/activity/_components/ActivitySdkSourceQuickFilters'
+import { ActivityResourceIdentity } from '@/components/pages/projects/$projectId/activity/_components/ActivityResourceIdentity'
+import {
+  ActivityLogRowContextMenu,
+  type ActivityRowFilterItem,
+} from '@/components/pages/projects/$projectId/activity/_components/ActivityLogRowContextMenu'
 import { ActivityEmptyState } from '@/components/pages/projects/$projectId/activity/_components/ActivityEmptyState'
 import {
   getActivityCountryCode,
   getActivityCountryDisplayName,
   hasHumanEmail,
+  isCliSdkActivity,
   isMcpSdkActivity,
   userTypeBadge,
 } from '@/components/pages/projects/$projectId/activity/activity-utils'
 import type { CountryLookups } from '@/lib/locale/country-lookups'
 import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
-import { McpIcon } from '@/components/global/shared/McpIcon'
+import { ActivitySdkSourceBadge } from '@/components/pages/projects/$projectId/activity/ActivitySdkSourceBadge'
 import {
   clampDateRangeToRetentionFloor,
 } from '@/lib/date-range-retention'
@@ -100,9 +105,6 @@ const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
 /** Skeleton row count caps page size so default 150 does not render hundreds of placeholders. */
 const ACTIVITY_TABLE_SKELETON_ROWS_CAP = 24
 
-/** Max characters for resource id/name in the table before middle ellipsis. */
-const ACTIVITY_RESOURCE_DISPLAY_MAX = 56
-
 function ActivityTableCountryCell({
   countryName,
 }: {
@@ -111,30 +113,82 @@ function ActivityTableCountryCell({
   const name = countryName?.trim() ?? ''
 
   return (
-    <p
-      className="truncate text-[13px] text-muted-foreground"
+    <span
+      className="block truncate text-[13px] text-muted-foreground"
       title={name || undefined}
     >
       {name || '-'}
-    </p>
+    </span>
   )
 }
 
-/** Min width keeps columns legible on narrow screens - the table scrolls horizontally instead of squeezing every cell. */
-const ACTIVITY_TABLE_CLASS_NAME = 'w-full min-w-[60rem] table-fixed'
+/** Clickable cell value that toggles an `equal` filter, matching analytics/usage breakdowns. */
+function ActivityFilterValue({
+  active,
+  disabled,
+  onToggle,
+  className,
+  label,
+  children,
+}: {
+  active: boolean
+  disabled?: boolean
+  onToggle: () => void
+  className?: string
+  label?: string
+  children: React.ReactNode
+}) {
+  const t = useT()
+  if (disabled) {
+    return <span className={className}>{children}</span>
+  }
+  const hint = active ? t('Remove filter') : t('Filter by this value')
+  return (
+    <button
+      type="button"
+      title={label ? `${hint}: ${label}` : hint}
+      aria-pressed={active}
+      onClick={onToggle}
+      className={cn(
+        '-mx-1 min-w-0 max-w-full cursor-pointer rounded-sm px-1 text-start transition-colors',
+        'hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        active && 'bg-accent/60 ring-1 ring-border',
+        className,
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
+/**
+ * Auto layout + column floors. Cells size to their content so names and
+ * emails are not ellipsized while empty space sits in the column. The parent
+ * `overflow-auto` scrolls horizontally when the row is wider than the viewport.
+ */
+const ACTIVITY_TABLE_CLASS_NAME = 'w-max min-w-full'
+
+const ACTIVITY_COL_EVENT = 'min-w-[18rem]'
+const ACTIVITY_COL_ACTOR = 'min-w-[16rem]'
+const ACTIVITY_COL_TYPE = 'min-w-[12rem]'
+const ACTIVITY_COL_RESOURCE = 'min-w-[18rem]'
+const ACTIVITY_COL_IP = 'min-w-[10rem]'
+const ACTIVITY_COL_COUNTRY = 'min-w-[8rem]'
+const ACTIVITY_COL_TIME = 'min-w-[8.5rem]'
+const ACTIVITY_COL_ACTION = 'min-w-[8rem]'
 
 /** Column widths for activity log table - shared by `colgroup` and kept in sync with header labels. */
 function ActivityLogsTableColGroup() {
   return (
     <colgroup>
-      <col className="w-[14%]" />
-      <col className="w-[12%]" />
-      {/* Fixed so the longest actor badge (PROJECT KEY) fits without spilling into Resource. */}
-      <col className="w-[8.5rem]" />
-      <col className="" />
-      <col className="w-[12%]" />
-      <col className="w-[10%]" />
-      <col className="w-[10%]" />
+      <col className={ACTIVITY_COL_EVENT} />
+      <col className={ACTIVITY_COL_ACTOR} />
+      <col className={ACTIVITY_COL_TYPE} />
+      <col className={ACTIVITY_COL_RESOURCE} />
+      <col className={ACTIVITY_COL_IP} />
+      <col className={ACTIVITY_COL_COUNTRY} />
+      <col className={ACTIVITY_COL_TIME} />
+      <col className={ACTIVITY_COL_ACTION} />
     </colgroup>
   )
 }
@@ -144,27 +198,68 @@ function ActivityLogsTableHead() {
   return (
     <TableHeader>
       <TableRow className="hover:bg-transparent border-b border-border">
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider ps-6 sm:ps-8 shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead
+          className={cn(
+            'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider ps-6 sm:ps-8 shadow-[inset_0_-1px_0_var(--border)]',
+            ACTIVITY_COL_EVENT,
+          )}
+        >
           {t('Event')}
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead
+          className={cn(
+            'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]',
+            ACTIVITY_COL_ACTOR,
+          )}
+        >
           {t('Actor')}
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead
+          className={cn(
+            'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]',
+            ACTIVITY_COL_TYPE,
+          )}
+        >
           {t('Type')}
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead
+          className={cn(
+            'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]',
+            ACTIVITY_COL_RESOURCE,
+          )}
+        >
           {t('Resource')}
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead
+          className={cn(
+            'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]',
+            ACTIVITY_COL_IP,
+          )}
+        >
           {t('IP address')}
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead
+          className={cn(
+            'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]',
+            ACTIVITY_COL_COUNTRY,
+          )}
+        >
           {t('Country')}
         </TableHead>
-        <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pe-6 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider sm:pe-8 shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHead
+          className={cn(
+            'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]',
+            ACTIVITY_COL_TIME,
+          )}
+        >
           {t('Time')}
         </TableHead>
+        <TableHead
+          className={cn(
+            'sticky top-0 z-10 bg-background px-4 py-3 pe-6 text-end text-[12px] font-semibold text-muted-foreground uppercase tracking-wider sm:pe-8 shadow-[inset_0_-1px_0_var(--border)]',
+            ACTIVITY_COL_ACTION,
+          )}
+        />
       </TableRow>
     </TableHeader>
   )
@@ -212,8 +307,11 @@ function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
           <TableCell className="min-w-0 px-4 py-3">
             <Skeleton className="h-3.5 w-20 max-w-full" />
           </TableCell>
-          <TableCell className="min-w-0 px-4 py-3 pe-6 sm:pe-8">
+          <TableCell className="min-w-0 px-4 py-3">
             <Skeleton className="h-3.5 w-[6.5rem]" />
+          </TableCell>
+          <TableCell className="min-w-0 px-4 py-3 pe-6 text-end sm:pe-8">
+            <Skeleton className="ms-auto h-7 w-[5.5rem] rounded-md" />
           </TableCell>
         </TableRow>
       ))}
@@ -312,22 +410,7 @@ const actionLabels: Record<ActionType, string> = {
   view: 'Viewed',
 }
 
-// Resource types and their icons (see {@link ActivityUiResourceType})
 type ResourceType = ActivityUiResourceType
-
-const resourceIcons: Record<ResourceType, React.ReactNode> = {
-  document: <FileText className="h-4 w-4" />,
-  collection: <Folder className="h-4 w-4" />,
-  database: <Database className="h-4 w-4" />,
-  file: <FileText className="h-4 w-4" />,
-  bucket: <Folder className="h-4 w-4" />,
-  function: <Zap className="h-4 w-4" />,
-  user: <Users className="h-4 w-4" />,
-  team: <Users className="h-4 w-4" />,
-  site: <Globe className="h-4 w-4" />,
-  rule: <ListChecks className="h-4 w-4" />,
-  project: <Server className="h-4 w-4" />,
-}
 
 /**
  * Display-shaped activity row derived from `Models.ActivityEvent`.
@@ -341,7 +424,14 @@ interface DisplayActivity {
   actorName: string
   actorEmail: string
   action: ActionType
+  /** UI bucket for icons and the resource-type subtitle. */
   resourceType: ResourceType
+  /**
+   * Stored `ActivityEvent.resourceType` (audit path token). The list API
+   * filters on this value, not the UI bucket — e.g. a TablesDB row can show
+   * as "Database" while the queryable type is `table` or `row`.
+   */
+  apiResourceType: string
   resourceId: string
   resourceName: string
   description: string | null
@@ -443,6 +533,70 @@ function resourceLabelFromEvent(activity: Models.ActivityEvent): string {
   return activity.event
 }
 
+/** Queryable row values for the context menu (same attributes as cell clicks). */
+function activityRowFilterItems(
+  activity: DisplayActivity,
+): ActivityRowFilterItem[] {
+  const eventValue =
+    activity.rawEvent.trim() || activity.description?.trim() || ''
+  const actorValue = activity.actorId.trim()
+  const resourceValue =
+    activity.resourceId?.trim() ||
+    (activity.resourceName !== '-' ? activity.resourceName.trim() : '')
+  const items: ActivityRowFilterItem[] = []
+
+  if (eventValue) {
+    items.push({
+      attribute: 'event',
+      value: eventValue,
+      label: 'Event',
+      displayValue: activity.description || eventValue,
+    })
+  }
+  if (actorValue) {
+    items.push({
+      attribute: 'actorId',
+      value: actorValue,
+      label: 'Actor',
+      displayValue: activity.actorName || actorValue,
+    })
+  }
+  if (activity.actorType.trim()) {
+    items.push({
+      attribute: 'actorType',
+      value: activity.actorType,
+      label: 'Type',
+      displayValue: userTypeBadge(activity.actorType).label,
+    })
+  }
+  if (resourceValue) {
+    items.push({
+      attribute: 'resourceId',
+      value: resourceValue,
+      label: 'Resource',
+      displayValue: resourceValue,
+    })
+  }
+  if (activity.apiResourceType) {
+    items.push({
+      attribute: 'resourceType',
+      value: activity.apiResourceType,
+      label: 'Resource type',
+      displayValue: activityResourceTypeLabel(activity.apiResourceType),
+    })
+  }
+  if (activity.countryCode) {
+    items.push({
+      attribute: 'country',
+      value: activity.countryCode,
+      label: 'Country',
+      displayValue: activity.countryName || activity.countryCode.toUpperCase(),
+    })
+  }
+
+  return items
+}
+
 function toDisplayActivity(
   event: Models.ActivityEvent,
   countryLookups: CountryLookups | null,
@@ -460,6 +614,7 @@ function toDisplayActivity(
       event.event,
       event.resource,
     ),
+    apiResourceType: event.resourceType?.trim() || '',
     resourceId: event.resourceId || '',
     resourceName: resourceLabelFromEvent(event),
     description: event.event,
@@ -526,15 +681,36 @@ export function View({ projectId, initialData }: ViewProps) {
   )
   const isFreePlan = planCanonical === 'free'
 
-  /** Default window when no URL `time` filter: plan retention, aligned to picker presets. */
-  const defaultActivityDateRange = useMemo(
-    () => getDefaultActivityDateRangeFromRetentionDays(activityLogRetentionDays),
+  /** Closest picker preset ≤ plan retention, so the view is not a custom span. */
+  const defaultActivityDateRangePreset = useMemo(
+    () => getDefaultActivityDateRangePreset(activityLogRetentionDays),
     [activityLogRetentionDays],
+  )
+  const defaultActivityDateRange = useMemo(
+    () => defaultActivityDateRangePreset.getRange(),
+    [defaultActivityDateRangePreset],
   )
 
   const filterMap = useMemo(
     () => queryParamToMap(queryFromSearch ?? null),
     [queryFromSearch],
+  )
+  const selectedSdkSources = useMemo(
+    () => getSelectedActivitySdkSources(filterMap),
+    [filterMap],
+  )
+  const toggleSdkSourceFilter = useCallback(
+    (source: ActivitySdkSource) => {
+      const next = toggleActivitySdkSourceInMap(filterMap, source)
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          query: next.size > 0 ? mapToQueryParam(next) : undefined,
+        }),
+        replace: true,
+      })
+    },
+    [filterMap, navigate],
   )
 
   const activityFilterColumns = useMemo(() => {
@@ -581,6 +757,16 @@ export function View({ projectId, initialData }: ViewProps) {
     (isLoading || isFetching || isPending)
   const events =
     useLoaderList && initialData ? initialData.events : eventsFromHook
+  const visibleEvents = useMemo(() => {
+    if (selectedSdkSources.length === 0) return events
+    const wantMcp = selectedSdkSources.includes('mcp')
+    const wantCli = selectedSdkSources.includes('cli')
+    return events.filter((event) => {
+      if (wantMcp && isMcpSdkActivity(event)) return true
+      if (wantCli && isCliSdkActivity(event)) return true
+      return false
+    })
+  }, [events, selectedSdkSources])
   const hasMore =
     useLoaderList && initialData ? initialData.hasMore : hasMoreFromHook
   const showListLoading =
@@ -625,10 +811,15 @@ export function View({ projectId, initialData }: ViewProps) {
   }, [filterMap])
 
   const dateRangeForPicker = useMemo(() => {
-    const base = dateRangeFromFilters ?? defaultActivityDateRange
-    if (!hasFiniteActivityLogRetention(organizationPlan)) return base
+    if (!dateRangeFromFilters) return defaultActivityDateRange
+    if (!hasFiniteActivityLogRetention(organizationPlan)) {
+      return dateRangeFromFilters
+    }
     return (
-      clampDateRangeToRetentionFloor(base, activityLogRetentionHours) ?? base
+      clampDateRangeToRetentionFloor(
+        dateRangeFromFilters,
+        activityLogRetentionHours,
+      ) ?? dateRangeFromFilters
     )
   }, [
     activityLogRetentionHours,
@@ -680,6 +871,115 @@ export function View({ projectId, initialData }: ViewProps) {
       })
     },
     [filterMap, navigate],
+  )
+
+  const findEqualFilter = useCallback(
+    (attribute: string, value: string) => {
+      const normalizedValue =
+        attribute === 'country' ? value.toLowerCase() : value
+      const key: CompactFilterKey = {
+        c: attribute,
+        o: 'equal',
+        v: normalizedValue,
+      }
+      return (
+        findCompactFilterKeyInMap(filterMap, key) ??
+        findCompactFilterKeyInMap(filterMap, { ...key, o: 'is' })
+      )
+    },
+    [filterMap],
+  )
+
+  const isEqualFilterActive = useCallback(
+    (attribute: string, value: string) =>
+      !!value.trim() && !!findEqualFilter(attribute, value),
+    [findEqualFilter],
+  )
+
+  const findNotEqualFilter = useCallback(
+    (attribute: string, value: string) => {
+      const normalizedValue =
+        attribute === 'country' ? value.toLowerCase() : value
+      return findCompactFilterKeyInMap(filterMap, {
+        c: attribute,
+        o: 'notEqual',
+        v: normalizedValue,
+      })
+    },
+    [filterMap],
+  )
+
+  const isNotEqualFilterActive = useCallback(
+    (attribute: string, value: string) =>
+      !!value.trim() && !!findNotEqualFilter(attribute, value),
+    [findNotEqualFilter],
+  )
+
+  /** Same as analytics/usage: click applies an `equal` filter; click again clears it. */
+  const toggleEqualFilter = useCallback(
+    (attribute: string, value: string) => {
+      const trimmed = value.trim()
+      if (!trimmed) return
+      const existing = findEqualFilter(attribute, trimmed)
+      if (existing) {
+        const next = new Map(filterMap)
+        next.delete(existing)
+        navigate({
+          search: (prev) => ({
+            ...prev,
+            query: next.size > 0 ? mapToQueryParam(next) : undefined,
+          }),
+          replace: true,
+        })
+        return
+      }
+      const next = new Map(filterMap)
+      for (const key of [...next.keys()]) {
+        if (key.c === attribute && (key.o === 'equal' || key.o === 'is')) {
+          next.delete(key)
+        }
+      }
+      const compactKey: CompactFilterKey = {
+        c: attribute,
+        o: 'equal',
+        v:
+          attribute === 'country'
+            ? trimmed.toLowerCase()
+            : trimmed,
+      }
+      next.set(
+        compactKey,
+        buildFilterQueryString('equal', compactKey.c, compactKey.v),
+      )
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          query: mapToQueryParam(next) || undefined,
+        }),
+        replace: true,
+      })
+    },
+    [filterMap, findEqualFilter, navigate],
+  )
+
+  /** Same as analytics value menus: `notEqual` for this attribute/value. */
+  const excludeValueFilter = useCallback(
+    (attribute: string, value: string) => {
+      const trimmed = value.trim()
+      if (!trimmed) return
+      if (findEqualFilter(attribute, trimmed)) return
+      if (findNotEqualFilter(attribute, trimmed)) return
+      const compactKey: CompactFilterKey = {
+        c: attribute,
+        o: 'notEqual',
+        v: attribute === 'country' ? trimmed.toLowerCase() : trimmed,
+      }
+      applyFilter(
+        compactKey,
+        buildFilterQueryString('notEqual', compactKey.c, compactKey.v),
+      )
+    },
+    [applyFilter, findEqualFilter, findNotEqualFilter],
   )
 
   const removeFilter = useCallback(
@@ -758,52 +1058,9 @@ export function View({ projectId, initialData }: ViewProps) {
 
   const handleLegendResourceTypeClick = useCallback(
     (resourceKey: string) => {
-      const next = new Map(filterMap)
-      for (const key of [...next.keys()]) {
-        if (key.c === 'resourceType') next.delete(key)
-      }
-
-      let current: string | null = null
-      for (const [k] of filterMap) {
-        if (
-          k.c === 'resourceType' &&
-          (k.o === 'equal' || k.o === 'is') &&
-          k.v != null
-        ) {
-          current = String(k.v)
-          break
-        }
-      }
-
-      if (current === resourceKey) {
-        navigate({
-          search: (prev) => ({
-            ...prev,
-            query: next.size > 0 ? mapToQueryParam(next) : undefined,
-          }),
-          replace: true,
-        })
-        return
-      }
-
-      const compactKey: CompactFilterKey = {
-        c: 'resourceType',
-        o: 'equal',
-        v: resourceKey,
-      }
-      next.set(
-        compactKey,
-        buildFilterQueryString('equal', 'resourceType', resourceKey),
-      )
-      navigate({
-        search: (prev) => ({
-          ...prev,
-          query: mapToQueryParam(next) || undefined,
-        }),
-        replace: true,
-      })
+      toggleEqualFilter('resourceType', resourceKey)
     },
-    [filterMap, navigate],
+    [toggleEqualFilter],
   )
 
   const eventOnCurrentList = useMemo(
@@ -952,12 +1209,23 @@ export function View({ projectId, initialData }: ViewProps) {
                     replace: true,
                   })
                 }}
+                afterTrigger={
+                  <ActivitySdkSourceQuickFilters
+                    selected={selectedSdkSources}
+                    onToggle={toggleSdkSourceFilter}
+                  />
+                }
               />
               <DateRangePicker
                 dateRange={dateRangeForPicker}
                 onDateRangeChange={handleDateRangeChange}
                 className="h-9 min-w-0 shrink @[640px]:min-w-[200px]"
                 popoverContentAlign="start"
+                presetId={
+                  dateRangeFromFilters
+                    ? undefined
+                    : defaultActivityDateRangePreset.value
+                }
                 retentionHours={
                   hasFiniteActivityLogRetention(organizationPlan)
                     ? activityLogRetentionHours
@@ -1024,6 +1292,15 @@ export function View({ projectId, initialData }: ViewProps) {
           showToolbarBottomBorder
           hideToolbar={showsFirstRunEmptyState}
         />
+        {!showsFirstRunEmptyState ? (
+          <ActivityActiveFilterChips
+            filterMap={filterMap}
+            columns={activityFilterColumns}
+            countryLookups={countryLookups}
+            onRemoveFilter={removeFilter}
+            onClearAllFilters={clearAllFilters}
+          />
+        ) : null}
         {/* Plan upgrade notice for free tier */}
         {isFreePlan && (
           <div className="border-b border-border bg-amber-500/5">
@@ -1112,56 +1389,58 @@ export function View({ projectId, initialData }: ViewProps) {
                 <ActivityLogsTableColGroup />
                 <ActivityLogsTableHead />
                 <TableBody>
-                  {events.map((rawEvent) => {
+                  {visibleEvents.length === 0 ? (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell
+                        colSpan={8}
+                        className="px-6 py-8 text-center text-[13px] text-muted-foreground"
+                      >
+                        {t('No matching activities on this page')}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    visibleEvents.map((rawEvent) => {
                     const activity = toDisplayActivity(rawEvent, countryLookups)
-                    const resourcePrimary =
+                    const resourceFilterValue =
                       activity.resourceId?.trim() ||
-                      activity.resourceName ||
-                      '-'
-                    const resourceDisplay = truncateMiddle(
-                      resourcePrimary,
-                      ACTIVITY_RESOURCE_DISPLAY_MAX,
-                    )
-                    const resourceTitle =
-                      resourcePrimary !== '-' &&
-                      resourcePrimary.length > ACTIVITY_RESOURCE_DISPLAY_MAX
-                        ? resourcePrimary
-                        : undefined
+                      (activity.resourceName !== '-'
+                        ? activity.resourceName.trim()
+                        : '')
+                    const eventFilterValue =
+                      activity.rawEvent.trim() ||
+                      activity.description?.trim() ||
+                      ''
+                    const actorFilterValue = activity.actorId.trim()
+                    const actorSecondary = hasHumanEmail(activity.actorType)
+                      ? activity.actorEmail || activity.actorId || '-'
+                      : activity.actorId || '-'
+                    const typeBadge = userTypeBadge(activity.actorType)
                     return (
                       <ActivityLogRowContextMenu
                         key={activity.$id}
                         projectId={projectId}
                         event={rawEvent}
                         onOpenDetails={() => openActivityDrawer(rawEvent)}
+                        filterItems={activityRowFilterItems(activity)}
+                        isEqualFilterActive={isEqualFilterActive}
+                        isNotEqualFilterActive={isNotEqualFilterActive}
+                        onToggleEqualFilter={toggleEqualFilter}
+                        onExcludeFilter={excludeValueFilter}
                       >
                         <TableRow
-                          role="button"
-                          tabIndex={0}
                           data-state={
                             drawerOpen && selectedEvent?.$id === activity.$id
                               ? 'selected'
                               : undefined
                           }
-                          aria-label={`${t('Open activity details')}: ${activity.rawEvent}`}
                           className={cn(
-                            'cursor-pointer',
                             drawerOpen &&
                               selectedEvent?.$id === activity.$id &&
                               'bg-muted/60 hover:bg-muted/60',
                           )}
-                          onClick={() => openActivityDrawer(rawEvent)}
                           onMouseEnter={() =>
                             prefetchActivityEventOnHover(rawEvent.$id)
                           }
-                          onFocus={() =>
-                            prefetchActivityEventOnHover(rawEvent.$id)
-                          }
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault()
-                              openActivityDrawer(rawEvent)
-                            }
-                          }}
                         >
                       <TableCell className="min-w-0 px-4 py-3 ps-6 sm:ps-8">
                         <div className="flex min-w-0 items-center gap-2">
@@ -1174,95 +1453,134 @@ export function View({ projectId, initialData }: ViewProps) {
                           >
                             {actionIcons[activity.action]}
                           </div>
-                          <p
+                          <ActivityFilterValue
+                            active={isEqualFilterActive(
+                              'event',
+                              eventFilterValue,
+                            )}
+                            disabled={!eventFilterValue}
+                            onToggle={() =>
+                              toggleEqualFilter('event', eventFilterValue)
+                            }
+                            label={activity.description ?? eventFilterValue}
                             className="min-w-0 truncate font-mono text-[12px] text-muted-foreground"
-                            title={activity.description ?? undefined}
                           >
                             {activity.description || '-'}
-                          </p>
+                          </ActivityFilterValue>
                         </div>
                       </TableCell>
-                      <TableCell className="min-w-0 px-4 py-3">
+                      <TableCell
+                        className={cn(
+                          'px-4 py-3',
+                          ACTIVITY_COL_ACTOR,
+                        )}
+                      >
                         <div className="flex items-center gap-2.5">
                           <UserTypeAvatar
                             actorType={activity.actorType}
                             actorName={activity.actorName}
                             actorId={activity.actorId}
+                            actorEmail={activity.actorEmail}
                             projectId={projectId}
                             className="shadow-none"
                           />
                           <div className="min-w-0">
-                            <div className="flex min-w-0 items-center gap-1.5">
-                              <p className="truncate text-[13px] font-medium text-foreground">
-                                {activity.actorName}
-                              </p>
-                              {isMcpSdkActivity(rawEvent) ? (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span
-                                      className="inline-flex shrink-0 text-muted-foreground"
-                                      aria-label={t('Via MCP')}
-                                      onClick={(e) => e.stopPropagation()}
-                                      onKeyDown={(e) => e.stopPropagation()}
-                                    >
-                                      <McpIcon className="h-3.5 w-3.5" />
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">
-                                    {t('Via MCP')}
-                                  </TooltipContent>
-                                </Tooltip>
-                              ) : null}
-                            </div>
-                            <p
+                            <ActivityFilterValue
+                              active={isEqualFilterActive(
+                                'actorId',
+                                actorFilterValue,
+                              )}
+                              disabled={!actorFilterValue}
+                              onToggle={() =>
+                                toggleEqualFilter(
+                                  'actorId',
+                                  actorFilterValue,
+                                )
+                              }
+                              className="block max-w-none whitespace-nowrap text-[13px] font-medium text-foreground"
+                            >
+                              {activity.actorName}
+                            </ActivityFilterValue>
+                            <ActivityFilterValue
+                              active={isEqualFilterActive(
+                                'actorId',
+                                actorFilterValue,
+                              )}
+                              disabled={!actorFilterValue || actorSecondary === '-'}
+                              onToggle={() =>
+                                toggleEqualFilter('actorId', actorFilterValue)
+                              }
                               className={cn(
-                                'truncate text-[11px] text-muted-foreground',
+                                'block max-w-none whitespace-nowrap text-[11px] text-muted-foreground',
                                 hasHumanEmail(activity.actorType)
                                   ? ''
                                   : 'font-mono',
                               )}
                             >
-                              {hasHumanEmail(activity.actorType)
-                                ? activity.actorEmail ||
-                                  activity.actorId ||
-                                  '-'
-                                : activity.actorId || '-'}
-                            </p>
+                              {actorSecondary}
+                            </ActivityFilterValue>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
-                        {(() => {
-                          const badge = userTypeBadge(activity.actorType)
-                          return (
+                      <TableCell
+                        className={cn('px-4 py-3', ACTIVITY_COL_TYPE)}
+                      >
+                        <div className="flex flex-nowrap items-center gap-1.5">
+                          <ActivityFilterValue
+                            active={isEqualFilterActive(
+                              'actorType',
+                              activity.actorType,
+                            )}
+                            disabled={!activity.actorType.trim()}
+                            onToggle={() =>
+                              toggleEqualFilter(
+                                'actorType',
+                                activity.actorType,
+                              )
+                            }
+                            className="max-w-none"
+                          >
                             <span
                               className={cn(
-                                'inline-block max-w-full truncate rounded px-1.5 py-0.5 align-middle text-[10px] font-medium uppercase tracking-wider',
-                                badge.tone,
+                                'inline-block whitespace-nowrap rounded px-1.5 py-0.5 align-middle text-[10px] font-medium uppercase tracking-wider',
+                                typeBadge.tone,
                               )}
                             >
-                              {t(badge.label)}
+                              {t(typeBadge.label)}
                             </span>
-                          )
-                        })()}
-                      </TableCell>
-                      <TableCell className="min-w-0 whitespace-normal px-4 py-3 align-top">
-                        <div className="flex min-w-0 items-center gap-2.5">
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                            {resourceIcons[activity.resourceType]}
-                          </div>
-                          <div className="min-w-0 flex flex-col gap-1">
-                            <p
-                              className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium leading-snug text-foreground"
-                              title={resourceTitle}
-                            >
-                              {resourceDisplay}
-                            </p>
-                            <p className="text-[11px] capitalize text-muted-foreground">
-                              {t(activity.resourceType)}
-                            </p>
-                          </div>
+                          </ActivityFilterValue>
+                          <ActivitySdkSourceBadge event={rawEvent} />
                         </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <ActivityResourceIdentity
+                          resourceType={
+                            activity.apiResourceType || activity.resourceType
+                          }
+                          resourceId={
+                            resourceFilterValue !== ''
+                              ? resourceFilterValue
+                              : null
+                          }
+                          typeControl={(label) => (
+                            <ActivityFilterValue
+                              active={isEqualFilterActive(
+                                'resourceType',
+                                activity.apiResourceType,
+                              )}
+                              disabled={!activity.apiResourceType}
+                              onToggle={() =>
+                                toggleEqualFilter(
+                                  'resourceType',
+                                  activity.apiResourceType,
+                                )
+                              }
+                              className="min-w-min max-w-none"
+                            >
+                              {label}
+                            </ActivityFilterValue>
+                          )}
+                        />
                       </TableCell>
                       <TableCell className="min-w-0 px-4 py-3">
                         {activity.ipAddress ? (
@@ -1283,20 +1601,54 @@ export function View({ projectId, initialData }: ViewProps) {
                         )}
                       </TableCell>
                       <TableCell className="min-w-0 px-4 py-3">
-                        <ActivityTableCountryCell
-                          countryName={activity.countryName}
-                        />
+                        <ActivityFilterValue
+                          active={isEqualFilterActive(
+                            'country',
+                            activity.countryCode ?? '',
+                          )}
+                          disabled={!activity.countryCode}
+                          onToggle={() =>
+                            toggleEqualFilter(
+                              'country',
+                              activity.countryCode ?? '',
+                            )
+                          }
+                          className="max-w-full"
+                        >
+                          <ActivityTableCountryCell
+                            countryName={activity.countryName}
+                          />
+                        </ActivityFilterValue>
                       </TableCell>
-                      <TableCell className="min-w-0 px-4 py-3 pe-6 sm:pe-8">
+                      <TableCell className="min-w-0 px-4 py-3">
                         <DateTooltip
                           date={activity.timestamp}
                           className="text-[12px] text-muted-foreground"
                         />
                       </TableCell>
+                      <TableCell className="min-w-0 px-4 py-3 pe-6 text-end sm:pe-8">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2.5 text-[12px]"
+                          aria-label={`${t('View event')}: ${activity.rawEvent}`}
+                          onClick={() => openActivityDrawer(rawEvent)}
+                          onMouseEnter={() =>
+                            prefetchActivityEventOnHover(rawEvent.$id)
+                          }
+                          onFocus={() =>
+                            prefetchActivityEventOnHover(rawEvent.$id)
+                          }
+                        >
+                          {t('View event')}
+                        </Button>
+                      </TableCell>
                       </TableRow>
                     </ActivityLogRowContextMenu>
                   )
-                  })}
+                    })
+                  )}
                 </TableBody>
               </Table>
             </div>

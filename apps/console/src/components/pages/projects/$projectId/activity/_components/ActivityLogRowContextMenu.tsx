@@ -2,9 +2,12 @@ import {
   Copy,
   ExternalLink,
   FileJson,
+  Filter,
+  FilterX,
   LayoutList,
   Link2,
   Square,
+  X,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -27,11 +30,27 @@ import {
 import { formatActivityEventJson } from '@/components/pages/projects/$projectId/activity/activity-utils'
 import { useT } from '@/lib/i18n/translate'
 
+/** One queryable cell on the row, same attributes as click-to-filter. */
+export type ActivityRowFilterItem = {
+  attribute: string
+  value: string
+  /** Column label (`Event`, `Actor`, …). */
+  label: string
+  /** Human value shown next to the column label. */
+  displayValue: string
+}
+
 interface ActivityLogRowContextMenuProps {
   projectId: string
   event: Models.ActivityEvent
-  /** Opens the activity detail drawer (same as row activate). */
+  /** Opens the activity detail drawer (same as the View event button). */
   onOpenDetails: () => void
+  /** Filterable values on this row (`event`, `actorId`, `country`, …). */
+  filterItems?: ActivityRowFilterItem[]
+  isEqualFilterActive?: (attribute: string, value: string) => boolean
+  isNotEqualFilterActive?: (attribute: string, value: string) => boolean
+  onToggleEqualFilter?: (attribute: string, value: string) => void
+  onExcludeFilter?: (attribute: string, value: string) => void
   children: React.ReactNode
 }
 
@@ -40,10 +59,25 @@ function activityPermalink(projectId: string, eventId: string) {
   return buildConsoleUrl(path)
 }
 
+function filterItemDisplay(
+  item: ActivityRowFilterItem,
+  t: (text: string) => string,
+): string {
+  if (item.attribute === 'actorType' || item.attribute === 'resourceType') {
+    return t(item.displayValue)
+  }
+  return item.displayValue
+}
+
 export function ActivityLogRowContextMenu({
   projectId,
   event,
   onOpenDetails,
+  filterItems = [],
+  isEqualFilterActive,
+  isNotEqualFilterActive,
+  onToggleEqualFilter,
+  onExcludeFilter,
   children,
 }: ActivityLogRowContextMenuProps) {
   const t = useT()
@@ -53,6 +87,16 @@ export function ActivityLogRowContextMenu({
 
   const eventHref = activityPermalink(projectId, event.$id)
   const hasName = !!event.actorName?.trim()
+  const items = filterItems.filter((item) => item.value.trim())
+  const canFilter =
+    items.length > 0 && !!onToggleEqualFilter && !!isEqualFilterActive
+  const excludable = canFilter
+    ? items.filter(
+        (item) =>
+          !isEqualFilterActive(item.attribute, item.value) &&
+          !isNotEqualFilterActive?.(item.attribute, item.value),
+      )
+    : []
 
   return (
     <ContextMenu>
@@ -62,6 +106,59 @@ export function ActivityLogRowContextMenu({
           <ContextMenuIcon icon={LayoutList} />
           {t('Overview')}
         </ContextMenuItem>
+        {canFilter ? (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuSub>
+              <ContextMenuSubTrigger>
+                <ContextMenuIcon icon={Filter} />
+                {t('Filters')}
+              </ContextMenuSubTrigger>
+              <ContextMenuSubContent className="w-64">
+                {items.map((item) => {
+                  const equalActive = isEqualFilterActive(
+                    item.attribute,
+                    item.value,
+                  )
+                  const display = filterItemDisplay(item, t)
+                  return (
+                    <ContextMenuItem
+                      key={`equal-${item.attribute}`}
+                      onSelect={() =>
+                        onToggleEqualFilter(item.attribute, item.value)
+                      }
+                    >
+                      <ContextMenuIcon icon={equalActive ? X : Filter} />
+                      <span className="min-w-0 truncate">
+                        {equalActive
+                          ? `${t('Remove filter')}: ${t(item.label)}`
+                          : `${t(item.label)}: ${display}`}
+                      </span>
+                    </ContextMenuItem>
+                  )
+                })}
+                {onExcludeFilter && excludable.length > 0 ? (
+                  <>
+                    <ContextMenuSeparator />
+                    {excludable.map((item) => (
+                      <ContextMenuItem
+                        key={`exclude-${item.attribute}`}
+                        onSelect={() =>
+                          onExcludeFilter(item.attribute, item.value)
+                        }
+                      >
+                        <ContextMenuIcon icon={FilterX} />
+                        <span className="min-w-0 truncate">
+                          {`${t('Exclude this value')}: ${filterItemDisplay(item, t)}`}
+                        </span>
+                      </ContextMenuItem>
+                    ))}
+                  </>
+                ) : null}
+              </ContextMenuSubContent>
+            </ContextMenuSub>
+          </>
+        ) : null}
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>

@@ -2121,7 +2121,7 @@ abstract class Builder implements
             Method::Or => $this->buildLogicalAstExpression($query, 'OR'),
             Method::On => $this->buildOnAstExpression($query),
             Method::Raw => new Raw($attr),
-            default => new Raw($attr !== '' ? $attr : '1 = 1'),
+            default => throw new UnsupportedException('Unsupported filter type: ' . $method->value),
         };
     }
 

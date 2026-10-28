@@ -38,6 +38,16 @@ final class ImageTest extends TestCase
         }
     }
 
+    private function requireDecoder(string $format, string $data): void
+    {
+        try {
+            $probe = new \Imagick();
+            $probe->readImageBlob($data);
+        } catch (\ImagickException $exception) {
+            self::markTestSkipped("The {$format} decoder is not usable: {$exception->getMessage()}");
+        }
+    }
+
     private function jpegWithExifOrientation(int $orientation): string
     {
         $source = new \Imagick();
@@ -50,6 +60,58 @@ final class ImageTest extends TestCase
         $segment = "\xff\xe1" . pack('n', \strlen($exif) + 2) . $exif;
 
         return substr($jpeg, 0, 2) . $segment . substr($jpeg, 2);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function unsupportedFormatProvider(): iterable
+    {
+        yield 'pixel enumeration text' => ["# ImageMagick pixel enumeration: 1,1,255,srgb\n0,0: (255,0,0)  #FF0000  red\n"];
+        yield 'portable pixmap' => ["P3\n1 1\n255\n255 0 0\n"];
+        yield 'vector graphics' => ["push graphic-context\nviewbox 0 0 1 1\npop graphic-context\n"];
+        yield 'svg' => ['<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>'];
+        yield 'postscript' => ["%!PS-Adobe-3.0\nshowpage\n"];
+        yield 'empty' => [''];
+    }
+
+    #[DataProvider('unsupportedFormatProvider')]
+    public function testRejectsFormatsOutsideTheAllowList(string $data): void
+    {
+        $this->expectExceptionMessage('Unsupported image format');
+
+        new Image($data);
+    }
+
+    public function testAvifInput(): void
+    {
+        $this->requireEncoder('AVIF');
+
+        $source = new \Imagick();
+        $source->newImage(20, 10, 'red');
+        $source->setImageFormat('avif');
+
+        $image = new Image($source->getImageBlob());
+        $image->crop(10, 10);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output('png') ?? '');
+        $this->assertSame(10, $output->getImageWidth());
+        $this->assertSame(10, $output->getImageHeight());
+    }
+
+    public function testHeicInput(): void
+    {
+        $heic = file_get_contents(__DIR__ . '/resources/resize/100x100.heic') ?: '';
+        $this->requireDecoder('HEIC', $heic);
+
+        $image = new Image($heic);
+        $image->crop(50, 50);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output('png') ?? '');
+        $this->assertSame(50, $output->getImageWidth());
+        $this->assertSame(50, $output->getImageHeight());
     }
 
     public function testJpeg(): void
@@ -113,6 +175,37 @@ final class ImageTest extends TestCase
         $this->assertSame('JPEG', $image->getImageFormat());
 
         unlink($target);
+    }
+
+    /**
+     * @return array<string, array{int, int, int, int, string, int, int}>
+     */
+    public static function skewedCrops(): array
+    {
+        return [
+            'landscape, 1px wide' => [6, 2, 1, 0, Image::GRAVITY_TOP_LEFT, 1, 1],
+            'landscape, 1px wide, center' => [6, 2, 1, 0, Image::GRAVITY_CENTER, 1, 1],
+            'landscape, 1px high' => [6, 2, 0, 1, Image::GRAVITY_BOTTOM_RIGHT, 3, 1],
+            'portrait, 1px high' => [2, 6, 0, 1, Image::GRAVITY_TOP_LEFT, 1, 1],
+            'portrait, 1px high, center' => [2, 6, 0, 1, Image::GRAVITY_CENTER, 1, 1],
+            'portrait, 1px wide' => [2, 6, 1, 0, Image::GRAVITY_RIGHT, 1, 3],
+        ];
+    }
+
+    #[DataProvider('skewedCrops')]
+    public function testCropKeepsADerivedSideOfAtLeastOnePixel(int $sourceWidth, int $sourceHeight, int $width, int $height, string $gravity, int $expectedWidth, int $expectedHeight): void
+    {
+        $source = new \Imagick();
+        $source->newImage($sourceWidth, $sourceHeight, 'red', 'png');
+
+        $image = new Image($source->getImageBlob());
+        $image->crop($width, $height, $gravity);
+
+        $result = new \Imagick();
+        $result->readImageBlob($image->output('png', 100) ?: '');
+
+        $this->assertSame($expectedWidth, $result->getImageWidth());
+        $this->assertSame($expectedHeight, $result->getImageHeight());
     }
 
     public function testCropFocalUsesNormalizedCoordinates(): void

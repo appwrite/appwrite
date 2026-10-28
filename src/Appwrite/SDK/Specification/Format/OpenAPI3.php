@@ -2,6 +2,9 @@
 
 namespace Appwrite\SDK\Specification\Format;
 
+use Appwrite\Auth\Validator\Hash\Argon2;
+use Appwrite\Auth\Validator\Hash\Bcrypt;
+use Appwrite\Auth\Validator\Hash\PHPass;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,14 +15,14 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
-use Utopia\Database\Database;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Queries;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Spatial;
 use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\Platform\Enum;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
@@ -28,6 +31,12 @@ use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
+    private const array HASH_EXAMPLES = [
+        Argon2::class => '$argon2id$v=19$m=65536,t=4,p=1$NC8xaW1CVXlIZXFSQi9FRg$0bd4pLo1ytyqvCwl5NSijpm5OIe8J6CjZ1vFemKAg+o',
+        Bcrypt::class => '$2y$10$vBiMe4NOvlbYL1iJUNdqkO.QJy17fvslZQ5oiqKq1G4uwyRWvdrXC',
+        PHPass::class => '$P$BrOEFP1YR5W1yHpvvGuoeVUDPmw9ra/',
+    ];
+
     public function getName(): string
     {
         return 'Open API 3';
@@ -644,8 +653,8 @@ class OpenAPI3 extends Format
 
                 // Every Queries validator serialises to an array of query strings, so
                 // normalise the whole hierarchy instead of enumerating each subclass.
-                if (\is_subclass_of($class, Queries::class)) {
-                    $class = Queries::class;
+                if (\is_subclass_of($class, Base::class)) {
+                    $class = Base::class;
                 }
 
                 $openEnum = false;
@@ -684,11 +693,12 @@ class OpenAPI3 extends Format
                     case \Appwrite\Utopia\Database\Validator\ProjectId::class:
                     case \Appwrite\Platform\Modules\Compute\Validator\VariableKey::class:
                     case \Utopia\Validator\Text::class:
+                    case \Appwrite\Vcs\Validator\Directory::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\BigInt::class:
-                        // BigInt validator reports Database::VAR_BIGINT, but OpenAPI expects scalar types.
+                        // BigInt validator reports ColumnType::BigInteger, but OpenAPI expects scalar types.
                         // We expose it as int64 to keep schema consistent with Column/Attribute models.
                         $node['schema']['type'] = 'integer';
                         $node['schema']['format'] = 'int64';
@@ -731,18 +741,18 @@ class OpenAPI3 extends Format
                         /** @var Spatial $validator */
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = match ($validator->getSpatialType()) {
-                            Database::VAR_POINT => [
+                            ColumnType::Point->value => [
                                 'type' => 'number',
                                 'format' => 'double',
                             ],
-                            Database::VAR_LINESTRING => [
+                            ColumnType::Linestring->value => [
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'number',
                                     'format' => 'double',
                                 ],
                             ],
-                            Database::VAR_POLYGON => [
+                            ColumnType::Polygon->value => [
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'array',
@@ -761,9 +771,9 @@ class OpenAPI3 extends Format
                             ],
                         };
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : match ($validator->getSpatialType()) {
-                            Database::VAR_POINT => '[1, 2]',
-                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
-                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                            ColumnType::Point->value => '[1, 2]',
+                            ColumnType::Linestring->value => '[[1, 2], [3, 4], [5, 6]]',
+                            ColumnType::Polygon->value => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
                             default => '',
                         };
                         break;
@@ -812,7 +822,7 @@ class OpenAPI3 extends Format
                             $node['schema']['example'] = $param['example'];
                         }
                         break;
-                    case Queries::class:
+                    case Base::class:
                         // utopia-php/waf is not a dependency here, so the class is named rather than referenced.
                     case 'Utopia\WAF\Validator\Conditions':
                         $node['schema']['type'] = 'array';
@@ -846,6 +856,13 @@ class OpenAPI3 extends Format
                             'type' => 'string',
                         ];
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '["' . Role::any()->toString() . '"]';
+                        break;
+                    case Argon2::class:
+                    case Bcrypt::class:
+                    case PHPass::class:
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'password';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : self::HASH_EXAMPLES[$validator::class];
                         break;
                     case \Appwrite\Auth\Validator\Password::class:
                     case \Appwrite\SDK\Specification\Validator\PasswordFormat::class:
@@ -1291,6 +1308,9 @@ class OpenAPI3 extends Format
                     if ($readOnly) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
                     }
+                    if (\is_array($rule['default'] ?? null) || ($rule['default'] ?? null) instanceof \stdClass) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['default'] = $rule['default'] === [] ? new \stdClass() : $rule['default'];
+                    }
                     continue;
                 }
 
@@ -1360,6 +1380,16 @@ class OpenAPI3 extends Format
                         ];
                     }
                 }
+                // Clients fill a field an older server omits from its default, as the server does.
+                if (
+                    isset($rule['default'])
+                    && $items === null
+                    && ($rule['type'] !== 'datetime' || $rule['default'] === '')
+                    && $this->defaultMatchesType($rule['default'], $output['components']['schemas'][$model->getType()]['properties'][$name])
+                    && $this->shouldEmitDefaultForSchema($rule['default'], $output['components']['schemas'][$model->getType()]['properties'][$name])
+                ) {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['default'] = $rule['default'];
+                }
                 if (!in_array($name, $required)) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
@@ -1376,5 +1406,22 @@ class OpenAPI3 extends Format
         \ksort($output['paths']);
 
         return $output;
+    }
+
+    /**
+     * Typed SDK models write a default as is, so one of the wrong type, such as '' on an integer, breaks them.
+     *
+     * @param array<string, mixed> $schema
+     */
+    private function defaultMatchesType(mixed $default, array $schema): bool
+    {
+        return match ($schema['type'] ?? null) {
+            'integer' => \is_int($default),
+            'number' => \is_int($default) || \is_float($default),
+            'boolean' => \is_bool($default),
+            'string' => \is_string($default),
+            'array' => \is_array($default),
+            default => true,
+        };
     }
 }

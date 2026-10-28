@@ -189,6 +189,7 @@ void main() async {
         final row = await tablesDB.createRow(
             databaseId: '<DATABASE_ID>',
             tableId: '<TABLE_ID>',
+            rowId: ID.unique(),
             data: { 'title': 'My Private Row' },
             permissions: [
                 Permission.read(Role.user('<USER_ID>')),    // Only this user can read
@@ -215,6 +216,7 @@ func main() async throws {
         let row = try await tablesDB.createRow(
             databaseId: "<DATABASE_ID>",
             tableId: "<TABLE_ID>",
+            rowId: ID.unique(),
             data: ["title": "My Private Row"],
             permissions: [
                 Permission.read(Role.user("<USER_ID>")),    // Only this user can read
@@ -229,6 +231,7 @@ func main() async throws {
 ```
 ```client-android-kotlin
 import io.appwrite.Client
+import io.appwrite.ID
 import io.appwrite.Permission
 import io.appwrite.Role
 import io.appwrite.services.TablesDB
@@ -245,6 +248,7 @@ suspend fun main() {
         val row = tablesDB.createRow(
             databaseId = "<DATABASE_ID>",
             tableId = "<TABLE_ID>",
+            rowId = ID.unique(),
             data = mapOf("title" to "My Private Row"),
             permissions = listOf(
                 Permission.read(Role.user("<USER_ID>")),    // Only this user can read

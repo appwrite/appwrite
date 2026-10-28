@@ -234,9 +234,16 @@ export async function fetchActiveProjects(
       ]
     : []
 
-  const statusQueries = getProjectStatusQueries()
+  // Environments are reached through their project's switcher, not listed beside it.
+  const hideEnvironments = getActiveProfileFeatures().projectEnvironments
+  const statusQueries = [
+    ...getProjectStatusQueries(),
+    ...(hideEnvironments ? [Query.isNull('parentId')] : []),
+  ]
   const trimmedSearch = search?.trim() ?? ''
-  const searchQueries = trimmedSearch ? [projectListSearchOrQuery(trimmedSearch)] : []
+  const searchQueries = trimmedSearch
+    ? [projectListSearchOrQuery(trimmedSearch)]
+    : []
 
   const baseQueries = [
     Query.select(getProjectListSelect()),
@@ -265,7 +272,8 @@ export async function fetchActiveProjects(
         direct.teamId === teamId &&
         // Pasting an id must not reveal a project outside the member's scope.
         (!isRestricted || allowedIdSet.has(direct.$id)) &&
-        projectMatchesActiveListStatus(direct)
+        projectMatchesActiveListStatus(direct) &&
+        !(hideEnvironments && direct.parentId)
       ) {
         return {
           projects: page === 0 ? [direct] : [],
@@ -334,6 +342,9 @@ export async function fetchProjectsByIds(
       Query.select(getProjectListSelect()),
       Query.equal('teamId', teamId),
       ...getProjectStatusQueries(),
+      ...(getActiveProfileFeatures().projectEnvironments
+        ? [Query.isNull('parentId')]
+        : []),
       idQuery,
       Query.limit(validIds.length),
     ],
@@ -345,7 +356,9 @@ export async function fetchProjectsByIds(
   const projects: unknown[] = validIds
     .map((id) => byId.get(id))
     .filter((p): p is NonNullable<typeof p> => p != null)
-  registerProjectRegionsFromProjects(projects as Array<{ $id?: string; region?: string }>)
+  registerProjectRegionsFromProjects(
+    projects as Array<{ $id?: string; region?: string }>,
+  )
   return { projects }
 }
 
@@ -373,7 +386,8 @@ export async function fetchApiKey(projectId: string, keyId: string) {
   }
   const response = await fetchApiKeys(projectId)
   const key = (response.keys ?? []).find((k) => {
-    const id = (k as { $id?: string; id?: string }).$id ?? (k as { id?: string }).id
+    const id =
+      (k as { $id?: string; id?: string }).$id ?? (k as { id?: string }).id
     return id === keyId
   })
   if (!key) {
@@ -509,6 +523,7 @@ async function updatePlatformForProject(
     name: string
     key?: string
     hostname?: string
+    fingerprints?: string[]
   },
 ): Promise<Models.PlatformList['platforms'][number]> {
   const projectSdk = sdk.forProject(projectId)
@@ -530,6 +545,7 @@ async function updatePlatformForProject(
       platformId: data.platformId,
       name,
       applicationId: key || current.applicationId,
+      fingerprints: data.fingerprints,
     })
   }
   if ('bundleIdentifier' in current) {
@@ -589,9 +605,7 @@ export async function fetchProjectVariables(projectId: string) {
  * `null` (org-wide access) and `[]` (access to no project) are different
  * results, so they must not collapse to the same key.
  */
-function projectRestrictionKey(
-  restrictToProjectIds?: string[] | null,
-): string {
+function projectRestrictionKey(restrictToProjectIds?: string[] | null): string {
   return Array.isArray(restrictToProjectIds)
     ? `ids:${restrictToProjectIds.slice().sort().join(',')}`
     : 'all'
@@ -618,6 +632,7 @@ export function projectsForTeamInfiniteQueryKey(
     search,
     excludeKey,
     projectRestrictionKey(restrictToProjectIds),
+    getActiveProfileFeatures().projectEnvironments,
   ]
 }
 
@@ -631,7 +646,14 @@ export function activeProjectsTotalQueryOptions(
 ) {
   const restrictKey = projectRestrictionKey(restrictToProjectIds)
   return queryOptions({
-    queryKey: ['projects', 'active', 'total', orgId, restrictKey],
+    queryKey: [
+      'projects',
+      'active',
+      'total',
+      orgId,
+      restrictKey,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () =>
       fetchActiveProjects(orgId!, 0, 1, '', undefined, restrictToProjectIds),
     enabled: !!orgId,
@@ -667,6 +689,7 @@ export function activeProjectsQueryOptions(
       search,
       excludeKey,
       restrictKey,
+      getActiveProfileFeatures().projectEnvironments,
     ],
     queryFn: () =>
       fetchActiveProjects(
@@ -700,7 +723,13 @@ export function pinnedProjectsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: ['projects', 'pinned', orgId, idsKey],
+    queryKey: [
+      'projects',
+      'pinned',
+      orgId,
+      idsKey,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId,
     staleTime: DEFAULT_STALE_TIME,
@@ -724,7 +753,13 @@ export function projectsByIdsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: ['projects', 'by-ids', orgId, idsKey],
+    queryKey: [
+      'projects',
+      'by-ids',
+      orgId,
+      idsKey,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId && projectIds.length > 0,
     staleTime: DEFAULT_STALE_TIME,
@@ -923,7 +958,15 @@ export function useProjectsForTeam(
     error,
     refetch,
   } = useQuery({
-    queryKey: ['projects', 'team', teamId, page, limit, search],
+    queryKey: [
+      'projects',
+      'team',
+      teamId,
+      page,
+      limit,
+      search,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () => fetchActiveProjects(teamId!, page, limit, search),
     enabled: !!teamId,
     staleTime: DEFAULT_STALE_TIME,
@@ -1390,6 +1433,7 @@ export function useUpdatePlatform(projectId: string | null | undefined) {
       name: string
       key?: string
       hostname?: string
+      fingerprints?: string[]
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
@@ -1409,6 +1453,11 @@ export function useUpdatePlatform(projectId: string | null | undefined) {
       })
       queryClient.invalidateQueries({
         queryKey: ['platform', 'project', projectId, variables.platformId],
+        refetchType: 'all',
+      })
+      // Passkey origins are computed from the platforms
+      await queryClient.invalidateQueries({
+        queryKey: ['project-auth-security', projectId],
         refetchType: 'all',
       })
     },

@@ -59,6 +59,7 @@ import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
 import { toResourceUrl } from '@/lib/appwrite/admin-resource-url'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import { resolveAppwriteEndpointFallback } from '@/lib/runtime-config-shared'
+import { clearApiExplorerAuthStorage } from '@/lib/api-explorer/auth-storage'
 import { clearConsoleAccountCache } from '@/lib/console-account-cache'
 import {
   fetchConsoleAccount,
@@ -424,6 +425,7 @@ const CONSOLE_SDK_PROJECT_ID = 'console'
  *
  * - Clears operator impersonation.
  * - Removes Appwrite `cookieFallback` from localStorage (SDK uses it when cookies are restricted).
+ * - Removes the API explorer's stored auth state, including project API keys.
  * - Clears in-memory session/JWT/key on the shared console and project clients.
  * - Best-effort expiry of `a_session_console` on the current document host (only works for
  *   non-httpOnly cookies; cross-site session cookies require a successful server sign-out).
@@ -434,6 +436,7 @@ export function clearConsoleSessionLocally(): void {
   clearConsoleImpersonateUser()
   clearConsoleImpersonationSession()
   clearConsoleAccountCache()
+  clearApiExplorerAuthStorage()
 
   try {
     window.localStorage.removeItem('cookieFallback')

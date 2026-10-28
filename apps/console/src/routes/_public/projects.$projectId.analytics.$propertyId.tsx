@@ -19,7 +19,13 @@ import {
 export const Route = createFileRoute(
   '/_public/projects/$projectId/analytics/$propertyId',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Property', 'Analytics') }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(loaderData?.property?.name ?? 'Property', 'Analytics'),
+      },
+    ],
+  }),
   validateSearch: listSearchSchema,
   // Layout data depends on path params only, not the filters.
   loaderDeps: () => ({}),
@@ -37,9 +43,10 @@ export const Route = createFileRoute(
       staleTime: 5 * 60 * 1000,
     })
     // A missing property is handled by each tab's "not found" state.
-    await queryClient
+    const property = await queryClient
       .ensureQueryData(analyticsPropertyQueryOptions(projectId, propertyId))
       .catch(() => undefined)
+    return { property }
   },
   component: Outlet,
 })

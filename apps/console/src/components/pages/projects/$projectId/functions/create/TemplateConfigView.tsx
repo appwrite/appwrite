@@ -262,6 +262,13 @@ export function TemplateConfigView({
       return
     }
 
+    // The template deployment needs the template's repository; check it before
+    // the function is created, not after.
+    if (!template.providerRepositoryId || !template.providerOwner) {
+      toast.error(t('Template is missing repository information'))
+      return
+    }
+
     setIsDeploying(true)
     const projectSdk = sdk.forProject(projectId)
     const finalFunctionId = (functionId?.trim() || ID.unique()) as string
@@ -284,6 +291,7 @@ export function TemplateConfigView({
       formData.installationId &&
       formData.providerRepositoryId
 
+    let created = false
     try {
       await projectSdk.functions.create({
         functionId: finalFunctionId,
@@ -316,6 +324,7 @@ export function TemplateConfigView({
             }),
         buildSpecification: specification || undefined,
       })
+      created = true
 
       await projectSdk.proxy.createFunctionRule({
         domain: domainTrimmed,
@@ -335,11 +344,6 @@ export function TemplateConfigView({
 
       // Use template deployment so the deployment has source code (same as sites).
       // Payload must match backend expectation: repository name, owner, rootDirectory path in repo (e.g. php/starter), tag reference (e.g. 0.2.*).
-      if (!template.providerRepositoryId || !template.providerOwner) {
-        toast.error(t('Template is missing repository information'))
-        setIsDeploying(false)
-        return
-      }
       const runtimeRoot = selectedRuntimeObj?.providerRootDirectory?.trim()
       // Derive path when template does not provide it (e.g. appwrite/templates uses php/starter, node/starter).
       const rootDirectory =
@@ -374,6 +378,18 @@ export function TemplateConfigView({
       toast.error(
         err instanceof Error ? err.message : t('Failed to create function'),
       )
+      // The function exists by now. Leaving the owner on this form would make
+      // the next attempt create a second one, so open the function instead.
+      if (created) {
+        await queryClient.refetchQueries({
+          queryKey: ['functions', 'project', projectId],
+        })
+        navigate({
+          to: '/projects/$projectId/functions/$functionId',
+          params: { projectId, functionId: finalFunctionId },
+        })
+        return
+      }
       setIsDeploying(false)
     }
   }

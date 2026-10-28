@@ -36,6 +36,7 @@ export function proxyRuleServesActiveDeployment(
 import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
+import { isCloudEndpointUrl } from '@/lib/debug-endpoint'
 
 /** Domain validation regex - allows subdomains and apex domains */
 export const DOMAIN_REGEX =
@@ -64,7 +65,7 @@ export function getApexDomain(domain: string): string | null {
  */
 export function isCloud(): boolean {
   try {
-    return getBaseEndpoint().includes('cloud.appwrite.io')
+    return isCloudEndpointUrl(getBaseEndpoint())
   } catch {
     return false
   }

@@ -24,6 +24,11 @@ import {
 import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { AnimatedCounter } from '@/components/global/shared/AnimatedCounter'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip as UiTooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { UsageChartBrushReferenceArea } from '../../usage/_components/UsageChartBrushReferenceArea'
 import {
   OVERVIEW_CHART_HEIGHT,
@@ -57,9 +62,11 @@ import {
 } from './chart-series'
 import {
   formatDuration,
+  formatExactNumber,
   formatNumber,
   formatPercent,
   formatRatio,
+  isCompactNumber,
 } from './format'
 
 const CURRENT_COLOR = 'var(--chart-brand)'
@@ -161,6 +168,7 @@ function MetricTab({
   info,
   value,
   format,
+  exact,
   change,
   invert,
   isActive,
@@ -172,6 +180,8 @@ function MetricTab({
   info: AnalyticsMetricInfoKey
   value: number | undefined
   format: (value: number) => string
+  /** Exact digits shown on hover when the displayed value is compact (1.2K). */
+  exact?: string
   change: number | undefined
   invert?: boolean
   isActive: boolean
@@ -181,8 +191,13 @@ function MetricTab({
   /** Omitted for aggregate-only metrics: the tab shows a value, no plot. */
   onClick?: () => void
 }) {
+  const [open, setOpen] = useState(false)
+  const [infoHovered, setInfoHovered] = useState(false)
   const interactive = !!onClick
-  return (
+  // Card-owned tooltip: exact count, or why the figure is unavailable.
+  // Not on the value itself so hover works anywhere on the metric.
+  const tooltip = hint ?? exact
+  const card = (
     <div
       // A div with button semantics, because the info hint inside it is
       // itself a button and buttons cannot be nested.
@@ -200,7 +215,6 @@ function MetricTab({
             'aria-pressed': isActive,
           }
         : {})}
-      title={hint}
       className={cn(
         'flex min-w-0 select-none flex-col items-start gap-0.5 overflow-hidden rounded-md border px-3 py-1.5 text-start transition-colors',
         interactive &&
@@ -217,7 +231,12 @@ function MetricTab({
         <span className="truncate" title={label}>
           {label}
         </span>
-        <MetricInfo info={info} />
+        <span
+          onPointerEnter={() => setInfoHovered(true)}
+          onPointerLeave={() => setInfoHovered(false)}
+        >
+          <MetricInfo info={info} />
+        </span>
       </span>
       <span className="flex items-baseline gap-x-2 whitespace-nowrap">
         {unavailable || value === undefined ? (
@@ -231,7 +250,9 @@ function MetricTab({
               formatDisplay={format}
               className={cn(
                 'text-[20px] font-semibold',
-                isActive || !interactive ? 'text-foreground' : 'text-foreground/80',
+                isActive || !interactive
+                  ? 'text-foreground'
+                  : 'text-foreground/80',
                 USAGE_CHART_FADE_IN_CLASS_NAME,
               )}
             />
@@ -240,6 +261,20 @@ function MetricTab({
         )}
       </span>
     </div>
+  )
+
+  if (!tooltip) return card
+
+  return (
+    <UiTooltip open={open && !infoHovered} onOpenChange={setOpen}>
+      <TooltipTrigger asChild>{card}</TooltipTrigger>
+      <TooltipContent
+        side="top"
+        className={cn('text-[12px]', !hint && 'tabular-nums')}
+      >
+        {tooltip}
+      </TooltipContent>
+    </UiTooltip>
   )
 }
 
@@ -634,6 +669,11 @@ export function AnalyticsOverview({
               info={tab.info}
               value={tab.value}
               format={tab.format}
+              exact={
+                tab.axis === 'count' && isCompactNumber(tab.value)
+                  ? formatExactNumber(tab.value)
+                  : undefined
+              }
               change={tab.change}
               invert={tab.invert}
               isActive={activeMetric.key === tab.key}

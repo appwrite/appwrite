@@ -6,15 +6,34 @@
  * null.
  */
 
+const COMPACT_NUMBER_THRESHOLD = 1000
+
 export function formatNumber(num: number | null | undefined): string {
   if (num == null || !Number.isFinite(num)) return '0'
   if (Math.abs(num) >= 1000000) {
     return (num / 1000000).toFixed(1) + 'M'
   }
-  if (Math.abs(num) >= 1000) {
+  if (Math.abs(num) >= COMPACT_NUMBER_THRESHOLD) {
     return (num / 1000).toFixed(1) + 'K'
   }
   return String(Math.round(num))
+}
+
+/** Full digit grouping, for tooltips on compact K/M values. */
+export function formatExactNumber(num: number | null | undefined): string {
+  if (num == null || !Number.isFinite(num)) return '0'
+  return Math.round(num).toLocaleString()
+}
+
+/** True when `formatNumber()` abbreviates with K/M. */
+export function isCompactNumber(
+  num: number | null | undefined,
+): num is number {
+  return (
+    num != null &&
+    Number.isFinite(num) &&
+    Math.abs(num) >= COMPACT_NUMBER_THRESHOLD
+  )
 }
 
 /** `visitDuration` / `engagementTime` are seconds. */

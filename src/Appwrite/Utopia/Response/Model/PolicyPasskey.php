@@ -23,9 +23,9 @@ class PolicyPasskey extends PolicyBase
             ])
             ->addRule('origins', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Web origins allowed to register and sign in with passkeys.',
+                'description' => 'Web origins passkeys work on, from the project\'s platforms on the relying party ID and a localhost web platform. Read-only.',
                 'default' => [],
-                'example' => ['https://example.com'],
+                'example' => ['https://app.example.com', 'http://localhost'],
                 'array' => true,
             ]);
     }

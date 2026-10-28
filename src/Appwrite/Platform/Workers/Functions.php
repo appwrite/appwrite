@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
@@ -12,6 +13,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Redelivery;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\Validator\Headers;
 use Appwrite\Utopia\Response\Model\Execution;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -22,10 +24,10 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -99,6 +101,18 @@ class Functions extends Action
         Span::add('queue.pid', $message->getPid());
         Span::add('queue.name', $message->getQueue());
         Span::add('message.timestamp', (string) $message->getTimestamp());
+
+        // The message names a project the platform no longer has: it was
+        // deleted after the run was queued, typically a schedule that fired
+        // before the scheduler dropped it. Its database went with it, so no
+        // attempt can run the function and there is nothing to redrive.
+        if ($project->isEmpty()) {
+            $projectId = $functionMessage->project?->getId() ?? '';
+            $functionId = $functionMessage->function?->getId() ?: ($functionMessage->functionId ?? '');
+            Span::add('execution.skipped', 'project_not_found');
+            Console::warning("Project '{$projectId}' not found, skipping {$type} execution of function '{$functionId}'");
+            return;
+        }
 
         // Recorded on consume, not on publish: the schedulers hand over a due
         // second one occurrence at a time, so a write there delays the rest.
@@ -179,7 +193,7 @@ class Functions extends Action
                 try {
                     $functions = $dbForProject->find('functions', [
                         Query::select(['$id', 'events']), // Skip variables subqueries
-                        Query::contains('events', $events),
+                        Query::containsAny('events', $events),
                         Query::limit($limit),
                         Query::offset($offset),
                         Query::orderAsc('$sequence'),
@@ -298,7 +312,8 @@ class Functions extends Action
                     jwt: $jwt,
                     event: null,
                     eventData: null,
-                    executionId: $execution->getId()
+                    executionId: $execution->getId(),
+                    createdAt: $execution->getCreatedAt(),
                 );
                 break;
             case 'schedule':
@@ -457,7 +472,7 @@ class Functions extends Action
         ?string $jwt = null,
         ?string $event = null,
     ): void {
-        $executionId = ID::unique();
+        $executionId = Id::unique();
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
@@ -525,6 +540,7 @@ class Functions extends Action
      * @param string|null $event
      * @param string|null $eventData
      * @param string|null $executionId
+     * @param string|null $createdAt Creation time of an execution queued by the API, kept on its update
      * @return void
      * @throws \Throwable Only before the executor is called, where a retry cannot run the function twice.
      */
@@ -549,8 +565,10 @@ class Functions extends Action
         ?string $event = null,
         ?string $eventData = null,
         ?string $executionId = null,
+        ?string $createdAt = null,
     ): void {
         $user ??= new Document();
+        $headers = Headers::stripReserved($headers, ['x-appwrite-client-ip']);
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deploymentId', '');
         $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
@@ -598,7 +616,9 @@ class Functions extends Action
         $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'scopes' => Deployments::scopes($function)
         ]);
 
@@ -614,7 +634,7 @@ class Functions extends Action
 
         /** Create or update execution to processing status */
         if (empty($executionId)) {
-            $executionId = ID::unique();
+            $executionId = Id::unique();
         }
         $headers['x-appwrite-execution-id'] = $executionId;
 
@@ -627,9 +647,12 @@ class Functions extends Action
             }
         }
 
+        $now = DateTime::now();
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
+            '$createdAt' => $createdAt ?: $now,
+            '$updatedAt' => $now,
             'resourceInternalId' => $function->getSequence(),
             'resourceId' => $function->getId(),
             'resourceType' => 'functions',
@@ -794,6 +817,7 @@ class Functions extends Action
             $errorCode = $th->getCode();
         } finally {
             /** Persist final execution status and record usage */
+            $execution->setAttribute('$updatedAt', DateTime::now());
             Span::add('execution.status', $execution->getAttribute('status', ''));
 
             $bus->dispatch(new ExecutionCompleted(
@@ -811,17 +835,13 @@ class Functions extends Action
         // Webhook and realtime triggers swallow their own publish errors;
         // the functions publish does not, so it goes last.
         try {
-            $executionModel = new Execution();
-            $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
-            $realtimeExecution = $realtimeExecution->getArrayCopy(\array_keys($executionModel->getRules()));
-
             $queueForEvents
                 ->setProject($project)
                 ->setUser($user)
                 ->setEvent('functions.[functionId].executions.[executionId].update')
                 ->setParam('functionId', $function->getId())
                 ->setParam('executionId', $execution->getId())
-                ->setPayload($realtimeExecution);
+                ->setPayload((new Execution())->payload($execution), sensitive: ['logs', 'errors']);
 
             /** Trigger Webhook */
             $queueForWebhooks

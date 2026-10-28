@@ -77,7 +77,7 @@ export const FUNCTION_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   {
     sectionId: 'executions',
     title: 'Schedule',
-    keywords: ['cron', 'scheduled', 'recurring'],
+    keywords: ['cron', 'interval', 'scheduled', 'recurring'],
   },
   {
     sectionId: 'executions',

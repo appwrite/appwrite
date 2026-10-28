@@ -72,7 +72,7 @@ export function getActivityFilterQueryParts(
   const until = userHi ? minIso(nowIso, userHi) : undefined
 
   const extraQueries = [...filterMap.entries()]
-    .filter(([key]) => key.c !== 'time')
+    .filter(([key]) => key.c !== 'time' && key.c !== 'sdk')
     .map(([key]) => activityFilterQueryString(key))
 
   return { mergedSince, until, extraQueries }

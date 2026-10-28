@@ -27,8 +27,8 @@ interface ViewProps {
 
 /**
  * The property's Settings tab, its own route like Sites and Functions
- * settings. Same header as the Analytics tab; loads only the property, none
- * of the analytics queries.
+ * settings. Header is constrained to the cards (not fullWidth, unlike the
+ * Analytics tab). Loads only the property, none of the analytics queries.
  */
 export function View({
   projectId,
@@ -57,7 +57,6 @@ export function View({
           title={t('Analytics')}
           showFilters={false}
           fullWidthBorder
-          fullWidth
         />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-4 sm:px-6">
           <EmptyState
@@ -94,7 +93,6 @@ export function View({
         activeTab="settings"
         showFilters={false}
         fullWidthBorder
-        fullWidth
       />
       {property ? (
         <div className="mx-auto w-full max-w-7xl flex-1">
