@@ -131,6 +131,44 @@ final class LimitsTest extends TestCase
         $this->assertSame([], $this->network->closed);
     }
 
+    public function testSubscribeOverTheFilterLimitIsRefused(): void
+    {
+        $this->connect(1, 'user');
+        $this->accounts->blocked['user'] = true;
+        $authorizations = $this->accounts->authorizations;
+        $filters = \array_map(fn (int $index): string => 'topic' . $index, \range(1, APP_LIMIT_MQTT_FILTERS + 1));
+
+        $this->network->deliver(1, V5::subscribe(1, $filters, Packet::QOS_1));
+
+        // Test for FAILURE
+        $this->assertSame(0, $this->subacks(1), 'an oversized SUBSCRIBE was answered');
+        $this->assertSame($authorizations, $this->accounts->authorizations, 'an oversized SUBSCRIBE reached the authorizer');
+        $disconnects = $this->network->disconnects(1);
+        $this->assertCount(1, $disconnects);
+        $this->assertSame(Disconnect::QUOTA_EXCEEDED, $disconnects[0]->reasonCode);
+        $this->assertSame([1], $this->network->closed);
+    }
+
+    public function testSubscribeFiltersFollowThePlan(): void
+    {
+        $this->plan = ['mqttFilters' => 2];
+        $this->connect(1, 'user');
+        $this->accounts->blocked['user'] = true;
+
+        $this->network->deliver(1, V5::subscribe(1, ['a', 'b'], Packet::QOS_1));
+
+        // Test for SUCCESS
+        $this->assertSame(1, $this->subacks(1));
+        $this->network->sent[1] = [];
+
+        $this->network->deliver(1, V5::subscribe(2, ['a', 'b', 'c'], Packet::QOS_1));
+
+        // Test for FAILURE: the plan's limit replaces the default.
+        $this->assertSame(0, $this->subacks(1));
+        $this->assertSame(Disconnect::QUOTA_EXCEEDED, $this->network->disconnects(1)[0]->reasonCode ?? null);
+        $this->assertSame([1], $this->network->closed);
+    }
+
     public function testOpenConnectionsPerUserAreCapped(): void
     {
         for ($fd = 1; $fd <= APP_LIMIT_MQTT_CONNECTIONS; $fd++) {

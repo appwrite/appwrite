@@ -113,6 +113,7 @@ abstract class ReplayTestCase extends TestCase
         $container->set('getConsoleDB', fn () => fn (): Database => $this->database, []);
         $container->set('getProjectDB', fn () => fn (Document $project): Database => $this->database, []);
         $container->set('authorizer', fn () => fn (array $identity): bool => true, []);
+        $container->set('getPlan', fn () => fn (string $projectId): array => [], []);
         $redis = new RecordingRedis();
         $container->set('getRedis', fn () => fn (): \Redis => $redis, []);
 

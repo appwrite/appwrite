@@ -227,6 +227,18 @@ class Handler implements MqttHandler
             return $suback;
         }
 
+        // Every filter costs authorization work, so a packet may carry only as many as the plan allows.
+        $limit = (int) ($this->getPlan($connection)['mqttFilters'] ?? APP_LIMIT_MQTT_FILTERS);
+        if (\count($subscribe->filters()) > $limit) {
+            Span::add('mqtt.result', 'quota');
+            $connection->disconnect(Disconnect::QUOTA_EXCEEDED, 'SUBSCRIBE must contain at most ' . $limit . ' topic filters.');
+            foreach ($subscribe->filters() as $filter) {
+                $suback->deny();
+            }
+
+            return $suback;
+        }
+
         // The connection's user must still be valid: re-check that it was not blocked or removed
         // since CONNECT. If it is no longer permitted, refuse every filter before any topic gating.
         $authorizer = $this->container->get('authorizer');
