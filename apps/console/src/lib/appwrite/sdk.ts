@@ -51,6 +51,7 @@ import {
   Waf,
 } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
+import { Alerts } from '@/lib/appwrite/alerts'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
@@ -555,6 +556,7 @@ const sdkForProjectRaw = {
   client: clientProject,
   account: new Account(clientProject),
   activities: new Activities(clientProject),
+  alerts: new Alerts(clientProject),
   analytics: new Analytics(clientProject),
   apps: new Apps(clientProject),
   avatars: new Avatars(clientProject),

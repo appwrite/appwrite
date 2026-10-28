@@ -211,6 +211,13 @@ export function canWriteWebhooks(
   return whenOrgRoles(access, features, access.canWriteWebhooks)
 }
 
+export function canWriteAlertRules(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteAlertRules)
+}
+
 export function canCreateMigration(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
