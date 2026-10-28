@@ -7,7 +7,6 @@ use Override;
 use Utopia\Client\Adapter\Curl\Client as Curl;
 use Utopia\Client\Client as HttpClient;
 use Utopia\Client\Destinations;
-use Utopia\Migration\Sources\Appwrite\Client\RedirectRefusal;
 use Utopia\Migration\Target;
 
 class Client extends Base
@@ -49,7 +48,7 @@ class Client extends Base
     }
 
     #[Override]
-    protected function createHttpClient(bool $followRedirects): HttpClient
+    protected function createHttpClient(): HttpClient
     {
         $options = [
             CURLOPT_TIMEOUT_MS => 0,
@@ -66,7 +65,7 @@ class Client extends Base
 
         $adapter = (new Curl(options: $options))->withConnectionReuse();
 
-        $client = new HttpClient($followRedirects ? new RedirectRefusal($adapter) : $adapter);
+        $client = new HttpClient($adapter);
 
         if ($this->destinations !== null) {
             $client = $client->withDestinations($this->destinations);
