@@ -312,6 +312,37 @@ final class KeyTest extends TestCase
             new Document(),
             self::generateKey('other-project', false, ['documents.read']),
         ];
+        yield 'ephemeral jwt without purpose' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            self::generateKey($projectId, false, ['documents.read'], extra: [Key::PURPOSE_CLAIM => null]),
+        ];
+        yield 'ephemeral jwt with another purpose' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            self::generateKey($projectId, false, ['documents.read'], extra: [Key::PURPOSE_CLAIM => 'session']),
+        ];
+        yield 'account jwt as ephemeral key' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            API_KEY_EPHEMERAL . '_' . (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0))->encode([
+                'userId' => 'user123',
+                'sessionId' => 'session123',
+                'projectId' => $projectId,
+            ]),
+        ];
+        yield 'dynamic jwt without purpose' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            'dynamic_' . (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0))->encode([
+                'projectId' => $projectId,
+                'scopes' => ['documents.read'],
+            ]),
+        ];
         yield 'mismatched ephemeral project sequence' => [
             new Document(['$id' => $projectId, '$sequence' => '2']),
             new Document(),
@@ -390,6 +421,30 @@ final class KeyTest extends TestCase
             key: self::generateKey('other', false, ['documents.read'], extra: ['projectSequence' => '1', 'projectCheckDisabled' => true]),
         );
         $this->assertTrue($decoded->isProjectCheckDisabled());
+    }
+
+    public static function rules(): \Iterator
+    {
+        yield 'issued rule' => [['hostname' => 'preview.sites.test', 'deploymentId' => 'deployment1'], new Document(['domain' => 'preview.sites.test', 'deploymentId' => 'deployment1']), true];
+        yield 'other hostname' => [['hostname' => 'preview.sites.test', 'deploymentId' => 'deployment1'], new Document(['domain' => 'victim.sites.test', 'deploymentId' => 'deployment1']), false];
+        yield 'other deployment' => [['hostname' => 'preview.sites.test', 'deploymentId' => 'deployment1'], new Document(['domain' => 'preview.sites.test', 'deploymentId' => 'deployment2']), false];
+        yield 'unbound key' => [[], new Document(['domain' => '', 'deploymentId' => '']), false];
+    }
+
+    /**
+     * @param array<string, string> $binding
+     */
+    #[DataProvider('rules')]
+    public function testDecodedKeyIsBoundToItsRule(array $binding, Document $rule, bool $bound): void
+    {
+        $decoded = Key::decode(
+            project: new Document(['$id' => 'test']),
+            team: new Document(),
+            user: new Document(),
+            key: self::generateKey('test', false, [], extra: $binding),
+        );
+
+        $this->assertSame($bound, $decoded->isBoundTo($rule));
     }
 
     public function testDecodeExpiredEphemeral(): void
@@ -528,6 +583,15 @@ final class KeyTest extends TestCase
         $this->assertFalse($caller->mayCreate(API_KEY_STANDARD, [], '2030-01-01T12:00:01.000+00:00'));
     }
 
+    public function testMayGrantOnlyScopesItHolds(): void
+    {
+        $caller = new Key('test', '', '', API_KEY_STANDARD, User::ROLE_KEYS, ['functions.write', 'users.read'], 'Caller');
+
+        $this->assertTrue($caller->mayGrant([]));
+        $this->assertTrue($caller->mayGrant(['users.read']));
+        $this->assertFalse($caller->mayGrant(['users.read', 'users.write']));
+    }
+
     private static function generateKey(
         string $projectId,
         bool $usage,
@@ -545,6 +609,7 @@ final class KeyTest extends TestCase
         $jwt->setTestTimestamp($timestamp);
 
         $apiKey = $jwt->encode(\array_merge([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $projectId,
             'usage' => $usage,
             'scopes' => $scopes,

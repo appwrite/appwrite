@@ -60,7 +60,7 @@ return function (Container $container): void {
         return ProjectContext::fromArray(\is_array($project) ? $project : []);
     }, ['message']);
 
-    $container->set('project', function (Message $message, Document $console, Database $dbForPlatform) {
+    $container->set('project', function (Message $message, ProjectContext $projectContext, Document $console, Database $dbForPlatform) {
         $payload = $message->getPayload();
         $project = new Document($payload['project'] ?? []);
 
@@ -76,8 +76,12 @@ return function (Container $container): void {
 
         Span::add('project.id', $project->getId());
 
+        if ($projectContext->sequence !== '' && (string) $project->getSequence() !== $projectContext->sequence) {
+            return new Document();
+        }
+
         return $project;
-    }, ['message', 'console', 'dbForPlatform']);
+    }, ['message', 'projectContext', 'console', 'dbForPlatform']);
 
     $container->set('dbForProject', fn (DatabaseFactory $databaseFactory, Document $project, Database $dbForPlatform) => $project->isEmpty() || $project->getId() === 'console'
         ? $dbForPlatform

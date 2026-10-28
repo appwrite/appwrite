@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Auth\Key;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -110,6 +111,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -145,8 +147,13 @@ class Create extends Base
         Event $queueForEvents,
         Database $dbForPlatform,
         VcsFactory $vcsFactory,
-        RepositoryWebhooks $repositoryWebhooks
+        RepositoryWebhooks $repositoryWebhooks,
+        ?Key $apiKey,
     ) {
+        if ($apiKey !== null && !$apiKey->mayGrant($scopes)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
+        }
+
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);

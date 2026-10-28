@@ -150,7 +150,7 @@ export const posthogAlternativeContent: AlternativeContent = {
     {
       question: 'Can I track events from my server with Appwrite?',
       answer:
-        'Yes. Send events over REST or with any Appwrite server SDK, from your backend or an Appwrite Function. With an API key you can attach a user ID, and client code only ever uses a public snippet ID.',
+        'Yes. Send events over REST or with any Appwrite server SDK, from your backend or an Appwrite Function. With an API key you can attach a user ID, and client code only ever uses a public property ID.',
       links: [{ label: 'Server-side tracking', href: '/docs/products/analytics/server-side' }],
     },
     {

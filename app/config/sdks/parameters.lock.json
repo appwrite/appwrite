@@ -2972,6 +2972,7 @@
         "project.deletePlatform": [
             "platformId"
         ],
+        "project.deleteSessions": [],
         "project.deleteVariable": [
             "variableId"
         ],
@@ -3051,6 +3052,9 @@
             "enabled"
         ],
         "project.updateDenyFreeEmailPolicy": [
+            "enabled"
+        ],
+        "project.updateDenyRealtimeGuestsPolicy": [
             "enabled"
         ],
         "project.updateEmailTemplate": [
@@ -7034,6 +7038,7 @@
         "project.deletePlatform": [
             "platformId"
         ],
+        "project.deleteSessions": [],
         "project.deleteVariable": [
             "variableId"
         ],
@@ -7113,6 +7118,9 @@
             "enabled"
         ],
         "project.updateDenyFreeEmailPolicy": [
+            "enabled"
+        ],
+        "project.updateDenyRealtimeGuestsPolicy": [
             "enabled"
         ],
         "project.updateEmailTemplate": [

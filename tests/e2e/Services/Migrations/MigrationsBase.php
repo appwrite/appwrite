@@ -2841,7 +2841,15 @@ trait MigrationsBase
         $this->assertIsArray($completedExecution, 'Timed out waiting for the terminal execution event. Last message: ' . json_encode($lastMessage, JSON_PRETTY_PRINT));
         $this->assertSame('completed', $completedExecution['status'], 'Execution did not complete: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
         $this->assertSame(200, $completedExecution['responseStatusCode'], 'Execution returned an unexpected status: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
-        $this->assertStringContainsString('body-is-test', (string) $completedExecution['logs'], 'Execution completed without the logs it printed: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
+        $this->assertArrayNotHasKey('logs', $completedExecution, 'Realtime sent execution logs to a project user: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
+
+        $stored = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProject['$id'],
+            'x-appwrite-key' => $destinationProject['apiKey'],
+        ]);
+        $this->assertSame(200, $stored['headers']['status-code']);
+        $this->assertStringContainsString('body-is-test', (string) $stored['body']['logs'], 'Execution completed without the logs it printed: ' . json_encode($stored['body'], JSON_PRETTY_PRINT));
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -2976,7 +2984,7 @@ trait MigrationsBase
             'outputDirectory' => './',
             'startCommand' => 'npm run start',
             'deploymentRetention' => 14,
-            'scopes' => ['users.read', 'files.read'],
+            'scopes' => ['users.read', 'files.read', 'databases.read'],
         ]);
 
         $this->assertEquals(201, $site['headers']['status-code'], 'Create site failed: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
@@ -3066,7 +3074,7 @@ trait MigrationsBase
         $this->assertEquals('static', $response['body']['adapter']);
         $this->assertSame('npm run start', $response['body']['startCommand']);
         $this->assertSame(14, $response['body']['deploymentRetention']);
-        $this->assertSame(['users.read', 'files.read'], $response['body']['scopes']);
+        $this->assertSame(['users.read', 'files.read', 'databases.read'], $response['body']['scopes']);
 
         // Verify deployment in destination
         $this->assertEventually(function () use ($siteId) {
@@ -4681,6 +4689,80 @@ trait MigrationsBase
         return [$databaseId, $tableId, $bucketId, $fileId, 'hxfcwpcas5xokpwe', 'Diamond Mendez', 56];
     }
 
+    public function testCreateCSVImportFromConsoleUpload(): void
+    {
+        [$databaseId, $tableId] = $this->prepareCsvImportFixture('console upload');
+
+        $this->assertImportFromConsoleUpload('csv', $databaseId, $tableId, 'text/csv');
+    }
+
+    public function testCreateJSONImportFromConsoleUpload(): void
+    {
+        [$databaseId, $tableId] = $this->prepareJsonImportFixture('console upload');
+
+        $this->assertImportFromConsoleUpload('json', $databaseId, $tableId, 'application/json');
+    }
+
+    /**
+     * The Console imports a local file by uploading it to the console bucket, then importing it with internalFile.
+     */
+    private function assertImportFromConsoleUpload(string $format, string $databaseId, string $tableId, string $mimeType): void
+    {
+        $upload = $this->client->call(Client::METHOD_POST, '/storage/buckets/default/files', [
+            'content-type' => 'multipart/form-data',
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/' . $format . '/documents.' . $format), $mimeType, 'documents.' . $format),
+        ]);
+        $this->assertSame(201, $upload['headers']['status-code']);
+        $fileId = $upload['body']['$id'];
+
+        /**
+         * Test for SUCCESS - the console user who uploaded the file can import it
+         */
+        $import = $this->client->call(Client::METHOD_POST, '/migrations/' . $format . '/imports', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => 'default',
+            'fileId' => $fileId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
+            'internalFile' => true,
+        ]);
+        $this->assertSame(202, $import['headers']['status-code']);
+        $importId = $import['body']['$id'];
+
+        $this->assertEventually(function () use ($importId) {
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $importId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertSame('completed', $migration['body']['status']);
+            $this->assertSame(100, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
+        }, 10_000, 500);
+
+        /**
+         * Test for FAILURE - a caller other than the uploader cannot import it
+         */
+        $import = $this->client->call(Client::METHOD_POST, '/migrations/' . $format . '/imports', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => 'default',
+            'fileId' => $fileId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
+            'internalFile' => true,
+        ]);
+        $this->assertSame(404, $import['headers']['status-code']);
+        $this->assertSame('storage_file_not_found', $import['body']['type']);
+    }
+
     /**
      * onDuplicate=skip on re-import: duplicates are silently no-op'd, existing rows preserved unchanged.
      */
@@ -5399,6 +5481,50 @@ trait MigrationsBase
         $this->assertStringContainsString('varchar', $csvData, 'CSV should contain the varchar column header');
         $this->assertStringContainsString('bigint', $csvData, 'CSV should contain the bigint column header');
         $this->assertStringContainsString('2147483649', $csvData, 'CSV should contain bigint test data');
+
+        $segments = \explode('/', $components['path']);
+        $fileId = $segments[\array_search('files', $segments, true) + 1];
+
+        // The export file can be imported back into the project that created it
+        $import = $this->client->call(Client::METHOD_POST, '/migrations/csv/imports', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => 'default',
+            'fileId' => $fileId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'internalFile' => true,
+            'onDuplicate' => 'skip',
+        ]);
+        $this->assertSame(202, $import['headers']['status-code']);
+        $importId = $import['body']['$id'];
+
+        $this->assertEventually(function () use ($importId) {
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $importId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertSame('completed', $response['body']['status']);
+        }, 30_000, 500);
+
+        // But not by another project
+        $import = $this->client->call(Client::METHOD_POST, '/migrations/csv/imports', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ], [
+            'bucketId' => 'default',
+            'fileId' => $fileId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'internalFile' => true,
+        ]);
+        $this->assertSame(404, $import['headers']['status-code']);
+        $this->assertSame('storage_file_not_found', $import['body']['type']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
