@@ -161,8 +161,9 @@ class Update extends Action
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
         }
 
-        $claimed = false;
+        $claimed = null;
         $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, &$session, &$claimed) {
+            $claimed = null; // A retried attempt starts over
             // Lock the user first, as an address change does, so a voided invite cannot slip through
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
 
@@ -194,7 +195,7 @@ class Update extends Action
             if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false)) {
                 $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
-                $claimed = true;
+                $claimed = $user;
             }
 
             if ($verification !== null) {
@@ -261,9 +262,9 @@ class Update extends Action
 
         $dbForProject->purgeCachedDocument('users', $targetUser->getId());
 
-        if ($claimed) {
+        if ($claimed !== null) {
             $bus->dispatch(new CredentialsRevoked(
-                user: $targetUser->getArrayCopy(),
+                user: $claimed->getArrayCopy(),
                 project: $project->getArrayCopy(),
             ));
         }

@@ -242,6 +242,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     // orders this against an address change, which deletes the token and resets the verification it proves
     $claimed = false;
     $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project, &$claimed) {
+        $claimed = false; // A retried attempt starts over
         $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
 
         if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
@@ -4664,6 +4665,7 @@ Http::put('/v1/account/recovery')
 
         $claimed = false;
         $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, &$claimed) {
+            $claimed = false; // A retried attempt starts over
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
@@ -5101,6 +5103,7 @@ Http::put('/v1/account/recovery/otp')
 
         $claimed = false;
         $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, &$claimed) {
+            $claimed = false; // A retried attempt starts over
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
