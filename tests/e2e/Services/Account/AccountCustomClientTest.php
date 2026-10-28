@@ -3301,6 +3301,37 @@ final class AccountCustomClientTest extends Scope
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(0, $response['body']['total']);
+
+        // A flow started before states carried a binding
+        $callback = \parse_url($callbackUrl);
+        \parse_str($callback['query'], $callbackParams);
+        $legacyState = \json_decode($callbackParams['state'], true);
+        $this->assertArrayHasKey('binding', $legacyState);
+        unset($legacyState['binding']);
+        $callbackParams['state'] = \json_encode($legacyState);
+        $legacyCallbackUrl = $callback['scheme'] . '://' . $callback['host'] . (isset($callback['port']) ? ':' . $callback['port'] : '') . $callback['path'] . '?' . \http_build_query($callbackParams);
+
+        /**
+         * Test for FAILURE - a signed-in browser still needs the binding
+         */
+        $response = $oauthClient->call(Client::METHOD_GET, $legacyCallbackUrl, $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
+
+        /**
+         * Test for SUCCESS - a guest holding the nonce finishes it
+         */
+        $headers = ['cookie' => $plantedCookie];
+        $response = $oauthClient->call(Client::METHOD_GET, $legacyCallbackUrl, $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success', $response['headers']['location']);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
     }
 
     public function testCreateOAuth2SessionRejectsCallbackFromAnotherBrowser(): void

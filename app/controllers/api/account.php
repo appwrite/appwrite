@@ -1787,12 +1787,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // it started this flow, and linking the provider identity to it would let anyone attach
         // their identity to that account by sending the callback link. The app binds the token it
         // receives to its own user through the `state` it passed in.
-        // A sibling site can plant the nonce cookie, so the flow is also bound to the user who started it
+        // A sibling site can plant the nonce cookie, so the flow is also bound to the user who started it.
+        // A guest callback accepts a state without a binding: flows started before it existed still finish.
         $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())));
         $stateNonce = \is_string($state['nonce'] ?? null) ? $state['nonce'] : '';
         $stateBinding = \is_string($state['binding'] ?? null) ? $state['binding'] : '';
         $binding = \hash_hmac('sha256', $stateNonce . ':' . $user->getId(), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
-        if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce)) || !\hash_equals($binding, $stateBinding)) {
+        $bound = \hash_equals($binding, $stateBinding) || ($stateBinding === '' && $user->isEmpty());
+        if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce)) || !$bound) {
             if (empty($state['token'])) {
                 $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
             }
