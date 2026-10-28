@@ -33,6 +33,21 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "introducing-appwrite-analytics",
+    "href": "/blog/post/introducing-appwrite-analytics",
+    "title": "Introducing Appwrite Analytics",
+    "description": "See the people and the AI agents that visit your websites and apps, track the events that matter to your product, and block unwanted traffic with Firewall, all without cookies.",
+    "date": "2026-10-28",
+    "lastUpdated": "2026-10-28",
+    "timeToRead": 7,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/introducing-appwrite-analytics/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-entire-partnership",
     "href": "/blog/post/announcing-appwrite-entire-partnership",
     "title": "Appwrite partners with Entire to deploy Sites and Functions",

@@ -1,0 +1,680 @@
+---
+layout: post
+title: "Introducing Appwrite Analytics"
+description: See the people and the AI agents that visit your websites and apps, track the events that matter to your product, and block unwanted traffic with Firewall, all without cookies.
+date: 2026-10-28
+cover: /images/blog/introducing-appwrite-analytics/cover.avif
+timeToRead: 7
+author: atharva
+category: announcements
+featured: false
+draft: true
+callToAction: true
+faqs:
+  - question: "What is Appwrite Analytics?"
+    answer: "Appwrite Analytics is the analytics product of Appwrite Cloud. It shows who visits your websites and apps, where they come from, which pages and screens they view, and which events they trigger. It also labels traffic from bots and AI agents, and it works without cookies."
+  - question: "Does Appwrite Analytics use cookies?"
+    answer: "No. Appwrite Analytics sets no cookies and keeps no identifiers on the visitor's device. Each visitor ID is a one-way hash of the IP address, the user agent, and the hostname, and Appwrite does not store the IP address."
+  - question: "How does Appwrite Analytics detect AI agents and bots?"
+    answer: "Appwrite checks the user agent of every event against known bots and records the bot's name and category, such as AI crawler, AI assistant, search crawler, or social preview. People who follow a link from an AI assistant to your site are not bots: they count as visitors in the ai channel."
+  - question: "Which platforms does Appwrite Analytics support?"
+    answer: "The Web and Flutter SDKs include a Tracking helper that sends pageviews, screen views, and engagement events automatically. The Android, Apple, and React Native SDKs send events with createEvent(). Every server SDK can send events with an API key, and any other client can use the REST API."
+  - question: "Can I block a bot that I see in Appwrite Analytics?"
+    answer: "Yes, for sites hosted on Appwrite Sites. Right-click the bot on the dashboard and select Create firewall rule. The Firewall rule opens with the site, a user agent condition, and the Deny action filled in, and it shows the estimated impact before you create it."
+  - question: "How much does Appwrite Analytics cost?"
+    answer: "The Free plan includes 50K events per month with 30 days of retention. The Pro plan includes 100K events per month, then $3 per 100K events, with 90 days of retention. Events from bots do not count toward the limit."
+---
+
+Your websites and apps have two kinds of visitors now: people, and the bots and AI agents that read your pages. Appwrite Analytics shows you both. It counts the people who visit, where they come from, and what they do, and it names the crawlers and assistants that fetch your pages, from GPTBot to ChatGPT User.
+
+Appwrite Analytics is now available on Appwrite Cloud. It works without cookies, it records the events that you define next to pageviews and screen views, and it connects to Appwrite Firewall, so that you can block the traffic you see on the dashboard.
+
+# Create a property
+
+![The Create property page with a name, a domain, and the Web platform selected](/images/blog/introducing-appwrite-analytics/create-property.avif)
+
+A property is one website or app that you track, with its own dashboard. Appwrite accepts events only from the websites and apps that are registered under **Apps** in your project, so register yours first. Then create the property:
+
+1. In the Appwrite Console, open your project and go to **Analytics**.
+2. Select **Create property**.
+3. Enter a **Name** and, for a website, its **Domain**.
+4. Under **Platform**, select **Web**, **Flutter**, or **REST**. This choice only selects the install snippet that the Console shows next.
+5. Select **Create property**.
+
+The Console then shows the install steps, with your endpoint, project ID, and property ID filled in. The **Set up with AI** card gives you a prompt with the same values for your AI coding tool. The page confirms the first event when it arrives.
+
+# Add tracking to your site or app
+
+Install the Appwrite SDK for your platform and start sending events:
+
+{% multicode %}
+```client-web
+import { Client, Analytics, Tracking } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
+
+tracking.start();
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+import 'package:flutter/material.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final tracking = Tracking(Analytics(client), '<PROPERTY_ID>');
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  tracking.start();
+
+  runApp(
+    MaterialApp(
+      navigatorObservers: [TrackingObserver(tracking)],
+      home: const HomeScreen(),
+    ),
+  );
+}
+```
+
+```client-android-kotlin
+import androidx.lifecycle.lifecycleScope
+import io.appwrite.Client
+import io.appwrite.services.Analytics
+import kotlinx.coroutines.launch
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val analytics = Analytics(client)
+
+lifecycleScope.launch {
+    analytics.createEvent(
+        propertyId = "<PROPERTY_ID>",
+        name = "screen_view",
+        url = "app://android/home",
+        props = listOf("screen", "home"),
+    )
+}
+```
+
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let analytics = Analytics(client)
+
+_ = try await analytics.createEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "screen_view",
+    url: "app://ios/home",
+    props: ["screen", "home"]
+)
+```
+
+```client-react-native
+import 'react-native-url-polyfill/auto';
+import { Platform } from 'react-native';
+import { Analytics, Client } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setPlatform('com.example.acmestore');
+
+const analytics = new Analytics(client);
+
+analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'screen_view',
+    url: `app://${Platform.OS}/home`,
+    props: ['screen', 'home'],
+});
+```
+{% /multicode %}
+
+The Web and Flutter SDKs include a `Tracking` helper. On a website, `start()` sends a pageview on every route change, and it also records outbound links, scroll depth, and engagement time. In Flutter, the `TrackingObserver` sends a screen view for each route, and `start()` records when the app goes to the background and comes back. Android, Apple, and React Native apps send events with `createEvent()`, and any other client can send them over REST.
+
+For step-by-step setups, read [how to add Appwrite Analytics to your website](/blog/post/add-appwrite-analytics-to-your-website) and [how to add Appwrite Analytics to your mobile app](/blog/post/add-appwrite-analytics-to-your-mobile-app).
+
+# See every visit on one dashboard
+
+![The Analytics dashboard for a store with unique visitors, visits, pageviews, and a chart for the last 30 days](/images/blog/introducing-appwrite-analytics/dashboard.avif)
+
+Each property has its own dashboard. The top row shows unique visitors, visits, pageviews, views per visit, bounce rate, visit duration, and engagement time for any date range, compared with the previous period. The **online** count shows the visitors who were active in the last five minutes.
+
+Below the chart, cards break your traffic down by page, location, browser, operating system, and device. Select any value to filter the dashboard to it, and combine filters to narrow it further. **Export** downloads the current view as a PDF report or as CSV files, to share the numbers with people who do not use Appwrite.
+
+# See the people and the agents that visit
+
+![The Traffic sources card with the ai channel next to the Humans vs bots card, which splits bots into social previews, AI crawlers, and AI assistants](/images/blog/introducing-appwrite-analytics/traffic-sources.avif)
+
+**Traffic sources** shows how people found you: by channel, by referring site, and by UTM campaign. The `ai` channel counts the people who followed a link from an AI assistant, such as ChatGPT, to your site.
+
+**Humans vs bots** shows how much of your traffic is automated. Appwrite recognizes bots from their user agent and sorts them into categories: AI crawlers that collect pages for training and search, AI assistants that fetch a page while they answer a question, search crawlers, social previews, site monitors, and more. The **AI agents and crawlers** card names each one, such as GPTBot, ClaudeBot, PerplexityBot, and ChatGPT User. Events from bots do not count toward your plan's event limit.
+
+# Block unwanted traffic with Firewall
+
+![The menu for GPTBot on the AI agents and crawlers card, with Create firewall rule at the bottom](/images/blog/introducing-appwrite-analytics/bot-menu.avif)
+
+When a property tracks a site on Appwrite Sites, the dashboard is also the starting point for Firewall rules. Right-click a bot, a country, a page, or a hostname, and select **Create firewall rule**. For a country, **Block this country** and **Allow only this country** are in the same menu.
+
+## Check the impact before you block
+
+![The Create firewall rule page for GPTBot with the Deny action and an estimated impact of 2.9 percent of the site's traffic](/images/blog/introducing-appwrite-analytics/firewall-rule.avif)
+
+The rule opens with the site, the condition, and the **Deny** action filled in. Before you create it, **Estimated impact** shows how many of the site's recent requests the rule would have matched, and their share of the site's traffic. To check that a visitor is a person instead of denying every request, change the action to **Challenge**.
+
+# Track the events that matter
+
+![The dashboard filtered to the purchase_completed event, with the unique visitors who completed a purchase in the last 30 days](/images/blog/introducing-appwrite-analytics/event-filter.avif)
+
+Pageviews show where people go. Custom events record what they do, such as a signup, a purchase, or an invite. Send them from the browser, from your app, or from your server:
+
+{% multicode %}
+```client-web
+tracking.track('signup_completed', {
+    props: { plan: 'pro', source: 'pricing_page' },
+});
+```
+```client-flutter
+tracking.event(
+  'signup_completed',
+  url: '/signup',
+  props: {'plan': 'pro', 'source': 'pricing_page'},
+);
+```
+```client-android-kotlin
+analytics.createEvent(
+    propertyId = "<PROPERTY_ID>",
+    name = "signup_completed",
+    url = "app://android/signup",
+    props = listOf("plan", "pro", "source", "pricing_page"),
+)
+```
+```client-apple
+_ = try await analytics.createEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "signup_completed",
+    url: "app://ios/signup",
+    props: ["plan", "pro", "source", "pricing_page"]
+)
+```
+```client-react-native
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: `app://${Platform.OS}/signup`,
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+});
+```
+```server-nodejs
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+});
+```
+```server-deno
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+});
+```
+```server-php
+$analytics->createEvent(
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+);
+```
+```server-python
+analytics.create_event(
+    property_id='<PROPERTY_ID>',
+    name='signup_completed',
+    url='https://example.com/signup',
+    props=['plan', 'pro', 'source', 'pricing_page'],
+)
+```
+```server-ruby
+analytics.create_event(
+    property_id: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page']
+)
+```
+```server-dotnet
+await analytics.CreateEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "signup_completed",
+    url: "https://example.com/signup",
+    props: new List<string> { "plan", "pro", "source", "pricing_page" }
+);
+```
+```server-dart
+await analytics.createEvent(
+  propertyId: '<PROPERTY_ID>',
+  name: 'signup_completed',
+  url: 'https://example.com/signup',
+  props: ['plan', 'pro', 'source', 'pricing_page'],
+);
+```
+```server-kotlin
+analytics.createEvent(
+    propertyId = "<PROPERTY_ID>",
+    name = "signup_completed",
+    url = "https://example.com/signup",
+    props = listOf("plan", "pro", "source", "pricing_page"),
+)
+```
+```server-swift
+_ = try await analytics.createEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "signup_completed",
+    url: "https://example.com/signup",
+    props: ["plan", "pro", "source", "pricing_page"]
+)
+```
+```server-go
+_, err := analytics.CreateEvent(
+    "<PROPERTY_ID>",
+    "signup_completed",
+    "https://example.com/signup",
+    analytics.WithCreateEventProps([]string{"plan", "pro", "source", "pricing_page"}),
+)
+if err != nil {
+    log.Fatal(err)
+}
+```
+```server-rust
+analytics.create_event(
+    "<PROPERTY_ID>",
+    "signup_completed",
+    "https://example.com/signup",
+    None, // domain
+    None, // referrer
+    None, // screen_width
+    None, // session_hash
+    None, // scroll_depth
+    None, // engagement_time
+    Some(vec!["plan".into(), "pro".into(), "source".into(), "pricing_page".into()]),
+    None, // user_id
+    None, // ip
+    None, // user_agent
+).await?;
+```
+```bash
+appwrite analytics create-event \
+    --property-id '<PROPERTY_ID>' \
+    --name signup_completed \
+    --url https://example.com/signup \
+    --props plan --props pro --props source --props pricing_page
+```
+```curl
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
+    -H 'Content-Type: application/json' \
+    -H 'X-Appwrite-Project: <PROJECT_ID>' \
+    -d '{
+        "name": "signup_completed",
+        "url": "https://example.com/signup",
+        "props": ["plan", "pro", "source", "pricing_page"]
+    }'
+```
+{% /multicode %}
+
+Each event takes up to 16 props, such as the plan or the source of a signup. The **Custom events** card on the dashboard ranks your events. Select one to filter the dashboard to it. **Unique visitors** and **Visits** then count the people and the visits that triggered the event, and the cards below the chart show where those events happened. Metrics that describe whole visits, such as bounce rate and visit duration, show `-` while an event filter is on.
+
+From a server, use an API key with the `analytics.write` scope, and pass the visitor's `ip` and `userAgent` from their request. The event then counts toward the same visitor as the events from their browser, instead of a visit from your server.
+
+# Read metrics from your code
+
+`listMetrics` returns the numbers behind the dashboard: totals, a time series, or a breakdown by one dimension. Use it to build reports, send weekly summaries, or show statistics in your own app. This example lists the five countries with the most visitors in the last seven days, with an API key that has the `analytics.read` scope:
+
+{% multicode %}
+```server-nodejs
+import { Client, Analytics, AnalyticsDimension } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const analytics = new Analytics(client);
+
+const countries = await analytics.listMetrics({
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension.Country],
+    dateRange: '7d',
+    limit: 5,
+});
+
+for (const row of countries.metrics) {
+    console.log(row.value, row.visitors);
+}
+```
+```server-deno
+import { Client, Analytics, AnalyticsDimension } from 'npm:node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const analytics = new Analytics(client);
+
+const countries = await analytics.listMetrics({
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension.Country],
+    dateRange: '7d',
+    limit: 5,
+});
+
+for (const row of countries.metrics) {
+    console.log(row.value, row.visitors);
+}
+```
+```server-php
+<?php
+
+require 'vendor/autoload.php';
+
+use Appwrite\Client;
+use Appwrite\Enums\AnalyticsDimension;
+use Appwrite\Services\Analytics;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$analytics = new Analytics($client);
+
+$countries = $analytics->listMetrics(
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension::COUNTRY()],
+    dateRange: '7d',
+    limit: 5,
+);
+
+foreach ($countries->metrics as $row) {
+    echo $row->value, ' ', $row->visitors, PHP_EOL;
+}
+```
+```server-python
+from appwrite.client import Client
+from appwrite.enums.analytics_dimension import AnalyticsDimension
+from appwrite.services.analytics import Analytics
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+analytics = Analytics(client)
+
+countries = analytics.list_metrics(
+    property_id='<PROPERTY_ID>',
+    dimensions=[AnalyticsDimension.COUNTRY],
+    date_range='7d',
+    limit=5,
+)
+
+for row in countries.metrics:
+    print(row.value, row.visitors)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+analytics = Analytics.new(client)
+
+countries = analytics.list_metrics(
+    property_id: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension::COUNTRY],
+    date_range: '7d',
+    limit: 5
+)
+
+countries.metrics.each do |row|
+    puts "#{row.value} #{row.visitors}"
+end
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Services;
+
+var client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+var analytics = new Analytics(client);
+
+var countries = await analytics.ListMetrics(
+    propertyId: "<PROPERTY_ID>",
+    dimensions: new List<AnalyticsDimension> { AnalyticsDimension.Country },
+    dateRange: "7d",
+    limit: 5
+);
+
+foreach (var row in countries.Metrics)
+{
+    Console.WriteLine($"{row.Value} {row.Visitors}");
+}
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Future<void> main() async {
+  final client = Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>')
+      .setKey('<API_KEY>');
+
+  final analytics = Analytics(client);
+
+  final countries = await analytics.listMetrics(
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [enums.AnalyticsDimension.country],
+    dateRange: '7d',
+    limit: 5,
+  );
+
+  for (final row in countries.metrics) {
+    print('${row.value} ${row.visitors}');
+  }
+}
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.enums.AnalyticsDimension
+import io.appwrite.services.Analytics
+
+suspend fun main() {
+    val client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<API_KEY>")
+
+    val analytics = Analytics(client)
+
+    val countries = analytics.listMetrics(
+        propertyId = "<PROPERTY_ID>",
+        dimensions = listOf(AnalyticsDimension.COUNTRY),
+        dateRange = "7d",
+        limit = 5,
+    )
+
+    for (row in countries.metrics) {
+        println("${row.value} ${row.visitors}")
+    }
+}
+```
+```server-swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let analytics = Analytics(client)
+
+let countries = try await analytics.listMetrics(
+    propertyId: "<PROPERTY_ID>",
+    dimensions: [.country],
+    dateRange: "7d",
+    limit: 5
+)
+
+for row in countries.metrics {
+    print(row.value ?? "", row.visitors)
+}
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<API_KEY>"),
+    )
+
+    analytics := appwrite.NewAnalytics(client)
+
+    countries, err := analytics.ListMetrics(
+        "<PROPERTY_ID>",
+        analytics.WithListMetricsDimensions([]string{"country"}),
+        analytics.WithListMetricsDateRange("7d"),
+        analytics.WithListMetricsLimit(5),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, row := range countries.Metrics {
+        fmt.Println(*row.Value, row.Visitors)
+    }
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::enums::AnalyticsDimension;
+use appwrite::services::Analytics;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let analytics = Analytics::new(&client);
+
+    let countries = analytics.list_metrics(
+        "<PROPERTY_ID>",
+        None, // queries
+        None, // interval
+        Some(vec![AnalyticsDimension::Country]),
+        Some("7d"),
+        None, // start_at
+        None, // end_at
+        Some(5),
+        None, // total
+    ).await?;
+
+    for row in countries.metrics {
+        println!("{} {}", row.value.unwrap_or_default(), row.visitors);
+    }
+
+    Ok(())
+}
+```
+```bash
+appwrite client \
+    --endpoint https://<REGION>.cloud.appwrite.io/v1 \
+    --project-id '<PROJECT_ID>' \
+    --key '<API_KEY>'
+
+appwrite analytics list-metrics \
+    --property-id '<PROPERTY_ID>' \
+    --dimensions country \
+    --date-range 7d \
+    --limit 5
+```
+```curl
+curl -G 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/metrics' \
+    -H 'X-Appwrite-Project: <PROJECT_ID>' \
+    -H 'X-Appwrite-Key: <API_KEY>' \
+    --data-urlencode 'dimensions[]=country' \
+    --data-urlencode 'dateRange=7d' \
+    --data-urlencode 'limit=5'
+```
+{% /multicode %}
+
+# Analytics for your Appwrite Sites
+
+![The Analytics card on a site's Deployments page with the last 24 hours of visitors, pageviews, bounce rate, visit duration, and top sources](/images/blog/introducing-appwrite-analytics/site-card.avif)
+
+When the domain of a property is one of the domains of your site on Appwrite Sites, the two are linked. The site's **Deployments** page then shows an **Analytics** card with the last 24 hours of visitors, pageviews, bounce rate, visit duration, and top sources. A site without a property shows **Add analytics**, which opens the property wizard with the site's name and domain filled in.
+
+# Privacy without cookies
+
+Appwrite Analytics sets no cookies, and the tracking helpers keep no identifiers on the device. Appwrite identifies each visitor with a one-way hash of the IP address, the user agent, and the hostname. It uses the IP address to find the location and to compute the hash, and then discards it. The IP address is not stored with the event.
+
+The Web SDK sends no events for visitors who turn on Do Not Track in their browser. Keep personal data, such as names and email addresses, out of event names, props, and URLs. The [privacy documentation](/docs/products/analytics/privacy) lists everything that Appwrite stores for each event.
+
+# Pricing and limits
+
+| | Free | Pro | Enterprise |
+| --- | --- | --- | --- |
+| Events | 50K per month | 100K per month | Custom |
+| Additional events | Not available | $3 per 100K events | Custom |
+| Properties | 1 per project | 5 per project | Unlimited |
+| Data retention | 30 days | 90 days | Custom |
+
+The events limit covers every property in the organization, including the automatic events that the tracking helpers send. Events from bots do not count. For the full details, see [Limits and retention](/docs/products/analytics/limits).
+
+# Get started
+
+Open your project in the Appwrite Console, go to **Analytics**, and create your first property.
+
+- [Appwrite Analytics documentation](/docs/products/analytics)
+- [Quick start](/docs/products/analytics/quick-start)
+- [How to add Appwrite Analytics to your website](/blog/post/add-appwrite-analytics-to-your-website)
+- [How to add Appwrite Analytics to your mobile app](/blog/post/add-appwrite-analytics-to-your-mobile-app)
+- [Block traffic with Firewall](/docs/products/analytics/firewall)
+- [Track events from your server](/docs/products/analytics/server-side)
