@@ -186,7 +186,7 @@ class Server
                 $connect = Connect::decode($packet->body);
                 $connection->protocol = $connect->protocolLevel;
                 $connection->cleanStart = $connect->cleanStart;
-                $connection->keepAlive = $this->keepAlive($connect->keepAlive);
+                $connection->keepAlive = $this->keepAlive($connect->keepAlive, $connection->protocol);
                 $connection->setClientId($connect->clientId);
 
                 $result = $this->handler->onConnect($connect, $connection);
@@ -309,17 +309,22 @@ class Server
     }
 
     /**
-     * The keep-alive the broker enforces: the client's, lowered to maxKeepAlive, which also replaces
-     * a disabled (0) one so an idle client is still reaped. 3.1.1 cannot announce it, but lets a server
-     * disconnect an inactive client whatever its keep-alive (3.1.2.10).
+     * The keep-alive the broker enforces. A disabled (0) one becomes maxKeepAlive, so an idle client
+     * is still reaped: 3.1.1 lets a server drop an inactive client whatever its keep-alive (3.1.2.10).
+     * A longer one is lowered only for 5.0, which is told through Server Keep Alive; 3.1.1 cannot be
+     * told, so its declared interval stands.
      */
-    private function keepAlive(int $requested): int
+    private function keepAlive(int $requested, int $protocol): int
     {
         if ($this->maxKeepAlive <= 0) {
             return $requested;
         }
 
-        return $requested === 0 ? $this->maxKeepAlive : \min($requested, $this->maxKeepAlive);
+        if ($requested === 0) {
+            return $this->maxKeepAlive;
+        }
+
+        return $protocol >= V5::PROTOCOL_LEVEL ? \min($requested, $this->maxKeepAlive) : $requested;
     }
 
     private function refreshKeepAlive(Connection $connection): void

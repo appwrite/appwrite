@@ -214,7 +214,7 @@ $adapter = new Adapter\Swoole([
 
 A WebSocket message may carry several or partial MQTT packets, so the adapter reassembles whole packets before dispatch and pushes binary frames on send. Keep-alive reaping is intrinsic to MQTT and runs inside the adapter: every inbound packet re-arms a connection's deadline, and a client silent past `keepAlive × 1.5` is closed, surfacing as `onDisconnect(null, ...)`.
 
-An optional `maxKeepAlive` on `Server` lowers a longer keep-alive and replaces a disabled one (`0`), announcing it to 5.0 clients as Server Keep Alive, so an idle client is still reaped:
+An optional `maxKeepAlive` on `Server` replaces a disabled keep-alive (`0`), so an idle client is still reaped, and lowers a longer one for 5.0 clients, announcing it as Server Keep Alive. A 3.1.1 client cannot be told a new interval, so its declared one stands:
 
 ```php
 $server = new Server($adapter, new Broker(), maxKeepAlive: 1200);

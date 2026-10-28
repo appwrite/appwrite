@@ -98,6 +98,18 @@ final class ServerTest extends TestCase
         $this->assertSame(60, $timer->scheduled[9] ?? null);
     }
 
+    public function testKeepAliveAboveTheMaximumOnA311ClientIsKept(): void
+    {
+        $timer = new RecordingTimer();
+        $adapter = new RecordingAdapter($timer);
+        (new Server($adapter, new AcceptingHandler(), maxKeepAlive: 60))->start();
+
+        $adapter->deliver(9, V3::connect('client-9', 600));
+
+        // 3.1.1 cannot be told a shorter interval, so a client pinging as it declared is not reaped early.
+        $this->assertSame(600, $timer->scheduled[9] ?? null);
+    }
+
     public function testDisabledKeepAliveStandsWithoutAMaximum(): void
     {
         $timer = new RecordingTimer();
