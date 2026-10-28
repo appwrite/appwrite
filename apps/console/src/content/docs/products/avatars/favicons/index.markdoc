@@ -21,9 +21,7 @@ const client = new Client()
 const avatars = new Avatars(client);
 
 const result = avatars.getFavicon({
-    url: 'https://example.com',
-    width: 100,
-    height: 100
+    url: 'https://example.com'
 });
 
 console.log(result); // Resource URL
@@ -38,9 +36,7 @@ final client = Client()
 final avatars = Avatars(client);
 
 Future result = avatars.getFavicon(
-    url: 'https://example.com',
-    width: 100,
-    height: 100
+    url: 'https://example.com'
 ).then((bytes) {
     // Use the favicon image bytes
     return bytes;
@@ -58,25 +54,21 @@ let client = Client()
 let avatars = Avatars(client)
 
 let byteBuffer = try await avatars.getFavicon(
-    url: "https://example.com",
-    width: 100,
-    height: 100
+    url: "https://example.com"
 )
 ```
 ```client-android-kotlin
 import io.appwrite.Client
 import io.appwrite.services.Avatars
 
-val client = Client()
+val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
 
 val avatars = Avatars(client)
 
 val result = avatars.getFavicon(
-    url = "https://example.com",
-    width = 100,
-    height = 100
+    url = "https://example.com"
 )
 ```
 ```client-react-native
@@ -89,9 +81,7 @@ const client = new Client()
 const avatars = new Avatars(client);
 
 const result = avatars.getFavicon({
-    url: 'https://example.com',
-    width: 100,
-    height: 100
+    url: 'https://example.com'
 });
 
 console.log(result); // Resource URL
@@ -105,8 +95,6 @@ The `getFavicon` method accepts the following parameters:
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
 | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. |
-| width | integer | The width of the output image in pixels. Accepts values between `0-2000`. |
-| height | integer | The height of the output image in pixels. Accepts values between `0-2000`. |
 
 # Favicon retrieval {% #favicon-retrieval %}
 
@@ -116,89 +104,65 @@ The service automatically attempts to retrieve favicons from common locations on
 ```client-web
 // Standard website
 const exampleFavicon = avatars.getFavicon({
-    url: 'https://example.com',
-    width: 64,
-    height: 64
+    url: 'https://example.com'
 });
 
 // Website with subdomain
 const subdomainFavicon = avatars.getFavicon({
-    url: 'https://blog.example.com',
-    width: 64,
-    height: 64
+    url: 'https://blog.example.com'
 });
 
 // Website with path
 const pathFavicon = avatars.getFavicon({
-    url: 'https://example.com/page',
-    width: 64,
-    height: 64
+    url: 'https://example.com/page'
 });
 ```
 ```client-flutter
 // Standard website
 Future exampleFavicon = avatars.getFavicon(
-    url: 'https://example.com',
-    width: 64,
-    height: 64
+    url: 'https://example.com'
 );
 
 // Website with subdomain
 Future subdomainFavicon = avatars.getFavicon(
-    url: 'https://blog.example.com',
-    width: 64,
-    height: 64
+    url: 'https://blog.example.com'
 );
 
 // Website with path
 Future pathFavicon = avatars.getFavicon(
-    url: 'https://example.com/page',
-    width: 64,
-    height: 64
+    url: 'https://example.com/page'
 );
 ```
 ```client-apple
 // Standard website
 let exampleFavicon = try await avatars.getFavicon(
-    url: "https://example.com",
-    width: 64,
-    height: 64
+    url: "https://example.com"
 )
 
 // Website with subdomain
 let subdomainFavicon = try await avatars.getFavicon(
-    url: "https://blog.example.com",
-    width: 64,
-    height: 64
+    url: "https://blog.example.com"
 )
 
 // Website with path
 let pathFavicon = try await avatars.getFavicon(
-    url: "https://example.com/page",
-    width: 64,
-    height: 64
+    url: "https://example.com/page"
 )
 ```
 ```client-android-kotlin
 // Standard website
 val exampleFavicon = avatars.getFavicon(
-    url = "https://example.com",
-    width = 64,
-    height = 64
+    url = "https://example.com"
 )
 
 // Website with subdomain
 val subdomainFavicon = avatars.getFavicon(
-    url = "https://blog.example.com",
-    width = 64,
-    height = 64
+    url = "https://blog.example.com"
 )
 
 // Website with path
 val pathFavicon = avatars.getFavicon(
-    url = "https://example.com/page",
-    width = 64,
-    height = 64
+    url = "https://example.com/page"
 )
 ```
 {% /multicode %}

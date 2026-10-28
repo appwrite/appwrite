@@ -5,11 +5,11 @@ import {
   Fingerprint,
   KeyRound,
   Mail,
+  Radio,
   Users,
   UsersRound,
 } from 'lucide-react'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
-import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { useT } from '@/lib/i18n/translate'
 import { POLICIES_SETTINGS_CARD_INDEX } from '@/lib/settings-search/policies-settings-cards'
 import {
@@ -24,6 +24,7 @@ export type PoliciesSubTab =
   | 'memberships'
   | 'passwords'
   | 'passkeys'
+  | 'realtime'
 
 type PoliciesLayoutProps = {
   projectId: string
@@ -97,6 +98,20 @@ const NAV_ITEMS = [
     icon: Fingerprint,
     keywords: ['passkey', 'webauthn', 'relying party', 'rp id', 'origins'],
   },
+  {
+    id: 'realtime' as const,
+    label: 'Realtime',
+    to: '/projects/$projectId/auth/policies/realtime' as const,
+    icon: Radio,
+    keywords: [
+      'realtime',
+      'websocket',
+      'subscribe',
+      'guest',
+      'anonymous',
+      'unauthenticated',
+    ],
+  },
 ]
 
 export function PoliciesLayout(props: PoliciesLayoutProps) {
@@ -117,26 +132,14 @@ function PoliciesLayoutContent({
   const { query: policiesSearchQuery, setQuery: setPoliciesSearchQuery } =
     usePoliciesSettingsSearch()
 
-  const passkeysAllowed = usePasskeysAllowed()
-
   const navItems = useMemo(
     () =>
-      NAV_ITEMS.filter((item) => passkeysAllowed || item.id !== 'passkeys').map(
-        (item) => ({
-          ...item,
-          label: t(item.label),
-          params: { projectId },
-        }),
-      ),
-    [passkeysAllowed, projectId, t],
-  )
-
-  const cardIndex = useMemo(
-    () =>
-      POLICIES_SETTINGS_CARD_INDEX.filter(
-        (entry) => passkeysAllowed || entry.sectionId !== 'passkeys',
-      ),
-    [passkeysAllowed],
+      NAV_ITEMS.map((item) => ({
+        ...item,
+        label: t(item.label),
+        params: { projectId },
+      })),
+    [projectId, t],
   )
 
   const activeLabel = t(
@@ -147,7 +150,7 @@ function PoliciesLayoutContent({
     <SettingsLayoutShell
       navItems={navItems}
       activeSectionId={activeSubTab}
-      cardIndex={cardIndex}
+      cardIndex={POLICIES_SETTINGS_CARD_INDEX}
       searchQuery={policiesSearchQuery}
       onSearchQueryChange={setPoliciesSearchQuery}
       searchPlaceholder={t('Search policies...')}

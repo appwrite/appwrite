@@ -21,7 +21,15 @@ import {
   type UsageDateRangePresetContext,
   type UsageDateRangePresetGroup,
 } from '@/lib/usage/usage-date-range-presets'
-import { isFullCalendarDayRange, normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
+import {
+  finalizeDateRangeSelection,
+  isFullCalendarDayRange,
+  mergeCalendarRangeWithClocks,
+  rememberDateRangeClocks,
+  type DateRangeClocks,
+} from '@/lib/usage/usage-date-range'
+import { DateTimePickerTimeFields } from '@/components/global/shared/DateTimePickerTimeFields'
+import type { HourMinute } from '@/lib/time-segments'
 import {
   clampDateRangeToRetentionFloor,
   getLogRetentionCalendarMinDate,
@@ -69,6 +77,11 @@ interface DateRangePickerProps {
    * hidden when it is missing.
    */
   presetContext?: UsageDateRangePresetContext
+  /**
+   * Start and end time of day. On for windows the API reads as exact
+   * instants (usage, activity, analytics). Off for a date-only range.
+   */
+  showTime?: boolean
 }
 
 export function DateRangePicker({
@@ -80,6 +93,7 @@ export function DateRangePicker({
   retentionHours = null,
   presetGroups = USAGE_DATE_RANGE_PRESET_GROUPS,
   presetContext,
+  showTime = true,
 }: DateRangePickerProps) {
   const t = useT()
   const since = presetContext?.since
@@ -129,32 +143,89 @@ export function DateRangePicker({
     [onDateRangeChange],
   )
 
-  const handlePendingDateRangeSelect = React.useCallback(
-    (range: DateRange | undefined) => {
-      if (!retentionLimited) {
-        setPendingDateRange(range)
-        return
-      }
-      setPendingDateRange(
-        clampDateRangeToRetentionFloor(range, retentionHours!) ?? range,
-      )
-    },
-    [retentionHours, retentionLimited],
-  )
   const [isOpen, setIsOpen] = React.useState(false)
   const [pendingDateRange, setPendingDateRange] = React.useState<
     DateRange | undefined
   >(dateRange)
+  const clocksRef = React.useRef<DateRangeClocks>(
+    rememberDateRangeClocks({ start: null, end: null }, dateRange),
+  )
+  const pendingRef = React.useRef(pendingDateRange)
+  pendingRef.current = pendingDateRange
+
+  const assignPending = React.useCallback((range: DateRange | undefined) => {
+    clocksRef.current = rememberDateRangeClocks(clocksRef.current, range)
+    pendingRef.current = range
+    setPendingDateRange(range)
+    return range
+  }, [])
+
+  const commitPending = React.useCallback(
+    (range: DateRange | undefined) => {
+      const next =
+        retentionLimited && range?.from && range.to
+          ? (clampDateRangeToRetentionFloor(range, retentionHours!) ?? range)
+          : range
+      return assignPending(next)
+    },
+    [assignPending, retentionHours, retentionLimited],
+  )
 
   React.useEffect(() => {
     if (!isOpen) {
+      clocksRef.current = rememberDateRangeClocks(
+        { start: null, end: null },
+        dateRange,
+      )
+      pendingRef.current = dateRange
       setPendingDateRange(dateRange)
     }
   }, [dateRange, isOpen])
 
+  const handlePendingDateRangeSelect = React.useCallback(
+    (range: DateRange | undefined) => {
+      if (showTime) {
+        commitPending(mergeCalendarRangeWithClocks(range, clocksRef.current))
+        return
+      }
+      if (!retentionLimited) {
+        pendingRef.current = range
+        setPendingDateRange(range)
+        return
+      }
+      const next =
+        clampDateRangeToRetentionFloor(range, retentionHours!) ?? range
+      pendingRef.current = next
+      setPendingDateRange(next)
+    },
+    [commitPending, retentionHours, retentionLimited, showTime],
+  )
+
+  const handleEdgeTime = React.useCallback(
+    (edge: 'from' | 'to', next: HourMinute): HourMinute => {
+      const current = pendingRef.current
+      if (!current?.from) return next
+      const base = edge === 'from' ? current.from : (current.to ?? current.from)
+      const updated = new Date(base)
+      updated.setHours(next.hour, next.minute, 0, 0)
+      const range: DateRange =
+        edge === 'from'
+          ? { from: updated, to: current.to }
+          : { from: current.from, to: updated }
+      const committed = commitPending(range)
+      const applied = edge === 'from' ? committed?.from : committed?.to
+      if (!applied) return next
+      return { hour: applied.getHours(), minute: applied.getMinutes() }
+    },
+    [commitPending],
+  )
+
   const matchingPreset = React.useMemo(() => {
     if (presetId) {
-      return getUsageDateRangePresetByValue(presetId) ?? findMatchingPreset(dateRange)
+      return (
+        getUsageDateRangePresetByValue(presetId) ??
+        findMatchingPreset(dateRange)
+      )
     }
     return findMatchingPreset(dateRange)
   }, [dateRange, presetId, findMatchingPreset])
@@ -178,16 +249,16 @@ export function DateRangePicker({
       // Refresh rolling presets to a live window so quick-select stays matched.
       if (presetId) {
         const preset = getUsageDateRangePresetByValue(presetId)
-        setPendingDateRange(preset ? preset.getRange({ since }) : dateRange)
+        assignPending(preset ? preset.getRange({ since }) : dateRange)
       } else {
-        setPendingDateRange(dateRange)
+        assignPending(dateRange)
       }
       setIsOpen(true)
       return
     }
 
     if (isOpen) {
-      setPendingDateRange(dateRange)
+      assignPending(dateRange)
       setIsOpen(false)
     }
   }
@@ -195,7 +266,7 @@ export function DateRangePicker({
   const handlePresetSelect = (preset: DateRangePreset) => {
     if (!isPresetEnabled(preset)) return
     const range = preset.getRange({ since })
-    setPendingDateRange(range)
+    assignPending(range)
     setSelectedPreset(preset.value)
     emitDateRangeChange(range)
     setIsOpen(false)
@@ -209,17 +280,19 @@ export function DateRangePicker({
   }
 
   const handleClear = () => {
-    setPendingDateRange(undefined)
+    assignPending(undefined)
     setSelectedPreset(null)
   }
 
   const handleApply = () => {
-    emitDateRangeChange(normalizeUsageDateRangeSelection(pendingDateRange))
+    emitDateRangeChange(
+      finalizeDateRangeSelection(pendingRef.current, showTime),
+    )
     setIsOpen(false)
   }
 
   const handleCancel = () => {
-    setPendingDateRange(dateRange)
+    assignPending(dateRange)
     setIsOpen(false)
   }
 
@@ -255,6 +328,16 @@ export function DateRangePicker({
     ? t(pendingMatchingPreset.label)
     : formatDateRange(pendingDateRange)
 
+  const timeRow = showTime ? (
+    <DateRangeTimeRow
+      from={pendingDateRange?.from}
+      to={pendingDateRange?.to}
+      onStartTimeChange={(next) => handleEdgeTime('from', next)}
+      onEndTimeChange={(next) => handleEdgeTime('to', next)}
+      onConfirm={handleApply}
+    />
+  ) : null
+
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
@@ -274,7 +357,7 @@ export function DateRangePicker({
       </PopoverTrigger>
       <PopoverContent
         className={cn(
-          'overflow-hidden rounded-xl p-0 shadow-lg',
+          'flex max-h-(--radix-popover-content-available-height) flex-col overflow-hidden rounded-xl p-0 shadow-lg',
           isWideLayout
             ? 'w-auto max-w-[calc(100vw-1rem)]'
             : 'w-[min(calc(100vw-1rem),21.5rem)]',
@@ -284,14 +367,14 @@ export function DateRangePicker({
         collisionPadding={8}
       >
         {isWideLayout ? (
-          <div className="flex flex-row items-stretch">
+          <div className="flex min-h-0 flex-row items-stretch">
             <div className="flex w-[220px] shrink-0 flex-col border-e border-border bg-muted/25">
               <div className="shrink-0 border-b border-border/80 px-3 py-2.5">
                 <p className="text-[11px] font-semibold leading-none text-foreground">
                   {t('Quick select')}
                 </p>
               </div>
-              <div className="flex min-h-0 flex-1 flex-col justify-start px-2 py-2">
+              <div className="flex min-h-0 flex-1 flex-col justify-start overflow-y-auto px-2 py-2">
                 {PRESET_GROUPS.map((group, groupIndex) => (
                   <div
                     key={group.title ?? `group-${groupIndex}`}
@@ -338,7 +421,7 @@ export function DateRangePicker({
             </div>
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
-              <div className="p-3">
+              <div className="min-h-0 overflow-y-auto p-3">
                 <Calendar
                   mode="range"
                   selected={pendingDateRange}
@@ -350,6 +433,7 @@ export function DateRangePicker({
                   }
                 />
               </div>
+              {timeRow}
               <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border p-3">
                 <Button
                   variant="ghost"
@@ -380,7 +464,7 @@ export function DateRangePicker({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col bg-background">
+          <div className="flex min-h-0 flex-col bg-background">
             <div className="border-b border-border px-3.5 py-3">
               <label
                 htmlFor="date-range-quick-select"
@@ -427,7 +511,7 @@ export function DateRangePicker({
               </Select>
             </div>
 
-            <div className="px-2.5 pt-2 pb-1">
+            <div className="min-h-0 overflow-y-auto px-2.5 pt-2 pb-1">
               <Calendar
                 mode="range"
                 selected={pendingDateRange}
@@ -448,6 +532,8 @@ export function DateRangePicker({
                 }}
               />
             </div>
+
+            {timeRow}
 
             <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border bg-muted/20 px-3.5 py-2.5">
               <Button
@@ -480,5 +566,87 @@ export function DateRangePicker({
         )}
       </PopoverContent>
     </Popover>
+  )
+}
+
+function DateRangeTimeField({
+  label,
+  hour,
+  minute,
+  disabled,
+  onChange,
+  onConfirm,
+}: {
+  label: string
+  hour: number | null
+  minute: number | null
+  disabled?: boolean
+  onChange: (next: HourMinute) => HourMinute
+  onConfirm: () => void
+}) {
+  const labelId = React.useId()
+
+  return (
+    <div className="flex min-w-0 items-center justify-center gap-2">
+      <span id={labelId} className="text-[13px] text-muted-foreground">
+        {label}
+      </span>
+      <div
+        className={cn(
+          'inline-flex h-7 items-center rounded-md border border-border bg-transparent px-2',
+          'focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50',
+          disabled && 'opacity-40',
+        )}
+      >
+        <DateTimePickerTimeFields
+          hour={hour}
+          minute={minute}
+          disabled={disabled}
+          onChange={onChange}
+          onConfirm={onConfirm}
+          aria-labelledby={labelId}
+          unstyled
+          className="gap-0"
+          separatorClassName="px-0.5 text-muted-foreground/70"
+        />
+      </div>
+    </div>
+  )
+}
+
+function DateRangeTimeRow({
+  from,
+  to,
+  onStartTimeChange,
+  onEndTimeChange,
+  onConfirm,
+}: {
+  from: Date | undefined
+  to: Date | undefined
+  onStartTimeChange: (next: HourMinute) => HourMinute
+  onEndTimeChange: (next: HourMinute) => HourMinute
+  onConfirm: () => void
+}) {
+  const t = useT()
+
+  return (
+    <div className="grid shrink-0 grid-cols-2 border-t border-border py-2">
+      <DateRangeTimeField
+        label={t('Start time')}
+        hour={from ? from.getHours() : null}
+        minute={from ? from.getMinutes() : null}
+        disabled={!from}
+        onChange={onStartTimeChange}
+        onConfirm={onConfirm}
+      />
+      <DateRangeTimeField
+        label={t('End time')}
+        hour={to ? to.getHours() : null}
+        minute={to ? to.getMinutes() : null}
+        disabled={!from}
+        onChange={onEndTimeChange}
+        onConfirm={onConfirm}
+      />
+    </div>
   )
 }

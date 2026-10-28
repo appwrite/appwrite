@@ -66,6 +66,12 @@ export const authProductContent: ProductPageContent = {
       ],
     },
     {
+      question: 'Does Appwrite support passkeys?',
+      answer:
+        'Yes. Turn on Passkey in Auth settings and pick your app\'s domain. Users register a passkey after signing up, then sign in with Face ID, Touch ID, a fingerprint, or the device PIN, without an email or password. The same passkey works on your website and in your Android and iOS apps, and a passkey session also satisfies MFA.',
+      links: [{ label: 'Passkeys', href: '/docs/products/auth/passkeys' }],
+    },
+    {
       question: 'Can I migrate users from another auth provider?',
       answer:
         'Yes. Import users through the Console or the Users API with the Server SDK. For email and password accounts, create users with plain-text passwords or import existing password hashes when your provider uses a supported algorithm: Argon2, bcrypt, scrypt, scrypt-modified (Firebase), SHA, MD5, or PHPass. New passwords are stored with Argon2. Hashes imported from other algorithms are upgraded to Argon2 after the user\'s first successful sign-in.',

@@ -52,6 +52,7 @@ class Metric extends ArrayObject
     public const EVENT_COLUMNS = [
         'path', 'method', 'status',
         'service', 'resourceType', 'resourceId', 'resourceInternalId',
+        'ordinal',
         'teamId', 'teamInternalId',
         'country', 'region', 'hostname', 'ip',
         // request attributes (firewall rule matching)
@@ -92,6 +93,7 @@ class Metric extends ArrayObject
      * - path / method / status: HTTP shape
      * - service: API service segment (storage, databases, …)
      * - resourceType / resourceId / resourceInternalId: resource identity
+     * - ordinal: replica ordinal for multi-node resources (0 is the first member)
      * - teamId / teamInternalId: owning team identity
      * - country / region / hostname / ip: geographic + caller origin
      * - protocol / accept / acceptLanguage / queryKeys: request attributes (firewall rule matching)
@@ -108,7 +110,7 @@ class Metric extends ArrayObject
      *
      * Gauge-only dimension columns (see GAUGE_COLUMNS):
      * - teamId / teamInternalId / resourceId / resourceInternalId
-     * - ordinal: replica ordinal for multi-node resources (0 is the primary)
+     * - ordinal: replica ordinal for multi-node resources (0 is the first member)
      *
      * @param  array<string, mixed>  $input  Metric data
      */
@@ -290,7 +292,7 @@ class Metric extends ArrayObject
     }
 
     /**
-     * Get replica ordinal (gauge metrics). 0 is the primary; 1+ are replicas.
+     * Get replica ordinal (event and gauge metrics). 0 is the first member; 1+ are further members.
      */
     public function getOrdinal(): ?string
     {
@@ -601,7 +603,7 @@ class Metric extends ArrayObject
      * raw request events with metadata columns for path, method, status,
      * resourceType, and resourceId.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public static function getEventSchema(): array
     {
@@ -651,6 +653,7 @@ class Metric extends ArrayObject
             $stringColumn('resourceType', 256),
             $stringColumn('resourceId', 255),
             $stringColumn('resourceInternalId', 255),
+            $stringColumn('ordinal', 255),
             $stringColumn('teamId', 255),
             $stringColumn('teamInternalId', 255),
             $stringColumn('country', 2),
@@ -703,7 +706,7 @@ class Metric extends ArrayObject
      * Returns the attribute schema for the gauges table which stores
      * simple resource snapshots (metric, value, time, tags).
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public static function getGaugeSchema(): array
     {
@@ -772,13 +775,14 @@ class Metric extends ArrayObject
     /**
      * Get event table indexes.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public static function getEventIndexes(): array
     {
         $indexed = [
             'path', 'method', 'status',
             'service', 'resourceType', 'resourceId', 'resourceInternalId',
+            'ordinal',
             'teamId', 'teamInternalId',
             'country', 'region', 'hostname', 'ip',
             'osName', 'clientType', 'clientName', 'deviceName',
@@ -792,7 +796,7 @@ class Metric extends ArrayObject
         ];
 
         $setIndexed = [
-            'status', 'method', 'country', 'service', 'clientType', 'osName',
+            'status', 'method', 'country', 'service', 'clientType', 'osName', 'ordinal',
             // low-cardinality request/geo dims filtered by equality. accept/
             // acceptLanguage/queryKeys are unbounded caller input, so they use
             // bloom_filter (below) instead of an unlimited set(0) index.
@@ -828,7 +832,7 @@ class Metric extends ArrayObject
     /**
      * Get gauge table indexes.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public static function getGaugeIndexes(): array
     {

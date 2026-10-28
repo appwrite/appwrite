@@ -298,6 +298,16 @@ export const heSharedUiDictionary: Record<string, string> = {
   Integer: 'מספר שלם',
   'Invalid JSON format': 'פורמט JSON לא תקין',
   'Invalid format': 'פורמט לא תקין',
+
+  // Custom ID field (IdInput)
+  'Invalid ID format': 'פורמט מזהה לא תקין',
+  'ID is too long': 'המזהה ארוך מדי',
+  'Allowed characters: letters and numbers only':
+    'תווים מותרים: אותיות וספרות בלבד',
+  'Allowed characters: lowercase letters, numbers, non-leading hyphen':
+    'תווים מותרים: אותיות קטנות, ספרות ומקף שאינו בתחילת המזהה',
+  'Allowed characters: alphanumeric, non-leading hyphen, underscore, period':
+    'תווים מותרים: אותיות וספרות, מקף שאינו בתחילת המזהה, קו תחתון ונקודה',
   'Join 24k+ developers': 'הצטרפו ליותר מ-24 אלף מפתחים',
   'Skip for now': 'דילוג לעכשיו',
   'Help other Appwriters on Discord and grow with the community.':
@@ -1381,4 +1391,13 @@ export const heSharedUiDictionary: Record<string, string> = {
   'App key copied': 'מפתח האפליקציה הועתק',
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
+  Experiments: 'ניסויים',
+  'Features the quality team can try before they launch. Choices stay in this browser.':
+    "פיצ'רים שצוות האיכות יכול לנסות לפני ההשקה. הבחירות נשמרות בדפדפן הזה.",
+  'Appwrite Analytics': 'Appwrite Analytics',
+  'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
+    'הציגו את אנליטיקה בקונסולה ועקבו אחרי מבקרים, עמודים, מקורות, קמפיינים ואירועים מותאמים בפרויקט.',
+  'Repository not available': 'ה-repo לא זמין',
+  'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
+    'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
 }

@@ -13,6 +13,7 @@ use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 use Utopia\Queue\Server;
 use Utopia\Telemetry\Adapter\Test as TestTelemetry;
+use Utopia\Telemetry\Histogram;
 
 final class ServerTelemetryTest extends TestCase
 {
@@ -63,6 +64,71 @@ final class ServerTelemetryTest extends TestCase
             $sum += $value;
             $this->assertGreaterThanOrEqual($previous, $sum);
         }
+    }
+
+    public function testRecordsWhichQueueEachMessageCameFrom(): void
+    {
+        // One worker consuming a queue per database shard: a backlog on one
+        // shard is only visible if every recording names its own queue rather
+        // than the worker's.
+        $consumers = [
+            'database_shard_1' => new ServerTelemetryMultiMessageConsumer([
+                new Message([
+                    'pid' => 'shard-1-pid',
+                    'queue' => 'database_shard_1',
+                    'timestamp' => time() - 120,
+                    'payload' => [],
+                ])->setSize(512),
+            ]),
+            'database_shard_2' => new ServerTelemetryMultiMessageConsumer([
+                new Message([
+                    'pid' => 'shard-2-pid',
+                    'queue' => 'database_shard_2',
+                    'timestamp' => time() - 1,
+                    'payload' => [],
+                ])->setSize(2048),
+            ]),
+        ];
+        $adapter = new ServerTelemetryAdapter(
+            fn (string $queue): Consumer => $consumers[$queue] ?? new ServerTelemetryMultiMessageConsumer([]),
+            1,
+            'appwrite',
+        );
+        $telemetry = new ServerTelemetryAttributeTelemetry();
+
+        $server = new Server($adapter);
+        $server->setTelemetry($telemetry);
+        foreach (['database_shard_1', 'database_shard_2'] as $queue) {
+            $server
+                ->job($queue)
+                ->inject('message')
+                ->action(fn (Message $message): null => null);
+        }
+
+        $server->start();
+
+        $expected = [
+            [
+                'messaging.destination.name' => 'database_shard_1',
+                'messaging.destination.namespace' => 'appwrite',
+            ],
+            [
+                'messaging.destination.name' => 'database_shard_2',
+                'messaging.destination.namespace' => 'appwrite',
+            ],
+        ];
+
+        $wait = $telemetry->histograms['messaging.process.wait.duration'];
+        $this->assertSame($expected, $wait->attributes);
+        $this->assertGreaterThan(100.0, $wait->values[0]);
+        $this->assertLessThan(100.0, $wait->values[1]);
+
+        $duration = $telemetry->histograms['messaging.process.duration'];
+        $this->assertSame($expected, $duration->attributes);
+
+        $size = $telemetry->histograms['messaging.process.message.size'];
+        $this->assertSame([512, 2048], $size->values);
+        $this->assertSame($expected, $size->attributes);
     }
 
     public function testRecordsQueueDepth(): void
@@ -221,6 +287,39 @@ final class ServerTelemetryTest extends TestCase
     }
 }
 
+final class ServerTelemetryAttributeHistogram extends Histogram
+{
+    /** @var list<float|int> */
+    public array $values = [];
+
+    /** @var list<array<mixed>> */
+    public array $attributes = [];
+
+    #[\Override]
+    public function record(float|int $amount, iterable $attributes = []): void
+    {
+        $this->values[] = $amount;
+        $this->attributes[] = \is_array($attributes) ? $attributes : \iterator_to_array($attributes);
+    }
+}
+
+/**
+ * Keeps each histogram recording's attributes, which the released Test adapter does
+ * not: the package is tested against the telemetry release it requires.
+ */
+final class ServerTelemetryAttributeTelemetry extends TestTelemetry
+{
+    /** @var array<string, ServerTelemetryAttributeHistogram> */
+    #[\Override]
+    public array $histograms = [];
+
+    #[\Override]
+    public function createHistogram(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): ServerTelemetryAttributeHistogram
+    {
+        return $this->histograms[$name] = new ServerTelemetryAttributeHistogram();
+    }
+}
+
 final class ServerTelemetryAdapter extends Adapter
 {
     /**
@@ -234,7 +333,7 @@ final class ServerTelemetryAdapter extends Adapter
     private array $onWorkerStop = [];
 
     public function __construct(
-        Consumer $consumer,
+        Consumer|callable $consumer,
         int $workerNum,
         string $namespace = 'utopia-queue',
         Container $resources = new Container(),
@@ -270,10 +369,11 @@ final class ServerTelemetryAdapter extends Adapter
     ): void {
         foreach ($queues as $spec) {
             $queue = $spec['queue'];
+            $consumer = $spec['consumer'] ?? $this->consumer;
             $this->queue = $queue;
-            while (($message = ($this->consumer->receive($queue, 0)[0] ?? null)) instanceof Message) {
+            while (($message = ($consumer->receive($queue, 0)[0] ?? null)) instanceof Message) {
                 $this->context = new Container($this->resources());
-                $this->process($message, $messageCallback, $successCallback, $errorCallback);
+                $this->processFrom($message, $messageCallback, $successCallback, $errorCallback, $queue, $consumer);
             }
         }
     }

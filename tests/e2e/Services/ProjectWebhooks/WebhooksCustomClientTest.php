@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 final class WebhooksCustomClientTest extends Scope
@@ -35,7 +35,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -80,7 +80,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -131,7 +131,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -198,7 +198,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,

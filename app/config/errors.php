@@ -74,6 +74,11 @@ return [
         'description' => 'The breached password service could not be reached, so the password could not be verified. Please try again later.',
         'code' => 503,
     ],
+    Exception::GENERAL_CACHE_UNAVAILABLE => [
+        'name' => Exception::GENERAL_CACHE_UNAVAILABLE,
+        'description' => "The cache could not confirm the request's changes, so they may or may not have been applied. Read the affected resources back before retrying.",
+        'code' => 503,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
@@ -663,7 +668,7 @@ return [
     ],
     Exception::PROVIDER_REPOSITORY_NOT_FOUND => [
         'name' => Exception::PROVIDER_REPOSITORY_NOT_FOUND,
-        'description' => 'VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, and if it belongs to installationId you provided.',
+        'description' => 'VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, and if the installation you provided still has access to it.',
         'code' => 404,
     ],
     Exception::REPOSITORY_NOT_FOUND => [
@@ -846,6 +851,11 @@ return [
     Exception::DATABASE_QUERY_ORDER_NULL => [
         'name' => Exception::DATABASE_QUERY_ORDER_NULL,
         'description' => 'The order attribute/column had a null value. Cursor pagination requires all documents/rows order attribute/column values are non-null.',
+        'code' => 400,
+    ],
+    Exception::DATABASE_QUERY_OUT_OF_RANGE => [
+        'name' => Exception::DATABASE_QUERY_OUT_OF_RANGE,
+        'description' => 'The query computed a value outside the range the database can represent. Try narrowing the query or aggregating a different attribute/column.',
         'code' => 400,
     ],
 
@@ -1286,6 +1296,12 @@ return [
         'description' => 'Webhook with the same ID already exists. Try again with a different ID.',
         'code' => 409,
     ],
+    Exception::WEBHOOK_DELIVERY_FAILED => [
+        'name' => Exception::WEBHOOK_DELIVERY_FAILED,
+        'description' => 'One or more webhook deliveries failed.',
+        'code' => 502,
+        'publish' => false,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',
@@ -1298,7 +1314,7 @@ return [
     ],
     Exception::KEY_CREATION_DENIED => [
         'name' => Exception::KEY_CREATION_DENIED,
-        'description' => 'An API key cannot be created from a request authorized with an API key. Authenticate with a session instead. To create a short-lived key from a server, use the ephemeral key endpoint.',
+        'description' => 'This request cannot create or change the key. A JWT cannot create or change keys, an API key cannot create another stored API key, and a key never gives out scopes it does not hold or an expiry later than its own. Authenticate with a session instead, or use the ephemeral key endpoint for a short-lived key within your key\'s grant.',
         'code' => 403,
     ],
     Exception::PLATFORM_NOT_FOUND => [
@@ -1500,7 +1516,7 @@ return [
     ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,
-        'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
+        'description' => 'Message with the requested ID has no recipients (topics, users, targets, or emails).',
         'code' => 400,
     ],
     Exception::MESSAGE_ALREADY_SENT => [
