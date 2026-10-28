@@ -180,8 +180,11 @@
     }
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^21.0.4",
     "@playwright/test": "^1.58.2",
     "@tanstack/router-cli": "1.167.40",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/bun": "^1.4.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.12.0",
@@ -194,6 +197,7 @@
     "editorconfig-checker": "6.2.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unused-imports": "^4.3.0",
+    "happy-dom": "^21.0.4",
     "prettier": "^3.5.3",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.50.0",
