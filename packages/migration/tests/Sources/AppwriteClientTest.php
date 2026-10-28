@@ -161,6 +161,8 @@ final class AppwriteClientTest extends TestCase
         }
 
         $this->expectException(AppwriteException::class);
+        // The rows export halves its page on this code
+        $this->expectExceptionCode(\CURLE_FILESIZE_EXCEEDED);
 
         $this->client($this->server->getURL())->call(Client::METHOD_GET, '/compressed');
     }
