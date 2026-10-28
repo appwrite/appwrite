@@ -12,7 +12,6 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Redelivery;
 use Appwrite\Event\Webhook;
-use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -65,7 +64,6 @@ class Functions extends Action
             ->inject('getIsResourceBlocked')
             ->inject('locks')
             ->inject('cache')
-            ->inject('executionStore')
             ->callback($this->action(...));
     }
 
@@ -82,8 +80,7 @@ class Functions extends Action
         Executor $executor,
         callable $getIsResourceBlocked,
         callable $locks,
-        Cache $cache,
-        ExecutionStore $executionStore,
+        Cache $cache
     ): void {
         $this->locks = $locks;
 
@@ -258,8 +255,6 @@ class Functions extends Action
                             event: $events[0],
                             eventData: \json_encode($eventData) ?: null,
                             executionId: null,
-                            permissions: $functionMessage->executionPermissions,
-                            executionStore: $executionStore,
                         );
                         $handled[] = $function->getId();
                         Console::success('Triggered function: ' . $events[0]);
@@ -319,8 +314,6 @@ class Functions extends Action
                     eventData: null,
                     executionId: $execution->getId(),
                     createdAt: $execution->getCreatedAt(),
-                    permissions: $execution->getPermissions(),
-                    executionStore: $executionStore,
                 );
                 break;
             case 'schedule':
@@ -355,12 +348,7 @@ class Functions extends Action
                     jwt: $jwt,
                     event: null,
                     eventData: null,
-                    executionId: $execution->getId(),
-                    // No permissions passed: the scheduled requeue carries only
-                    // the id, so execute() reads the stored row's permission
-                    // (gated at create time) from the execution store, rather
-                    // than deriving one from the queued user id.
-                    executionStore: $executionStore,
+                    executionId: $execution->getId()
                 );
                 break;
         }
@@ -483,7 +471,6 @@ class Functions extends Action
         Document $user,
         ?string $jwt = null,
         ?string $event = null,
-        ?array $permissions = null,
     ): void {
         $executionId = Id::unique();
         $headers['x-appwrite-execution-id'] = $executionId;
@@ -501,12 +488,7 @@ class Functions extends Action
 
         $execution = new Document([
             '$id' => $executionId,
-            // Same gating as the success path: never stamp an admin-mode
-            // console user id onto the failure row (would leak error details to
-            // a colliding project user); fall back to the user only when the
-            // caller resolved no permission (e.g. event triggers).
-            '$permissions' => $permissions
-                ?? ($user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))]),
+            '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
             'resourceInternalId' => $function->getSequence(),
             'resourceId' => $function->getId(),
             'resourceType' => 'functions',
@@ -584,31 +566,8 @@ class Functions extends Action
         ?string $eventData = null,
         ?string $executionId = null,
         ?string $createdAt = null,
-        ?array $permissions = null,
-        ?ExecutionStore $executionStore = null,
     ): void {
         $user ??= new Document();
-
-        // Resolve the execution's read permission once, up front, so every row
-        // this method may write (the preflight failure rows as well as the run
-        // itself) uses the same trusted, project-scoped decision. The worker
-        // never derives user:{id} from $user: a queued user can be an
-        // admin-mode console account whose id a colliding project user could
-        // claim. The grant is made only by a trusted caller that knows the
-        // request was not admin mode (the HTTP path and the event fanout pass
-        // it explicitly; a scheduled run carries it on its stored row). In
-        // order: the caller's explicit permission, then the stored row's, then
-        // private — so legacy messages, direct publishers and expired rows all
-        // default to no project-user read rather than a derived one.
-        $executionPermissions = $permissions;
-        if ($executionPermissions === null && !empty($executionId) && $executionStore !== null) {
-            $storedExecution = $executionStore->get($project->getId(), $executionId);
-            if (!$storedExecution->isEmpty()) {
-                $executionPermissions = $storedExecution->getPermissions();
-            }
-        }
-        $executionPermissions ??= [];
-
         $headers = Headers::stripReserved($headers, ['x-appwrite-client-ip']);
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deploymentId', '');
@@ -625,19 +584,19 @@ class Functions extends Action
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $executionPermissions);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
         if ($deployment->isEmpty()) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $executionPermissions);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
         if ($deployment->getAttribute('status') !== 'ready') {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $executionPermissions);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
@@ -691,7 +650,7 @@ class Functions extends Action
         $now = DateTime::now();
         $execution = new Document([
             '$id' => $executionId,
-            '$permissions' => $executionPermissions,
+            '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
             '$createdAt' => $createdAt ?: $now,
             '$updatedAt' => $now,
             'resourceInternalId' => $function->getSequence(),

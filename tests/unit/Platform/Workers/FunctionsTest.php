@@ -9,7 +9,6 @@ use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
-use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Platform\Workers\Functions;
 use Executor\Executor;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -198,9 +197,6 @@ final class FunctionsTest extends TestCase
         $publisher = $this->createMock(FunctionPublisher::class);
         $publisher->expects($this->never())->method('enqueue');
 
-        $executionStore = $this->createStub(ExecutionStore::class);
-        $executionStore->method('get')->willReturn(new Document());
-
         $payload = new FunctionMessage(
             project: new Document(['$id' => 'deleted-project']),
             function: new Document(['$id' => 'function-id', 'deploymentId' => 'deployment-id']),
@@ -230,7 +226,6 @@ final class FunctionsTest extends TestCase
             getIsResourceBlocked: fn (): bool => false,
             locks: fn (string $key, int $ttl, callable $callback): mixed => $callback(),
             cache: $this->createStub(Cache::class),
-            executionStore: $executionStore,
         );
     }
 

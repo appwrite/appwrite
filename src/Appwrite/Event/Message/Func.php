@@ -27,12 +27,6 @@ final class Func extends Base
         public readonly array $platform = [],
         // Names one triggered event, so a redelivery of it can be told from a new one.
         public readonly string $eventId = '',
-        // Read permission the triggering context resolved for the execution the
-        // worker will create. Null lets the worker derive it from the user; an
-        // explicit (possibly empty) list is used verbatim — the event fanout
-        // passes [] for admin-mode callers so a console user id is never stamped
-        // onto a project execution.
-        public readonly ?array $executionPermissions = null,
     ) {
     }
 
@@ -45,7 +39,6 @@ final class Func extends Base
         array $payload = [],
         array $platform = [],
         ?Document $database = null,
-        ?array $executionPermissions = null,
     ): static {
         return new self(
             project: $project,
@@ -55,7 +48,6 @@ final class Func extends Base
             events: $event !== '' ? Event::generateEvents($event, $params, $database) : [],
             platform: $platform,
             eventId: Id::unique(),
-            executionPermissions: $executionPermissions,
         );
     }
 
@@ -81,7 +73,6 @@ final class Func extends Base
             'method' => $this->method,
             'platform' => $platform,
             'eventId' => $this->eventId,
-            'executionPermissions' => $this->executionPermissions,
         ];
     }
 
@@ -105,7 +96,6 @@ final class Func extends Base
             method: $data['method'] ?? '',
             platform: $data['platform'] ?? [],
             eventId: $data['eventId'] ?? '',
-            executionPermissions: $data['executionPermissions'] ?? null,
         );
     }
 }

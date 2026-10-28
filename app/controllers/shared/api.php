@@ -34,7 +34,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
@@ -699,18 +698,7 @@ Http::init()
         $queueForEvents
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($targetUser)
-            // Resolve, where the request mode is known, the read permission any
-            // function execution this event triggers may be granted. In admin
-            // mode the user is the console account, whose id must never become a
-            // project read role (a colliding project user could claim it), so
-            // grant nothing; otherwise grant the genuine triggering project
-            // user. Function publishers forward this instead of deriving it.
-            ->setExecutionPermissions(
-                ($mode === APP_MODE_ADMIN || $targetUser->isEmpty())
-                    ? []
-                    : [Permission::read(Role::user($targetUser->getId()))]
-            );
+            ->setUser($targetUser);
 
         $auditContext->mode = $mode;
         $auditContext->userAgent = $request->getUserAgent('');
@@ -970,9 +958,6 @@ Http::shutdown()
                         payload: $queueForEvents->getPayload(),
                         platform: $queueForEvents->getPlatform(),
                         database: $queueForEvents->getContext('database'),
-                        // Resolved at event init where the request mode is known;
-                        // the worker never derives it, so this is authoritative.
-                        executionPermissions: $queueForEvents->getExecutionPermissions(),
                     ));
                     break;
                 }

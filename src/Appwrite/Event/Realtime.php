@@ -4,11 +4,10 @@ namespace Appwrite\Event;
 
 use Appwrite\Messaging\Adapter;
 use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
-use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
-use Utopia\Database\Role;
+use Utopia\Database\PermissionType;
 
 class Realtime extends Event
 {
@@ -116,15 +115,21 @@ class Realtime extends Event
             bucket: $bucket,
         );
 
+        $project = $this->getProject();
+
         $projectIds = !empty($this->getSubscribers())
             ? $this->getSubscribers()
-            : [$target['projectId'] ?? $this->getProject()->getId()];
+            : [$target['projectId'] ?? $project->getId()];
 
         foreach ($projectIds as $projectId) {
-            $roles = $this->resolveSubscriberRoles($projectId, $target['roles'], $target['projectId'] ?? null);
-            if ($roles === null) {
-                continue;
-            }
+            // A resource's own read roles (e.g. an execution's user:{id}) are
+            // meaningful only in its project's subscription tree. Delivered to
+            // the console tree the same role matches an unrelated console
+            // account with that id, so the console copy is re-addressed to the
+            // project's read roles — the org members who may actually read it.
+            $roles = $projectId === 'console' && $project->getId() !== 'console' && ($target['projectId'] ?? null) !== 'console'
+                ? $project->getPermissionsByType(PermissionType::Read)
+                : $target['roles'];
 
             try {
                 $this->realtime->send(
@@ -144,56 +149,5 @@ class Realtime extends Event
         }
 
         return true;
-    }
-
-    /**
-     * Resolve the roles a subscriber's copy of this event is addressed with.
-     *
-     * Role names are tree-relative: `user:{id}` names a project user in the
-     * project's subscription tree but a console user in the console tree, and
-     * either identity can be minted by signing up with a colliding custom ID.
-     * A copy delivered across trees with the roles of the other tree therefore
-     * reaches whoever claimed the same ID, not the intended audience:
-     *
-     * - The console copy of a project-flavored event (an execution's `user:{id}`
-     *   read roles) is re-addressed to the project organization's privileged
-     *   roles. The console reads these resources in admin mode, where only a
-     *   privileged member — owner, developer or admin per `User::isPrivileged`
-     *   (see Functions/Http/Executions/Get.php) — bypasses the per-resource
-     *   permission filter; a plain member could not GET the execution. The bare
-     *   `team:{teamId}` role is held by every member and would broaden delivery
-     *   past that boundary, so the copy is addressed to the dimensioned
-     *   privileged roles (`team:{teamId}/owner`, …), which a console connection
-     *   holds (User::getRoles) exactly when it would pass the HTTP check.
-     * - The project copy of a console-flavored event (rules and the like, keyed
-     *   `team:{orgTeamId}`) is dropped: admin-mode connections subscribe with
-     *   bare membership roles and never matched it, so only a project team
-     *   minted with the colliding ID could receive it.
-     *
-     * @param array<int, string> $roles roles computed for the event's own tree
-     * @return array<int, string>|null roles for this copy, or null to skip it
-     */
-    protected function resolveSubscriberRoles(string $subscriber, array $roles, ?string $targetProjectId): ?array
-    {
-        $project = $this->getProject();
-
-        if ($subscriber === 'console' && $project->getId() !== 'console' && $targetProjectId !== 'console') {
-            $teamId = $project->getAttribute('teamId');
-            if (empty($teamId)) {
-                return null;
-            }
-
-            return [
-                Role::team($teamId, User::ROLE_OWNER)->toString(),
-                Role::team($teamId, User::ROLE_DEVELOPER)->toString(),
-                Role::team($teamId, User::ROLE_ADMIN)->toString(),
-            ];
-        }
-
-        if ($subscriber !== 'console' && $targetProjectId === 'console') {
-            return null;
-        }
-
-        return $roles;
     }
 }
