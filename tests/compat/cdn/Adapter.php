@@ -11,20 +11,26 @@ use Utopia\Balancer\Balancer as OptionBalancer;
 use Utopia\Cdn\Cache;
 use Utopia\Cdn\Cache\Adapter as CacheAdapter;
 use Utopia\Cdn\Cache\Adapter\Balancer;
+use Utopia\Cdn\Aws\Signature;
 use Utopia\Cdn\Cache\Adapter\Cloudflare as CloudflareCache;
+use Utopia\Cdn\Cache\Adapter\CloudFront as CloudFrontCache;
 use Utopia\Cdn\Cache\Adapter\Fastly as FastlyCache;
 use Utopia\Cdn\Certificates;
 use Utopia\Cdn\Certificates\Challenge;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Provider\Cloudflare as CloudflareCertificates;
+use Utopia\Cdn\Certificates\Provider\CloudFront as CloudFrontCertificates;
 use Utopia\Cdn\Certificates\Provider\Fastly as FastlyCertificates;
 use Utopia\Cdn\Certificates\Provider\FastlyTls;
 use Utopia\Cdn\Certificates\Provider\Proxy;
 use Utopia\Cdn\Certificates\Status;
+use Utopia\Cdn\Certificates\ValidationToken;
 use Utopia\Cdn\Domain;
 use Utopia\Cdn\Exception\Certificate;
 use Utopia\Cdn\Exception\Purge;
 use Utopia\Cdn\Extend\CdnOption;
+use Utopia\Psr7\Request\Factory as RequestFactory;
+use Utopia\Psr7\Stream;
 
 require_once __DIR__ . '/Transport.php';
 require_once __DIR__ . '/Doubles.php';
@@ -128,6 +134,28 @@ final class Adapter implements Base, Benchmarks
             'certificates.call' => fn (array $a, Session $s) => self::callProvider($s->get($a['provider']), $a),
             'certificates.once' => fn (array $a, Session $s) => self::callProvider(self::provider($a, $s), $a),
             'challenge.new' => fn (array $a, Session $s) => self::challenge(new Challenge($a['type'], $a['record_type'], $a['record_name'], $a['values'])),
+            'validation_token.new' => fn (array $a, Session $s) => self::token(new ValidationToken($a['domain'], $a['from'], $a['to'])),
+            'aws.sign' => function (array $a, Session $s) {
+                $request = new RequestFactory()->createRequest($a['method'] ?? 'GET', $a['url']);
+                foreach ($a['headers'] ?? [] as $name => $value) {
+                    $request = $request->withHeader((string) $name, $value);
+                }
+                if (isset($a['body'])) {
+                    $request = $request->withBody(new Stream($a['body']));
+                }
+                $signed = new Signature($a['access_key_id'], $a['secret_access_key'], ...(\array_key_exists('session_token', $a) ? [$a['session_token']] : []))
+                    ->sign($request, $a['service'], $a['region'], isset($a['time']) ? new \DateTimeImmutable($a['time']) : null);
+                $headers = [];
+                // Without `Host`, which the transports leave out too: it is the URI's.
+                foreach (array_keys($signed->getHeaders()) as $name) {
+                    if (strtolower((string) $name) !== 'host') {
+                        $headers[strtolower((string) $name)] = $signed->getHeaderLine((string) $name);
+                    }
+                }
+                ksort($headers);
+
+                return isset($a['time']) ? $headers : Stable::normalize([['headers' => $headers]])[0]['headers'];
+            },
             'exception.certificate' => fn (array $a, Session $s) => self::error(new Certificate(
                 $a['message'],
                 $a['status'],
@@ -140,6 +168,19 @@ final class Adapter implements Base, Benchmarks
             )),
             'constants' => fn (array $a, Session $s) => [
                 'cloudflare' => ['PATHS_PER_PURGE' => CloudflareCache::PATHS_PER_PURGE, 'KEYS_PER_PURGE' => CloudflareCache::KEYS_PER_PURGE],
+                'cloudfront' => [
+                    'SIGNING_SERVICE' => CloudFrontCache::SIGNING_SERVICE,
+                    'SIGNING_REGION' => CloudFrontCache::SIGNING_REGION,
+                    'API_VERSION' => CloudFrontCache::API_VERSION,
+                    'PATHS_PER_PURGE' => CloudFrontCache::PATHS_PER_PURGE,
+                    'KEYS_PER_PURGE' => CloudFrontCache::KEYS_PER_PURGE,
+                    'THROTTLE_RETRIES' => CloudFrontCache::THROTTLE_RETRIES,
+                    'KEY_MAX_LENGTH' => CloudFrontCache::KEY_MAX_LENGTH,
+                    'VALIDATION_TOKEN_HOST_CLOUDFRONT' => CloudFrontCertificates::VALIDATION_TOKEN_HOST_CLOUDFRONT,
+                    'VALIDATION_TOKEN_HOST_SELF_HOSTED' => CloudFrontCertificates::VALIDATION_TOKEN_HOST_SELF_HOSTED,
+                    'RECHECK_INTERVAL' => CloudFrontCertificates::RECHECK_INTERVAL,
+                ],
+                'aws' => ['ALGORITHM' => Signature::ALGORITHM],
                 'fastly' => ['KEYS_PER_PURGE' => FastlyCache::KEYS_PER_PURGE],
                 'option' => [
                     'ADAPTER' => CdnOption::ADAPTER,
@@ -147,8 +188,9 @@ final class Adapter implements Base, Benchmarks
                     'EDGE' => CdnOption::EDGE,
                     'PROVIDER_FASTLY' => CdnOption::PROVIDER_FASTLY,
                     'PROVIDER_CLOUDFLARE' => CdnOption::PROVIDER_CLOUDFLARE,
+                    'PROVIDER_CLOUDFRONT' => CdnOption::PROVIDER_CLOUDFRONT,
                 ],
-                'status' => [Status::PENDING, Status::PROCESSING, Status::ISSUED, Status::RENEWING, Status::FAILED, Status::BLOCKED, Status::UNKNOWN],
+                'status' => [Status::PENDING, Status::PROCESSING, Status::ISSUED, Status::RENEWING, Status::FAILED, Status::BLOCKED, Status::EXPIRING, Status::UNKNOWN],
                 'fastly_tls' => ['CHALLENGE_MANAGED_DNS' => FastlyTls::CHALLENGE_MANAGED_DNS],
             ],
         ];
@@ -220,6 +262,19 @@ final class Adapter implements Base, Benchmarks
                 [$transport, $client, $base] = self::transport($a, $s, 'https://api.fastly.com');
 
                 return ['cache' => new FastlyCache($a['token'], $a['prefix'], $a['service'] ?? null, $a['soft'] ?? false, $client, $base), 'transport' => $transport];
+            case 'cloudfront':
+                [$transport, $client, $base] = self::transport($a, $s, 'https://cloudfront.amazonaws.com');
+
+                return ['cache' => new CloudFrontCache(
+                    $a['access_key_id'],
+                    $a['secret_access_key'],
+                    $a['prefix'],
+                    $a['tenant'] ?? null,
+                    $a['session_token'] ?? null,
+                    $client,
+                    $base,
+                    $a['batch_interval'] ?? 0,
+                ), 'transport' => $transport];
             case 'recorder':
                 return ['cache' => new CacheRecorder($a['name'], self::log($a['log'], $s), $a['supports_keys'] ?? true, $a['fails'] ?? false), 'transport' => null];
             case 'balancer':
@@ -266,6 +321,20 @@ final class Adapter implements Base, Benchmarks
                 [$transport, $client, $base] = self::transport($a, $s, 'https://api.fastly.com');
 
                 return ['provider' => new FastlyTls($a['token'], $a['tls_config'], $a['ca'] ?? 'certainly', $client, $base), 'transport' => $transport];
+            case 'cloudfront':
+                [$transport, $client, $base] = self::transport($a, $s, 'https://cloudfront.amazonaws.com');
+
+                return ['provider' => new CloudFrontCertificates(
+                    $a['access_key_id'],
+                    $a['secret_access_key'],
+                    $a['distribution'],
+                    $a['connection_group'] ?? null,
+                    $a['validation_token_host'] ?? CloudFrontCertificates::VALIDATION_TOKEN_HOST_SELF_HOSTED,
+                    $a['parameters'] ?? [],
+                    $a['session_token'] ?? null,
+                    $client,
+                    $base,
+                ), 'transport' => $transport];
             case 'recorder':
                 return ['provider' => new ProviderRecorder(
                     $a['name'],
@@ -316,6 +385,9 @@ final class Adapter implements Base, Benchmarks
             'getCertificateStatus' => $provider->getCertificateStatus($a['domain'], $type),
             'isRenewRequired' => $provider->isRenewRequired($a['domain'], $type),
             'deleteCertificate' => $provider->deleteCertificate($a['domain'], $type),
+            'getValidationTokens' => $provider instanceof CloudFrontCertificates
+                ? array_map(self::token(...), $provider->getValidationTokens($a['domain']))
+                : throw new Fault('only a CloudFront provider has validation tokens'),
             default => throw new Fault('unknown provider method ' . $a['method']),
         });
     }
@@ -358,6 +430,12 @@ final class Adapter implements Base, Benchmarks
         }
 
         return $out;
+    }
+
+    /** @return array<string, string> */
+    private static function token(ValidationToken $token): array
+    {
+        return ['domain' => $token->domain, 'from' => $token->from, 'to' => $token->to];
     }
 
     /** @return array<string, mixed> */

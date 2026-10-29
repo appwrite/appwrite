@@ -4,6 +4,7 @@
 //! between them).
 
 mod cloudflare;
+mod cloudfront;
 mod fastly;
 mod fastly_tls;
 mod proxy;
@@ -12,6 +13,7 @@ use std::fmt;
 use std::sync::Arc;
 
 pub use cloudflare::Cloudflare;
+pub use cloudfront::CloudFront;
 pub use fastly::Fastly;
 pub use fastly_tls::FastlyTls;
 pub use proxy::Proxy;
@@ -39,19 +41,25 @@ pub enum Status {
     /// returned, so a caller polling for completion cannot mistake it for
     /// progress. PHP: `Status::BLOCKED` (`blocked`).
     Blocked,
+    /// The certificate expires soon and the provider, which renews it on
+    /// its own, has not replaced it yet. It keeps serving until it expires,
+    /// and ordering another one does not help while the provider owns the
+    /// renewal. PHP: `Status::EXPIRING` (`expiring`).
+    Expiring,
     /// Nothing known. PHP: `Status::UNKNOWN` (`unknown`).
     Unknown,
 }
 
 impl Status {
     /// Every status, in the order PHP declares them.
-    pub const ALL: [Status; 7] = [
+    pub const ALL: [Status; 8] = [
         Status::Pending,
         Status::Processing,
         Status::Issued,
         Status::Renewing,
         Status::Failed,
         Status::Blocked,
+        Status::Expiring,
         Status::Unknown,
     ];
 
@@ -64,6 +72,7 @@ impl Status {
             Status::Renewing => "renewing",
             Status::Failed => "failed",
             Status::Blocked => "blocked",
+            Status::Expiring => "expiring",
             Status::Unknown => "unknown",
         }
     }
@@ -95,6 +104,25 @@ pub struct Challenge {
     pub record_name: String,
     /// Values the record has to hold; several values are alternatives.
     pub values: Vec<String>,
+}
+
+/// An HTTP validation token the certificate authority fetches to prove the
+/// domain is controlled by whoever requested the certificate.
+///
+/// Whatever currently serves the domain has to answer a request for
+/// `from` with a redirect to `to`, which lets a certificate be issued
+/// before the domain's traffic moves to the provider that requested it.
+///
+/// PHP: `Utopia\Cdn\Certificates\ValidationToken` (its public properties).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ValidationToken {
+    /// Domain the token validates.
+    pub domain: String,
+    /// URL the certificate authority requests, under
+    /// `/.well-known/pki-validation/`.
+    pub from: String,
+    /// URL that serves the token, which `from` has to redirect to.
+    pub to: String,
 }
 
 /// Issues, checks, renews and deletes the certificate of a domain.

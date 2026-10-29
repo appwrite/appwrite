@@ -74,6 +74,10 @@ impl CdnOption {
     ///
     /// PHP: `CdnOption::PROVIDER_CLOUDFLARE`.
     pub const PROVIDER_CLOUDFLARE: &str = "cloudflare";
+    /// Amazon CloudFront.
+    ///
+    /// PHP: `CdnOption::PROVIDER_CLOUDFRONT`.
+    pub const PROVIDER_CLOUDFRONT: &str = "cloudfront";
 
     /// An option purging through `adapter`, for the vendor `provider` (one
     /// of the `PROVIDER_*` constants, or your own name), fronting the edge

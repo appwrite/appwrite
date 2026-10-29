@@ -607,6 +607,21 @@
           "PATHS_PER_PURGE": 30,
           "KEYS_PER_PURGE": 30
         },
+        "cloudfront": {
+          "SIGNING_SERVICE": "cloudfront",
+          "SIGNING_REGION": "us-east-1",
+          "API_VERSION": "2020-05-31",
+          "PATHS_PER_PURGE": 150,
+          "KEYS_PER_PURGE": 150,
+          "THROTTLE_RETRIES": 3,
+          "KEY_MAX_LENGTH": 256,
+          "VALIDATION_TOKEN_HOST_CLOUDFRONT": "cloudfront",
+          "VALIDATION_TOKEN_HOST_SELF_HOSTED": "self-hosted",
+          "RECHECK_INTERVAL": "+30 days"
+        },
+        "aws": {
+          "ALGORITHM": "AWS4-HMAC-SHA256"
+        },
         "fastly": {
           "KEYS_PER_PURGE": 256
         },
@@ -615,7 +630,8 @@
           "PROVIDER": "provider",
           "EDGE": "edge",
           "PROVIDER_FASTLY": "fastly",
-          "PROVIDER_CLOUDFLARE": "cloudflare"
+          "PROVIDER_CLOUDFLARE": "cloudflare",
+          "PROVIDER_CLOUDFRONT": "cloudfront"
         },
         "status": [
           "pending",
@@ -624,6 +640,7 @@
           "renewing",
           "failed",
           "blocked",
+          "expiring",
           "unknown"
         ],
         "fastly_tls": {
