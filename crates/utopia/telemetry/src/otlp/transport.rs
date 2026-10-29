@@ -186,8 +186,11 @@ impl HttpTransport {
         self
     }
 
-    /// The TLS settings of `https` connections: the trusted roots.
-    fn tls(&self) -> Result<rustls::ClientConfig, Error> {
+    /// The TLS settings of `https` connections: the trusted roots. On an
+    /// IP literal, the handshake checks only the chain, and `named` learns
+    /// whether the certificate names the address, which `connect()` checks
+    /// after the HEAD probe, as PHP's `verifyAddress()` does.
+    fn tls(&self, named: &Arc<AtomicBool>) -> Result<rustls::ClientConfig, Error> {
         let mut roots = rustls::RootCertStore::empty();
         match &self.certificate_authority {
             Some(path) => {
@@ -199,10 +202,20 @@ impl HttpTransport {
             }
             None => roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned()),
         }
-        rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
+        let provider = Arc::new(rustls::crypto::ring::default_provider());
+        let builder = rustls::ClientConfig::builder_with_provider(provider.clone())
             .with_safe_default_protocol_versions()
-            .map(|builder| builder.with_root_certificates(roots).with_no_client_auth())
-            .map_err(|e| Error::Telemetry(format!("TLS setup failed: {e}")))
+            .map_err(|e| Error::Telemetry(format!("TLS setup failed: {e}")))?;
+        if !self.address() {
+            return Ok(builder.with_root_certificates(roots).with_no_client_auth());
+        }
+        let chain = rustls::client::WebPkiServerVerifier::builder_with_provider(Arc::new(roots), provider)
+            .build()
+            .map_err(|e| Error::Telemetry(format!("TLS setup failed: {e}")))?;
+        Ok(builder
+            .dangerous()
+            .with_custom_certificate_verifier(Arc::new(AddressVerifier { chain, named: named.clone() }))
+            .with_no_client_auth())
     }
 
     fn idle(&self) -> MutexGuard<'_, Vec<Sender>> {
@@ -221,6 +234,7 @@ impl HttpTransport {
     }
 
     async fn connect(&self) -> Result<Sender, Error> {
+        let named = Arc::new(AtomicBool::new(false));
         let mut http = Connector::new();
         http.enforce_http(false);
         http.set_nodelay(true);
@@ -229,7 +243,7 @@ impl HttpTransport {
         http.set_send_buffer_size(Some(self.socket_buffer_size));
         http.set_recv_buffer_size(Some(self.socket_buffer_size));
         let mut https: HttpsConnector<Connector> = hyper_rustls::HttpsConnectorBuilder::new()
-            .with_tls_config(self.tls()?)
+            .with_tls_config(self.tls(&named)?)
             .https_or_http()
             .enable_http1()
             .wrap_connector(http);
@@ -238,6 +252,12 @@ impl HttpTransport {
         utopia_async::spawn(connection);
         if self.address() {
             self.probe(&mut sender).await?;
+            if !named.load(Ordering::Acquire) {
+                let address = self.url.host().unwrap_or_default().trim_matches(['[', ']']);
+                return Err(Error::Telemetry(format!(
+                    "OTLP connection failed: the collector certificate does not name {address}"
+                )));
+            }
         }
         Ok(sender)
     }
@@ -332,6 +352,63 @@ impl HttpTransport {
     }
 }
 
+/// Verifies a collector's certificate chain like rustls, but lets a
+/// certificate that does not name the address through, noting it in `named`.
+///
+/// PHP: Swoole checks only DNS names in the handshake; `verifyAddress()`
+/// checks the IP addresses after its HEAD request.
+#[derive(Debug)]
+struct AddressVerifier {
+    chain: Arc<rustls::client::WebPkiServerVerifier>,
+    named: Arc<AtomicBool>,
+}
+
+impl rustls::client::danger::ServerCertVerifier for AddressVerifier {
+    fn verify_server_cert(
+        &self,
+        end_entity: &CertificateDer<'_>,
+        intermediates: &[CertificateDer<'_>],
+        server_name: &rustls::pki_types::ServerName<'_>,
+        ocsp_response: &[u8],
+        now: rustls::pki_types::UnixTime,
+    ) -> Result<rustls::client::danger::ServerCertVerified, rustls::Error> {
+        use rustls::CertificateError::{NotValidForName, NotValidForNameContext};
+        match self.chain.verify_server_cert(end_entity, intermediates, server_name, ocsp_response, now) {
+            Ok(verified) => {
+                self.named.store(true, Ordering::Release);
+                Ok(verified)
+            }
+            Err(rustls::Error::InvalidCertificate(NotValidForName | NotValidForNameContext { .. })) => {
+                self.named.store(false, Ordering::Release);
+                Ok(rustls::client::danger::ServerCertVerified::assertion())
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    fn verify_tls12_signature(
+        &self,
+        message: &[u8],
+        cert: &CertificateDer<'_>,
+        dss: &rustls::DigitallySignedStruct,
+    ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+        self.chain.verify_tls12_signature(message, cert, dss)
+    }
+
+    fn verify_tls13_signature(
+        &self,
+        message: &[u8],
+        cert: &CertificateDer<'_>,
+        dss: &rustls::DigitallySignedStruct,
+    ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+        self.chain.verify_tls13_signature(message, cert, dss)
+    }
+
+    fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {
+        self.chain.supported_verify_schemes()
+    }
+}
+
 /// Whether the I/O error behind `error` is a reset or broken connection.
 fn reset(error: &(dyn std::error::Error + 'static)) -> bool {
     let mut source: Option<&(dyn std::error::Error + 'static)> = Some(error);
@@ -345,12 +422,28 @@ fn reset(error: &(dyn std::error::Error + 'static)) -> bool {
     false
 }
 
+/// Whether `error`, or an error it wraps, is a refused certificate.
+fn refused(error: &(dyn std::error::Error + 'static)) -> bool {
+    if let Some(rustls::Error::InvalidCertificate(_)) = error.downcast_ref::<rustls::Error>() {
+        return true;
+    }
+    if let Some(inner) = error.downcast_ref::<std::io::Error>().and_then(std::io::Error::get_ref) {
+        return refused(inner);
+    }
+    error.source().is_some_and(refused)
+}
+
 /// `OTLP connection failed: <reason> (code: <errno>)`, from the I/O error
-/// behind `error` when there is one.
+/// behind `error` when there is one (`SSL verify failed (code: 1014)` for a
+/// refused certificate, as Swoole reports it).
 fn connection_failed(error: &(dyn std::error::Error + 'static)) -> Error {
     let mut source: Option<&(dyn std::error::Error + 'static)> = Some(error);
     while let Some(e) = source {
         if let Some(io) = e.downcast_ref::<std::io::Error>() {
+            // A refused certificate reads as Swoole's: OpenSSL's verify error (1014).
+            if refused(io) {
+                return Error::Telemetry("OTLP connection failed: SSL verify failed (code: 1014)".into());
+            }
             let code = io.raw_os_error().unwrap_or(0);
             let text = io.to_string();
             let reason = text.split(" (os error").next().unwrap_or(&text).to_owned();

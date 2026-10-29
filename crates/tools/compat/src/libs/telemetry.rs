@@ -408,71 +408,172 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
     Ok(result)
 }
 
+/// What the scripted collector of `exchange()` saw: export requests and the
+/// request lines of HEAD requests.
+#[derive(Default)]
+struct Seen {
+    requests: Vec<Json>,
+    strays: Vec<String>,
+}
+
+/// A TLS acceptor for the `certs/<name>.pem` certificate of the telemetry
+/// cases, issued by `certs/authority.pem`.
+fn acceptor(name: &str) -> Result<tokio_rustls::TlsAcceptor, Fault> {
+    use rustls::pki_types::pem::PemObject;
+    use rustls::pki_types::{CertificateDer, PrivateKeyDer};
+    let failed = |e: String| Fault::new(format!("certificate {name}: {e}"));
+    let certs = CertificateDer::pem_file_iter(certificates().join(format!("{name}.pem")))
+        .map_err(|e| failed(e.to_string()))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| failed(e.to_string()))?;
+    let key = PrivateKeyDer::from_pem_file(certificates().join(format!("{name}.key"))).map_err(|e| failed(e.to_string()))?;
+    let config = rustls::ServerConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
+        .with_safe_default_protocol_versions()
+        .map_err(|e| failed(e.to_string()))?
+        .with_no_client_auth()
+        .with_single_cert(certs, key)
+        .map_err(|e| failed(e.to_string()))?;
+    Ok(tokio_rustls::TlsAcceptor::from(Arc::new(config)))
+}
+
+/// `tests/compat/telemetry/certs`.
+fn certificates() -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../tests/compat/telemetry/certs")
+}
+
+/// The scripted collector of `exchange()` on `listener`, over TLS with
+/// `tls`: every connection's task is kept in `connections`, so a restart can
+/// drop them.
+fn collect(
+    listener: utopia_async::net::TcpListener,
+    tls: Option<tokio_rustls::TlsAcceptor>,
+    script: Arc<Vec<Json>>,
+    seen: Arc<Mutex<Seen>>,
+    connections: Arc<Mutex<Vec<utopia_async::JoinHandle<()>>>>,
+) -> utopia_async::JoinHandle<()> {
+    utopia_async::spawn(async move {
+        while let Ok((socket, _)) = listener.accept().await {
+            let (script, seen, tls) = (script.clone(), seen.clone(), tls.clone());
+            let task = utopia_async::spawn(async move {
+                match tls {
+                    None => serve(socket, &script, &seen, |s| drop(s.set_zero_linger())).await,
+                    Some(tls) => {
+                        if let Ok(Ok(stream)) = utopia_async::timeout(Duration::from_secs(5), tls.accept(socket)).await {
+                            serve(stream, &script, &seen, |s| drop(s.get_ref().0.set_zero_linger())).await;
+                        }
+                    }
+                }
+            });
+            connections.lock().unwrap_or_else(|e| e.into_inner()).push(task);
+        }
+    })
+}
+
+/// One connection of the scripted collector: see `exchange()` in Adapter.php.
+async fn serve<S>(mut socket: S, script: &[Json], seen: &Mutex<Seen>, linger: impl Fn(&S))
+where
+    S: utopia_async::io::AsyncRead + utopia_async::io::AsyncWrite + Unpin,
+{
+    let mut buffer = Vec::new();
+    let mut chunk = vec![0u8; 65536];
+    loop {
+        let read = match utopia_async::timeout(Duration::from_secs(5), socket.read(&mut chunk)).await {
+            Ok(Ok(n)) if n > 0 => n,
+            _ => return,
+        };
+        buffer.extend_from_slice(&chunk[..read]);
+        loop {
+            let Some(line) = buffer.windows(2).position(|w| w == b"\r\n").map(|at| String::from_utf8_lossy(&buffer[..at]).into_owned())
+            else {
+                break;
+            };
+            let Some(request) = take_request(&mut buffer) else {
+                break;
+            };
+            if line.starts_with("HEAD ") {
+                let target = line.rsplit_once(' ').map_or(line.as_str(), |(head, _)| head).to_owned();
+                seen.lock().unwrap_or_else(|e| e.into_inner()).strays.push(target);
+                if socket.write_all(b"HTTP/1.1 200 X\r\nContent-Length: 0\r\n\r\n").await.is_err() {
+                    return;
+                }
+                continue;
+            }
+            let step = {
+                let mut seen = seen.lock().unwrap_or_else(|e| e.into_inner());
+                seen.requests.push(request);
+                script[seen.requests.len().min(script.len()) - 1].clone()
+            };
+            if step["reset"].as_bool().unwrap_or(false) {
+                // A zero linger resets the connection and never blocks.
+                linger(&socket);
+                return;
+            }
+            if let Some(ms) = step["hang_ms"].as_u64() {
+                utopia_async::sleep(Duration::from_millis(ms)).await;
+                return;
+            }
+            if let Some(ms) = step["delay_ms"].as_u64() {
+                utopia_async::sleep(Duration::from_millis(ms)).await;
+            }
+            let body = step["body"].as_str().unwrap_or("");
+            let status = step["status"].as_u64().unwrap_or(200);
+            let reply = format!("HTTP/1.1 {status} X\r\nContent-Length: {}\r\n\r\n{body}", body.len());
+            if socket.write_all(reply.as_bytes()).await.is_err() {
+                return;
+            }
+        }
+    }
+}
+
+/// Binds `127.0.0.1:port`, retrying for up to 2 seconds while a restarted
+/// collector's port is still taken.
+async fn bind(port: u16) -> Result<utopia_async::net::TcpListener, Fault> {
+    let deadline = std::time::Instant::now() + Duration::from_secs(2);
+    loop {
+        match utopia_async::net::TcpListener::bind(("127.0.0.1", port)).await {
+            Ok(listener) => return Ok(listener),
+            Err(e) if std::time::Instant::now() > deadline => return Err(Fault::new(e.to_string())),
+            Err(_) => utopia_async::sleep(Duration::from_millis(10)).await,
+        }
+    }
+}
+
 /// See `exchange()` in Adapter.php: a scripted collector on a local port and
 /// a transport sending to it.
 async fn exchange(a: &Args<'_>) -> Result<Json, Fault> {
-    let script: Vec<Json> =
-        a.opt("script").and_then(Json::as_array).cloned().unwrap_or_else(|| vec![json!({"status": 200, "body": ""})]);
-    let listener = utopia_async::net::TcpListener::bind("127.0.0.1:0").await.map_err(|e| Fault::new(e.to_string()))?;
+    let script: Arc<Vec<Json>> = Arc::new(
+        a.opt("script").and_then(Json::as_array).cloned().unwrap_or_else(|| vec![json!({"status": 200, "body": ""})]),
+    );
+    let tls = a.opt_str("tls")?;
+    let listener = bind(0).await?;
     let port = listener.local_addr().map_err(|e| Fault::new(e.to_string()))?.port();
-    let requests: Arc<Mutex<Vec<Json>>> = Arc::default();
-    let server = {
-        let requests = requests.clone();
-        utopia_async::spawn(async move {
-            while let Ok((mut socket, _)) = listener.accept().await {
-                let (requests, script) = (requests.clone(), script.clone());
-                utopia_async::spawn(async move {
-                    let mut buffer = Vec::new();
-                    let mut chunk = vec![0u8; 65536];
-                    loop {
-                        let read = match utopia_async::timeout(Duration::from_secs(5), socket.read(&mut chunk)).await {
-                            Ok(Ok(n)) if n > 0 => n,
-                            _ => return,
-                        };
-                        buffer.extend_from_slice(&chunk[..read]);
-                        while let Some(request) = take_request(&mut buffer) {
-                            let step = {
-                                let mut r = requests.lock().unwrap_or_else(|e| e.into_inner());
-                                r.push(request);
-                                script[r.len().min(script.len()) - 1].clone()
-                            };
-                            if step["reset"].as_bool().unwrap_or(false) {
-                                // A zero linger resets the connection and never blocks.
-                                let _ = socket.set_zero_linger();
-                                return;
-                            }
-                            if let Some(ms) = step["hang_ms"].as_u64() {
-                                utopia_async::sleep(Duration::from_millis(ms)).await;
-                                return;
-                            }
-                            if let Some(ms) = step["delay_ms"].as_u64() {
-                                utopia_async::sleep(Duration::from_millis(ms)).await;
-                            }
-                            let body = step["body"].as_str().unwrap_or("");
-                            let status = step["status"].as_u64().unwrap_or(200);
-                            let reply = format!("HTTP/1.1 {status} X\r\nContent-Length: {}\r\n\r\n{body}", body.len());
-                            if socket.write_all(reply.as_bytes()).await.is_err() {
-                                return;
-                            }
-                        }
-                    }
-                });
-            }
-        })
+    let seen: Arc<Mutex<Seen>> = Arc::default();
+    let connections: Arc<Mutex<Vec<utopia_async::JoinHandle<()>>>> = Arc::default();
+    let mut server = collect(listener, tls.map(acceptor).transpose()?, script.clone(), seen.clone(), connections.clone());
+    let default = match tls {
+        None => format!("http://127.0.0.1:{port}/v1/metrics"),
+        Some(_) => format!(
+            "https://{}:{port}/v1/metrics{}",
+            a.opt_str("host")?.unwrap_or("127.0.0.1"),
+            a.opt_str("query")?.unwrap_or("")
+        ),
     };
-    let default = format!("http://127.0.0.1:{port}/v1/metrics");
     let endpoint = a.opt_str("endpoint")?.unwrap_or(&default);
-    let t = match transport(endpoint, a) {
+    let mut args = a.0.clone();
+    if a.opt_bool("trust")?.unwrap_or(false) {
+        args["certificate_authority"] = json!(certificates().join("authority.pem").to_string_lossy());
+    }
+    let t = match transport(endpoint, &Args(&args)) {
         Ok(t) => Arc::new(t),
         Err(e) => return Ok(err(e).to_json()),
     };
-    let payloads: Vec<Vec<u8>> = a
-        .array("sends")?
-        .iter()
-        .map(|p| crate::adapter::bytes(p).ok_or_else(|| Fault::new("payload")))
-        .collect::<Result<_, _>>()?;
     let concurrent = a.opt_bool("concurrent")?.unwrap_or(false);
     let results: Vec<Json> = if concurrent {
+        let payloads: Vec<Vec<u8>> = a
+            .array("sends")?
+            .iter()
+            .map(|p| crate::adapter::bytes(p).ok_or_else(|| Fault::new("payload")))
+            .collect::<Result<_, _>>()?;
         futures_util::future::join_all(payloads.into_iter().map(|p| {
             let t = t.clone();
             async move { send_json(t.send(p).await) }
@@ -480,18 +581,38 @@ async fn exchange(a: &Args<'_>) -> Result<Json, Fault> {
         .await
     } else {
         let mut out = Vec::new();
-        for p in payloads {
-            out.push(send_json(t.send(p).await));
+        for send in a.array("sends")? {
+            if let Some(certificate) = send.get("restart").and_then(Json::as_str) {
+                server.abort();
+                for task in connections.lock().unwrap_or_else(|e| e.into_inner()).drain(..) {
+                    task.abort();
+                }
+                utopia_async::sleep(Duration::from_millis(20)).await;
+                let listener = bind(port).await?;
+                server =
+                    collect(listener, Some(acceptor(certificate)?), script.clone(), seen.clone(), connections.clone());
+                continue;
+            }
+            let payload = crate::adapter::bytes(send).ok_or_else(|| Fault::new("payload"))?;
+            out.push(send_json(t.send(payload).await));
         }
         out
     };
     t.shutdown();
     server.abort();
-    let mut requests = requests.lock().unwrap_or_else(|e| e.into_inner()).clone();
+    for task in connections.lock().unwrap_or_else(|e| e.into_inner()).drain(..) {
+        task.abort();
+    }
+    let seen = std::mem::take(&mut *seen.lock().unwrap_or_else(|e| e.into_inner()));
+    let mut requests = seen.requests;
     if concurrent {
         requests.sort_by(|x, y| x["payload"].as_str().cmp(&y["payload"].as_str()));
     }
-    Ok(json!({ "results": results, "requests": requests }))
+    let mut out = json!({ "results": results, "requests": requests });
+    if tls.is_some() {
+        out["strays"] = json!(seen.strays);
+    }
+    Ok(out)
 }
 
 /// One complete HTTP request off the front of `buffer`: its body and its
