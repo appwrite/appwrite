@@ -646,8 +646,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Request activity over time': 'פעילות בקשות לאורך זמן',
   'Real-time view of requests processed by firewall rules':
     'תצוגה בזמן אמת של בקשות שעובדו על ידי כללי חומת האש',
-  'Traffic broken down by Firewall action':
-    'תעבורה מפורקת לפי פעולת חומת האש',
+  'Traffic broken down by Firewall action': 'תעבורה מפורקת לפי פעולת חומת האש',
   Challenged: 'אותגרו',
   'Challenge solves': 'פתרונות Challenge',
   'Avg solve time': 'זמן פתרון ממוצע',
@@ -662,10 +661,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'No denied IPs in this period': 'אין כתובות IP שנדחו בתקופה זו',
   'Top blocked countries': 'המדינות החסומות המובילות',
   'Top denied countries': 'המדינות שנדחו המובילות',
-  'Countries with the most blocked requests':
-    'מדינות עם הכי הרבה בקשות חסומות',
-  'Countries with the most denied requests':
-    'מדינות עם הכי הרבה בקשות שנדחו',
+  'Countries with the most blocked requests': 'מדינות עם הכי הרבה בקשות חסומות',
+  'Countries with the most denied requests': 'מדינות עם הכי הרבה בקשות שנדחו',
   'No blocked countries in this period': 'אין מדינות חסומות בתקופה זו',
   'No denied countries in this period': 'אין מדינות שנדחו בתקופה זו',
   'Requests throttled by rate limit rules':
@@ -855,7 +852,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Hide: 'הסתרה',
   Show: 'הצגה',
   'No data for this date range': 'אין נתונים לטווח תאריכים זה',
-  'Drag on the chart to select a date range': 'גררו על התרשים כדי לבחור טווח תאריכים',
+  'Drag on the chart to select a date range':
+    'גררו על התרשים כדי לבחור טווח תאריכים',
   'Filter activities by': 'סינון פעילויות לפי',
   Database: 'מסד נתונים',
   Table: 'טבלה',
@@ -972,6 +970,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Show more': 'הצגת עוד',
   more: 'נוספים',
   'Select date range': 'בחירת טווח תאריכים',
+  'Start time': 'שעת התחלה',
+  'End time': 'שעת סיום',
   'Quick select': 'בחירה מהירה',
   Days: 'ימים',
   'To date': 'עד היום',
@@ -1003,7 +1003,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Property: 'נכס',
   properties: 'נכסים',
   'Property ID': 'מזהה נכס',
-  'Snippet ID': 'מזהה סניפט',
   'No properties yet': 'אין נכסים עדיין',
   'Create your first property to start tracking analytics for a website or app':
     'צרו את הנכס הראשון שלכם כדי להתחיל לעקוב אחר נתוני אנליטיקה של אתר או אפליקציה',
@@ -1048,7 +1047,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Update this property's display name.": 'עדכנו את שם התצוגה של הנכס הזה.',
   'Name updated': 'השם עודכן',
   'Property details': 'פרטי הנכס',
-  'Control whether this property accepts events.': 'קבעו אם הנכס הזה מקבל אירועים.',
+  'Control whether this property accepts events.':
+    'קבעו אם הנכס הזה מקבל אירועים.',
   'Tracking enabled': 'המעקב הופעל',
   'Tracking disabled': 'המעקב הושבת',
   'Tracking is enabled': 'המעקב פעיל',
@@ -1098,7 +1098,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Identifiers and timestamps for this property.':
     'מזהים וחותמות זמן של הנכס הזה.',
   'Property ID:': 'מזהה נכס:',
-  'Snippet ID:': 'מזהה סניפט:',
   'Events are reaching Appwrite.': 'אירועים מגיעים ל-Appwrite.',
   'Install the code and load a page. Checks every few seconds.':
     'התקינו את הקוד וטענו דף. הבדיקה מתבצעת כל כמה שניות.',
@@ -1684,7 +1683,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Your dedicated Slack channel is monitored during business hours (9am-6pm EST). For urgent issues, please use our':
     'ערוץ ה-Slack הייעודי שלכם מנוטר בשעות העבודה (9:00-18:00 EST). לנושאים דחופים, השתמשו ב',
   'priority support portal': 'פורטל התמיכה בעדיפות גבוהה',
-  "Appwrite offers an MCP server that allows LLMs to interact with Appwrite's API and documentation. Install with a single click or view the": 'Appwrite מציעה שרת MCP שמאפשר למודלי שפה לתקשר עם ה-API והדוקומנטציה של Appwrite. התקינו בלחיצה אחת או עיינו ב', // pragma: allowlist secret
+  "Appwrite offers an MCP server that allows LLMs to interact with Appwrite's API and documentation. Install with a single click or view the":
+    'Appwrite מציעה שרת MCP שמאפשר למודלי שפה לתקשר עם ה-API והדוקומנטציה של Appwrite. התקינו בלחיצה אחת או עיינו ב', // pragma: allowlist secret
   'Run Appwrite MCP locally with uvx and a project API key. Replace YOUR_API_KEY, then see the':
     'הריצו את Appwrite MCP באופן מקומי עם uvx ומפתח API של הפרויקט. החליפו את YOUR_API_KEY, ואז עיינו ב',
   docs: 'דוקומנטציה',
@@ -1874,7 +1874,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'פרסו את הפונקציה שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית הפונקציה.', // pragma: allowlist secret
   "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.":
     'פרסו את האתר שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית האתר.', // pragma: allowlist secret
- 'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
+  'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
     'שם קובץ נפוץ לבלוקים של provider {}. דוגמה: נקודת קצה מותאמת ו-self_signed כאשר Appwrite אינו ב-cloud.appwrite.io. סודות נשארים ב-tfvars, במשתני סביבה או ב-CI, לא בקובצי ‎.tf. בלוק required_providers אחד לכל מודול שורש (ראו main.tf).', // pragma: allowlist secret
   'About GBH': 'אודות GBH',
   Bandwidth: 'רוחב פס',
@@ -1887,6 +1887,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '1d': '1 יום',
   'Use a date range of': 'השתמשו בטווח תאריכים של',
   'hours or less for this interval.': 'שעות או פחות למרווח הזה.',
+  'Ranges shorter than 15 minutes use the 1m interval.':
+    'טווחים קצרים מ-15 דקות משתמשים במרווח של דקה אחת.',
   'days or less for this interval.': 'ימים או פחות למרווח הזה.',
   Compute: 'מחשוב',
   'Compute over time': 'חישוב לאורך זמן',
@@ -2130,8 +2132,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'נפח בקשות מקובץ לפי מקטע שירות של Appwrite.', // pragma: allowlist secret
   'Request volume grouped by caller country.':
     'נפח בקשות מקובץ לפי מדינת המקור.',
-  'Request volume grouped by caller city.':
-    'נפח בקשות מקובץ לפי עיר המקור.',
+  'Request volume grouped by caller city.': 'נפח בקשות מקובץ לפי עיר המקור.',
   'Request volume grouped by caller internet service provider.':
     'נפח בקשות מקובץ לפי ספק האינטרנט של המקור.',
   'Request volume grouped by caller autonomous system number.':
@@ -2496,8 +2497,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'It will stop receiving events immediately. This action cannot be undone.':
     'הוא יפסיק לקבל אירועים באופן מיידי. לא ניתן לבטל פעולה זו.',
   'Last deployed:': 'פריסה אחרונה:',
-  'Leave blank to keep current password unchanged.':
-    'השאירו ריק כדי לשמור על הסיסמה הנוכחית ללא שינוי.',
+  'Leave blank to keep the current password. Re-enter it when changing the host, port, or secure protocol.':
+    'השאירו ריק כדי לשמור על הסיסמה הנוכחית. הזינו אותה מחדש בעת שינוי המארח, הפורט או הפרוטוקול המאובטח.',
   'Leave blank to keep existing': 'השאירו ריק כדי לשמור על הקיים',
   'Leave empty to auto-generate': 'השאירו ריק ליצירה אוטומטית',
   'Leave empty to clear the whole project':
@@ -2583,8 +2584,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   SMTP: 'SMTP',
   'SMTP server has been disabled.': 'שרת ה-SMTP הושבת.',
   'SMTP server has been enabled.': 'שרת ה-SMTP הופעל.',
-  'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.':
-    'תעודת SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות, לא נדרשת פעולה מצדכם.',
+  "SSL certificate is being issued. This usually takes a few minutes. If the logs ask for a DNS record, add it where your domain's DNS is managed.":
+    'תעודת SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות. אם הלוגים מבקשים רשומת DNS, הוסיפו אותה במקום שבו מנוהל ה-DNS של הדומיין שלכם.',
   'Search domains...': 'חיפוש דומיינים...',
   'Search migrations...': 'חיפוש מיגרציות...',
   'Search webhooks...': 'חיפוש webhooks...',
@@ -2701,7 +2702,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'הופעלו.',
   here: 'כאן',
   installations: 'התקנות',
-  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.": // pragma: allowlist secret
+  // pragma: allowlist secret
+  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.":
     'במקום זאת. אם אתם משתמשים ב-Cloudflare או ב-CDN אחר, ודאו שהפרוקסי מושבת (מוגדר כ-DNS only) עבור הרשומה הזו, כי Appwrite מגיש את הדומיין שלכם דרך ה-CDN שלו.', // pragma: allowlist secret
   "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
     'הוא דומיין שורש (apex), ורשומת CNAME נתמכת רק אצל ספקים מסוימים. אם הספק שלכם לא תומך בכך, אמתו באמצעות',
@@ -3234,7 +3236,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "A payment is awaiting confirmation. If you've completed authentication, click refresh to check the payment status.":
     'תשלום ממתין לאישור. אם השלמתם את האימות, לחצו על רענון כדי לבדוק את סטטוס התשלום.',
   'Scheduled for removal': 'מתוזמן להסרה',
-  'Enabled for this project at {price}/month.': 'מופעל בפרויקט זה ב-{price}/חודש.',
+  'Enabled for this project at {price}/month.':
+    'מופעל בפרויקט זה ב-{price}/חודש.',
   'Enabled for this project.': 'מופעל בפרויקט זה.',
   '{price}/month': '{price}/חודש',
   'Enrich request and session data with premium geolocation. {price}/month, prorated for the current billing cycle.':
@@ -3278,13 +3281,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'A contributor opened this pull request. Approve it to start the Git deployment.':
     'משתתף פתח pull request זה. אשרו אותו כדי להתחיל את פריסת ה-Git.',
   'The build will start shortly.': 'הבנייה תתחיל בקרוב.',
-  'Approved': 'אושר',
+  Approved: 'אושר',
   'Merge request': 'Merge request',
   'Pull request': 'Pull request',
   'Failed to approve deployment': 'אישור הפריסה נכשל',
   'Pause live updates': 'השהיית עדכונים חיים',
-  'Pause live updates to refresh manually':
-    'השהו עדכונים חיים כדי לרענן ידנית',
+  'Pause live updates to refresh manually': 'השהו עדכונים חיים כדי לרענן ידנית',
   'Resume live updates': 'חידוש עדכונים חיים',
   'Updating…': 'מתעדכן…',
   Paused: 'מושהה',
@@ -3296,12 +3298,26 @@ export const heProjectMiscDictionary: Record<string, string> = {
 
   // Project environment switcher
   Environments: 'סביבות',
-  Staging: 'Staging',
-  Development: 'פיתוח',
   'Switch environment': 'החלפת סביבה',
-  'Environment switched': 'הסביבה הוחלפה',
   'Create environment': 'יצירת סביבה',
-  'Custom environments are coming soon': 'סביבות מותאמות אישית יגיעו בקרוב',
+  'Rename environment': 'שינוי שם הסביבה',
+  'Delete environment': 'מחיקת סביבה',
+  'Environment ID': 'מזהה סביבה',
+  'Enter environment name': 'הזינו שם סביבה',
+  'An environment gets its own resources and users, in the same region as this project. Its usage is billed under this project.':
+    'לכל סביבה יש משאבים ומשתמשים משלה, באותו אזור של הפרויקט הזה. השימוש בה מחויב תחת הפרויקט הזה.',
+  'Only the name changes. The environment ID stays the same.':
+    'רק השם משתנה. מזהה הסביבה נשאר זהה.',
+  'Are you sure you want to delete this environment? Its resources and users are removed with it. This action cannot be undone.':
+    'האם אתם בטוחים שברצונכם למחוק את הסביבה הזו? המשאבים והמשתמשים שלה יוסרו יחד איתה. פעולה זו אינה ניתנת לביטול.',
+  'Environment created': 'הסביבה נוצרה',
+  'Environment renamed': 'שם הסביבה שונה',
+  'Environment deleted': 'הסביבה נמחקה',
+  'Failed to create environment': 'יצירת הסביבה נכשלה',
+  'Failed to rename environment': 'שינוי שם הסביבה נכשל',
+  'Failed to delete environment': 'מחיקת הסביבה נכשלה',
+  'Too many environments created for this project in the last hour. Try again later.':
+    'נוצרו יותר מדי סביבות לפרויקט הזה בשעה האחרונה. נסו שוב מאוחר יותר.',
   'Send your first message': 'שליחת ההודעה הראשונה שלכם',
   'Reach your users by email, SMS, and push notifications from one place.':
     'הגיעו למשתמשים שלכם באימייל, ב-SMS ובהתראות Push, הכול ממקום אחד.',
@@ -3445,4 +3461,103 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Ship your apps to every store': 'הפצת האפליקציות שלכם לכל חנות',
   'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
     'בנו גרסאות Android,‏ iOS ו-Windows ממקום אחד והגישו אותן ל-Google Play,‏ App Store ו-Microsoft Store.',
+  'Create a link that lets another organization claim this project. Each link can be claimed once.':
+    'צרו קישור שמאפשר לארגון אחר לקבל את הפרויקט. ניתן לממש כל קישור פעם אחת.',
+  'Failed to load transfer links': 'טעינת קישורי ההעברה נכשלה',
+  'No active transfer links': 'אין קישורי העברה פעילים',
+  Recipient: 'נמען',
+  'Any organization': 'כל ארגון',
+  'Transfer link actions': 'פעולות לקישור ההעברה',
+  'transfer links': 'קישורי העברה',
+  'Create transfer link': 'יצירת קישור העברה',
+  'Share this link with the recipient organization. You can copy it again from the list.':
+    'שתפו את הקישור עם הארגון הנמען. תוכלו להעתיק אותו שוב מהרשימה.',
+  'Choose how long the link is valid and which organization can claim the project.':
+    'בחרו לכמה זמן הקישור תקף ואיזה ארגון יוכל לקבל את הפרויקט.',
+  'Transfer link': 'קישור ההעברה',
+  'Expires in': 'תוקף הקישור',
+  'Recipient organization ID (optional)': 'מזהה הארגון הנמען (אופציונלי)',
+  'Leave empty to let any organization claim the project.':
+    'השאירו ריק כדי לאפשר לכל ארגון לקבל את הפרויקט.',
+  'Failed to create transfer link': 'יצירת קישור ההעברה נכשלה',
+  'Delete transfer link': 'מחיקת קישור העברה',
+  'The link will stop working and the project can no longer be claimed with it.':
+    'הקישור יפסיק לפעול ולא ניתן יהיה לקבל באמצעותו את הפרויקט.',
+  'Transfer link has been deleted': 'קישור ההעברה נמחק',
+  'Failed to delete transfer link': 'מחיקת קישור ההעברה נכשלה',
+  'Claim project': 'קבלת פרויקט',
+  'Choose the organization that should receive this project.':
+    'בחרו את הארגון שיקבל את הפרויקט.',
+  'Target organization': 'ארגון יעד',
+  'has been claimed': 'התקבל',
+  'Failed to claim project': 'קבלת הפרויקט נכשלה',
+  'This transfer link is incomplete. Ask the sender to share it again.':
+    'קישור ההעברה חלקי. בקשו מהשולח לשתף אותו שוב.',
+  'You need an organization to claim this project. Create one, then open the link again.':
+    'נדרש ארגון כדי לקבל את הפרויקט. צרו ארגון ופתחו את הקישור שוב.',
+  'Link expires': 'תוקף הקישור יפוג',
+  'This transfer link is no longer valid.': 'קישור ההעברה אינו תקף עוד.',
+  'The project already belongs to this organization. Select a different one.':
+    'הפרויקט כבר שייך לארגון זה. בחרו ארגון אחר.',
+  'will move from': 'יועבר מ-',
+  'to the organization you choose.': 'לארגון שתבחרו.',
+  'Only this organization can claim this link.':
+    'רק ארגון זה יכול לקבל את הקישור הזה.',
+  'This transfer is reserved for an organization you are not part of:':
+    'ההעברה הזו שמורה לארגון שאינכם חברים בו:',
+  'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
+    'בחרו כמה זמן לשמור פריסות לא פעילות. פריסות פעילות ופריסות שמקושרות לדומיין מותאם אישית נשמרות תמיד.',
+  'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':
+    'החל מ-5 בנובמבר 2026, Appwrite Cloud ימחק פריסות לא פעילות אחרי 30 יום כברירת מחדל. כדי לשמור היסטוריה ארוכה יותר, בחרו תקופת שמירה ארוכה יותר ולחצו על עדכון לפני תאריך זה.',
+  'Retention limits are unavailable. Try reloading this page.':
+    'לא ניתן לטעון את מגבלות השמירה. נסו לטעון את הדף מחדש.',
+  'Your plan keeps up to 100 inactive deployments for up to 90 days.':
+    'התוכנית שלכם שומרת עד 100 פריסות לא פעילות למשך עד 90 יום.',
+  'Your plan allows retention for up to 3 years.':
+    'התוכנית שלכם מאפשרת שמירה למשך עד 3 שנים.',
+  'Your organization has a custom retention policy.':
+    'לארגון שלכם יש מדיניות שמירה מותאמת אישית.',
+  'Your saved retention exceeds your plan limit. Save a supported period to update it.':
+    'תקופת השמירה שנשמרה חורגת ממגבלת התוכנית שלכם. בחרו תקופה נתמכת ושמרו לעדכון.',
+  '3 Years': '3 שנים',
+
+  // Environment copy at creation, its progress card, and backups in environments
+  'Start from': 'נקודת התחלה',
+  'Empty environment': 'סביבה ריקה',
+  'Nothing is copied from the project.': 'דבר לא מועתק מהפרויקט.',
+  'Copy of the project': 'עותק של הפרויקט',
+  'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
+    'המבנה וההגדרות מועתקים, והנתונים רק היכן שתבקשו זאת. ההעתקה מתבצעת לאחר יצירת הסביבה ושומרת על המזהים של מה שהיא מעתיקה.',
+  'What to copy': 'מה להעתיק',
+  'Pick what to copy, or start from an empty environment.':
+    'בחרו מה להעתיק, או התחילו מסביבה ריקה.',
+  'Environment created. The copy from the project is under way.':
+    'הסביבה נוצרה. ההעתקה מהפרויקט מתבצעת כעת.',
+  'Databases, tables, columns and indexes':
+    'מסדי נתונים, טבלאות, עמודות ואינדקסים',
+  'Rows and documents': 'שורות ומסמכים',
+  'Buckets and their settings': 'באקטים וההגדרות שלהם',
+  'Teams, auth settings, security policies and OAuth2 providers':
+    'צוותים, הגדרות אימות, מדיניות אבטחה וספקי OAuth2',
+  'Users and memberships': 'משתמשים וחברויות',
+  'The newest 90 users, with their passwords. An environment holds 100 users at most, so 10 places stay free for test accounts.':
+    '90 המשתמשים החדשים ביותר, יחד עם הסיסמאות שלהם. סביבה מכילה עד 100 משתמשים, כך ש-10 מקומות נשארים פנויים לחשבונות בדיקה.',
+  'Functions, their variables and their active deployment':
+    'פונקציות, המשתנים שלהן והפריסה הפעילה שלהן',
+  'Every deployment': 'כל הפריסות',
+  'Sites, their variables and their active deployment':
+    'אתרים, המשתנים שלהם והפריסה הפעילה שלהם',
+  'Providers and topics': 'ספקים ונושאים',
+  'Platforms, SMTP, enabled services, project variables and email templates':
+    'פלטפורמות, SMTP, שירותים מופעלים, משתני פרויקט ותבניות אימייל',
+  'Copying from the project': 'ההעתקה מהפרויקט מתבצעת',
+  'Copied from the project': 'הועתק מהפרויקט',
+  'Could not copy from the project': 'לא ניתן היה להעתיק מהפרויקט',
+  Dismiss: 'סגירה',
+  'Backups are not available in environments. Back up the project the environment belongs to.':
+    'גיבויים אינם זמינים בסביבות. גבו את הפרויקט שהסביבה שייכת אליו.',
+  'Backed up with the project': 'מגובה יחד עם הפרויקט',
+  'Backup policies and archives are managed on the project this environment belongs to.':
+    'מדיניות הגיבוי והארכיונים מנוהלים בפרויקט שהסביבה הזו שייכת אליו.',
+  'Open the project': 'פתיחת הפרויקט',
 }

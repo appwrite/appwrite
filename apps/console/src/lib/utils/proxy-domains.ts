@@ -6,13 +6,24 @@ import { parse } from 'tldts'
 import type { Models } from '@appwrite.io/console'
 
 /**
- * Check if a rule has logs available for viewing (string or array with content)
+ * Whether a rule offers its logs. A rule that is not verified always does. A
+ * verified rule offers them once a certificate check has written any.
  */
-export function canViewRuleLogs(logs: unknown): boolean {
-  if (!logs) return false
-  if (typeof logs === 'string') return logs.length > 0
-  if (Array.isArray(logs)) return logs.length > 0
+export function canViewRuleLogs(rule: {
+  status: string
+  logs?: unknown
+}): boolean {
+  if (rule.status !== 'verified') return true
+  if (typeof rule.logs === 'string') return rule.logs.length > 0
+  if (Array.isArray(rule.logs)) return rule.logs.length > 0
   return false
+}
+
+/**
+ * Whether verification of a rule can be retried
+ */
+export function canRetryRule(status: string): boolean {
+  return status === 'created' || status === 'unverified'
 }
 
 /**
@@ -36,6 +47,7 @@ export function proxyRuleServesActiveDeployment(
 import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
+import { isCloudEndpointUrl } from '@/lib/debug-endpoint'
 
 /** Domain validation regex - allows subdomains and apex domains */
 export const DOMAIN_REGEX =
@@ -64,7 +76,7 @@ export function getApexDomain(domain: string): string | null {
  */
 export function isCloud(): boolean {
   try {
-    return getBaseEndpoint().includes('cloud.appwrite.io')
+    return isCloudEndpointUrl(getBaseEndpoint())
   } catch {
     return false
   }

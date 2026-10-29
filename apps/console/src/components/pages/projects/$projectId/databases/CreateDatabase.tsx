@@ -33,7 +33,7 @@ interface CreateDatabaseProps {
   onCreate: (data: { databaseId?: string; name: string }) => void
   isLoading?: boolean
   /** When false, a warning is shown that the database will not be backed up. Omit when unknown/loading. */
-  backupsEnabled?: boolean
+  backupsEnabled?: boolean | null
   /** Organization id for the upgrade wizard link in the backups warning. */
   orgId?: string | null
 }

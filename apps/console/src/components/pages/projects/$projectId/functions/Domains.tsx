@@ -6,7 +6,8 @@ import {
   RefreshCw,
   Trash2,
   ExternalLink,
-  Globe} from 'lucide-react'
+  Globe,
+  Mail} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
@@ -35,7 +36,11 @@ import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import {
+  canRetryRule,
+  canViewRuleLogs,
+  getApexDomain,
+} from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { queryParamToMap } from '@/lib/table-filters'
@@ -43,6 +48,8 @@ import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { domainUrl } from '@/lib/domains/url'
+import { isSmtpRule } from '@/lib/function-smtp-domain'
+import { VerifySmtpDomain } from './domains/VerifySmtpDomain'
 
 export function View() {
   const t = useT()
@@ -56,6 +63,7 @@ export function View() {
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [verifyOpen, setVerifyOpen] = useState(false)
+  const [smtpVerifyOpen, setSmtpVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
@@ -88,6 +96,14 @@ export function View() {
   const rulesFromApi = domainsData?.rules || []
   const total = domainsData?.total || 0
 
+  // Deleting the last domain on the last page leaves that page empty; step
+  // back to the last page that still has rows so the table stays reachable.
+  useEffect(() => {
+    if (!domainsData || currentPage === 0) return
+    const lastPage = Math.max(0, Math.ceil(domainsData.total / pageSize) - 1)
+    if (currentPage > lastPage) setCurrentPage(lastPage)
+  }, [domainsData, currentPage, pageSize])
+
   // Keep showing previous results while fetching new filter results (no empty state flash)
   const lastRulesRef = useRef<typeof rulesFromApi>([])
   useEffect(() => {
@@ -116,7 +132,11 @@ export function View() {
   const handleRetry = (rule: Models.ProxyRule) => {
     openDialogAfterOverlayCloses(() => {
       setSelectedRule(rule)
-      setVerifyOpen(true)
+      if (isSmtpRule(rule)) {
+        setSmtpVerifyOpen(true)
+      } else {
+        setVerifyOpen(true)
+      }
     })
   }
 
@@ -194,6 +214,7 @@ export function View() {
               <TableBody>
                 {rules.map((rule) => {
                   const statusConfig = getDomainStatusBadgeConfig(rule.status)
+                  const isEmail = isSmtpRule(rule)
 
                   return (
                     <ProxyRuleContextMenu
@@ -208,18 +229,27 @@ export function View() {
                     >
                       <TableRow>
                         <TableCell className="px-4 py-3">
-                          <a
-                            href={domainUrl(rule.domain)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"
-                          >
-                            {rule.domain}
-                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                          </a>
+                          {isEmail ? (
+                            <span className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium">
+                              {rule.domain}
+                              <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                            </span>
+                          ) : (
+                            <a
+                              href={domainUrl(rule.domain)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"
+                            >
+                              {rule.domain}
+                              <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                            </a>
+                          )}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-[13px]">
-                          {rule.redirectUrl ? (
+                          {isEmail ? (
+                            <span>{t('Email')}</span>
+                          ) : rule.redirectUrl ? (
                             <span>
                               {t('Redirect to')} {rule.redirectUrl}
                             </span>
@@ -260,8 +290,7 @@ export function View() {
                                 {t('View logs')}
                               </Button>
                             )}
-                            {(rule.status === 'created' ||
-                              rule.status === 'unverified') && (
+                            {canRetryRule(rule.status) && (
                               <Button
                                 variant="link"
                                 size="sm"
@@ -286,15 +315,14 @@ export function View() {
                                 <RowActionsMenuTrigger />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {rule.status !== 'verified' && (
+                                {canViewRuleLogs(rule) && (
                                   <DropdownMenuItem
                                     onClick={() => handleViewLogs(rule)}
                                   >
                                     <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
-                                {(rule.status === 'created' ||
-                                  rule.status === 'unverified') && (
+                                {canRetryRule(rule.status) && (
                                   <DropdownMenuItem
                                     onClick={() => handleRetry(rule)}
                                   >
@@ -368,6 +396,16 @@ export function View() {
       {domainsContent}
       {selectedRule && (
         <>
+          {isSmtpRule(selectedRule) ? (
+            <VerifySmtpDomain
+              open={smtpVerifyOpen}
+              onOpenChange={setSmtpVerifyOpen}
+              projectId={projectId ?? ''}
+              region={project?.region}
+              rule={selectedRule}
+              onVerifySuccess={() => setSelectedRule(null)}
+            />
+          ) : null}
           <VerifyDomain
             open={verifyOpen}
             onOpenChange={setVerifyOpen}
@@ -405,7 +443,7 @@ export function View() {
             setViewLogsOpen(open)
             if (!open) setViewLogsRule(null)
           }}
-          rule={viewLogsRule}
+          rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
         />
       )}
     </>

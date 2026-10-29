@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -49,7 +50,7 @@ class Create extends Action
                 group: null,
                 name: 'createAppwriteMigration',
                 description: '/docs/references/migrations/migration-appwrite.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -69,6 +70,7 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
             ->inject('publicHostname')
+            ->inject('deploymentHostname')
             ->callback($this->action(...));
     }
 
@@ -84,13 +86,13 @@ class Create extends Action
         array $platform,
         Event $queueForEvents,
         MigrationPublisher $publisherForMigrations,
-        PublicHostname $publicHostname
+        PublicHostname $publicHostname,
+        DeploymentHostname $deploymentHostname
     ): void {
-        // Block a source endpoint that resolves to a private or reserved
-        // address to prevent SSRF into the internal network.
-        $hostname = $publicHostname;
-        if (!$hostname->isValid(\parse_url($endpoint, PHP_URL_HOST) ?? '')) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        $host = \parse_url($endpoint, PHP_URL_HOST) ?: '';
+
+        if (!$deploymentHostname->isValid($host) && !$publicHostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $publicHostname->getDescription());
         }
 
         $migration = $dbForProject->createDocument('migrations', new Document([

@@ -39,6 +39,7 @@ import {
 } from './constants'
 import { Dependencies } from './dependencies'
 import { keepNewerLatestDeployment } from '@/lib/utils/deployment-status'
+import type { SmtpProxyRule } from '@/lib/function-smtp-domain'
 
 const EMPTY_PROXY_RULES: Models.ProxyRule[] = []
 
@@ -1539,6 +1540,69 @@ export function useCreateFunctionDomainRule(
         domain: domainNorm,
         functionId,
       })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['proxy-rules'],
+      })
+    },
+  })
+}
+
+/**
+ * Create an SMTP rule with a raw POST: the console SDK has no method for it yet.
+ */
+export async function createSmtpDomainRule(
+  projectId: string,
+  params: { domain: string; functionId: string; branch?: string },
+): Promise<SmtpProxyRule> {
+  if (!projectId) {
+    throw new Error('Project ID is required')
+  }
+  const domain = params.domain.trim().toLowerCase()
+  const functionId = params.functionId.trim()
+  if (!domain || !functionId) {
+    throw new Error('Domain and Function ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  const uri = new URL(`${projectSdk.client.config.endpoint}/proxy/rules/smtp`)
+  const payload: Record<string, string> = {
+    domain,
+    functionId,
+  }
+  if (params.branch?.trim()) {
+    payload.branch = params.branch.trim()
+  }
+
+  return (await projectSdk.client.call(
+    'post',
+    uri,
+    {
+      'X-Appwrite-Project': projectSdk.client.config.project,
+      'content-type': 'application/json',
+      accept: 'application/json',
+    },
+    payload,
+  )) as SmtpProxyRule
+}
+
+/**
+ * Hook to create a custom inbound email (SMTP) domain for a function.
+ */
+export function useCreateSmtpDomainRule(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      domain: string
+      functionId: string
+      branch?: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await createSmtpDomainRule(projectId, params)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

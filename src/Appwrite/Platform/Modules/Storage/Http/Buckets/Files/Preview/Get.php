@@ -59,6 +59,9 @@ class Get extends Action
             ->label('scope', 'files.read')
             ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId},fileId:{param-fileId}')
+            ->label('abuse-limit', 60)
+            ->label('abuse-time', 60)
             ->label('cache', true)
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
             ->label('cache.resource', 'file/{request.fileId}')
@@ -170,7 +173,8 @@ class Get extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($file->isEmpty()) {
+        // A file stays incomplete until its final chunk is joined and scanned.
+        if ($file->isEmpty() || $file->getAttribute('chunksUploaded', 0) < $file->getAttribute('chunksTotal', 1)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 

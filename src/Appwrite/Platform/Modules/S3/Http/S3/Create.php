@@ -101,7 +101,7 @@ class Create extends Base
             }
             $bucket = $this->bucket($dbForProject, $bucketId);
             $uploadId = \bin2hex(\random_bytes(16));
-            $this->createMultipartUpload($dbForProject, $cache, $project, $deviceForFiles, $bucket, $key, $uploadId, $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
+            $this->createMultipartUpload($locks, $dbForProject, $cache, $project, $deviceForFiles, $bucket, $key, $uploadId, $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
             $this->sendXml($response, S3Xml::initiateMultipart($bucketId, $key, $uploadId));
             return;
         }
@@ -140,9 +140,9 @@ class Create extends Base
             // SDKs upload parts of one upload concurrently; the cached parts map
             // and device chunk bookkeeping are read-modify-write, so load and
             // save must share the upload's critical section.
-            $locks($this->multipartLockKey($project, $uploadId), 600, function () use ($cache, $project, $deviceForFiles, $uploadId, $bucketId, $key, $partNumber, $body, $etag): void {
+            $locks($this->multipartLockKey($project, $uploadId), 600, function () use ($cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag): void {
                 $upload = $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
-                $this->uploadMultipartPart($cache, $project, $deviceForFiles, $upload, $partNumber, $body, $etag);
+                $this->uploadMultipartPart($cache, $project, $deviceForFiles, $bucket, $upload, $partNumber, $body, $etag);
             }, timeout: 120.0);
             if ($copySource !== '') {
                 $this->sendXml($response, S3Xml::copyPart($etag));
@@ -166,7 +166,7 @@ class Create extends Base
             // connections from the fail-fast lock pool at once.
             $selected = CompleteMultipartUpload::parts($this->requestBody($request));
             $upload = $this->multipartUploadForBucket($cache, $project, $this->query($request, 'uploadId'), $bucketId, $key);
-            [$file, $event] = $this->completeMultipartUpload($locks, $dbForProject, $cache, $project, $deviceForFiles, $bucket, $upload, $selected);
+            [$file, $event] = $this->completeMultipartUpload($locks, $dbForProject, $cache, $project, $publisherForDeletes, $deviceForFiles, $bucket, $upload, $selected);
             if ($event !== null) {
                 $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
                 $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
@@ -210,23 +210,19 @@ class Create extends Base
             if (\strtoupper($request->getHeaderLine('x-amz-metadata-directive')) === 'REPLACE') {
                 $metadata = $this->requestObjectMetadata($request);
             }
-            [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $deviceForFiles, $bucket, $key, (string) $deviceForFiles->read($sourceFile->getAttribute('path', '')), $sourceFile->getAttribute('mimeType', 'application/octet-stream'), $metadata);
+            [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, $key, (string) $deviceForFiles->read($sourceFile->getAttribute('path', '')), $sourceFile->getAttribute('mimeType', 'application/octet-stream'), $metadata);
             $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
             $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
             $this->sendXml($response, S3Xml::copyObject($file->getAttribute('signature', ''), $file->getUpdatedAt() ?: $file->getCreatedAt()));
             return;
         }
 
-        [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $deviceForFiles, $bucket, $key, $this->requestBody($request), $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
+        [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, $key, $this->requestBody($request), $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
         $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
         $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
-            ->addHeader('ETag', '"' . $file->getAttribute('signature', '') . '"');
-        $sse = (string) ($file->getAttribute('metadata', [])['serverSideEncryption'] ?? '');
-        if ($sse !== '') {
-            $response->addHeader('x-amz-server-side-encryption', $sse);
-        }
-        $response->send('');
+            ->addHeader('ETag', '"' . $file->getAttribute('signature', '') . '"')
+            ->send('');
     }
 }

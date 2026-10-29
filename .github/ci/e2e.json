@@ -59,6 +59,7 @@
         "src/Appwrite/Auth/OIDC/",
         "src/Appwrite/Auth/Passkey/",
         "src/Appwrite/Auth/MFA/",
+        "src/Appwrite/Auth/OTPToken.php",
         "src/Appwrite/Platform/Workers/Mails.php",
         "app/config/oAuthProviders.php",
         "packages/messaging/",
@@ -197,7 +198,18 @@
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "src/Appwrite/Platform/Workers/Certificates.php",
-        "src/Appwrite/Certificates/"
+        "src/Appwrite/Certificates/",
+        "src/Appwrite/Maintenance/",
+        "src/Appwrite/Platform/Tasks/ScheduleMaintenance.php",
+        "src/Appwrite/Platform/Tasks/Schedule.php",
+        "src/Appwrite/Schedule/Source/Maintenance.php",
+        "src/Appwrite/Platform/Workers/Deletes.php",
+        "src/Appwrite/Platform/Workers/Maintenance.php",
+        "src/Appwrite/Event/Message/Maintenance.php",
+        "src/Appwrite/Event/Publisher/Maintenance.php",
+        "app/config/workers.php",
+        "app/init/resources.php",
+        "packages/schedule/"
       ]
     },
     {
@@ -359,6 +371,16 @@
       ]
     },
     {
+      "name": "VCSEntire",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/VCS/",
+        "packages/vcs/"
+      ]
+    },
+    {
       "name": "VCSGitea",
       "runner": "e2e",
       "functional": false,
@@ -456,7 +478,9 @@
       "paths": [
         "app/mqtt.php",
         "src/Appwrite/Mqtt/",
-        "src/Appwrite/Messaging/Adapter/Mqtt.php"
+        "src/Appwrite/Messaging/Adapter/Mqtt.php",
+        "src/Appwrite/Messaging/Adapter/Push/",
+        "src/Appwrite/Platform/Workers/Messaging.php"
       ]
     }
   ],
@@ -500,7 +524,17 @@
       "compose_profiles": "s3",
       "wait": "executor",
       "storage_device": "s3",
-      "services": ["Functions", "Storage"]
+      "services": ["Functions", "Project", "Storage"]
+    },
+    {
+      "label": "Usage Outage",
+      "group": "usageOutage",
+      "path": "/usr/src/code/tests/e2e/Services/Usage",
+      "options_abuse": "disabled",
+      "storage_antivirus": "disabled",
+      "compose_profiles": "",
+      "wait": "",
+      "services": ["Usage"]
     },
     {
       "label": "Queue Retry",
@@ -510,7 +544,7 @@
       "storage_antivirus": "disabled",
       "compose_profiles": "",
       "wait": "executor",
-      "services": ["Functions", "Webhooks"]
+      "services": ["Functions", "Storage", "Webhooks"]
     }
   ]
 }

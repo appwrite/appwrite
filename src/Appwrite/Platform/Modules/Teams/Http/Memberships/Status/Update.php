@@ -2,19 +2,24 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 
+use Appwrite\Auth\MFA\Type;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -78,10 +83,12 @@ class Update extends Action
             ->inject('proofForToken')
             ->inject('domainVerification')
             ->inject('cookieDomain')
+            ->inject('mqtt')
+            ->inject('queueForRealtime')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain, Mqtt $mqtt, Realtime $queueForRealtime)
     {
         $protocol = $request->getProtocol();
 
@@ -127,17 +134,16 @@ class Update extends Action
             ->setAttribute('confirm', true)
         ;
 
-        $targetUser->setAttribute('emailVerification', true);
-        $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document(['emailVerification' => true])));
+        $authorization->addRole(Role::user($targetUser->getId())->toString());
 
-        // Create session for the user if not logged in
+        // Built up front and stored with the confirmation, so a failure cannot consume the invite without a session
+        $session = null;
+        $sessionSecret = '';
         if (!$hasSession) {
-            $authorization->addRole(Role::user($targetUser->getId())->toString());
-
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
-            $secret = $proofForToken->generate();
+            $sessionSecret = $proofForToken->generate();
             $session = new Document(array_merge([
                 '$id' => Id::unique(),
                 '$permissions' => [
@@ -149,21 +155,84 @@ class Update extends Action
                 'userInternalId' => $targetUser->getSequence(),
                 'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $targetUser->getAttribute('email'),
-                'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
+                'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
-                'factors' => ['email'],
                 'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+        }
 
-            $session = $dbForProject->createDocument('sessions', $session);
+        $claimed = null;
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, &$session, &$claimed) {
+            $claimed = null; // A retried attempt starts over
+            // Lock the user first, as an address change does, so a voided invite cannot slip through
+            $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
 
+            // Re-read under a lock, a concurrent accept of the same invite must not be counted twice
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+
+            if ($current->getAttribute('confirm') === true) {
+                return new Document();
+            }
+
+            if (!$proofForToken->verify($secret, (string) $current->getAttribute('secret'))) {
+                throw new Exception(Exception::TEAM_INVALID_SECRET);
+            }
+
+            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
+
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
+            // The invite proves the address it was sent to, and only one address on file tells which that was
+            $hasEmail = !empty($user->getAttribute('email'));
+            $hasPhone = !empty($user->getAttribute('phone'));
+            $verification = match (true) {
+                $hasEmail && !$hasPhone => 'emailVerification',
+                $hasPhone && !$hasEmail => 'phoneVerification',
+                default => null,
+            };
+
+            // Accepting while signed out proves an unverified email or phone, so whoever registered it keeps no other way in
+            if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false)) {
+                $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
+                $claimed = $user;
+            }
+
+            if ($verification !== null) {
+                $targetUser->setAttribute($verification, true);
+                $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
+            }
+
+            // The session counts only the channel the invite proved; when that is unknown the user signs in instead
+            if ($verification === null) {
+                $session = null;
+            }
+
+            if ($session !== null) {
+                $phoneProof = $verification === 'phoneVerification';
+                $session
+                    ->setAttribute('provider', $phoneProof ? SESSION_PROVIDER_PHONE : SESSION_PROVIDER_EMAIL)
+                    ->setAttribute('providerUid', $phoneProof ? $user->getAttribute('phone') : $user->getAttribute('email'))
+                    ->setAttribute('factors', [$phoneProof ? Type::PHONE : Type::EMAIL]);
+                $session = $dbForProject->createDocument('sessions', $session);
+            }
+
+            return $confirmed;
+        });
+
+        if ($membership->isEmpty()) {
+            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
+        }
+
+        // Hand the new session to a user who was not logged in
+        if ($session !== null) {
             $authorization->addRole(Role::user($userId)->toString());
 
             $encoded = $store
                 ->setProperty('id', $targetUser->getId())
-                ->setProperty('secret', $secret)
+                ->setProperty('secret', $sessionSecret)
                 ->encode();
 
             if (!$domainVerification) {
@@ -193,26 +262,23 @@ class Update extends Action
             ;
         }
 
-        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team) {
-            // Re-read under a lock, a concurrent accept of the same invite must not be counted twice
-            $current = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+        $dbForProject->purgeCachedDocument('users', $targetUser->getId());
 
-            if ($current->getAttribute('confirm') === true) {
-                return new Document();
+        if ($claimed !== null) {
+            try {
+                $mqtt->revoke($project->getId(), $claimed->getId());
+            } catch (\Throwable $error) {
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
             }
 
-            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
-
-            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
-
-            return $confirmed;
-        });
-
-        if ($membership->isEmpty()) {
-            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
+            // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
+            (clone $queueForRealtime)
+                ->reset()
+                ->setProject($project)
+                ->setEvent('users.[userId].sessions.delete')
+                ->setParam('userId', $claimed->getId())
+                ->trigger();
         }
-
-        $dbForProject->purgeCachedDocument('users', $targetUser->getId());
 
         $queueForEvents
             ->setParam('userId', $targetUser->getId())

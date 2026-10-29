@@ -123,6 +123,39 @@ trait VariablesBase
         $this->assertSame(400, $variable['headers']['status-code']);
     }
 
+    public function testCreateVariableDescription(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $variable = $this->createVariable(ID::unique(), 'STRIPE_KEY', 'sk_test', false, description: 'Stripe key used at checkout');
+
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $this->assertSame('Stripe key used at checkout', $variable['body']['description']);
+        $variableId = $variable['body']['$id'];
+
+        $get = $this->getVariable($variableId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('Stripe key used at checkout', $get['body']['description']);
+
+        $plain = $this->createVariable(ID::unique(), 'PLAIN_KEY', 'plain', false);
+
+        $this->assertSame(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->createVariable(ID::unique(), 'LONG_DESCRIPTION', 'value', false, description: \str_repeat('a', 1025));
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        // Cleanup
+        $this->deleteVariable($variableId);
+        $this->deleteVariable($plain['body']['$id']);
+    }
+
     public function testCreateVariableInvalidKey(): void
     {
         // Keys become container env var names; anything that is not a
@@ -404,6 +437,49 @@ trait VariablesBase
         $response = $this->updateVariable($variableId, 'UPDATED_KEY', null, null, false);
 
         $this->assertSame(401, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteVariable($variableId);
+    }
+
+    public function testUpdateVariableDescription(): void
+    {
+        $variable = $this->createVariable(ID::unique(), 'STRIPE_KEY', 'sk_test', false, description: 'Stripe key used at checkout');
+
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->updateVariable($variableId, description: 'Rotated quarterly');
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $updated['body']['description']);
+        $this->assertSame('STRIPE_KEY', $updated['body']['key']);
+        $this->assertSame('sk_test', $updated['body']['value']);
+
+        $updated = $this->updateVariable($variableId, value: 'sk_live');
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $updated['body']['description']);
+
+        $updated = $this->updateVariable($variableId, description: '');
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('', $updated['body']['description']);
+
+        $get = $this->getVariable($variableId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('', $get['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $updated = $this->updateVariable($variableId, description: \str_repeat('a', 1025));
+
+        $this->assertSame(400, $updated['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $updated['body']['type']);
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -785,7 +861,7 @@ trait VariablesBase
 
     // Helpers
 
-    protected function createVariable(string $variableId, ?string $key, ?string $value, ?bool $secret = null, bool $authenticated = true): mixed
+    protected function createVariable(string $variableId, ?string $key, ?string $value, ?bool $secret = null, bool $authenticated = true, ?string $description = null): mixed
     {
         $params = [
             'variableId' => $variableId,
@@ -803,6 +879,10 @@ trait VariablesBase
             $params['secret'] = $secret;
         }
 
+        if ($description !== null) {
+            $params['description'] = $description;
+        }
+
         $headers = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -815,7 +895,7 @@ trait VariablesBase
         return $this->client->call(Client::METHOD_POST, '/project/variables', $headers, $params);
     }
 
-    protected function updateVariable(string $variableId, ?string $key = null, ?string $value = null, ?bool $secret = null, bool $authenticated = true): mixed
+    protected function updateVariable(string $variableId, ?string $key = null, ?string $value = null, ?bool $secret = null, bool $authenticated = true, ?string $description = null): mixed
     {
         $params = [];
 
@@ -829,6 +909,10 @@ trait VariablesBase
 
         if ($secret !== null) {
             $params['secret'] = $secret;
+        }
+
+        if ($description !== null) {
+            $params['description'] = $description;
         }
 
         $headers = [

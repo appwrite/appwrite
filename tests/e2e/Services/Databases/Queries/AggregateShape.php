@@ -188,6 +188,52 @@ trait AggregateShape
         $this->assertSame(['a', 'b'], $this->sortedValues(\array_column($rows, 'grp')));
     }
 
+    public function testCachedDistinctRowsCarryOnlyTheSelectedAttributes(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $fixture = $this->setupAggregateShapeFixture();
+
+        $selections = [
+            'grp' => [['grp'], 2],
+            '$id and grp' => [['$id', 'grp'], 3],
+        ];
+
+        foreach ($selections as $name => [$selected, $count]) {
+            $queries = [
+                Query::distinct()->toString(),
+                Query::select($selected)->toString(),
+            ];
+
+            foreach (['miss', 'hit'] as $cache) {
+                $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($fixture['databaseId'], $fixture['metricsId']), array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), [
+                    'queries' => $queries,
+                    'ttl' => 60,
+                ]);
+
+                $this->assertSame(200, $result['headers']['status-code'], "{$name} ({$cache}): " . \json_encode($result['body']));
+                $this->assertSame($cache, $result['headers']['x-appwrite-cache'] ?? null, $name);
+
+                $rows = $result['body'][$this->getRecordResource()];
+                $this->assertCount($count, $rows, "{$name} ({$cache})");
+                $expected = $selected;
+                \sort($expected);
+                foreach ($rows as $row) {
+                    $this->assertSame($expected, $this->sortedKeys($row), "{$name} ({$cache})");
+                }
+                $this->assertSame(['a', 'b'], \array_values(\array_unique($this->sortedValues(\array_column($rows, 'grp')))), "{$name} ({$cache})");
+                if (\in_array('$id', $selected, true)) {
+                    $this->assertSame(['m1', 'm2', 'm3'], $this->sortedValues(\array_column($rows, '$id')), "{$name} ({$cache})");
+                }
+            }
+        }
+    }
+
     public function testDistinctWithValuesIsRejected(): void
     {
         if (!$this->getSupportForAggregations()) {

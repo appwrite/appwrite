@@ -23,14 +23,15 @@ import {
   useProject,
 } from '@/lib/react-query/hooks'
 import { UsageBreakdownCard } from '../../usage/_components/UsageMetricCard'
-import type {
-  FirewallConditionDraft,
-  FirewallResourceType,
+import {
+  isConditionDraftComplete,
+  type FirewallConditionDraft,
+  type FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import {
-  countUnestimableFirewallConditions,
   exceedsFirewallUsageConditionLimit,
   firewallUsageConditionsKey,
+  listUnestimableFirewallConditionLabels,
 } from '@/lib/firewall/usage'
 import {
   getFirewallActionLabel,
@@ -41,9 +42,7 @@ import { formatFirewallSolveTime } from '@/lib/firewall/usage'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { UsageLogRetentionAlert } from '../../usage/_components/UsageLogRetentionAlert'
-import {
-  OVERVIEW_CHART_HEIGHT,
-} from '../../overview/chart-panel'
+import { OVERVIEW_CHART_HEIGHT } from '../../overview/chart-panel'
 import { FirewallImpactChart } from './FirewallImpactChart'
 import {
   FIREWALL_IMPACT_FETCH_ERROR,
@@ -138,10 +137,11 @@ export function RuleImpactPreview({
     // Re-run when the serialized condition values change, not only array identity.
   }, [conditions, conditionsKey])
 
-  const unestimableConditions = useMemo(
-    () => countUnestimableFirewallConditions(debouncedConditions),
+  const unestimableLabels = useMemo(
+    () => listUnestimableFirewallConditionLabels(debouncedConditions),
     [debouncedConditions],
   )
+  const unestimableConditions = unestimableLabels.length
   const tooManyConditions = useMemo(
     () => exceedsFirewallUsageConditionLimit(debouncedConditions),
     [debouncedConditions],
@@ -151,16 +151,17 @@ export function RuleImpactPreview({
   // matched traffic. Skip the fetch and show "Preview unavailable".
   const previewUnavailable = unestimableConditions > 0 || tooManyConditions
 
-  const { impact, isLoading, isFetching, isError, error, refetch } = useFirewallRuleImpact(
-    previewUnavailable ? null : projectId,
-    debouncedConditions,
-    resourceType,
-    resourceId,
-    selectedDateRange,
-    chartInterval,
-    usageLogRetentionHours,
-    action,
-  )
+  const { impact, isLoading, isFetching, isError, error, refetch } =
+    useFirewallRuleImpact(
+      previewUnavailable ? null : projectId,
+      debouncedConditions,
+      resourceType,
+      resourceId,
+      selectedDateRange,
+      chartInterval,
+      usageLogRetentionHours,
+      action,
+    )
 
   // Per-attribute breakdowns for the selected conditions, scoped to the rule's
   // resource. Independent of the overall estimate (which a header/query
@@ -200,9 +201,7 @@ export function RuleImpactPreview({
       : undefined
   const activity = previewUnavailable ? undefined : impact?.activity
 
-  const filledConditions = conditions.filter(
-    (c) => c.value.trim().length > 0,
-  ).length
+  const filledConditions = conditions.filter(isConditionDraftComplete).length
   const showSubtleLoading =
     !previewUnavailable && !isError && isFetching && !isLoading
   const hideImpactValues = previewUnavailable || !impact
@@ -280,9 +279,7 @@ export function RuleImpactPreview({
                 <span className="text-[11px]">{t('Matched requests')}</span>
               </div>
               <p className="text-[18px] font-semibold tabular-nums text-foreground">
-                {hideImpactValues
-                  ? '-'
-                  : summary.matched.toLocaleString()}
+                {hideImpactValues ? '-' : summary.matched.toLocaleString()}
               </p>
             </div>
             <div className="rounded-lg border border-border bg-muted/20 p-3">
@@ -291,9 +288,7 @@ export function RuleImpactPreview({
                 <span className="text-[11px]">{t('Share of traffic')}</span>
               </div>
               <p className="text-[18px] font-semibold tabular-nums text-foreground">
-                {hideImpactValues
-                  ? '-'
-                  : `${(summary.rate * 100).toFixed(1)}%`}
+                {hideImpactValues ? '-' : `${(summary.rate * 100).toFixed(1)}%`}
               </p>
             </div>
           </div>
@@ -336,7 +331,14 @@ export function RuleImpactPreview({
             <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-700 dark:text-amber-400">
               {unestimableConditions > 0
                 ? t(
-                    'Preview unavailable: header, query parameter, continent, state, and "does not contain" conditions have no usage data to estimate from. The rule will still enforce them.',
+                    unestimableConditions === 1
+                      ? 'Preview unavailable: {conditions} has no usage data to estimate from. The rule will still enforce it.'
+                      : 'Preview unavailable: {conditions} have no usage data to estimate from. The rule will still enforce them.',
+                  ).replace(
+                    '{conditions}',
+                    unestimableLabels
+                      .map((label) => `"${t(label)}"`)
+                      .join(', '),
                   )
                 : t(
                     'Preview unavailable: rules with this many conditions cannot be estimated from usage data. The rule will still enforce all conditions.',

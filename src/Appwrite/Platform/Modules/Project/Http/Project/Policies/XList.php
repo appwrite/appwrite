@@ -99,6 +99,7 @@ class XList extends Action
             new Document([
                 '$id' => 'password-dictionary',
                 'enabled' => $auths['passwordDictionary'] ?? false,
+                'denyList' => $auths['passwordDictionaryDenyList'] ?? [],
             ]),
             new Document([
                 '$id' => 'password-history',
@@ -116,6 +117,7 @@ class XList extends Action
             new Document([
                 '$id' => 'password-personal-data',
                 'enabled' => $auths['personalDataCheck'] ?? false,
+                'denyList' => $auths['personalDataDenyList'] ?? [],
             ]),
             new Document(\array_merge([
                 'enabled' => true,
@@ -181,6 +183,10 @@ class XList extends Action
             new Document([
                 '$id' => 'deny-corporate-email',
                 'enabled' => $auths['corporateEmails'] ?? false,
+            ]),
+            new Document([
+                '$id' => 'deny-realtime-guests',
+                'enabled' => $auths['realtimeGuests'] ?? false,
             ]),
             new Document([
                 '$id' => 'passkey',

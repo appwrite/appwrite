@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\Email;
 
+use Appwrite\Auth\MFA\Type;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -93,8 +94,6 @@ class Update extends Action
             }
         }
 
-        $oldEmail = $user->getAttribute('email');
-
         $emailMetadata = [
             'emailCanonical' => null,
             'emailIsCanonical' => null,
@@ -143,40 +142,75 @@ class Update extends Action
         ;
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'email' => $user->getAttribute('email'),
-                'emailVerification' => $user->getAttribute('emailVerification'),
-                'emailCanonical' => $user->getAttribute('emailCanonical'),
-                'emailIsCanonical' => $user->getAttribute('emailIsCanonical'),
-                'emailIsCorporate' => $user->getAttribute('emailIsCorporate'),
-                'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
-                'emailIsFree' => $user->getAttribute('emailIsFree'),
-            ]));
-            $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldEmail);
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $user, $email) {
+                $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                if (\strlen($email) !== 0) {
-                    $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $email]));
-                    $oldTarget->setAttribute('identifier', $email);
+                $lockedEmail = $current->getAttribute('email');
+
+                $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+                    'email' => $user->getAttribute('email'),
+                    'emailVerification' => $user->getAttribute('emailVerification'),
+                    'emailCanonical' => $user->getAttribute('emailCanonical'),
+                    'emailIsCanonical' => $user->getAttribute('emailIsCanonical'),
+                    'emailIsCorporate' => $user->getAttribute('emailIsCorporate'),
+                    'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
+                    'emailIsFree' => $user->getAttribute('emailIsFree'),
+                ]));
+                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $lockedEmail);
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    if (\strlen($email) !== 0) {
+                        $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $email]));
+                        $oldTarget->setAttribute('identifier', $email);
+                    } else {
+                        $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    }
                 } else {
-                    $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    if (\strlen($email) !== 0) {
+                        $target = $dbForProject->createDocument('targets', new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($user->getId())),
+                                Permission::update(Role::user($user->getId())),
+                                Permission::delete(Role::user($user->getId())),
+                            ],
+                            'userId' => $user->getId(),
+                            'userInternalId' => $user->getSequence(),
+                            'providerType' => 'email',
+                            'identifier' => $email,
+                        ]));
+                        $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                    }
                 }
-            } else {
-                if (\strlen($email) !== 0) {
-                    $target = $dbForProject->createDocument('targets', new Document([
-                        '$permissions' => [
-                            Permission::read(Role::user($user->getId())),
-                            Permission::update(Role::user($user->getId())),
-                            Permission::delete(Role::user($user->getId())),
-                        ],
-                        'userId' => $user->getId(),
-                        'userInternalId' => $user->getSequence(),
-                        'providerType' => 'email',
-                        'identifier' => $email,
-                    ]));
-                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+
+                $sequence = $user->getSequence();
+                if ($lockedEmail !== $email && $sequence !== '' && $sequence !== null) {
+                    $dbForProject->deleteDocuments('tokens', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [
+                            TOKEN_TYPE_RECOVERY,
+                            TOKEN_TYPE_RECOVERY_OTP,
+                            TOKEN_TYPE_VERIFICATION,
+                            TOKEN_TYPE_VERIFICATION_OTP,
+                            TOKEN_TYPE_MAGIC_URL,
+                            TOKEN_TYPE_EMAIL,
+                        ]),
+                    ]);
+                    $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::EMAIL]),
+                    ]);
+                    // A pending invite was sent to the old address, so it must not prove the new one
+                    $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('confirm', [false]),
+                    ]);
                 }
-            }
+
+                return $user;
+            });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);

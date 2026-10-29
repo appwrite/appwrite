@@ -21,6 +21,8 @@ Do exactly these steps in order. Confirm each step succeeds before continuing. I
 
 ## Step 2: Create Python project
 
+- SDK 27.0.0 requires Python 3.10 or later. Check `python --version` and select a supported interpreter before creating the virtual environment.
+
 - Create a directory for the project:
 
 ```sh
@@ -34,7 +36,7 @@ cd my_app
 # Create a venv
 python -m venv .venv
 
-# Active the venv in Unix shell
+# Activate the venv in Unix shell
 source .venv/bin/activate
 
 # Or in Powershell
@@ -45,7 +47,9 @@ source .venv/bin/activate
 
 ## Step 3: Install Appwrite SDK
 
-- Run: `pip install appwrite==24.4.0`
+- Run: `python -m pip install "appwrite==27.0.0"`
+
+- When upgrading from SDK 26.0.0, update dependency pins or constraints that exclude `requests>=2.34.2,<3` or `urllib3>=2.8.0,<3`. The service API and response format `2.5.0` are unchanged.
 
 ## Step 4: Import Appwrite and initialize client (ask user for details; never assume)
 

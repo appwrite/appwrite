@@ -150,14 +150,16 @@ const CARD_BRAND_LABELS: Record<string, string> = {
   'targeta-shopping': 'Tarjeta Shopping',
 }
 
-function normalizePaymentCardBrand(brand: string | undefined): string {
+function normalizePaymentCardBrand(brand: string | null | undefined): string {
   return brand?.trim().toLowerCase().replace(/[\s-]+/g, '_') || ''
 }
 
 /**
  * Human-readable card network from API `brand` (often Stripe-style slugs).
  */
-export function formatPaymentCardBrand(brand: string | undefined): string {
+export function formatPaymentCardBrand(
+  brand: string | null | undefined,
+): string {
   const b = normalizePaymentCardBrand(brand)
   if (CARD_BRAND_LABELS[b]) return CARD_BRAND_LABELS[b]
   if (!b) return 'Card'
@@ -168,11 +170,11 @@ export function formatPaymentCardBrand(brand: string | undefined): string {
 }
 
 export type PaymentMethodCardSummaryInput = {
-  brand?: string
-  last4?: string
-  name?: string
-  expiryMonth?: number
-  expiryYear?: number
+  brand?: string | null
+  last4?: string | null
+  name?: string | null
+  expiryMonth?: number | null
+  expiryYear?: number | null
 }
 
 /**
