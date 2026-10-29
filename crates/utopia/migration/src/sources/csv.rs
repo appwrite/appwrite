@@ -551,9 +551,7 @@ impl Csv {
                     continue;
                 }
                 // Undo the quote CSV exports prefix to formula-like values.
-                let value = if value.first() == Some(&b'\'')
-                    && crate::destinations::csv::formula_like(&value)
-                {
+                let value = if value.first() == Some(&b'\'') && crate::destinations::csv::formula_like(&value) {
                     value[1..].to_vec()
                 } else {
                     value

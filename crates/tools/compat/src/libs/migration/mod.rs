@@ -814,9 +814,7 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
         },
         "fs.exists" => Outcome::Ok(Json::Bool(utopia_async::fs::metadata(a.str("path")?).await.is_ok())),
         "fs.mkdir" => Outcome::Ok(Json::Bool(utopia_async::fs::create_dir_all(a.str("path")?).await.is_ok())),
-        "fs.symlink" => {
-            Outcome::Ok(Json::Bool(std::os::unix::fs::symlink(a.str("target")?, a.str("link")?).is_ok()))
-        }
+        "fs.symlink" => Outcome::Ok(Json::Bool(std::os::unix::fs::symlink(a.str("target")?, a.str("link")?).is_ok())),
         "fs.is_dir" => {
             Outcome::Ok(Json::Bool(utopia_async::fs::metadata(a.str("path")?).await.is_ok_and(|m| m.is_dir())))
         }
@@ -884,12 +882,10 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 Err(e) => error(&e),
             }
         }
-        "local_destination.new" => {
-            match LocalDestination::new(a.str("path")?).await {
-                Ok(d) => Outcome::Ok(s.handle(DestinationSlot::Owned(Box::new(d)))),
-                Err(e) => error(&e),
-            }
-        }
+        "local_destination.new" => match LocalDestination::new(a.str("path")?).await {
+            Ok(d) => Outcome::Ok(s.handle(DestinationSlot::Owned(Box::new(d)))),
+            Err(e) => error(&e),
+        },
         "destination.import" => {
             let list = resources::resources(s, a.value("resources")?)?;
             let mut rec = Recorder::new(args.get("callback"));

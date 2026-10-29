@@ -341,10 +341,7 @@ impl Policies {
             password_pwned: to_opt_array(&i.or("passwordPwned", Value::Null), &p(24, "passwordPwned"))?,
             password_rotation: to_opt_array(&i.or("passwordRotation", Value::Null), &p(25, "passwordRotation"))?,
             passkey_rp_id: to_opt_string(&i.or("passkeyRpId", Value::Null), &p(26, "passkeyRpId"))?,
-            deny_realtime_guests: to_opt_bool(
-                &i.or("denyRealtimeGuests", Value::Null),
-                &p(27, "denyRealtimeGuests"),
-            )?,
+            deny_realtime_guests: to_opt_bool(&i.or("denyRealtimeGuests", Value::Null), &p(27, "denyRealtimeGuests"))?,
             ..policies
         };
         Ok(policies.resource(id, created, updated))
