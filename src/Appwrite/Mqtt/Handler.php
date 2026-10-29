@@ -91,6 +91,15 @@ class Handler implements MqttHandler
             }
         }
 
+        // As realtime caps a user's open connections, so idle sockets cannot pile up toward the broker's limit.
+        $limit = (int) ($this->getPlan($connection)['mqttConnections'] ?? APP_LIMIT_MQTT_CONNECTIONS);
+        if (\count($this->connectionsOf((string) ($identity['projectId'] ?? ''), (string) ($identity['userId'] ?? ''))) > $limit) {
+            $this->untrack($connection);
+            Span::add('mqtt.result', 'quota');
+            $this->mqtt->connectRefused->add(1, ['reason' => 'connection_limit']);
+            return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod, 'Too many open connections. Close an existing connection and try again.');
+        }
+
         // The per-device session anchor: the client id, or an account-level fallback so reconnects
         // resume the same session (the offline-replay cursor is keyed on it).
         $clientId = $connect->clientId;
@@ -151,9 +160,9 @@ class Handler implements MqttHandler
      * Refuse a CONNECT with an MQTT reason code, echoing the enhanced-auth method (see
      * connackProperties) and carrying the matching Appwrite error message as the Reason String.
      */
-    private function refuseConnect(int $reasonCode, string $error, string $authMethod): Connack
+    private function refuseConnect(int $reasonCode, string $error, string $authMethod, ?string $message = null): Connack
     {
-        return Connack::refuse($reasonCode, $this->connackProperties($authMethod, $error));
+        return Connack::refuse($reasonCode, $this->connackProperties($authMethod, $error, $message));
     }
 
     /**
@@ -162,7 +171,7 @@ class Handler implements MqttHandler
      * HiveMQ) reject it with "Auth method in CONNACK must be present". A refusal also carries the
      * Appwrite error message as the Reason String (0x1F). Returns null when there is nothing to add.
      */
-    private function connackProperties(string $authMethod, ?string $error = null): ?Properties
+    private function connackProperties(string $authMethod, ?string $error = null, ?string $message = null): ?Properties
     {
         $properties = new Properties();
 
@@ -171,7 +180,7 @@ class Handler implements MqttHandler
         }
 
         if ($error !== null) {
-            $properties->add(new Property(Property::REASON_STRING, (new Exception($error))->getMessage()));
+            $properties->add(new Property(Property::REASON_STRING, (new Exception($error, $message))->getMessage()));
         }
 
         return $properties->all() === [] ? null : $properties;
@@ -207,6 +216,37 @@ class Handler implements MqttHandler
     public function onSubscribe(Subscribe $subscribe, Connection $connection): Suback
     {
         $suback = new Suback();
+
+        // A connection that never completed CONNECT has no user to authorize or count against.
+        if (($connection->identity['userId'] ?? '') === '') {
+            foreach ($subscribe->filters() as $filter) {
+                $suback->deny();
+            }
+
+            return $suback;
+        }
+
+        if ($this->isSubscribeLimited($connection)) {
+            Span::add('mqtt.result', 'abuse');
+            $connection->disconnect(Disconnect::MESSAGE_RATE_TOO_HIGH, (new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED))->getMessage());
+            foreach ($subscribe->filters() as $filter) {
+                $suback->deny();
+            }
+
+            return $suback;
+        }
+
+        // Every filter costs authorization work, so a packet may carry only as many as the plan allows.
+        $limit = (int) ($this->getPlan($connection)['mqttFilters'] ?? APP_LIMIT_MQTT_FILTERS);
+        if (\count($subscribe->filters()) > $limit) {
+            Span::add('mqtt.result', 'quota');
+            $connection->disconnect(Disconnect::QUOTA_EXCEEDED, 'SUBSCRIBE must contain at most ' . $limit . ' topic filters.');
+            foreach ($subscribe->filters() as $filter) {
+                $suback->deny();
+            }
+
+            return $suback;
+        }
 
         // The connection's user must still be valid: re-check that it was not blocked or removed
         // since CONNECT. If it is no longer permitted, refuse every filter before any topic gating.
@@ -333,6 +373,26 @@ class Handler implements MqttHandler
         }
 
         return $suback;
+    }
+
+    /**
+     * Each SUBSCRIBE costs several database reads, so a user may send 32 a minute, as a realtime
+     * connection may send 32 messages. Keyed on the authenticated user, so reconnecting or opening
+     * more connections does not add to the budget.
+     */
+    private function isSubscribeLimited(Connection $connection): bool
+    {
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'enabled') {
+            return false;
+        }
+
+        $getRedis = $this->container->get('getRedis');
+        $timeLimit = new TimeLimitRedis('mqtt:subscribe:{projectId}:{userId}', 32, 60, $getRedis())->withParams([
+            '{projectId}' => (string) ($connection->identity['projectId'] ?? ''),
+            '{userId}' => (string) ($connection->identity['userId'] ?? ''),
+        ]);
+
+        return $timeLimit->check()->limited;
     }
 
     public function onUnsubscribe(Unsubscribe $unsubscribe, Connection $connection): Unsuback
@@ -875,6 +935,19 @@ class Handler implements MqttHandler
         return 'push:cursor:' . $connection->prefix
             . ':' . ($connection->identity['userId'] ?? '')
             . ':' . $connection->getClientId();
+    }
+
+    /**
+     * The plan of the connection's project, from the `getPlan` resource; a limit it leaves out
+     * falls back to the APP_LIMIT_MQTT_* default.
+     *
+     * @return array<string, mixed>
+     */
+    private function getPlan(Connection $connection): array
+    {
+        $getPlan = $this->container->get('getPlan');
+
+        return $getPlan($connection->prefix);
     }
 
     private function getProjectDB(string $projectId): Database
