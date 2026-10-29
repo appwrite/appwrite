@@ -7,6 +7,7 @@
  * Spawned as its own process by PermissionsChangedTest. Fake user lookups:
  * - `frozen`: blocks forever when TEST_FROZEN_BLOCKS=true, standing in for a read
  *   on a silently dead (half-open) database connection
+ * - `broken`: throws, standing in for a failed database read
  * - `revoked`: resolves to a blocked user
  * - anything else: resolves to an active user
  */
@@ -63,6 +64,10 @@ final class FakeDatabase
         if ($collection === 'users') {
             if ($id === 'frozen' && $this->frozenBlocks) {
                 (new Channel(1))->pop(); // never pushed: a read on a half-open connection
+            }
+
+            if ($id === 'broken') {
+                throw new \RuntimeException('Connection reset by peer');
             }
 
             return makeUser($id, status: $id !== 'revoked');

@@ -17,9 +17,9 @@ use WebSocket\TimeoutException;
  *
  * - a revoked user's connection receives the revoking event with the roles it held
  *   until then, then the unauthorized error, then the close;
- * - a permission verification stuck on a half-open database connection must not stall
- *   delivery to everyone else: the stuck user's connections are closed unverified
- *   within the timeout and the firehose keeps flowing.
+ * - a permission verification stuck on a half-open database connection, or failing
+ *   outright, must not stall delivery to everyone else: the unverifiable user's
+ *   connections are closed and the firehose keeps flowing.
  */
 final class PermissionsChangedTest extends TestCase
 {
@@ -319,6 +319,46 @@ final class PermissionsChangedTest extends TestCase
         $this->assertNotNull(
             $this->receiveMatch($other, $this->isEvent('after'), 10),
             'Subscriber died after the timed-out verification: ' . $this->tailLog()
+        );
+    }
+
+    public function testFailedVerificationFailsClosedAndKeepsDelivering(): void
+    {
+        $this->startServer(frozenBlocks: false);
+
+        $broken = $this->connect('broken', ['account', 'documents']);
+        $other = $this->connect('other', ['documents']);
+
+        $this->awaitSubscriber($other);
+
+        // The user lookup for `broken` throws: the user cannot be verified, so it must be
+        // closed like a timeout, not kept open on its old roles.
+        $this->publish($this->event(
+            events: ['users.broken.update.status'],
+            channels: ['account', 'account.broken', 'documents'],
+            roles: ['users'],
+            payload: ['$id' => 'broken'],
+            permissionsChanged: true,
+            userId: 'broken',
+        ));
+
+        // The triggering event still fans out to everyone else.
+        $this->assertNotNull(
+            $this->receiveMatch($other, $this->isEvent('broken'), 10),
+            'Triggering event was not delivered to other subscribers: ' . $this->tailLog()
+        );
+
+        // Fail closed: the triggering event with the old roles, then the 401 and the close.
+        $this->assertNotNull(
+            $this->receiveMatch($broken, $this->isEvent('broken'), 10),
+            'Broken connection must receive the triggering event before the close: ' . $this->tailLog()
+        );
+        $this->assertUnauthorizedClose($broken, 10);
+
+        $this->publish($this->event(['documents.x.create'], ['documents'], ['users'], ['$id' => 'follow-up']));
+        $this->assertNotNull(
+            $this->receiveMatch($other, $this->isEvent('follow-up'), 10),
+            'Follow-up event was not delivered after the failed verification: ' . $this->tailLog()
         );
     }
 }
