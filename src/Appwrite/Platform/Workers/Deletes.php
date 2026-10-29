@@ -36,11 +36,14 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
+use Utopia\Lock\Distributed;
+use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
+use Utopia\Storage\Exception\NotFoundException;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Usage\Tenant as UsageTenant;
@@ -51,6 +54,8 @@ class Deletes extends Action
 {
     protected array $selects = ['$sequence', '$id', '$collection', '$permissions', '$updatedAt'];
     public const PROCESSING_STUCK_RETENTION_SECONDS = 3 * 24 * 60 * 60; // 3 days
+
+    private const UPLOAD_ABORT_ATTEMPTS = 3; // Daily runs before a failing abort falls back to deleting the path
 
     public static function getName(): string
     {
@@ -83,7 +88,8 @@ class Deletes extends Action
             ->inject('publisherForUsage')
             ->inject('bus')
             ->inject('executionStore')
-            ->inject('queueForRealtime');
+            ->inject('queueForRealtime')
+            ->inject('locks');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -116,6 +122,7 @@ class Deletes extends Action
         Bus $bus,
         Store $executionStore,
         Realtime $queueForRealtime,
+        callable $locks,
         UsageConnection $usageConnection,
     ): void {
         $payload = $message->getPayload();
@@ -151,6 +158,7 @@ class Deletes extends Action
             $bus,
             $executionStore,
             $queueForRealtime,
+            $locks,
         );
 
         // Sweep rows that landed between the purge and the delete. The
@@ -246,6 +254,7 @@ class Deletes extends Action
         Bus $bus,
         Store $executionStore,
         Realtime $queueForRealtime,
+        ?callable $locks = null,
     ): void {
         $payload = $message->getPayload();
 
@@ -374,6 +383,7 @@ class Deletes extends Action
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteExpiredPushLedger($project, $getProjectDB);
+                $this->deleteExpiredUploads($project, $getProjectDB, $deviceForFiles, $locks);
                 $this->deleteOldDeployments($dbForPlatform, $publisherForDeletes, $project, $getProjectDB, $deploymentRetention);
                 $this->updateProcessingMigrations($project, $getProjectDB);
                 break;
@@ -647,41 +657,40 @@ class Deletes extends Action
 
             $now = new \DateTime();
 
-            $kept = [];
-            $activeDeploymentId = $resource->getAttribute('deploymentId', '');
-            if (!empty($activeDeploymentId)) {
-                $kept[] = $activeDeploymentId;
-            }
-
-            // A custom domain pinned to a branch serves that branch's latest build, which is
-            // rarely the active deployment; deleting the deployment would delete the domain too.
-            $this->listByGroup(
-                'rules',
-                [
-                    Query::equal('projectInternalId', [$project->getSequence()]),
-                    Query::equal('type', ['deployment']),
-                    Query::equal('trigger', ['manual']),
-                    Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
-                    Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
-                    Query::notEqual('deploymentId', ''),
-                ],
-                $dbForPlatform,
-                function (Document $rule) use (&$kept) {
-                    $kept[] = $rule->getAttribute('deploymentId');
-                }
-            );
-
-            $queries = [
+            $resourceQueries = [
                 Query::equal('resourceInternalId', [$resource->getSequence()]),
                 Query::equal('resourceType', [$resource->getCollection()]),
             ];
 
-            foreach (\array_unique($kept) as $deploymentId) {
-                $queries[] = Query::notEqual('$id', $deploymentId);
-            }
-
             try {
-                foreach ($retention->passes($dbForProject, $queries, $requested, $now) as $pass) {
+                $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+
+                foreach ($retention->passes(
+                    $dbForProject,
+                    $resourceQueries,
+                    $requested,
+                    $now,
+                    function () use ($dbForPlatform, $dbForProject, $project, &$resource, $resourceQueries): array {
+                        $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+
+                        return $this->deploymentRetentionQueries(
+                            $dbForPlatform,
+                            $dbForProject,
+                            $project,
+                            $resource,
+                            $resourceQueries,
+                        );
+                    },
+                ) as $pass) {
+                    $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+                    $queries = $this->deploymentRetentionQueries(
+                        $dbForPlatform,
+                        $dbForProject,
+                        $project,
+                        $resource,
+                        $resourceQueries,
+                    );
+
                     $this->retireDeployments($pass->reason, [...$queries, ...$pass->queries], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
                 }
             } catch (Throwable $th) {
@@ -702,6 +711,83 @@ class Deletes extends Action
             $dbForProject,
             $removalCallback
         );
+    }
+
+    /**
+     * Deployments retention must never delete while a manual rule still serves them.
+     * Branch-pinned rules follow that branch's newest ready VCS build, which may not
+     * match deploymentId until the build worker repoints the rule.
+     *
+     * @return list<string>
+     */
+    private function deploymentIdsProtectedFromRetention(Database $dbForPlatform, Database $dbForProject, Document $project, Document $resource): array
+    {
+        $kept = [];
+        $activeDeploymentId = $resource->getAttribute('deploymentId', '');
+        if ($activeDeploymentId !== '') {
+            $kept[] = $activeDeploymentId;
+        }
+
+        $this->listByGroup(
+            'rules',
+            [
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('type', ['deployment']),
+                Query::equal('trigger', ['manual']),
+                Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
+                Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+            ],
+            $dbForPlatform,
+            function (Document $rule) use (&$kept, $dbForProject, $resource): void {
+                $deploymentId = $rule->getAttribute('deploymentId', '');
+                if ($deploymentId !== '') {
+                    $kept[] = $deploymentId;
+                }
+
+                $branch = $rule->getAttribute('deploymentVcsProviderBranch', '');
+                if ($branch === '') {
+                    return;
+                }
+
+                $branchDeployment = $dbForProject->findOne('deployments', [
+                    Query::equal('resourceType', [$resource->getCollection()]),
+                    Query::equal('resourceInternalId', [$resource->getSequence()]),
+                    Query::equal('providerBranch', [$branch]),
+                    Query::equal('status', ['ready']),
+                    Query::isNotNull('installationId'),
+                    Query::notEqual('installationId', ''),
+                    Query::orderDesc('$createdAt'),
+                    Query::orderDesc('$sequence'),
+                ]);
+
+                if (! $branchDeployment->isEmpty()) {
+                    $kept[] = $branchDeployment->getId();
+                }
+            }
+        );
+
+        return \array_values(\array_unique($kept));
+    }
+
+    /**
+     * Resource-scoped deployment queries with protected builds excluded from retention passes.
+     *
+     * @param list<Query> $resourceQueries
+     * @return list<Query>
+     */
+    private function deploymentRetentionQueries(
+        Database $dbForPlatform,
+        Database $dbForProject,
+        Document $project,
+        Document $resource,
+        array $resourceQueries,
+    ): array {
+        $queries = $resourceQueries;
+        foreach ($this->deploymentIdsProtectedFromRetention($dbForPlatform, $dbForProject, $project, $resource) as $deploymentId) {
+            $queries[] = Query::notEqual('$id', $deploymentId);
+        }
+
+        return $queries;
     }
 
     /**
@@ -2131,6 +2217,102 @@ class Deletes extends Action
         $dbForProject->deleteDocuments('pushLedger', [
             Query::lessThan('$createdAt', $expired),
         ]);
+    }
+
+    private function deleteExpiredUploads(Document $project, callable $getProjectDB, Device $deviceForFiles, ?callable $locks): void
+    {
+        Console::info('Delete expired uploads');
+
+        $dbForProject = $getProjectDB($project);
+        $expired = DateTime::addSeconds(new \DateTime(), -APP_STORAGE_UPLOAD_RETENTION);
+
+        $this->listByGroup('buckets', [
+            Query::select(['$id', '$sequence']),
+        ], $dbForProject, function (Document $bucket) use ($project, $dbForProject, $deviceForFiles, $locks, $expired) {
+            $collection = 'bucket_' . $bucket->getSequence();
+
+            // Every chunk updates the document, and its signature stays empty until the upload completes.
+            try {
+                $this->listByGroup($collection, [
+                    Query::select(['$id']),
+                    Query::equal('signature', ['']),
+                    Query::updatedBefore($expired),
+                ], $dbForProject, function (Document $file) use ($project, $bucket, $collection, $dbForProject, $deviceForFiles, $locks, $expired) {
+                    $deleteUpload = function (?Distributed $lock = null) use ($collection, $file, $dbForProject, $deviceForFiles, $expired): void {
+                        // Re-read under the lock: a chunk may have landed since the listing.
+                        $file = $dbForProject->getDocument($collection, $file->getId());
+                        if (
+                            $file->isEmpty()
+                            || $file->getAttribute('signature') !== ''
+                            || $file->getAttribute('chunksUploaded', 0) >= $file->getAttribute('chunksTotal', 1)
+                            || \strtotime($file->getUpdatedAt()) >= \strtotime($expired)
+                        ) {
+                            return;
+                        }
+
+                        // Renewing before each step fences it: a lapsed lease stops here, and each step gets a full TTL.
+                        if ($lock !== null && !$lock->refresh()) {
+                            return;
+                        }
+
+                        $path = $file->getAttribute('path');
+                        $metadata = $file->getAttribute('metadata', []);
+                        try {
+                            $aborted = $deviceForFiles->abort($path, $metadata['uploadId'] ?? '');
+                        } catch (NotFoundException) {
+                            $aborted = true;
+                        } catch (Throwable $th) {
+                            Console::warning('Failed to abort upload ' . $file->getId() . ': ' . $th->getMessage());
+                            $aborted = false;
+                        }
+
+                        if ($lock !== null && !$lock->refresh()) {
+                            return;
+                        }
+
+                        $attempts = ($metadata['abortAttempts'] ?? 0) + 1;
+                        if (!$aborted && $attempts < self::UPLOAD_ABORT_ATTEMPTS) {
+                            // Keep the upload ID for the next run; preserved dates keep the row idle.
+                            $metadata['abortAttempts'] = $attempts;
+                            $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument($collection, $file->getId(), new Document([
+                                '$updatedAt' => $file->getUpdatedAt(),
+                                'metadata' => $metadata,
+                            ])));
+                            return;
+                        }
+
+                        // A stale upload ID can fail every abort, so after the last attempt remove the path and drop the row.
+                        if (!$aborted) {
+                            try {
+                                $deviceForFiles->delete($path, true);
+                            } catch (Throwable $th) {
+                                Console::warning('Failed to delete upload ' . $file->getId() . ': ' . $th->getMessage());
+                            }
+
+                            if ($lock !== null && !$lock->refresh()) {
+                                return;
+                            }
+                        }
+
+                        $dbForProject->deleteDocument($collection, $file->getId());
+                    };
+
+                    if (\is_null($locks)) {
+                        $deleteUpload();
+                        return;
+                    }
+
+                    try {
+                        // Same key as the upload endpoint, so a resuming chunk and the cleanup never interleave.
+                        $locks('storage:file:' . $project->getId() . ':' . $bucket->getId() . ':' . $file->getId(), 600, $deleteUpload);
+                    } catch (LockContention) {
+                        Console::info('Upload in progress, skipping cleanup: ' . $file->getId());
+                    }
+                });
+            } catch (Throwable $th) {
+                Console::error('Failed to delete expired uploads in bucket ' . $bucket->getId() . ': ' . $th->getMessage());
+            }
+        });
     }
 
     private function deleteExpiredPresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void
