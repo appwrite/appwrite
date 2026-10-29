@@ -108,5 +108,25 @@ final class ComparatorTest extends TestCase
         $this->assertSame('Budget used is at or above 100%', $email->heading());
         $this->assertStringContainsString('>Update budget cap</a>', $email->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl'));
         $this->assertStringNotContainsString('View alert', $email->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl'));
+
+        $worded = new Email(
+            status: Status::Firing,
+            rule: 'Budget cap reached',
+            metric: 'Budget used',
+            place: 'Acme',
+            value: new Quantity(100, 'percent'),
+            comparator: Comparator::GreaterThanEqual,
+            threshold: new Quantity(100, 'percent'),
+            window: null,
+            changedAt: new \DateTimeImmutable('2026-10-29T12:00:00+00:00'),
+            details: [],
+            url: 'https://console.example/organizations/acme/billing',
+            reason: '',
+            wording: new Wording(heading: 'You have reached your budget cap', summary: 'Projects in Acme are now limited.'),
+        );
+        $this->assertSame('You have reached your budget cap', $worded->heading());
+        $this->assertSame('Projects in Acme are now limited.', $worded->summary());
+        $this->assertStringContainsString('Projects in Acme are now limited.', $worded->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl'));
+        $this->assertSame('Alert firing: Budget cap reached', $worded->subject());
     }
 }
