@@ -154,7 +154,7 @@ async function signIn(email: string, password: string) {
 }
 ```
 
-On the user's own topic, `subscribe` turns on background delivery by default. While your app is on screen, the callback receives each message and the SDK shows no notification. While it isn't, the SDK shows a system notification with the title and body you sent. On Android 13 and later, the first background subscription asks for the notification permission.
+Called without a topic, `subscribe` also turns on background delivery by default. While your app is on screen, the callback receives each message and the SDK shows no notification. While it isn't, the SDK shows a system notification with the title and body you sent. On Android 13 and later, the first background subscription asks for the notification permission.
 
 In this app, the callback reloads the order list, so a new status shows up while your user is looking at it. Row security limits the list to the signed-in customer's orders. `Order` is the row type, `Models.Row & { userId: string; item: string; status: string }`.
 

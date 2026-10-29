@@ -34,7 +34,11 @@ In the Console, open your project and go to **Messaging** > **Providers** > **Cr
 
 # Set up APNs
 
-iOS suspends an app a few seconds after the user leaves it, so the app's connection to Appwrite closes. To reach a suspended app, Appwrite sends a notification through APNs. The [Appwrite CLI](/docs/tooling/command-line/installation) sets up APNs in one command. Sign in with `appwrite login`, then run it from your Xcode project's folder:
+iOS suspends an app a few seconds after the user leaves it, so the app's connection to Appwrite closes. To reach a suspended app, Appwrite sends a notification through APNs.
+
+In Xcode, open your app target's **Signing & Capabilities** tab. Add **Push Notifications**, then add **Background Modes** and check **Remote notifications**.
+
+The [Appwrite CLI](/docs/tooling/command-line/installation) sets up the rest of APNs in one command. Sign in with `appwrite login`, then run it from your Xcode project's folder:
 
 ```bash
 appwrite init apns
@@ -43,8 +47,8 @@ appwrite init apns
 The CLI reads the bundle ID and team ID from your Xcode project and asks for your APNs key, or creates one for you with `--create-key`. It then:
 
 - Creates two APNs providers, sandbox for builds you run from Xcode and production for TestFlight and App Store builds.
-- Adds the Push Notifications capability and the remote notifications background mode to your app target.
 - Adds an Apple platform with your bundle ID to the project. Appwrite only accepts requests from apps registered in the project.
+- Checks that your app target has the APNs entitlement and the remote notifications background mode, which the capabilities you added provide.
 
 [One-click APNs setup](/docs/products/messaging/apns#one-click-setup) lists every option.
 
@@ -90,9 +94,9 @@ class NotificationService: AppwriteNotificationService {}
 
 The extension connects to Appwrite as the signed-in user, so the app has to share its session with it. Apps and extensions share data through an App Group:
 
-1. In the app target's **Signing & Capabilities** tab, add **App Groups** with a new group, such as `group.io.appwrite.orders`. Add **Keychain Sharing** with the same group.
-1. Add the same two capabilities, with the same group, to the `NotificationService` target.
-1. In the `Info.plist` of both targets, add the key `AppwritePushAppGroup` with the group as its value.
+1. In the app target's **Signing & Capabilities** tab, add **App Groups** with a new group, such as `group.io.appwrite.orders`.
+1. Add **App Groups** with the same group to the `NotificationService` target.
+1. In the **Info** tab of both targets, add the key `AppwritePushAppGroup` with the group as its value.
 
 The `Info.plist` entry looks like this in source form:
 
@@ -146,14 +150,14 @@ final class OrdersModel: ObservableObject {
 
 Appwrite keeps each message for a while and replays the ones a device missed when it reconnects. It tracks this per client ID. On iOS, all of a user's devices share the default ID, so the model sets its own ID for each install.
 
-Create the model in your app struct. The `Appwrite` module has its own `App` type, so write `SwiftUI.App`:
+Create the model when the app struct is created, rather than as a `@StateObject`, so `Push` exists before the app finishes launching. iOS reports the tap that opened the app during launch. The `Appwrite` module has its own `App` type, so write `SwiftUI.App`:
 
 ```swift
 import SwiftUI
 
 @main
 struct OrdersApp: SwiftUI.App {
-    @StateObject private var model = OrdersModel()
+    private let model = OrdersModel()
 
     var body: some Scene {
         WindowGroup {
@@ -319,11 +323,11 @@ Run the app on an iPhone, sign in as a customer with orders, and allow notificat
 
 When you send to a user, Appwrite delivers the message over Appwrite Push to each of their devices that is connected. Because the user has an Appwrite push target, it also sends the APNs wake-up to each of their iOS devices. iOS runs your extension, which connects with the shared session, fetches the message, and shows it in place of "New message". This also works after the user swipes the app away.
 
-If a notification still says "New message", the extension couldn't fetch the message. Check that the extension target includes the `Appwrite` library, and that both `Info.plist` files have `AppwritePushAppGroup` set to a group both targets share. The [troubleshooting table](/docs/products/messaging/appwrite-push#troubleshooting) covers more cases, such as an APNs provider that doesn't match the build.
+If a notification still says "New message", the extension couldn't fetch the message. Check that the extension target includes the `Appwrite` library, that both targets have the same App Group, and that both have `AppwritePushAppGroup` set to it. The [troubleshooting table](/docs/products/messaging/appwrite-push#troubleshooting) covers more cases, such as an APNs provider that doesn't match the build.
 
 # Sign out
 
-Close `Push` before you delete the session. It closes the connection, stops background delivery, and removes the device's APNs registration, so the device stops receiving the previous user's notifications:
+Close `Push` before you delete the session. It closes the connection, stops background delivery, and deletes the device's APNs push target, so the device stops receiving the previous user's notifications:
 
 ```swift
 func signOut() async {

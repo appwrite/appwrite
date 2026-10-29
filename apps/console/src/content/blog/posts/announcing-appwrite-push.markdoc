@@ -18,11 +18,11 @@ faqs:
   - question: "Does Appwrite Push work when the app is closed?"
     answer: "On Android, yes: the SDK wakes the app on a schedule to reconnect, and with a foreground service it delivers immediately, even in Doze. On iOS, the Apple SDK uses an APNs wake-up and a Notification Service Extension to show the real message while the app is suspended. On the web, messages arrive while the tab is open, and with a stable client ID, missed ones are replayed when the page opens again."
   - question: "What happens to messages sent while a device is offline?"
-    answer: "With at-least-once delivery, the default, Appwrite keeps each message for up to 7 days and replays the newest messages a device missed, oldest first, when it reconnects. You can shorten how long messages are kept on the provider or on each topic."
+    answer: "With at-least-once delivery, the default, Appwrite keeps each message for up to 7 days and replays the newest messages a device missed, up to five per topic, oldest first, when it reconnects. You can shorten how long messages are kept on the provider or on each topic."
   - question: "Can I keep using FCM and APNs?"
     answer: "Yes. Appwrite Push is another provider next to FCM and APNs, and you can enable them together. A user with FCM or APNs targets gets the FCM or APNs notification. Register an Appwrite push target for them to also receive messages over Appwrite Push. On iOS, APNs then only wakes the app, so each message shows once. FCM still sends the full notification, so an Android app that registers both should skip duplicates by `messageId`."
   - question: "Can I use Appwrite Push when self-hosting?"
-    answer: "Yes, from Appwrite 2.6.0. Self-hosted Appwrite runs the broker in the `appwrite-mqtt` container, with MQTT over TLS on port 8883 and secure WebSocket on port 8084. Point a `push.` DNS record at your server, or set the broker address with `client.setPushEndpoint()`."
+    answer: "Yes, from Appwrite 2.6.0. Self-hosted Appwrite runs the broker in the `appwrite-mqtt` container, with MQTT over TLS on port 8883 and secure WebSocket on port 8084. Point a `push.` DNS record at your server for the mobile SDKs, and set the broker address with `client.setPushEndpoint()` on web clients."
 ---
 
 Push notifications usually take more setup outside your app than anything inside it. Before the first message goes out, you need a Firebase project and its service account key, code that collects each device's token and keeps it current, and a separate APNs setup for iOS.
@@ -33,7 +33,7 @@ Today we're announcing **Appwrite Push**, a push provider built into [Appwrite M
 
 - **Message a user on every device they use.** Send a message to a user ID and it reaches each device where that user is signed in. You don't have to register their devices first.
 - **Delivery while the app is closed.** On Android, the SDK wakes your app to check for new messages, or keeps a foreground service running for instant delivery. On iOS, it works with APNs to show the message while the app is suspended.
-- **Nothing lost while offline.** Appwrite keeps messages for up to 7 days, so a phone that was offline overnight still gets the evening's messages when it reconnects.
+- **Nothing lost while offline.** Appwrite keeps messages for up to 7 days, so a phone that was offline overnight gets the latest ones it missed, up to five per topic, when it reconnects.
 - **Notifications and taps handled for you.** The SDK shows a system notification with the title, body, and image you sent. When your user taps it, your app gets the data you attached so it can open the right screen.
 - **Android, iOS, web, Flutter, and React Native.** Push is part of the Web, Flutter, React Native, Android, and Apple SDKs and works the same way in each.
 - **Set up in a minute.** There are no keys or config files to upload. Create the provider in the Console and you can start sending.
