@@ -1583,6 +1583,70 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertSame('error', \end($frames)['type'] ?? null);
     }
 
+    public function testAdminModeReauthenticationDropsAdminRoles(): void
+    {
+        $user = $this->getUser();
+
+        $client = $this->getAdminWebsocket($this->getProject()['$id'], $this->getRoot()['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => [
+                'session' => $user['session'],
+            ],
+        ]));
+        $response = \json_decode($client->receive(), true);
+
+        // Refusing the switch also keeps the admin roles from a project session.
+        if ($response['type'] === 'error') {
+            $this->assertSame(1003, $response['data']['code']);
+            $client->close();
+            return;
+        }
+
+        $this->assertSame('response', $response['type']);
+        $this->assertTrue($response['data']['success']);
+        $this->assertSame($user['$id'], $response['data']['user']['$id']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $client->send(\json_encode([
+            'type' => 'presence',
+            'data' => [
+                'status' => 'online',
+                'permissions' => [
+                    Permission::read(Role::user($user['$id'])),
+                    Permission::update(Role::user($user['$id'])),
+                    Permission::delete(Role::user($user['$id'])),
+                ],
+            ],
+        ]));
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('response', $response['type']);
+        $this->assertSame('presence', $response['data']['to']);
+
+        /**
+         * Test for FAILURE
+         */
+        // Only a privileged role may share a presence with a role it does not hold.
+        $client->send(\json_encode([
+            'type' => 'presence',
+            'data' => [
+                'status' => 'online',
+                'permissions' => [Permission::read(Role::user(Id::unique()))],
+            ],
+        ]));
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(401, $response['data']['code']);
+        $this->assertStringStartsWith('Permissions must be one of', $response['data']['message']);
+
+        $client->close();
+    }
+
     private function getAdminWebsocket(string $projectId, string $session, array $channels = ['documents']): WebSocketClient
     {
         return $this->getWebsocket($channels, [
