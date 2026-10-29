@@ -28,10 +28,20 @@ describe('buildFunctionEmailAddress', () => {
     ).toBe('contact@fnabc-myproject.appwrite.email')
   })
 
-  test('keeps hyphens in custom IDs', () => {
+  test('keeps hyphens in the project ID', () => {
     expect(
-      buildFunctionEmailAddress('my-app', 'send-mail', 'appwrite.email'),
-    ).toBe('contact@send-mail-my-app.appwrite.email')
+      buildFunctionEmailAddress('my-app', 'sendmail', 'appwrite.email'),
+    ).toBe('contact@sendmail-my-app.appwrite.email')
+  })
+
+  test('uses the earlier form for a hyphenated function ID', () => {
+    // `foo-bar` in `baz` and `foo` in `bar-baz` would otherwise share a host.
+    expect(buildFunctionEmailAddress('baz', 'foo-bar', 'appwrite.email')).toBe(
+      'foo-bar@baz.appwrite.email',
+    )
+    expect(buildFunctionEmailAddress('bar-baz', 'foo', 'appwrite.email')).toBe(
+      'contact@foo-bar-baz.appwrite.email',
+    )
   })
 
   test('falls back to the function ID local part when the host cannot hold it', () => {

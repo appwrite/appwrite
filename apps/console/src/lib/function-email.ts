@@ -19,9 +19,18 @@ export function isFunctionEmailEnabled(
 /** Local part of the default address. Edge accepts any local part. */
 export const FUNCTION_EMAIL_LOCAL_PART = 'contact'
 
-/** A DNS label is at most 63 characters of `a-z`, `0-9` and `-`. */
+/** A DNS label is at most 63 characters. */
 const MAX_DNS_LABEL_LENGTH = 63
-const DNS_LABEL_PART = /^[a-z0-9-]+$/
+
+/** Only `a-z` and `0-9`: no `-`, so Edge splits the label at its first `-`. */
+function isAlphanumeric(value: string): boolean {
+  for (const char of value) {
+    const isDigit = char >= '0' && char <= '9'
+    const isLower = char >= 'a' && char <= 'z'
+    if (!isDigit && !isLower) return false
+  }
+  return value !== ''
+}
 
 /**
  * Appwrite-owned testing address, `contact@{functionId}-{projectId}.{zone}`.
@@ -31,9 +40,11 @@ const DNS_LABEL_PART = /^[a-z0-9-]+$/
  * (`orders+eu@{functionId}-{projectId}.{zone}`). DNS is case-insensitive, so
  * the label is lowercased; Edge matches IDs case-insensitively.
  *
- * A function ID with `.` or `_`, or IDs too long for one label, cannot go in
- * the host, so those fall back to the earlier `{functionId}@{projectId}.{zone}`
- * form, which Edge still routes and where the function ID keeps its case.
+ * Edge reads the label as `{functionId}-{projectId}` split at the first `-`,
+ * so this form is only used for function IDs made of letters and digits;
+ * otherwise `foo-bar` in `baz` and `foo` in `bar-baz` would share an address.
+ * Other function IDs, and IDs too long for one label, keep the earlier
+ * `{functionId}@{projectId}.{zone}` form, where the function ID keeps its case.
  *
  * `zone` is `_APP_DOMAIN_EMAIL` from console variables. Returns null when any
  * part is missing, so the console never shows an address the region does not
@@ -50,7 +61,10 @@ export function buildFunctionEmailAddress(
   if (project === '' || fn === '' || domain === '') return null
 
   const label = `${fn.toLowerCase()}-${project}`
-  if (DNS_LABEL_PART.test(label) && label.length <= MAX_DNS_LABEL_LENGTH) {
+  if (
+    isAlphanumeric(fn.toLowerCase()) &&
+    label.length <= MAX_DNS_LABEL_LENGTH
+  ) {
     return `${FUNCTION_EMAIL_LOCAL_PART}@${label}.${domain}`
   }
   return `${fn}@${project}.${domain}`
