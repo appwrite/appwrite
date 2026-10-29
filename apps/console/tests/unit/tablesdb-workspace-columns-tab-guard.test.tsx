@@ -1,4 +1,5 @@
 import {
+  afterAll,
   afterEach,
   beforeAll,
   describe,
@@ -7,13 +8,19 @@ import {
   test,
 } from 'bun:test'
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
-
-GlobalRegistrator.register()
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import * as actualRouter from '@tanstack/react-router'
 import { cleanup, render } from '@testing-library/react'
 import { createElement, type ReactNode } from 'react'
 import { join } from 'node:path'
+import * as actualRequireAuth from '../../src/components/global/auth/RequireAuth.tsx'
+import * as actualOperationsLock from '../../src/components/pages/projects/$projectId/databases/_components/DatabaseOperationsLockContext.tsx'
+import * as actualConsoleProfile from '../../src/hooks/use-console-profile.ts'
+import * as actualMediaMinWidth from '../../src/hooks/use-media-min-width.ts'
+import * as actualMonitorFilters from '../../src/hooks/use-database-monitor-chart-filters.ts'
+import * as actualTranslate from '../../src/lib/i18n/translate.ts'
 import * as actualHooks from '../../src/lib/react-query/hooks/index.ts'
+import * as actualStripe from '@stripe/stripe-js'
 
 const consoleRoot = join(import.meta.dir, '../..')
 
@@ -129,6 +136,7 @@ function installMocks() {
   }))
 
   mock.module(operationsLockPath, () => ({
+    ...actualOperationsLock,
     useDatabaseTableOperationsAccess: () => ({
       canWrite: true,
       writeDisabled: false,
@@ -146,10 +154,12 @@ function installMocks() {
   }))
 
   mock.module(requireAuthPath, () => ({
+    ...actualRequireAuth,
     useAuth: () => ({ account: { prefs: {} } }),
   }))
 
   mock.module(consoleProfilePath, () => ({
+    ...actualConsoleProfile,
     useConsoleProfile: () => ({
       profileId: 'cloud',
       profile: { id: 'cloud', features: { orgRoles: false, agent: false } },
@@ -158,10 +168,12 @@ function installMocks() {
   }))
 
   mock.module(mediaMinWidthPath, () => ({
+    ...actualMediaMinWidth,
     useMediaMinWidth: () => false,
   }))
 
   mock.module(monitorFiltersPath, () => ({
+    ...actualMonitorFilters,
     useDatabaseMonitorChartFilters: () => ({
       dateRange: { from: new Date(), to: new Date() },
       chartInterval: '1h',
@@ -177,6 +189,7 @@ function installMocks() {
   mock.module(translatePath, () => {
     const identity = (text: string) => text
     return {
+      ...actualTranslate,
       useT: () => identity,
       translate: identity,
       translateText: identity,
@@ -184,10 +197,12 @@ function installMocks() {
   })
 
   mock.module('@stripe/stripe-js', () => ({
+    ...actualStripe,
     loadStripe: async () => null,
   }))
 
   mock.module('@tanstack/react-router', () => ({
+    ...actualRouter,
     Link: ({
       children,
       ...props
@@ -213,7 +228,14 @@ function installMocks() {
 }
 
 beforeAll(async () => {
+  GlobalRegistrator.register()
   installMocks()
+})
+
+afterAll(async () => {
+  cleanup()
+  mock.restore()
+  await GlobalRegistrator.unregister()
 })
 
 afterEach(() => {
