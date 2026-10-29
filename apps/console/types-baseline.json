@@ -1,1 +1,3 @@
-$WORKSPACE:/workspace/apps/console/types-baseline.json
+{
+  "e2e/console.mocked.dialogs.spec.ts": {
+    "TS2741: Property 'providerIdToken' is missing in type '{ $id: string; $createdAt: string; $updatedAt: string; userId: string; provider: string; providerUid: string; providerEmail: string; providerAccessToken: string; providerAccessTokenExpiry: string; providerRefreshToken: string; ip: string; osCode: string; osName: string; osVersion: string; clientType: string; clientCode: string; clientName: string; clientVersion: string; clientEngine: string; clientEngineVersion: string; deviceName: string; 
