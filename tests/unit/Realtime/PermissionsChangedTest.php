@@ -218,11 +218,28 @@ final class PermissionsChangedTest extends TestCase
         $this->assertNotNull($error, 'Expected the unauthorized error frame before the close: ' . $this->tailLog());
         $this->assertSame(401, $error['data']['code'] ?? null);
 
-        // Nothing but the close may follow the unauthorized frame.
-        $this->assertNull(
-            $this->receiveMatch($client, fn (): bool => true, $seconds),
-            'Expected the connection to close after the unauthorized frame'
-        );
+        // Nothing but the close may follow the unauthorized frame. A close frame or a
+        // dropped socket passes; silence until the deadline fails.
+        $deadline = \microtime(true) + $seconds;
+        $client->setTimeout(2);
+
+        while (\microtime(true) < $deadline) {
+            try {
+                $frame = $client->receive();
+            } catch (TimeoutException) {
+                continue;
+            } catch (ConnectionException) {
+                return;
+            }
+
+            if ($frame === null) {
+                return; // close frame
+            }
+
+            $this->fail('Expected only the close after the unauthorized frame, got: ' . $frame);
+        }
+
+        $this->fail('Expected the connection to close after the unauthorized frame');
     }
 
     public function testRevokedConnectionGetsEventThenUnauthorizedClose(): void
