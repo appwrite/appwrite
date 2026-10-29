@@ -28,6 +28,7 @@
   },
   "overrides": {
     "seroval": "1.6.12",
-    "seroval-plugins": "1.6.12"
+    "seroval-plugins": "1.6.12",
+    "zod": "4.6.6"
   }
 }
