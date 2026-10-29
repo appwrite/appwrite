@@ -479,6 +479,52 @@
           "message": "Not connected to WebSocket server"
         }
       ]
+    },
+    {
+      "name": "testSecureSchemeNegotiatesTlsOnNonstandardPort",
+      "steps": [
+        {
+          "op": "tls.probe",
+          "args": {
+            "scheme": "wss",
+            "headers": [
+              [
+                "Authorization",
+                "Bearer secret"
+              ]
+            ]
+          },
+          "expect": {
+            "received": true,
+            "handshake": true,
+            "leaked": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "the ws scheme on the same port sends the upgrade in clear",
+      "steps": [
+        {
+          "op": "tls.probe",
+          "args": {
+            "scheme": "ws",
+            "headers": [
+              [
+                "Authorization",
+                "Bearer secret"
+              ]
+            ]
+          },
+          "expect": {
+            "received": true,
+            "handshake": false,
+            "leaked": [
+              "Bearer secret"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

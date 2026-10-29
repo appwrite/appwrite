@@ -624,6 +624,37 @@ final class Servers
 
                 return ['data' => $data, 'closed' => $closed];
 
+            case 'stall':
+                // A peer that pipelines `queries` queries and never reads the
+                // answers, for `wait` seconds; then another client's query
+                // (unless `other` is false), then whether the server closed the
+                // stalled connection (read to its end, for up to 5 seconds).
+                $socket = stream_socket_client('tcp://' . $host . ':' . $port('tcp'), $errno, $errstr, 2);
+                if ($socket === false) {
+                    throw new Fault('cannot connect: ' . $errstr);
+                }
+                $query = Message::query(new Question($step['name'], $step['type']), 1)->encode();
+                fwrite($socket, str_repeat(pack('n', \strlen($query)) . $query, $step['queries']));
+                usleep((int) ($step['wait'] * 1_000_000));
+                $other = null;
+                if ($step['other'] ?? true) {
+                    $client = new Client($host, $port('tcp'), 2, true);
+                    $other = Adapter::dumpMessage($client->query(Message::query(new Question($step['name'], Record::TYPE_A), 2)));
+                }
+                stream_set_timeout($socket, 1);
+                $closed = false;
+                $deadline = microtime(true) + 5;
+                while (microtime(true) < $deadline) {
+                    $chunk = fread($socket, 65536);
+                    if (($chunk === false || $chunk === '') && stream_get_meta_data($socket)['eof']) {
+                        $closed = true;
+                        break;
+                    }
+                }
+                fclose($socket);
+
+                return ['other' => $other, 'closed' => $closed];
+
             case 'doh':
                 $url = 'http://' . $host . ':' . $port('http') . ($step['path'] ?? '/');
                 $headers = [];

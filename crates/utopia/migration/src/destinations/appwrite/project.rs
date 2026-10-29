@@ -473,6 +473,7 @@ impl Appwrite {
             ("corporateEmails", flag(p.deny_corporate_email)),
             ("passwordPwned", p.password_pwned.clone().map(Value::Array)),
             ("passwordRotation", p.password_rotation.clone().map(Value::Array)),
+            ("realtimeGuests", flag(p.deny_realtime_guests)),
             ("passkeyRpId", passkey_rp_id.map(|id| Value::from(id.as_str()))),
         ];
         for (k, v) in reported {

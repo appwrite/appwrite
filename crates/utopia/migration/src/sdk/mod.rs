@@ -29,10 +29,10 @@ use crate::target::{Destinations, Resolver, Shared};
 use spec_types::{Field, Method};
 
 /// The SDK version the requests name.
-pub const VERSION: &str = "32.0.0";
+pub const VERSION: &str = "32.1.0";
 
 /// The response format the requests ask for.
-pub const RESPONSE_FORMAT: &str = "2.5.0";
+pub const RESPONSE_FORMAT: &str = "2.6.2";
 
 /// A client of one project's API.
 ///
@@ -44,14 +44,12 @@ pub struct Client {
     config: IndexMap<String, String>,
     timeout: Option<i64>,
     connect_timeout: Option<i64>,
-    refuse_redirects: bool,
     resolver: Option<Resolver>,
     destinations: Option<Destinations>,
-    /// The resolver's entries for the endpoint, per transport (following
-    /// redirects, and not for `location` responses), kept until a setting
-    /// changes as PHP keeps the HTTP clients it built them for. Clones
+    /// The resolver's entries for the endpoint, kept until a setting
+    /// changes as PHP keeps the HTTP client it built them for. Clones
     /// share it, as PHP's reader shares the client object.
-    resolved: Arc<Mutex<[Option<Vec<String>>; 2]>>,
+    resolved: Arc<Mutex<Option<Vec<String>>>>,
 }
 
 impl std::fmt::Debug for Client {
@@ -61,7 +59,6 @@ impl std::fmt::Debug for Client {
             .field("headers", &self.headers)
             .field("timeout", &self.timeout)
             .field("connect_timeout", &self.connect_timeout)
-            .field("refuse_redirects", &self.refuse_redirects)
             .field("resolver", &self.resolver.is_some())
             .field("destinations", &self.destinations)
             .finish_non_exhaustive()
@@ -79,7 +76,8 @@ impl Default for Client {
 pub enum Input {
     /// A value.
     Value(Value),
-    /// An SDK enum value: its value in JSON, nothing in a query string.
+    /// An SDK enum value: its value (`JsonSerializable`, which
+    /// `Client::flatten()` turns into its value everywhere).
     Enum(String),
     /// A file (PHP: `CURLFile`).
     File {
@@ -111,7 +109,6 @@ impl Client {
             config: IndexMap::new(),
             timeout: None,
             connect_timeout: None,
-            refuse_redirects: false,
             resolver: None,
             destinations: None,
             resolved: Arc::default(),
@@ -121,16 +118,6 @@ impl Client {
     /// `resetHttpClient()`: the next request resolves the endpoint again.
     fn reset(&mut self) {
         self.resolved = Arc::default();
-    }
-
-    /// Refuses redirects: a 3xx response is an error (`<status>: Redirects
-    /// are not followed`) instead of being followed.
-    ///
-    /// PHP: `Utopia\Migration\Sources\Appwrite\Client`, the SDK client
-    /// whose transport is wrapped in `Client\RedirectRefusal`.
-    pub fn refuse_redirects(&mut self) -> &mut Self {
-        self.refuse_redirects = true;
-        self
     }
 
     /// Pins every connection to the addresses `resolver` returns for the
@@ -253,16 +240,15 @@ impl Client {
         }
     }
 
-    /// `getHttpClient($followRedirects)`'s resolver entries: the cached
+    /// `getHttpClient()`'s resolver entries: the cached
     /// ones, or the resolver's for the endpoint (not cached when it errs).
-    fn resolve(&self, location: bool) -> Result<Option<Vec<String>>> {
+    fn resolve(&self) -> Result<Option<Vec<String>>> {
         let Some(resolver) = &self.resolver else { return Ok(None) };
-        let slot = usize::from(location);
-        if let Some(entries) = &self.resolved.lock().unwrap_or_else(|e| e.into_inner())[slot] {
+        if let Some(entries) = &*self.resolved.lock().unwrap_or_else(|e| e.into_inner()) {
             return Ok(Some(entries.clone()));
         }
         let entries = resolver(&self.endpoint)?;
-        self.resolved.lock().unwrap_or_else(|e| e.into_inner())[slot] = Some(entries.clone());
+        *self.resolved.lock().unwrap_or_else(|e| e.into_inner()) = Some(entries.clone());
         Ok(Some(entries))
     }
 
@@ -282,14 +268,14 @@ impl Client {
         if content_type.is_empty() {
             all.shift_remove("content-type");
         }
-        let plain = |params: &[(String, Input)], json: bool| -> Array {
+        let plain = |params: &[(String, Input)]| -> Array {
             let mut a = Array::new();
             for (k, v) in params {
                 match v {
                     Input::Value(v) => {
                         a.set(ArrayKey::from(k.as_str()), v.clone());
                     }
-                    Input::Enum(e) if json => {
+                    Input::Enum(e) => {
                         a.set(ArrayKey::from(k.as_str()), Value::from(e.as_str()));
                     }
                     _ => {}
@@ -302,7 +288,7 @@ impl Client {
         if method == "GET" {
             // `Factory::query()`: the parameters appended to the URI's query.
             if !params.is_empty() {
-                let built = query(&plain(params, false));
+                let built = query(&plain(params));
                 let (base, existing) = match url.split_once('?') {
                     Some((base, q)) => (base.to_owned(), q.to_owned()),
                     None => (url.clone(), String::new()),
@@ -313,7 +299,7 @@ impl Client {
             body = None;
         } else if content_type == "application/json" {
             let encoded = php_std::json::encode(
-                &Value::Array(plain(params, true)),
+                &Value::Array(plain(params)),
                 php_std::json::Flags::NONE,
                 php_std::json::DEFAULT_DEPTH,
             )
@@ -335,12 +321,12 @@ impl Client {
             all.insert("content-type".to_owned(), ct);
             body = Some(multipart_body);
         } else {
-            body = Some(query(&plain(params, false)).into_bytes());
+            body = Some(query(&plain(params)).into_bytes());
             all.entry("content-type".to_owned()).or_insert_with(|| "application/x-www-form-urlencoded".to_owned());
         }
         // `createHttpClient()` resolves the endpoint; the resolver's own
         // error is not the client's.
-        let http = match self.resolve(location)? {
+        let http = match self.resolve()? {
             Some(entries) => Http::new().with_resolve(entries),
             None => Http::new(),
         };
@@ -349,10 +335,9 @@ impl Client {
             Some(d) => client.with_destinations(Shared(d.clone())),
             None => client.with_destinations(Anywhere),
         };
-        // The migration's client never follows a redirect: it refuses it,
-        // except for a `location` response, which returns it.
-        let follow = !self.refuse_redirects && !location;
-        let mut client = client.with_follow_redirects(follow, 50).map_err(transport)?;
+        // The SDK never follows a redirect: it refuses it, except for a
+        // `location` response, which returns it.
+        let mut client = client.with_follow_redirects(false, 50).map_err(transport)?;
         if let Some(seconds) = self.timeout {
             client = client.with_timeout(seconds as f64).map_err(transport)?;
         }
@@ -369,17 +354,17 @@ impl Client {
         if let Some(body) = body {
             request = request.body(body);
         }
-        let response = client.send(request).await.map_err(transport)?;
-        let status = response.status();
-        if self.refuse_redirects && !location && (300..400).contains(&status) {
-            // `RedirectRefusal`'s `RequestException`, as `call()` rethrows it.
+        // `CURLOPT_MAXFILESIZE_LARGE`: a body decoding past the cap fails
+        // with cURL's error, as `call()` rethrows it.
+        let Some((response, raw)) = crate::http::capped(&client, request, |_| {}).await.map_err(transport)? else {
             return Err(Error::Appwrite {
-                message: format!("{status}: Redirects are not followed"),
-                code: i64::from(status),
+                message: crate::http::MAX_RESPONSE_SIZE_EXCEEDED.to_owned(),
+                code: crate::http::CURLE_FILESIZE_EXCEEDED,
                 error_type: String::new(),
                 response: String::new(),
             });
-        }
+        };
+        let status = response.status();
         // `getHeaderLine('content-type')`: its values joined, case kept.
         let mut content = String::new();
         let mut redirect = String::new();
@@ -391,7 +376,15 @@ impl Client {
                 redirect = line();
             }
         }
-        let raw = response.bytes().clone();
+        if !location && (300..400).contains(&status) {
+            let body = String::from_utf8_lossy(&raw).into_owned();
+            return Err(Error::Appwrite {
+                message: format!("Redirect to {redirect} not followed"),
+                code: i64::from(status),
+                error_type: String::new(),
+                response: body,
+            });
+        }
         let decoded = if content.starts_with("application/json") {
             php_std::json::decode(&raw, Some(true), php_std::json::DEFAULT_DEPTH, php_std::json::Flags::NONE)
                 .unwrap_or(Value::Null)

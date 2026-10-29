@@ -244,6 +244,7 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
                 password_pwned: n.opt_array("passwordPwned")?,
                 password_rotation: n.opt_array("passwordRotation")?,
                 passkey_rp_id: n.opt_string("passkeyRpId", None)?,
+                deny_realtime_guests: n.opt_bool("denyRealtimeGuests")?,
             };
             Resource::new(Kind::Policies(p), dated(&n, id(&n)?)?)
         }
@@ -818,6 +819,7 @@ pub fn describe(r: &ResourceRef) -> Json {
             ("getPasskeyRpId", opt(&p.passkey_rp_id)),
             ("getPasswordPwned", p.password_pwned.as_ref().map_or(Json::Null, arr)),
             ("getPasswordRotation", p.password_rotation.as_ref().map_or(Json::Null, arr)),
+            ("getDenyRealtimeGuests", p.deny_realtime_guests.map_or(Json::Null, Json::from)),
         ]),
         Kind::Team(t) => g.extend([
             ("getMembers", arr(&t.members)),

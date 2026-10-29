@@ -699,11 +699,13 @@ dependencies = [
  "quote",
  "redis",
  "rusqlite",
+ "rustls",
  "serde",
  "serde_json",
  "sha2 0.10.9",
  "syn 2.0.119",
  "tokio-postgres",
+ "tokio-rustls",
  "tokio-tungstenite",
  "utopia-abuse",
  "utopia-agents",
@@ -4930,6 +4932,7 @@ dependencies = [
  "thiserror",
  "tower-service",
  "utopia-async",
+ "webpki-roots 1.0.10",
 ]
 
 [[package]]

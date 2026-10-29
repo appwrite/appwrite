@@ -92,6 +92,21 @@ pub enum Error {
     /// PHP: `Utopia\SMTP\Exception\TransactionException`.
     #[error("{}", .0.message)]
     Transaction(Box<Refusal>),
+    /// The message was submitted and the server's decision never arrived:
+    /// the terminating dot was written, then the connection or the protocol
+    /// failed, or the server answered 421. Sending it again can deliver it
+    /// twice. `previous` is that failure, whose message and code it keeps.
+    ///
+    /// PHP: `Utopia\SMTP\Exception\UnconfirmedException`.
+    #[error("{message}")]
+    Unconfirmed {
+        /// What happened.
+        message: String,
+        /// The error code.
+        code: u16,
+        /// The failure that left the message unconfirmed.
+        previous: Option<Box<Error>>,
+    },
 }
 
 impl Error {
@@ -108,6 +123,7 @@ impl Error {
             Error::Capability(_) => "Utopia\\SMTP\\Exception\\CapabilityException",
             Error::Message(_) => "Utopia\\SMTP\\Exception\\MessageException",
             Error::Transaction(_) => "Utopia\\SMTP\\Exception\\TransactionException",
+            Error::Unconfirmed { .. } => "Utopia\\SMTP\\Exception\\UnconfirmedException",
         }
     }
 
@@ -133,8 +149,26 @@ impl Error {
         match self {
             Error::Authentication { code, .. } => *code,
             Error::Transaction(refusal) => refusal.reply.code(),
+            Error::Unconfirmed { code, .. } => *code,
             _ => 0,
         }
+    }
+
+    /// The failure an [`Error::Unconfirmed`] wraps.
+    ///
+    /// PHP: `getPrevious()`.
+    pub fn previous(&self) -> Option<&Error> {
+        match self {
+            Error::Unconfirmed { previous, .. } => previous.as_deref(),
+            _ => None,
+        }
+    }
+
+    /// The submitted message's failure, wrapping `previous`.
+    ///
+    /// PHP: `new UnconfirmedException($previous->getMessage(), $previous->getCode(), $previous)`.
+    pub fn unconfirmed(previous: Error) -> Self {
+        Error::Unconfirmed { message: previous.to_string(), code: previous.code(), previous: Some(Box::new(previous)) }
     }
 
     /// The refusal, when the server refused the transaction.

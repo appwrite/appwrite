@@ -867,6 +867,344 @@
           "message": "Unable to parse DSN: malformed"
         }
       }
+    },
+    {
+      "name": "from encodes each part",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "minio.example.com",
+        "user": "admin@example.com",
+        "password": "sl/sh+$@no:her",
+        "port": 9000,
+        "path": "b?url=http://169.254.169.254/latest&insecure=true#",
+        "params": {
+          "region": "us-east-1",
+          "value": "a&b=c"
+        },
+        "keys": [
+          "region",
+          "value",
+          "url",
+          "insecure"
+        ]
+      },
+      "expect": {
+        "scheme": "s3",
+        "user": "admin@example.com",
+        "password": "sl/sh+$@no:her",
+        "host": "minio.example.com",
+        "port": "9000",
+        "path": "b?url=http://169.254.169.254/latest&insecure=true#",
+        "query": "region=us-east-1&value=a%26b%3Dc",
+        "string": "s3://admin%40example.com:sl%2Fsh%2B%24%40no%3Aher@minio.example.com:9000/b%3Furl%3Dhttp%3A//169.254.169.254/latest%26insecure%3Dtrue%23?region=us-east-1&value=a%26b%3Dc",
+        "keys": [
+          "us-east-1",
+          "a&b=c",
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "name": "from keeps path segments",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "localhost",
+        "path": "bucket/prefix"
+      },
+      "expect": {
+        "scheme": "s3",
+        "user": null,
+        "password": null,
+        "host": "localhost",
+        "port": null,
+        "path": "bucket/prefix",
+        "query": null,
+        "string": "s3://localhost/bucket/prefix"
+      }
+    },
+    {
+      "name": "from refuses a host that reshapes the DSN: path",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "minio.example.com/other",
+        "path": "bucket"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to build DSN: a part does not survive encoding"
+        }
+      }
+    },
+    {
+      "name": "from refuses a host that reshapes the DSN: query",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "minio.example.com?url=http://10.0.0.1",
+        "path": "bucket"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to build DSN: a part does not survive encoding"
+        }
+      }
+    },
+    {
+      "name": "from refuses a host that reshapes the DSN: fragment",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "minio.example.com#x",
+        "path": "bucket"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to build DSN: a part does not survive encoding"
+        }
+      }
+    },
+    {
+      "name": "from refuses a host that reshapes the DSN: userinfo",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "user@minio.example.com",
+        "path": "bucket"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to build DSN: a part does not survive encoding"
+        }
+      }
+    },
+    {
+      "name": "from refuses a host that reshapes the DSN: port",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "minio.example.com:9000",
+        "path": "bucket"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to build DSN: a part does not survive encoding"
+        }
+      }
+    },
+    {
+      "name": "from refuses a password without a user",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "localhost",
+        "password": "secret"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to build DSN: a password needs a user"
+        }
+      }
+    },
+    {
+      "name": "from refuses params getParam cannot read back: brackets",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "localhost",
+        "params": {
+          "x[y]": "z"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to build DSN: a part does not survive encoding"
+        }
+      }
+    },
+    {
+      "name": "from refuses params getParam cannot read back: dot",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "localhost",
+        "params": {
+          "a.b": "c"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to build DSN: a part does not survive encoding"
+        }
+      }
+    },
+    {
+      "name": "from refuses params getParam cannot read back: space",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "localhost",
+        "params": {
+          "a b": "c"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to build DSN: a part does not survive encoding"
+        }
+      }
+    },
+    {
+      "name": "from params read back",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "s3",
+        "host": "localhost",
+        "params": {
+          "region": "eu central",
+          "url": "https://x?y=1&z"
+        },
+        "keys": [
+          "region",
+          "url"
+        ]
+      },
+      "expect": {
+        "scheme": "s3",
+        "user": null,
+        "password": null,
+        "host": "localhost",
+        "port": null,
+        "path": "",
+        "query": "region=eu%20central&url=https%3A%2F%2Fx%3Fy%3D1%26z",
+        "string": "s3://localhost?region=eu%20central&url=https%3A%2F%2Fx%3Fy%3D1%26z",
+        "keys": [
+          "eu central",
+          "https://x?y=1&z"
+        ]
+      }
+    },
+    {
+      "name": "to string round trips",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "mariadb",
+        "host": "localhost",
+        "user": "user",
+        "password": "p@ss/word",
+        "port": 3306,
+        "path": "data base",
+        "params": {
+          "charset": "utf8"
+        }
+      },
+      "expect": {
+        "scheme": "mariadb",
+        "user": "user",
+        "password": "p@ss/word",
+        "host": "localhost",
+        "port": "3306",
+        "path": "data base",
+        "query": "charset=utf8",
+        "string": "mariadb://user:p%40ss%2Fword@localhost:3306/data%20base?charset=utf8"
+      }
+    },
+    {
+      "name": "to string round trips: parsed back",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "mariadb://user:p%40ss%2Fword@localhost:3306/data%20base?charset=utf8",
+        "params": [
+          "charset"
+        ]
+      },
+      "expect": {
+        "scheme": "mariadb",
+        "user": "user",
+        "password": "p@ss/word",
+        "host": "localhost",
+        "port": "3306",
+        "path": "data base",
+        "query": "charset=utf8",
+        "params": [
+          "utf8"
+        ]
+      }
+    },
+    {
+      "name": "to string of a parsed DSN",
+      "op": "dsn.string",
+      "args": {
+        "dsn": "mariadb://user:p%40ss@localhost:3306/data%20base/%FF?charset=utf8#frag"
+      },
+      "expect": "mariadb://user:p%40ss@localhost:3306/data%20base/%FF?charset=utf8"
+    },
+    {
+      "name": "path is decoded",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "s3://localhost/b%3Furl%3Dx",
+        "params": [
+          "url"
+        ]
+      },
+      "expect": {
+        "scheme": "s3",
+        "user": null,
+        "password": null,
+        "host": "localhost",
+        "port": null,
+        "path": "b?url=x",
+        "query": null,
+        "params": [
+          ""
+        ]
+      }
+    },
+    {
+      "name": "from with integer param keys and an empty user",
+      "op": "dsn.from",
+      "args": {
+        "scheme": "redis",
+        "host": "cache",
+        "user": "",
+        "password": "",
+        "port": 0,
+        "params": {
+          "0": "a",
+          "01": "b"
+        },
+        "keys": [
+          "0",
+          "01"
+        ]
+      },
+      "expect": {
+        "scheme": "redis",
+        "user": "",
+        "password": "",
+        "host": "cache",
+        "port": "0",
+        "path": "",
+        "query": "0=a&01=b",
+        "string": "redis://:@cache:0?0=a&01=b",
+        "keys": [
+          "a",
+          "b"
+        ]
+      }
     }
   ]
 }

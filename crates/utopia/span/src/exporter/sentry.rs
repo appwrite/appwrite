@@ -15,7 +15,7 @@ use crate::{Error, Failure, Level, Span, Value};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SentryField {
     /// Indexed and searchable: for low-cardinality values (environment,
-    /// version, tenant). Values are cut to 200 bytes.
+    /// version, tenant). Values are cut to 200 characters.
     Tag,
     /// Not indexed; recommended for debugging data. The default.
     Context,
@@ -383,7 +383,9 @@ impl Sentry {
             match (self.classifier)(k) {
                 SentryField::Tag => {
                     let text = value.to_php_string();
-                    tags.set(key(k), Php::Str(text[..text.len().min(200)].into()));
+                    // `mb_substr($value, 0, 200, 'UTF-8')`: 200 characters.
+                    let cut = php_std::mb::mb_substr(&text, 0, Some(200)).unwrap_or_else(|_| text.to_vec());
+                    tags.set(key(k), Php::Str(cut.into()));
                 }
                 SentryField::Context => {
                     custom.set(key(k), value.to_php());
@@ -436,8 +438,21 @@ impl Sentry {
             }
         }
 
-        let encode = |v: &Php| json::encode(v, Flags::NONE, json::DEFAULT_DEPTH).ok();
-        let (header, item, payload) = (encode(&header)?, encode(&item)?, encode(&object(payload))?);
+        let encode = |v: &Php, flags: Flags| json::encode(v, flags, json::DEFAULT_DEPTH);
+        let encoded = (
+            encode(&header, Flags::INVALID_UTF8_SUBSTITUTE),
+            encode(&item, Flags::NONE),
+            encode(&object(payload), Flags::INVALID_UTF8_SUBSTITUTE),
+        );
+        let (Ok(header), Ok(item), Ok(payload)) = encoded else {
+            // `json_last_error_msg()` is the last encoding's: the payload's.
+            let message = match &encoded.2 {
+                Err(e) => e.message(),
+                Ok(_) => "No error",
+            };
+            eprintln!("Sentry exporter: failed to encode event - {message}");
+            return None;
+        };
         Some(format!("{header}\n{item}\n{payload}").into_bytes())
     }
 }

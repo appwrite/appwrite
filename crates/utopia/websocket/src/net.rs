@@ -528,16 +528,17 @@ fn failure(e: tungstenite::Error) -> TransportError {
     }
 }
 
-/// Connects, upgrades and returns the transport. TLS is used when the port
-/// is 443, whatever the scheme (as Swoole's client decides).
+/// Connects, upgrades and returns the transport, over TLS when `secure`
+/// (the URL's scheme is `wss`), whatever the port.
 pub(crate) async fn connect(
     host: &str,
     port: u16,
+    secure: bool,
     path: &str,
     headers: &[(String, String)],
     timeout: Duration,
 ) -> Result<Wire, TransportError> {
-    let scheme = if port == 443 { "wss" } else { "ws" };
+    let scheme = if secure { "wss" } else { "ws" };
     let mut builder = http::Request::builder()
         .uri(format!("{scheme}://{host}:{port}{path}"))
         .header("Host", host)

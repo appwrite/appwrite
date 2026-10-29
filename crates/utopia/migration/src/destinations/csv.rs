@@ -159,6 +159,13 @@ impl Csv {
     }
 }
 
+/// Whether a value starts, after any single quotes, with a byte a
+/// spreadsheet reads as the start of a formula (`=`, `+`, `-`, `@`, a tab
+/// or a carriage return).
+pub(crate) fn formula_like(value: &[u8]) -> bool {
+    value.iter().find(|&&b| b != b'\'').is_some_and(|b| b"=+-@\t\r".contains(b))
+}
+
 /// `convertValueToCSV()`.
 pub(crate) fn csv_value(value: &Value) -> Vec<u8> {
     match value {
@@ -182,6 +189,19 @@ pub(crate) fn csv_value(value: &Value) -> Vec<u8> {
             }
         }
         Value::Object(_) => encode(value, Flags::NONE, 512).unwrap_or_default().into_bytes(),
+        Value::Str(text) => {
+            // Spreadsheets evaluate cells starting with these as formulas.
+            // Values already quoted before one get another quote too, so the
+            // CSV source strips exactly one and they import back unchanged.
+            let bytes = text.as_bytes();
+            if formula_like(bytes) {
+                let mut quoted = Vec::with_capacity(bytes.len() + 1);
+                quoted.push(b'\'');
+                quoted.extend_from_slice(bytes);
+                return quoted;
+            }
+            bytes.to_vec()
+        }
         other => other.to_php_string().map(|s| s.as_bytes().to_vec()).unwrap_or_default(),
     }
 }

@@ -1241,6 +1241,7 @@
             "getDenyCorporateEmail": false,
             "getDenyDisposableEmail": null,
             "getDenyFreeEmail": true,
+            "getDenyRealtimeGuests": null,
             "getDescription": "",
             "getGroup": "auth",
             "getId": "p1",
@@ -1312,6 +1313,7 @@
             "passwordPwned": null,
             "passwordRotation": null,
             "passkeyRpId": null,
+            "denyRealtimeGuests": null,
             "createdAt": "",
             "updatedAt": ""
           }

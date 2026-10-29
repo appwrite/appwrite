@@ -148,9 +148,10 @@ type ErrorHook = Box<dyn FnMut(&Error) + Send>;
 /// A WebSocket client.
 ///
 /// [`Client::new`] parses the URL with PHP's `parse_url` rules: the host is
-/// required, the port defaults to 443 for `wss` and 80 otherwise, the path to
-/// `/`, and the query is kept. [`connect`](Client::connect) opens the
-/// connection (TLS when the port is 443), then [`send`](Client::send),
+/// required, the scheme must be `ws` or `wss`, the port defaults to 443 for
+/// `wss` and 80 for `ws`, the path to `/`, and the query is kept.
+/// [`connect`](Client::connect) opens the connection (TLS for `wss`, whatever
+/// the port), then [`send`](Client::send),
 /// [`receive`](Client::receive) one message or [`listen`](Client::listen)
 /// until the connection closes, with the `on_*` hooks called along the way.
 ///
@@ -185,6 +186,7 @@ type ErrorHook = Box<dyn FnMut(&Error) + Send>;
 pub struct Client {
     host: String,
     port: u16,
+    secure: bool,
     path: String,
     headers: Vec<(String, String)>,
     timeout: Duration,
@@ -217,7 +219,8 @@ impl Client {
     ///
     /// Fails with [`Error::InvalidArgument`] when PHP's `parse_url` rejects
     /// the URL (`Invalid WebSocket URL`) or finds no host in it (`WebSocket
-    /// URL must contain a host`).
+    /// URL must contain a host`), or when its scheme is not `ws` or `wss`
+    /// (`WebSocket URL scheme must be ws or wss`).
     ///
     /// PHP: `new Client(string $url, array $options = [])`.
     pub fn new(url: &str, options: Options) -> Result<Self, Error> {
@@ -228,8 +231,14 @@ impl Client {
             .host()
             .map(text)
             .ok_or_else(|| Error::InvalidArgument("WebSocket URL must contain a host".into()))?;
-        let port =
-            parsed.port().unwrap_or(if parsed.scheme().as_deref() == Some(b"wss".as_slice()) { 443 } else { 80 });
+        let scheme = parsed.scheme().map(|s| s.to_ascii_lowercase()).unwrap_or_default();
+        let default_port = match scheme.as_slice() {
+            b"ws" => 80,
+            b"wss" => 443,
+            _ => return Err(Error::InvalidArgument("WebSocket URL scheme must be ws or wss".into())),
+        };
+        let secure = scheme == b"wss";
+        let port = parsed.port().unwrap_or(default_port);
         let mut path = parsed.path().map(text).unwrap_or_else(|| "/".to_owned());
         if let Some(query) = parsed.query() {
             path.push('?');
@@ -238,6 +247,7 @@ impl Client {
         Ok(Self {
             host,
             port,
+            secure,
             path,
             headers: options.headers,
             timeout: options.timeout,
@@ -347,7 +357,7 @@ impl Client {
     /// PHP: `connect()`.
     #[cfg(feature = "network")]
     pub async fn connect(&mut self) -> Result<(), Error> {
-        match crate::net::connect(&self.host, self.port, &self.path, &self.headers, self.timeout).await {
+        match crate::net::connect(&self.host, self.port, self.secure, &self.path, &self.headers, self.timeout).await {
             Ok(transport) => {
                 self.transport = Some(Box::new(transport));
                 self.connected = true;

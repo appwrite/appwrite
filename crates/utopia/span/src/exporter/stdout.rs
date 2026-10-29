@@ -14,8 +14,10 @@ use crate::Span;
 /// with at most `max_trace_frames` frames, `error.trace_truncated`). Spans
 /// with an error go to standard error, the others to standard output.
 ///
-/// A span whose JSON cannot be encoded (a string attribute that is not
-/// UTF-8) is dropped.
+/// Invalid UTF-8 is replaced with U+FFFD and a value that cannot be encoded
+/// becomes `null`, so one bad attribute cannot drop the whole record; when
+/// the record still cannot be encoded, a line naming the failure (`level`,
+/// `action`, `error.type`, `export.error`) is written instead.
 ///
 /// PHP: `Utopia\Span\Exporter\Stdout`.
 ///
@@ -94,13 +96,15 @@ impl Stdout {
     }
 
     /// Writes spans to `out`, and spans with an error to `err`.
+    ///
+    /// PHP: the `$stdout` and `$stderr` arguments.
     pub fn writers(mut self, out: Box<dyn Write + Send>, err: Box<dyn Write + Send>) -> Self {
         self.streams = Streams::new(out, err);
         self
     }
 
     /// The line this exporter writes for `span` (without its newline), or
-    /// `None` when it cannot be encoded.
+    /// `None` when neither it nor the fallback line can be encoded.
     pub fn line(&self, span: &Span) -> Option<String> {
         let mut attributes = Array::<php_std::Never>::default();
         span.with_attributes(|attrs| {
@@ -144,7 +148,27 @@ impl Stdout {
                 set(&mut data, "error.trace_truncated", Php::Int((frames.len() - self.max_trace_frames) as i64));
             }
         }
-        json::encode(&Php::Array(data), Flags::UNESCAPED_SLASHES, json::DEFAULT_DEPTH).ok()
+        // Substitute invalid UTF-8 and keep partial output so one bad
+        // attribute cannot drop the whole record.
+        let flags = Flags::UNESCAPED_SLASHES | Flags::INVALID_UTF8_SUBSTITUTE | Flags::PARTIAL_OUTPUT_ON_ERROR;
+        let error = match json::encode(&Php::Array(data.clone()), flags, json::DEFAULT_DEPTH) {
+            Ok(line) => return Some(line),
+            Err(json::Error::Partial { json, .. }) => return Some(json),
+            Err(e) => e,
+        };
+        let mut fallback = Array::default();
+        let field = |key: &str| data.get(&ArrayKey::from(key)).cloned().unwrap_or(Php::Null);
+        fallback.set(ArrayKey::from("level"), field("level"));
+        fallback.set(ArrayKey::from("action"), Php::from(span.action()));
+        fallback.set(ArrayKey::from("error.type"), field("error.type"));
+        fallback.set(
+            ArrayKey::from("export.error"),
+            Php::from(format!("Span could not be encoded as JSON: {}", error.message()).as_str()),
+        );
+        match json::encode(&Php::Array(fallback), flags, json::DEFAULT_DEPTH) {
+            Ok(line) | Err(json::Error::Partial { json: line, .. }) => Some(line),
+            Err(_) => None,
+        }
     }
 }
 

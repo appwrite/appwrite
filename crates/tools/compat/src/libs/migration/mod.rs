@@ -99,6 +99,9 @@ pub const OPS: &[&str] = &[
     "fs.put_fixture",
     "fs.get",
     "fs.exists",
+    "fs.mkdir",
+    "fs.symlink",
+    "fs.is_dir",
     "json_source.new",
     "csv_source.new",
     "csv.detect_delimiter",
@@ -810,6 +813,11 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
             Err(_) => Outcome::Ok(Json::Null),
         },
         "fs.exists" => Outcome::Ok(Json::Bool(utopia_async::fs::metadata(a.str("path")?).await.is_ok())),
+        "fs.mkdir" => Outcome::Ok(Json::Bool(utopia_async::fs::create_dir_all(a.str("path")?).await.is_ok())),
+        "fs.symlink" => Outcome::Ok(Json::Bool(std::os::unix::fs::symlink(a.str("target")?, a.str("link")?).is_ok())),
+        "fs.is_dir" => {
+            Outcome::Ok(Json::Bool(utopia_async::fs::metadata(a.str("path")?).await.is_ok_and(|m| m.is_dir())))
+        }
 
         "json_source.new" => {
             let device: Arc<dyn Device> = Arc::new(Local::new(a.str("root")?));
@@ -874,10 +882,10 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 Err(e) => error(&e),
             }
         }
-        "local_destination.new" => {
-            let d = LocalDestination::new(a.str("path")?).await;
-            Outcome::Ok(s.handle(DestinationSlot::Owned(Box::new(d))))
-        }
+        "local_destination.new" => match LocalDestination::new(a.str("path")?).await {
+            Ok(d) => Outcome::Ok(s.handle(DestinationSlot::Owned(Box::new(d)))),
+            Err(e) => error(&e),
+        },
         "destination.import" => {
             let list = resources::resources(s, a.value("resources")?)?;
             let mut rec = Recorder::new(args.get("callback"));
@@ -1160,7 +1168,6 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
         }
         "appwrite_client.new" => {
             let mut client = utopia_migration::sdk::Client::new();
-            client.refuse_redirects();
             client.set_endpoint(&reach::endpoint(s, a.str("endpoint")?)?).map_err(|e| Fault::new(e.to_string()))?;
             Outcome::Ok(s.handle(client))
         }

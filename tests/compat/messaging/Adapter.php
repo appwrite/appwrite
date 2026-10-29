@@ -213,7 +213,7 @@ final class Adapter implements Base, Benchmarks
             'telemetry.new' => fn (array $a, Session $s) => $s->handle(new RecordingTelemetry()),
             'telemetry.records' => fn (array $a, Session $s) => $s->get($a['telemetry'])->records,
             'scripted.messages' => fn (array $a, Session $s) => array_map(self::smsOut(...), $s->get($a['adapter'])['adapter']->messages),
-            'smtp_server.new' => fn (array $a, Session $s) => $s->handle(new ScriptedSmtpServer($a['replies'])),
+            'smtp_server.new' => fn (array $a, Session $s) => $s->handle(new ScriptedSmtpServer($a['replies'], ...($a['more'] ?? []))),
             'smtp_server.commands' => fn (array $a, Session $s) => array_map(
                 static fn (string $c) => str_starts_with($c, 'EHLO ') || str_starts_with($c, 'HELO ') ? substr($c, 0, 5) . '<host>' : $c,
                 $s->get($a['server'])->commands(),

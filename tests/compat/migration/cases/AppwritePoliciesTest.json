@@ -74,7 +74,8 @@
                 "enabled": true,
                 "maxAge": 7776000
               },
-              "passkeyRpId": "example.com"
+              "passkeyRpId": "example.com",
+              "denyRealtimeGuests": true
             }
           },
           "bind": "pol",
@@ -192,6 +193,7 @@
                 "enabled": true,
                 "maxAge": 7776000
               },
+              "realtimeGuests": true,
               "passkeyRpId": "example.com"
             },
             "$sequence": "1",
@@ -256,7 +258,8 @@
                   "enabled": true,
                   "maxAge": 86400
                 },
-                "passkeyRpId": "destination.example.com"
+                "passkeyRpId": "destination.example.com",
+                "realtimeGuests": true
               }
             }
           },
@@ -380,6 +383,7 @@
                 "maxAge": 86400
               },
               "passkeyRpId": "destination.example.com",
+              "realtimeGuests": true,
               "passwordHistory": 0,
               "duration": 31536000,
               "maxSessions": 100,

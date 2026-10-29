@@ -745,13 +745,15 @@
                 "path": "/tmp/compat-fs/${ns}/disk/list-files/.hidden",
                 "size": 2,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               },
               {
                 "path": "/tmp/compat-fs/${ns}/disk/list-files/a.txt",
                 "size": 2,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               }
             ],
             "cursor": "2"
@@ -779,7 +781,8 @@
                 "path": "/tmp/compat-fs/${ns}/disk/list-files/nested/b.txt",
                 "size": 2,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -807,7 +810,8 @@
                 "path": "/tmp/compat-fs/${ns}/disk/list-files/nested/b.txt",
                 "size": 2,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               }
             ],
             "cursor": "0"
@@ -835,7 +839,8 @@
                 "path": "/tmp/compat-fs/${ns}/disk/list-files/a.txt",
                 "size": 2,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               }
             ],
             "cursor": "2"
@@ -863,19 +868,22 @@
                 "path": "/tmp/compat-fs/${ns}/disk/list-files/.hidden",
                 "size": 2,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               },
               {
                 "path": "/tmp/compat-fs/${ns}/disk/list-files/a.txt",
                 "size": 2,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               },
               {
                 "path": "/tmp/compat-fs/${ns}/disk/list-files/nested/b.txt",
                 "size": 2,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -3425,13 +3433,15 @@
                 "path": "/tmp/compat-fs/${ns}/disk/get-files-test/new-file-two.txt",
                 "size": 11,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               },
               {
                 "path": "/tmp/compat-fs/${ns}/disk/get-files-test/new-file.txt",
                 "size": 11,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -4162,7 +4172,8 @@
             "path": "/tmp/compat-fs/${ns}/disk/info.txt",
             "size": 11,
             "modified": "<masked>",
-            "etag": "b10a8db164e0754105b7a99be72e3fe5"
+            "etag": "b10a8db164e0754105b7a99be72e3fe5",
+            "mime_type": "text/plain"
           }
         },
         {
@@ -5000,7 +5011,8 @@
             "path": "/tmp/compat-fs/${ns}/disk/failed-replace.txt",
             "size": 5,
             "modified": "<masked>",
-            "etag": "8b04d5e3775d298e78455efc5ca404d5"
+            "etag": "8b04d5e3775d298e78455efc5ca404d5",
+            "mime_type": "text/plain"
           }
         },
         {
@@ -5466,6 +5478,350 @@
               "error_code": null,
               "previous": false
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "recursive delete does not follow symlinks",
+      "state": [],
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/symlink-delete-outside"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/symlink-delete-outside/kept.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/symlink-delete-path"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.symlink",
+          "args": {
+            "target": "/tmp/compat-fs/${ns}/disk/symlink-delete-outside",
+            "link": "/tmp/compat-fs/${ns}/disk/symlink-delete-path/link"
+          },
+          "expect": true
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/symlink-delete"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.symlink",
+          "args": {
+            "target": "/tmp/compat-fs/${ns}/disk/symlink-delete-outside",
+            "link": "/tmp/compat-fs/${ns}/disk/symlink-delete/link"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "symlink-delete-path"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/symlink-delete",
+            "recursive": true
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/symlink-delete-path"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/symlink-delete"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/symlink-delete-outside/kept.txt"
+          },
+          "expect": "Hello World"
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "symlink-delete-outside"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/symlink-delete-outside"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "delete path takes entry names literally",
+      "state": [],
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/glob-delete-outside"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/glob-delete-outside/kept.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/glob-delete-path/*"
+          },
+          "expect": true
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/glob-delete-path/..hidden"
+          },
+          "expect": true
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/glob-delete-path/[ab]"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/glob-delete-path/a",
+            "data": "a",
+            "content_type": "text/plain"
+          },
+          "expect": "0cc175b9c0f1b6a831c399e269772661"
+        },
+        {
+          "op": "fs.symlink",
+          "args": {
+            "target": "/tmp/compat-fs/${ns}/disk/glob-delete-outside",
+            "link": "/tmp/compat-fs/${ns}/disk/glob-delete-path/link"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/disk/glob-delete-path"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "write times"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/glob-delete-path/a",
+                "size": 1,
+                "modified": "<masked>",
+                "etag": null,
+                "mime_type": null
+              },
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/glob-delete-path/link/kept.txt",
+                "size": 11,
+                "modified": "<masked>",
+                "etag": null,
+                "mime_type": null
+              }
+            ],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "glob-delete-path"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/glob-delete-path"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/glob-delete-outside/kept.txt"
+          },
+          "expect": "Hello World"
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "glob-delete-outside"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "file info reports the mime type",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/info.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/info.txt"
+          },
+          "mask": {
+            "paths": [
+              "/modified"
+            ],
+            "reason": "the write time"
+          },
+          "expect": {
+            "path": "/tmp/compat-fs/${ns}/disk/info.txt",
+            "size": 11,
+            "modified": "<masked>",
+            "etag": "b10a8db164e0754105b7a99be72e3fe5",
+            "mime_type": "text/plain"
           }
         }
       ]

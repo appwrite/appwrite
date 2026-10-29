@@ -92,13 +92,15 @@
                 "path": "${ns}/endpoint/path.txt",
                 "size": 10,
                 "modified": "<masked>",
-                "etag": "18a86ec6d2b009163fe76d8b951f798e"
+                "etag": "18a86ec6d2b009163fe76d8b951f798e",
+                "mime_type": null
               },
               {
                 "path": "${ns}/endpoint/virtual.txt",
                 "size": 14,
                 "modified": "<masked>",
-                "etag": "1adcfa39b0dca89f7fd1cf822ea5a5f2"
+                "etag": "1adcfa39b0dca89f7fd1cf822ea5a5f2",
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -240,7 +242,8 @@
             "path": "${ns}/conditional/lock",
             "size": 6,
             "modified": "<masked>",
-            "etag": "a9f0e61a137d86aa9db53465e0801612"
+            "etag": "a9f0e61a137d86aa9db53465e0801612",
+            "mime_type": "text/plain"
           }
         },
         {
@@ -901,7 +904,8 @@
                 "path": "${ns}/dir-archive/c.txt",
                 "size": 1,
                 "modified": "<masked>",
-                "etag": "<masked>"
+                "etag": "<masked>",
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -991,7 +995,8 @@
                 "path": "${ns}/dir-archive/c.txt",
                 "size": 1,
                 "modified": "<masked>",
-                "etag": "<masked>"
+                "etag": "<masked>",
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -1162,7 +1167,8 @@
                 "path": "compat/${ns}/dir-archive/c.txt",
                 "size": 1,
                 "modified": "<masked>",
-                "etag": "<masked>"
+                "etag": "<masked>",
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -1253,7 +1259,8 @@
                 "path": "compat/${ns}/dir-archive/c.txt",
                 "size": 1,
                 "modified": "<masked>",
-                "etag": "<masked>"
+                "etag": "<masked>",
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -1476,13 +1483,15 @@
                 "path": "compat/${ns}/copy/a.txt",
                 "size": 6,
                 "modified": "<masked>",
-                "etag": "<masked>"
+                "etag": "<masked>",
+                "mime_type": null
               },
               {
                 "path": "compat/${ns}/copy/b.txt",
                 "size": 6,
                 "modified": "<masked>",
-                "etag": "<masked>"
+                "etag": "<masked>",
+                "mime_type": null
               }
             ],
             "cursor": null

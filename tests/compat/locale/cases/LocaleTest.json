@@ -2526,6 +2526,86 @@
         "default": null
       },
       "expect": null
+    },
+    {
+      "name": "empty default value uses fallback",
+      "op": "locale.lookup",
+      "args": {
+        "exceptions": false,
+        "languages": {
+          "bg": {
+            "emails.recovery.subject": "",
+            "only": ""
+          },
+          "en": {
+            "emails.recovery.subject": "Password Reset for {{project}}"
+          }
+        },
+        "language": "bg",
+        "fallback": "en",
+        "key": "emails.recovery.subject"
+      },
+      "expect": "Password Reset for {{project}}"
+    },
+    {
+      "name": "empty value without fallback text keeps the default",
+      "op": "locale.lookup",
+      "args": {
+        "exceptions": true,
+        "languages": {
+          "bg": {
+            "emails.recovery.subject": "",
+            "only": ""
+          },
+          "en": {
+            "emails.recovery.subject": "Password Reset for {{project}}"
+          }
+        },
+        "language": "bg",
+        "fallback": "en",
+        "key": "only",
+        "default": "missing"
+      },
+      "expect": "missing"
+    },
+    {
+      "name": "empty value with exceptions on is not an error",
+      "op": "locale.lookup",
+      "args": {
+        "exceptions": true,
+        "languages": {
+          "bg": {
+            "emails.recovery.subject": "",
+            "only": ""
+          },
+          "en": {
+            "emails.recovery.subject": "Password Reset for {{project}}"
+          }
+        },
+        "language": "bg",
+        "key": "only"
+      },
+      "expect": "{{only}}"
+    },
+    {
+      "name": "empty fallback value keeps the default",
+      "op": "locale.lookup",
+      "args": {
+        "exceptions": false,
+        "languages": {
+          "bg": {
+            "other": "x"
+          },
+          "en": {
+            "k": ""
+          }
+        },
+        "language": "bg",
+        "fallback": "en",
+        "key": "k",
+        "default": null
+      },
+      "expect": null
     }
   ]
 }

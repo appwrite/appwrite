@@ -653,8 +653,11 @@ impl Resolver for Fixture {
                     .cloned()
                     .unwrap_or_else(|| json!({"rcode": 0}));
                 let rcode = rule.get("rcode").and_then(Value::as_i64).unwrap_or(0) as u8;
+                let repeat = rule.get("repeat").and_then(Value::as_u64).map_or(1, |n| n as usize);
                 let answers = match rule.get("answer").and_then(Value::as_str) {
-                    Some(rdata) => vec![Record::new(question.name(), question.ty).with_ttl(60).with_rdata(rdata)],
+                    Some(rdata) => {
+                        vec![Record::new(question.name(), question.ty).with_ttl(60).with_rdata(rdata.repeat(repeat))]
+                    }
                     None => Vec::new(),
                 };
                 Message::response(query.message.header(), rcode)
@@ -848,6 +851,7 @@ async fn start(spec: &Value, running: &[Running], host: &str, base: Option<u16>)
                 tcp.max_buffer_size = int(&options, "maxBufferSize", 16384)? as usize;
                 tcp.max_frame_size = int(&options, "maxFrameSize", 65535)? as usize;
                 tcp.idle_timeout = Duration::from_secs(int(&options, "idleTimeout", 30)?.max(0) as u64);
+                tcp.write_timeout = Duration::from_secs(int(&options, "writeTimeout", 5)?.max(0) as u64);
                 Transport::Tcp(tcp)
             }
             "http" => Transport::Http(
@@ -944,6 +948,7 @@ async fn step(step: &Value, running: &[Running]) -> Result<Value, Fault> {
         }
         "raw" => raw(step, host, &port).await?,
         "doh" => doh(step, host, port("http")?).await?,
+        "stall" => stall(step, host, port("tcp")?).await?,
         "recursive" => {
             let mut servers = Vec::new();
             for target in step.get("servers").and_then(Value::as_array).cloned().unwrap_or_default() {
@@ -1083,6 +1088,41 @@ async fn raw(step: &Value, host: &str, port: &dyn Fn(&str) -> Result<u16, Fault>
         }
     }
     Ok(json!({"data": bytes_value(&data), "closed": closed}))
+}
+
+/// A peer that pipelines `queries` queries and never reads the answers, for
+/// `wait` seconds; then another client's query (unless `other` is false),
+/// then whether the server closed the stalled connection (read to its end,
+/// for up to 5 seconds).
+async fn stall(step: &Value, host: &str, port: u16) -> Result<Value, Fault> {
+    let io = |e: std::io::Error| Fault::new(e.to_string());
+    let mut stream = utopia_async::net::TcpStream::connect((host, port)).await.map_err(io)?;
+    let question = Question::new(text(step, "name")?, u16_field(step, "type", 1)?);
+    let query = Message::query(question, Some(1), true).encode(None).map_err(|e| Fault::new(e.to_string()))?;
+    let mut frame = (query.len() as u16).to_be_bytes().to_vec();
+    frame.extend_from_slice(&query);
+    let pipeline = frame.repeat(int(step, "queries", 1)?.max(0) as usize);
+    stream.write_all(&pipeline).await.map_err(io)?;
+    utopia_async::sleep(Duration::from_secs_f64(step.get("wait").and_then(Value::as_f64).unwrap_or(0.0))).await;
+    let mut other = Value::Null;
+    if step.get("other").and_then(Value::as_bool).unwrap_or(true) {
+        let client = Client::new(host, port, Duration::from_secs(2), true).map_err(|e| Fault::new(e.to_string()))?;
+        let query = Message::query(Question::new(text(step, "name")?, Record::TYPE_A), Some(2), true);
+        other = lift(client.query(&query).await.map(|m| dump_message(&m)));
+    }
+    let deadline = std::time::Instant::now() + Duration::from_secs(5);
+    let mut buffer = vec![0u8; 65536];
+    let mut closed = false;
+    while let Ok(read) =
+        utopia_async::timeout(deadline.saturating_duration_since(std::time::Instant::now()), stream.read(&mut buffer))
+            .await
+    {
+        if matches!(read, Ok(0) | Err(_)) {
+            closed = true;
+            break;
+        }
+    }
+    Ok(json!({"other": other, "closed": closed}))
 }
 
 /// How many complete length-prefixed frames `data` holds.

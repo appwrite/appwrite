@@ -2174,6 +2174,211 @@
           }
         }
       ]
+    },
+    {
+      "name": "lookup answers identical records once",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "example.com",
+                  "type": 257,
+                  "ttl": 3600,
+                  "rdata": "0 issue \"letsencrypt.org\""
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 5,
+                  "ttl": 3600,
+                  "rdata": "target.example.com"
+                },
+                {
+                  "name": "example.com",
+                  "type": 257,
+                  "ttl": 3600,
+                  "rdata": "0 issue \"letsencrypt.org\""
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 5,
+                  "ttl": 3600,
+                  "rdata": "target.example.com"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 4242,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "example.com",
+                  "type": 257
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 4242,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "example.com",
+                "type": 257,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "example.com",
+                "type": 257,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "0 issue \"letsencrypt.org\"",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "example.com",
+                  "type": 257,
+                  "ttl": 3600,
+                  "rdata": "0 issue \"letsencrypt.org\""
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 5,
+                  "ttl": 3600,
+                  "rdata": "target.example.com"
+                },
+                {
+                  "name": "example.com",
+                  "type": 257,
+                  "ttl": 3600,
+                  "rdata": "0 issue \"letsencrypt.org\""
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 5,
+                  "ttl": 3600,
+                  "rdata": "target.example.com"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 4242,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "beta.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 4242,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "beta.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "beta.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "target.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
     }
   ]
 }

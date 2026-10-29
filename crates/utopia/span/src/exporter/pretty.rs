@@ -77,8 +77,24 @@ fn format_value(value: &php_std::Value) -> Vec<u8> {
         php_std::Value::Null => b"null".to_vec(),
         php_std::Value::Bool(true) => b"true".to_vec(),
         php_std::Value::Bool(false) => b"false".to_vec(),
-        other => other.to_php_string().map(|s| s.as_bytes().to_vec()).unwrap_or_default(),
+        other => escape(&other.to_php_string().map(|s| s.as_bytes().to_vec()).unwrap_or_default()),
     }
+}
+
+/// Replaces C0 controls and DEL with `\xNN`, so a value cannot forge extra
+/// log lines or inject terminal control sequences.
+///
+/// PHP: `Pretty::escape()`.
+fn escape(value: &[u8]) -> Vec<u8> {
+    let mut escaped = Vec::with_capacity(value.len());
+    for &byte in value {
+        if byte < 0x20 || byte == 0x7F {
+            escaped.extend_from_slice(format!("\\x{byte:02x}").as_bytes());
+        } else {
+            escaped.push(byte);
+        }
+    }
+    escaped
 }
 
 fn format_duration(seconds: f64) -> String {
@@ -135,6 +151,8 @@ impl Pretty {
     }
 
     /// Writes spans to `out`, and spans with an error to `err`.
+    ///
+    /// PHP: the `$stdout` and `$stderr` arguments.
     pub fn writers(mut self, out: Box<dyn Write + Send>, err: Box<dyn Write + Send>) -> Self {
         self.streams = Streams::new(out, err);
         self
@@ -162,10 +180,10 @@ impl Pretty {
             }
             attributes = first;
         }
-        let pad = attributes.keys().map(|k| key_bytes(k).len()).max().unwrap_or(0);
+        let pad = attributes.keys().map(|k| escape(&key_bytes(k)).len()).max().unwrap_or(0);
         for (key, value) in attributes.iter() {
             let mut line = format!("  {CYAN}").into_bytes();
-            let key = key_bytes(key);
+            let key = escape(&key_bytes(key));
             line.extend_from_slice(&key);
             line.resize(line.len() + pad.saturating_sub(key.len()), b' ');
             line.extend_from_slice(format!("{RESET} {WHITE}").as_bytes());
@@ -178,15 +196,22 @@ impl Pretty {
             if !attributes.is_empty() {
                 lines.push(Vec::new());
             }
-            let mut line = format!("{RED}{BOLD}  {}{RESET}{RED}: ", error.class()).into_bytes();
-            line.extend_from_slice(error.message_bytes());
-            line.extend_from_slice(format!("{RESET}\n{DIM}    at {}:{}{RESET}", error.file(), error.line()).as_bytes());
+            let mut line = format!("{RED}{BOLD}  ").into_bytes();
+            line.extend_from_slice(&escape(error.class().as_bytes()));
+            line.extend_from_slice(format!("{RESET}{RED}: ").as_bytes());
+            line.extend_from_slice(&escape(error.message_bytes()));
+            line.extend_from_slice(format!("{RESET}\n{DIM}    at ").as_bytes());
+            line.extend_from_slice(&escape(error.file().as_bytes()));
+            line.extend_from_slice(format!(":{}{RESET}", error.line()).as_bytes());
             lines.push(line);
             let frames = error.frames();
             for frame in &frames[..kept(frames.len(), self.max_trace_frames)] {
-                let file = frame.file.as_deref().unwrap_or("unknown");
+                let file = escape(frame.file.as_deref().unwrap_or("unknown").as_bytes());
                 let line = frame.line.map_or_else(|| "?".to_owned(), |l| l.to_string());
-                lines.push(format!("{DIM}    at {file}:{line}{RESET}").into_bytes());
+                let mut out = format!("{DIM}    at ").into_bytes();
+                out.extend_from_slice(&file);
+                out.extend_from_slice(format!(":{line}{RESET}").as_bytes());
+                lines.push(out);
             }
             if frames.len() > self.max_trace_frames {
                 lines.push(format!("{DIM}    ... {} more{RESET}", frames.len() - self.max_trace_frames).into_bytes());
@@ -202,7 +227,10 @@ impl Pretty {
 
     fn header(&self, span: &Span, error: bool) -> Vec<u8> {
         let color = if error { RED } else { GREEN };
-        let mut parts = vec![format!("{BOLD}{color}{}{RESET}", span.action()).into_bytes()];
+        let mut action = format!("{BOLD}{color}").into_bytes();
+        action.extend_from_slice(&escape(span.action().as_bytes()));
+        action.extend_from_slice(RESET.as_bytes());
+        let mut parts = vec![action];
         if let Value::Float(duration) = span.get("span.duration") {
             parts.push(format!("{}{}{RESET}", duration_color(duration), format_duration(duration)).into_bytes());
         }

@@ -1,0 +1,715 @@
+{
+  "source": "packages/domains/tests/Registrar/Adapter/OpenSRSTest.php",
+  "cases": [
+    {
+      "name": "purchase envelope is unchanged",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "test-key",
+              "username": "test-user",
+              "password": "test-pass",
+              "endpoint": "https://horizon.opensrs.net:55443"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "example.net",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              },
+              "periodYears": 1,
+              "nameservers": [
+                "ns1.systemdns.com",
+                "ns2.systemdns.com"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE OPS_envelope SYSTEM \"ops.dtd\"><OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"response_code\">200</item><item key=\"is_success\">1</item><item key=\"response_text\">Command successful</item><item key=\"attributes\"><dt_assoc><item key=\"id\">123456</item><item key=\"details\"><dt_assoc><item key=\"example.net\"><dt_assoc><item key=\"is_success\">0</item></dt_assoc></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": "123456",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "62d07d1ca28605f80e93e4d226e2e939",
+                  "x-username": "test-user"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>example.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n<item key='owner'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='admin'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='tech'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='billing'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Tester</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Tester</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>1</item>\n<item key='reg_username'>test-user</item>\n<item key='reg_password'>test-pass</item>\n<item key='reg_type'>new</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key=\"nameserver_list\">\n<dt_array>\n<dt_assoc>\n<item key='name'>ns1.systemdns.com</item>\n<item key='sortorder'>0</item>\n</dt_assoc>\n<dt_assoc>\n<item key='name'>ns2.systemdns.com</item>\n<item key='sortorder'>1</item>\n</dt_assoc>\n</dt_array>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase escapes contact",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "test-key",
+              "username": "test-user",
+              "password": "test-pass",
+              "endpoint": "https://horizon.opensrs.net:55443"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "example.net",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "O'Brien & \"Sons\" <item key='auto_renew'>1</item>",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "O'Brien & \"Sons\" <item key='auto_renew'>1</item>",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "O'Brien & \"Sons\" <item key='auto_renew'>1</item>",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "O'Brien & \"Sons\" <item key='auto_renew'>1</item>",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              },
+              "periodYears": 1,
+              "nameservers": [
+                "ns1.systemdns.com"
+              ],
+              "autorenewEnabled": false
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE OPS_envelope SYSTEM \"ops.dtd\"><OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"response_code\">200</item><item key=\"is_success\">1</item><item key=\"response_text\">Command successful</item><item key=\"attributes\"><dt_assoc><item key=\"id\">123456</item><item key=\"details\"><dt_assoc><item key=\"example.net\"><dt_assoc><item key=\"is_success\">0</item></dt_assoc></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": "123456",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "94e364b7215529e9c4f51f32953210fc",
+                  "x-username": "test-user"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>example.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n<item key='owner'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>O&apos;Brien &amp; &quot;Sons&quot; &lt;item key=&apos;auto_renew&apos;&gt;1&lt;/item&gt;</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test O&apos;Brien &amp; &quot;Sons&quot; &lt;item key=&apos;auto_renew&apos;&gt;1&lt;/item&gt;</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='admin'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>O&apos;Brien &amp; &quot;Sons&quot; &lt;item key=&apos;auto_renew&apos;&gt;1&lt;/item&gt;</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test O&apos;Brien &amp; &quot;Sons&quot; &lt;item key=&apos;auto_renew&apos;&gt;1&lt;/item&gt;</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='tech'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>O&apos;Brien &amp; &quot;Sons&quot; &lt;item key=&apos;auto_renew&apos;&gt;1&lt;/item&gt;</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test O&apos;Brien &amp; &quot;Sons&quot; &lt;item key=&apos;auto_renew&apos;&gt;1&lt;/item&gt;</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='billing'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>O&apos;Brien &amp; &quot;Sons&quot; &lt;item key=&apos;auto_renew&apos;&gt;1&lt;/item&gt;</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test O&apos;Brien &amp; &quot;Sons&quot; &lt;item key=&apos;auto_renew&apos;&gt;1&lt;/item&gt;</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>1</item>\n<item key='reg_username'>test-user</item>\n<item key='reg_password'>test-pass</item>\n<item key='reg_type'>new</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n<item key=\"nameserver_list\">\n<dt_array>\n<dt_assoc>\n<item key='name'>ns1.systemdns.com</item>\n<item key='sortorder'>0</item>\n</dt_assoc>\n</dt_array>\n</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "update nameservers escapes markup",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "test-key",
+              "username": "test-user",
+              "password": "test-pass",
+              "endpoint": "https://horizon.opensrs.net:55443"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateNameservers",
+            "args": {
+              "domain": "example.net",
+              "nameservers": [
+                "ns1.example.com",
+                "evil.example</item><item key='1'>injected"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE OPS_envelope SYSTEM \"ops.dtd\"><OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"response_code\">200</item><item key=\"is_success\">1</item><item key=\"response_text\">Command successful</item><item key=\"attributes\"><dt_assoc><item key=\"id\">123456</item><item key=\"details\"><dt_assoc><item key=\"example.net\"><dt_assoc><item key=\"is_success\">0</item></dt_assoc></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "code": "200",
+              "text": "Command successful",
+              "successful": true,
+              "nameservers": [
+                "ns1.example.com",
+                "evil.example</item><item key='1'>injected"
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "f3853b76c86c02a01deb4f6e6fe94c81",
+                  "x-username": "test-user"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>ADVANCED_UPDATE_NAMESERVERS</item>\n<item key='domain'>example.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"add_ns\">\n<dt_array>\n<item key='0'>ns1.example.com</item>\n<item key='1'>evil.example&lt;/item&gt;&lt;item key=&apos;1&apos;&gt;injected</item>\n</dt_array>\n</item>\n<item key='op_type'>add_remove</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purchase rejects unknown contact type",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "test-key",
+              "username": "test-user",
+              "password": "test-pass",
+              "endpoint": "https://horizon.opensrs.net:55443"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "example.net",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing' x='": {
+                  "firstname": "Test",
+                  "lastname": "Tester",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE OPS_envelope SYSTEM \"ops.dtd\"><OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"response_code\">200</item><item key=\"is_success\">1</item><item key=\"response_text\">Command successful</item><item key=\"attributes\"><dt_assoc><item key=\"id\">123456</item><item key=\"details\"><dt_assoc><item key=\"example.net\"><dt_assoc><item key=\"is_success\">0</item></dt_assoc></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Domains\\Exception",
+              "message": "Failed to purchase domain: Unknown contact type: billing' x='",
+              "code": 0
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "signature covers the escaped body",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "test-key",
+              "username": "test-user",
+              "password": "test-pass",
+              "endpoint": "https://horizon.opensrs.net:55443"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "purchase",
+            "args": {
+              "domain": "example.net",
+              "contacts": {
+                "owner": {
+                  "firstname": "Test",
+                  "lastname": "Smith & Sons",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "admin": {
+                  "firstname": "Test",
+                  "lastname": "Smith & Sons",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "tech": {
+                  "firstname": "Test",
+                  "lastname": "Smith & Sons",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                },
+                "billing": {
+                  "firstname": "Test",
+                  "lastname": "Smith & Sons",
+                  "phone": "+18031234567",
+                  "email": "testing@test.com",
+                  "address1": "123 Main St",
+                  "address2": "Suite 100",
+                  "address3": "",
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "country": "US",
+                  "postalcode": "94105",
+                  "org": "Test Inc"
+                }
+              }
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE OPS_envelope SYSTEM \"ops.dtd\"><OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"response_code\">200</item><item key=\"is_success\">1</item><item key=\"response_text\">Command successful</item><item key=\"attributes\"><dt_assoc><item key=\"id\">123456</item><item key=\"details\"><dt_assoc><item key=\"example.net\"><dt_assoc><item key=\"is_success\">0</item></dt_assoc></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": "123456",
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "256f29e18bf229b04274b1180edab724",
+                  "x-username": "test-user"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>SW_REGISTER</item>\n\n<item key=\"attributes\">\n<dt_assoc>\n<item key='domain'>example.net</item>\n<item key='periodYears'>1</item>\n<item key=\"contact_set\">\n<dt_assoc>\n<item key='owner'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Smith &amp; Sons</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Smith &amp; Sons</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='admin'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Smith &amp; Sons</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Smith &amp; Sons</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='tech'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Smith &amp; Sons</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Smith &amp; Sons</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n<item key='billing'>\n<dt_assoc>\n<item key='first_name'>Test</item>\n<item key='last_name'>Smith &amp; Sons</item>\n<item key='email'>testing@test.com</item>\n<item key='phone'>+18031234567</item>\n<item key='address1'>123 Main St</item>\n<item key='city'>San Francisco</item>\n<item key='state'>CA</item>\n<item key='postal_code'>94105</item>\n<item key='country'>US</item>\n<item key='owner'>Test Smith &amp; Sons</item>\n<item key='org_name'>Test Inc</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</item>\n<item key='custom_tech_contact'>0</item>\n<item key='custom_nameservers'>0</item>\n<item key='reg_username'>test-user</item>\n<item key='reg_password'>test-pass</item>\n<item key='reg_type'>new</item>\n<item key='handle'>process</item>\n<item key='f_whois_privacy'>1</item>\n<item key='auto_renew'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "update domain reads the domain verdict",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "test-key",
+              "username": "test-user",
+              "password": "test-pass",
+              "endpoint": "https://horizon.opensrs.net:55443"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "example.net",
+              "autoRenew": true
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE OPS_envelope SYSTEM \"ops.dtd\"><OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"response_code\">200</item><item key=\"is_success\">1</item><item key=\"response_text\">Command successful</item><item key=\"attributes\"><dt_assoc><item key=\"id\">123456</item><item key=\"details\"><dt_assoc><item key=\"example.net\"><dt_assoc><item key=\"is_success\">0</item></dt_assoc></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "31db1c1d5427b1eff324977bb9d4d843",
+                  "x-username": "test-user"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>MODIFY</item>\n<item key='domain'>example.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='data'>expire_action</item>\n<item key='affect_domains'>0</item>\n<item key='auto_renew'>1</item>\n<item key='let_expire'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateDomain",
+            "args": {
+              "domain": "evil\"]",
+              "autoRenew": true
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE OPS_envelope SYSTEM \"ops.dtd\"><OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"response_code\">200</item><item key=\"is_success\">1</item><item key=\"response_text\">Command successful</item><item key=\"attributes\"><dt_assoc><item key=\"id\">123456</item><item key=\"details\"><dt_assoc><item key=\"example.net\"><dt_assoc><item key=\"is_success\">0</item></dt_assoc></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "483d10a8f609e59b2df50f89db8e08d1",
+                  "x-username": "test-user"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>MODIFY</item>\n<item key='domain'>evil&quot;]</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key='data'>expire_action</item>\n<item key='affect_domains'>0</item>\n<item key='auto_renew'>1</item>\n<item key='let_expire'>0</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "non-ASCII and quoted values are escaped",
+      "steps": [
+        {
+          "op": "registrar.new",
+          "args": {
+            "adapter": {
+              "type": "opensrs",
+              "key": "test-key",
+              "username": "test-user",
+              "password": "test-pass",
+              "endpoint": "https://horizon.opensrs.net:55443"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "registrar.call",
+          "args": {
+            "registrar": {
+              "$ref": "r"
+            },
+            "method": "updateNameservers",
+            "args": {
+              "domain": "example.net",
+              "nameservers": [
+                "ns1.example.com",
+                "aé'b"
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "headers": {
+                  "Content-Type": "text/xml"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE OPS_envelope SYSTEM \"ops.dtd\"><OPS_envelope><header><version>0.9</version></header><body><data_block><dt_assoc><item key=\"response_code\">200</item><item key=\"is_success\">1</item><item key=\"response_text\">Command successful</item><item key=\"attributes\"><dt_assoc><item key=\"id\">123456</item><item key=\"details\"><dt_assoc><item key=\"example.net\"><dt_assoc><item key=\"is_success\">0</item></dt_assoc></item></dt_assoc></item></dt_assoc></item></dt_assoc></data_block></body></OPS_envelope>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "code": "200",
+              "text": "Command successful",
+              "successful": true,
+              "nameservers": [
+                "ns1.example.com",
+                "aé'b"
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://horizon.opensrs.net:55443",
+                "headers": {
+                  "content-type": "text/xml",
+                  "x-signature": "d1dc9f82a78842ef9175f40e9cff26f4",
+                  "x-username": "test-user"
+                },
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!DOCTYPE OPS_envelope SYSTEM 'ops.dtd'>\n<OPS_envelope>\n<header>\n<version>0.9</version>\n</header>\n<body>\n<data_block>\n<dt_assoc>\n<item key='protocol'>XCP</item>\n<item key='object'>DOMAIN</item>\n<item key='action'>ADVANCED_UPDATE_NAMESERVERS</item>\n<item key='domain'>example.net</item>\n<item key=\"attributes\">\n<dt_assoc>\n<item key=\"add_ns\">\n<dt_array>\n<item key='0'>ns1.example.com</item>\n<item key='1'>aé&apos;b</item>\n</dt_array>\n</item>\n<item key='op_type'>add_remove</item>\n</dt_assoc>\n</item>\n</dt_assoc>\n</data_block>\n</body>\n</OPS_envelope>"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

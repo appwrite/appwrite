@@ -2688,6 +2688,8 @@
             "Utopia\\Query\\Builder\\MySQL::build",
             "Utopia\\Query\\Builder\\MySQL::countWhen",
             "Utopia\\Query\\Builder\\MySQL::filterIntersects",
+            "Utopia\\Query\\Builder\\MySQL::filterNotSearch",
+            "Utopia\\Query\\Builder\\MySQL::filterSearch",
             "Utopia\\Query\\Builder\\MySQL::groupConcat",
             "Utopia\\Query\\Builder\\MySQL::setJsonPath",
             "Utopia\\Query\\Builder\\MySQL::sumWhen",
@@ -2706,6 +2708,7 @@
             "Utopia\\Query\\Builder\\Trait\\ConditionalAggregates::countWhen",
             "Utopia\\Query\\Builder\\Trait\\ConditionalAggregates::sumWhen",
             "Utopia\\Query\\Builder\\Trait\\CrossJoins::crossJoin",
+            "Utopia\\Query\\Builder\\Trait\\FullTextSearch::filterSearch",
             "Utopia\\Query\\Builder\\Trait\\Inserts::fromSelect",
             "Utopia\\Query\\Builder\\Trait\\Inserts::insertSelect",
             "Utopia\\Query\\Builder\\Trait\\Inserts::into",
@@ -2718,6 +2721,7 @@
             "Utopia\\Query\\Builder\\Trait\\Json::filterJsonPath",
             "Utopia\\Query\\Builder\\Trait\\Locking::forUpdate",
             "Utopia\\Query\\Builder\\Trait\\MariaDB\\Sequences::nextVal",
+            "Utopia\\Query\\Builder\\Trait\\NegatedFullTextSearch::filterNotSearch",
             "Utopia\\Query\\Builder\\Trait\\RawSql::selectCase",
             "Utopia\\Query\\Builder\\Trait\\RawSql::selectRaw",
             "Utopia\\Query\\Builder\\Trait\\Returning::returning",
@@ -2870,6 +2874,7 @@
             "Utopia\\Query\\Builder\\MySQL::delete",
             "Utopia\\Query\\Builder\\MySQL::filterDistance",
             "Utopia\\Query\\Builder\\MySQL::filterIntersects",
+            "Utopia\\Query\\Builder\\MySQL::filterNotSearch",
             "Utopia\\Query\\Builder\\MySQL::filterSearch",
             "Utopia\\Query\\Builder\\MySQL::groupConcat",
             "Utopia\\Query\\Builder\\MySQL::hint",
@@ -2910,6 +2915,7 @@
             "Utopia\\Query\\Builder\\Trait\\Json::filterJsonPath",
             "Utopia\\Query\\Builder\\Trait\\LateralJoins::joinLateral",
             "Utopia\\Query\\Builder\\Trait\\Locking::forUpdate",
+            "Utopia\\Query\\Builder\\Trait\\NegatedFullTextSearch::filterNotSearch",
             "Utopia\\Query\\Builder\\Trait\\RawSql::selectCase",
             "Utopia\\Query\\Builder\\Trait\\RawSql::whereColumn",
             "Utopia\\Query\\Builder\\Trait\\Selects::distinct",
@@ -3413,6 +3419,13 @@
             "Utopia\\Query\\Query::search"
         ]
     },
+    "Extra/GrammarCoverageTest.php": {
+        "op": "ast",
+        "symbols": [
+            "Utopia\\Query\\AST\\Grammar::isIdentifier",
+            "Utopia\\Query\\AST\\Grammar::isType"
+        ]
+    },
     "Extra/SchemaCoverageTest.php": {
         "op": "schema",
         "symbols": [
@@ -3737,11 +3750,22 @@
     "Regression/SecurityRegressionTest.php": {
         "op": "query",
         "symbols": [
+            "Utopia\\Query\\AST\\Call\\Func::__construct",
+            "Utopia\\Query\\AST\\Expression\\Binary::__construct",
+            "Utopia\\Query\\AST\\Expression\\Cast::__construct",
+            "Utopia\\Query\\AST\\Literal::__construct",
+            "Utopia\\Query\\AST\\Parser::parse",
+            "Utopia\\Query\\AST\\Reference\\Column::__construct",
+            "Utopia\\Query\\AST\\Serializer::serialize",
+            "Utopia\\Query\\AST\\Serializer::serializeExpression",
+            "Utopia\\Query\\AST\\Visitor\\FilterInjector::__construct",
+            "Utopia\\Query\\AST\\Visitor\\FilterInjector::visitSelect",
             "Utopia\\Query\\Builder::addHook",
             "Utopia\\Query\\Builder::filter",
             "Utopia\\Query\\Builder::from",
             "Utopia\\Query\\Builder::select",
             "Utopia\\Query\\Builder::selectWindow",
+            "Utopia\\Query\\Builder::toAst",
             "Utopia\\Query\\Builder\\JoinBuilder::on",
             "Utopia\\Query\\Builder\\MongoDB::addHook",
             "Utopia\\Query\\Builder\\MongoDB::build",
@@ -3765,6 +3789,7 @@
             "Utopia\\Query\\Query::equal",
             "Utopia\\Query\\Query::getMethod",
             "Utopia\\Query\\Query::parseQuery",
+            "Utopia\\Query\\Query::search",
             "Utopia\\Query\\Schema\\Column::create",
             "Utopia\\Query\\Schema\\Column::default",
             "Utopia\\Query\\Schema\\Index::__construct",
@@ -3774,7 +3799,9 @@
             "Utopia\\Query\\Schema\\PostgreSQL::createPartition",
             "Utopia\\Query\\Schema\\PostgreSQL::createProcedure",
             "Utopia\\Query\\Schema\\Table::enum",
-            "Utopia\\Query\\Schema\\Table::string"
+            "Utopia\\Query\\Schema\\Table::string",
+            "Utopia\\Query\\Tokenizer\\Tokenizer::filter",
+            "Utopia\\Query\\Tokenizer\\Tokenizer::tokenize"
         ]
     },
     "Schema/ClickHouseTest.php": {

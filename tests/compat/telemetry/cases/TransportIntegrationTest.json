@@ -975,6 +975,325 @@
           }
         ]
       }
+    },
+    {
+      "name": "refuses a collector with an untrusted certificate",
+      "op": "transport.exchange",
+      "args": {
+        "tls": "localhost",
+        "host": "localhost",
+        "headers": [
+          [
+            "Authorization",
+            "Bearer collector-token"
+          ]
+        ],
+        "timeout": 1.0,
+        "sends": [
+          "payload"
+        ]
+      },
+      "expect": {
+        "results": [
+          {
+            "$error": {
+              "class": "Utopia\\Telemetry\\Exception",
+              "message": "OTLP connection failed: SSL verify failed (code: 1014)"
+            }
+          }
+        ],
+        "requests": [],
+        "strays": []
+      }
+    },
+    {
+      "name": "refuses a collector whose certificate names another host",
+      "op": "transport.exchange",
+      "args": {
+        "tls": "collector-internal",
+        "host": "localhost",
+        "trust": true,
+        "headers": [
+          [
+            "Authorization",
+            "Bearer collector-token"
+          ]
+        ],
+        "timeout": 1.0,
+        "sends": [
+          "payload"
+        ]
+      },
+      "expect": {
+        "results": [
+          {
+            "$error": {
+              "class": "Utopia\\Telemetry\\Exception",
+              "message": "OTLP connection failed: SSL verify failed (code: 1014)"
+            }
+          }
+        ],
+        "requests": [],
+        "strays": []
+      }
+    },
+    {
+      "name": "sends to a collector with a trusted certificate",
+      "op": "transport.exchange",
+      "args": {
+        "tls": "localhost",
+        "host": "localhost",
+        "trust": true,
+        "headers": [
+          [
+            "Authorization",
+            "Bearer collector-token"
+          ]
+        ],
+        "timeout": 1.0,
+        "script": [
+          {
+            "status": 200,
+            "body": "OK"
+          }
+        ],
+        "sends": [
+          "payload"
+        ]
+      },
+      "expect": {
+        "results": [
+          "OK"
+        ],
+        "requests": [
+          {
+            "payload": "payload",
+            "headers": [
+              [
+                "authorization",
+                "Bearer collector-token"
+              ],
+              [
+                "content-length",
+                "7"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ],
+        "strays": []
+      }
+    },
+    {
+      "name": "sends to a collector whose certificate names its address",
+      "op": "transport.exchange",
+      "args": {
+        "tls": "ip-127-0-0-1",
+        "trust": true,
+        "headers": [
+          [
+            "Authorization",
+            "Bearer collector-token"
+          ]
+        ],
+        "timeout": 1.0,
+        "script": [
+          {
+            "status": 200,
+            "body": "OK"
+          }
+        ],
+        "sends": [
+          "payload"
+        ]
+      },
+      "expect": {
+        "results": [
+          "OK"
+        ],
+        "requests": [
+          {
+            "payload": "payload",
+            "headers": [
+              [
+                "authorization",
+                "Bearer collector-token"
+              ],
+              [
+                "content-length",
+                "7"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ],
+        "strays": [
+          "HEAD /"
+        ]
+      }
+    },
+    {
+      "name": "refuses a collector whose certificate names another address",
+      "op": "transport.exchange",
+      "args": {
+        "tls": "ip-127-0-0-2",
+        "query": "?tenant=collector-tenant",
+        "trust": true,
+        "headers": [
+          [
+            "Authorization",
+            "Bearer collector-token"
+          ]
+        ],
+        "timeout": 1.0,
+        "sends": [
+          "payload"
+        ]
+      },
+      "expect": {
+        "results": [
+          {
+            "$error": {
+              "class": "Utopia\\Telemetry\\Exception",
+              "message": "OTLP connection failed: the collector certificate does not name 127.0.0.1"
+            }
+          }
+        ],
+        "requests": [],
+        "strays": [
+          "HEAD /"
+        ]
+      }
+    },
+    {
+      "name": "refuses to reconnect to a collector whose certificate names another address",
+      "op": "transport.exchange",
+      "args": {
+        "tls": "ip-127-0-0-1",
+        "trust": true,
+        "headers": [
+          [
+            "Authorization",
+            "Bearer collector-token"
+          ]
+        ],
+        "timeout": 1.0,
+        "pool_size": 1,
+        "script": [
+          {
+            "status": 200,
+            "body": "OK"
+          }
+        ],
+        "sends": [
+          "first",
+          {
+            "restart": "ip-127-0-0-2"
+          },
+          "payload"
+        ]
+      },
+      "expect": {
+        "results": [
+          "OK",
+          {
+            "$error": {
+              "class": "Utopia\\Telemetry\\Exception",
+              "message": "OTLP connection failed: the collector certificate does not name 127.0.0.1"
+            }
+          }
+        ],
+        "requests": [
+          {
+            "payload": "first",
+            "headers": [
+              [
+                "authorization",
+                "Bearer collector-token"
+              ],
+              [
+                "content-length",
+                "5"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ],
+        "strays": [
+          "HEAD /",
+          "HEAD /"
+        ]
+      }
+    },
+    {
+      "name": "reconnects to a collector addressed by IP after it drops the pooled connection",
+      "op": "transport.exchange",
+      "args": {
+        "tls": "ip-127-0-0-1",
+        "trust": true,
+        "timeout": 1.0,
+        "pool_size": 1,
+        "script": [
+          {
+            "status": 200,
+            "body": "OK"
+          }
+        ],
+        "sends": [
+          "first",
+          {
+            "restart": "ip-127-0-0-1"
+          },
+          "second"
+        ]
+      },
+      "expect": {
+        "results": [
+          "OK",
+          "OK"
+        ],
+        "requests": [
+          {
+            "payload": "first",
+            "headers": [
+              [
+                "content-length",
+                "5"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          },
+          {
+            "payload": "second",
+            "headers": [
+              [
+                "content-length",
+                "6"
+              ],
+              [
+                "content-type",
+                "application/x-protobuf"
+              ]
+            ]
+          }
+        ],
+        "strays": [
+          "HEAD /",
+          "HEAD /"
+        ]
+      }
     }
   ]
 }

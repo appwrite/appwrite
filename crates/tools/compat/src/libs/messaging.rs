@@ -1183,40 +1183,50 @@ struct SmtpServer {
 }
 
 impl SmtpServer {
-    async fn start(replies: Vec<String>) -> Result<SmtpServer, Fault> {
+    /// One connection per script, in order (`smtp-server.php`): when a
+    /// script runs out the server hangs up and waits for the next one.
+    async fn start(sessions: Vec<Vec<String>>) -> Result<SmtpServer, Fault> {
         let listener = TcpListener::bind("127.0.0.1:0").await.map_err(|e| Fault::new(e.to_string()))?;
         let port = listener.local_addr().map_err(|e| Fault::new(e.to_string()))?.port();
         let task = utopia_async::spawn(async move {
             let mut commands = Vec::new();
-            let mut replies: VecDeque<String> = replies.into();
-            let Ok(Ok((stream, _))) = utopia_async::timeout(Duration::from_secs(10), listener.accept()).await else {
-                return commands;
-            };
-            let (read, mut write) = stream.into_split();
-            let mut reader = BufReader::new(read);
-            if let Some(greeting) = replies.pop_front() {
-                let _ = write.write_all(format!("{greeting}\r\n").as_bytes()).await;
-            }
-            while !replies.is_empty() {
-                let mut line = String::new();
-                match utopia_async::timeout(Duration::from_secs(10), reader.read_line(&mut line)).await {
-                    Ok(Ok(n)) if n > 0 => {}
-                    _ => break,
+            for replies in sessions {
+                let mut replies: VecDeque<String> = replies.into();
+                let Ok(Ok((stream, _))) = utopia_async::timeout(Duration::from_secs(10), listener.accept()).await
+                else {
+                    break;
+                };
+                let (read, mut write) = stream.into_split();
+                let mut reader = BufReader::new(read);
+                if let Some(greeting) = replies.pop_front() {
+                    let _ = write.write_all(format!("{greeting}\r\n").as_bytes()).await;
                 }
-                commands.push(line.trim_end_matches(['\r', '\n']).to_owned());
-                let reply = replies.pop_front().unwrap_or_default();
-                let _ = write.write_all(format!("{reply}\r\n").as_bytes()).await;
-                if reply.starts_with("354") && !replies.is_empty() {
-                    loop {
-                        let mut data = String::new();
-                        match reader.read_line(&mut data).await {
-                            Ok(n) if n > 0 && data != ".\r\n" => continue,
-                            _ => break,
+                while !replies.is_empty() {
+                    let mut line = String::new();
+                    match utopia_async::timeout(Duration::from_secs(10), reader.read_line(&mut line)).await {
+                        Ok(Ok(n)) if n > 0 => {}
+                        _ => break,
+                    }
+                    commands.push(line.trim_end_matches(['\r', '\n']).to_owned());
+                    let reply = replies.pop_front().unwrap_or_default();
+                    let _ = write.write_all(format!("{reply}\r\n").as_bytes()).await;
+                    // The reply to the data goes out the moment the
+                    // terminating dot is read; with none left, the dot is
+                    // met by a hang-up instead.
+                    if reply.starts_with("354") {
+                        loop {
+                            let mut data = String::new();
+                            match utopia_async::timeout(Duration::from_secs(10), reader.read_line(&mut data)).await {
+                                Ok(Ok(n)) if n > 0 && data != ".\r\n" => continue,
+                                _ => break,
+                            }
+                        }
+                        if let Some(next) = replies.pop_front() {
+                            let _ = write.write_all(format!("{next}\r\n").as_bytes()).await;
                         }
                     }
-                    let next = replies.pop_front().unwrap_or_default();
-                    let _ = write.write_all(format!("{next}\r\n").as_bytes()).await;
                 }
+                let _ = write.shutdown().await;
             }
             commands
         });
@@ -1850,8 +1860,14 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             Outcome::Ok(Value::Array(scripted.messages.lock().unwrap().iter().map(sms_out).collect()))
         }
         "smtp_server.new" => {
-            let replies = a.array("replies")?.iter().map(text).collect::<Result<Vec<_>, _>>()?;
-            let server = SmtpServer::start(replies).await?;
+            let mut sessions = vec![a.array("replies")?.iter().map(text).collect::<Result<Vec<_>, _>>()?];
+            if let Some(more) = args.get("more") {
+                for replies in more.as_array().ok_or_else(|| Fault::new("more: a list of reply lists"))? {
+                    let replies = replies.as_array().ok_or_else(|| Fault::new("more: a list of reply lists"))?;
+                    sessions.push(replies.iter().map(text).collect::<Result<Vec<_>, _>>()?);
+                }
+            }
+            let server = SmtpServer::start(sessions).await?;
             Outcome::Ok(s.handle(Arc::new(server)))
         }
         "smtp_server.commands" => {

@@ -100,7 +100,7 @@
       ]
     },
     {
-      "name": "a host without an address is dialled by name",
+      "name": "a host without an address is refused",
       "steps": [
         {
           "op": "smtp_server.new",
@@ -125,7 +125,7 @@
           "args": {
             "adapter": "smtp",
             "args": {
-              "host": "127.0.0.1:{closed}",
+              "host": "127.0.0.1:{port0}",
               "timeout": 2,
               "timelimit": 2,
               "addresses": {
@@ -172,8 +172,8 @@
                 {
                   "recipient": "to@example.test",
                   "status": "failure",
-                  "error": "No SMTP host answered: 127.0.0.1:{closed} (Cannot reach 127.0.0.1:{closed}: Connection refused)",
-                  "permanent": false,
+                  "error": "No SMTP host answered: 127.0.0.1:{port0} (no checked address)",
+                  "permanent": true,
                   "code": 0
                 }
               ]

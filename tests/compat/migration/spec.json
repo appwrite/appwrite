@@ -219,6 +219,7 @@
         "Utopia\\Migration\\Resources\\Auth\\Policies::getUserLimit",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyAliasedEmail",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyCorporateEmail",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyRealtimeGuests",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyDisposableEmail",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyFreeEmail",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getPasskeyRpId",
@@ -1127,6 +1128,15 @@
     "fs.exists": {
       "doc": "file_exists() (glue)"
     },
+    "fs.mkdir": {
+      "doc": "Creates a directory and its parents (glue)"
+    },
+    "fs.symlink": {
+      "doc": "symlink($target, $link) (glue)"
+    },
+    "fs.is_dir": {
+      "doc": "is_dir() (glue)"
+    },
     "json_source.new": {
       "doc": "new Sources\\JSON($resourceId, $filePath, new Local($root), null), or JSON::fromResourceIds()",
       "covers": [
@@ -1519,10 +1529,8 @@
       ]
     },
     "appwrite_client.call": {
-      "doc": "$client->call($method, $path, [], $params, $responseType) on a client, or on a source's own client (`source`): `{response}` or `{error}` as target.request; the transport refuses redirects (Client\\RedirectRefusal) unless the response type is `location`",
-      "covers": [
-        "Utopia\\Migration\\Sources\\Appwrite\\Client\\RedirectRefusal::*"
-      ]
+      "doc": "$client->call($method, $path, [], $params, $responseType) on a client, or on a source's own client (`source`): `{response}` or `{error}` as target.request; the SDK refuses redirects unless the response type is `location`, and a body decoding past Target::MAX_RESPONSE_SIZE fails with cURL's error",
+      "covers": []
     }
   },
   "generators": {

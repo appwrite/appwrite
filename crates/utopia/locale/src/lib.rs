@@ -324,8 +324,9 @@ impl<'a> Locale<'a> {
 
     /// The translation of `key`, with its placeholders filled in.
     ///
-    /// The default language's text, else the fallback's, else `missing`
-    /// (with exceptions on, a key neither has fails with
+    /// The default language's text, else the fallback's, else `missing`;
+    /// an empty text counts as missing (with exceptions on, a key neither
+    /// has fails with
     /// `Key named "<key>" not found`). Each `{{name}}` of `placeholders` is
     /// then replaced in turn, so a value can itself hold a later
     /// placeholder. `Ok(None)` only for [`Missing::Null`].
@@ -346,12 +347,14 @@ impl<'a> Locale<'a> {
             Some(Language::Unusable(given)) => return Err(key_exists_error(given)),
             Some(Language::Texts(t)) => t.get(key),
         };
-        let text = match (default, fallback) {
+        // An empty text counts as missing, so the next source is used.
+        let usable = |text: Option<&'s String>| text.filter(|text| !text.is_empty());
+        let text = match (usable(default), usable(fallback)) {
             (Some(text), _) | (None, Some(text)) => Some(Cow::Borrowed(text.as_str())),
-            (None, None) if self.languages.exceptions => {
+            _ if default.is_none() && fallback.is_none() && self.languages.exceptions => {
                 return Err(Error::Exception(format!("Key named \"{key}\" not found")));
             }
-            (None, None) => match missing {
+            _ => match missing {
                 Missing::Key | Missing::Text(DEFAULT_DYNAMIC_KEY) => Some(Cow::Owned(format!("{{{{{key}}}}}"))),
                 Missing::Text(text) => Some(Cow::Borrowed(text)),
                 Missing::Null => None,

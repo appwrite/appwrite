@@ -399,6 +399,7 @@ final class Adapter implements Base, Benchmarks
             ...(isset($a['timeout']) ? ['timeout' => (float) $a['timeout']] : []),
             ...(isset($a['pool_size']) ? ['poolSize' => $a['pool_size']] : []),
             ...(isset($a['socket_buffer_size']) ? ['socketBufferSize' => $a['socket_buffer_size']] : []),
+            ...(isset($a['certificate_authority']) ? ['certificateAuthority' => $a['certificate_authority']] : []),
         );
     }
 
@@ -410,20 +411,43 @@ final class Adapter implements Base, Benchmarks
      * the connection without answering) or `{hang_ms}` (answer nothing for
      * that long, then drop it).
      *
+     * With `tls` (a certificate of certs/, issued by certs/authority.pem,
+     * which the transport trusts with `trust`) the collector speaks HTTPS,
+     * the default endpoint is `https://<host>:<port>/v1/metrics<query>`, a
+     * `{restart: <certificate>}` entry of `sends` drops every connection and
+     * listens again on the same port with that certificate, and `strays`
+     * lists the request lines of the HEAD requests, answered 200 without
+     * taking a script entry.
+     *
      * @return array{results: list<mixed>, requests: list<array{payload: string, headers: list<array{0: string, 1: string}>}>}
      */
     private static function exchange(array $a): array
     {
         $requests = [];
+        $strays = [];
+        $connections = [];
         $script = $a['script'] ?? [['status' => 200, 'body' => '']];
-        $server = new TcpServer('127.0.0.1', 0);
-        $port = $server->port;
-        $server->handle(function (TcpConnection $connection) use (&$requests, $script): void {
+        $tls = $a['tls'] ?? null;
+        if ($tls !== null) {
+            // Swoole reports refused handshakes on stdout, the driver's channel.
+            Coroutine::set(['log_level' => SWOOLE_LOG_ERROR]);
+        }
+        $handler = function (TcpConnection $connection) use (&$requests, &$strays, &$connections, $script): void {
             $socket = $connection->exportSocket();
+            $connections[] = $socket;
             $buffer = '';
             while (\is_string($chunk = $socket->recv(65536, 5.0)) && $chunk !== '') {
                 $buffer .= $chunk;
-                while (($request = self::takeRequest($buffer)) !== null) {
+                while (true) {
+                    $line = strstr($buffer, "\r\n", true);
+                    if ($line === false || ($request = self::takeRequest($buffer)) === null) {
+                        break;
+                    }
+                    if (str_starts_with($line, 'HEAD ')) {
+                        $strays[] = substr($line, 0, (int) strrpos($line, ' '));
+                        $socket->send("HTTP/1.1 200 X\r\nContent-Length: 0\r\n\r\n");
+                        continue;
+                    }
                     $requests[] = $request;
                     $step = $script[min(\count($requests), \count($script)) - 1];
                     if ($step['reset'] ?? false) {
@@ -445,10 +469,41 @@ final class Adapter implements Base, Benchmarks
                     $socket->send("HTTP/1.1 {$step['status']} X\r\nContent-Length: " . \strlen($body) . "\r\n\r\n{$body}");
                 }
             }
-        });
-        Coroutine::create(fn () => $server->start());
-        Coroutine::sleep(0.02);
-        $transport = self::transport($a['endpoint'] ?? "http://127.0.0.1:{$port}/v1/metrics", $a);
+        };
+        $listen = static function (int $port, ?string $certificate) use ($handler): TcpServer {
+            $deadline = microtime(true) + 2;
+            while (true) {
+                try {
+                    $server = new TcpServer('127.0.0.1', $port, $certificate !== null);
+                    break;
+                } catch (\Throwable $e) {
+                    if (microtime(true) > $deadline) {
+                        throw $e;
+                    }
+                    Coroutine::sleep(0.01);
+                }
+            }
+            if ($certificate !== null) {
+                $server->set([
+                    'ssl_cert_file' => __DIR__ . '/certs/' . $certificate . '.pem',
+                    'ssl_key_file' => __DIR__ . '/certs/' . $certificate . '.key',
+                ]);
+            }
+            $server->handle($handler);
+            Coroutine::create(fn () => $server->start());
+            Coroutine::sleep(0.02);
+
+            return $server;
+        };
+        $server = $listen(0, $tls);
+        $port = $server->port;
+        if ($a['trust'] ?? false) {
+            $a['certificate_authority'] = __DIR__ . '/certs/authority.pem';
+        }
+        $endpoint = $tls === null
+            ? "http://127.0.0.1:{$port}/v1/metrics"
+            : 'https://' . ($a['host'] ?? '127.0.0.1') . ":{$port}/v1/metrics" . ($a['query'] ?? '');
+        $transport = self::transport($a['endpoint'] ?? $endpoint, $a);
         $send = static function (string $payload) use ($transport): mixed {
             try {
                 return $transport->send($payload)->await();
@@ -470,6 +525,17 @@ final class Adapter implements Base, Benchmarks
             ksort($results);
         } else {
             foreach ($a['sends'] as $payload) {
+                if (\is_array($payload)) {
+                    $server->shutdown();
+                    foreach ($connections as $socket) {
+                        $socket->shutdown();
+                    }
+                    // The port is free once the old server and its connections are gone.
+                    unset($server);
+                    $connections = [];
+                    $server = $listen($port, $payload['restart']);
+                    continue;
+                }
                 $results[] = $send($payload);
             }
         }
@@ -479,7 +545,7 @@ final class Adapter implements Base, Benchmarks
             usort($requests, static fn (array $x, array $y) => strcmp($x['payload'], $y['payload']));
         }
 
-        return ['results' => array_values($results), 'requests' => $requests];
+        return ['results' => array_values($results), 'requests' => $requests] + ($tls === null ? [] : ['strays' => $strays]);
     }
 
     /**

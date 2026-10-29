@@ -42,6 +42,9 @@ syn = { workspace = true, features = ["visit"] }
 utopia-async.workspace = true
 # A WebSocket client for the mqtt cases' MQTT-over-WebSocket steps.
 tokio-tungstenite.workspace = true
+# A TLS collector for the telemetry transport cases.
+rustls.workspace = true
+tokio-rustls.workspace = true
 # The runner snapshots PostgreSQL schemas (`postgres@<service>`).
 tokio-postgres.workspace = true
 # The runner snapshots SQLite database files (`sqlite`).

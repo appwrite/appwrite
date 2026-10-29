@@ -95,7 +95,8 @@
                 "path": "/tmp/compat-fs/${ns}/shared/hello.txt",
                 "size": 3,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               }
             ],
             "cursor": null
