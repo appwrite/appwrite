@@ -107,7 +107,8 @@ class Base extends Action
                 'resourceId' => $rule->getId(),
                 'resourceInternalId' => (string) $rule->getSequence(),
                 'projectId' => (string) $rule->getAttribute('projectId', ''),
-                'projectInternalId' => (string) $rule->getAttribute('projectInternalId', ''),
+                // An ID column, which takes no empty string for a rule without a project.
+                'projectInternalId' => $rule->getAttribute('projectInternalId') ?: null,
                 'schedule' => '',
                 'data' => ['teamInternalId' => (string) $rule->getAttribute('teamInternalId')],
                 ...$changes,
@@ -137,7 +138,7 @@ class Base extends Action
         return $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->findOne('schedules', [
             Query::equal('region', [(string) $rule->getAttribute('region')]),
             Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_ALERT]),
-            Query::equal('projectInternalId', [(string) $rule->getAttribute('projectInternalId', '')]),
+            Query::equal('projectId', [(string) $rule->getAttribute('projectId', '')]),
             Query::equal('resourceId', [$rule->getId()]),
         ]));
     }
