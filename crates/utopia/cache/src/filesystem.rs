@@ -205,7 +205,7 @@ impl Adapter for Filesystem {
 
     fn flush(&self) -> impl Future<Output = Result<bool>> + Send {
         let root = self.root.clone();
-        async move { utopia_async::spawn_blocking(move || delete_directory(&root)).await.unwrap_or(Ok(false)) }
+        async move { utopia_async::spawn_blocking(move || delete_directory(&root, true)).await.unwrap_or(Ok(false)) }
     }
 
     fn ping(&self) -> impl Future<Output = Result<bool>> + Send {
@@ -253,25 +253,28 @@ fn directory_size(dir: &Path) -> i64 {
         .sum()
 }
 
-/// Deletes `path` and everything under it. Fails when `path` is not a
-/// directory, or when it or a subdirectory is empty (where `glob()` finds
-/// nothing).
+/// Deletes everything under `path`, and `path` itself unless it is the
+/// root. Fails when `path` is not a directory or cannot be listed. Symbolic
+/// links are removed, never followed. Returns whether every entry went.
 ///
 /// PHP: `deleteDirectory`.
-fn delete_directory(path: &Path) -> Result<bool> {
+fn delete_directory(path: &Path, is_root: bool) -> Result<bool> {
     if !path.is_dir() {
         return Err(Error::Exception(format!("{} must be a directory", path.display())));
     }
-    let files = glob(path);
-    if files.is_empty() {
-        return Err(Error::Exception("Error happened during glob".into()));
-    }
+    let Ok(entries) = std::fs::read_dir(path) else {
+        return Err(Error::Exception("Error happened during scandir".into()));
+    };
+    let mut files: Vec<PathBuf> = entries.flatten().map(|e| e.path()).collect();
+    files.sort_by(|a, b| a.as_os_str().as_bytes().cmp(b.as_os_str().as_bytes()));
+    let mut success = true;
     for file in files {
-        if file.is_dir() {
-            delete_directory(&file)?;
+        let link = std::fs::symlink_metadata(&file).is_ok_and(|m| m.file_type().is_symlink());
+        if file.is_dir() && !link {
+            success = delete_directory(&file, false)? && success;
         } else {
-            let _ = std::fs::remove_file(&file);
+            success = std::fs::remove_file(&file).is_ok() && success;
         }
     }
-    Ok(std::fs::remove_dir(path).is_ok())
+    Ok(if is_root { success } else { success && std::fs::remove_dir(path).is_ok() })
 }
