@@ -18,7 +18,7 @@ import type {
   AlertComparator,
   AlertMetric,
   AlertResourceType,
-} from '@/lib/appwrite/alerts'
+} from '@/lib/appwrite/monitors'
 import { METRICS, formatMetricValue } from '@/lib/alerts/metrics'
 import {
   breaches,
@@ -100,7 +100,7 @@ function rangeShort(range: number): string {
   return '30d'
 }
 
-/** Small trend of a rule's value against its threshold, for the rules list. */
+/** Small trend of a monitor's value against its threshold, for the monitors list. */
 export function RuleSparkline({
   projectId,
   rule,
@@ -165,8 +165,8 @@ export function RuleSparkline({
 }
 
 /**
- * The rule's value over its chart range with the threshold drawn in, and a
- * mark everywhere the rule would have fired.
+ * The monitor's value over its chart range with the threshold drawn in, and a
+ * mark everywhere the monitor would have fired.
  */
 export function RuleChart({
   projectId,

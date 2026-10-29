@@ -1,6 +1,6 @@
 /**
- * History of the value an alert rule compares, rebuilt from project usage the
- * same way the server measures it: a counter summed over the rule's window at
+ * History of the value a monitor compares, rebuilt from project usage the
+ * same way the server measures it: a counter summed over the monitor's window at
  * every bucket, a gauge at its latest sample.
  */
 
@@ -10,7 +10,7 @@ import type {
   AlertComparator,
   AlertMetric,
   AlertResourceType,
-} from '@/lib/appwrite/alerts'
+} from '@/lib/appwrite/monitors'
 import { USAGE_API_MAX_LIMIT } from '@/lib/usage/breakdown-limits'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import { METRICS } from './metrics'
@@ -38,11 +38,11 @@ const INTERVALS: Record<number, UsageChartInterval> = {
   [DAY]: '1d',
 }
 
-/** Ranges a rule's chart can show, in seconds. */
+/** Ranges a monitor's chart can show, in seconds. */
 export const SERIES_RANGES = [12 * HOUR, DAY, 7 * DAY, 30 * DAY] as const
 
 /**
- * Bucket size and history length a rule's chart reads. `range` replaces the
+ * Bucket size and history length a monitor's chart reads. `range` replaces the
  * default history length; pick one of `seriesRanges()` so it fits a page.
  */
 export function seriesPlan(
@@ -77,7 +77,7 @@ export function seriesPlan(
   }
 }
 
-/** The ranges whose buckets fit in one usage page for this rule. */
+/** The ranges whose buckets fit in one usage page for this monitor. */
 export function seriesRanges(window: number, counter: boolean): number[] {
   const { bucket, span } = seriesPlan(window, counter)
   return SERIES_RANGES.filter(
@@ -114,7 +114,7 @@ export function breaches(
   }
 }
 
-/** Times the series starts breaching, i.e. when a rule would have fired. */
+/** Times the series starts breaching, i.e. when a monitor would have fired. */
 export function firings(
   points: AlertPoint[],
   comparator: AlertComparator,
@@ -240,7 +240,7 @@ function parseTime(time: string): number {
 }
 
 /**
- * The value the rule compared at each bucket over the plan's range, or null
+ * The value the monitor compared at each bucket over the plan's range, or null
  * when the metric has no usage series the console reads.
  */
 export async function fetchAlertSeries(

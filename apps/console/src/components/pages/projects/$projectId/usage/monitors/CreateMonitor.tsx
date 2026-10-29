@@ -14,7 +14,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useCreateAlertRule } from '@/lib/react-query/hooks'
+import { useCreateMonitor } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
@@ -22,7 +22,7 @@ import {
   RuleFields,
   emptyRuleForm,
   ruleFormError,
-  ruleInputFromForm,
+  monitorInputFromForm,
   type RuleForm,
 } from './RuleFields'
 
@@ -67,14 +67,14 @@ interface CreateAlertProps {
   initial?: Partial<RuleForm>
 }
 
-export function CreateAlert({
+export function CreateMonitor({
   open,
   onOpenChange,
   projectId,
   initial,
 }: CreateAlertProps) {
   const t = useT()
-  const createMutation = useCreateAlertRule(projectId)
+  const createMutation = useCreateMonitor(projectId)
   const [form, setForm] = useState<RuleForm>(emptyRuleForm)
   const [secret, setSecret] = useState('')
 
@@ -92,16 +92,16 @@ export function CreateAlert({
   const handleCreate = (event: React.FormEvent) => {
     event.preventDefault()
     if (error) return
-    createMutation.mutate(ruleInputFromForm(form, t), {
-      onSuccess: (rule) => {
-        toast.success(t('Alert rule has been created'))
+    createMutation.mutate(monitorInputFromForm(form, t), {
+      onSuccess: (monitor) => {
+        toast.success(t('Monitor has been created'))
         onOpenChange(false)
-        if (rule.channels.includes('webhook') && rule.webhookSecret) {
-          openDialogAfterOverlayCloses(() => setSecret(rule.webhookSecret))
+        if (monitor.channels.includes('webhook') && monitor.webhookSecret) {
+          openDialogAfterOverlayCloses(() => setSecret(monitor.webhookSecret))
         }
       },
       onError: (err: Error) => {
-        toast.error(getErrorMessage(err, t('Failed to create alert rule')))
+        toast.error(getErrorMessage(err, t('Failed to create monitor')))
       },
     })
   }
@@ -111,7 +111,7 @@ export function CreateAlert({
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-3xl p-0 max-h-[90dvh] flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('Create alert rule')}</DialogTitle>
+            <DialogTitle>{t('Create monitor')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t(
                 'Get notified when a usage metric crosses a threshold, and again when it recovers.',

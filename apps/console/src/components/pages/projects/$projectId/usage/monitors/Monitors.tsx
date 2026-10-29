@@ -17,10 +17,10 @@ import {
   bucketsQueryOptions,
   databasesQueryOptions,
   dedicatedDatabasesQueryOptions,
-  fetchAlertRule,
-  useAlertRules,
-  useDeleteAlertRule,
-  useUpdateAlertRule,
+  fetchMonitor,
+  useMonitors,
+  useDeleteMonitor,
+  useUpdateMonitor,
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,7 +53,7 @@ import {
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
-import type { AlertChannel, AlertRule } from '@/lib/appwrite/alerts'
+import type { AlertChannel, ParsedMonitor } from '@/lib/appwrite/monitors'
 import {
   COMPARATORS,
   METRICS,
@@ -70,9 +70,9 @@ import {
 } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
-import { AlertsEmptyState } from './AlertsEmptyState'
-import { AlertDrawer } from './AlertDrawer'
-import { CreateAlert } from './CreateAlert'
+import { MonitorsEmptyState } from './MonitorsEmptyState'
+import { MonitorDrawer } from './MonitorDrawer'
+import { CreateMonitor } from './CreateMonitor'
 import type { RuleForm } from './RuleFields'
 import { RuleSparkline } from './RuleChart'
 import { StatusPill, ruleState, type RuleState } from './StatusPill'
@@ -92,9 +92,9 @@ const CHANNEL_LABELS: Record<AlertChannel, string> = {
 
 type Filter = 'all' | RuleState
 
-/** Resolves database, bucket and dedicated database names for the rules that watch one. */
-function useResourceNames(projectId: string, rules: AlertRule[]) {
-  const types = new Set(rules.map((rule) => rule.resourceType))
+/** Resolves database, bucket and dedicated database names for the monitors that watch one. */
+function useResourceNames(projectId: string, monitors: ParsedMonitor[]) {
+  const types = new Set(monitors.map((monitor) => monitor.resourceType))
   const databases = useQuery({
     ...databasesQueryOptions(projectId, 0, 100),
     enabled: types.has('database'),
@@ -120,40 +120,40 @@ function useResourceNames(projectId: string, rules: AlertRule[]) {
   }, [databases.data, buckets.data, dedicated.data])
 }
 
-interface AlertsProps {
+interface MonitorsProps {
   projectId: string
   createDisabled?: boolean
   createDisabledTooltip?: string
   /** Opens the create form filled with these fields, e.g. from a usage page. */
   prefill?: Partial<RuleForm>
   onPrefillConsumed?: () => void
-  /** Opens this rule's drawer once the rules have loaded, e.g. from an alert email. */
-  openRuleId?: string
-  onOpenRuleConsumed?: () => void
+  /** Opens this monitor's drawer once the monitors have loaded, e.g. from an alert email. */
+  openMonitorId?: string
+  onOpenMonitorConsumed?: () => void
 }
 
-export function Alerts({
+export function Monitors({
   projectId,
   createDisabled = false,
   createDisabledTooltip,
   prefill,
   onPrefillConsumed,
-  openRuleId,
-  onOpenRuleConsumed,
-}: AlertsProps) {
+  openMonitorId,
+  onOpenMonitorConsumed,
+}: MonitorsProps) {
   const t = useT()
-  const { rules, isLoading } = useAlertRules(projectId)
-  const updateMutation = useUpdateAlertRule(projectId)
-  const deleteMutation = useDeleteAlertRule(projectId)
-  const resourceNames = useResourceNames(projectId, rules)
+  const { monitors, isLoading } = useMonitors(projectId)
+  const updateMutation = useUpdateMonitor(projectId)
+  const deleteMutation = useDeleteMonitor(projectId)
+  const resourceNames = useResourceNames(projectId, monitors)
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   const [createOpen, setCreateOpen] = useState(false)
   const [initial, setInitial] = useState<Partial<RuleForm> | undefined>()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selected, setSelected] = useState<AlertRule | null>(null)
-  const [toDelete, setToDelete] = useState<AlertRule | null>(null)
+  const [selected, setSelected] = useState<ParsedMonitor | null>(null)
+  const [toDelete, setToDelete] = useState<ParsedMonitor | null>(null)
 
   const openCreate = (fields?: Partial<RuleForm>) => {
     if (createDisabled) return
@@ -169,116 +169,116 @@ export function Alerts({
   }, [prefill, createDisabled, onPrefillConsumed])
 
   useEffect(() => {
-    if (!openRuleId || isLoading) return
-    onOpenRuleConsumed?.()
-    const open = (rule: AlertRule) => {
-      setSelected(rule)
+    if (!openMonitorId || isLoading) return
+    onOpenMonitorConsumed?.()
+    const open = (monitor: ParsedMonitor) => {
+      setSelected(monitor)
       setDrawerOpen(true)
     }
-    const listed = rules.find((candidate) => candidate.$id === openRuleId)
+    const listed = monitors.find((candidate) => candidate.$id === openMonitorId)
     if (listed) {
       open(listed)
       return
     }
-    // The list holds the first page only; a linked rule can be beyond it.
-    fetchAlertRule(projectId, openRuleId).then(open, (err: Error) =>
-      toast.error(getErrorMessage(err, t('Alert rule not found'))),
+    // The list holds the first page only; a linked monitor can be beyond it.
+    fetchMonitor(projectId, openMonitorId).then(open, (err: Error) =>
+      toast.error(getErrorMessage(err, t('Monitor not found'))),
     )
-  }, [openRuleId, isLoading, rules, onOpenRuleConsumed, projectId, t])
+  }, [openMonitorId, isLoading, monitors, onOpenMonitorConsumed, projectId, t])
 
   const counts = useMemo(() => {
     const result: Record<Filter, number> = {
-      all: rules.length,
+      all: monitors.length,
       firing: 0,
       pending: 0,
       ok: 0,
       paused: 0,
     }
-    for (const rule of rules) result[ruleState(rule)]++
+    for (const monitor of monitors) result[ruleState(monitor)]++
     return result
-  }, [rules])
+  }, [monitors])
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
-    return rules
-      .filter((rule) => filter === 'all' || ruleState(rule) === filter)
+    return monitors
+      .filter((monitor) => filter === 'all' || ruleState(monitor) === filter)
       .filter(
-        (rule) =>
+        (monitor) =>
           !query ||
-          rule.name.toLowerCase().includes(query) ||
-          rule.metric.toLowerCase().includes(query) ||
-          t(METRICS[rule.metric]?.label ?? '')
+          monitor.name.toLowerCase().includes(query) ||
+          monitor.metric.toLowerCase().includes(query) ||
+          t(METRICS[monitor.metric]?.label ?? '')
             .toLowerCase()
             .includes(query) ||
-          rule.$id.toLowerCase().includes(query),
+          monitor.$id.toLowerCase().includes(query),
       )
       .sort(
         (a, b) =>
           STATE_ORDER[ruleState(a)] - STATE_ORDER[ruleState(b)] ||
           a.name.localeCompare(b.name),
       )
-  }, [rules, search, filter, t])
+  }, [monitors, search, filter, t])
 
-  const handleOpen = (rule: AlertRule) => {
+  const handleOpen = (monitor: ParsedMonitor) => {
     openDialogAfterOverlayCloses(() => {
-      setSelected(rule)
+      setSelected(monitor)
       setDrawerOpen(true)
     })
   }
 
-  const handleToggle = (rule: AlertRule) => {
+  const handleToggle = (monitor: ParsedMonitor) => {
     updateMutation.mutate(
-      { ruleId: rule.$id, changes: { enabled: !rule.enabled } },
+      { monitorId: monitor.$id, changes: { enabled: !monitor.enabled } },
       {
         onSuccess: () =>
           toast.success(
-            rule.enabled
-              ? t('Alert rule has been paused')
-              : t('Alert rule has been resumed'),
+            monitor.enabled
+              ? t('Monitor has been paused')
+              : t('Monitor has been resumed'),
           ),
         onError: (error: Error) =>
-          toast.error(getErrorMessage(error, t('Failed to update alert rule'))),
+          toast.error(getErrorMessage(error, t('Failed to update monitor'))),
       },
     )
   }
 
-  const requestDelete = (rule: AlertRule) =>
-    openDialogAfterOverlayCloses(() => setToDelete(rule))
+  const requestDelete = (monitor: ParsedMonitor) =>
+    openDialogAfterOverlayCloses(() => setToDelete(monitor))
 
   const handleDelete = () => {
     if (!toDelete) return
-    const ruleId = toDelete.$id
-    deleteMutation.mutate(ruleId, {
+    const monitorId = toDelete.$id
+    deleteMutation.mutate(monitorId, {
       onSuccess: () => {
         closeDialogBeforeOverlayUnmount(() => {
           setToDelete(null)
           setSelected(null)
         })
-        toast.success(t('Alert rule has been deleted'))
+        toast.success(t('Monitor has been deleted'))
       },
       onError: (error: Error) =>
-        toast.error(getErrorMessage(error, t('Failed to delete alert rule'))),
+        toast.error(getErrorMessage(error, t('Failed to delete monitor'))),
     })
   }
 
   /** `Outbound bandwidth > 10 GB within 1 hour` */
-  const sentence = (rule: AlertRule) => {
-    const definition = METRICS[rule.metric]
+  const sentence = (monitor: ParsedMonitor) => {
+    const definition = METRICS[monitor.metric]
     const symbol =
-      COMPARATORS.find((entry) => entry.value === rule.comparator)?.symbol ??
-      rule.comparator
-    const window = WINDOWS.find((entry) => entry.value === rule.window)
-    const base = `${t(definition?.label ?? rule.metric)} ${symbol} ${formatMetricValue(rule.metric, rule.threshold)}`
+      COMPARATORS.find((entry) => entry.value === monitor.comparator)?.symbol ??
+      monitor.comparator
+    const window = WINDOWS.find((entry) => entry.value === monitor.window)
+    const base = `${t(definition?.label ?? monitor.metric)} ${symbol} ${formatMetricValue(monitor.metric, monitor.threshold)}`
     if (!definition?.counter) return base
-    return `${base} ${t('within')} ${window ? t(window.label) : `${rule.window}s`}`
+    return `${base} ${t('within')} ${window ? t(window.label) : `${monitor.window}s`}`
   }
 
-  const scope = (rule: AlertRule) => {
-    if (rule.resourceType === 'project') return t('Project')
+  const scope = (monitor: ParsedMonitor) => {
+    if (monitor.resourceType === 'project') return t('Project')
     const type = RESOURCE_TYPES.find(
-      (entry) => entry.value === rule.resourceType,
+      (entry) => entry.value === monitor.resourceType,
     )
-    return `${t(type?.label ?? rule.resourceType)} · ${resourceNames.get(rule.resourceId) ?? rule.resourceId}`
+    return `${t(type?.label ?? monitor.resourceType)} · ${resourceNames.get(monitor.resourceId) ?? monitor.resourceId}`
   }
 
   const createButton = (
@@ -289,7 +289,7 @@ export function Alerts({
       disabled={createDisabled}
     >
       <Plus className="me-1.5 h-4 w-4" />
-      {t('Create alert')}
+      {t('Create monitor')}
     </Button>
   )
 
@@ -303,8 +303,8 @@ export function Alerts({
 
   return (
     <div>
-      {rules.length === 0 ? (
-        <AlertsEmptyState
+      {monitors.length === 0 ? (
+        <MonitorsEmptyState
           projectId={projectId}
           onCreate={() => openCreate()}
           onPreset={(preset) => openCreate(preset.form)}
@@ -316,7 +316,7 @@ export function Alerts({
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div
               role="tablist"
-              aria-label={t('Filter alert rules')}
+              aria-label={t('Filter monitors')}
               className="flex flex-wrap gap-1.5"
             >
               {(['all', 'firing', 'ok', 'pending', 'paused'] as Filter[]).map(
@@ -359,7 +359,7 @@ export function Alerts({
                 <Input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder={t('Search alert rules...')}
+                  placeholder={t('Search monitors...')}
                   className="h-9 ps-8 text-[13px]"
                 />
               </div>
@@ -380,46 +380,46 @@ export function Alerts({
             <EmptyState icon={Bell} hasFilters variant="card" />
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-              {filtered.map((rule) => {
-                const state = ruleState(rule)
-                const named = !sentence(rule).startsWith(rule.name)
+              {filtered.map((monitor) => {
+                const state = ruleState(monitor)
+                const named = !sentence(monitor).startsWith(monitor.name)
                 const ratio =
-                  state === 'firing' && rule.value !== null
-                    ? thresholdRatio(rule)
+                  state === 'firing' && monitor.value !== null
+                    ? thresholdRatio(monitor)
                     : null
                 return (
                   <li
-                    key={rule.$id}
+                    key={monitor.$id}
                     className={cn(
                       'group relative flex cursor-pointer items-center gap-4 px-4 py-3 transition-colors hover:bg-accent/30',
                       state === 'firing' &&
                         'before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-red-500',
                     )}
-                    onClick={() => handleOpen(rule)}
+                    onClick={() => handleOpen(monitor)}
                   >
                     <StatusPill status={state} className="w-[76px] shrink-0" />
                     <div className="min-w-0 flex-1">
                       {/* A name that only repeats the condition is shown once, as the condition. */}
                       <p className="truncate text-[13px] font-medium text-foreground">
-                        {named ? rule.name : sentence(rule)}
+                        {named ? monitor.name : sentence(monitor)}
                       </p>
                       <p className="truncate text-[12px] text-muted-foreground">
                         {named && (
                           <>
-                            {sentence(rule)}
+                            {sentence(monitor)}
                             <span className="mx-1.5">·</span>
                           </>
                         )}
-                        {scope(rule)}
+                        {scope(monitor)}
                         <span className="mx-1.5">·</span>
-                        {rule.channels
+                        {monitor.channels
                           .map((channel) => t(CHANNEL_LABELS[channel]))
                           .join(', ')}
                       </p>
                     </div>
                     <RuleSparkline
                       projectId={projectId}
-                      rule={rule}
+                      rule={monitor}
                       className={cn(
                         'hidden md:block',
                         state === 'paused' && 'opacity-50',
@@ -434,9 +434,9 @@ export function Alerts({
                             : 'text-foreground',
                         )}
                       >
-                        {rule.value === null || state === 'pending'
+                        {monitor.value === null || state === 'pending'
                           ? '–'
-                          : formatMetricValue(rule.metric, rule.value)}
+                          : formatMetricValue(monitor.metric, monitor.value)}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
                         {state === 'pending' ? (
@@ -451,8 +451,8 @@ export function Alerts({
                                 </span>
                               </span>
                             )}
-                            {rule.evaluatedAt && (
-                              <DateTooltip date={rule.evaluatedAt} />
+                            {monitor.evaluatedAt && (
+                              <DateTooltip date={monitor.evaluatedAt} />
                             )}
                           </>
                         )}
@@ -465,13 +465,13 @@ export function Alerts({
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <RowActionsMenuTrigger
-                            aria-label={`${t('Actions for')} ${rule.name}`}
+                            aria-label={`${t('Actions for')} ${monitor.name}`}
                           />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
                           <DropdownMenuItem
                             disabled={createDisabled}
-                            onClick={() => handleOpen(rule)}
+                            onClick={() => handleOpen(monitor)}
                           >
                             <MenuItemContent icon={Pencil}>
                               {t('Update')}
@@ -481,12 +481,12 @@ export function Alerts({
                             disabled={
                               createDisabled || updateMutation.isPending
                             }
-                            onClick={() => handleToggle(rule)}
+                            onClick={() => handleToggle(monitor)}
                           >
                             <MenuItemContent
-                              icon={rule.enabled ? PowerOff : Power}
+                              icon={monitor.enabled ? PowerOff : Power}
                             >
-                              {rule.enabled ? t('Pause') : t('Resume')}
+                              {monitor.enabled ? t('Pause') : t('Resume')}
                             </MenuItemContent>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -497,7 +497,9 @@ export function Alerts({
                             </DropdownMenuSubTrigger>
                             <DropdownMenuSubContent>
                               <DropdownMenuItem
-                                onClick={() => copyToClipboard('ID', rule.$id)}
+                                onClick={() =>
+                                  copyToClipboard('ID', monitor.$id)
+                                }
                               >
                                 <MenuItemContent icon={Copy}>
                                   {t('Copy ID')}
@@ -505,7 +507,7 @@ export function Alerts({
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
-                                  copyToClipboard('Name', rule.name)
+                                  copyToClipboard('Name', monitor.name)
                                 }
                               >
                                 <MenuItemContent icon={Copy}>
@@ -515,7 +517,7 @@ export function Alerts({
                               <DropdownMenuItem
                                 onClick={() =>
                                   void copyResourceAsJson(() =>
-                                    fetchAlertRule(projectId, rule.$id),
+                                    fetchMonitor(projectId, monitor.$id),
                                   )
                                 }
                               >
@@ -528,7 +530,7 @@ export function Alerts({
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             disabled={createDisabled}
-                            onClick={() => requestDelete(rule)}
+                            onClick={() => requestDelete(monitor)}
                           >
                             <MenuItemContent icon={Trash2}>
                               {t('Delete')}
@@ -545,18 +547,18 @@ export function Alerts({
         </>
       )}
 
-      <CreateAlert
+      <CreateMonitor
         open={createOpen}
         onOpenChange={setCreateOpen}
         projectId={projectId}
         initial={initial}
       />
 
-      <AlertDrawer
+      <MonitorDrawer
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         projectId={projectId}
-        rule={selected}
+        monitor={selected}
         onDelete={requestDelete}
         readOnly={createDisabled}
       />
@@ -568,11 +570,12 @@ export function Alerts({
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('Delete alert rule')}</DialogTitle>
+            <DialogTitle>{t('Delete monitor')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t('Are you sure you want to delete')}{' '}
               <strong>{toDelete?.name}</strong>?{' '}
-              {t('This action cannot be undone.')}
+              {t('This action cannot be undone.')}{' '}
+              {t('Its alerts stay in the history.')}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

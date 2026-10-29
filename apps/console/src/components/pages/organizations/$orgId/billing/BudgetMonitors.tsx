@@ -17,11 +17,11 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
   StatusPill,
   ruleState,
-} from '@/components/pages/projects/$projectId/usage/alerts/StatusPill'
+} from '@/components/pages/projects/$projectId/usage/monitors/StatusPill'
 import {
-  organizationBudgetRulesQueryOptions,
+  organizationBudgetMonitorsQueryOptions,
   useOrganizationById,
-  useSetBudgetRulesWebhook,
+  useSetBudgetMonitorsWebhook,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
@@ -31,31 +31,36 @@ const usd = (amount: number) =>
   amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 
 /**
- * The organization's budget alerts as the alert rules that send them: their
+ * The organization's budget alerts as the monitors that send them: their
  * status and the spend they last read. The budget settings above own their
  * thresholds, so the only change offered here is a webhook on all of them.
  */
-export function BudgetAlertRules({ orgId }: { orgId?: string }) {
+export function BudgetMonitors({ orgId }: { orgId?: string }) {
   const t = useT()
   const { organization } = useOrganizationById(orgId)
-  const rules = useQuery(organizationBudgetRulesQueryOptions(orgId))
-  const setWebhook = useSetBudgetRulesWebhook(orgId ?? '')
+  const monitors = useQuery(organizationBudgetMonitorsQueryOptions(orgId))
+  const setWebhook = useSetBudgetMonitorsWebhook(orgId ?? '')
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState('')
 
-  // Editions without organization rules answer with an error: nothing to show.
-  if (!orgId || rules.isError || !rules.data || rules.data.length === 0) {
+  // Editions without organization monitors answer with an error: nothing to show.
+  if (
+    !orgId ||
+    monitors.isError ||
+    !monitors.data ||
+    monitors.data.length === 0
+  ) {
     return null
   }
 
   const budget = Number(organization?.billingBudget ?? 0)
   const webhookUrl =
-    rules.data.find((rule) => rule.channels.includes('webhook'))?.webhookUrl ??
-    ''
+    monitors.data.find((monitor) => monitor.channels.includes('webhook'))
+      ?.webhookUrl ?? ''
 
   const save = (next: string) => {
     setWebhook.mutate(
-      { rules: rules.data, webhookUrl: next.trim() },
+      { monitors: monitors.data, webhookUrl: next.trim() },
       {
         onSuccess: () => {
           toast.success(
@@ -78,7 +83,7 @@ export function BudgetAlertRules({ orgId }: { orgId?: string }) {
       <div className="flex flex-wrap items-start justify-between gap-3 px-6 py-4">
         <div>
           <h3 className="text-[15px] font-semibold text-foreground">
-            {t('Budget alert rules')}
+            {t('Budget monitors')}
           </h3>
           <p className="mt-1 text-[13px] text-muted-foreground">
             {t(
@@ -101,30 +106,31 @@ export function BudgetAlertRules({ orgId }: { orgId?: string }) {
         </Button>
       </div>
       <ul className="divide-y divide-border border-t border-border">
-        {rules.data.map((rule) => {
-          const state = ruleState(rule)
-          const percent = rule.value ?? 0
+        {monitors.data.map((monitor) => {
+          const state = ruleState(monitor)
+          const percent = monitor.value ?? 0
           return (
             <li
-              key={rule.$id}
+              key={monitor.$id}
               className="grid grid-cols-[84px_minmax(0,1fr)_auto] items-center gap-3 px-6 py-3"
             >
               <StatusPill status={state} />
               <div className="min-w-0">
                 <p className="truncate text-[13px] font-medium text-foreground">
-                  {rule.threshold >= 100
+                  {monitor.threshold >= 100
                     ? t('Cap reached')
                     : t('{percent}% of {budget}')
-                        .replace('{percent}', String(rule.threshold))
+                        .replace('{percent}', String(monitor.threshold))
                         .replace('{budget}', usd(budget))}
                 </p>
                 <p className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
                   <span className="rounded-full bg-muted px-1.5 py-px text-[11px]">
                     {t('Managed by budget')}
                   </span>
-                  {rule.triggeredAt && (
+                  {monitor.triggeredAt && (
                     <span>
-                      {t('Last sent')} <DateTooltip date={rule.triggeredAt} />
+                      {t('Last sent')}{' '}
+                      <DateTooltip date={monitor.triggeredAt} />
                     </span>
                   )}
                 </p>
@@ -136,10 +142,10 @@ export function BudgetAlertRules({ orgId }: { orgId?: string }) {
                     state === 'firing' ? 'text-red-500' : 'text-foreground',
                   )}
                 >
-                  {rule.value === null ? '–' : usd((budget * percent) / 100)}
+                  {monitor.value === null ? '–' : usd((budget * percent) / 100)}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {rule.value === null
+                  {monitor.value === null
                     ? t('Waiting for the first check')
                     : `${percent}%`}
                 </p>

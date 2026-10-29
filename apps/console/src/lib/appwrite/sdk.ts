@@ -51,7 +51,7 @@ import {
   Waf,
 } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
-import { Alerts } from '@/lib/appwrite/alerts'
+import { Alerts, Monitors } from '@/lib/appwrite/monitors'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
@@ -225,6 +225,7 @@ function createConsoleSdkRaw(client: Client) {
     account: new Account(client),
     affiliates: new Affiliates(client),
     alerts: new Alerts(client),
+    monitors: new Monitors(client),
     apps: new Apps(client),
     oauth2: new Oauth2(client),
     avatars: new Avatars(client),
@@ -558,6 +559,7 @@ const sdkForProjectRaw = {
   account: new Account(clientProject),
   activities: new Activities(clientProject),
   alerts: new Alerts(clientProject),
+  monitors: new Monitors(clientProject),
   analytics: new Analytics(clientProject),
   apps: new Apps(clientProject),
   avatars: new Avatars(clientProject),

@@ -1,6 +1,6 @@
 /**
- * Starting points offered when a project has no alert rules. Each fills the
- * create form; nothing is saved until the rule is created.
+ * Starting points offered when a project has no monitors. Each fills the
+ * create form; nothing is saved until the monitor is created.
  */
 
 import type { RuleForm } from './RuleFields'

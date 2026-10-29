@@ -18,7 +18,7 @@ import { AddCreditsModal } from './AddCreditsModal'
 import { TaxIdSection } from './TaxIdSection'
 import { BudgetCapSection } from './BudgetCapSection'
 import { BillingAlertsSection } from './BillingAlertsSection'
-import { BudgetAlertRules } from './BudgetAlertRules'
+import { BudgetMonitors } from './BudgetMonitors'
 import { AvailableCreditsSection } from './AvailableCreditsSection'
 import {
   SettingsCardsList,
@@ -303,12 +303,12 @@ export function BillingTab() {
         node: <BillingAlertsSection orgId={orgId} />,
       },
       {
-        id: 'budget-alert-rules',
+        id: 'budget-monitors',
         search: {
-          title: 'Budget alert rules',
-          keywords: ['alerts', 'budget', 'webhook', 'rules'],
+          title: 'Budget monitors',
+          keywords: ['alerts', 'budget', 'webhook', 'monitors'],
         },
-        node: <BudgetAlertRules orgId={orgId} />,
+        node: <BudgetMonitors orgId={orgId} />,
       },
       {
         id: 'available-credits',

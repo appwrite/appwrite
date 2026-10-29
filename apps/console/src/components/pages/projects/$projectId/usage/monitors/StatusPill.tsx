@@ -1,19 +1,22 @@
-import type { AlertRule } from '@/lib/appwrite/alerts'
+import type { ParsedMonitor } from '@/lib/appwrite/monitors'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 export type RuleState = 'firing' | 'ok' | 'pending' | 'paused'
 
-/** A rule that has never been checked is pending, not OK: nothing is known about it yet. */
+/** A monitor that has never been checked is pending, not OK: nothing is known about it yet. */
 export function ruleState(
-  rule: Pick<AlertRule, 'enabled' | 'status' | 'evaluatedAt'>,
+  rule: Pick<ParsedMonitor, 'enabled' | 'status' | 'evaluatedAt'>,
 ): RuleState {
   if (!rule.enabled) return 'paused'
   if (!rule.evaluatedAt) return 'pending'
   return rule.status === 'firing' ? 'firing' : 'ok'
 }
 
-const STYLES: Record<RuleState, { dot: string; text: string; label: string }> =
+/** A monitor's state, or an alert's: `resolved` is an alert that recovered. */
+export type PillStatus = RuleState | 'resolved'
+
+const STYLES: Record<PillStatus, { dot: string; text: string; label: string }> =
   {
     firing: {
       dot: 'bg-red-500',
@@ -35,13 +38,18 @@ const STYLES: Record<RuleState, { dot: string; text: string; label: string }> =
       text: 'text-muted-foreground bg-muted',
       label: 'Paused',
     },
+    resolved: {
+      dot: 'bg-emerald-500',
+      text: 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10',
+      label: 'Resolved',
+    },
   }
 
 export function StatusPill({
   status,
   className,
 }: {
-  status: RuleState
+  status: PillStatus
   className?: string
 }) {
   const t = useT()

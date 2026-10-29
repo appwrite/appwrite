@@ -3547,19 +3547,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   // Alert rules
   '5 minutes': '5 分',
   '6 hours': '6 時間',
-  'Alert rule has been created': 'アラートルールを作成しました',
-  'Alert rule has been deleted': 'アラートルールを削除しました',
-  'Alert rule has been updated': 'アラートルールを更新しました',
   Cooldown: 'クールダウン',
-  'Create alert rule': 'アラートルールを作成',
   'Database storage': 'データベースストレージ',
-  'Delete alert rule': 'アラートルールを削除',
   'Egress spike': '送信トラフィックの急増',
   'Enter a threshold of 0 or more.': '0 以上のしきい値を入力してください。',
-  'Failed to create alert rule': 'アラートルールの作成に失敗しました',
-  'Failed to delete alert rule': 'アラートルールの削除に失敗しました',
-  'Failed to update alert rule': 'アラートルールの更新に失敗しました',
-  'Alert rule not found': 'アラートルールが見つかりません',
   Firing: '発生中',
   'Greater than': 'より大きい',
   'Greater than or equal': '以上',
@@ -3573,7 +3564,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   OK: '正常',
   'Outbound bandwidth': '送信帯域幅',
   'Read IOPS': '読み取り IOPS',
-  'Search alert rules...': 'アラートルールを検索...',
   'Select at least one channel.': '通知方法を 1 つ以上選択してください。',
   'Select resource': 'リソースを選択',
   'Select the resource to watch.': '監視するリソースを選択してください。',
@@ -3584,28 +3574,17 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Webhook URL': 'Webhook URL',
   Window: '期間',
   'Write IOPS': '書き込み IOPS',
-  "You don't have permission to manage alert rules.":
-    'アラートルールを管理する権限がありません。',
-  'Alert rules watch your project usage and notify you when a metric crosses the threshold you set.':
-    'アラートルールはプロジェクトの使用量を監視し、メトリクスが設定したしきい値を超えると通知します。',
   'Get notified when a usage metric crosses a threshold, and again when it recovers.':
     '使用量のメトリクスがしきい値を超えたとき、そして回復したときに通知を受け取ります。',
   'Could not load resources.': 'リソースを読み込めませんでした。',
   'Use this secret to verify the signature of alert webhook requests. Copy it now.':
     'このシークレットでアラート Webhook リクエストの署名を検証します。今すぐコピーしてください。',
-  'Permanently delete this rule. It stops evaluating immediately. This action cannot be undone.':
-    'このルールを完全に削除します。評価はすぐに停止します。この操作は元に戻せません。',
-  'Alert rule': 'アラートルール',
-  'Alert rule has been paused': 'アラートルールを一時停止しました',
-  'Alert rule has been resumed': 'アラートルールを再開しました',
   Comparator: '比較条件',
   Console: 'コンソール',
   'Could not load usage history.': '使用状況の履歴を読み込めませんでした。',
   'Counted over the window and compared at every check.':
     '期間内の合計をチェックごとに比較します。',
-  'Create alert': 'アラートを作成',
   'Databases grow past 5 GB.': 'データベースが 5 GB を超えたとき。',
-  'Filter alert rules': 'アラートルールを絞り込む',
   'Get notified when usage crosses a threshold, and again when it recovers.':
     '使用量がしきい値を超えたときと、回復したときに通知を受け取ります。',
   'Last checked': '最終チェック',
@@ -3626,8 +3605,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Read surge': '読み取りの急増',
   'Select a resource to see its history.':
     '履歴を表示するリソースを選択してください。',
-  'Sent when the rule fires and again when it resolves.':
-    'ルールが発生したときと解決したときに送信されます。',
   'Signed POST request': '署名付き POST リクエスト',
   'Stored files grow past 50 GB.': '保存ファイルが 50 GB を超えたとき。',
   'The latest reading is compared at every check.':
@@ -3639,7 +3616,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Would have fired {count} times in the {range}.':
     '{range}に {count} 回発生していました。',
   'Would not have fired in the {range}.': '{range}には発生していませんでした。',
-  'between two alerts from this rule.': '（このルールのアラート間隔）',
   is: 'が',
   'last 12 hours': '過去 12 時間',
   'last 24 hours': '過去 24 時間',
@@ -3659,13 +3635,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Checked: 'チェック',
   '{ratio} the {threshold} threshold': 'しきい値 {threshold} の {ratio}',
   'Threshold {threshold}': 'しきい値 {threshold}',
-  'Checks run every few minutes, so this rule is not being evaluated.':
-    'チェックは数分ごとに実行されるため、このルールは評価されていません。',
   Notifies: '通知先',
   'at most once per {cooldown}': '{cooldown}に最大 1 回',
   'Peak hour': 'ピーク時間',
   'Suggested from your last 7 days of usage': '過去 7 日間の使用量からの提案',
-  'Budget alert rules': '予算アラートルール',
   'Sent when additional usage reaches each threshold. They follow the budget cap and alerts above.':
     '追加使用量が各しきい値に達すると送信されます。上の予算上限とアラートに従います。',
   'Edit webhook': 'Webhook を編集',
@@ -3683,4 +3656,55 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Budget alerts will also post to the webhook':
     '予算アラートは Webhook にも送信されます',
   'Failed to update budget alerts': '予算アラートを更新できませんでした',
+  'A monitor raises an alert when its rules hold, and resolves it when usage recovers.':
+    'モニターはルールが成立するとアラートを発生させ、使用量が回復すると解決します。',
+  Alert: 'アラート',
+  'Alert not found': 'アラートが見つかりません',
+  'Budget monitors': '予算モニター',
+  'Checks run every few minutes, so this monitor is not being evaluated.':
+    'チェックは数分ごとに実行されるため、このモニターは評価されていません。',
+  'Create monitor': 'モニターを作成',
+  'Delete monitor': 'モニターを削除',
+  'Every time a monitor fired: when, how far over its threshold, and when it recovered.':
+    'モニターが発生したすべての記録: 発生時刻、しきい値をどれだけ超えたか、回復した時刻。',
+  'Failed to create monitor': 'モニターを作成できませんでした',
+  'Failed to delete monitor': 'モニターを削除できませんでした',
+  'Failed to update monitor': 'モニターを更新できませんでした',
+  'Filter alerts': 'アラートを絞り込む',
+  'Filter monitors': 'モニターを絞り込む',
+  'Fired for': '発生期間',
+  'Firing for': '発生中の期間',
+  'Latest reading': '最新の値',
+  'Monitor has been created': 'モニターを作成しました',
+  'Monitor has been deleted': 'モニターを削除しました',
+  'Monitor has been paused': 'モニターを一時停止しました',
+  'Monitor has been resumed': 'モニターを再開しました',
+  'Monitor has been updated': 'モニターを更新しました',
+  'Monitor not found': 'モニターが見つかりません',
+  Monitors: 'モニター',
+  'Monitors watch your project usage and notify you when a metric crosses the threshold you set.':
+    'モニターはプロジェクトの使用量を監視し、メトリクスが設定したしきい値を超えると通知します。',
+  'No alerts yet': 'まだアラートはありません',
+  Ongoing: '継続中',
+  Peak: 'ピーク',
+  Resolved: '解決済み',
+  "Resolves when the monitor's rules stop holding.":
+    'モニターのルールが成立しなくなると解決します。',
+  'Search monitors...': 'モニターを検索...',
+  'Sent when the monitor fires and again when it resolves.':
+    'モニターが発生したときと解決したときに送信されます。',
+  'Started firing': '発生開始',
+  'Still firing': '発生中',
+  'View monitor': 'モニターを表示',
+  'View monitors': 'モニターを表示',
+  'Waiting for recovery': '回復待ち',
+  Watches: '監視対象',
+  "You don't have permission to manage monitors.":
+    'モニターを管理する権限がありません。',
+  'between two alerts from this monitor.':
+    '(このモニターからの 2 つのアラートの間隔)。',
+  'the threshold': 'しきい値',
+  '{count} notifications sent, one per cooldown':
+    '{count} 件の通知を送信 (クールダウンごとに 1 件)',
+  'Its alerts stay in the history.': 'アラートは履歴に残ります。',
 }
