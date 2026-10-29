@@ -3878,6 +3878,84 @@
           }
         }
       ]
+    },
+    {
+      "name": "rejects formats outside the allow list: pixel enumeration text",
+      "op": "image.new",
+      "args": {
+        "blob": "# ImageMagick pixel enumeration: 1,1,255,srgb\n0,0: (255,0,0)  #FF0000  red\n"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "rejects formats outside the allow list: portable pixmap",
+      "op": "image.new",
+      "args": {
+        "blob": "P3\n1 1\n255\n255 0 0\n"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "rejects formats outside the allow list: vector graphics",
+      "op": "image.new",
+      "args": {
+        "blob": "push graphic-context\nviewbox 0 0 1 1\npop graphic-context\n"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "rejects formats outside the allow list: svg",
+      "op": "image.new",
+      "args": {
+        "blob": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1\" height=\"1\"/>"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "rejects formats outside the allow list: postscript",
+      "op": "image.new",
+      "args": {
+        "blob": "%!PS-Adobe-3.0\nshowpage\n"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
+    },
+    {
+      "name": "rejects formats outside the allow list: empty",
+      "op": "image.new",
+      "args": {
+        "blob": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+          "message": "Unsupported image format"
+        }
+      }
     }
   ]
 }

@@ -8,34 +8,9 @@ use crate::error::{Error, Result};
 use crate::frame::{Format, Frame};
 use crate::options::{canvas_bytes, check_dimensions, check_pixels, pixel_budget};
 
-/// The container a blob's first bytes announce.
-pub(crate) fn sniff(data: &[u8]) -> Option<Format> {
-    if data.starts_with(&[0xFF, 0xD8, 0xFF]) {
-        Some(Format::Jpeg)
-    } else if data.starts_with(b"\x89PNG\r\n\x1a\n") {
-        Some(Format::Png)
-    } else if data.starts_with(b"GIF87a") || data.starts_with(b"GIF89a") {
-        Some(Format::Gif)
-    } else if data.len() >= 12 && &data[..4] == b"RIFF" && &data[8..12] == b"WEBP" {
-        Some(Format::Webp)
-    } else if data.len() >= 12 && &data[4..8] == b"ftyp" {
-        match &data[8..12] {
-            b"avif" | b"avis" => Some(Format::Avif),
-            b"heic" | b"heix" | b"hevc" | b"hevx" | b"mif1" | b"msf1" | b"heim" | b"heis" => Some(Format::Heic),
-            _ => None,
-        }
-    } else {
-        None
-    }
-}
-
-/// Decodes every frame of `data`, composited onto the full canvas.
-pub(crate) fn decode(data: &[u8]) -> Result<Vec<Frame>> {
-    if data.is_empty() {
-        return Err(Error::imagick("Zero size image string passed"));
-    }
-    let format = sniff(data)
-        .ok_or_else(|| Error::imagick("no decode delegate for this image format `' @ error/blob.c/BlobToImage/479"))?;
+/// Decodes every frame of `data`, which [`Format::detect`] read as
+/// `format`, composited onto the full canvas.
+pub(crate) fn decode(data: &[u8], format: Format) -> Result<Vec<Frame>> {
     let frames = match format {
         Format::Jpeg | Format::Png => single(data, format)?,
         Format::Gif => gif(data)?,

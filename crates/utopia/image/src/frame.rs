@@ -5,27 +5,12 @@ use image::RgbaImage;
 use crate::color::Color;
 
 /// The format a frame was read in or last set to.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Format {
-    Jpeg,
-    Png,
-    Gif,
-    Webp,
-    Avif,
-    Heic,
-}
+pub(crate) use crate::format::Format;
 
 impl Format {
     /// ImageMagick's name for the format.
     pub(crate) fn magick(self) -> &'static str {
-        match self {
-            Format::Jpeg => "JPEG",
-            Format::Png => "PNG",
-            Format::Gif => "GIF",
-            Format::Webp => "WEBP",
-            Format::Avif => "AVIF",
-            Format::Heic => "HEIC",
-        }
+        self.value()
     }
 }
 

@@ -98,6 +98,98 @@
         "Utopia\\Image\\Image::getGravityTypes"
       ]
     },
+    "format.detect": {
+      "doc": "Format::detect(data)->value, data built from segments (bytes, {N: n} or {J: n} packed big-endian, {repeat: bytes, times: n})",
+      "covers": [
+        "Utopia\\Image\\Format::detect",
+        "Utopia\\Image\\Exception\\UnsupportedFormatException::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "signatures",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "magic"
+                    },
+                    {
+                      "gen": "bytes",
+                      "max": 12
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "ftyp",
+                        "avif",
+                        "avis",
+                        "heic",
+                        "mif1",
+                        "msf1",
+                        "hevm",
+                        "isom",
+                        "mp41",
+                        "RIFF",
+                        "WEBP",
+                        "GIF89a",
+                        "\u0000\u0000\u0000\u0000"
+                      ]
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "N": {
+                          "gen": "pick",
+                          "from": [
+                            0,
+                            1,
+                            4,
+                            8,
+                            12,
+                            16,
+                            20,
+                            24,
+                            28,
+                            4096,
+                            4294967295
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "J": {
+                          "gen": "pick",
+                          "from": [
+                            0,
+                            1,
+                            16,
+                            24,
+                            32,
+                            9223372036854775807,
+                            -1
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 6
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
     "image.set_resource_limit": {
       "doc": "Image::setResourceLimit(type, value)",
       "covers": [
@@ -346,8 +438,8 @@
     },
     {
       "symbol": "Utopia\\Image\\Image::__construct",
-      "php": "Reads every format ImageMagick has a delegate for (AVIF, HEIC, TIFF, BMP, SVG, ...); a damaged blob fails with ImageMagick's message, which names its C source location.",
-      "reason": "Rust reads JPEG, PNG, GIF and WebP (the formats Appwrite previews; AVIF decoding needs the dav1d C library, HEIC an HEVC decoder). Other formats fail with ImagickException('no decode delegate for this image format `<FORMAT>''). Empty blobs and unknown magic bytes give PHP's exact messages; damaged blobs give the Rust decoder's message under the same class (the garbage fuzz profile masks the message)."
+      "php": "Format::detect() first refuses anything but JPEG, PNG, GIF, WebP, AVIF and HEIC signatures (UnsupportedFormatException); ImageMagick then reads the blob with that format set, with every delegate it has (AVIF and HEIC included); a damaged blob fails with ImageMagick's message, which names its C source location.",
+      "reason": "Rust reads JPEG, PNG, GIF and WebP (the formats Appwrite previews; AVIF decoding needs the dav1d C library, HEIC an HEVC decoder). AVIF and HEIC fail with ImagickException('no decode delegate for this image format `<FORMAT>''). Unsupported signatures (empty blobs included) fail with UnsupportedFormatException as in PHP; damaged blobs give the Rust decoder's message under the same class (the garbage fuzz profile masks the message)."
     },
     {
       "symbol": "Utopia\\Image\\Image::__construct",

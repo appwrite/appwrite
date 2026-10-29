@@ -5,6 +5,7 @@ namespace Tests\Compat\Image;
 use Tests\Compat\Adapter as Base;
 use Tests\Compat\Benchmarks;
 use Tests\Compat\Session;
+use Utopia\Image\Format;
 use Utopia\Image\Image;
 
 /**
@@ -104,10 +105,34 @@ final class Adapter implements Base, Benchmarks
             'image.size_by_fixed_height' => fn (array $a, Session $s) => (fn (int $h) => $this->getSizeByFixedHeight($h))->call(self::image($a, $s), $a['height']),
             'image.size_by_fixed_width' => fn (array $a, Session $s) => (fn (int $w) => $this->getSizeByFixedWidth($w))->call(self::image($a, $s), $a['width']),
             'image.gravity_types' => fn (array $a, Session $s) => Image::getGravityTypes(),
+            'format.detect' => fn (array $a, Session $s) => Format::detect(self::data($a['data']))->value,
             'image.set_resource_limit' => fn (array $a, Session $s) => Image::setResourceLimit($a['type'], $a['value']),
             'file.probe' => fn (array $a, Session $s) => self::summary(file_get_contents($a['path']) ?: ''),
             'file.compare' => fn (array $a, Session $s) => self::compare(file_get_contents($a['path']) ?: '', file_get_contents($a['reference']) ?: '', $a['debug'] ?? false),
         ];
+    }
+
+    /**
+     * Bytes built from segments, so a case can describe a large file type box:
+     * a string as is, `{"N": n}` or `{"J": n}` as pack() writes n, and
+     * `{"repeat": string, "times": n}` the string n times.
+     *
+     * @param list<mixed> $segments
+     */
+    private static function data(array $segments): string
+    {
+        $data = '';
+        foreach ($segments as $segment) {
+            $data .= match (true) {
+                \is_string($segment) => $segment,
+                \is_array($segment) && isset($segment['N']) => pack('N', $segment['N']),
+                \is_array($segment) && isset($segment['J']) => pack('J', $segment['J']),
+                \is_array($segment) && isset($segment['repeat']) => str_repeat($segment['repeat'], $segment['times']),
+                default => throw new \Tests\Compat\Fault('a data segment is a string, {N}, {J} or {repeat, times}'),
+            };
+        }
+
+        return $data;
     }
 
     private static function image(array $a, Session $s): Image

@@ -78,8 +78,8 @@
           },
           "expect": {
             "$error": {
-              "class": "ImagickException",
-              "message": "Zero size image string passed"
+              "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+              "message": "Unsupported image format"
             }
           }
         }
@@ -95,8 +95,8 @@
           },
           "expect": {
             "$error": {
-              "class": "ImagickException",
-              "message": "no decode delegate for this image format `' @ error/blob.c/BlobToImage/479"
+              "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
+              "message": "Unsupported image format"
             }
           }
         }
@@ -1529,7 +1529,7 @@
           },
           "expect": {
             "$error": {
-              "class": "ImagickException",
+              "class": "Utopia\\Image\\Exception\\UnsupportedFormatException",
               "message": "<masked>"
             }
           }
