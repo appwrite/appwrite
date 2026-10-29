@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Event\Event;
+use Appwrite\Maintenance\Cohort;
 use Swoole\Coroutine;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -22,16 +23,15 @@ use Utopia\System\System;
 use function Swoole\Coroutine\run;
 
 /**
- * A project not accessed in the last 30 days still gets maintenance: its expired presence row is deleted, while the
- * same row in a recently accessed project survives.
+ * Every project gets maintenance through schedule-maintenance -> worker-maintenance -> worker-deletes, on one cycle for
+ * projects accessed in the last 30 days and another for the rest: an expired presence row in the project is deleted.
  *
- * The path is schedule-maintenance -> worker-maintenance -> worker-deletes. The deleted idle row and the surviving
- * control row are what prove the sweep; the maintenance queue's success counter only shows that a worker consumed
- * jobs from that queue while the test waited. The scheduler reaches every inactive project once per
- * _APP_MAINTENANCE_INACTIVE_INTERVAL, so the test only runs when that interval is at most one five-minute slice, as
- * CI sets it.
+ * task-maintenance no longer enqueues projects, so only the cohort's sweep can delete the row. The maintenance queue's
+ * success counter only shows that a worker consumed jobs from that queue while the test waited. A cycle reaches every
+ * project of its cohort once per interval, so each test only runs when its interval is at most one five-minute slice,
+ * as CI sets both.
  */
-final class InactiveProjectMaintenanceTest extends Scope
+final class ProjectMaintenanceTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -40,15 +40,28 @@ final class InactiveProjectMaintenanceTest extends Scope
 
     private const string WORKER = 'appwrite-worker';
 
-    private const string DAILY = 'appwrite-task-maintenance';
-
     private const int TIMEOUT = 300;
+
+    public function testActiveProjectGetsMaintenance(): void
+    {
+        $this->assertMaintained(Cohort::Active);
+    }
 
     public function testInactiveProjectGetsMaintenance(): void
     {
+        $this->assertMaintained(Cohort::Inactive);
+    }
+
+    private function assertMaintained(Cohort $cohort): void
+    {
+        [$variable, $default] = match ($cohort) {
+            Cohort::Active => ['_APP_MAINTENANCE_INTERVAL', '86400'],
+            Cohort::Inactive => ['_APP_MAINTENANCE_INACTIVE_INTERVAL', '604800'],
+        };
+
         $scheduler = $this->containerEnvironment(self::SCHEDULER);
         if ($scheduler === null) {
-            $this->requireContainer('The ' . self::SCHEDULER . ' container is not running, so nothing schedules inactive projects');
+            $this->requireContainer('The ' . self::SCHEDULER . ' container is not running, so nothing schedules project maintenance');
         }
 
         $worker = $this->containerEnvironment(self::WORKER);
@@ -57,48 +70,53 @@ final class InactiveProjectMaintenanceTest extends Scope
         }
         $queue = ($worker['_APP_MAINTENANCE_QUEUE_NAME'] ?? '') ?: Event::MAINTENANCE_QUEUE_NAME;
 
-        $interval = (int) ($scheduler['_APP_MAINTENANCE_INACTIVE_INTERVAL'] ?? '604800');
+        $interval = (int) (($scheduler[$variable] ?? '') ?: $default);
         if ($interval > self::TIMEOUT) {
-            $this->markTestSkipped('_APP_MAINTENANCE_INACTIVE_INTERVAL is ' . $interval . ' seconds, longer than the ' . self::TIMEOUT . ' seconds this test waits for the scheduler to reach a project');
+            $this->markTestSkipped($variable . ' is ' . $interval . ' seconds, longer than the ' . self::TIMEOUT . ' seconds this test waits for the scheduler to reach a project');
         }
 
-        $idle = $this->getProject(true);
-        $active = $this->getProject(true);
+        $project = $this->getProject(true);
+        [$presenceId, $expiresAt] = $this->createExpiringPresence($project['$id'], $cohort === Cohort::Inactive ? 6 : 2);
 
-        [$idlePresenceId, $idleExpiresAt] = $this->createExpiringPresence($idle['$id']);
-        [$activePresenceId, $activeExpiresAt] = $this->createExpiringPresence($active['$id']);
+        // The calls above stamp accessedAt as they finish, so let that settle before overwriting it. The row still
+        // expires after the project is placed in its cohort, so no other cohort's sweep can reach it first. From here
+        // on any API call to an inactive project would refresh accessedAt and move it back to the active projects.
+        while ($cohort === Cohort::Inactive && \time() < $expiresAt - 2) {
+            \usleep(100_000);
+        }
+        $accessedAt = match ($cohort) {
+            Cohort::Active => DateTime::now(),
+            Cohort::Inactive => DateTime::addSeconds(new \DateTime(), -60 * 86400),
+        };
+        $this->withFactory(function ($factory) use ($project, $accessedAt): void {
+            $factory->platform()->updateDocument('projects', $project['$id'], new Document([
+                'accessedAt' => $accessedAt,
+            ]));
+        });
 
-        // Any API call to the idle project from here on would refresh accessedAt and move it back to the active projects.
-        $expiresAt = \max($idleExpiresAt, $activeExpiresAt);
+        $processed = $this->countProcessedJobs($queue);
+
         while (\time() <= $expiresAt) {
             \usleep(100_000);
         }
 
-        $this->skipNearDailyRun();
-
-        $this->assertSame(1, $this->countPresenceRows($idle['$id'], $idlePresenceId), 'the idle row outlives its expiry until maintenance');
-        $this->assertSame(1, $this->countPresenceRows($active['$id'], $activePresenceId), 'the control row outlives its expiry until maintenance');
-
-        $processed = $this->countProcessedJobs($queue);
-
-        $this->withFactory(function ($factory) use ($idle): void {
-            $factory->platform()->updateDocument('projects', $idle['$id'], new Document([
-                'accessedAt' => DateTime::addSeconds(new \DateTime(), -60 * 86400),
-            ]));
-        });
-
-        $this->assertEventually(function () use ($idle, $idlePresenceId): void {
-            $this->assertSame(0, $this->countPresenceRows($idle['$id'], $idlePresenceId), 'the scheduler maintained the inactive project and deleted its expired presence');
+        $this->assertEventually(function () use ($project, $presenceId, $cohort): void {
+            $this->assertSame(0, $this->countPresenceRows($project['$id'], $presenceId), 'the scheduler maintained the ' . $cohort->value . ' project and deleted its expired presence');
         }, self::TIMEOUT * 1_000, 1_000);
 
-        $this->assertSame(1, $this->countPresenceRows($active['$id'], $activePresenceId), 'the scheduler left the recently accessed project to the daily maintenance');
         $this->assertGreaterThan($processed, $this->countProcessedJobs($queue), 'a worker committed at least one job from the ' . $queue . ' queue while the test waited');
 
-        $accessedAt = '';
-        $this->withFactory(function ($factory) use ($idle, &$accessedAt): void {
-            $accessedAt = (string) $factory->platform()->getDocument('projects', $idle['$id'])->getAttribute('accessedAt', '');
+        $stored = '';
+        $this->withFactory(function ($factory) use ($project, &$stored): void {
+            $stored = (string) $factory->platform()->getDocument('projects', $project['$id'])->getAttribute('accessedAt', '');
         });
-        $this->assertLessThan(\time() - 30 * 86400, (new \DateTime($accessedAt))->getTimestamp(), 'the idle project stayed inactive for the whole wait');
+        $cutoff = \time() - 30 * 86400;
+        $stamp = (new \DateTime($stored))->getTimestamp();
+        if ($cohort === Cohort::Active) {
+            $this->assertGreaterThanOrEqual($cutoff, $stamp, 'the project stayed active for the whole wait');
+        } else {
+            $this->assertLessThan($cutoff, $stamp, 'the project stayed inactive for the whole wait');
+        }
     }
 
     private function requireContainer(string $message): never
@@ -132,7 +150,7 @@ final class InactiveProjectMaintenanceTest extends Scope
     /**
      * @return array{string, int} the presence's id and its expiry as a unix timestamp
      */
-    private function createExpiringPresence(string $projectId): array
+    private function createExpiringPresence(string $projectId, int $seconds): array
     {
         $key = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
             'origin' => 'http://localhost',
@@ -141,7 +159,7 @@ final class InactiveProjectMaintenanceTest extends Scope
             'x-appwrite-project' => 'console',
         ], [
             'keyId' => Id::unique(),
-            'name' => 'Inactive project maintenance',
+            'name' => 'Project maintenance',
             'scopes' => ['users.read', 'users.write', 'presences.read', 'presences.write'],
         ]);
         $this->assertSame(201, $key['headers']['status-code']);
@@ -160,7 +178,7 @@ final class InactiveProjectMaintenanceTest extends Scope
         $this->assertSame(201, $user['headers']['status-code']);
 
         // Stamped immediately before the call: the API refuses an expiry already in the past.
-        $expiresAt = DateTime::addSeconds(new \DateTime(), 2);
+        $expiresAt = DateTime::addSeconds(new \DateTime(), $seconds);
         $presence = $this->client->call(Client::METHOD_PUT, '/presences/' . Id::unique(), $headers, [
             'userId' => $user['body']['$id'],
             'status' => 'online',
@@ -169,31 +187,6 @@ final class InactiveProjectMaintenanceTest extends Scope
         $this->assertSame(200, $presence['headers']['status-code']);
 
         return [$presence['body']['$id'], (new \DateTime($expiresAt))->getTimestamp()];
-    }
-
-    /**
-     * The daily maintenance deletes the control's expired row too, so a run between five minutes ago (it may still be
-     * working through a backlog) and fifteen minutes from now would make the control assertion meaningless.
-     */
-    private function skipNearDailyRun(): void
-    {
-        $environment = $this->containerEnvironment(self::DAILY);
-        if ($environment === null) {
-            return;
-        }
-
-        $interval = \max(1, (int) ($environment['_APP_MAINTENANCE_INTERVAL'] ?? '86400'));
-        $startTime = $environment['_APP_MAINTENANCE_START_TIME'] ?? '00:00';
-
-        $now = \time();
-        $from = $now - 301;
-        $until = $now + 900;
-        $anchor = (new \DateTime('today ' . $startTime, new \DateTimeZone(\date_default_timezone_get())))->getTimestamp();
-        $run = $anchor + (int) \ceil(($from - $anchor) / $interval) * $interval;
-
-        if ($run <= $until) {
-            $this->markTestSkipped('The daily maintenance runs at ' . \gmdate('H:i', $run) . ' UTC, inside the window this test needs it to stay out of');
-        }
     }
 
     /**

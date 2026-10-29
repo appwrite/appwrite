@@ -2,13 +2,14 @@
 
 namespace Appwrite\Event\Message;
 
+use Appwrite\Maintenance\Cohort;
 use Utopia\Queue\PermanentFailure;
 
 /**
- * One due moment of the inactive project cycle: the slot it owns, out of how many, how long the cycle is, and the
- * region whose projects it covers.
+ * One due moment of a cohort's maintenance cycle: the slot it owns, out of how many, how long the cycle is, the region
+ * whose projects it covers, and the cohort. A message without a cohort predates active pacing and is inactive.
  *
- * A sweep that defers behind the deletes backlog sends the message again with where to resume: $pass is the inactive
+ * A sweep that defers behind the deletes backlog sends the message again with where to resume: $pass is the cohort
  * condition it was reading, and $cursor the last project it read through, '' for the start of the pass: the last $sequence
  * of the block before when sequences are integers, otherwise the project's ID.
  */
@@ -22,6 +23,7 @@ final class Maintenance extends Base
         public readonly string $region,
         public readonly int $pass = 0,
         public readonly string $cursor = '',
+        public readonly Cohort $cohort = Cohort::Inactive,
     ) {
     }
 
@@ -36,11 +38,13 @@ final class Maintenance extends Base
             'region' => $this->region,
             'pass' => $this->pass,
             'cursor' => $this->cursor,
+            'cohort' => $this->cohort->value,
         ];
     }
 
     /**
-     * @throws PermanentFailure when the payload names no slot count, period or region, which no retry can supply
+     * @throws PermanentFailure when the payload names no slot count, period or region, or an unknown cohort, which no
+     *                          retry can supply
      */
     #[\Override]
     public static function fromArray(array $data): static
@@ -53,6 +57,9 @@ final class Maintenance extends Base
             throw new PermanentFailure('Maintenance message needs positive slots and period and a region');
         }
 
+        $cohort = Cohort::tryFrom((string) ($data['cohort'] ?? Cohort::Inactive->value))
+            ?? throw new PermanentFailure('Unknown maintenance cohort "' . $data['cohort'] . '"');
+
         return new self(
             slot: (int) ($data['slot'] ?? 0),
             slots: $slots,
@@ -61,6 +68,7 @@ final class Maintenance extends Base
             region: $region,
             pass: (int) ($data['pass'] ?? 0),
             cursor: (string) ($data['cursor'] ?? ''),
+            cohort: $cohort,
         );
     }
 }
