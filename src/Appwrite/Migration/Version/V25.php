@@ -438,15 +438,17 @@ class V25 extends Migration
                     // Other identities regain their email on the next verified sign-in.
                     // Failures propagate so the migration can be re-run; the step is idempotent.
                     if ($this->dbForProject->findCollection($id) !== null) {
-                        $identities = [];
-                        foreach ($this->dbForProject->cursor($id, [Query::notEqual('providerEmail', '')], batchSize: 100) as $identity) {
-                            $identities[] = $identity;
-                            if (\count($identities) === 100) {
-                                $this->clearUnverifiedIdentityEmails($identities);
-                                $identities = [];
+                        // Each page and its cursor are read before clearing, so the shrinking filter cannot skip rows
+                        $cursor = null;
+                        do {
+                            $queries = [Query::notEqual('providerEmail', ''), Query::limit(100)];
+                            if ($cursor !== null) {
+                                $queries[] = Query::cursorAfter($cursor);
                             }
-                        }
-                        $this->clearUnverifiedIdentityEmails($identities);
+                            $identities = $this->dbForProject->find($id, $queries);
+                            $cursor = \end($identities) ?: null;
+                            $this->clearUnverifiedIdentityEmails($identities);
+                        } while (\count($identities) === 100);
                     }
                     break;
 
