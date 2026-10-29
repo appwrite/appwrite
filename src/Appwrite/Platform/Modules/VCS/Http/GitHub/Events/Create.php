@@ -640,6 +640,13 @@ class Create extends Action
             'status' => 'queued',
         ]);
 
+        // A redelivered comment that already queued its review changes nothing, not even the
+        // reviews queued after it.
+        $existing = $authorization->skip(fn () => $dbForProject->getDocument('reviews', $reviewId));
+        if (!$existing->isEmpty() && $existing->getAttribute('status') !== 'failed') {
+            return;
+        }
+
         // Older queued reviews of the pull request are superseded before this one is created, as
         // hansi.codes does: two overlapping deliveries then both stay queued, and the worker skips
         // the one that resolves to an already reviewed head, instead of superseding each other.
