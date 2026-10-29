@@ -226,6 +226,22 @@ class User extends Document
         return $session !== null && \count($session->getAttribute('factors', [])) >= $this->getMinimumFactors();
     }
 
+    /**
+     * Check that a session of the user completed an MFA challenge within the recent window.
+     */
+    public function sessionChallengeRecent(string $sessionId): bool
+    {
+        $verifiedAt = $this->getSession($sessionId)?->getAttribute('mfaUpdatedAt');
+
+        if (empty($verifiedAt)) {
+            return false;
+        }
+
+        $maxAllowedDate = DateTime::addSeconds(new \DateTime($verifiedAt), MFA_RECENT_DURATION);
+
+        return DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz(DateTime::now());
+    }
+
     private function getSession(string $sessionId): ?Document
     {
         return \array_find($this->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $sessionId);
