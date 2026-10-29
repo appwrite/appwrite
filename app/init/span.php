@@ -6,6 +6,7 @@ use Utopia\Span\Exporter\Pretty;
 use Utopia\Span\Exporter\Sentry;
 use Utopia\Span\Exporter\SentryField;
 use Utopia\Span\Exporter\Stdout;
+use Utopia\Span\Level;
 use Utopia\Span\Span;
 use Utopia\Span\Storage;
 use Utopia\System\System;
@@ -20,7 +21,7 @@ $traceEnabled = $traceProjectId !== '' || $traceFunctionId !== '';
 $sampler = function (Span $span) use ($traceEnabled, $traceProjectId, $traceFunctionId): bool {
     // Terminal diagnostics must survive tracing filters, including failures
     // before project or function resolution.
-    if ($span->getError() !== null) {
+    if ($span->getError() !== null || $span->get('level') === Level::Error->value) {
         return true;
     }
 
