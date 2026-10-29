@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import {
+  formatLength,
   fromBytes,
   suggestThreshold,
   thresholdRatio,
@@ -7,9 +8,16 @@ import {
 } from '@/lib/alerts/metrics'
 import { fillBuckets, firings, rolling, seriesPlan } from '@/lib/alerts/series'
 import {
+  buildRules,
+  parseMonitor,
+  parseRules,
+  type Monitor,
+} from '@/lib/appwrite/monitors'
+import {
   emptyRuleForm,
-  ruleInputFromForm,
-} from '@/components/pages/projects/$projectId/usage/alerts/RuleFields'
+  monitorInputFromForm,
+  ruleFormFromMonitor,
+} from '@/components/pages/projects/$projectId/usage/monitors/RuleFields'
 
 describe('alert byte thresholds', () => {
   test.each([5e9, 1e12, 999_999_999, 1_234_567_891, 1_500, 0])(
@@ -72,14 +80,14 @@ describe('alert rule form', () => {
 
   test('leaves the webhook URL out unless the webhook channel is on', () => {
     const form = { ...emptyRuleForm(), webhookUrl: 'https://example.com' }
-    expect(ruleInputFromForm(form, t).webhookUrl).toBeUndefined()
+    expect(monitorInputFromForm(form, t).webhookUrl).toBeUndefined()
     expect(
-      ruleInputFromForm({ ...form, channels: ['webhook'] }, t).webhookUrl,
+      monitorInputFromForm({ ...form, channels: ['webhook'] }, t).webhookUrl,
     ).toBe('https://example.com')
   })
 
   test('names an unnamed rule after its condition', () => {
-    expect(ruleInputFromForm(emptyRuleForm(), t).name).toBe(
+    expect(monitorInputFromForm(emptyRuleForm(), t).name).toBe(
       'Outbound bandwidth > 10 GB',
     )
   })
@@ -105,5 +113,123 @@ describe('alert threshold ratio', () => {
       thresholdRatio({ ...rule, comparator: 'lessThan', value: 12_000 }),
     ).toBeNull()
     expect(thresholdRatio({ ...rule, value: null })).toBeNull()
+  })
+})
+
+describe('monitor rules', () => {
+  test('a project-wide monitor holds only its comparison', () => {
+    expect(
+      buildRules({
+        metric: 'bandwidth.outbound',
+        comparator: 'greaterThan',
+        threshold: 5_000,
+        resourceType: 'project',
+        resourceId: '',
+      }).map((rule) => JSON.parse(rule)),
+    ).toEqual([
+      {
+        method: 'greaterThan',
+        attribute: 'bandwidth.outbound',
+        values: [5_000],
+      },
+    ])
+  })
+
+  test('a scoped monitor names its resource in the rules', () => {
+    const condition = {
+      metric: 'files.storage',
+      comparator: 'greaterThanEqual',
+      threshold: 1e9,
+      resourceType: 'bucket',
+      resourceId: 'images',
+    } as const
+    const rules = buildRules(condition)
+    expect(rules.map((rule) => JSON.parse(rule))).toEqual([
+      { method: 'greaterThanEqual', attribute: 'files.storage', values: [1e9] },
+      { method: 'equal', attribute: 'resourceType', values: ['bucket'] },
+      { method: 'equal', attribute: 'resourceId', values: ['images'] },
+    ])
+    expect(parseRules(rules)).toEqual(condition)
+  })
+
+  test('reads the comparison whatever order the server returns the rules in', () => {
+    expect(
+      parseRules([
+        '{"method":"equal","attribute":"resourceType","values":["database"]}',
+        'not a query',
+        '{"method":"lessThan","attribute":"databases.reads","values":[10]}',
+      ]),
+    ).toEqual({
+      metric: 'databases.reads',
+      comparator: 'lessThan',
+      threshold: 10,
+      resourceType: 'database',
+      resourceId: '',
+    })
+  })
+
+  test('rules without a comparison hold no condition', () => {
+    expect(
+      parseRules([
+        '{"method":"equal","attribute":"resourceId","values":["a"]}',
+      ]),
+    ).toBeNull()
+  })
+
+  test('an untouched monitor edits back to the rules it was saved with', () => {
+    const t = (text: string) => text
+    const input = monitorInputFromForm(
+      {
+        ...emptyRuleForm(),
+        metric: 'databases.storage',
+        resourceType: 'database',
+        resourceId: 'main',
+        threshold: 2,
+        byteUnit: 'GB',
+      },
+      t,
+    )
+    const monitor = parseMonitor({
+      $id: 'm1',
+      $createdAt: '',
+      $updatedAt: '',
+      type: 'usage',
+      resourceType: 'database',
+      resourceId: 'main',
+      window: 3600,
+      cooldown: 3600,
+      channels: ['email'],
+      webhookUrl: '',
+      webhookSecret: '',
+      enabled: true,
+      status: 'ok',
+      value: null,
+      evaluatedAt: null,
+      alertId: '',
+      triggeredAt: null,
+      ...input,
+    } as Monitor)
+    expect(monitorInputFromForm(ruleFormFromMonitor(monitor), t).rules).toEqual(
+      input.rules,
+    )
+  })
+
+  test('a gauge sends no window', () => {
+    const t = (text: string) => text
+    const form = { ...emptyRuleForm(), metric: 'files.storage' as const }
+    expect(monitorInputFromForm(form, t).window).toBeUndefined()
+    expect(monitorInputFromForm(emptyRuleForm(), t).window).toBe(3600)
+  })
+})
+
+describe('alert lengths', () => {
+  test.each([
+    [0, '<1 m'],
+    [59, '<1 m'],
+    [60, '1 m'],
+    [8_040, '2 h 14 m'],
+    [90_061, '1 d 1 h'],
+  ])('%d seconds read as %s', (seconds, text) => {
+    expect(formatLength(seconds)).toBe(text)
   })
 })

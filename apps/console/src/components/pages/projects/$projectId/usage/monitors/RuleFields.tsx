@@ -16,14 +16,15 @@ import {
   databasesQueryOptions,
   dedicatedDatabasesQueryOptions,
 } from '@/lib/react-query/hooks'
-import type {
-  AlertChannel,
-  AlertComparator,
-  AlertMetric,
-  AlertResourceType,
-  AlertRule,
-  AlertRuleInput,
-} from '@/lib/appwrite/alerts'
+import {
+  buildRules,
+  type AlertChannel,
+  type AlertComparator,
+  type AlertMetric,
+  type AlertResourceType,
+  type MonitorInput,
+  type ParsedMonitor,
+} from '@/lib/appwrite/monitors'
 import {
   BYTE_UNITS,
   COMPARATORS,
@@ -40,7 +41,7 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { RuleChart } from './RuleChart'
 
-/** Rule form state; `threshold` is in `byteUnit` for byte metrics. */
+/** Monitor form state; `threshold` is in `byteUnit` for byte metrics. */
 export type RuleForm = {
   name: string
   resourceType: AlertResourceType
@@ -99,7 +100,7 @@ export function emptyRuleForm(): RuleForm {
   }
 }
 
-export function ruleFormFromRule(rule: AlertRule): RuleForm {
+export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
   const bytes = METRICS[rule.metric]?.unit === 'bytes'
   const split = bytes ? fromBytes(rule.threshold) : null
   return {
@@ -117,7 +118,7 @@ export function ruleFormFromRule(rule: AlertRule): RuleForm {
   }
 }
 
-/** Name a rule gets when none is typed, e.g. `Outbound bandwidth > 10 GB`. */
+/** Name a monitor gets when none is typed, e.g. `Outbound bandwidth > 10 GB`. */
 export function suggestedName(
   form: RuleForm,
   t: (text: string) => string,
@@ -136,21 +137,35 @@ export function suggestedName(
   return `${t(definition.label)} ${symbol} ${form.threshold.toLocaleString('en-US')}${unit}`
 }
 
-/** Full API input for a form, with the threshold converted to the metric's unit. */
-export function ruleInputFromForm(
+/** The form's threshold in the metric's unit. */
+export function formThreshold(form: RuleForm): number {
+  return METRICS[form.metric]?.unit === 'bytes'
+    ? toBytes(form.threshold, form.byteUnit)
+    : form.threshold
+}
+
+/** The database or bucket the form watches; empty for the whole project. */
+export function formResourceId(form: RuleForm): string {
+  return form.resourceType === 'project' ? '' : form.resourceId.trim()
+}
+
+/** API input for a form: its condition as rules, the threshold in the metric's unit. */
+export function monitorInputFromForm(
   form: RuleForm,
   t: (text: string) => string,
-): AlertRuleInput {
-  const bytes = METRICS[form.metric]?.unit === 'bytes'
+): MonitorInput {
   const webhook = form.channels.includes('webhook')
   return {
     name: form.name.trim() || suggestedName(form, t),
-    resourceType: form.resourceType,
-    resourceId: form.resourceType === 'project' ? '' : form.resourceId.trim(),
-    metric: form.metric,
-    comparator: form.comparator,
-    threshold: bytes ? toBytes(form.threshold, form.byteUnit) : form.threshold,
-    window: form.window,
+    rules: buildRules({
+      metric: form.metric,
+      comparator: form.comparator,
+      threshold: formThreshold(form),
+      resourceType: form.resourceType,
+      resourceId: formResourceId(form),
+    }),
+    // Gauges compare their latest reading, so the API ignores a window for them.
+    window: METRICS[form.metric]?.counter ? form.window : undefined,
     cooldown: form.cooldown,
     channels: form.channels,
     // The API validates any URL it is sent, so an empty one is left out.
@@ -337,7 +352,6 @@ export function RuleFields({
   const resourceTypes = RESOURCE_TYPES.filter((type) =>
     definition.resourceTypes.includes(type.value),
   )
-  const input = ruleInputFromForm(form, t)
 
   const setMetric = (metric: AlertMetric) => {
     const types = METRICS[metric].resourceTypes
@@ -359,7 +373,7 @@ export function RuleFields({
     })
   }
 
-  // Folded unless the rule already sets either, so a new rule shows only what it needs.
+  // Folded unless the monitor already sets either, so a new monitor shows only what it needs.
   const [optional, setOptional] = useState(
     form.name !== '' || form.cooldown !== emptyRuleForm().cooldown,
   )
@@ -433,7 +447,11 @@ export function RuleFields({
               <span className="text-[13px] font-medium text-foreground">
                 {form.resourceType === 'project'
                   ? t('the whole project')
-                  : t(resourceTypes[0]?.label ?? '')}
+                  : t(
+                      RESOURCE_TYPES.find(
+                        (type) => type.value === form.resourceType,
+                      )?.label ?? '',
+                    )}
               </span>
             )}
             {form.resourceType !== 'project' && (
@@ -546,10 +564,10 @@ export function RuleFields({
               rule={{
                 metric: form.metric,
                 resourceType: form.resourceType,
-                resourceId: input.resourceId ?? '',
+                resourceId: formResourceId(form),
                 window: form.window,
                 comparator: form.comparator,
-                threshold: input.threshold ?? 0,
+                threshold: formThreshold(form),
               }}
             />
           </div>
@@ -560,7 +578,7 @@ export function RuleFields({
         <SectionHeading
           title={t('Notify')}
           description={t(
-            'Sent when the rule fires and again when it resolves.',
+            'Sent when the monitor fires and again when it resolves.',
           )}
         />
         <div className="grid gap-2 sm:grid-cols-3">
@@ -689,7 +707,7 @@ export function RuleFields({
                   )}
                 </SelectContent>
               </Select>
-              <Word>{t('between two alerts from this rule.')}</Word>
+              <Word>{t('between two alerts from this monitor.')}</Word>
             </div>
           </div>
         )}

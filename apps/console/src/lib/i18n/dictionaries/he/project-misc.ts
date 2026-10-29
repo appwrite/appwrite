@@ -3479,19 +3479,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   // Alert rules
   '5 minutes': '5 דקות',
   '6 hours': '6 שעות',
-  'Alert rule has been created': 'כלל ההתראה נוצר',
-  'Alert rule has been deleted': 'כלל ההתראה נמחק',
-  'Alert rule has been updated': 'כלל ההתראה עודכן',
   Cooldown: 'זמן המתנה בין התראות',
-  'Create alert rule': 'יצירת כלל התראה',
   'Database storage': 'אחסון מסדי נתונים',
-  'Delete alert rule': 'מחיקת כלל התראה',
   'Egress spike': 'קפיצה בתעבורה יוצאת',
   'Enter a threshold of 0 or more.': 'הזינו סף של 0 ומעלה.',
-  'Failed to create alert rule': 'יצירת כלל ההתראה נכשלה',
-  'Failed to delete alert rule': 'מחיקת כלל ההתראה נכשלה',
-  'Failed to update alert rule': 'עדכון כלל ההתראה נכשל',
-  'Alert rule not found': 'כלל ההתראה לא נמצא',
   Firing: 'פעילה',
   'Greater than': 'גדול מ-',
   'Greater than or equal': 'גדול או שווה ל-',
@@ -3505,7 +3496,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   OK: 'תקין',
   'Outbound bandwidth': 'תעבורה יוצאת',
   'Read IOPS': 'IOPS קריאה',
-  'Search alert rules...': 'חיפוש כללי התראה...',
   'Select at least one channel.': 'בחרו לפחות ערוץ אחד.',
   'Select resource': 'בחירת משאב',
   'Select the resource to watch.': 'בחרו את המשאב למעקב.',
@@ -3515,28 +3505,17 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Webhook URL': 'כתובת URL של Webhook',
   Window: 'חלון זמן',
   'Write IOPS': 'IOPS כתיבה',
-  "You don't have permission to manage alert rules.":
-    'אין לכם הרשאה לנהל כללי התראה.',
-  'Alert rules watch your project usage and notify you when a metric crosses the threshold you set.':
-    'כללי התראה עוקבים אחר השימוש בפרויקט ומתריעים כשמדד חוצה את הסף שהגדרתם.',
   'Get notified when a usage metric crosses a threshold, and again when it recovers.':
     'קבלו התראה כשמדד שימוש חוצה סף, ושוב כשהוא חוזר לתקין.',
   'Could not load resources.': 'לא ניתן לטעון את המשאבים.',
   'Use this secret to verify the signature of alert webhook requests. Copy it now.':
     'השתמשו בסוד הזה כדי לאמת את החתימה של בקשות ה-webhook של ההתראות. העתיקו אותו עכשיו.',
-  'Permanently delete this rule. It stops evaluating immediately. This action cannot be undone.':
-    'מחיקה לצמיתות של הכלל. הבדיקה שלו נעצרת מיד. פעולה זו אינה ניתנת לביטול.',
-  'Alert rule': 'כלל התראה',
-  'Alert rule has been paused': 'כלל ההתראה הושהה',
-  'Alert rule has been resumed': 'כלל ההתראה חודש',
   Comparator: 'השוואה',
   Console: 'קונסולה',
   'Could not load usage history.': 'לא ניתן לטעון את היסטוריית השימוש.',
   'Counted over the window and compared at every check.':
     'נספר לאורך החלון ומושווה בכל בדיקה.',
-  'Create alert': 'יצירת התראה',
   'Databases grow past 5 GB.': 'מסדי הנתונים גדלים מעבר ל-5 GB.',
-  'Filter alert rules': 'סינון כללי התראה',
   'Get notified when usage crosses a threshold, and again when it recovers.':
     'קבלו התראה כשהשימוש חוצה סף, ושוב כשהוא חוזר לשגרה.',
   'Last checked': 'בדיקה אחרונה',
@@ -3556,8 +3535,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Read surge': 'זינוק בקריאות',
   'Select a resource to see its history.':
     'בחרו משאב כדי לראות את ההיסטוריה שלו.',
-  'Sent when the rule fires and again when it resolves.':
-    'נשלח כשהכלל מופעל ושוב כשהוא נסגר.',
   'Signed POST request': 'בקשת POST חתומה',
   'Stored files grow past 50 GB.': 'הקבצים המאוחסנים גדלים מעבר ל-50 GB.',
   'The latest reading is compared at every check.':
@@ -3569,7 +3546,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Would have fired {count} times in the {range}.':
     'היה מופעל {count} פעמים ב{range}.',
   'Would not have fired in the {range}.': 'לא היה מופעל ב{range}.',
-  'between two alerts from this rule.': 'בין שתי התראות של הכלל הזה.',
   is: 'הוא',
   'last 12 hours': '12 השעות האחרונות',
   'last 24 hours': '24 השעות האחרונות',
@@ -3589,14 +3565,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Checked: 'נבדק',
   '{ratio} the {threshold} threshold': '{ratio} מסף {threshold}',
   'Threshold {threshold}': 'סף {threshold}',
-  'Checks run every few minutes, so this rule is not being evaluated.':
-    'בדיקות רצות כל כמה דקות, כך שכלל זה אינו מוערך.',
   Notifies: 'מודיע ל',
   'at most once per {cooldown}': 'לכל היותר פעם ב{cooldown}',
   'Peak hour': 'שעת שיא',
   'Suggested from your last 7 days of usage':
     'הצעות לפי השימוש ב-7 הימים האחרונים',
-  'Budget alert rules': 'כללי התראת תקציב',
   'Sent when additional usage reaches each threshold. They follow the budget cap and alerts above.':
     'נשלח כשהשימוש הנוסף מגיע לכל סף. הם עוקבים אחר מגבלת התקציב וההתראות למעלה.',
   'Edit webhook': 'עריכת Webhook',
@@ -3613,4 +3586,54 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Budget alerts will also post to the webhook':
     'התראות התקציב יישלחו גם ל-Webhook',
   'Failed to update budget alerts': 'עדכון התראות התקציב נכשל',
+  'A monitor raises an alert when its rules hold, and resolves it when usage recovers.':
+    'מוניטור מעלה התראה כשהכללים שלו מתקיימים, וסוגר אותה כשהשימוש חוזר לשגרה.',
+  Alert: 'התראה',
+  'Alert not found': 'ההתראה לא נמצאה',
+  'Budget monitors': 'מוניטורים של תקציב',
+  'Checks run every few minutes, so this monitor is not being evaluated.':
+    'הבדיקות רצות כל כמה דקות, ולכן המוניטור הזה לא נבדק.',
+  'Create monitor': 'יצירת מוניטור',
+  'Delete monitor': 'מחיקת מוניטור',
+  'Every time a monitor fired: when, how far over its threshold, and when it recovered.':
+    'כל פעם שמוניטור הופעל: מתי, בכמה חרג מהסף ומתי חזר לשגרה.',
+  'Failed to create monitor': 'יצירת המוניטור נכשלה',
+  'Failed to delete monitor': 'מחיקת המוניטור נכשלה',
+  'Failed to update monitor': 'עדכון המוניטור נכשל',
+  'Filter alerts': 'סינון התראות',
+  'Filter monitors': 'סינון מוניטורים',
+  'Fired for': 'משך ההפעלה',
+  'Firing for': 'מופעל כבר',
+  'Latest reading': 'הקריאה האחרונה',
+  'Monitor has been created': 'המוניטור נוצר',
+  'Monitor has been deleted': 'המוניטור נמחק',
+  'Monitor has been paused': 'המוניטור הושהה',
+  'Monitor has been resumed': 'המוניטור חודש',
+  'Monitor has been updated': 'המוניטור עודכן',
+  'Monitor not found': 'המוניטור לא נמצא',
+  Monitors: 'מוניטורים',
+  'Monitors watch your project usage and notify you when a metric crosses the threshold you set.':
+    'מוניטורים עוקבים אחר השימוש בפרויקט ומתריעים כשמדד חוצה את הסף שהגדרתם.',
+  'No alerts yet': 'אין עדיין התראות',
+  Ongoing: 'מתמשך',
+  Peak: 'שיא',
+  Resolved: 'נסגרה',
+  "Resolves when the monitor's rules stop holding.":
+    'נסגרת כשהכללים של המוניטור מפסיקים להתקיים.',
+  'Search monitors...': 'חיפוש מוניטורים...',
+  'Sent when the monitor fires and again when it resolves.':
+    'נשלח כשהמוניטור מופעל ושוב כשהוא נסגר.',
+  'Started firing': 'התחיל לפעול',
+  'Still firing': 'עדיין פעיל',
+  'View monitor': 'הצגת המוניטור',
+  'View monitors': 'הצגת המוניטורים',
+  'Waiting for recovery': 'ממתין לחזרה לשגרה',
+  Watches: 'עוקב אחר',
+  "You don't have permission to manage monitors.":
+    'אין לכם הרשאה לנהל מוניטורים.',
+  'between two alerts from this monitor.': 'בין שתי התראות מהמוניטור הזה.',
+  'the threshold': 'הסף',
+  '{count} notifications sent, one per cooldown':
+    'נשלחו {count} התראות, אחת לכל תקופת המתנה',
+  'Its alerts stay in the history.': 'ההתראות שלו נשארות בהיסטוריה.',
 }

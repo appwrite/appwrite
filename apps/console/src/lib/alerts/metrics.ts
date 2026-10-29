@@ -1,5 +1,5 @@
 /**
- * Alert rule metric catalog. Mirrors which metrics the alerts API accepts per
+ * Monitor metric catalog. Mirrors which metrics the monitors API accepts per
  * resource type and the unit its threshold is stored in.
  */
 
@@ -7,7 +7,7 @@ import type {
   AlertComparator,
   AlertMetric,
   AlertResourceType,
-} from '@/lib/appwrite/alerts'
+} from '@/lib/appwrite/monitors'
 import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
 
 export type AlertUnit = 'bytes' | 'count' | 'percent'
@@ -17,7 +17,7 @@ type MetricDefinition = {
   unit: AlertUnit
   /** Unit shown after a count, e.g. `queries/s`. */
   suffix?: string
-  /** Counters are summed over the rule window; gauges compare their latest value. */
+  /** Counters are summed over the monitor window; gauges compare their latest value. */
   counter: boolean
   resourceTypes: AlertResourceType[]
 }
@@ -143,7 +143,7 @@ export function toBytes(amount: number, unit: ByteUnit): number {
 
 /**
  * Splits a byte threshold into the largest unit it reaches and still converts
- * back to exactly, for editing, so saving an untouched rule changes nothing.
+ * back to exactly, for editing, so saving an untouched monitor changes nothing.
  */
 export function fromBytes(bytes: number): { amount: number; unit: ByteUnit } {
   for (const entry of [...BYTE_UNITS].reverse()) {
@@ -230,4 +230,24 @@ export function suggestThreshold(value: number): number {
     if (step * power >= target) return step * power
   }
   return 10 * power
+}
+
+/**
+ * Seconds as the two largest units, as alert emails write them: `2 h 14 m`,
+ * `3 d 1 h`. Under a minute reads `<1 m`.
+ */
+export function formatLength(seconds: number): string {
+  const parts: string[] = []
+  let rest = Math.max(0, Math.floor(seconds))
+  for (const [unit, length] of [
+    ['d', 86400],
+    ['h', 3600],
+    ['m', 60],
+  ] as const) {
+    if (rest >= length) {
+      parts.push(`${Math.floor(rest / length)} ${unit}`)
+      rest %= length
+    }
+  }
+  return parts.slice(0, 2).join(' ') || '<1 m'
 }

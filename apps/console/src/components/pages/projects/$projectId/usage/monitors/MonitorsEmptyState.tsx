@@ -45,7 +45,7 @@ const PRESET_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   'file-storage': HardDrive,
 }
 
-/** Decorative firing rule card. */
+/** Decorative firing monitor card. */
 function AlertsVisual() {
   const t = useT()
   return (
@@ -159,7 +159,7 @@ function PresetCard({
   )
 }
 
-export function AlertsEmptyState({
+export function MonitorsEmptyState({
   projectId,
   onCreate,
   onPreset,
@@ -180,7 +180,7 @@ export function AlertsEmptyState({
         icon={Bell}
         title={t('Know when usage crosses a line')}
         description={t(
-          'Alert rules watch your project usage and notify you when a metric crosses the threshold you set.',
+          'Monitors watch your project usage and notify you when a metric crosses the threshold you set.',
         )}
         actions={
           <ProductEmptyStateCreateButton
@@ -188,7 +188,7 @@ export function AlertsEmptyState({
             disabled={createDisabled}
             disabledTooltip={createDisabledTooltip}
           >
-            {t('Create alert')}
+            {t('Create monitor')}
           </ProductEmptyStateCreateButton>
         }
       />

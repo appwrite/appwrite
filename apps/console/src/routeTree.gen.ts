@@ -262,6 +262,7 @@ import { Route as PublicProjectsProjectIdStoresIndexRouteImport } from './routes
 import { Route as PublicProjectsProjectIdUsageIndexRouteImport } from './routes/_public/projects.$projectId.usage.index'
 import { Route as PublicProjectsProjectIdUsageCategoryIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId'
 import { Route as PublicProjectsProjectIdUsageAlertsRouteImport } from './routes/_public/projects.$projectId.usage.alerts'
+import { Route as PublicProjectsProjectIdUsageMonitorsRouteImport } from './routes/_public/projects.$projectId.usage.monitors'
 import { Route as PublicProjectsProjectIdVideosIndexRouteImport } from './routes/_public/projects.$projectId.videos.index'
 import { Route as PublicProjectsProjectIdVideosVideoIdRouteImport } from './routes/_public/projects.$projectId.videos.$videoId'
 import { Route as PublicProjectsProjectIdVideosProfilesRouteImport } from './routes/_public/projects.$projectId.videos.profiles'
@@ -1871,6 +1872,12 @@ const PublicProjectsProjectIdUsageAlertsRoute =
   PublicProjectsProjectIdUsageAlertsRouteImport.update({
     id: '/alerts',
     path: '/alerts',
+    getParentRoute: () => PublicProjectsProjectIdUsageRoute,
+  } as any)
+const PublicProjectsProjectIdUsageMonitorsRoute =
+  PublicProjectsProjectIdUsageMonitorsRouteImport.update({
+    id: '/monitors',
+    path: '/monitors',
     getParentRoute: () => PublicProjectsProjectIdUsageRoute,
   } as any)
 const PublicProjectsProjectIdVideosIndexRoute =
@@ -3616,6 +3623,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
   '/projects/$projectId/usage/alerts': typeof PublicProjectsProjectIdUsageAlertsRoute
+  '/projects/$projectId/usage/monitors': typeof PublicProjectsProjectIdUsageMonitorsRoute
   '/projects/$projectId/videos/$videoId': typeof PublicProjectsProjectIdVideosVideoIdRouteWithChildren
   '/projects/$projectId/videos/profiles': typeof PublicProjectsProjectIdVideosProfilesRoute
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
@@ -4044,6 +4052,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
   '/projects/$projectId/usage/alerts': typeof PublicProjectsProjectIdUsageAlertsRoute
+  '/projects/$projectId/usage/monitors': typeof PublicProjectsProjectIdUsageMonitorsRoute
   '/projects/$projectId/videos/profiles': typeof PublicProjectsProjectIdVideosProfilesRoute
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
@@ -4496,6 +4505,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/_public/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
   '/_public/projects/$projectId/usage/alerts': typeof PublicProjectsProjectIdUsageAlertsRoute
+  '/_public/projects/$projectId/usage/monitors': typeof PublicProjectsProjectIdUsageMonitorsRoute
   '/_public/projects/$projectId/videos/$videoId': typeof PublicProjectsProjectIdVideosVideoIdRouteWithChildren
   '/_public/projects/$projectId/videos/profiles': typeof PublicProjectsProjectIdVideosProfilesRoute
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
@@ -4962,6 +4972,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/storage/$bucketId'
     | '/projects/$projectId/usage/$categoryId'
     | '/projects/$projectId/usage/alerts'
+    | '/projects/$projectId/usage/monitors'
     | '/projects/$projectId/videos/$videoId'
     | '/projects/$projectId/videos/profiles'
     | '/docs/references/$version/$platform/$service'
@@ -5390,6 +5401,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/webhooks'
     | '/projects/$projectId/usage/$categoryId'
     | '/projects/$projectId/usage/alerts'
+    | '/projects/$projectId/usage/monitors'
     | '/projects/$projectId/videos/profiles'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
@@ -5841,6 +5853,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/storage/$bucketId'
     | '/_public/projects/$projectId/usage/$categoryId'
     | '/_public/projects/$projectId/usage/alerts'
+    | '/_public/projects/$projectId/usage/monitors'
     | '/_public/projects/$projectId/videos/$videoId'
     | '/_public/projects/$projectId/videos/profiles'
     | '/docs/references/$version/$platform/$service'
@@ -7888,6 +7901,13 @@ declare module '@tanstack/react-router' {
       path: '/alerts'
       fullPath: '/projects/$projectId/usage/alerts'
       preLoaderRoute: typeof PublicProjectsProjectIdUsageAlertsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdUsageRoute
+    }
+    '/_public/projects/$projectId/usage/monitors': {
+      id: '/_public/projects/$projectId/usage/monitors'
+      path: '/monitors'
+      fullPath: '/projects/$projectId/usage/monitors'
+      preLoaderRoute: typeof PublicProjectsProjectIdUsageMonitorsRouteImport
       parentRoute: typeof PublicProjectsProjectIdUsageRoute
     }
     '/_public/projects/$projectId/videos/': {
@@ -10916,6 +10936,7 @@ const PublicProjectsProjectIdUsageCategoryIdRouteWithChildren =
 interface PublicProjectsProjectIdUsageRouteChildren {
   PublicProjectsProjectIdUsageCategoryIdRoute: typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
   PublicProjectsProjectIdUsageAlertsRoute: typeof PublicProjectsProjectIdUsageAlertsRoute
+  PublicProjectsProjectIdUsageMonitorsRoute: typeof PublicProjectsProjectIdUsageMonitorsRoute
   PublicProjectsProjectIdUsageIndexRoute: typeof PublicProjectsProjectIdUsageIndexRoute
 }
 
@@ -10925,6 +10946,8 @@ const PublicProjectsProjectIdUsageRouteChildren: PublicProjectsProjectIdUsageRou
       PublicProjectsProjectIdUsageCategoryIdRouteWithChildren,
     PublicProjectsProjectIdUsageAlertsRoute:
       PublicProjectsProjectIdUsageAlertsRoute,
+    PublicProjectsProjectIdUsageMonitorsRoute:
+      PublicProjectsProjectIdUsageMonitorsRoute,
     PublicProjectsProjectIdUsageIndexRoute:
       PublicProjectsProjectIdUsageIndexRoute,
   }
@@ -11404,13 +11427,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

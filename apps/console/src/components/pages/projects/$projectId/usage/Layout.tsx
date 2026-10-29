@@ -66,7 +66,7 @@ import { categorySupportsChartInterval } from './category-filter-state'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import {
-  useAlertRules,
+  useMonitors,
   useProject,
   useOrganizationPlan,
   useOrganizationScopes,
@@ -193,31 +193,50 @@ interface CategoryNavigationProps {
   projectId: string
   navGroups: UsageNavGroup[]
   activeCategoryId: string
-  /** Enabled alert rules currently firing, flagged on the Alerts link. */
+  /** Monitors currently firing, flagged on the Alerts link. */
   firingAlerts: number
   className?: string
 }
 
-/** Metric each usage category opens a new alert rule on. */
+/** Metric each usage category opens a new monitor on. */
 const ALERT_METRIC_BY_CATEGORY: Record<string, string> = {
   bandwidth: 'bandwidth.outbound',
   databases: 'databases.reads',
   storage: 'files.storage',
 }
 
-function AlertsNavLink({
+/** The two pages under Monitoring: what is watched, and what it raised. */
+const MONITORING_PAGES = {
+  monitors: { label: 'Monitors', icon: Activity },
+  alerts: { label: 'Alerts', icon: Bell },
+} as const
+
+type MonitoringPage = keyof typeof MONITORING_PAGES
+
+function isMonitoringPage(id: string): id is MonitoringPage {
+  return id in MONITORING_PAGES
+}
+
+function MonitoringNavLink({
   projectId,
+  page,
   isActive,
   firing,
 }: {
   projectId: string
+  page: MonitoringPage
   isActive: boolean
   firing: number
 }) {
   const t = useT()
+  const { label, icon: Icon } = MONITORING_PAGES[page]
   return (
     <Link
-      to="/projects/$projectId/usage/alerts"
+      to={
+        page === 'monitors'
+          ? '/projects/$projectId/usage/monitors'
+          : '/projects/$projectId/usage/alerts'
+      }
       params={{ projectId }}
       search={{}}
       className={cn(
@@ -226,14 +245,12 @@ function AlertsNavLink({
       )}
     >
       <div className="relative shrink-0">
-        <Bell className="h-4 w-4 shrink-0" />
+        <Icon className="h-4 w-4 shrink-0" />
         {firing > 0 ? (
           <span className="absolute -end-1 -top-1 h-2 w-2 rounded-full bg-red-500" />
         ) : null}
       </div>
-      <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
-        {t('Alerts')}
-      </span>
+      <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t(label)}</span>
       {firing > 0 ? (
         <span className="ms-auto rounded-full bg-red-500/10 px-1.5 text-[11px] font-medium tabular-nums text-red-600 dark:text-red-400">
           {firing}
@@ -264,8 +281,15 @@ function CategoryNavigation({
     >
       <div className="space-y-0.5">
         <UsageNavGroupHeading label="Monitoring" />
-        <AlertsNavLink
+        <MonitoringNavLink
           projectId={projectId}
+          page="monitors"
+          isActive={activeCategoryId === 'monitors'}
+          firing={0}
+        />
+        <MonitoringNavLink
+          projectId={projectId}
+          page="alerts"
           isActive={activeCategoryId === 'alerts'}
           firing={firingAlerts}
         />
@@ -315,12 +339,11 @@ function MobileCategoryDrawer({
   }, [location.pathname])
 
   const activeCategory = categories.find((c) => c.id === activeCategoryId)
-  const activeLabel =
-    activeCategoryId === 'alerts'
-      ? t('Alerts')
-      : activeCategory?.label
-        ? t(activeCategory.label)
-        : t('Select category')
+  const activeLabel = isMonitoringPage(activeCategoryId)
+    ? t(MONITORING_PAGES[activeCategoryId].label)
+    : activeCategory?.label
+      ? t(activeCategory.label)
+      : t('Select category')
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -459,15 +482,16 @@ function UsageLayoutContent({
   const t = useT()
   const location = useLocation()
   const navigate = useNavigate()
-  const isAlerts =
-    getUsageCategoryIdFromPathname(location.pathname) === 'alerts'
+  const pathCategory = getUsageCategoryIdFromPathname(location.pathname)
+  const monitoringPage =
+    pathCategory && isMonitoringPage(pathCategory) ? pathCategory : null
   const categoryId = resolveUsageCategoryId(
     getUsageCategoryIdFromPathname(location.pathname),
     plan,
   )
-  const { rules: alertRules } = useAlertRules(projectId)
-  const firingAlerts = alertRules.filter(
-    (rule) => rule.enabled && rule.status === 'firing',
+  const { monitors } = useMonitors(projectId)
+  const firingAlerts = monitors.filter(
+    (monitor) => monitor.enabled && monitor.status === 'firing',
   ).length
   const alertMetric = ALERT_METRIC_BY_CATEGORY[categoryId]
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -814,7 +838,7 @@ function UsageLayoutContent({
                 {t('Usage')}
               </h1>
 
-              {isAlerts ? null : (
+              {monitoringPage ? null : (
                 <div className="flex flex-wrap items-center justify-end gap-3">
                   {showUsageFilters ? (
                     <FiltersPopover
@@ -900,7 +924,7 @@ function UsageLayoutContent({
             </div>
           </div>
         </div>
-        {!isAlerts &&
+        {!monitoringPage &&
         showUsageHistoryLimitAlert &&
         hasFiniteUsageLogRetention(organizationPlan) ? (
           <UsageLogRetentionAlert
@@ -921,7 +945,7 @@ function UsageLayoutContent({
               <CategoryNavigation
                 projectId={projectId}
                 navGroups={navGroups}
-                activeCategoryId={isAlerts ? 'alerts' : categoryId}
+                activeCategoryId={monitoringPage ?? categoryId}
                 firingAlerts={firingAlerts}
               />
             </div>
@@ -934,21 +958,25 @@ function UsageLayoutContent({
               <MobileCategoryDrawer
                 projectId={projectId}
                 navGroups={navGroups}
-                activeCategoryId={isAlerts ? 'alerts' : categoryId}
+                activeCategoryId={monitoringPage ?? categoryId}
                 firingAlerts={firingAlerts}
               />
             </div>
 
-            {isAlerts ? (
+            {monitoringPage ? (
               <>
                 <div className="mb-6">
                   <h2 className="text-[16px] font-semibold text-foreground">
-                    {t('Alerts')}
+                    {t(MONITORING_PAGES[monitoringPage].label)}
                   </h2>
                   <p className="mt-1 text-[13px] text-muted-foreground">
-                    {t(
-                      'Get notified when usage crosses a threshold, and again when it recovers.',
-                    )}
+                    {monitoringPage === 'monitors'
+                      ? t(
+                          'Get notified when usage crosses a threshold, and again when it recovers.',
+                        )
+                      : t(
+                          'Every time a monitor fired: when, how far over its threshold, and when it recovered.',
+                        )}
                   </p>
                 </div>
                 <Outlet />
@@ -972,12 +1000,12 @@ function UsageLayoutContent({
                       className="h-8 shrink-0 text-[13px]"
                     >
                       <Link
-                        to="/projects/$projectId/usage/alerts"
+                        to="/projects/$projectId/usage/monitors"
                         params={{ projectId }}
                         search={{ metric: alertMetric }}
                       >
                         <Plus className="me-1.5 h-3.5 w-3.5" />
-                        {t('Create alert')}
+                        {t('Create monitor')}
                       </Link>
                     </Button>
                   ) : null}

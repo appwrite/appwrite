@@ -211,11 +211,11 @@ export function canWriteWebhooks(
   return whenOrgRoles(access, features, access.canWriteWebhooks)
 }
 
-export function canWriteAlertRules(
+export function canWriteMonitors(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return whenOrgRoles(access, features, access.canWriteAlertRules)
+  return whenOrgRoles(access, features, access.canWriteMonitors)
 }
 
 export function canCreateMigration(
@@ -282,9 +282,7 @@ export function canShowProjectOAuth2Server(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return (
-    isCloudProfile() && canShowAuthSecuritySettings(access, features)
-  )
+  return isCloudProfile() && canShowAuthSecuritySettings(access, features)
 }
 
 export function canShowTopicSettingsTab(
