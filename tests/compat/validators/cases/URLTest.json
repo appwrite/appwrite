@@ -127,6 +127,62 @@
       ]
     },
     {
+      "name": "testIsValidNonAscii",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "https://example.com/čšž"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "https://example.com/?q=日本"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "https://example.com/č š"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "example.com/čšž"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
       "name": "testIsValidAllowedSchemes",
       "steps": [
         {

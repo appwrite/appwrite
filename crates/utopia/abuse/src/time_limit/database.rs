@@ -56,10 +56,11 @@ pub trait Documents: Send + Sync {
     /// index).
     fn create(&self, entry: &Entry) -> impl Future<Output = Result<()>> + Send;
 
-    /// Adds one to the count of document `id`.
+    /// Adds one to the count of document `id`, unless that takes it past
+    /// `max` ([`Error::Limit`]): the document after the increment.
     ///
-    /// PHP: `increaseDocumentAttribute($collection, $id, 'count')`.
-    fn increase(&self, id: &str) -> impl Future<Output = Result<()>> + Send;
+    /// PHP: `increaseDocumentAttribute($collection, $id, 'count', 1, $max)`.
+    fn increase(&self, id: &str, max: Option<i64>) -> impl Future<Output = Result<Entry>> + Send;
 
     /// Sets the count of document `id`.
     fn update(&self, id: &str, count: i64) -> impl Future<Output = Result<()>> + Send;
@@ -104,8 +105,8 @@ impl<D: Documents + ?Sized> Documents for std::sync::Arc<D> {
         (**self).create(entry)
     }
 
-    fn increase(&self, id: &str) -> impl Future<Output = Result<()>> + Send {
-        (**self).increase(id)
+    fn increase(&self, id: &str, max: Option<i64>) -> impl Future<Output = Result<Entry>> + Send {
+        (**self).increase(id, max)
     }
 
     fn update(&self, id: &str, count: i64) -> impl Future<Output = Result<()>> + Send {
@@ -274,7 +275,9 @@ impl<D: Documents> Store for Database<D> {
     type Log = Entry;
 
     /// Creates the window's document with a count of 1, or adds one to it
-    /// unless it has reached the limit.
+    /// unless it has reached the limit. The increment is bounded at the
+    /// limit, so of concurrent hits that read the same count only those that
+    /// fit are counted; one refused is reported at the limit.
     async fn hit(&self, key: &str, window: i64, rule: Rule) -> Result<i64> {
         let time = datetime(window);
         let Some(entry) = self.find_or_create(key, &time, 1, "Document Not Found").await? else {
@@ -283,8 +286,11 @@ impl<D: Documents> Store for Database<D> {
         if entry.count >= rule.limit {
             return Ok(entry.count);
         }
-        self.db.increase(&entry.id).await?;
-        Ok(entry.count)
+        match self.db.increase(&entry.id, Some(rule.limit)).await {
+            Ok(entry) => Ok(entry.count - 1),
+            Err(Error::Limit(_)) => Ok(rule.limit),
+            Err(e) => Err(e),
+        }
     }
 
     /// The window's count, `0` without a document.
@@ -391,12 +397,21 @@ impl Documents for Memory {
         Ok(())
     }
 
-    async fn increase(&self, id: &str) -> Result<()> {
+    async fn increase(&self, id: &str, max: Option<i64>) -> Result<Entry> {
         let mut state = self.state();
-        if let Some(e) = state.entries.iter_mut().find(|e| e.id == id) {
-            e.count += 1;
+        Self::collection(&state)?;
+        let entry = state
+            .entries
+            .iter_mut()
+            .find(|e| e.id == id)
+            .ok_or_else(|| Error::Exception("Document not found".into()))?;
+        if let Some(max) = max
+            && entry.count + 1 > max
+        {
+            return Err(Error::Limit(format!("Attribute value exceeds maximum limit: {max}")));
         }
-        Ok(())
+        entry.count += 1;
+        Ok(entry.clone())
     }
 
     async fn update(&self, id: &str, count: i64) -> Result<()> {

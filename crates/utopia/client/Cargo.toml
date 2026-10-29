@@ -26,4 +26,4 @@ zstd.workspace = true
 
 [package.metadata.utopia]
 category = "transport"
-php-sync = "167f117f95601120e3897b50dde0f3e932019fa1"
+php-sync = "6a2c63b752e7095630c4d911e68d24bc54328520"

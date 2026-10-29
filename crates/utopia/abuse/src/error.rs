@@ -47,6 +47,11 @@ pub enum Error {
     /// PHP: `Utopia\Database\Exception\Unique`, a subclass of `Duplicate`.
     #[error("{0}")]
     Unique(String),
+    /// An increment that would take a count past its maximum.
+    ///
+    /// PHP: `Utopia\Database\Exception\Limit`.
+    #[error("{0}")]
+    Limit(String),
     /// An Appwrite API error, with its type (`row_already_exists`, ...).
     ///
     /// PHP: `Appwrite\AppwriteException`.
@@ -93,6 +98,7 @@ impl Error {
             Error::Type(_) => "TypeError",
             Error::Duplicate(_) => "Utopia\\Database\\Exception\\Duplicate",
             Error::Unique(_) => "Utopia\\Database\\Exception\\Unique",
+            Error::Limit(_) => "Utopia\\Database\\Exception\\Limit",
             Error::Appwrite { .. } => "Appwrite\\AppwriteException",
             Error::Client(_) => "Psr\\Http\\Client\\ClientExceptionInterface",
             #[cfg(feature = "redis")]

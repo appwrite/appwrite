@@ -312,8 +312,11 @@
         }
       ]
     },
+    "limit.race": {
+      "doc": "$limit->check() on a database or tables limit whose `store` (the database.new or tables.new handle) first runs `competing`->check() once, just before its increment reaches storage (the tests' RacingDatabase / RacingTablesDBClient): {result, competing}"
+    },
     "database.new": {
-      "doc": "a Utopia\\Database\\Database over the Memory adapter, its database created unless `exists` is false"
+      "doc": "a Utopia\\Database\\Database (the tests' RacingDatabase) over the Memory adapter, its database created unless `exists` is false"
     },
     "database.setup": {
       "doc": "$limit->setup() on a TimeLimit\\Database",

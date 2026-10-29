@@ -22,6 +22,8 @@ use crate::adapter::{Fault, OpResult, Outcome, Session, bytes_value, float_value
 pub const OPS: &[&str] = &[
     "clickhouse.new",
     "database.new",
+    "database.collection",
+    "database.schema",
     "recording.new",
     "recording.succeed",
     "recording.calls",
@@ -932,6 +934,49 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
         }
         "usage.adapter" => Outcome::ok(Json::String(usage(session, a)?.adapter().name().to_owned())),
         "usage.health_check" => Outcome::ok(encode(&Value::Array(usage(session, a)?.health_check().await))),
+        "database.collection" | "database.schema" => {
+            let AnyAdapter::Database(adapter) = adapter(session, a)? else {
+                return Err(Fault::new("not a database adapter"));
+            };
+            let db = adapter.db();
+            let collection = utopia_usage::adapter::database::COLLECTION;
+            if op == "database.collection" {
+                let without = string(a, "without")?;
+                let attributes: Vec<_> = tri!(utopia_usage::adapter::database::attribute_documents(Kind::Event))
+                    .into_iter()
+                    .filter(|x| x.key != without)
+                    .collect();
+                let indexes: Vec<_> = tri!(utopia_usage::adapter::database::index_documents(Kind::Event))
+                    .into_iter()
+                    .filter(|x| !x.attributes.contains(&without))
+                    .collect();
+                let created = utopia_database::Collection::create(
+                    collection,
+                    "",
+                    attributes,
+                    indexes,
+                    None,
+                    true,
+                    Default::default(),
+                );
+                let created = tri!(created.map_err(Error::from));
+                tri!(db.create_collection(created).await.map_err(Error::from));
+                Outcome::ok(Json::Null)
+            } else {
+                let found = tri!(db.get_collection(collection).await.map_err(Error::from));
+                let mut attributes: Vec<String> =
+                    tri!(found.attributes().map_err(Error::from)).iter().map(|x| x.key.clone()).collect();
+                attributes.sort();
+                let mut indexes: Vec<(String, Vec<String>)> = tri!(found.indexes().map_err(Error::from))
+                    .iter()
+                    .map(|x| (x.key.clone(), x.attributes.clone()))
+                    .collect();
+                indexes.sort();
+                let indexes: serde_json::Map<String, Json> =
+                    indexes.into_iter().map(|(k, v)| (k, Json::from(v))).collect();
+                Outcome::ok(serde_json::json!({ "attributes": attributes, "indexes": indexes }))
+            }
+        }
         "usage.setup" => {
             tri!(usage(session, a)?.setup().await);
             Outcome::ok(Json::Null)
