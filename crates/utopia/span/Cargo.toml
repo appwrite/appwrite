@@ -29,4 +29,4 @@ rustls = { workspace = true, optional = true }
 
 [package.metadata.utopia]
 category = "observability"
-php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"
+php-sync = "8bf9b1498e8ad3ab1e16ed288d182f49a097e52f"

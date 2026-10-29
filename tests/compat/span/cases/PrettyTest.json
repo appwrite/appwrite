@@ -852,6 +852,98 @@
           }
         }
       ]
+    },
+    {
+      "name": "export escapes control characters",
+      "op": "exporter.export",
+      "args": {
+        "exporter": "pretty",
+        "options": {},
+        "span": {
+          "base": {
+            "trace_id": "0af7651916cd43dd8448eb211c80319c",
+            "span_id": "b7ad6b7169203331",
+            "started_at": 1700000000.25
+          },
+          "action": "http.request\n",
+          "attributes": [
+            {
+              "key": "http.locale\r",
+              "value": "en\nFORGED\u001b[31m"
+            }
+          ],
+          "error": {
+            "class": "RuntimeException",
+            "message": "boom\r\nINJECTED",
+            "file": "/app/src/\tTest.php",
+            "line": 10
+          }
+        }
+      },
+      "expect": {
+        "stdout": "",
+        "stderr": "\u001b[1m\u001b[31mhttp.request\\x0a\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n  \u001b[36mhttp.locale\\x0d\u001b[0m \u001b[37men\\x0aFORGED\\x1b[31m\\x7f\u001b[0m\n\n\u001b[31m\u001b[1m  RuntimeException\u001b[0m\u001b[31m: boom\\x0d\\x0aINJECTED\u001b[0m\n\u001b[2m    at /app/src/\\x09Test.php:10\u001b[0m\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n"
+      }
+    },
+    {
+      "name": "export leaves plain values untouched",
+      "op": "exporter.export",
+      "args": {
+        "exporter": "pretty",
+        "options": {},
+        "span": {
+          "base": {
+            "trace_id": "0af7651916cd43dd8448eb211c80319c",
+            "span_id": "b7ad6b7169203331",
+            "started_at": 1700000000.25
+          },
+          "action": "http.request",
+          "attributes": [
+            {
+              "key": "http.locale",
+              "value": "en"
+            },
+            {
+              "key": "count",
+              "value": 2
+            }
+          ]
+        }
+      },
+      "expect": {
+        "stdout": "\u001b[1m\u001b[32mhttp.request\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n  \u001b[36mhttp.locale\u001b[0m \u001b[37men\u001b[0m\n  \u001b[36mcount      \u001b[0m \u001b[37m2\u001b[0m\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "control characters widen the key column",
+      "op": "exporter.export",
+      "args": {
+        "exporter": "pretty",
+        "options": {},
+        "span": {
+          "base": {
+            "trace_id": "0af7651916cd43dd8448eb211c80319c",
+            "span_id": "b7ad6b7169203331",
+            "started_at": 1700000000.25
+          },
+          "action": "a",
+          "attributes": [
+            {
+              "key": "a\u0000b",
+              "value": "x"
+            },
+            {
+              "key": "longer",
+              "value": "\u001f ~"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "stdout": "\u001b[1m\u001b[32ma\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n  \u001b[36ma\\x00b\u001b[0m \u001b[37mx\u001b[0m\n  \u001b[36mlonger\u001b[0m \u001b[37m\\x1f ~\u001b[0m\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+        "stderr": ""
+      }
     }
   ]
 }
