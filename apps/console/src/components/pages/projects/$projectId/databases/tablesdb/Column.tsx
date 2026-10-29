@@ -324,10 +324,10 @@ export function ColumnDrawer({
         // Columns created without bounds store the type's full range; show those as empty.
         const unbounded =
           effectiveType === 'double' ? Number.MAX_VALUE : Number(INT64_MAX)
-        data.min =
-          Math.abs(Number(column.min)) === unbounded ? undefined : column.min
-        data.max =
-          Math.abs(Number(column.max)) === unbounded ? undefined : column.max
+        const bound = <T,>(value: T) =>
+          Math.abs(Number(value)) === unbounded ? undefined : value
+        data.min = bound(column.min)
+        data.max = bound(column.max)
       } else if (effectiveType === 'enum') {
         data.elements = column.elements || []
         setEnumElements(column.elements || [])
