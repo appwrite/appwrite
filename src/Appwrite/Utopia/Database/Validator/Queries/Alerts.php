@@ -2,22 +2,22 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-class AlertRules extends Base
+class Alerts extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
+        'monitorId',
         'name',
+        'status',
+        'type',
         'resourceType',
         'resourceId',
         'metric',
-        'enabled',
-        'status',
-        'evaluatedAt',
-        'triggeredAt',
+        'resolvedAt',
         'search',
     ];
 
     public function __construct()
     {
-        parent::__construct('alertRules', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('alerts', self::ALLOWED_ATTRIBUTES);
     }
 }

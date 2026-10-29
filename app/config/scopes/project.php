@@ -407,12 +407,16 @@ return [
             "Access to create, update, and delete webhooks",
         'category' => 'Other',
     ],
-    'alertRules.read' => [
-        'description' => 'Access to read alert rules',
+    'monitors.read' => [
+        'description' => 'Access to read monitors',
         'category' => 'Other',
     ],
-    'alertRules.write' => [
-        'description' => 'Access to create, update, and delete alert rules',
+    'monitors.write' => [
+        'description' => 'Access to create, update, and delete monitors',
+        'category' => 'Other',
+    ],
+    'alerts.read' => [
+        'description' => 'Access to read the alerts monitors raise',
         'category' => 'Other',
     ],
     'locale.read' => [

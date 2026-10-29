@@ -1,19 +1,26 @@
 <?php
 
 /**
- * What an alert rule can watch.
+ * What a monitor can check.
  *
- * `resources` are the resource types a rule points at, each with the project
- * collection its ID is looked up in; `project` needs none, the rule watches the
- * project itself. A resource with `'project' => false` is not offered on the
- * project's alert rule routes, for rules managed somewhere else. `metrics` lists the resource types each metric is recorded
- * for, whether it is a counter summed over the rule's window or a gauge read at
- * its latest sample, the unit its threshold is written in, and the name
- * notifications show for it.
+ * `types` are the kinds of check a monitor runs, each with its own create and
+ * update routes under `/v1/monitors/<type>`; `usage` reads the project's usage
+ * stats. The rest describes usage monitors: `resources` are what a usage
+ * monitor's `resourceType` rule can scope it to, each with the project
+ * collection its ID is looked up in (`project` needs none, it is the project
+ * itself). `metrics` lists the resources each metric is recorded for, whether
+ * it is a counter summed over the monitor's window or a gauge read at its
+ * latest sample, the unit its threshold is written in, and the name
+ * notifications show for it. An edition adds types, resources and metrics here.
  *
  * `Appwrite\Alert\Meter` reads each metric listed here.
  */
 return [
+    'types' => [
+        'usage' => [
+            'label' => 'Usage',
+        ],
+    ],
     'resources' => [
         'project' => [
             'collection' => null,

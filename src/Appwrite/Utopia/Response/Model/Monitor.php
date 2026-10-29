@@ -3,42 +3,41 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Alert\Channel;
-use Appwrite\Alert\Comparator;
 use Appwrite\Alert\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
 
-class AlertRule extends Model
+class Monitor extends Model
 {
     public function __construct()
     {
         $alerts = Config::getParam('alerts', []);
-        $metrics = \array_keys($alerts['metrics'] ?? []);
+        $types = \array_keys($alerts['types'] ?? []);
         $resources = \array_keys($alerts['resources'] ?? []);
 
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Alert rule ID.',
+                'description' => 'Monitor ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Alert rule creation date in ISO 8601 format.',
+                'description' => 'Monitor creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Alert rule update date in ISO 8601 format.',
+                'description' => 'Monitor update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Alert rule name.',
+                'description' => 'Monitor name.',
                 'default' => '',
                 'example' => 'Bandwidth spike',
             ])
@@ -48,41 +47,34 @@ class AlertRule extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('rules', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Rules that must all hold for the monitor to fire, as query strings. A usage monitor has one comparing a metric with a threshold, optionally scoped with `equal(\'resourceType\')` and `equal(\'resourceId\')`.',
+                'default' => [],
+                'example' => ['{"method":"greaterThan","attribute":"bandwidth.outbound","values":[5000000]}'],
+                'array' => true,
+            ])
+            ->addRule('type', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'What the monitor checks: `usage` compares a usage metric with a threshold.',
+                'default' => $types[0] ?? '',
+                'example' => 'usage',
+                'enum' => $types,
+                'enumSDKName' => 'MonitorType',
+            ])
             ->addRule('resourceType', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'Type of the resource the rule watches.',
+                'description' => 'Type of the resource the monitor watches, from its rules: the project, or one database or bucket.',
                 'default' => $resources[0] ?? '',
                 'example' => 'database',
                 'enum' => $resources,
-                'enumSDKName' => 'AlertResourceType',
+                'enumSDKName' => 'MonitorResourceType',
             ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID of the resource the rule watches. The project ID for project-wide rules.',
+                'description' => 'ID of the resource the monitor watches, from its rules. The project ID for a project-wide monitor.',
                 'default' => '',
                 'example' => 'main',
-            ])
-            ->addRule('metric', [
-                'type' => self::TYPE_ENUM,
-                'description' => 'Metric the rule evaluates.',
-                'default' => $metrics[0] ?? '',
-                'example' => 'databases.reads',
-                'enum' => $metrics,
-                'enumSDKName' => 'AlertMetric',
-            ])
-            ->addRule('comparator', [
-                'type' => self::TYPE_ENUM,
-                'description' => 'How the metric value is compared with the threshold.',
-                'default' => Comparator::GreaterThan->value,
-                'example' => Comparator::GreaterThan->value,
-                'enum' => Comparator::values(),
-                'enumSDKName' => 'AlertComparator',
-            ])
-            ->addRule('threshold', [
-                'type' => self::TYPE_FLOAT,
-                'description' => 'Value the metric is compared with, in the metric\'s unit.',
-                'default' => 0,
-                'example' => 1000000,
             ])
             ->addRule('window', [
                 'type' => self::TYPE_INTEGER,
@@ -92,18 +84,18 @@ class AlertRule extends Model
             ])
             ->addRule('cooldown', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Minimum seconds between two notifications for this rule.',
+                'description' => 'Minimum seconds between two firing notifications for this monitor.',
                 'default' => 3600,
                 'example' => 3600,
             ])
             ->addRule('channels', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'Channels notified when the rule changes state.',
+                'description' => 'Channels an alert is announced on when it fires and resolves.',
                 'default' => [],
                 'example' => [Channel::Email->value, Channel::Webhook->value],
                 'array' => true,
                 'enum' => Channel::values(),
-                'enumSDKName' => 'AlertChannel',
+                'enumSDKName' => 'MonitorChannel',
             ])
             ->addRule('webhookUrl', [
                 'type' => self::TYPE_STRING,
@@ -119,17 +111,17 @@ class AlertRule extends Model
             ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether the rule is evaluated.',
+                'description' => 'Whether the monitor is evaluated.',
                 'default' => true,
                 'example' => true,
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'Whether the rule is firing, as of its last evaluation.',
+                'description' => 'Whether the monitor is firing, as of its last evaluation.',
                 'default' => Status::Ok->value,
                 'example' => Status::Ok->value,
                 'enum' => Status::values(),
-                'enumSDKName' => 'AlertStatus',
+                'enumSDKName' => 'MonitorStatus',
             ])
             ->addRule('value', [
                 'type' => self::TYPE_FLOAT,
@@ -145,9 +137,15 @@ class AlertRule extends Model
                 'required' => false,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('alertId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the alert the monitor is firing for. Empty while it is not firing.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('triggeredAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Date the rule last started firing and notified, in ISO 8601 format.',
+                'description' => 'Date the monitor last announced an alert, in ISO 8601 format.',
                 'default' => null,
                 'required' => false,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
@@ -156,11 +154,11 @@ class AlertRule extends Model
 
     public function getName(): string
     {
-        return 'AlertRule';
+        return 'Monitor';
     }
 
     public function getType(): string
     {
-        return Response::MODEL_ALERT_RULE;
+        return Response::MODEL_MONITOR;
     }
 }

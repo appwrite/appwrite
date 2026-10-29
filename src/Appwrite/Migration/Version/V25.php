@@ -511,8 +511,9 @@ class V25 extends Migration
                     $this->createCollection($id);
                     break;
 
-                case 'alertRules':
-                    // New in 2.7.0. A platform collection, so only the console project visits it.
+                case 'monitors':
+                case 'alerts':
+                    // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
                     break;
 

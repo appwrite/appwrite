@@ -2,7 +2,7 @@
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Account;
-use Appwrite\Utopia\Response\Model\AlertRule;
+use Appwrite\Utopia\Response\Model\Alert;
 use Appwrite\Utopia\Response\Model\AlgoArgon2;
 use Appwrite\Utopia\Response\Model\AlgoBcrypt;
 use Appwrite\Utopia\Response\Model\AlgoMd5;
@@ -115,6 +115,7 @@ use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
 use Appwrite\Utopia\Response\Model\MigrationReport;
 use Appwrite\Utopia\Response\Model\Mock;
 use Appwrite\Utopia\Response\Model\MockNumber;
+use Appwrite\Utopia\Response\Model\Monitor;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Notification;
 use Appwrite\Utopia\Response\Model\OAuth2Amazon;
@@ -285,7 +286,8 @@ Response::setModel(new BaseList('Deployments List', Response::MODEL_DEPLOYMENT_L
 Response::setModel(new BaseList('Executions List', Response::MODEL_EXECUTION_LIST, 'executions', Response::MODEL_EXECUTION));
 Response::setModel(new BaseList('Projects List', Response::MODEL_PROJECT_LIST, 'projects', Response::MODEL_PROJECT, true, true));
 Response::setModel(new BaseList('Webhooks List', Response::MODEL_WEBHOOK_LIST, 'webhooks', Response::MODEL_WEBHOOK, true, true));
-Response::setModel(new BaseList('Alert Rules List', Response::MODEL_ALERT_RULE_LIST, 'rules', Response::MODEL_ALERT_RULE));
+Response::setModel(new BaseList('Monitors List', Response::MODEL_MONITOR_LIST, 'monitors', Response::MODEL_MONITOR));
+Response::setModel(new BaseList('Alerts List', Response::MODEL_ALERT_LIST, 'alerts', Response::MODEL_ALERT));
 Response::setModel(new BaseList('API Keys List', Response::MODEL_KEY_LIST, 'keys', Response::MODEL_KEY, true, true));
 Response::setModel(new BaseList('Auth Providers List', Response::MODEL_AUTH_PROVIDER_LIST, 'platforms', Response::MODEL_AUTH_PROVIDER, true, false));
 Response::setModel(new BaseList('Countries List', Response::MODEL_COUNTRY_LIST, 'countries', Response::MODEL_COUNTRY));
@@ -426,7 +428,8 @@ Response::setModel(new ProjectAuthMethod());
 Response::setModel(new ProjectService());
 Response::setModel(new ProjectProtocol());
 Response::setModel(new Webhook());
-Response::setModel(new AlertRule());
+Response::setModel(new Monitor());
+Response::setModel(new Alert());
 Response::setModel(new Key());
 Response::setModel(new EphemeralKey());
 Response::setModel(new MockNumber());

@@ -543,7 +543,7 @@ const RESOURCE_TYPE_TEAMS = 'teams';
 const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 const RESOURCE_TYPE_INSIGHTS = 'insights';
 const RESOURCE_TYPE_REPORTS = 'reports';
-const RESOURCE_TYPE_ALERT_RULES = 'alertRules';
+const RESOURCE_TYPE_MONITORS = 'monitors';
 
 // Insight types — engine-specific so the CTA action can reference the right public API.
 const ADVISOR_INSIGHT_TYPES = [
@@ -602,7 +602,10 @@ const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
 const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
-const SCHEDULE_RESOURCE_TYPE_ALERT = 'alert';
+const SCHEDULE_RESOURCE_TYPE_MONITOR = 'monitor';
+
+// Monitor types, the kind of check a monitor runs; see `types` in app/config/alerts.php
+const MONITOR_TYPE_USAGE = 'usage';
 
 /** Preview cookie */
 const COOKIE_NAME_PREVIEW = 'a_jwt_console';

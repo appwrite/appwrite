@@ -1,7 +1,6 @@
 {
     "project": [
-        "alertRules.read",
-        "alertRules.write",
+        "alerts.read",
         "assistant.read",
         "attributes.read",
         "attributes.write",
@@ -50,6 +49,8 @@
         "migrations.write",
         "mocks.read",
         "mocks.write",
+        "monitors.read",
+        "monitors.write",
         "platforms.read",
         "platforms.write",
         "policies.read",

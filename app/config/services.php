@@ -211,10 +211,24 @@ return [
         'icon' => '',
         'platforms' => ['server', 'console'],
     ],
+    'monitors' => [
+        'key' => 'monitors',
+        'name' => 'Monitors',
+        'subtitle' => 'The Monitors service watches your project\'s usage and raises an alert when a monitor\'s rules hold, announced by email, in the console or to a webhook.',
+        'description' => '',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['server', 'console'],
+    ],
     'alerts' => [
         'key' => 'alerts',
         'name' => 'Alerts',
-        'subtitle' => 'The Alerts service allows you to create rules on your project\'s usage metrics and get notified when a threshold is crossed.',
+        'subtitle' => 'The Alerts service lists the alerts your monitors raised: when each fired, the readings while it fired, and when it resolved.',
         'description' => '',
         'controller' => '', // Uses modules
         'sdk' => true,
