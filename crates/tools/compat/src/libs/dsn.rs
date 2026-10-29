@@ -84,7 +84,9 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let optional_bytes = |key: &str| -> Result<Option<Vec<u8>>, Fault> {
                 match a.opt(key) {
                     None | Some(Value::Null) => Ok(None),
-                    Some(v) => crate::adapter::bytes(v).map(Some).ok_or_else(|| Fault::new(format!("{key} must be a string"))),
+                    Some(v) => {
+                        crate::adapter::bytes(v).map(Some).ok_or_else(|| Fault::new(format!("{key} must be a string")))
+                    }
                 }
             };
             let user = optional_bytes("user")?;
