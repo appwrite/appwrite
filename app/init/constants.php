@@ -351,6 +351,7 @@ const APP_AUTH_TYPE_ORGANIZATION = 'Organization';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 const APP_LIMIT_UPLOAD_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+const APP_STORAGE_UPLOAD_RETENTION = 60 * 60 * 24 * 7; // Chunked uploads idle for longer are aborted by maintenance
 const APP_LOG_LENGTH_LIMIT = 1000000; // Single source of truth for log/error length limits (matches the related attribute sizes)
 const APP_FUNCTION_LOG_LENGTH_LIMIT = APP_LOG_LENGTH_LIMIT;
 const APP_FUNCTION_ERROR_LENGTH_LIMIT = APP_LOG_LENGTH_LIMIT;

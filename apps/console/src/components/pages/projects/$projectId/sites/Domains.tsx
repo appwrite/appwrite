@@ -36,7 +36,11 @@ import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import {
+  canRetryRule,
+  canViewRuleLogs,
+  getApexDomain,
+} from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { queryParamToMap } from '@/lib/table-filters'
@@ -261,8 +265,7 @@ export function View() {
                                 {t('View logs')}
                               </Button>
                             )}
-                            {(rule.status === 'created' ||
-                              rule.status === 'unverified') && (
+                            {canRetryRule(rule.status) && (
                               <Button
                                 variant="link"
                                 size="sm"
@@ -287,7 +290,7 @@ export function View() {
                                 <RowActionsMenuTrigger />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {rule.status !== 'verified' && (
+                                {canViewRuleLogs(rule) && (
                                   <DropdownMenuItem
                                     onClick={() => handleViewLogs(rule)}
                                   >
@@ -296,8 +299,7 @@ export function View() {
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
-                                {(rule.status === 'created' ||
-                                  rule.status === 'unverified') && (
+                                {canRetryRule(rule.status) && (
                                   <DropdownMenuItem
                                     onClick={() => handleRetry(rule)}
                                   >
@@ -416,7 +418,7 @@ export function View() {
             setViewLogsOpen(open)
             if (!open) setViewLogsRule(null)
           }}
-          rule={viewLogsRule}
+          rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
         />
       )}
     </>

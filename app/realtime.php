@@ -634,8 +634,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     // Connections this user opened while impersonating someone else carry
                     // that user's roles but stand or fall with this user's session and status.
                     $impersonating = $realtime->getImpersonatorConnections($projectId, $userId);
+                    // Admin-mode connections live in the project they administer, but end with
+                    // this console user's session, status and membership.
+                    $administering = $projectId === 'console' ? $realtime->getAdminConnections($userId) : [];
 
-                    if (!empty($connections) || !empty($impersonating)) {
+                    if (!empty($connections) || !empty($impersonating) || !empty($administering)) {
                         $consoleDatabase = getConsoleDB();
                         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
@@ -667,6 +670,44 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             // session extends the connection.
                             if ($impersonatorSessionId !== null) {
                                 $realtime->connections[$connection]['expire'] = $user->getSessionExpiry($impersonatorSessionId);
+                            }
+                        }
+
+                        // One query for every administered project, instead of one per connection.
+                        $administeredIds = [];
+                        foreach ($administering as $connection) {
+                            $administeredIds[$realtime->connections[$connection]['projectId'] ?? ''] = true;
+                        }
+                        unset($administeredIds['']);
+                        $administeredProjects = [];
+                        if (!empty($administeredIds)) {
+                            $found = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->find('projects', [
+                                Query::equal('$id', \array_map(\strval(...), \array_keys($administeredIds))),
+                                Query::limit(\count($administeredIds)),
+                            ]));
+                            foreach ($found as $administered) {
+                                $administeredProjects[$administered->getId()] = $administered;
+                            }
+                        }
+
+                        foreach ($administering as $connection) {
+                            $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
+                            $admin = $realtime->connections[$connection]['admin'];
+                            // A deleted project is an empty document here and ends the connection below.
+                            $administered = $administeredProjects[$realtime->connections[$connection]['projectId'] ?? ''] ?? new Document();
+
+                            // Its roles came from this membership, so any change to it ends the connection.
+                            if (
+                                $revoked($sessionId)
+                                || $administered->getAttribute('teamId', '') !== $admin['teamId']
+                                || $user->getMembershipRoles($admin['teamId']) !== $admin['roles']
+                            ) {
+                                $closing[$connection] = true;
+                                continue;
+                            }
+
+                            if ($sessionId !== null) {
+                                $realtime->connections[$connection]['expire'] = $user->getSessionExpiry($sessionId);
                             }
                         }
 
@@ -776,9 +817,19 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         foreach ($realtime->getProjectConnections($targetProjectId) as $connection) {
                             $userId = $realtime->connections[$connection]['userId'] ?? '';
                             $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
+                            $admin = $realtime->connections[$connection]['admin'] ?? null;
+
+                            // An admin-mode connection holds no project session, but a transfer
+                            // ends the access its organization gave it.
+                            if ($admin !== null) {
+                                if ($targetProject->getAttribute('teamId', '') !== $admin['teamId']) {
+                                    $closing[$connection] = true;
+                                }
+                                continue;
+                            }
 
                             if ($userId === '' || $sessionId === null) {
-                                continue; // Guests, keys and admin-mode connections hold no project session to invalidate.
+                                continue; // Guests and keys hold no project session to invalidate.
                             }
 
                             /** @var User $user */
@@ -798,6 +849,18 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $targetProject->getPermissionsByType(PermissionType::Read),
                             fn (int $connection): array => $realtime->connections[$connection]['roles'] ?? [],
                         );
+                    }
+                }
+
+                // Deleting an organization names no user, so end its admin-mode connections here.
+                if (($event['project'] ?? '') === 'console') {
+                    foreach (($event['data']['events'] ?? []) as $name) {
+                        $parts = \explode('.', $name);
+                        if (\count($parts) === 3 && $parts[0] === 'teams' && $parts[1] !== '*' && $parts[2] === 'delete') {
+                            foreach ($realtime->getTeamAdminConnections($parts[1]) as $connection) {
+                                $closing[$connection] = true;
+                            }
+                        }
                     }
                 }
 
@@ -1017,6 +1080,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing or unknown project ID');
         }
 
+        $projectRegion = $project->getAttribute('region', '');
+        $currentRegion = System::getEnv('_APP_REGION', 'default');
+        if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
+        }
+
         $timelimit = $connectionContainer->get('timelimit');
         $user = $connectionContainer->get('user'); /** @var User $user */
         $impersonatorUser = $connectionContainer->get('impersonatorUser'); /** @var Document $impersonatorUser */
@@ -1038,14 +1107,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         // As over HTTP, admin mode needs project access and grants admin roles, never console identity roles.
         $adminRoles = null;
+        $admin = null;
         if ($connectionContainer->get('mode') === APP_MODE_ADMIN && $project->getId() !== 'console' && !$targetUser->isEmpty()) {
-            $membershipRoles = [];
-            foreach ($targetUser->getAttribute('memberships', []) as $membership) {
-                if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $project->getAttribute('teamId')) {
-                    $membershipRoles = $membership->getAttribute('roles', []);
-                    break;
-                }
-            }
+            $membershipRoles = $targetUser->getMembershipRoles($project->getAttribute('teamId', ''));
 
             if (empty($membershipRoles)) {
                 throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
@@ -1068,6 +1132,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
                 }
             }
             $adminRoles = \array_values(\array_unique($adminRoles));
+            // Console events about this user re-check the access, as they are not published to this project.
+            $admin = [
+                'userId' => $targetUser->getId(),
+                'teamId' => $project->getAttribute('teamId', ''),
+                'roles' => $membershipRoles,
+            ];
 
             foreach ($adminRoles as $role) {
                 $authorization->addRole($role);
@@ -1083,12 +1153,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             && !($effectiveUser->isPrivileged($authorization->getRoles()) || $effectiveUser->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
-        }
-
-        $projectRegion = $project->getAttribute('region', '');
-        $currentRegion = System::getEnv('_APP_REGION', 'default');
-        if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
-            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
         }
 
         /*
@@ -1208,6 +1272,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
             $realtime->connections[$connection]['sessionId'] = $sessionId;
             $realtime->connections[$connection]['impersonator'] = $impersonator;
+            $realtime->connections[$connection]['admin'] = $admin;
             $realtime->connections[$connection]['expire'] = $expire;
             $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
             $realtime->connections[$connection]['limits'] = $limits;
@@ -1281,6 +1346,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
         $realtime->connections[$connection]['sessionId'] = $sessionId;
         $realtime->connections[$connection]['impersonator'] = $impersonator;
+        $realtime->connections[$connection]['admin'] = $admin;
         $realtime->connections[$connection]['expire'] = $expire;
         $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
         $realtime->connections[$connection]['limits'] = $limits;
