@@ -1,5 +1,13 @@
 ## Getting Started
 
+### Install the SDK
+
+Add SDK 31.0.1 to your app module's `build.gradle.kts`:
+
+```kotlin
+implementation("io.appwrite:sdk-for-android:31.0.1")
+```
+
 ### Add your Android platform
 
 To let your app talk to Appwrite, register it as a platform. In the [Appwrite Console](https://cloud.appwrite.io/console), open your project (create one if you haven't already), click **Add platform** and choose **Android**.
@@ -172,3 +180,9 @@ Every model also has `toMap()`, which is handy for logging or manual data handli
 val user = account.get()
 Log.d("Appwrite", user.toMap().toString())
 ```
+
+### Realtime client ownership
+
+In SDK 31.0.1 and later, each `Client` owns its realtime connection, subscriptions, presence, and reconnect state. Separate clients can use different endpoints, projects, or JWTs independently. Configure `setJWT()` before creating a JWT-authenticated subscription.
+
+`Realtime` objects created with the same client share that connection. Disconnecting it affects that client's realtime subscriptions. Close an individual subscription to stop only that subscription; use separate clients for independently managed connections.

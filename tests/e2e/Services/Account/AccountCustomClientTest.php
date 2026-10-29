@@ -151,6 +151,35 @@ final class AccountCustomClientTest extends Scope
         $this->fail('TOTP did not rotate within the expected time window.');
     }
 
+    private function extractEmailCode(string $text): string
+    {
+        $marker = 'Use OTP ';
+        $offset = strpos($text, $marker);
+        if ($offset !== false) {
+            $code = substr($text, $offset + strlen($marker), 6);
+            if (strlen($code) === 6 && ctype_digit($code)) {
+                return $code;
+            }
+        }
+
+        $length = strlen($text);
+        for ($i = 0; $i <= $length - 6; $i++) {
+            $candidate = substr($text, $i, 6);
+            if (!ctype_digit($candidate)) {
+                continue;
+            }
+            if ($i > 0 && ctype_digit($text[$i - 1])) {
+                continue;
+            }
+            if ($i + 6 < $length && ctype_digit($text[$i + 6])) {
+                continue;
+            }
+            return $candidate;
+        }
+
+        return '';
+    }
+
     /**
      * Helper to set up a basic account
      */
@@ -1501,6 +1530,213 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($response['body']['name'], $data['name']);
     }
 
+    #[Retry(count: 1)]
+    public function testUpdateAccountEmailClearsRecovery(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'recovery-email@localhost.test';
+        $newEmail = uniqid() . 'recovery-email-new@localhost.test';
+        $password = 'password';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => 'Recovery Email User',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $cookie = $session['cookies']['a_session_' . $projectId];
+
+        $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $recovery['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email, function ($mail) {
+            $this->assertStringContainsString('Password Reset', (string) $mail['subject']);
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $secret = $tokens['secret'] ?? '';
+        $this->assertNotEmpty($secret);
+
+        $update = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $cookie,
+        ]), [
+            'email' => $newEmail,
+            'password' => $password,
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertEquals($newEmail, $update['body']['email']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $cookie,
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($newEmail, $account['body']['email']);
+
+        $stale = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $userId,
+            'secret' => $secret,
+            'password' => 'new-password',
+        ]);
+        $this->assertEquals(401, $stale['headers']['status-code']);
+
+        $newRecovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $newEmail,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $newRecovery['headers']['status-code']);
+
+        $newMail = $this->getLastEmailByAddress($newEmail, function ($mail) {
+            $this->assertStringContainsString('Password Reset', (string) $mail['subject']);
+        });
+        $newTokens = $this->extractQueryParamsFromEmailLink($newMail['html']);
+        $this->assertNotEmpty($newTokens['secret'] ?? '');
+
+        $complete = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $userId,
+            'secret' => $newTokens['secret'],
+            'password' => 'new-password',
+        ]);
+        $this->assertEquals(200, $complete['headers']['status-code']);
+    }
+
+    #[Retry(count: 1)]
+    public function testUpdateAccountEmailClearsEmailTokens(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'email-tokens@localhost.test';
+        $newEmail = uniqid() . 'email-tokens-new@localhost.test';
+        $password = 'password';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => 'Email Tokens User',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $cookie = $session['cookies']['a_session_' . $projectId];
+        $sessionHeaders = array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $cookie,
+        ]);
+
+        $projectName = $this->getProject()['name'];
+
+        $verification = $this->client->call(Client::METHOD_POST, '/account/verification', $sessionHeaders, [
+            'url' => 'http://localhost/verification',
+        ]);
+        $this->assertEquals(201, $verification['headers']['status-code']);
+        $verificationMail = $this->getLastEmailByAddress($email, function ($mail) use ($projectName) {
+            $this->assertSame('Account Verification for ' . $projectName, (string) $mail['subject']);
+        });
+        $verificationSecret = $this->extractQueryParamsFromEmailLink($verificationMail['html'])['secret'] ?? '';
+        $this->assertNotEmpty($verificationSecret);
+
+        $verificationOtp = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', $sessionHeaders);
+        $this->assertEquals(201, $verificationOtp['headers']['status-code']);
+        $verificationOtpMail = $this->getLastEmailByAddress($email, function ($mail) use ($projectName) {
+            $this->assertSame('Verify your email for ' . $projectName, (string) $mail['subject']);
+        });
+        $verificationOtpSecret = $this->extractEmailCode((string) $verificationOtpMail['text']);
+        $this->assertNotEmpty($verificationOtpSecret);
+
+        $magicUrl = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
+            'userId' => $userId,
+            'email' => $email,
+        ]);
+        $this->assertEquals(201, $magicUrl['headers']['status-code']);
+        $magicMail = $this->getLastEmailByAddress($email, function ($mail) use ($projectName) {
+            $this->assertSame($projectName . ' Login', (string) $mail['subject']);
+        });
+        $magicSecret = substr($magicMail['text'], strpos($magicMail['text'], '&secret=', 0) + 8, 64);
+        $this->assertNotEmpty($magicSecret);
+
+        $emailOtp = $this->client->call(Client::METHOD_POST, '/account/tokens/email', $headers, [
+            'userId' => $userId,
+            'email' => $email,
+        ]);
+        $this->assertEquals(201, $emailOtp['headers']['status-code']);
+        $emailOtpMail = $this->getLastEmailByAddress($email, function ($mail) use ($projectName) {
+            $this->assertSame('OTP for ' . $projectName . ' Login', (string) $mail['subject']);
+        });
+        $emailOtpSecret = $this->extractEmailCode((string) $emailOtpMail['text']);
+        $this->assertNotEmpty($emailOtpSecret);
+
+        $recoveryOtp = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', $headers, [
+            'email' => $email,
+        ]);
+        $this->assertEquals(201, $recoveryOtp['headers']['status-code']);
+        $recoveryOtpMail = $this->getLastEmailByAddress($email, function ($mail) use ($projectName) {
+            $this->assertSame('Password Reset for ' . $projectName, (string) $mail['subject']);
+        });
+        $recoveryOtpSecret = $this->extractEmailCode((string) $recoveryOtpMail['text']);
+        $this->assertNotEmpty($recoveryOtpSecret);
+
+        $update = $this->client->call(Client::METHOD_PATCH, '/account/email', $sessionHeaders, [
+            'email' => $newEmail,
+            'password' => $password,
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertEquals($newEmail, $update['body']['email']);
+
+        $staleVerification = $this->client->call(Client::METHOD_PUT, '/account/verification', $sessionHeaders, [
+            'userId' => $userId,
+            'secret' => $verificationSecret,
+        ]);
+        $this->assertEquals(401, $staleVerification['headers']['status-code']);
+
+        $staleVerificationOtp = $this->client->call(Client::METHOD_PUT, '/account/verifications/email/otp', $sessionHeaders, [
+            'userId' => $userId,
+            'secret' => $verificationOtpSecret,
+        ]);
+        $this->assertEquals(401, $staleVerificationOtp['headers']['status-code']);
+
+        $staleMagicUrl = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', $headers, [
+            'userId' => $userId,
+            'secret' => $magicSecret,
+        ]);
+        $this->assertEquals(401, $staleMagicUrl['headers']['status-code']);
+
+        $staleEmailOtp = $this->client->call(Client::METHOD_POST, '/account/sessions/token', $headers, [
+            'userId' => $userId,
+            'secret' => $emailOtpSecret,
+        ]);
+        $this->assertEquals(401, $staleEmailOtp['headers']['status-code']);
+
+        $staleRecoveryOtp = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', $headers, [
+            'userId' => $userId,
+            'secret' => $recoveryOtpSecret,
+            'password' => 'new-password',
+        ]);
+        $this->assertEquals(401, $staleRecoveryOtp['headers']['status-code']);
+    }
+
     public function testUpdateAccountPrefs(): void
     {
         $data = $this->setupAccountWithUpdatedEmail();
@@ -2060,6 +2296,10 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('Reset your ' . $this->getProject()['name'] . ' password using the link.', $lastEmail['text']);
+        // Spam filters count direction marks (U+200E, U+200F) in the preview padding as hidden text
+        $this->assertStringContainsString('&#x200C;&nbsp;', (string) $lastEmail['html']);
+        $this->assertStringNotContainsStringIgnoringCase('&#x200E;', $lastEmail['html']);
+        $this->assertStringNotContainsStringIgnoringCase('&#x200F;', $lastEmail['html']);
         $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
 
 
@@ -2978,6 +3218,122 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testCreateOAuth2SessionRejectsPlantedNonceCookie(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $nonceCookieKey = 'a_oauth2_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $email = \uniqid() . 'planted@localhost.test';
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $signedInCookie = $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey];
+
+        // Another browser starts a flow and stops at the provider's redirect back to Appwrite
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertArrayHasKey($nonceCookieKey, $response['cookies']);
+        $plantedCookie = $nonceCookieKey . '=' . $response['cookies'][$nonceCookieKey];
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $callbackUrl = $response['headers']['location'];
+
+        /**
+         * Test for FAILURE - the signed-in browser carries that nonce, planted by a sibling site
+         */
+        $headers = ['cookie' => $signedInCookie . '; ' . $plantedCookie];
+        $response = $oauthClient->call(Client::METHOD_GET, $callbackUrl, $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
+
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $failureParams);
+        $this->assertSame('user_oauth2_state_invalid', \json_decode($failureParams['error'], true)['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/identities', [
+            'x-appwrite-project' => $projectId,
+            'cookie' => $signedInCookie,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['total']);
+
+        // A flow started before states carried a binding
+        $callback = \parse_url($callbackUrl);
+        \parse_str($callback['query'], $callbackParams);
+        $legacyState = \json_decode($callbackParams['state'], true);
+        $this->assertArrayHasKey('binding', $legacyState);
+        unset($legacyState['binding']);
+        $callbackParams['state'] = \json_encode($legacyState);
+        $legacyCallbackUrl = $callback['scheme'] . '://' . $callback['host'] . (isset($callback['port']) ? ':' . $callback['port'] : '') . $callback['path'] . '?' . \http_build_query($callbackParams);
+
+        /**
+         * Test for FAILURE - a signed-in browser still needs the binding
+         */
+        $response = $oauthClient->call(Client::METHOD_GET, $legacyCallbackUrl, $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
+
+        /**
+         * Test for SUCCESS - a guest holding the nonce finishes it
+         */
+        $headers = ['cookie' => $plantedCookie];
+        $response = $oauthClient->call(Client::METHOD_GET, $legacyCallbackUrl, $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $headers, followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success', $response['headers']['location']);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+    }
+
     public function testCreateOAuth2SessionRejectsCallbackFromAnotherBrowser(): void
     {
         $provider = 'mock';
@@ -3224,6 +3580,65 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
+    }
+
+    public function testCreateOAuth2SessionMatchesExactEmail(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $local = 'oauth.exact.' . \bin2hex(\random_bytes(8));
+
+        $existing = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $local . '@outlook.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $existing['headers']['status-code']);
+
+        // The mock provider returns the address after the canonical- prefix as a verified email
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => 'canonical-' . $local . '@hotmail.com',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        try {
+            /**
+             * Test for FAILURE - an address on another domain of the same mail provider is a different account
+             */
+            $response = $this->followMockOAuth2Flow('/account/tokens/oauth2/mock');
+
+            $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
+
+            $params = [];
+            \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $params);
+
+            $this->assertNotEmpty($params['userId']);
+            $this->assertNotEquals($existing['body']['$id'], $params['userId']);
+
+            $user = $this->client->call(Client::METHOD_GET, '/users/' . $params['userId'], [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $user['headers']['status-code']);
+            $this->assertEquals($local . '@hotmail.com', $user['body']['email']);
+        } finally {
+            $this->updateMockProvider(true);
+        }
     }
 
     public function testCreateOAuth2TokenStartedByServer(): void
@@ -4517,6 +4932,259 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    public function testOAuthVerifiedEmailRevokesUnverifiedAccountCredentials(): void
+    {
+        // A fresh project keeps the fixed mock OAuth email away from parallel tests.
+        $projectId = $this->getProject(true)['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $email = 'useroauth@localhost.test';
+        $password = 'password';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $existingUserId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $existingSession = $response['cookies'][$sessionCookieKey];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/mock', ['x-appwrite-project' => $projectId]);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+        $session = $response['cookies'][$sessionCookieKey];
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => $sessionCookieKey . '=' . $session,
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($existingUserId, $account['body']['$id']);
+        $this->assertTrue($account['body']['emailVerification']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => $sessionCookieKey . '=' . $existingSession,
+        ]));
+        $this->assertEquals(401, $account['headers']['status-code']);
+
+        $login = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(401, $login['headers']['status-code']);
+    }
+
+    public function testCreateMagicURLSessionRevokesUnverifiedAccountCredentials(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
+            'userId' => $data['id'],
+            'email' => $data['email'],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $mail = $this->getLastEmailByAddress($data['email']);
+        $secret = substr($mail['text'], strpos($mail['text'], '&secret=', 0) + 8, 64);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', $headers, [
+            'userId' => $data['id'],
+            'secret' => $secret,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['emailVerification']);
+
+        /**
+         * Test for FAILURE
+         * The registrant's session and password no longer reach the claimed account.
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ]));
+        $this->assertEquals(401, $account['headers']['status-code']);
+
+        $login = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+        $this->assertEquals(401, $login['headers']['status-code']);
+    }
+
+    public function testUpdateRecoveryRevokesUnverifiedAccountCredentials(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', \array_merge($headers, [
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $data['session'],
+        ]), [
+            'phone' => '+1202' . \random_int(1000000, 9999999),
+            'password' => $data['password'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $data['email'],
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $secret = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($data['email'], function ($email) {
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
+        })['html'])['secret'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $data['id'],
+            'secret' => $secret,
+            'password' => 'recovered-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $this->createSessionCookie($data['email'], 'recovered-password')['headers']);
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['emailVerification']);
+
+        /**
+         * Test for FAILURE
+         * The phone the registrant added is no longer a way in.
+         */
+        $this->assertEmpty($account['body']['phone']);
+    }
+
+    public function testCreatePhoneSessionRevokesUnverifiedAccountCredentials(): void
+    {
+        $this->ensurePhoneAuthEnabled();
+
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+        $sessionHeaders = \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ]);
+
+        // The registrant verifies their own email, then adds a phone they do not own
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', $sessionHeaders, [
+            'url' => 'http://localhost/verification',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $secret = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($data['email'])['html'])['secret'];
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verification', $sessionHeaders, [
+            'userId' => $data['id'],
+            'secret' => $secret,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $number = '+1' . substr(str_replace('.', '', (string) microtime(true)) . getmypid() . random_int(100, 999), -9);
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', $sessionHeaders, [
+            'phone' => $number,
+            'password' => $data['password'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['emailVerification']);
+        $this->assertFalse($response['body']['phoneVerification']);
+
+        // The phone's owner signs in by OTP
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', $headers, [
+            'userId' => Id::unique(),
+            'phone' => $number,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($data['id'], $response['body']['userId']);
+
+        $sms = $this->getLastRequestForProject(
+            $projectId,
+            Scope::REQUEST_TYPE_SMS,
+            [
+                'header_X-Username' => 'username',
+                'header_X-Key' => 'password',
+                'method' => 'POST',
+            ],
+            probe: function (array $request) use ($number) {
+                $this->assertEquals($number, $request['data']['to'] ?? null);
+            }
+        );
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', $headers, [
+            'userId' => $data['id'],
+            'secret' => \explode(' ', $sms['data']['message'])[0],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($number, $account['body']['phone']);
+        $this->assertTrue($account['body']['phoneVerification']);
+
+        /**
+         * Test for FAILURE
+         * The registrant's session, password and email no longer reach the claimed account.
+         */
+        $registrant = $this->client->call(Client::METHOD_GET, '/account', $sessionHeaders);
+        $this->assertEquals(401, $registrant['headers']['status-code']);
+
+        $login = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+        $this->assertEquals(401, $login['headers']['status-code']);
+
+        $this->assertEmpty($account['body']['email']);
+        $this->assertFalse($account['body']['emailVerification']);
+    }
+
     public function testCreateOAuth2SessionWithoutEmail(): void
     {
         $provider = 'mock-no-email';
@@ -5011,6 +5679,191 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testCreateSessionWithPhoneAfterPhoneUpdate(): void
+    {
+        $this->ensurePhoneAuthEnabled();
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+        $numbers = \array_map(fn (int $index): string => '+1' . \substr(\str_replace('.', '', (string) \microtime(true)) . \getmypid() . $index . \random_int(10, 99), -9), [1, 2, 3]);
+
+        $createToken = function (string $userId, string $number) use ($projectId, $headers): string {
+            $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', $headers, [
+                'userId' => $userId,
+                'phone' => $number,
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code']);
+
+            $sms = $this->getLastRequestForProject($projectId, Scope::REQUEST_TYPE_SMS, [
+                'header_X-Username' => 'username',
+                'header_X-Key' => 'password',
+                'method' => 'POST',
+            ], probe: function (array $request) use ($number) {
+                $this->assertEquals($number, $request['data']['to'] ?? null);
+            });
+            $this->assertNotEmpty($sms);
+
+            return \explode(' ', $sms['data']['message'])[0];
+        };
+
+        /**
+         * Test for FAILURE - a token sent before the server changes the number is no longer accepted
+         */
+        $userId = Id::unique();
+        $token = $createToken($userId, $numbers[0]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/phone', \array_merge($headers, [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'number' => $numbers[1],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', $headers, [
+            'userId' => $userId,
+            'secret' => $token,
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - a token sent before the user changes the number is no longer accepted
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', $headers, [
+            'userId' => $userId,
+            'secret' => $createToken($userId, $numbers[1]),
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $session = $response['cookies']['a_session_' . $projectId];
+
+        $token = $createToken($userId, $numbers[1]);
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'factor' => 'phone',
+        ]);
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+
+        $sms = $this->getLastRequestForProject($projectId, Scope::REQUEST_TYPE_SMS, [
+            'header_X-Username' => 'username',
+            'header_X-Key' => 'password',
+            'method' => 'POST',
+        ], probe: function (array $request) use ($numbers, $token) {
+            $this->assertEquals($numbers[1], $request['data']['to'] ?? null);
+            $this->assertStringNotContainsString($token, (string) ($request['data']['message'] ?? ''));
+        });
+        $this->assertNotEmpty($sms);
+        $otp = \explode(' ', $sms['data']['message'])[0];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'phone' => $numbers[2],
+            'password' => 'new-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', $headers, [
+            'userId' => $userId,
+            'secret' => $token,
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'challengeId' => $challenge['body']['$id'],
+            'otp' => $otp,
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+    }
+
+    public function testUpdateMFAChallengeAfterEmailUpdate(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $email = 'mfa_' . \uniqid() . '@localhost.test';
+        $user = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password1234',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $serverHeaders);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $sessionHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ];
+
+        $createChallenge = function () use (&$email, $userId, $serverHeaders, $sessionHeaders): array {
+            $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $serverHeaders, [
+                'emailVerification' => true,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $sessionHeaders, [
+                'factor' => 'email',
+            ]);
+            $this->assertSame(201, $challenge['headers']['status-code']);
+
+            $mail = $this->getLastEmailByAddress($email, function (array $mail): void {
+                $this->assertStringStartsWith('Verification Code for ', (string) $mail['subject']);
+            });
+            $code = $this->extractEmailCode((string) $mail['text']);
+            $this->assertNotEmpty($code);
+
+            return [$challenge['body']['$id'], $code];
+        };
+
+        /**
+         * Test for FAILURE - a challenge mailed before the server changes the email is no longer accepted
+         */
+        [$challengeId, $code] = $createChallenge();
+
+        $email = 'mfa_' . \uniqid() . '@localhost.test';
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/email', $serverHeaders, [
+            'email' => $email,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $sessionHeaders, [
+            'challengeId' => $challengeId,
+            'otp' => $code,
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - a challenge mailed before the user changes the email is no longer accepted
+         */
+        [$challengeId, $code] = $createChallenge();
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', $sessionHeaders, [
+            'email' => 'mfa_' . \uniqid() . '@localhost.test',
+            'password' => 'password1234',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $sessionHeaders, [
+            'challengeId' => $challengeId,
+            'otp' => $code,
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
+    }
+
     public function testConvertPhoneToPassword(): void
     {
         $data = $this->setupPhoneSession();
@@ -5337,6 +6190,61 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
+    public function testCreateMagicUrlEscapesRedirect(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = 'magic-escape-' . uniqid() . '@appwrite.io';
+        $url = 'http://localhost/magic"<b>path</b>#frag"<i>end';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'url' => $url,
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $userId = $response['body']['userId'];
+
+        $html = (string) $this->getLastEmailByAddress($email)['html'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->assertStringNotContainsString('"<b>', $html);
+        $this->assertStringNotContainsString('"<i>', $html);
+        $this->assertStringContainsString('http://localhost/magic&quot;&lt;b&gt;path&lt;/b&gt;?userId=' . $userId . '&amp;secret=', $html);
+        $this->assertStringContainsString('#frag&quot;&lt;i&gt;end', $html);
+
+        $hrefStart = strpos($html, 'href="http://localhost/magic');
+        $this->assertNotFalse($hrefStart);
+        $hrefStart += \strlen('href="');
+        $hrefEnd = strpos($html, '"', $hrefStart);
+        $this->assertNotFalse($hrefEnd);
+
+        $link = html_entity_decode(substr($html, $hrefStart, $hrefEnd - $hrefStart), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $this->assertStringStartsWith('http://localhost/magic"<b>path</b>?userId=' . $userId . '&secret=', $link);
+        $this->assertStringEndsWith('#frag"<i>end', $link);
+
+        parse_str((string) parse_url($link, PHP_URL_QUERY), $query);
+        $this->assertSame($userId, $query['userId']);
+
+        $session = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $query['userId'],
+            'secret' => $query['secret'],
+        ]);
+
+        $this->assertSame(201, $session['headers']['status-code']);
+        $this->assertSame($userId, $session['body']['userId']);
     }
 
     public function testCreateMagicUrl(): void
@@ -6517,6 +7425,111 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(204, $delete['headers']['status-code']);
     }
 
+    public function testUpdateMFADisableRequiresRecentChallenge(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
+
+        $this->assertEquals(200, $authenticator['headers']['status-code']);
+
+        $recoveryCodes = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', $headers);
+
+        $this->assertEquals(201, $recoveryCodes['headers']['status-code']);
+        $this->assertNotEmpty($recoveryCodes['body']['recoveryCodes']);
+
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        // The server accepts only the current time step, so skip a code about to expire
+        if ($totp->expiresIn() <= 5) {
+            $this->getNextTOTP($totp, $totp->now());
+        }
+
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
+            'otp' => $totp->now(),
+        ]);
+
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        // Test SUCCESS: enabling MFA needs no challenge
+        $enable = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, [
+            'mfa' => true,
+        ]);
+
+        $this->assertEquals(200, $enable['headers']['status-code']);
+        $this->assertTrue($enable['body']['mfa']);
+
+        // Test FAILURE: disabling MFA without a recent challenge
+        $disableWithoutChallenge = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, [
+            'mfa' => false,
+        ]);
+
+        $this->assertEquals(401, $disableWithoutChallenge['headers']['status-code']);
+        $this->assertEquals('user_challenge_required', $disableWithoutChallenge['body']['type']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['mfa']);
+
+        // Test SUCCESS: disabling MFA after a challenge
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers, [
+            'factor' => 'recoveryCode',
+        ]);
+
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+
+        $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
+            'challengeId' => $challenge['body']['$id'],
+            'otp' => $recoveryCodes['body']['recoveryCodes'][0],
+        ]);
+
+        $this->assertEquals(200, $challengeVerification['headers']['status-code']);
+        $this->assertNotEmpty($challengeVerification['body']['mfaUpdatedAt']);
+
+        $disable = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, [
+            'mfa' => false,
+        ]);
+
+        $this->assertEquals(200, $disable['headers']['status-code']);
+        $this->assertFalse($disable['body']['mfa']);
+    }
+
+    public function testUpdateMFADisableWithoutSecondFactor(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $enable = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, [
+            'mfa' => true,
+        ]);
+
+        $this->assertEquals(200, $enable['headers']['status-code']);
+        $this->assertTrue($enable['body']['mfa']);
+
+        // No verified second factor means MFA is not in force, and no challenge could be completed
+        $disable = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, [
+            'mfa' => false,
+        ]);
+
+        $this->assertEquals(200, $disable['headers']['status-code']);
+        $this->assertFalse($disable['body']['mfa']);
+    }
+
     public function testMFAAuthenticatorLifecycle(): void
     {
         $data = $this->createFreshAccountWithSession();
@@ -7317,6 +8330,87 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testImpersonationHidesProviderCredentials(): void
+    {
+        $this->updateMockProvider(true);
+
+        $projectId = $this->getProject()['$id'];
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $sub = 'idtoken-' . \uniqid('', true) . \bin2hex(\random_bytes(4));
+        $email = 'idtoken.impersonated.' . \uniqid('', true) . \bin2hex(\random_bytes(4)) . '@localhost.test';
+        $accessToken = 'mock-access-token-' . \bin2hex(\random_bytes(4));
+
+        $target = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => $sub, 'email' => $email, 'email_verified' => true]),
+            'accessToken' => $accessToken,
+            'accessTokenExpiry' => 3600,
+        ]);
+        $this->assertSame(201, $target['headers']['status-code']);
+        $targetId = $target['body']['userId'];
+
+        $impersonator = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
+            'userId' => Id::unique(),
+            'email' => 'impersonator.' . \uniqid('', true) . '@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $impersonator['headers']['status-code']);
+        $impersonatorId = $impersonator['body']['$id'];
+
+        $patch = $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/impersonator', $serverHeaders, ['impersonator' => true]);
+        $this->assertSame(200, $patch['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/sessions', $serverHeaders);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $ownHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $target['cookies']['a_session_' . $projectId],
+        ];
+        $impersonationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+            'x-appwrite-impersonate-user-id' => $targetId,
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $identities = $this->client->call(Client::METHOD_GET, '/account/identities', $ownHeaders);
+        $this->assertSame(200, $identities['headers']['status-code']);
+        $this->assertSame($accessToken, $identities['body']['identities'][0]['providerAccessToken']);
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/account/sessions', $ownHeaders);
+        $this->assertSame(200, $sessions['headers']['status-code']);
+        $this->assertSame($accessToken, $sessions['body']['sessions'][0]['providerAccessToken']);
+
+        /**
+         * Test for FAILURE
+         */
+        $identities = $this->client->call(Client::METHOD_GET, '/account/identities', $impersonationHeaders);
+        $this->assertSame(200, $identities['headers']['status-code']);
+        $this->assertSame(1, $identities['body']['total']);
+        $this->assertSame('', $identities['body']['identities'][0]['providerAccessToken']);
+        $this->assertSame('', $identities['body']['identities'][0]['providerRefreshToken']);
+        $this->assertSame('', $identities['body']['identities'][0]['providerIdToken']);
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/account/sessions', $impersonationHeaders);
+        $this->assertSame(200, $sessions['headers']['status-code']);
+        $this->assertNotEmpty($sessions['body']['sessions']);
+        foreach ($sessions['body']['sessions'] as $listed) {
+            $this->assertSame($targetId, $listed['userId']);
+            $this->assertSame('', $listed['providerAccessToken']);
+            $this->assertSame('', $listed['providerRefreshToken']);
+        }
+    }
+
     public function testCreateIdTokenSessionInvalidToken(): void
     {
         $this->updateMockProvider(true);
@@ -7531,6 +8625,165 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('general_bad_request', $response['body']['type']);
+    }
+
+    public function testCreateIdTokenSessionRevokesUnverifiedAccountCredentials(): void
+    {
+        $this->updateMockProvider(true);
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        /**
+         * Test for SUCCESS - claiming an unverified account revokes its existing credentials
+         */
+        $existing = $this->createFreshAccountWithSession();
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => 'idtoken-' . \uniqid('', true),
+                'email' => $existing['email'],
+                'email_verified' => true,
+            ]),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($existing['id'], $response['body']['userId']);
+        $session = $response['cookies']['a_session_' . $projectId];
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['emailVerification']);
+        $this->assertEmpty($account['body']['passwordUpdate']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $existing['session'],
+        ]));
+        $this->assertEquals(401, $account['headers']['status-code']);
+
+        $login = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $existing['email'],
+            'password' => $existing['password'],
+        ]);
+        $this->assertEquals(401, $login['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS - a verified account keeps its credentials when linked
+         */
+        $verified = $this->createFreshAccountWithSession();
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $verified['id'] . '/verification', \array_merge($headers, [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'emailVerification' => true,
+        ]);
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => 'idtoken-' . \uniqid('', true),
+                'email' => $verified['email'],
+                'email_verified' => true,
+            ]),
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($verified['id'], $response['body']['userId']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $verified['session'],
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+
+        $login = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $verified['email'],
+            'password' => $verified['password'],
+        ]);
+        $this->assertEquals(201, $login['headers']['status-code']);
+    }
+
+    public function testCreateIdTokenSessionMatchesExactEmail(): void
+    {
+        $this->updateMockProvider(true);
+
+        $local = 'idtoken.exact.' . \bin2hex(\random_bytes(8));
+        $existing = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => Id::unique(),
+            'email' => $local . '@outlook.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $existing['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS - the same address in another case adopts the existing account
+         */
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => 'idtoken-' . \uniqid('', true),
+                'email' => \strtoupper($local) . '@Outlook.com',
+                'email_verified' => true,
+            ]),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($existing['body']['$id'], $response['body']['userId']);
+
+        /**
+         * Test for FAILURE - an address on another domain of the same mail provider is a different account
+         */
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => 'idtoken-' . \uniqid('', true),
+                'email' => $local . '@hotmail.com',
+                'email_verified' => true,
+            ]),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEquals($existing['body']['$id'], $response['body']['userId']);
+
+        /**
+         * Test for SUCCESS - an account without email takes an address on another domain of the same mail provider
+         */
+        $projectId = $this->getProject()['$id'];
+        $session = $this->createAnonymousSession();
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => 'idtoken-' . \uniqid('', true),
+                'email' => $local . '@live.com',
+                'email_verified' => true,
+            ]),
+        ], [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEquals($existing['body']['$id'], $response['body']['userId']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($local . '@live.com', $account['body']['email']);
     }
 
     public function testCreateIdTokenSessionAnonymousLinking(): void
@@ -7959,6 +9212,357 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertEquals($email, $account['body']['email']);
         $this->assertTrue($account['body']['emailVerification']);
+    }
+
+    /**
+     * ID-token sign-in must apply the same project email policies as
+     * email/password sign-up, including when the injected plan is empty
+     * (self-hosted). Covers new-user creation and the email backfill path.
+     */
+    public function testCreateIdTokenSessionDenyFreeEmail(): void
+    {
+        $this->updateMockProvider(true);
+        $this->updateProjectEmailPolicy('deny-free-email', true);
+
+        try {
+            $email = 'idtoken.free.' . \uniqid('', true) . \bin2hex(\random_bytes(4)) . '@gmail.com';
+
+            /**
+             * Test for FAILURE
+             */
+            $signup = $this->client->call(Client::METHOD_POST, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => 'password',
+            ]);
+
+            $this->assertEquals(400, $signup['headers']['status-code']);
+            $this->assertEquals('user_email_free', $signup['body']['type']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $email,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_free', $response['body']['type']);
+
+            $sub = 'idtoken-' . \uniqid('', true);
+            $created = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken(['sub' => $sub]),
+            ]);
+
+            $this->assertEquals(201, $created['headers']['status-code']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => $sub,
+                    'email' => 'idtoken.free.backfill.' . \uniqid('', true) . '@gmail.com',
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_free', $response['body']['type']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $allowed = 'idtoken.free.allowed.' . \uniqid('', true) . '@localhost.test';
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $allowed,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+        } finally {
+            $this->updateProjectEmailPolicy('deny-free-email', false);
+        }
+    }
+
+    public function testCreateIdTokenSessionDenyDisposableEmail(): void
+    {
+        $this->updateMockProvider(true);
+        $this->updateProjectEmailPolicy('deny-disposable-email', true);
+
+        try {
+            $email = 'idtoken.disposable.' . \uniqid('', true) . \bin2hex(\random_bytes(4)) . '@mailinator.com';
+
+            /**
+             * Test for FAILURE
+             */
+            $signup = $this->client->call(Client::METHOD_POST, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => 'password',
+            ]);
+
+            $this->assertEquals(400, $signup['headers']['status-code']);
+            $this->assertEquals('user_email_disposable', $signup['body']['type']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $email,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_disposable', $response['body']['type']);
+
+            $sub = 'idtoken-' . \uniqid('', true);
+            $created = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken(['sub' => $sub]),
+            ]);
+
+            $this->assertEquals(201, $created['headers']['status-code']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => $sub,
+                    'email' => 'idtoken.disposable.backfill.' . \uniqid('', true) . '@mailinator.com',
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_disposable', $response['body']['type']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $allowed = 'idtoken.disposable.allowed.' . \uniqid('', true) . '@localhost.test';
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $allowed,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+        } finally {
+            $this->updateProjectEmailPolicy('deny-disposable-email', false);
+        }
+    }
+
+    public function testCreateIdTokenSessionDenyAliasedEmail(): void
+    {
+        $this->updateMockProvider(true);
+        $this->updateProjectEmailPolicy('deny-aliased-email', true);
+
+        try {
+            $email = 'idtoken.alias.' . \uniqid('', true) . \bin2hex(\random_bytes(4)) . '+tag@gmail.com';
+
+            /**
+             * Test for FAILURE
+             */
+            $signup = $this->client->call(Client::METHOD_POST, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => 'password',
+            ]);
+
+            $this->assertEquals(400, $signup['headers']['status-code']);
+            $this->assertEquals('user_email_not_canonical', $signup['body']['type']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $email,
+                    'email_verified' => false,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_not_canonical', $response['body']['type']);
+
+            $sub = 'idtoken-' . \uniqid('', true);
+            $created = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken(['sub' => $sub]),
+            ]);
+
+            $this->assertEquals(201, $created['headers']['status-code']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => $sub,
+                    'email' => 'idtoken.alias.backfill.' . \uniqid('', true) . '+tag@gmail.com',
+                    'email_verified' => false,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_not_canonical', $response['body']['type']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $allowed = 'idtoken.alias.allowed.' . \uniqid('', true) . '@localhost.test';
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $allowed,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+
+            $local = 'idtokenalias' . \bin2hex(\random_bytes(8));
+            $aliased = $local . '+tag@gmail.com';
+            $canonicalized = $local . '@gmail.com';
+            $projectId = $this->getProject()['$id'];
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $aliased,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+
+            $account = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+            ]);
+
+            $this->assertEquals(200, $account['headers']['status-code']);
+            $this->assertEquals($canonicalized, $account['body']['email']);
+            $this->assertEquals($canonicalized, $account['body']['emailCanonical']);
+            $this->assertTrue($account['body']['emailIsCanonical']);
+        } finally {
+            $this->updateProjectEmailPolicy('deny-aliased-email', false);
+        }
+    }
+
+    public function testCreateIdTokenSessionDenyCorporateEmail(): void
+    {
+        $this->updateMockProvider(true);
+        $this->updateProjectEmailPolicy('deny-corporate-email', true);
+
+        try {
+            $email = 'idtoken.corporate.' . \uniqid('', true) . \bin2hex(\random_bytes(4)) . '@gmail.com';
+
+            /**
+             * Test for FAILURE
+             */
+            $signup = $this->client->call(Client::METHOD_POST, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => 'password',
+            ]);
+
+            $this->assertEquals(400, $signup['headers']['status-code']);
+            $this->assertEquals('user_email_not_corporate', $signup['body']['type']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $email,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_not_corporate', $response['body']['type']);
+
+            $sub = 'idtoken-' . \uniqid('', true);
+            $created = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken(['sub' => $sub]),
+            ]);
+
+            $this->assertEquals(201, $created['headers']['status-code']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => $sub,
+                    'email' => 'idtoken.corporate.backfill.' . \uniqid('', true) . '@gmail.com',
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_not_corporate', $response['body']['type']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $allowed = 'idtoken.corporate.allowed.' . \uniqid('', true) . '@localhost.test';
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $allowed,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+        } finally {
+            $this->updateProjectEmailPolicy('deny-corporate-email', false);
+        }
+    }
+
+    private function updateProjectEmailPolicy(string $policy, bool $enabled): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/' . $policy, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'enabled' => $enabled,
+        ]);
+
+        if ($enabled && ($response['body']['type'] ?? null) === 'general_access_forbidden') {
+            $this->markTestSkipped('This plan does not support the ' . $policy . ' policy.');
+        }
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     public function testCreateEmailVerificationOTP(): void

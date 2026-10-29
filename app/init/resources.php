@@ -26,6 +26,7 @@ use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
+use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
@@ -96,24 +97,31 @@ $container->set('executor', fn () => new Executor(), []);
 // container's _APP_ALLOWED_INTERNAL_ADDRESSES lists (empty by default; the dev stack lists its
 // own network). A malformed range throws rather than being skipped. Shared per process: without
 // connection reuse every request opens its own handle, and each with*() returns a copy.
-$container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(), new PublicInternet(
+// cURL counts decoded bytes against the size cap and aborts the transfer once it is passed.
+$container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
     ...\array_map(
         fn (string $range) => new IPRange($range),
         \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
     )
 )), []);
-$container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(), new PublicInternet(
+$container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
     ...\array_map(
         fn (string $range) => new IPRange($range),
         \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
     )
 )), []);
-$container->set('clientForAvatars', fn () => new Client(new CurlAdapter(), new PublicInternet(
+$container->set('clientForAvatars', fn () => (new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
     ...\array_map(
         fn (string $range) => new IPRange($range),
         \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
     )
-)), []);
+)))->withConnectTimeout(5)->withTimeout(15), []);
 
 // Checked before connecting, for hosts a request accepts. Resolves through _APP_DNS_EXTERNAL,
 // falling back to _APP_DNS, never the container's own resolver.
@@ -129,6 +137,11 @@ $container->set('publicHostname', function () {
 }, []);
 
 $container->set('publicURL', fn (PublicHostname $publicHostname) => new PublicURL($publicHostname), ['publicHostname']);
+
+$container->set('deploymentHostname', fn () => new DeploymentHostname(
+    System::getEnv('_APP_DOMAIN', ''),
+    System::getEnv('_APP_MIGRATION_HOST', ''),
+), []);
 
 $container->set('jobs', function () {
     $client = (new Client(new CurlAdapter()))
@@ -181,14 +194,14 @@ $container->set('telemetry', fn () => new NoTelemetry(), []);
  * A malformed DSN is reported and read as unset rather than thrown: this resolves for every
  * messaging job, so one bad platform variable must not stop a project's push and email.
  */
-$container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
+$container->set('adapterForSMS', function (Telemetry $telemetry, PublicHostname $publicHostname): ?SMSAdapter {
     try {
-        return (new MessagingProvider($telemetry))->internalSMS();
+        return (new MessagingProvider($telemetry, $publicHostname))->internalSMS();
     } catch (\Throwable $error) {
         Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
         return null;
     }
-}, ['telemetry']);
+}, ['telemetry', 'publicHostname']);
 
 $container->set('authorization', fn () => new Authorization(), []);
 

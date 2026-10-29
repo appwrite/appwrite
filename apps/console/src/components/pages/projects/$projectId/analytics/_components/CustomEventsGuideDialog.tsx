@@ -66,9 +66,7 @@ export function CustomEventsGuideDialog({
         ? buildCustomEventSnippets(platform, {
             endpoint: getProjectApiEndpoint(projectId),
             projectId,
-            // The ingestion endpoint takes either ID; the snippet ID is the
-            // one meant for client-side code.
-            trackingId: property.snippetId || property.$id,
+            trackingId: property.$id,
             domain: property.domain,
           })
         : [],

@@ -42,8 +42,8 @@ final class CapturingClient implements ClientInterface, StreamingClientInterface
 }
 
 /**
- * Regression coverage for the HTTP 411 fix: every S3 request must carry an
- * explicit Content-Length so the transport never falls back to chunked
+ * Regression coverage for the HTTP 411 fix: every S3 PUT and POST must carry
+ * an explicit Content-Length so the transport never falls back to chunked
  * transfer encoding (which GCS and other S3-compatible services reject).
  */
 final class ContentLengthTest extends TestCase

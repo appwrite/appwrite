@@ -1,23 +1,23 @@
 ---
 layout: changelog
-title: Set up APNs for an iOS app with one CLI command
+title: "Verify emails and reset passwords with a 6-digit code"
 date: 2026-10-22
-cover: /images/blog/announcing-apns-one-click-setup/cover.avif
-tags: messaging, cli
+cover: /images/blog/announcing-verification-and-recovery-codes/cover.avif
+tags: auth
 ---
 
-Appwrite CLI 28.5.0 sets up push notifications for iOS apps. Run `appwrite init apns` in your project and it creates the [APNs](/docs/products/messaging/apns#one-click-setup) production and sandbox providers, adds the push entitlement and background mode to your Xcode target, adds an Apple platform for the bundle ID, and checks with Apple that the App ID has Push Notifications on.
+Appwrite Auth can now email a 6-digit code instead of a link for email verification and password recovery. Your users enter the code in your app, so mobile and desktop apps can handle both flows without a redirect page or a deep link.
 
-The bundle ID, team ID, and key ID are read from your Xcode project or Expo `app.json` and the `.p8` file name. With `--create-key`, the CLI signs in with your Apple ID and creates the APNs key for you, no Apple Developer portal needed.
+Each code lasts 15 minutes and works once. You can also add a security phrase that shows up in both the email and your app, so your users know the email came from their own request. Codes work on Appwrite Cloud and in self-hosted Appwrite 2.3 and later, with the Web, Flutter, Apple, Android, and React Native SDKs.
 
-```bash
-appwrite init apns --create-key
-```
-
-{% arrow_link href="/blog/post/announcing-apns-one-click-setup" %}
+{% arrow_link href="/blog/post/announcing-verification-and-recovery-codes" %}
 Read the announcement
 {% /arrow_link %}
 
-{% arrow_link href="/docs/products/messaging/apns#one-click-setup" %}
-Set up APNs with the CLI
+{% arrow_link href="/docs/products/auth/verify-user#verify-with-code" %}
+Verify an email with a code
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/auth/email-password#recover-with-code" %}
+Recover a password with a code
 {% /arrow_link %}
