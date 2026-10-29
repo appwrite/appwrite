@@ -6,7 +6,6 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Handler as Broker;
 use Swoole\Coroutine\Channel;
 use Utopia\Mqtt\Server;
-use Utopia\Span\Level;
 use Utopia\Span\Span;
 
 /** Handles the broker's internal events: revoke, unsubscribe and deliver. */
@@ -49,7 +48,6 @@ class Handler
         $span->set('project.id', $projectId);
         $span->set('user.id', $userId);
         $span->set('mqtt.is_broker', true);
-        $level = null;
 
         try {
             // The child sends back its count, or what it threw; the span stays here.
@@ -68,7 +66,10 @@ class Handler
             if ($outcome === null || $outcome === false) {
                 $span->set('mqtt.verification', $outcome === null ? 'coroutine_limit' : 'timed_out');
                 $span->set('mqtt.disconnected', $this->broker->expel($projectId, $userId));
-                $level = Level::Error;
+                // A check that could not complete is a failure: the error keeps the span past trace filters.
+                $span->setError(new \RuntimeException($outcome === null
+                    ? 'Permission verification skipped: coroutine limit reached'
+                    : "Permission verification timed out after {$this->timeout}s"));
 
                 return;
             }
@@ -83,7 +84,7 @@ class Handler
             $span->set('mqtt.verification', 'verified');
             $span->set('mqtt.disconnected', $outcome);
         } finally {
-            $span->finish($level);
+            $span->finish();
         }
     }
 
@@ -102,7 +103,6 @@ class Handler
         $span->set('user.id', $userId);
         $span->set('mqtt.topic', $topic);
         $span->set('mqtt.is_broker', true);
-        $level = null;
 
         try {
             $result = new Channel(1);
@@ -119,7 +119,9 @@ class Handler
             if ($outcome === null || $outcome === false) {
                 $span->set('mqtt.verification', $outcome === null ? 'coroutine_limit' : 'timed_out');
                 $span->set('mqtt.unsubscribed', $this->broker->drop($this->server, $projectId, $userId, $topic));
-                $level = Level::Error;
+                $span->setError(new \RuntimeException($outcome === null
+                    ? 'Permission verification skipped: coroutine limit reached'
+                    : "Permission verification timed out after {$this->timeout}s"));
 
                 return;
             }
@@ -134,7 +136,7 @@ class Handler
             $span->set('mqtt.verification', 'verified');
             $span->set('mqtt.unsubscribed', $outcome);
         } finally {
-            $span->finish($level);
+            $span->finish();
         }
     }
 

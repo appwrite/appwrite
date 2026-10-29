@@ -178,6 +178,15 @@ final class HandlerTest extends TestCase
         $this->assertSame($verification, $spans[0]->get('mqtt.verification'));
         $this->assertSame($count, $spans[0]->get($key));
         $this->assertSame($level->value, $spans[0]->get('level'));
+
+        // A fail-closed span carries an error so the trace sampler always keeps it.
+        $error = $spans[0]->getError();
+        if ($verification === 'verified') {
+            $this->assertNull($error);
+        } else {
+            $this->assertInstanceOf(\RuntimeException::class, $error);
+            $this->assertStringStartsWith('Permission verification', $error->getMessage());
+        }
     }
 
     /** Open and index a connection as $userId, then seed its store subscriptions to $topics. */
@@ -339,6 +348,7 @@ final class HandlerTest extends TestCase
             $this->assertSame(['verified', 'verified'], \array_map(fn (Span $span) => $span->get('mqtt.verification'), $revokes));
             $this->assertSame([1, 0], \array_map(fn (Span $span) => $span->get('mqtt.disconnected'), $revokes));
             $this->assertSame([Level::Info->value, Level::Info->value], \array_map(fn (Span $span) => $span->get('level'), $revokes));
+            $this->assertSame([null, null], \array_map(fn (Span $span) => $span->getError(), $revokes));
         });
     }
 
