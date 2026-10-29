@@ -548,15 +548,20 @@ class Handler implements MqttHandler
     {
         $this->accessClock->set($projectId, $userId);
 
-        $connections = $this->connectionsOf($projectId, $userId);
         $reason = (new Exception(Exception::USER_UNAUTHORIZED))->getMessage();
 
-        foreach ($connections as $connection) {
+        $disconnected = 0;
+        foreach ($this->connectionsOf($projectId, $userId) as $connection) {
+            // As in revoke(): a reused fd is never torn down.
+            if (!$this->tracked($projectId, $userId, $connection)) {
+                continue;
+            }
             $this->untrack($connection);
             $connection->disconnect(Disconnect::NOT_AUTHORIZED, $reason);
+            $disconnected++;
         }
 
-        return \count($connections);
+        return $disconnected;
     }
 
     /**
@@ -611,13 +616,17 @@ class Handler implements MqttHandler
      */
     public function drop(Server $server, string $projectId, string $userId, string $topic): int
     {
-        $connections = $this->connectionsOf($projectId, $userId);
-
-        foreach ($connections as $connection) {
+        $dropped = 0;
+        foreach ($this->connectionsOf($projectId, $userId) as $connection) {
+            // As in unsubscribe(): a reused fd never loses another connection's subscription.
+            if (!$this->tracked($projectId, $userId, $connection)) {
+                continue;
+            }
             $server->unsubscribe($topic, $connection->fd);
+            $dropped++;
         }
 
-        return \count($connections);
+        return $dropped;
     }
 
     /** @param array<string, mixed> $identity */
