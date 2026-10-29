@@ -564,7 +564,9 @@
     }
   },
   "waivers": {},
-  "tests_waived": {},
+  "tests_waived": {
+    "packages/servers/tests/BaseTest.php": "pins that only a default the hook registered is called, never a request value that happens to be a PHP callable (e0bfa9bf4bb); in Rust a param default is a Default::Value or a factory registered on the Hook, and request values are data that cannot be invoked, so the behaviour holds by construction. Exercising it would need Base::getArguments, protected in PHP and reached only through the test's own Server subclass"
+  },
   "quirks": [],
   "deviations": [
     {

@@ -548,3 +548,168 @@ pub fn query_value(value: Option<&Value>) -> utopia_query::Value {
 pub fn sequence_text(document: &Document) -> String {
     document.sequence().map(to_text).unwrap_or_default()
 }
+
+impl User {
+    /// `User::revokeCredentials($dbForProject, $user, $project, $proven)`: every
+    /// way into the account but the address just proven revoked (password,
+    /// sessions, tokens, MFA factors, passkeys, identities, the console's
+    /// account keys, the other address and every target not on the proven
+    /// channel) in one transaction, and mirrored on `user`. For the verified
+    /// owner of an address claiming an account that was registered with it and
+    /// never verified, so nobody else keeps access. `proven` is the channel of
+    /// the proven address: `email` (`MESSAGE_TYPE_EMAIL`) or `sms`.
+    pub async fn revoke_credentials(&mut self, db: &Database, console: bool, proven: &str) -> Result<()> {
+        let user = self;
+        if user.sequence == 0 || user.status == Some(false) {
+            return Ok(());
+        }
+        let sms = proven == "sms";
+        let hash = utopia_auth::hashes::Argon2::new();
+        let mut attributes = Document::default();
+        attributes.put("password", Value::Null);
+        attributes.put("hash", Value::from(utopia_auth::Hash::name(&hash)));
+        attributes.put(
+            "hashOptions",
+            utopia_database::value::from_plain(php_std::Value::Array(
+                utopia_auth::Hash::options(&hash).as_array().clone(),
+            )),
+        );
+        attributes.put("passwordHistory", Value::Array(Default::default()));
+        attributes.put("passwordUpdate", Value::Null);
+        attributes.put("passwordPwned", Value::Null);
+        attributes.put("mfa", Value::Bool(false));
+        attributes.put("mfaRecoveryCodes", Value::Array(Default::default()));
+        // The address that was not proven belongs to whoever registered the account.
+        if sms {
+            attributes.put("email", Value::Null);
+            attributes.put("emailVerification", Value::Bool(false));
+            attributes.put("emailCanonical", Value::Null);
+            attributes.put("emailIsCanonical", Value::Null);
+            attributes.put("emailIsCorporate", Value::Null);
+            attributes.put("emailIsDisposable", Value::Null);
+            attributes.put("emailIsFree", Value::Null);
+        } else {
+            attributes.put("phone", Value::Null);
+            attributes.put("phoneVerification", Value::Bool(false));
+        }
+
+        let sequence = user.sequence.to_string();
+        let proven = proven.to_owned();
+        Box::pin(db.with_transaction(|| {
+            let db = db.clone();
+            let id = user.id.clone();
+            let sequence = sequence.clone();
+            let attributes = attributes.clone();
+            let proven = proven.clone();
+            async move {
+                for collection in ["sessions", "tokens", "challenges", "authenticators", "identities"] {
+                    db.delete_documents(
+                        collection,
+                        vec![utopia_database::Query::equal("userInternalId", [sequence.as_str()])],
+                        utopia_database::database::BATCH_SIZE,
+                        None,
+                    )
+                    .await?;
+                }
+                if console {
+                    db.delete_documents(
+                        "keys",
+                        vec![
+                            utopia_database::Query::equal("resourceType", ["users"]),
+                            utopia_database::Query::equal("resourceInternalId", [sequence.as_str()]),
+                        ],
+                        utopia_database::database::BATCH_SIZE,
+                        None,
+                    )
+                    .await?;
+                }
+                Box::pin(crate::database::targets::delete(
+                    &db,
+                    vec![
+                        utopia_database::Query::equal("userInternalId", [sequence.as_str()]),
+                        utopia_database::Query::not_equal("providerType", proven.as_str()),
+                    ],
+                ))
+                .await
+                .map_err(|e| utopia_database::Error::new(utopia_database::Kind::Exception, e.message.into_owned()))?;
+                db.update_document("users", &id, attributes).await?;
+                Ok(())
+            }
+        }))
+        .await?;
+
+        user.password = None;
+        user.hash = attributes.string("hash");
+        user.hash_options = attributes.json("hashOptions");
+        user.password_history.clear();
+        user.password_update = None;
+        user.password_pwned = None;
+        if sms {
+            user.email = None;
+            user.email_verification = Some(false);
+            user.email_canonical = None;
+            user.email_is_canonical = None;
+            user.email_is_corporate = None;
+            user.email_is_disposable = None;
+            user.email_is_free = None;
+        } else {
+            user.phone = None;
+            user.phone_verification = Some(false);
+        }
+        user.mfa = Some(false);
+        user.mfa_recovery_codes.clear();
+        user.sessions.clear();
+        user.authenticators.clear();
+        user.targets.clear();
+        Ok(())
+    }
+
+    /// The proofs bound to the address a user just moved off (`channel`:
+    /// `email` or `phone`): its tokens and MFA challenges are deleted, and
+    /// pending invites, sent to the old address, can no longer prove the new
+    /// one (their secret is voided). Run under the user's row lock, when the
+    /// locked address differs from the new one.
+    pub async fn void_address_proofs(db: &Database, sequence: i64, channel: &str) -> utopia_database::Result<()> {
+        if sequence == 0 {
+            return Ok(());
+        }
+        let sequence = sequence.to_string();
+        // `TOKEN_TYPE_*`: recovery, recovery OTP, verification, verification
+        // OTP, magic URL and email OTP; or phone.
+        let tokens: &[i64] = if channel == "phone" { &[6] } else { &[3, 11, 2, 10, 5, 9] };
+        db.delete_documents(
+            "tokens",
+            vec![
+                utopia_database::Query::equal("userInternalId", [sequence.as_str()]),
+                utopia_database::Query::equal("type", tokens),
+            ],
+            utopia_database::database::BATCH_SIZE,
+            None,
+        )
+        .await?;
+        db.delete_documents(
+            "challenges",
+            vec![
+                utopia_database::Query::equal("userInternalId", [sequence.as_str()]),
+                utopia_database::Query::equal("type", [channel]),
+            ],
+            utopia_database::database::BATCH_SIZE,
+            None,
+        )
+        .await?;
+        let mut voided = Document::default();
+        voided.put("secret", Value::from(""));
+        db.update_documents(
+            "memberships",
+            voided,
+            vec![
+                utopia_database::Query::equal("userInternalId", [sequence.as_str()]),
+                utopia_database::Query::equal("confirm", [false]),
+            ],
+            utopia_database::database::BATCH_SIZE,
+            None,
+        )
+        .await?;
+        Ok(())
+    }
+}

@@ -1,6 +1,8 @@
 //! The nodes of the syntax tree.
 
+use super::Grammar;
 use crate::enums::{NullsPosition, OrderDirection};
+use crate::error::{Error, Result};
 use crate::value::Value;
 
 /// An expression: a column, a literal, an operation, a function call, a
@@ -123,11 +125,23 @@ pub struct Func {
 }
 
 impl Func {
-    /// A call of `name` with `arguments`.
+    /// A call of `name` with `arguments`, `DISTINCT` when `distinct`, and an
+    /// optional `FILTER (WHERE ...)` condition.
     ///
-    /// PHP: `new Func($name, $arguments)`.
-    pub fn new(name: impl Into<String>, arguments: Vec<Expression>) -> Self {
-        Func { name: name.into(), arguments, distinct: false, filter: None }
+    /// Fails when `name` is not a bare identifier ([`Grammar::is_identifier`]).
+    ///
+    /// PHP: `new Func($name, $arguments, $distinct, $filter)`.
+    pub fn new(
+        name: impl Into<String>,
+        arguments: Vec<Expression>,
+        distinct: bool,
+        filter: Option<Expression>,
+    ) -> Result<Self> {
+        let name = name.into();
+        if !Grammar::is_identifier(&name) {
+            return Err(Error::Validation(format!("Invalid function name: {name}")));
+        }
+        Ok(Func { name, arguments, distinct, filter: filter.map(Box::new) })
     }
 }
 
@@ -238,9 +252,15 @@ pub struct Cast {
 impl Cast {
     /// `CAST(expression AS data_type)`.
     ///
+    /// Fails when `data_type` is not a type name ([`Grammar::is_type`]).
+    ///
     /// PHP: `new Cast($expression, $type)`.
-    pub fn new(expression: impl Into<Expression>, data_type: impl Into<String>) -> Self {
-        Cast { expression: boxed(expression), data_type: data_type.into() }
+    pub fn new(expression: impl Into<Expression>, data_type: impl Into<String>) -> Result<Self> {
+        let data_type = data_type.into();
+        if !Grammar::is_type(&data_type) {
+            return Err(Error::Validation(format!("Invalid cast type: {data_type}")));
+        }
+        Ok(Cast { expression: boxed(expression), data_type })
     }
 }
 

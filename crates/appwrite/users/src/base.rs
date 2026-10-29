@@ -68,7 +68,7 @@ pub const SESSIONS: &str = "subQuerySessions";
 pub const AUTHENTICATORS: &str = "subQueryAuthenticators";
 
 /// The user sub-query filters (`APP_USERS_SUBQUERIES`) other than `keep`.
-fn skipped(keep: &[&str]) -> Vec<String> {
+pub(crate) fn skipped(keep: &[&str]) -> Vec<String> {
     filters::USERS_SUBQUERIES.iter().filter(|f| !keep.contains(f)).map(|f| (*f).to_owned()).collect()
 }
 
@@ -311,6 +311,12 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
             Some(&name),
             input.phone.as_deref(),
             true,
+            // Hashed imports cannot be checked against the deny list.
+            &if input.hash.name() == "plaintext" {
+                ctx.project.auth_strings("personalDataDenyList")
+            } else {
+                Vec::new()
+            },
         )
     {
         return Err(Error::new(ErrorType::UserPasswordPersonalData));

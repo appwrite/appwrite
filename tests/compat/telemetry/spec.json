@@ -149,7 +149,7 @@
       ]
     },
     "transport.exchange": {
-      "doc": "a scripted local collector ({status, body, delay_ms} | {reset} | {hang_ms} per request) and a transport sending `sends` to it, in order or `concurrent`: {results, requests: [{payload, headers}]}",
+      "doc": "a scripted local collector ({status, body, delay_ms} | {reset} | {hang_ms} per request) and a transport sending `sends` to it, in order or `concurrent`: {results, requests: [{payload, headers}]}; with `tls` (a certificate of tests/compat/telemetry/certs) over HTTPS, `{restart: <certificate>}` in `sends` restarts it on the same port, and `strays` lists its HEAD requests",
       "covers": [
         "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\Transport\\Swoole::send"
       ]

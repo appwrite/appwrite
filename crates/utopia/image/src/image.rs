@@ -73,9 +73,14 @@ impl Image {
     /// reads its EXIF orientation (3, 6 and 8 rotate the image when it is
     /// written; mirrored orientations are ignored).
     ///
+    /// The format is read from the signature first ([`Format::detect`]):
+    /// anything but JPEG, PNG, GIF, WebP, AVIF and HEIC fails with
+    /// [`Error::UnsupportedFormat`] before a decoder sees it.
+    ///
     /// PHP: `new Image($data)`.
     pub fn new(data: &[u8]) -> Result<Image> {
-        let frames = decode::decode(data)?;
+        // Only decoders for the detected format ever see the data.
+        let frames = decode::decode(data, Format::detect(data)?)?;
         let rotation = match decode::orientation(data) {
             Some(3) => 180,
             Some(6) => 90,
@@ -145,15 +150,14 @@ impl Image {
             return Ok(self);
         }
         let original_aspect = div(self.width as f64, self.height as f64)?;
-        if width == 0 {
-            width = intval(height as f64 * original_aspect);
-        }
-        if height == 0 {
-            height = intval(div(width as f64, original_aspect)?);
-        }
-        if height == 0 && width == 0 {
+        // A derived side rounds down, so a 1px side on a skewed source must not collapse to 0.
+        if width == 0 && height == 0 {
             height = self.height;
             width = self.width;
+        } else if width == 0 {
+            width = intval(height as f64 * original_aspect).max(1);
+        } else if height == 0 {
+            height = intval(div(width as f64, original_aspect)?).max(1);
         }
         let (mut resize_width, mut resize_height) = (self.width, self.height);
         if !center {
@@ -222,7 +226,7 @@ impl Image {
         if rect_w < bw || rect_h < bw {
             // ImageMagick refuses a rectangle whose end comes before its start.
             return Err(Error::imagick(
-                "non-conforming drawing primitive definition `roundrectangle' @ error/draw.c/RenderMVGContent/4661",
+                "non-conforming drawing primitive definition `roundrectangle' @ error/draw.c/RenderMVGContent/4708",
             ));
         }
         let shape =

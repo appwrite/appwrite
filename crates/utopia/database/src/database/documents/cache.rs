@@ -23,6 +23,10 @@ use crate::permission::PermissionType;
 use crate::validator::authorization::Input;
 use crate::value::{Array, ArrayKey, Ext, Str, Value, from_plain, to_plain};
 
+/// How many times a write tries to register as an owner of a collection's
+/// document cache (`DOCUMENT_CACHE_REGISTRATION_ATTEMPTS`).
+const DOCUMENT_CACHE_REGISTRATION_ATTEMPTS: usize = 2;
+
 /// A `RuntimeException`.
 fn runtime(message: String) -> Error {
     Error::new(Kind::Runtime, message)
@@ -62,6 +66,42 @@ impl Database {
         Ok(())
     }
 
+    /// Invalidates a collection's cached documents after a schema change
+    /// committed (`purgeCommittedCollection()`). The write to its definition
+    /// already retired them before the commit, so a failure here leaves
+    /// nothing stale and is not the caller's: it is logged.
+    pub(crate) async fn purge_committed_collection(&self, collection: &str) -> Result<()> {
+        if collection == METADATA {
+            return self.with_retries(|| self.purge_cached_collection(collection), 3, 100).await;
+        }
+        let (collection_key, _) = self.cache_base_keys(collection, None).await?;
+        let definition_key = self.definition_cache_key(collection).await?;
+        let advanced = self
+            .with_retries(
+                || async { self.advance_document_cache_epoch(&collection_key, &definition_key).await.map(|_| ()) },
+                3,
+                100,
+            )
+            .await;
+        if let Err(error) = advanced {
+            warning(format!(
+                "Warning: Failed to invalidate the cached documents of '{collection}' after its schema change: {}",
+                error.message()
+            ));
+        }
+        self.with_retries(
+            || async {
+                if let Some(query_cache) = self.query_cache() {
+                    query_cache.invalidate_collection(&self.query_cache_scope(None).await, collection).await?;
+                }
+                Ok(())
+            },
+            3,
+            100,
+        )
+        .await
+    }
+
     /// Purges a document's cache slot, and once more after the open
     /// invalidation scope ends (`purgeCachedDocumentInternal()`).
     pub(crate) async fn purge_cached_document_internal(&self, collection: &str, id: Option<&str>) -> Result<bool> {
@@ -72,19 +112,56 @@ impl Database {
         if let Some(context) = self.context() {
             let definition_key =
                 if collection != METADATA { Some(self.definition_cache_key(collection).await?) } else { None };
-            let mut state = context.state();
-            ContextState::put(&mut state.document_cache_purges, document_key.clone(), collection_key.clone());
-            if let Some(definition_key) = definition_key {
-                ContextState::put(&mut state.document_cache_definitions, collection_key, definition_key);
+            {
+                let mut state = context.state();
+                ContextState::put(&mut state.document_cache_purges, document_key.clone(), collection_key.clone());
+                if let Some(definition_key) = definition_key {
+                    ContextState::put(&mut state.document_cache_definitions, collection_key.clone(), definition_key);
+                }
+                if let Some(writes) = state.transaction_writes.as_mut() {
+                    let lower = document_key.to_lowercase();
+                    writes.insert(lower.clone());
+                    state.transaction_definitions.remove(&lower);
+                    state.definition_refills.retain(|(k, _, _)| *k != lower);
+                }
             }
-            if let Some(writes) = state.transaction_writes.as_mut() {
-                let lower = document_key.to_lowercase();
-                writes.insert(lower.clone());
-                state.transaction_definitions.remove(&lower);
-                state.definition_refills.retain(|(k, _, _)| *k != lower);
+            // A definition written inside an invalidation scope retires the
+            // collection's cached documents with it, so a reader cannot fill
+            // them under the old definition before the scope ends.
+            if collection == METADATA && id != METADATA {
+                let (described_key, _) = self.cache_base_keys(id, None).await?;
+                self.advance_document_cache_epoch(&described_key, &document_key).await?;
             }
         }
-        self.cache().purge(&document_key, "").await?;
+        // A write whose purge cannot be confirmed blocks its collection's
+        // epoch instead, before it commits, so the document cached before it
+        // is never served again; only when that fails too is the write
+        // refused (8.3.14).
+        let context = self.context();
+        let scoped = collection != METADATA && context.is_some();
+        let blocked = scoped
+            && context
+                .is_some_and(|c| ContextState::get(&c.state().document_cache_mutations, &collection_key).is_some());
+        let purged = if blocked {
+            self.cache().purge(&document_key, "").await.map(|_| ()).map_err(Error::from)
+        } else {
+            self.with_retries(
+                || async {
+                    self.cache().purge(&document_key, "").await?;
+                    Ok(())
+                },
+                3,
+                100,
+            )
+            .await
+        };
+        if let Err(error) = purged {
+            if !scoped {
+                return Err(error);
+            }
+            let definition_key = self.definition_cache_key(collection).await?;
+            self.advance_document_cache_epoch(&collection_key, &definition_key).await?;
+        }
         Ok(true)
     }
 
@@ -129,7 +206,9 @@ impl Database {
     /// A reader outside the transaction may have cached the pre-commit row
     /// after the purge inside it, so when this purge fails the collection's
     /// epoch is retired, which no such fill survives. A collection
-    /// definition has no epoch of its own: its purge is tried once more.
+    /// definition has no epoch of its own, so its failed purge is the one
+    /// returned. Purges are retried until one fails; after that the cache is
+    /// taken as unreachable and each is tried once.
     pub(crate) async fn purge_written_documents(
         &self,
         documents: &[(String, String)],
@@ -138,22 +217,36 @@ impl Database {
         if documents.is_empty() {
             return Ok(());
         }
-        let cache = self.cache();
         let mut failure: Option<Error> = None;
         let mut retired: Vec<&str> = Vec::new();
+        let mut reachable = true;
         for (document_key, collection_key) in documents {
-            if let Err(e) = cache.purge(document_key, "").await {
-                failure.get_or_insert(e.into());
-                // The purge failure below reaches the caller either way.
-                match ContextState::get(definitions, collection_key) {
-                    None => {
-                        let _ = cache.purge(document_key, "").await;
-                    }
-                    Some(definition_key) if !retired.contains(&collection_key.as_str()) => {
-                        retired.push(collection_key);
-                        let _ = self.advance_document_cache_epoch(collection_key, definition_key).await;
-                    }
-                    Some(_) => {}
+            if retired.contains(&collection_key.as_str()) {
+                continue;
+            }
+            let purged = if reachable {
+                self.with_retries(
+                    || async {
+                        self.cache().purge(document_key, "").await?;
+                        Ok(())
+                    },
+                    3,
+                    100,
+                )
+                .await
+            } else {
+                self.cache().purge(document_key, "").await.map(|_| ()).map_err(Error::from)
+            };
+            let Err(error) = purged else { continue };
+            reachable = false;
+            let Some(definition_key) = ContextState::get(definitions, collection_key) else {
+                failure.get_or_insert(error);
+                continue;
+            };
+            match self.advance_document_cache_epoch(collection_key, definition_key).await {
+                Ok(_) => retired.push(collection_key),
+                Err(_) => {
+                    failure.get_or_insert(error);
                 }
             }
         }
@@ -193,8 +286,13 @@ impl Database {
 
     /// Publishes a tombstone before the write, then drops the definition
     /// that carried the previous epoch, so readers refill it with the
-    /// tombstone (`blockDocumentCacheEpoch()`). `false` when the owner
-    /// cannot be registered on a cache that holds no epoch.
+    /// tombstone (`blockDocumentCacheEpoch()`). A write whose registration
+    /// keeps failing still blocks with its tombstone: its activation
+    /// finishes it while the tombstone is its own, and otherwise retires
+    /// whatever readers filled while it ran. An epoch that cannot be read is
+    /// purged all the same, so a cache that cannot confirm the purge fails
+    /// the write; `false` when the cache holds no epoch Each step is retried
+    /// first, so a blip shorter than the retries does not cost the write.
     async fn block_document_cache_epoch(
         &self,
         collection_key: &str,
@@ -203,18 +301,65 @@ impl Database {
     ) -> Result<bool> {
         let cache = self.cache();
         let epoch_key = format!("{collection_key}#epoch");
-        if !Owners::new(cache.clone()).register(collection_key, token).await? {
-            if missing(&cache.load(&epoch_key, PERMANENT, "").await?) {
-                return Ok(false);
+        if !self.register_document_cache_owner(collection_key, token).await?
+            && missing(&cache.load(&epoch_key, PERMANENT, "").await?)
+        {
+            self.with_retries(
+                || async {
+                    cache.purge(&epoch_key, "").await?;
+                    Ok(())
+                },
+                3,
+                100,
+            )
+            .await?;
+            return Ok(false);
+        }
+        self.with_retries(
+            || async {
+                let tombstone = format!("{BLOCKED_PREFIX}{token}{SEPARATOR}{}", php_std::datetime::time());
+                if !cache.save(&epoch_key, &text(&tombstone), "", 0).await? {
+                    return Err(runtime(format!("Failed to block document cache epoch '{epoch_key}'")));
+                }
+                Ok(())
+            },
+            3,
+            100,
+        )
+        .await?;
+        let started_key = format!("{collection_key}#started");
+        self.with_retries(
+            || async {
+                cache.purge(&started_key, "").await?;
+                Ok(())
+            },
+            3,
+            100,
+        )
+        .await?;
+        self.with_retries(
+            || async {
+                self.purge_cached_definition(definition_key).await?;
+                Ok(())
+            },
+            3,
+            100,
+        )
+        .await?;
+        Ok(true)
+    }
+
+    /// Registers a write as an owner of a collection's document cache,
+    /// trying [`DOCUMENT_CACHE_REGISTRATION_ATTEMPTS`] times
+    /// (`registerDocumentCacheOwner()`).
+    async fn register_document_cache_owner(&self, collection_key: &str, token: &str) -> Result<bool> {
+        let owners = Owners::new(self.cache());
+        for _ in 0..DOCUMENT_CACHE_REGISTRATION_ATTEMPTS {
+            if owners.register(collection_key, token).await? {
+                return Ok(true);
             }
-            return Err(runtime(format!("Failed to register document cache owner '{token}' for '{collection_key}'")));
         }
-        let tombstone = format!("{BLOCKED_PREFIX}{token}{SEPARATOR}{}", php_std::datetime::time());
-        if !cache.save(&epoch_key, &text(&tombstone), "", 0).await? {
-            return Err(runtime(format!("Failed to block document cache epoch '{epoch_key}'")));
-        }
-        cache.purge(&format!("{collection_key}#started"), "").await?;
-        self.purge_cached_definition(definition_key).await
+        Ok(false)
     }
 
     /// `purgeCachedDefinition()`.
@@ -261,16 +406,8 @@ impl Database {
         if !missing(&owner) && !is_token(&owner) {
             return Err(runtime(format!("Invalid document cache owner '{token}' for '{collection_key}'")));
         }
-        let mut owned = is_token(&owner);
-        if owned && !cache.purge(&registration.key, &registration.field).await? {
-            let owner = cache.load(&registration.key, TTL, &registration.field).await?;
-            if !missing(&owner) {
-                return Err(runtime(format!(
-                    "Failed to release document cache owner '{token}' for '{collection_key}'"
-                )));
-            }
-            owned = false;
-        }
+        let owned = is_token(&owner)
+            && self.release_document_cache_owner(&registration.key, &registration.field, collection_key, token).await?;
 
         let started_key = format!("{collection_key}#started");
         let finished_key = format!("{collection_key}#finished");
@@ -300,15 +437,7 @@ impl Database {
             return Ok(());
         }
 
-        cache.purge(&finished_key, "").await?;
-        let next_finished = cache.generation(&finished_key).await?;
-
-        // A cache flush restarts generations, so an unchanged #finished only
-        // proves this purge was lost while the epoch read with it is still
-        // in place; publish the new epoch after this check, not before.
-        if next_finished == finished && epoch.is_some() && cache.load(&epoch_key, PERMANENT, "").await? == loaded {
-            return Err(runtime(format!("Failed to finish document cache invalidation '{epoch_key}'")));
-        }
+        let next_finished = self.finish_document_cache_write(collection_key, &finished, &loaded).await?;
 
         let next_started = cache.generation(&started_key).await?;
         if next_started == next_finished {
@@ -323,6 +452,84 @@ impl Database {
         Ok(())
     }
 
+    /// Releases this write's registration, and reports whether it was still
+    /// this write's to release; a purge that cannot be confirmed is retried
+    /// while the registration is still in place
+    /// (`releaseDocumentCacheOwner()`).
+    async fn release_document_cache_owner(
+        &self,
+        key: &str,
+        field: &str,
+        collection_key: &str,
+        token: &str,
+    ) -> Result<bool> {
+        let cache = self.cache();
+        let released = std::sync::atomic::AtomicBool::new(true);
+        self.with_retries(
+            || async {
+                if cache.purge(key, field).await? {
+                    return Ok(());
+                }
+                let owner = cache.load(key, TTL, field).await?;
+                if !missing(&owner) {
+                    return Err(runtime(format!(
+                        "Failed to release document cache owner '{token}' for '{collection_key}'"
+                    )));
+                }
+                released.store(false, std::sync::atomic::Ordering::Relaxed);
+                Ok(())
+            },
+            3,
+            100,
+        )
+        .await?;
+        Ok(released.into_inner())
+    }
+
+    /// Counts this write as finished and returns the `#finished` generation
+    /// after it (`finishDocumentCacheWrite()`). A cache flush restarts
+    /// generations, so an unchanged `#finished` only proves the purge was
+    /// lost while the epoch read with it is still in place; the purge is
+    /// retried only then, so a purge that did land is never counted twice.
+    async fn finish_document_cache_write(
+        &self,
+        collection_key: &str,
+        finished: &str,
+        loaded: &Option<php_std::Value>,
+    ) -> Result<String> {
+        let cache = self.cache();
+        let finished_key = format!("{collection_key}#finished");
+        let epoch_key = format!("{collection_key}#epoch");
+        let next = std::sync::Mutex::new(finished.to_owned());
+        let attempted = std::sync::atomic::AtomicBool::new(false);
+        self.with_retries(
+            || async {
+                if attempted.load(std::sync::atomic::Ordering::Relaxed) {
+                    let generation = cache.generation(&finished_key).await?;
+                    *next.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = generation;
+                }
+                let unchanged = *next.lock().unwrap_or_else(std::sync::PoisonError::into_inner) == finished;
+                if unchanged {
+                    attempted.store(true, std::sync::atomic::Ordering::Relaxed);
+                    cache.purge(&finished_key, "").await?;
+                }
+                let generation = cache.generation(&finished_key).await?;
+                *next.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = generation.clone();
+                if generation == finished
+                    && string(loaded).is_some()
+                    && cache.load(&epoch_key, PERMANENT, "").await? == *loaded
+                {
+                    return Err(runtime(format!("Failed to finish document cache invalidation '{epoch_key}'")));
+                }
+                Ok(())
+            },
+            3,
+            100,
+        )
+        .await?;
+        Ok(next.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner))
+    }
+
     /// Publishes a fresh epoch carrying the started generation
     /// (`publishDocumentCacheEpoch()`): until the next write starts, it is
     /// current even while writes judged abandoned still count as unfinished.
@@ -334,11 +541,26 @@ impl Database {
     ) -> Result<()> {
         let epoch_key = format!("{collection_key}#epoch");
         let epoch = format!("{ACTIVE_PREFIX}{}{SEPARATOR}{started}", random_hex());
-        if !self.cache().save(&epoch_key, &text(&epoch), "", 0).await? {
-            return Err(runtime(format!("Failed to activate document cache epoch '{epoch_key}'")));
-        }
-        self.purge_cached_definition(definition_key).await?;
-        Ok(())
+        self.with_retries(
+            || async {
+                if !self.cache().save(&epoch_key, &text(&epoch), "", 0).await? {
+                    return Err(runtime(format!("Failed to activate document cache epoch '{epoch_key}'")));
+                }
+                Ok(())
+            },
+            3,
+            100,
+        )
+        .await?;
+        self.with_retries(
+            || async {
+                self.purge_cached_definition(definition_key).await?;
+                Ok(())
+            },
+            3,
+            100,
+        )
+        .await
     }
 
     /// Releases every other writer still registered when all of them are

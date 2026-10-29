@@ -24,6 +24,7 @@ use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Exception\SmtpException;
 use Utopia\SMTP\Exception\TimeoutException;
 use Utopia\SMTP\Exception\TransactionException;
+use Utopia\SMTP\Exception\UnconfirmedException;
 use Utopia\SMTP\Message;
 use Utopia\SMTP\Mime\Encoding;
 use Utopia\SMTP\Mime\Header;
@@ -442,6 +443,7 @@ final class Adapter implements Base, Benchmarks
             'authentication' => new AuthenticationException($a['message']),
             'capability' => new CapabilityException($a['message']),
             'message' => new MessageException($a['message']),
+            'unconfirmed' => new UnconfirmedException($a['message']),
             'transaction' => new TransactionException(
                 new Reply($a['reply']['code'], $a['reply']['lines']),
                 $a['message'] ?? '',

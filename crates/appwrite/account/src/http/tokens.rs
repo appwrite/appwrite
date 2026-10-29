@@ -6,6 +6,7 @@ use utopia_database::{Document, Query, Value};
 use utopia_http::Response;
 use utopia_validators::Boolean;
 
+use appwrite_core::auth::otp_token::OtpToken;
 use appwrite_core::database::documents::{self, Token, User};
 use appwrite_core::datetime;
 use appwrite_core::platform::{Audit, Context, Labels, Route};
@@ -14,7 +15,7 @@ use appwrite_core::validators::{CustomId, Phone};
 use appwrite_core::{Error, ErrorType, Result};
 use utopia_emails::EmailValidator;
 
-use crate::base::{self, Mail, Metadata, PHP_ROOT, Template, token_type};
+use crate::base::{self, Mail, Metadata, PHP_ROOT, Template, profile, token_type};
 use crate::{GROUPS, GROUPS_AUTH, route};
 
 const AUDIT_SESSION: Option<Audit> = Some(Audit { event: "session.create", resource: "user/{response.userId}" });
@@ -149,14 +150,14 @@ fn token_created(ctx: &Context, token: &Token, secret: &str, phrase: &str) -> Re
     ctx.created(&TokenModel { token, secret: Some(secret), phrase, reveal: false, render: ctx.render() })
 }
 
-/// Stores a sign-in token for the user (with the user's role, as PHP adds it).
-async fn create_token(
-    ctx: &mut Context,
+/// A sign-in token of `kind` for the user.
+fn token_document(
+    ctx: &Context,
     user: &User,
     kind: i64,
     hash: &str,
     expire: &chrono::NaiveDateTime,
-) -> Result<Token> {
+) -> Result<Document> {
     let mut token = Document::default();
     token.put("$id", Value::from(appwrite_core::database::unique_id().as_str()));
     token.put("userId", Value::from(user.id.as_str()));
@@ -167,11 +168,48 @@ async fn create_token(
     token.put("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
     token.put("ip", Value::from(ctx.ip.as_str()));
     token.set("$permissions", base::owner_permissions(&user.id))?;
-    ctx.authorization.add_role(&format!("user:{}", user.id));
+    Ok(token)
+}
+
+/// Stores a sign-in token for the user, with authorization skipped.
+async fn create_token(
+    ctx: &mut Context,
+    user: &User,
+    kind: i64,
+    hash: &str,
+    expire: &chrono::NaiveDateTime,
+) -> Result<Token> {
+    let token = token_document(ctx, user, kind, hash, expire)?;
     let db = ctx.db()?;
-    let token = Token::from(&db.create_document("tokens", token).await?);
+    let token = Token::from(&db.authorization().skip(db.create_document("tokens", token)).await?);
     db.purge_cached_document("users", &user.id).await?;
     Ok(token)
+}
+
+/// Stores a sign-in token for the user while `email` is still its address
+/// (checked under the user's row lock), and whether it was: otherwise the
+/// token binds no one, is deleted at once and nothing is delivered.
+async fn create_email_token(
+    ctx: &mut Context,
+    user: &User,
+    email: &str,
+    kind: i64,
+    hash: &str,
+    expire: &chrono::NaiveDateTime,
+) -> Result<(Token, bool)> {
+    let token = token_document(ctx, user, kind, hash, expire)?;
+    let db = ctx.db()?;
+    let email = email.to_ascii_lowercase();
+    let created =
+        profile::create_bound_token(&db, &user.id, token.clone(), |current| profile::has_email(current, &email))
+            .await?;
+    match created {
+        Some(token) => {
+            db.purge_cached_document("users", &user.id).await?;
+            Ok((Token::from(&token), true))
+        }
+        None => Ok((Token::from(&profile::create_unbound_token(&db, token, true).await?), false)),
+    }
 }
 
 /// `$smtpBaseTemplate` (`FileName`-valid, else a bad request).
@@ -226,13 +264,13 @@ pub async fn magic_url(ctx: &mut Context) -> Result<Response> {
         base::set_default_hash(&mut user);
         user.put("mfa", Value::Bool(false));
         user.put("authenticators", Value::Null);
-        base::create_user(ctx, user).await?
+        base::insert_user(ctx, user).await?
     };
-    base::act_as(ctx, &user);
 
     let secret = base::token_secret(64)?;
     let expire = datetime::add_seconds(datetime::now(), base::EXPIRATION_CONFIRM);
-    let token = create_token(ctx, &user, token_type::MAGIC_URL, &base::token_hash(&secret)?, &expire).await?;
+    let hash = base::token_hash(&secret)?;
+    let (token, deliverable) = create_email_token(ctx, &user, &email, token_type::MAGIC_URL, &hash, &expire).await?;
 
     let url = if url.is_empty() { format!("{}/auth/magic-url", base::console_base(ctx)) } else { url };
     let expire_text = datetime::format_tz(&expire);
@@ -265,8 +303,9 @@ pub async fn magic_url(ctx: &mut Context) -> Result<Response> {
     base::agent_variables(ctx, &mut variables);
     variables.insert("phrase".into(), Json::String(phrase.clone()));
     variables.insert("team".into(), Json::String(String::new()));
-    Mail {
+    let mail = Mail {
         recipient: email,
+        headers: Map::new(),
         subject,
         template: "magic-url",
         body_template: String::new(),
@@ -279,9 +318,10 @@ pub async fn magic_url(ctx: &mut Context) -> Result<Response> {
         } else {
             Json::Array(Vec::new())
         },
+    };
+    if deliverable {
+        mail.send(ctx).await;
     }
-    .send(ctx)
-    .await;
 
     Ok(token_created(ctx, &token, &secret, &phrase))
 }
@@ -303,18 +343,18 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     } else {
         let mut user = email_sign_up(ctx, user_id, &email, ErrorType::GeneralBadRequest).await?;
         base::set_default_hash(&mut user);
-        let mut user = base::create_user(ctx, user).await?;
+        let mut user = base::insert_user(ctx, user).await?;
         if let Some(target) = base::create_target(ctx, &user, "email", &email).await? {
             user.targets.push(target);
         }
         ctx.db()?.purge_cached_document("users", &user.id).await?;
         user
     };
-    base::act_as(ctx, &user);
 
     let secret = base::code_secret();
     let expire = datetime::add_seconds(datetime::now(), base::EXPIRATION_OTP);
-    let token = create_token(ctx, &user, token_type::EMAIL, &base::token_hash(&secret)?, &expire).await?;
+    let hash = base::token_hash(&secret)?;
+    let (token, deliverable) = create_email_token(ctx, &user, &email, token_type::EMAIL, &hash, &expire).await?;
 
     let mut subject = ctx.text("emails.otpSession.subject", None);
     let preview = ctx.text("emails.otpSession.preview", None);
@@ -345,8 +385,9 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     if branded {
         base::branded_variables(ctx, &mut variables);
     }
-    Mail {
+    let mail = Mail {
         recipient: email,
+        headers: OtpToken::headers(&secret, ctx.request.header("origin").unwrap_or_default()),
         subject,
         template: "otp",
         body_template: format!("{PHP_ROOT}/app/controllers/api/../../config/locale/templates/{template}.tpl"),
@@ -359,9 +400,10 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
         } else {
             Json::Array(Vec::new())
         },
+    };
+    if deliverable {
+        mail.send(ctx).await;
     }
-    .send(ctx)
-    .await;
 
     Ok(token_created(ctx, &token, &secret, &phrase))
 }
@@ -388,14 +430,13 @@ pub async fn phone(ctx: &mut Context) -> Result<Response> {
         user.put("passwordUpdate", Value::Null);
         user.put("search", Value::from(format!("{user_id} {phone}").as_str()));
         Metadata::default().apply(&mut user);
-        let mut user = base::create_user(ctx, user).await?;
+        let mut user = base::insert_user(ctx, user).await?;
         if let Some(target) = base::create_target(ctx, &user, "sms", &phone).await? {
             user.targets.push(target);
         }
         ctx.db()?.purge_cached_document("users", &user.id).await?;
         user
     };
-    base::act_as(ctx, &user);
 
     // A mock number signs in with its fixed code, and no SMS is sent.
     let mock = ctx

@@ -76,6 +76,18 @@ pub enum Error {
     /// PHP: `NoScript`.
     #[error("{0}")]
     NoScript(String),
+    /// The cache could not confirm a purge: the circuit is open, or the
+    /// adapter failed it (`previous`). The entry may still be cached.
+    ///
+    /// PHP: `Utopia\Cache\Exception\Unavailable`, with the failure as
+    /// `getPrevious()`.
+    #[error("{message}")]
+    Unavailable {
+        /// The message.
+        message: String,
+        /// The adapter's failure, when it ran and failed.
+        previous: Option<Box<Error>>,
+    },
 }
 
 impl Error {
@@ -97,6 +109,18 @@ impl Error {
             Error::Engine(_) => "Error",
             Error::Type(_) => "TypeError",
             Error::NoScript(_) => "Utopia\\Cache\\Adapter\\Redis\\NoScript",
+            Error::Unavailable { .. } => "Utopia\\Cache\\Exception\\Unavailable",
+        }
+    }
+
+    /// The error this one wraps: the adapter failure behind an
+    /// [`Error::Unavailable`].
+    ///
+    /// PHP: `getPrevious()`.
+    pub fn previous(&self) -> Option<&Error> {
+        match self {
+            Error::Unavailable { previous: Some(previous), .. } => Some(previous),
+            _ => None,
         }
     }
 

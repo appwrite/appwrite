@@ -36,6 +36,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -101,6 +111,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -287,6 +307,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1390,6 +1420,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2006,6 +2046,7 @@
             "getDatabase": "",
             "getDatabaseName": "Shop",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "shop",
@@ -2054,6 +2095,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "<masked>",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "",
@@ -2063,6 +2105,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "orders",
@@ -2117,6 +2160,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "<masked>",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "",
@@ -2126,6 +2170,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "customers",
@@ -2179,6 +2224,7 @@
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "c1",
             "getMessage": "",
@@ -2188,7 +2234,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",

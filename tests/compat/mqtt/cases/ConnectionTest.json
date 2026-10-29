@@ -2122,6 +2122,392 @@
           ]
         }
       ]
+    },
+    {
+      "name": "testSecondConnectIsAProtocolErrorThatClosesTheConnection",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9
+          },
+          "expect": null
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 60,
+            "clean_start": true
+          },
+          "bind": "a",
+          "expect": "\u0010\u0015\u0000\u0004MQTT\u0005\u0002\u0000<\u0000\u0000\bclient-9"
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "client-other",
+            "keep_alive": 60,
+            "clean_start": true
+          },
+          "bind": "b",
+          "expect": "\u0010\u0019\u0000\u0004MQTT\u0005\u0002\u0000<\u0000\u0000\fclient-other"
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9,
+            "data": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9,
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [
+              [
+                9,
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                9,
+                {
+                  "$bytes": "4AKCAA=="
+                }
+              ]
+            ],
+            "closed": [
+              9
+            ],
+            "timer": [
+              [
+                "schedule",
+                9,
+                30
+              ],
+              [
+                "schedule",
+                9,
+                60
+              ],
+              [
+                "clear",
+                9
+              ]
+            ],
+            "log": [
+              [
+                "connect",
+                9,
+                5,
+                "client-9",
+                true,
+                60,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "client-9"
+              ],
+              [
+                "disconnect",
+                9,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                1,
+                -1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testSecondConnectOnA311ClientClosesWithoutADisconnectPacket",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9
+          },
+          "expect": null
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 60,
+            "clean_session": true
+          },
+          "bind": "a",
+          "expect": "\u0010\u0014\u0000\u0004MQTT\u0004\u0002\u0000<\u0000\bclient-9"
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 60,
+            "clean_session": true
+          },
+          "bind": "b",
+          "expect": "\u0010\u0014\u0000\u0004MQTT\u0004\u0002\u0000<\u0000\bclient-9"
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9,
+            "data": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9,
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [
+              [
+                9,
+                " \u0002\u0000\u0000"
+              ]
+            ],
+            "closed": [
+              9
+            ],
+            "timer": [
+              [
+                "schedule",
+                9,
+                30
+              ],
+              [
+                "schedule",
+                9,
+                60
+              ],
+              [
+                "clear",
+                9
+              ]
+            ],
+            "log": [
+              [
+                "connect",
+                9,
+                4,
+                "client-9",
+                true,
+                60,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "client-9"
+              ],
+              [
+                "disconnect",
+                9,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                1,
+                -1
+              ]
+            ]
+          ]
+        }
+      ]
     }
   ]
 }

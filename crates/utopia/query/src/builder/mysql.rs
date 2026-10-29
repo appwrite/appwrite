@@ -134,6 +134,13 @@ pub(crate) fn search_expression<D: Dialect>(
     if sanitized.is_empty() {
         return Ok(if not { "1 = 1" } else { "1 = 0" }.into());
     }
+    if exact {
+        let words = split_search_words(&term);
+        let indexed: Vec<&str> = words.iter().map(String::as_str).filter(|word| is_indexed_search_word(word)).collect();
+        if !indexed.is_empty() {
+            return Ok(exact_search_expression(b, attribute, &words, &indexed, not));
+        }
+    }
     let sanitized = if exact { format!("\"{sanitized}\"") } else { format!("{sanitized}*") };
     b.add_binding(value::string(sanitized), None);
     Ok(if not {
@@ -141,6 +148,73 @@ pub(crate) fn search_expression<D: Dialect>(
     } else {
         format!("MATCH({attribute}) AGAINST(? IN BOOLEAN MODE)")
     })
+}
+
+/// InnoDB's `innodb_ft_min_token_size`: shorter words are not indexed.
+///
+/// PHP: `MySQL::FULL_TEXT_MINIMUM_WORD_LENGTH`.
+const FULL_TEXT_MINIMUM_WORD_LENGTH: usize = 3;
+
+/// InnoDB's default full-text stopwords, which are not indexed.
+///
+/// PHP: `MySQL::FULL_TEXT_STOPWORDS`.
+const FULL_TEXT_STOPWORDS: &[&str] = &[
+    "a", "about", "an", "are", "as", "at", "be", "by", "com", "de", "en", "for", "from", "how", "i", "in", "is", "it",
+    "la", "of", "on", "or", "that", "the", "this", "to", "was", "what", "when", "where", "who", "will", "with", "und",
+    "www",
+];
+
+/// An exact search that requires every indexed word through the full-text
+/// index and checks the words' order against the stored value: InnoDB loses
+/// phrase matches for rows whose transactions commit out of document ID
+/// order (MySQL bug #110448, also present in MariaDB).
+///
+/// PHP: `MySQL::compileExactSearchExpression()` (private).
+fn exact_search_expression<D: Dialect>(
+    b: &mut Builder<D>,
+    attribute: &str,
+    words: &[String],
+    indexed: &[&str],
+    not: bool,
+) -> String {
+    const SEPARATOR: &str = "[^[:alnum:]_]";
+    b.add_binding(value::string(format!("+{}", indexed.join(" +"))), None);
+    b.add_binding(
+        value::string(format!("(^|{SEPARATOR}){}({SEPARATOR}|$)", words.join(&format!("{SEPARATOR}+")))),
+        None,
+    );
+    let expression = format!("MATCH({attribute}) AGAINST(? IN BOOLEAN MODE) AND {attribute} REGEXP ?");
+    if not { format!("NOT ({expression})") } else { format!("({expression})") }
+}
+
+/// The words of a search term: runs of letters, numbers, `_` and `'`, with
+/// the quotes trimmed off their ends.
+///
+/// PHP: `MySQL::splitSearchWords()` (private).
+fn split_search_words(term: &str) -> Vec<String> {
+    use php_std::pcre::{PREG_SPLIT_NO_EMPTY, Value as PcreValue, preg_split};
+    let PcreValue::Array(pieces) = preg_split(br"/[^\p{L}\p{N}_']+/u", term.as_bytes(), -1, PREG_SPLIT_NO_EMPTY).value
+    else {
+        return Vec::new();
+    };
+    pieces
+        .entries()
+        .iter()
+        .filter_map(|(_, piece)| match piece {
+            PcreValue::Str(piece) => Some(String::from_utf8_lossy(piece).trim_matches('\'').to_owned()),
+            _ => None,
+        })
+        .filter(|word| !word.is_empty())
+        .collect()
+}
+
+/// Whether InnoDB indexes `word`: long enough and not a stopword.
+///
+/// PHP: `MySQL::isIndexedSearchWord()` (private).
+fn is_indexed_search_word(word: &str) -> bool {
+    php_std::mb::mb_strlen(word.as_bytes()) >= FULL_TEXT_MINIMUM_WORD_LENGTH
+        && !FULL_TEXT_STOPWORDS
+            .contains(&String::from_utf8_lossy(&php_std::mb::mb_strtolower(word.as_bytes())).as_ref())
 }
 
 /// MySQL's `build()`: the group-by modifier and the hints.
@@ -292,7 +366,7 @@ pub(crate) fn spatial_distance<D: MySqlFamily>(
     attribute: &str,
     values: &Array,
 ) -> Result<String> {
-    let filter = sql::distance_filter(values, "Builder/MySQL.php", 432)?;
+    let filter = sql::distance_filter(values, "Builder/MySQL.php", 484)?;
     let wkt = wkt_of(&filter.geometry)?;
     let operator = distance_operator(method);
     b.add_binding(wkt, None);
@@ -314,7 +388,7 @@ pub(crate) fn spatial_predicate<D: MySqlFamily>(
     values: &Array,
     not: bool,
 ) -> Result<String> {
-    let wkt = sql::predicate_wkt(values, MYSQL_CLASS, "Builder/MySQL.php", 461)?;
+    let wkt = sql::predicate_wkt(values, MYSQL_CLASS, "Builder/MySQL.php", 513)?;
     b.add_binding(value::string(wkt), None);
     let expression = format!("{function}({attribute}, {})", D::geom_from_text(4326));
     Ok(if not { format!("NOT {expression}") } else { expression })

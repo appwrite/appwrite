@@ -25,7 +25,7 @@ impl Status {
 /// The result for one recipient.
 ///
 /// PHP: an entry of `Response::getDetails()`, `{recipient, status, error,
-/// permanent}`.
+/// permanent, code}`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Delivery {
     /// The recipient: an address, a phone number, a device token.
@@ -37,6 +37,9 @@ pub struct Delivery {
     /// Whether sending the same message again gets the same answer (an SMTP
     /// 5xx). Only a failure can be permanent.
     pub permanent: bool,
+    /// The provider's reply code behind the failure, such as an SMTP 535, or
+    /// 0 when it gave none. Always 0 on success.
+    pub code: i64,
 }
 
 /// The outcome of one send through one adapter.
@@ -103,10 +106,11 @@ impl Response {
 
     /// Adds the result for `recipient`: a success when `error` is empty (or
     /// `"0"`, which PHP's check also reads as empty, keeping it as the
-    /// error), a failure otherwise. `permanent` holds only for a failure.
+    /// error), a failure otherwise. `permanent` and `code` (the provider's
+    /// reply code, 0 when it gave none) hold only for a failure.
     ///
-    /// PHP: `addResult($recipient, $error, $permanent)`.
-    pub fn add_result(&mut self, recipient: impl Into<String>, error: impl Into<String>, permanent: bool) {
+    /// PHP: `addResult($recipient, $error, $permanent, $code)`.
+    pub fn add_result(&mut self, recipient: impl Into<String>, error: impl Into<String>, permanent: bool, code: i64) {
         let error = error.into();
         let failed = !(error.is_empty() || error == "0");
         self.results.push(Delivery {
@@ -114,17 +118,18 @@ impl Response {
             status: if failed { Status::Failure } else { Status::Success },
             error,
             permanent: failed && permanent,
+            code: if failed { code } else { 0 },
         });
     }
 
     /// Adds a success for `recipient`.
     pub fn add_success(&mut self, recipient: impl Into<String>) {
-        self.add_result(recipient, "", false);
+        self.add_result(recipient, "", false, 0);
     }
 
     /// Adds a failure (unless `error` is empty) that is worth retrying.
     pub fn add_failure(&mut self, recipient: impl Into<String>, error: impl Into<String>) {
-        self.add_result(recipient, error, false);
+        self.add_result(recipient, error, false, 0);
     }
 
     /// Adds a result as the provider reported it.

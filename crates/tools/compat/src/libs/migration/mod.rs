@@ -99,6 +99,9 @@ pub const OPS: &[&str] = &[
     "fs.put_fixture",
     "fs.get",
     "fs.exists",
+    "fs.mkdir",
+    "fs.symlink",
+    "fs.is_dir",
     "json_source.new",
     "csv_source.new",
     "csv.detect_delimiter",
@@ -139,6 +142,8 @@ pub const OPS: &[&str] = &[
     "nhost_source.new",
     "supabase_source.new",
     "nhost.status_code",
+    "nhost.database",
+    "supabase.database",
     "request_target.new",
     "resolver.new",
     "resolver.urls",
@@ -808,6 +813,11 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
             Err(_) => Outcome::Ok(Json::Null),
         },
         "fs.exists" => Outcome::Ok(Json::Bool(utopia_async::fs::metadata(a.str("path")?).await.is_ok())),
+        "fs.mkdir" => Outcome::Ok(Json::Bool(utopia_async::fs::create_dir_all(a.str("path")?).await.is_ok())),
+        "fs.symlink" => Outcome::Ok(Json::Bool(std::os::unix::fs::symlink(a.str("target")?, a.str("link")?).is_ok())),
+        "fs.is_dir" => {
+            Outcome::Ok(Json::Bool(utopia_async::fs::metadata(a.str("path")?).await.is_ok_and(|m| m.is_dir())))
+        }
 
         "json_source.new" => {
             let device: Arc<dyn Device> = Arc::new(Local::new(a.str("root")?));
@@ -872,10 +882,10 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 Err(e) => error(&e),
             }
         }
-        "local_destination.new" => {
-            let d = LocalDestination::new(a.str("path")?).await;
-            Outcome::Ok(s.handle(DestinationSlot::Owned(Box::new(d))))
-        }
+        "local_destination.new" => match LocalDestination::new(a.str("path")?).await {
+            Ok(d) => Outcome::Ok(s.handle(DestinationSlot::Owned(Box::new(d)))),
+            Err(e) => error(&e),
+        },
         "destination.import" => {
             let list = resources::resources(s, a.value("resources")?)?;
             let mut rec = Recorder::new(args.get("callback"));
@@ -1158,7 +1168,6 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
         }
         "appwrite_client.new" => {
             let mut client = utopia_migration::sdk::Client::new();
-            client.refuse_redirects();
             client.set_endpoint(&reach::endpoint(s, a.str("endpoint")?)?).map_err(|e| Fault::new(e.to_string()))?;
             Outcome::Ok(s.handle(client))
         }
@@ -1359,6 +1368,39 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
             let endpoint = format!("{}/p/{}", s.service("migration-api")?, a.str("project")?);
             match SupabaseSource::new(&endpoint, "test-key", &host, "postgres", "postgres", "postgres", &port).await {
                 Ok(source) => Outcome::Ok(s.handle(SourceSlot::Owned(Box::new(source)))),
+                Err(e) => error(&e),
+            }
+        }
+        "nhost.database" => {
+            let mut source = NHostSource::new(
+                a.str("subdomain")?,
+                a.str("region")?,
+                a.opt_str("adminSecret")?.unwrap_or("secret"),
+                a.str("database")?,
+                a.opt_str("username")?.unwrap_or("postgres"),
+                a.opt_str("password")?.unwrap_or("password"),
+                a.opt_str("port")?.unwrap_or("5432"),
+            );
+            if let Some(address) = a.opt_str("address")? {
+                source.set_database_address(address);
+            }
+            Outcome::Ok(json!({ "host": source.database_host(), "dsn": source.database_dsn() }))
+        }
+        "supabase.database" => {
+            let db = s.service("migration-supabase-db")?.to_owned();
+            let (host, port) = db.split_once(':').unwrap_or((db.as_str(), "5432"));
+            let endpoint = format!("{}/p/supabase", s.service("migration-api")?);
+            match SupabaseSource::new(&endpoint, "test-key", host, "postgres", "postgres", "postgres", port).await {
+                Ok(mut source) => {
+                    if let Some(address) = a.opt_str("address")? {
+                        source.set_database_address(address);
+                    }
+                    // The fixture's address differs per runtime.
+                    let fixture = |v: String| v.replace(host, "{host}").replace(&format!("port={port}"), "port={port}");
+                    Outcome::Ok(
+                        json!({ "host": fixture(source.database_host()), "dsn": fixture(source.database_dsn()) }),
+                    )
+                }
                 Err(e) => error(&e),
             }
         }

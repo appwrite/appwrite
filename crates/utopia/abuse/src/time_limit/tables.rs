@@ -57,6 +57,11 @@ pub const TABLE_ID: &str = "Abuse";
 /// The table whose presence marks a finished setup. PHP: `TablesDB::TABLE_LOCK`.
 pub const TABLE_LOCK: &str = "lock";
 
+/// The API error type of an increment past its maximum.
+///
+/// PHP: `TablesDB::LIMIT_EXCEEDED`.
+const LIMIT_EXCEEDED: &str = "column_limit_exceeded";
+
 /// One row of the `Abuse` table.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Row {
@@ -103,8 +108,9 @@ pub trait Tables: Send + Sync {
     fn find_row(&self, database: &str, key: &str, time: &str) -> impl Future<Output = Result<Option<Row>>> + Send;
     /// `createRow` with a unique id.
     fn create_row(&self, database: &str, key: &str, time: &str, count: i64) -> impl Future<Output = Result<()>> + Send;
-    /// `incrementRowColumn` of `count` by 1.
-    fn increment(&self, database: &str, id: &str) -> impl Future<Output = Result<()>> + Send;
+    /// `incrementRowColumn` of `count` by 1, up to `max` (the API refuses an
+    /// increment past it with `column_limit_exceeded`): the row after it.
+    fn increment(&self, database: &str, id: &str, max: Option<i64>) -> impl Future<Output = Result<Row>> + Send;
     /// `updateRow` of `count`.
     fn update_row(&self, database: &str, id: &str, count: i64) -> impl Future<Output = Result<()>> + Send;
     /// `listRows`, newest first, `limit` from `offset`.
@@ -208,7 +214,9 @@ impl<T: Tables> Store for TablesDb<T> {
     type Log = Row;
 
     /// Creates the window's row with a count of 1, or increments it unless
-    /// it has reached the limit.
+    /// it has reached the limit. The increment is bounded at the limit, so of
+    /// concurrent hits that read the same count only those that fit are
+    /// counted; one refused is reported at the limit.
     async fn hit(&self, key: &str, window: i64, rule: Rule) -> Result<i64> {
         let time = datetime(window);
         let Some(row) = self.find_or_create(key, &time, 1, "Document Not Found").await? else {
@@ -217,8 +225,11 @@ impl<T: Tables> Store for TablesDb<T> {
         if row.count >= rule.limit {
             return Ok(row.count);
         }
-        self.tables.increment(&self.database, &row.id).await?;
-        Ok(row.count)
+        match self.tables.increment(&self.database, &row.id, Some(rule.limit)).await {
+            Ok(row) => Ok(row.count - 1),
+            Err(Error::Appwrite { kind, .. }) if kind == LIMIT_EXCEEDED => Ok(rule.limit),
+            Err(e) => Err(e),
+        }
     }
 
     /// The window's count, `0` without a row.

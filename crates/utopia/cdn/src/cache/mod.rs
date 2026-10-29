@@ -5,12 +5,14 @@
 
 mod balancer;
 mod cloudflare;
+mod cloudfront;
 mod fastly;
 
 use std::sync::Arc;
 
 pub use balancer::Balancer;
 pub use cloudflare::Cloudflare;
+pub use cloudfront::CloudFront;
 pub use fastly::Fastly;
 
 use crate::{BoxFuture, Error, domain};

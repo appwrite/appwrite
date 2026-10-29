@@ -117,7 +117,7 @@ fn a_float_increase_past_the_maximum_is_refused() {
         refused(
             increase(&db, "ledger", "ratio", float(MAX_DOUBLE), None).await,
             Kind::Limit,
-            "Attribute value exceeds maximum limit: 1.7976931348623E+308",
+            "Attribute value exceeds maximum limit: 1.7976931348623157E+308",
         );
         assert_eq!(value(&db, LEDGERS, "ledger", "ratio").await, Some(float(MAX_DOUBLE)));
     });
@@ -137,7 +137,7 @@ fn a_float_decrease_past_the_minimum_is_refused() {
         refused(
             decrease(&db, "ledger", "ratio", float(MAX_DOUBLE), None).await,
             Kind::Limit,
-            "Attribute value exceeds minimum limit: -1.7976931348623E+308",
+            "Attribute value exceeds minimum limit: -1.7976931348623157E+308",
         );
         assert_eq!(value(&db, LEDGERS, "ledger", "share").await, Some(float(0.5)));
     });

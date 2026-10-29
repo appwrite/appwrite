@@ -11,7 +11,7 @@ use appwrite_core::database::documents::{self, Session, User};
 use appwrite_core::database::filters;
 use appwrite_core::datetime;
 use appwrite_core::platform::{Audit, Context, Labels, Route};
-use appwrite_core::response::{SessionListModel, SessionModel};
+use appwrite_core::response::{SESSION_SENSITIVE, SessionListModel, SessionModel};
 use appwrite_core::validators::{CustomId, Password, uid};
 use appwrite_core::{Error, ErrorType, Result};
 use utopia_emails::EmailValidator;
@@ -96,7 +96,7 @@ pub fn routes() -> Vec<Route> {
             GROUPS_AUTH_SESSION,
             Labels {
                 abuse_limit: 10,
-                abuse_key: &["url:{url},email:{param-email}"],
+                abuse_key: &["projectId:{projectId},url:{url},email:{param-email}"],
                 abuse_reset: &[201],
                 auth_type: "email-password",
                 ..Labels::NONE
@@ -115,7 +115,7 @@ pub fn routes() -> Vec<Route> {
             GROUPS_AUTH_SESSION,
             Labels {
                 abuse_limit: 10,
-                abuse_key: &["url:{url},email:{param-email}"],
+                abuse_key: &["projectId:{projectId},url:{url},email:{param-email}"],
                 abuse_reset: &[201],
                 auth_type: "email-password",
                 ..Labels::NONE
@@ -334,8 +334,9 @@ fn document_json(document: &Document) -> Json {
     utopia_database::value::to_plain(&Value::from(document.clone())).to_json()
 }
 
-/// `DELETE_TYPE_SESSION_TARGETS`: the targets of a deleted session.
-fn delete_targets(ctx: &mut Context, mut session: Document, current: bool, country: &str) {
+/// `DELETE_TYPE_SESSION_TARGETS`: the targets of a deleted session, queued
+/// now, as the action's publisher does (before the MQTT revoke).
+async fn delete_targets(ctx: &mut Context, mut session: Document, current: bool, country: &str) {
     session.put("current", Value::Bool(current));
     session.put("countryName", Value::from(country));
     let message = appwrite_core::event::delete_message(
@@ -343,7 +344,8 @@ fn delete_targets(ctx: &mut Context, mut session: Document, current: bool, count
         "session_targets",
         document_json(&session),
     );
-    ctx.events.deletes.push(message);
+    let queue = ctx.state.config.queue_deletes.clone();
+    ctx.enqueue(&queue, &message).await;
 }
 
 /// `DELETE /v1/account/sessions`.
@@ -375,11 +377,13 @@ pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
             base::clear_session_cookies(ctx, &mut response);
             let payload = base::session_payload(ctx, &session, true, &country, None);
             ctx.events.payload = Some(payload);
-            delete_targets(ctx, document, true, &country);
+            ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
+            delete_targets(ctx, document, true, &country).await;
             current_session = Some(session);
         }
     }
     db.purge_cached_document("users", &user.id).await?;
+    ctx.mqtt_revoke(&user.id).await;
     match current_session {
         Some(session) => {
             ctx.event_param("userId", user.id.clone());
@@ -387,6 +391,7 @@ pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
         }
         // `$queueForEvents->reset()`: no event.
         None => {
+            ctx.events.event = Some(String::new());
             ctx.events.params.clear();
             ctx.events.payload = None;
         }
@@ -417,9 +422,11 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
         base::clear_session_cookies(ctx, &mut response);
     }
     db.purge_cached_document("users", &user.id).await?;
+    ctx.mqtt_revoke(&user.id).await;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
     ctx.events.payload = Some(base::session_payload(ctx, &session, is_current, &country, None));
+    ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
     let mut document = document;
     document.put("current", Value::Bool(is_current));
     if is_current {
@@ -483,6 +490,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
     ctx.events.payload = Some(base::session_payload(ctx, &session, false, "", None));
+    ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
     Ok(ctx.ok(&SessionModel {
         session: &session,
         country_name: "",
@@ -584,9 +592,10 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
 }
 
 /// The `201` of a sign-in: the session as stored (or with `expire` shown
-/// as `cookie_expire` when `override_expire`), its cookies.
+/// as `cookie_expire` when `override_expire`), its cookies, and the same
+/// session as the event's payload.
 fn created_response(
-    ctx: &Context,
+    ctx: &mut Context,
     session: &Session,
     encoded: &str,
     cookie_expire: &chrono::NaiveDateTime,
@@ -604,6 +613,7 @@ fn created_response(
         secret: Some(encoded),
         render: ctx.render(),
     };
+    ctx.event_payload_sensitive(&model, SESSION_SENSITIVE);
     let mut response = ctx.created(&model);
     base::add_session_cookies(ctx, &mut response, encoded, cookie_expire);
     response
@@ -759,40 +769,75 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
     }
     ctx.authorization.add_role(&format!("user:{}", user.id));
 
-    // Claim the token and issue the session together.
+    // Magic URL and email OTP prove the email, a phone OTP proves the phone.
+    let verification = match kind {
+        token_type::MAGIC_URL | token_type::EMAIL => Some("emailVerification"),
+        token_type::PHONE => Some("phoneVerification"),
+        _ => None,
+    };
+
+    // Claim the token and issue the session together: of concurrent
+    // exchanges only the one that deletes the token gets a session, and a
+    // failed insert rolls the claim back. The user row lock orders this
+    // against an address change, which deletes the token and resets the
+    // verification it proves.
     let token_id = verified.id().to_owned();
+    let console = ctx.project.is_console();
     let created = db
         .with_transaction(|| {
             let db = db.clone();
             let session = session.clone();
             let token_id = token_id.clone();
+            let mut user = user.clone();
             async move {
-                let deleted = db.authorization().skip(db.delete_document("tokens", &token_id)).await?;
+                let auth = db.authorization();
+                let locked = auth.skip(db.get_document("users", &user.id, Vec::new(), true)).await?;
+                let deleted = auth.skip(db.delete_document("tokens", &token_id)).await?;
                 if !deleted {
                     return Err(utopia_database::Error::new(utopia_database::Kind::NotFound, "token claimed"));
                 }
-                db.create_document("sessions", session).await
+                // Proving an unverified email or phone claims the account, so
+                // whoever registered it keeps no other way in.
+                let mut claimed = false;
+                if let Some(attribute) = verification
+                    && !locked.get(attribute).is_some_and(|v| matches!(v, Value::Bool(true)))
+                {
+                    let proven = if attribute == "phoneVerification" { "sms" } else { "email" };
+                    auth.skip(Box::pin(user.revoke_credentials(&db, console, proven))).await.map_err(|e| {
+                        utopia_database::Error::new(utopia_database::Kind::Exception, e.message.into_owned())
+                    })?;
+                    claimed = true;
+                }
+                let session = db.create_document("sessions", session).await?;
+                if let Some(attribute) = verification {
+                    let mut updates = Document::default();
+                    updates.put(attribute, Value::Bool(true));
+                    db.update_document("users", &user.id, updates).await?;
+                }
+                Ok((session, claimed, user))
             }
         })
         .await;
-    let session = match created {
-        Ok(session) => Session::from(&session),
+    let (session, claimed) = match created {
+        Ok((session, claimed, revoked)) => {
+            user = revoked;
+            (Session::from(&session), claimed)
+        }
         Err(e) if e.is_a(utopia_database::Kind::NotFound) => return Err(Error::new(ErrorType::UserInvalidToken)),
         Err(e) => return Err(e.into()),
     };
+    match verification {
+        Some("emailVerification") => user.email_verification = Some(true),
+        Some(_) => user.phone_verification = Some(true),
+        None => {}
+    }
     db.purge_cached_document("users", &user.id).await?;
 
-    if matches!(kind, token_type::MAGIC_URL | token_type::EMAIL) {
-        user.email_verification = Some(true);
-    }
-    if kind == token_type::PHONE {
-        user.phone_verification = Some(true);
-    }
-    let mut updates = Document::default();
-    updates.put("emailVerification", user.email_verification.map(Value::Bool).unwrap_or(Value::Null));
-    updates.put("phoneVerification", user.phone_verification.map(Value::Bool).unwrap_or(Value::Null));
-    if db.update_document("users", &user.id, updates).await.is_err() {
-        return Err(Error::with_message(ErrorType::GeneralServerError, "Failed saving user to DB"));
+    if claimed {
+        ctx.mqtt_revoke(&user.id).await;
+        // Sent before the request's own event, which would otherwise reach
+        // the registrant with the claimant's data.
+        ctx.realtime_sessions_deleted(&user.id).await;
     }
 
     if let Err(e) = base::session_alert(ctx, &user, &session).await {

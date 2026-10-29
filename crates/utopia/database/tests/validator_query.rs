@@ -663,8 +663,7 @@ mod join_alias {
     fn rejects_alias() {
         let main = DEFAULT_ALIAS;
         let upper = DEFAULT_ALIAS.to_uppercase();
-        let invalid =
-            "Join alias must start with a letter or an underscore and contain only letters, digits and underscores";
+        let invalid = "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens";
         for (join, message) in [
             (
                 Query::join("orders", main, on()).unwrap(),
@@ -682,14 +681,27 @@ mod join_alias {
                 Query::full_outer_join("orders", main, on()).unwrap(),
                 format!("Join alias \"{main}\" is reserved for the main collection"),
             ),
-            (Query::join("orders", "my-alias", on()).unwrap(), invalid.to_owned()),
-            (Query::left_join("orders", "1st", on()).unwrap(), invalid.to_owned()),
+            (Query::join("orders", "-alias", on()).unwrap(), invalid.to_owned()),
+            (Query::left_join("orders", "my alias", on()).unwrap(), invalid.to_owned()),
+            (
+                Query::join("orders", "a".repeat(64), on()).unwrap(),
+                "Join alias must be at most 63 characters".to_owned(),
+            ),
             (Query::join("orders", "a.b", on()).unwrap(), invalid.to_owned()),
             (Query::cross_join("orders", "x`y").unwrap(), invalid.to_owned()),
         ] {
             let v = Join::default();
             assert!(!v.check(&join));
             assert_eq!(v.description(), message);
+        }
+    }
+
+    // 8.3.10: an Appwrite table ID is a join alias (a leading digit, a
+    // hyphen), up to 63 characters.
+    #[test]
+    fn accepts_table_ids() {
+        for alias in ["my-alias", "1st", "2024-orders", &"a".repeat(63)] {
+            assert!(Join::default().check(&Query::join("orders", alias, on()).unwrap()), "{alias}");
         }
     }
 }

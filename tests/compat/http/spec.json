@@ -398,17 +398,42 @@
                     ]
                   },
                   "trusted": {
-                    "gen": "const",
-                    "value": {
-                      "ip": [
-                        "x-forwarded-for",
-                        "X-Real-IP"
-                      ],
-                      "proto": [
-                        "x-forwarded-proto",
-                        "x-cdn"
-                      ]
-                    }
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "const",
+                        "value": {
+                          "ip": [
+                            "x-forwarded-for",
+                            "X-Real-IP"
+                          ],
+                          "proto": [
+                            "x-forwarded-proto",
+                            "x-cdn"
+                          ]
+                        }
+                      },
+                      {
+                        "gen": "const",
+                        "value": {
+                          "ip": [
+                            "x-forwarded-for",
+                            "X-Real-IP"
+                          ],
+                          "proto": [
+                            "x-forwarded-proto",
+                            "x-cdn"
+                          ],
+                          "host": [
+                            "x-forwarded-host"
+                          ],
+                          "port": [
+                            "X-Forwarded-Port",
+                            "x-cdn-port"
+                          ]
+                        }
+                      }
+                    ]
                   }
                 }
               },
@@ -1096,7 +1121,7 @@
       ]
     },
     "trusted.new": {
-      "doc": "new TrustedHeaders(ip, proto): the normalized lists.",
+      "doc": "new TrustedHeaders(ip, proto, host, port): the normalized lists (host and port reported when given).",
       "covers": [
         "Utopia\\Http\\TrustedHeaders::__construct"
       ],
@@ -1126,8 +1151,34 @@
                 },
                 "min": 0,
                 "max": 3
+              },
+              "host": {
+                "gen": "array",
+                "items": {
+                  "gen": "string",
+                  "alphabet": "Xa- \t0",
+                  "min": 0,
+                  "max": 5
+                },
+                "min": 0,
+                "max": 3
+              },
+              "port": {
+                "gen": "array",
+                "items": {
+                  "gen": "string",
+                  "alphabet": "Xa- \t0",
+                  "min": 0,
+                  "max": 5
+                },
+                "min": 0,
+                "max": 3
               }
-            }
+            },
+            "optional": [
+              "host",
+              "port"
+            ]
           },
           "iterations": 500
         }
@@ -1715,8 +1766,8 @@
     },
     {
       "symbol": "Utopia\\Http\\Http::execute",
-      "php": "A param validator that is not a Utopia\\Validator\\Validator fails with 'Validator object is not an instance of the Validator class' (500); a request value that is a PHP callable array (['Class', 'method']) is called like a default factory.",
-      "reason": "Validators are utopia_validators::Validator values and request values are data: neither case can be expressed."
+      "php": "A param validator that is not a Utopia\\Validator\\Validator fails with 'Validator object is not an instance of the Validator class' (500).",
+      "reason": "Validators are utopia_validators::Validator values: the case cannot be expressed. (Only a default the route registers is resolved as a callable; request values are data on both sides, testCallableArrayRequestParametersNotExecuted.)"
     },
     {
       "symbol": "Utopia\\Http\\Http::execute",

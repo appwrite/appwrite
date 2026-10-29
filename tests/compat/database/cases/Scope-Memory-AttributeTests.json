@@ -5755,6 +5755,32 @@
       ]
     },
     {
+      "name": "AttributeTests::testDottedAttributeKeysInBatchWrites",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Upserts"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
       "name": "AttributeTests::testUpdateAttributeDefault",
       "state": [],
       "steps": [

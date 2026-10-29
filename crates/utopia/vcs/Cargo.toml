@@ -1,6 +1,6 @@
 [package]
 name = "utopia-vcs"
-description = "Version control system adapters: GitHub, GitLab, Gitea, Forgejo, Gogs, Bitbucket and Origin: repositories, branches, tags, files, commits, pull requests, comments, statuses and check runs, webhook parsing and signature validation, app installation tokens, and shallow sparse clone commands."
+description = "Version control system adapters: GitHub, GitLab, Gitea, Forgejo, Gogs, Bitbucket, Origin and Entire: repositories, branches, tags, files, commits, pull requests, comments, statuses and check runs, webhook parsing and signature validation, app installation tokens, and shallow sparse clone commands."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -27,4 +27,4 @@ utopia-console.workspace = true
 
 [package.metadata.utopia]
 category = "integrations"
-php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"
+php-sync = "7f64dffee55635c9a7cc38837acffdb5e45436f8"

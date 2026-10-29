@@ -251,6 +251,21 @@ impl Component<'_> {
 impl Url {
     /// An authority-less private-use URI scheme (`Uri\Rfc3986\Uri::parse()`:
     /// a scheme with a dot and no host).
+    /// `value` with each byte above 127 percent-encoded, as PHP's
+    /// `rawurlencode()` encodes a single byte (`%C4`).
+    fn ascii(value: &[u8]) -> Vec<u8> {
+        const HEX: &[u8; 16] = b"0123456789ABCDEF";
+        let mut out = Vec::with_capacity(value.len());
+        for &b in value {
+            if b > 127 {
+                out.extend_from_slice(&[b'%', HEX[usize::from(b >> 4)], HEX[usize::from(b & 15)]]);
+            } else {
+                out.push(b);
+            }
+        }
+        out
+    }
+
     fn is_private_use_scheme_uri(value: Input<'_>) -> bool {
         let Some(uri) = value.as_str().and_then(Uri::parse) else {
             return false;
@@ -294,7 +309,13 @@ impl Validator for Url {
             return Ok(Verdict::VALID);
         }
         let private = self.allow_private_use_schemes && Self::is_private_use_scheme_uri(value);
-        if !private && filter(value, FILTER_VALIDATE_URL, 0).is_none() {
+        // FILTER_VALIDATE_URL is ASCII-only: a string's non-ASCII bytes
+        // (IRIs, RFC 3987) are percent-encoded before it is validated.
+        let url = match value.as_str() {
+            Some(s) => filter_str(&Self::ascii(s), FILTER_VALIDATE_URL, 0),
+            None => filter(value, FILTER_VALIDATE_URL, 0).is_some(),
+        };
+        if !private && !url {
             return Ok(Verdict::INVALID);
         }
         // Only the scheme, fragment and transport limits read the URL's parts

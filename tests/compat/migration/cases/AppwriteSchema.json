@@ -36,6 +36,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -101,6 +111,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -287,6 +307,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1383,6 +1413,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -1897,8 +1937,9 @@
           "expect": [
             {
               "name": "Shop",
+              "description": "",
               "enabled": true,
-              "search": "shop Shop",
+              "search": "shop Shop ",
               "originalId": null,
               "type": "tablesdb",
               "database": "",
@@ -1937,7 +1978,8 @@
               "documentSecurity": true,
               "enabled": true,
               "name": "Orders",
-              "search": "orders Orders",
+              "description": "",
+              "search": "orders Orders ",
               "$id": "orders",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -1951,6 +1993,7 @@
               "attributes": [
                 {
                   "key": "title",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -1976,6 +2019,7 @@
                 },
                 {
                   "key": "big",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -2004,6 +2048,7 @@
                 },
                 {
                   "key": "price",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -2032,6 +2077,7 @@
                 },
                 {
                   "key": "when",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -2059,6 +2105,7 @@
                 },
                 {
                   "key": "tags",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -2084,6 +2131,7 @@
                 },
                 {
                   "key": "meta",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -2109,6 +2157,7 @@
                 },
                 {
                   "key": "code",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -2134,6 +2183,7 @@
                 },
                 {
                   "key": "notes",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -2159,6 +2209,7 @@
                 },
                 {
                   "key": "customer",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -2199,7 +2250,8 @@
               "documentSecurity": false,
               "enabled": true,
               "name": "Customers",
-              "search": "customers Customers",
+              "description": "",
+              "search": "customers Customers ",
               "$id": "customers",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -2208,6 +2260,7 @@
               "attributes": [
                 {
                   "key": "name",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "2",
@@ -2260,6 +2313,7 @@
                   "$updatedAt": "<masked>",
                   "$permissions": [],
                   "$sequence": "12",
+                  "description": null,
                   "error": null,
                   "$collection": "attributes"
                 }
@@ -2287,6 +2341,7 @@
           "expect": [
             {
               "key": "title",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -2312,6 +2367,7 @@
             },
             {
               "key": "big",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -2340,6 +2396,7 @@
             },
             {
               "key": "price",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -2368,6 +2425,7 @@
             },
             {
               "key": "when",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -2395,6 +2453,7 @@
             },
             {
               "key": "tags",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -2420,6 +2479,7 @@
             },
             {
               "key": "meta",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -2445,6 +2505,7 @@
             },
             {
               "key": "code",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -2470,6 +2531,7 @@
             },
             {
               "key": "notes",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -2495,6 +2557,7 @@
             },
             {
               "key": "name",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "2",
@@ -2520,6 +2583,7 @@
             },
             {
               "key": "customer",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -2579,6 +2643,7 @@
               "$updatedAt": "<masked>",
               "$permissions": [],
               "$sequence": "12",
+              "description": null,
               "error": null,
               "$collection": "attributes"
             }
@@ -2658,6 +2723,7 @@
             "getDatabase": "",
             "getDatabaseName": "Shop",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "shop",
@@ -2682,6 +2748,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "2024-01-01 00:00:00",
@@ -2691,6 +2758,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "orders",
@@ -2719,6 +2787,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "2024-01-01 00:00:00",
@@ -2728,6 +2797,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "customers",
@@ -2752,9 +2822,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -2790,6 +2863,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -2805,7 +2879,9 @@
             "getSize": 64,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -2843,9 +2919,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "qty",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -2884,6 +2963,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": 1,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -2904,7 +2984,9 @@
             "getSize": 4,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -2942,9 +3024,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\BigInt",
             "getAttribute": {
+              "description": "",
               "key": "big",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -2983,6 +3068,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -3003,7 +3089,9 @@
             "getSize": 8,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -3041,9 +3129,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Decimal",
             "getAttribute": {
+              "description": "",
               "key": "price",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -3082,6 +3173,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -3102,7 +3194,9 @@
             "getSize": 0,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -3140,9 +3234,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Boolean",
             "getAttribute": {
+              "description": "",
               "key": "paid",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -3178,6 +3275,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": false,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -3193,7 +3291,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -3231,9 +3331,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime",
             "getAttribute": {
+              "description": "",
               "key": "when",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -3271,6 +3374,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [
               "datetime"
             ],
@@ -3288,7 +3392,9 @@
             "getSize": 0,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -3326,9 +3432,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Enum",
             "getAttribute": {
+              "description": "",
               "key": "state",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -3369,6 +3478,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": "new",
+            "getDescription": "",
             "getElements": [
               "new",
               "done"
@@ -3393,7 +3503,9 @@
             "getSize": 255,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -3431,9 +3543,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "tags",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -3469,6 +3584,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -3484,7 +3600,9 @@
             "getSize": 16,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -3522,9 +3640,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Point",
             "getAttribute": {
+              "description": "",
               "key": "spot",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -3560,6 +3681,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -3575,7 +3697,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -3613,9 +3737,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\ObjectType",
             "getAttribute": {
+              "description": "",
               "key": "meta",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -3651,6 +3778,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -3666,7 +3794,9 @@
             "getSize": 0,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -3704,9 +3834,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar",
             "getAttribute": {
+              "description": "",
               "key": "code",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -3742,6 +3875,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -3757,7 +3891,9 @@
             "getSize": 20,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -3795,9 +3931,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\LongText",
             "getAttribute": {
+              "description": "",
               "key": "notes",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -3833,6 +3972,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -3848,7 +3988,9 @@
             "getSize": 2147483647,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -3886,9 +4028,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "name",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -3921,6 +4066,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -3936,7 +4082,9 @@
             "getSize": 32,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -3971,9 +4119,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship",
             "getAttribute": {
+              "description": "",
               "key": "customer",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -4016,6 +4167,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -4042,7 +4194,9 @@
             "getSize": 0,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -4085,6 +4239,7 @@
               "title"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "by_title",
             "getKey": "by_title",
@@ -4099,7 +4254,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -4137,6 +4294,7 @@
               "tags"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "by_tags",
             "getKey": "by_tags",
@@ -4151,7 +4309,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -4190,6 +4350,7 @@
               "qty"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "uniq",
             "getKey": "uniq",
@@ -4205,7 +4366,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -4243,6 +4406,7 @@
             "getData": {
               "name": "Ann"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "c1",
             "getMessage": "",
@@ -4252,7 +4416,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -4295,6 +4461,7 @@
               "unknown": "stripped",
               "$createdAt": "2024-01-02 03:04:05.000"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "o1",
             "getMessage": "",
@@ -4306,7 +4473,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -4355,6 +4524,7 @@
                 2.5
               ]
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "o2",
             "getMessage": "Invalid document structure: Missing required attribute \"title\"",
@@ -4364,7 +4534,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -4419,6 +4591,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -4490,6 +4672,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -4676,6 +4868,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -5772,6 +5974,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -6809,8 +7021,9 @@
           "expect": [
             {
               "name": "Shop",
+              "description": "",
               "enabled": true,
-              "search": "shop Shop",
+              "search": "shop Shop ",
               "originalId": null,
               "type": "tablesdb",
               "database": "",
@@ -6849,7 +7062,8 @@
               "documentSecurity": true,
               "enabled": true,
               "name": "Orders",
-              "search": "orders Orders",
+              "description": "",
+              "search": "orders Orders ",
               "$id": "orders",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -6863,6 +7077,7 @@
               "attributes": [
                 {
                   "key": "title",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -6888,6 +7103,7 @@
                 },
                 {
                   "key": "big",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -6916,6 +7132,7 @@
                 },
                 {
                   "key": "price",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -6944,6 +7161,7 @@
                 },
                 {
                   "key": "when",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -6971,6 +7189,7 @@
                 },
                 {
                   "key": "tags",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -6996,6 +7215,7 @@
                 },
                 {
                   "key": "meta",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -7021,6 +7241,7 @@
                 },
                 {
                   "key": "code",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -7046,6 +7267,7 @@
                 },
                 {
                   "key": "notes",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -7071,6 +7293,7 @@
                 },
                 {
                   "key": "customer",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -7105,6 +7328,7 @@
               "indexes": [
                 {
                   "key": "by_title",
+                  "description": "",
                   "status": "available",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
@@ -7137,7 +7361,8 @@
               "documentSecurity": false,
               "enabled": true,
               "name": "Customers",
-              "search": "customers Customers",
+              "description": "",
+              "search": "customers Customers ",
               "$id": "customers",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -7146,6 +7371,7 @@
               "attributes": [
                 {
                   "key": "name",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "2",
@@ -7198,6 +7424,7 @@
                   "$updatedAt": "<masked>",
                   "$permissions": [],
                   "$sequence": "12",
+                  "description": null,
                   "error": null,
                   "$collection": "attributes"
                 }
@@ -7225,6 +7452,7 @@
           "expect": [
             {
               "key": "title",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -7250,6 +7478,7 @@
             },
             {
               "key": "big",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -7278,6 +7507,7 @@
             },
             {
               "key": "price",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -7306,6 +7536,7 @@
             },
             {
               "key": "when",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -7333,6 +7564,7 @@
             },
             {
               "key": "tags",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -7358,6 +7590,7 @@
             },
             {
               "key": "meta",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -7383,6 +7616,7 @@
             },
             {
               "key": "code",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -7408,6 +7642,7 @@
             },
             {
               "key": "notes",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -7433,6 +7668,7 @@
             },
             {
               "key": "name",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "2",
@@ -7458,6 +7694,7 @@
             },
             {
               "key": "customer",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -7517,6 +7754,7 @@
               "$updatedAt": "<masked>",
               "$permissions": [],
               "$sequence": "12",
+              "description": null,
               "error": null,
               "$collection": "attributes"
             }
@@ -7540,6 +7778,7 @@
           "expect": [
             {
               "key": "by_title",
+              "description": "",
               "status": "available",
               "databaseInternalId": "1",
               "databaseId": "shop",
@@ -7622,6 +7861,7 @@
             "getDatabase": "",
             "getDatabaseName": "Shop",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "shop",
@@ -7646,6 +7886,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "2024-01-01 00:00:00",
@@ -7655,6 +7896,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "orders",
@@ -7683,6 +7925,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "2024-01-01 00:00:00",
@@ -7692,6 +7935,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "customers",
@@ -7716,9 +7960,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -7754,6 +8001,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -7769,7 +8017,9 @@
             "getSize": 64,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -7807,9 +8057,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "qty",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -7848,6 +8101,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": 1,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -7868,7 +8122,9 @@
             "getSize": 4,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -7906,9 +8162,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\BigInt",
             "getAttribute": {
+              "description": "",
               "key": "big",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -7947,6 +8206,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -7967,7 +8227,9 @@
             "getSize": 8,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -8005,9 +8267,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Decimal",
             "getAttribute": {
+              "description": "",
               "key": "price",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -8046,6 +8311,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -8066,7 +8332,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -8104,9 +8372,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Boolean",
             "getAttribute": {
+              "description": "",
               "key": "paid",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -8142,6 +8413,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": false,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -8157,7 +8429,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -8195,9 +8469,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime",
             "getAttribute": {
+              "description": "",
               "key": "when",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -8235,6 +8512,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [
               "datetime"
             ],
@@ -8252,7 +8530,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -8290,9 +8570,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Enum",
             "getAttribute": {
+              "description": "",
               "key": "state",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -8333,6 +8616,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": "new",
+            "getDescription": "",
             "getElements": [
               "new",
               "done"
@@ -8357,7 +8641,9 @@
             "getSize": 255,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -8395,9 +8681,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "tags",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -8433,6 +8722,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -8448,7 +8738,9 @@
             "getSize": 16,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -8486,9 +8778,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Point",
             "getAttribute": {
+              "description": "",
               "key": "spot",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -8524,6 +8819,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -8539,7 +8835,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -8577,9 +8875,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\ObjectType",
             "getAttribute": {
+              "description": "",
               "key": "meta",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -8615,6 +8916,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -8630,7 +8932,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -8668,9 +8972,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar",
             "getAttribute": {
+              "description": "",
               "key": "code",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -8706,6 +9013,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -8721,7 +9029,9 @@
             "getSize": 20,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -8759,9 +9069,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\LongText",
             "getAttribute": {
+              "description": "",
               "key": "notes",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -8797,6 +9110,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -8812,7 +9126,9 @@
             "getSize": 2147483647,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -8850,9 +9166,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "name",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -8885,6 +9204,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -8900,7 +9220,9 @@
             "getSize": 32,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -8935,9 +9257,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship",
             "getAttribute": {
+              "description": "",
               "key": "customer",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -8980,6 +9305,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -9006,7 +9332,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -9049,6 +9377,7 @@
               "title"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "by_title",
             "getKey": "by_title",
@@ -9063,7 +9392,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -9101,6 +9432,7 @@
               "tags"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "by_tags",
             "getKey": "by_tags",
@@ -9115,7 +9447,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -9154,6 +9488,7 @@
               "qty"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "uniq",
             "getKey": "uniq",
@@ -9169,7 +9504,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -9207,6 +9544,7 @@
             "getData": {
               "name": "Ann"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "c1",
             "getMessage": "",
@@ -9216,7 +9554,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -9259,6 +9599,7 @@
               "unknown": "stripped",
               "$createdAt": "2024-01-02 03:04:05.000"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "o1",
             "getMessage": "",
@@ -9270,7 +9611,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -9319,6 +9662,7 @@
                 2.5
               ]
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "o2",
             "getMessage": "Invalid document structure: Missing required attribute \"title\"",
@@ -9328,7 +9672,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -9383,6 +9729,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -9454,6 +9810,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -9640,6 +10006,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -10736,6 +11112,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -11526,8 +11912,9 @@
           "expect": [
             {
               "name": "Shop",
+              "description": "",
               "enabled": true,
-              "search": "shop Shop",
+              "search": "shop Shop ",
               "originalId": null,
               "type": "tablesdb",
               "database": "",
@@ -11566,7 +11953,8 @@
               "documentSecurity": true,
               "enabled": true,
               "name": "Orders",
-              "search": "orders Orders",
+              "description": "",
+              "search": "orders Orders ",
               "$id": "orders",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -11580,6 +11968,7 @@
               "attributes": [
                 {
                   "key": "title",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -11605,6 +11994,7 @@
                 },
                 {
                   "key": "big",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -11633,6 +12023,7 @@
                 },
                 {
                   "key": "price",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -11661,6 +12052,7 @@
                 },
                 {
                   "key": "when",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -11688,6 +12080,7 @@
                 },
                 {
                   "key": "tags",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -11713,6 +12106,7 @@
                 },
                 {
                   "key": "meta",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -11738,6 +12132,7 @@
                 },
                 {
                   "key": "code",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -11763,6 +12158,7 @@
                 },
                 {
                   "key": "notes",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -11788,6 +12184,7 @@
                 },
                 {
                   "key": "customer",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -11822,6 +12219,7 @@
               "indexes": [
                 {
                   "key": "by_title",
+                  "description": "",
                   "status": "available",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
@@ -11854,7 +12252,8 @@
               "documentSecurity": false,
               "enabled": true,
               "name": "Customers",
-              "search": "customers Customers",
+              "description": "",
+              "search": "customers Customers ",
               "$id": "customers",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -11863,6 +12262,7 @@
               "attributes": [
                 {
                   "key": "name",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "2",
@@ -11915,6 +12315,7 @@
                   "$updatedAt": "<masked>",
                   "$permissions": [],
                   "$sequence": "12",
+                  "description": null,
                   "error": null,
                   "$collection": "attributes"
                 }
@@ -11942,6 +12343,7 @@
           "expect": [
             {
               "key": "title",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -11967,6 +12369,7 @@
             },
             {
               "key": "big",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -11995,6 +12398,7 @@
             },
             {
               "key": "price",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -12023,6 +12427,7 @@
             },
             {
               "key": "when",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -12050,6 +12455,7 @@
             },
             {
               "key": "tags",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -12075,6 +12481,7 @@
             },
             {
               "key": "meta",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -12100,6 +12507,7 @@
             },
             {
               "key": "code",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -12125,6 +12533,7 @@
             },
             {
               "key": "notes",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -12150,6 +12559,7 @@
             },
             {
               "key": "name",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "2",
@@ -12175,6 +12585,7 @@
             },
             {
               "key": "customer",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -12234,6 +12645,7 @@
               "$updatedAt": "<masked>",
               "$permissions": [],
               "$sequence": "12",
+              "description": null,
               "error": null,
               "$collection": "attributes"
             }
@@ -12257,6 +12669,7 @@
           "expect": [
             {
               "key": "by_title",
+              "description": "",
               "status": "available",
               "databaseInternalId": "1",
               "databaseId": "shop",
@@ -12339,6 +12752,7 @@
             "getDatabase": "",
             "getDatabaseName": "Shop",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "shop",
@@ -12363,6 +12777,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "2024-01-01 00:00:00",
@@ -12372,6 +12787,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "orders",
@@ -12400,6 +12816,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "2024-01-01 00:00:00",
@@ -12409,6 +12826,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "customers",
@@ -12433,9 +12851,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -12471,6 +12892,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -12486,7 +12908,9 @@
             "getSize": 64,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -12524,9 +12948,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "qty",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -12565,6 +12992,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": 1,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -12585,7 +13013,9 @@
             "getSize": 4,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -12623,9 +13053,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\BigInt",
             "getAttribute": {
+              "description": "",
               "key": "big",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -12664,6 +13097,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -12684,7 +13118,9 @@
             "getSize": 8,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -12722,9 +13158,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Decimal",
             "getAttribute": {
+              "description": "",
               "key": "price",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -12763,6 +13202,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -12783,7 +13223,9 @@
             "getSize": 0,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -12821,9 +13263,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Boolean",
             "getAttribute": {
+              "description": "",
               "key": "paid",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -12859,6 +13304,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": false,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -12874,7 +13320,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -12912,9 +13360,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime",
             "getAttribute": {
+              "description": "",
               "key": "when",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -12952,6 +13403,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [
               "datetime"
             ],
@@ -12969,7 +13421,9 @@
             "getSize": 0,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13007,9 +13461,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Enum",
             "getAttribute": {
+              "description": "",
               "key": "state",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -13050,6 +13507,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": "new",
+            "getDescription": "",
             "getElements": [
               "new",
               "done"
@@ -13074,7 +13532,9 @@
             "getSize": 255,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13112,9 +13572,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "tags",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -13150,6 +13613,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -13165,7 +13629,9 @@
             "getSize": 16,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13203,9 +13669,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Point",
             "getAttribute": {
+              "description": "",
               "key": "spot",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -13241,6 +13710,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -13256,7 +13726,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13294,9 +13766,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\ObjectType",
             "getAttribute": {
+              "description": "",
               "key": "meta",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -13332,6 +13807,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -13347,7 +13823,9 @@
             "getSize": 0,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13385,9 +13863,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar",
             "getAttribute": {
+              "description": "",
               "key": "code",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -13423,6 +13904,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -13438,7 +13920,9 @@
             "getSize": 20,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13476,9 +13960,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\LongText",
             "getAttribute": {
+              "description": "",
               "key": "notes",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -13514,6 +14001,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -13529,7 +14017,9 @@
             "getSize": 2147483647,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13567,9 +14057,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "name",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -13602,6 +14095,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -13617,7 +14111,9 @@
             "getSize": 32,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13652,9 +14148,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship",
             "getAttribute": {
+              "description": "",
               "key": "customer",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -13697,6 +14196,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -13723,7 +14223,9 @@
             "getSize": 0,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13766,6 +14268,7 @@
               "title"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "by_title",
             "getKey": "by_title",
@@ -13780,7 +14283,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13818,6 +14323,7 @@
               "tags"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "by_tags",
             "getKey": "by_tags",
@@ -13832,7 +14338,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13871,6 +14379,7 @@
               "qty"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "uniq",
             "getKey": "uniq",
@@ -13886,7 +14395,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13924,6 +14435,7 @@
             "getData": {
               "name": "Ann"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "c1",
             "getMessage": "",
@@ -13933,7 +14445,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -13976,6 +14490,7 @@
               "unknown": "stripped",
               "$createdAt": "2024-01-02 03:04:05.000"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "o1",
             "getMessage": "",
@@ -13987,7 +14502,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -14036,6 +14553,7 @@
                 2.5
               ]
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "o2",
             "getMessage": "Invalid document structure: Missing required attribute \"title\"",
@@ -14045,7 +14563,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -14100,6 +14620,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -14171,6 +14701,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -14357,6 +14897,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -15453,6 +16003,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -16262,8 +16822,9 @@
           "expect": [
             {
               "name": "Shop",
+              "description": "",
               "enabled": true,
-              "search": "shop Shop",
+              "search": "shop Shop ",
               "originalId": null,
               "type": "tablesdb",
               "database": "",
@@ -16302,7 +16863,8 @@
               "documentSecurity": true,
               "enabled": true,
               "name": "Orders",
-              "search": "orders Orders",
+              "description": "",
+              "search": "orders Orders ",
               "$id": "orders",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -16316,6 +16878,7 @@
               "attributes": [
                 {
                   "key": "title",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -16341,6 +16904,7 @@
                 },
                 {
                   "key": "big",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -16369,6 +16933,7 @@
                 },
                 {
                   "key": "price",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -16397,6 +16962,7 @@
                 },
                 {
                   "key": "when",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -16424,6 +16990,7 @@
                 },
                 {
                   "key": "tags",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -16449,6 +17016,7 @@
                 },
                 {
                   "key": "meta",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -16474,6 +17042,7 @@
                 },
                 {
                   "key": "code",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -16499,6 +17068,7 @@
                 },
                 {
                   "key": "notes",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -16526,6 +17096,7 @@
               "indexes": [
                 {
                   "key": "by_title",
+                  "description": "",
                   "status": "available",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
@@ -16558,7 +17129,8 @@
               "documentSecurity": false,
               "enabled": true,
               "name": "Customers",
-              "search": "customers Customers",
+              "description": "",
+              "search": "customers Customers ",
               "$id": "customers",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -16567,6 +17139,7 @@
               "attributes": [
                 {
                   "key": "name",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "2",
@@ -16614,6 +17187,7 @@
           "expect": [
             {
               "key": "title",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -16639,6 +17213,7 @@
             },
             {
               "key": "big",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -16667,6 +17242,7 @@
             },
             {
               "key": "price",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -16695,6 +17271,7 @@
             },
             {
               "key": "when",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -16722,6 +17299,7 @@
             },
             {
               "key": "tags",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -16747,6 +17325,7 @@
             },
             {
               "key": "meta",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -16772,6 +17351,7 @@
             },
             {
               "key": "code",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -16797,6 +17377,7 @@
             },
             {
               "key": "notes",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -16822,6 +17403,7 @@
             },
             {
               "key": "name",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "2",
@@ -16865,6 +17447,7 @@
           "expect": [
             {
               "key": "by_title",
+              "description": "",
               "status": "available",
               "databaseInternalId": "1",
               "databaseId": "shop",
@@ -16937,6 +17520,7 @@
             "getDatabase": "",
             "getDatabaseName": "Shop",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "shop",
@@ -16961,6 +17545,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "2024-01-01 00:00:00",
@@ -16970,6 +17555,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "orders",
@@ -16998,6 +17584,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "2024-01-01 00:00:00",
@@ -17007,6 +17594,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "customers",
@@ -17031,9 +17619,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -17069,6 +17660,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -17084,7 +17676,9 @@
             "getSize": 64,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -17122,9 +17716,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "qty",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -17163,6 +17760,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": 1,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -17183,7 +17781,9 @@
             "getSize": 4,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -17221,9 +17821,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\BigInt",
             "getAttribute": {
+              "description": "",
               "key": "big",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -17262,6 +17865,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -17282,7 +17886,9 @@
             "getSize": 8,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -17320,9 +17926,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Decimal",
             "getAttribute": {
+              "description": "",
               "key": "price",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -17361,6 +17970,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -17381,7 +17991,9 @@
             "getSize": 0,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -17419,9 +18031,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Boolean",
             "getAttribute": {
+              "description": "",
               "key": "paid",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -17457,6 +18072,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": false,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -17472,7 +18088,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -17510,9 +18128,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime",
             "getAttribute": {
+              "description": "",
               "key": "when",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -17550,6 +18171,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [
               "datetime"
             ],
@@ -17567,7 +18189,9 @@
             "getSize": 0,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -17605,9 +18229,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Enum",
             "getAttribute": {
+              "description": "",
               "key": "state",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -17648,6 +18275,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": "new",
+            "getDescription": "",
             "getElements": [
               "new",
               "done"
@@ -17672,7 +18300,9 @@
             "getSize": 255,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -17710,9 +18340,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "tags",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -17748,6 +18381,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -17763,7 +18397,9 @@
             "getSize": 16,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -17801,9 +18437,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Point",
             "getAttribute": {
+              "description": "",
               "key": "spot",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -17839,6 +18478,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -17854,7 +18494,9 @@
             "getSize": 0,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -17892,9 +18534,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\ObjectType",
             "getAttribute": {
+              "description": "",
               "key": "meta",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -17930,6 +18575,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -17945,7 +18591,9 @@
             "getSize": 0,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -17983,9 +18631,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar",
             "getAttribute": {
+              "description": "",
               "key": "code",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -18021,6 +18672,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -18036,7 +18688,9 @@
             "getSize": 20,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -18074,9 +18728,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\LongText",
             "getAttribute": {
+              "description": "",
               "key": "notes",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -18112,6 +18769,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -18127,7 +18785,9 @@
             "getSize": 2147483647,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -18165,9 +18825,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "name",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -18200,6 +18863,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -18215,7 +18879,9 @@
             "getSize": 32,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -18250,9 +18916,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship",
             "getAttribute": {
+              "description": "",
               "key": "customer",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "2024-01-01 00:00:00",
@@ -18295,6 +18964,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -18321,7 +18991,9 @@
             "getSize": 0,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -18364,6 +19036,7 @@
               "title"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "by_title",
             "getKey": "by_title",
@@ -18378,7 +19051,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -18416,6 +19091,7 @@
               "tags"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "by_tags",
             "getKey": "by_tags",
@@ -18430,7 +19106,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -18469,6 +19147,7 @@
               "qty"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "uniq",
             "getKey": "uniq",
@@ -18484,7 +19163,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -18522,6 +19203,7 @@
             "getData": {
               "name": "Ann"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "c1",
             "getMessage": "",
@@ -18531,7 +19213,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -18574,6 +19258,7 @@
               "unknown": "stripped",
               "$createdAt": "2024-01-02 03:04:05.000"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "o1",
             "getMessage": "",
@@ -18585,7 +19270,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -18634,6 +19321,7 @@
                 2.5
               ]
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "o2",
             "getMessage": "Adapter does not support upserts",
@@ -18643,7 +19331,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "2024-01-01 00:00:00",
@@ -18698,6 +19388,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -18769,6 +19469,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -18955,6 +19665,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -19802,6 +20522,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -20426,8 +21156,9 @@
           "expect": [
             {
               "name": "Shop",
+              "description": "",
               "enabled": true,
-              "search": "shop Shop",
+              "search": "shop Shop ",
               "originalId": null,
               "type": "legacy",
               "database": "",
@@ -20440,8 +21171,9 @@
             },
             {
               "name": "Ghost",
+              "description": "",
               "enabled": true,
-              "search": "ghost Ghost",
+              "search": "ghost Ghost ",
               "originalId": null,
               "type": "legacy",
               "database": "",
@@ -20480,7 +21212,8 @@
               "documentSecurity": false,
               "enabled": true,
               "name": "Orders",
-              "search": "orders Orders",
+              "description": "",
+              "search": "orders Orders ",
               "$id": "orders",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -20489,6 +21222,7 @@
               "attributes": [
                 {
                   "key": "ok",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -20522,7 +21256,8 @@
               "documentSecurity": false,
               "enabled": true,
               "name": "Missing",
-              "search": "missing Missing",
+              "description": "",
+              "search": "missing Missing ",
               "$id": "missing",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -20531,6 +21266,7 @@
               "attributes": [
                 {
                   "key": "lost",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "2",
@@ -20578,6 +21314,7 @@
           "expect": [
             {
               "key": "lost",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "2",
@@ -20603,6 +21340,7 @@
             },
             {
               "key": "x",
+              "description": "",
               "databaseInternalId": "2",
               "databaseId": "ghost",
               "collectionInternalId": "1",
@@ -20628,6 +21366,7 @@
             },
             {
               "key": "ok",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -20724,6 +21463,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -20789,6 +21538,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -20975,6 +21734,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -21413,6 +22182,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -22092,8 +22871,9 @@
           "expect": [
             {
               "name": "Shop",
+              "description": "",
               "enabled": true,
-              "search": "shop Shop",
+              "search": "shop Shop ",
               "originalId": null,
               "type": "tablesdb",
               "database": "",
@@ -22132,7 +22912,8 @@
               "documentSecurity": false,
               "enabled": true,
               "name": "Orders 2",
-              "search": "orders Orders 2",
+              "description": "",
+              "search": "orders Orders 2 ",
               "$id": "orders",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -22141,6 +22922,7 @@
               "attributes": [
                 {
                   "key": "a",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -22166,6 +22948,7 @@
                 },
                 {
                   "key": "b",
+                  "description": "",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
                   "collectionInternalId": "1",
@@ -22196,6 +22979,7 @@
               "indexes": [
                 {
                   "key": "ia",
+                  "description": "",
                   "status": "available",
                   "databaseInternalId": "1",
                   "databaseId": "shop",
@@ -22240,6 +23024,7 @@
           "expect": [
             {
               "key": "a",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -22265,6 +23050,7 @@
             },
             {
               "key": "b",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -22311,6 +23097,7 @@
           "expect": [
             {
               "key": "ia",
+              "description": "",
               "status": "available",
               "databaseInternalId": "1",
               "databaseId": "shop",
@@ -22364,6 +23151,7 @@
             "getDatabase": "",
             "getDatabaseName": "Shop 2",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "shop",
@@ -22388,6 +23176,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop 2",
               "createdAt": "2024-01-01 00:00:00",
@@ -22397,6 +23186,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "orders",
@@ -22421,9 +23211,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "a",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop 2",
                   "createdAt": "2024-01-01 00:00:00",
@@ -22456,6 +23249,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -22471,7 +23265,9 @@
             "getSize": 20,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop 2",
                 "createdAt": "2024-01-01 00:00:00",
@@ -22506,9 +23302,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "b",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop 2",
                   "createdAt": "2024-01-01 00:00:00",
@@ -22544,6 +23343,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -22564,7 +23364,9 @@
             "getSize": 8,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop 2",
                 "createdAt": "2024-01-01 00:00:00",
@@ -22602,6 +23404,7 @@
               "a"
             ],
             "getCreatedAt": "2024-01-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "ia",
             "getKey": "ia",
@@ -22614,7 +23417,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop 2",
                 "createdAt": "2024-01-01 00:00:00",
@@ -22650,6 +23455,7 @@
               "a": "uno",
               "b": 7
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r1",
             "getMessage": "",
@@ -22659,7 +23465,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop 2",
                 "createdAt": "2024-01-01 00:00:00",
@@ -22693,6 +23501,7 @@
             "getData": {
               "a": "two"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r2",
             "getMessage": "Adapter does not support upserts",
@@ -22702,7 +23511,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop 2",
                 "createdAt": "2024-01-01 00:00:00",
@@ -22754,6 +23565,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -22825,6 +23646,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -23011,6 +23842,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -23466,6 +24307,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -23550,6 +24401,16 @@
                     "$id": "name",
                     "type": "string",
                     "size": 256,
+                    "required": false,
+                    "default": null,
+                    "array": false,
+                    "signed": true,
+                    "filters": []
+                  },
+                  {
+                    "$id": "description",
+                    "type": "string",
+                    "size": 1024,
                     "required": false,
                     "default": null,
                     "array": false,
@@ -23861,8 +24722,9 @@
           "expect": [
             {
               "name": "Docs",
+              "description": "",
               "enabled": true,
-              "search": "docs Docs",
+              "search": "docs Docs ",
               "originalId": null,
               "type": "documentsdb",
               "database": "",
@@ -23875,8 +24737,9 @@
             },
             {
               "name": "Vectors",
+              "description": "",
               "enabled": true,
-              "search": "vec Vectors",
+              "search": "vec Vectors ",
               "originalId": null,
               "type": "vectorsdb",
               "database": "",
@@ -23915,7 +24778,8 @@
               "documentSecurity": true,
               "enabled": true,
               "name": "Notes",
-              "search": "notes Notes",
+              "description": "",
+              "search": "notes Notes ",
               "$id": "notes",
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>",
@@ -23983,7 +24847,8 @@
               "documentSecurity": false,
               "enabled": true,
               "name": "Items",
-              "search": "items Items",
+              "description": "",
+              "search": "items Items ",
               "dimension": 0,
               "$id": "items",
               "$createdAt": "<masked>",
@@ -24069,6 +24934,7 @@
             "getDatabase": "",
             "getDatabaseName": "Vectors",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "vec",
@@ -24093,6 +24959,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Collection",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "vec",
               "name": "Vectors",
               "createdAt": "",
@@ -24102,6 +24969,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getDimension": null,
             "getEnabled": true,
             "getGroup": "databases",
@@ -24130,6 +24998,7 @@
             "getDatabase": "",
             "getDatabaseName": "Docs",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "docs",
@@ -24154,6 +25023,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Collection",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "docs",
               "name": "Docs",
               "createdAt": "",
@@ -24163,6 +25033,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getDimension": null,
             "getEnabled": true,
             "getGroup": "databases",
@@ -24188,9 +25059,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Vector",
             "getAttribute": {
+              "description": "",
               "key": "embeddings",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "vec",
                   "name": "Vectors",
                   "createdAt": "",
@@ -24223,6 +25097,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -24238,7 +25113,9 @@
             "getSize": 3,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "vec",
                 "name": "Vectors",
                 "createdAt": "",
@@ -24273,9 +25150,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Vector",
             "getAttribute": {
+              "description": "",
               "key": "other",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "vec",
                   "name": "Vectors",
                   "createdAt": "",
@@ -24308,6 +25188,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -24323,7 +25204,9 @@
             "getSize": 5,
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "vec",
                 "name": "Vectors",
                 "createdAt": "",
@@ -24358,9 +25241,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "body",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "docs",
                   "name": "Docs",
                   "createdAt": "",
@@ -24393,6 +25279,7 @@
             },
             "getCreatedAt": "2024-01-01 00:00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -24408,7 +25295,9 @@
             "getSize": 255,
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "docs",
                 "name": "Docs",
                 "createdAt": "",
@@ -24449,6 +25338,7 @@
                 "x": 1
               }
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "n1",
             "getMessage": "",
@@ -24458,7 +25348,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "docs",
                 "name": "Docs",
                 "createdAt": "",
@@ -24496,6 +25388,7 @@
                 0.3
               ]
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "v1",
             "getMessage": "",
@@ -24505,7 +25398,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "vec",
                 "name": "Vectors",
                 "createdAt": "",

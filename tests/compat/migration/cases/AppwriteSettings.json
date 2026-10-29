@@ -969,6 +969,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -1579,6 +1589,7 @@
               "resourceId": "destination-project",
               "resourceType": "projects",
               "name": "Server",
+              "description": "",
               "scopes": [
                 "users.read"
               ],
@@ -1629,6 +1640,7 @@
               "projectInternalId": "7",
               "projectId": "destination-project",
               "name": "Hook",
+              "description": "",
               "events": [
                 "users.*"
               ],
@@ -1670,6 +1682,7 @@
               "resourceId": "",
               "resourceType": "project",
               "key": "API_URL",
+              "description": "",
               "value": "https://example.test",
               "secret": true,
               "search": "<masked>",
@@ -1841,6 +1854,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Integrations\\Platform",
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "integrations",
             "getHostname": "example.test",
             "getId": "pf1",
@@ -1867,6 +1881,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Integrations\\Platform",
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "integrations",
             "getHostname": "example.test",
             "getId": "pf2",
@@ -1895,6 +1910,7 @@
             "getAccessedAt": "",
             "getApiKeyName": "Server",
             "getCreatedAt": "",
+            "getDescription": "",
             "getExpire": "",
             "getGroup": "integrations",
             "getId": "k1",
@@ -1923,6 +1939,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Settings\\Webhook",
             "getCreatedAt": "",
+            "getDescription": "",
             "getEvents": [
               "users.*"
             ],
@@ -1953,6 +1970,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Settings\\Webhook",
             "getCreatedAt": "",
+            "getDescription": "",
             "getEvents": [],
             "getGroup": "integrations",
             "getHttpPass": "",
@@ -1981,6 +1999,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Settings\\SMTP",
             "getCreatedAt": "",
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "integrations",
             "getHost": "smtp.example.test",
@@ -2011,6 +2030,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Settings\\ProjectVariable",
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "projects",
             "getId": "v1",
             "getKey": "API_URL",
@@ -2035,6 +2055,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Settings\\ProjectVariable",
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "projects",
             "getId": "v2",
             "getKey": "API_URL",
@@ -2059,6 +2080,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Settings\\ProjectVariable",
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "projects",
             "getId": "v3",
             "getKey": "1bad-key",
@@ -2083,6 +2105,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Settings\\Protocols",
             "getCreatedAt": "",
+            "getDescription": "",
             "getGraphql": false,
             "getGroup": "projects",
             "getId": "protocols",
@@ -2107,6 +2130,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Settings\\Labels",
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "projects",
             "getId": "labels",
             "getLabels": [
@@ -2135,6 +2159,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Settings\\Services",
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "projects",
             "getId": "services",
             "getMessage": "",
@@ -2161,6 +2186,7 @@
             "class": "Utopia\\Migration\\Resources\\Templates\\EmailTemplate",
             "getBody": "<p>Hi</p>",
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "projects",
             "getId": "verification-en",
             "getLocale": "en",
@@ -2190,6 +2216,7 @@
             "class": "Utopia\\Migration\\Resources\\Auth\\AuthMethods",
             "getAnonymous": true,
             "getCreatedAt": "",
+            "getDescription": "",
             "getEmailOtp": true,
             "getEmailPassword": false,
             "getGroup": "auth",
@@ -2221,6 +2248,8 @@
             "getDenyCorporateEmail": null,
             "getDenyDisposableEmail": null,
             "getDenyFreeEmail": false,
+            "getDenyRealtimeGuests": null,
+            "getDescription": "",
             "getGroup": "auth",
             "getId": "policies",
             "getMembershipsUserAccessedAt": true,
@@ -2272,6 +2301,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": null,
             "getDestinationSecretFields": [],
             "getEnabled": true,
@@ -2299,6 +2329,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Messaging\\Subscriber",
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "messaging",
             "getId": "s1",
             "getMessage": "",
@@ -2325,6 +2356,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Messaging\\Subscriber",
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "messaging",
             "getId": "s2",
             "getMessage": "Unknown provider type: fax",
@@ -2358,6 +2390,7 @@
             "getDeliveredAt": "2024-01-01 00:00:00.000",
             "getDeliveredTotal": 3,
             "getDeliveryErrors": [],
+            "getDescription": "",
             "getGroup": "messaging",
             "getId": "m1",
             "getMessage": "",
@@ -2393,6 +2426,7 @@
             "getDeliveredAt": "",
             "getDeliveredTotal": 0,
             "getDeliveryErrors": [],
+            "getDescription": "",
             "getGroup": "messaging",
             "getId": "m2",
             "getMessage": "",
@@ -2426,6 +2460,7 @@
             "getDeliveredAt": "",
             "getDeliveredTotal": 0,
             "getDeliveryErrors": [],
+            "getDescription": "",
             "getGroup": "messaging",
             "getId": "m3",
             "getMessage": "",
@@ -2456,6 +2491,7 @@
             "getDeploymentResourceId": "",
             "getDeploymentResourceType": "",
             "getDeploymentVcsProviderBranch": "",
+            "getDescription": "",
             "getDomain": "app.example.test",
             "getGroup": "domains",
             "getId": "r1",
@@ -2482,6 +2518,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Backups\\Policy",
             "getCreatedAt": "",
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "backups",
             "getId": "bp1",

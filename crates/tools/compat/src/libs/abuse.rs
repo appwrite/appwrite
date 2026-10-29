@@ -25,6 +25,7 @@ pub const OPS: &[&str] = &[
     "limit.logs",
     "limit.cleanup",
     "limit.run",
+    "limit.race",
     "database.new",
     "database.setup",
     "database.attributes",
@@ -311,7 +312,13 @@ struct FakeState {
     reject_create: u16,
     /// The status `createTable` answers with, `0` to accept.
     reject_table: u16,
+    /// A competing request run once, just before the next increment.
+    race: Option<Race>,
 }
+
+/// A competing request a racing store runs once, just before its next
+/// increment reaches storage.
+type Race = BoxFuture<'static, ()>;
 
 #[derive(Clone, Default)]
 struct FakeTables(Arc<Mutex<FakeState>>);
@@ -466,12 +473,22 @@ impl time_limit::Tables for FakeTables {
         Ok(())
     }
 
-    async fn increment(&self, _database: &str, id: &str) -> utopia_abuse::Result<()> {
+    async fn increment(&self, _database: &str, id: &str, max: Option<i64>) -> utopia_abuse::Result<time_limit::Row> {
+        let race = self.state().race.take();
+        if let Some(race) = race {
+            race.await;
+        }
         let mut s = self.call("incrementRowColumn");
         let row =
             s.rows.iter_mut().find(|r| r.id == id).ok_or_else(|| appwrite("Row not found", 404, "row_not_found"))?;
+        if let Some(max) = max
+            && row.count + 1 > max
+        {
+            let message = format!("Column \"count\" has reached the maximum value of {max}");
+            return Err(appwrite(&message, 400, "column_limit_exceeded"));
+        }
         row.count += 1;
-        Ok(())
+        Ok(row.clone())
     }
 
     async fn update_row(&self, _database: &str, id: &str, count: i64) -> utopia_abuse::Result<()> {
@@ -502,7 +519,85 @@ impl time_limit::Tables for FakeTables {
     }
 }
 
-type Db = Arc<time_limit::Memory>;
+type Db = Arc<Racing>;
+
+/// The documents of `database.new`: `time_limit::Memory` that runs a
+/// competing request once, just before its next increment. The same double
+/// as `RacingDatabase` in packages/abuse/tests/TimeLimit.
+struct Racing {
+    memory: time_limit::Memory,
+    race: Mutex<Option<Race>>,
+}
+
+impl Racing {
+    fn new(memory: time_limit::Memory) -> Self {
+        Racing { memory, race: Mutex::new(None) }
+    }
+
+    fn arm(&self, race: Race) {
+        *self.race.lock().unwrap_or_else(|e| e.into_inner()) = Some(race);
+    }
+}
+
+impl time_limit::Documents for Racing {
+    async fn exists(&self) -> utopia_abuse::Result<bool> {
+        self.memory.exists().await
+    }
+
+    async fn create_collection(
+        &self,
+        attributes: &[time_limit::database::Attribute],
+        indexes: &[time_limit::database::Index],
+    ) -> utopia_abuse::Result<()> {
+        self.memory.create_collection(attributes, indexes).await
+    }
+
+    async fn find_one(&self, key: &str, time: &str) -> utopia_abuse::Result<Option<time_limit::Entry>> {
+        self.memory.find_one(key, time).await
+    }
+
+    async fn create(&self, entry: &time_limit::Entry) -> utopia_abuse::Result<()> {
+        self.memory.create(entry).await
+    }
+
+    async fn increase(&self, id: &str, max: Option<i64>) -> utopia_abuse::Result<time_limit::Entry> {
+        let race = self.race.lock().unwrap_or_else(|e| e.into_inner()).take();
+        if let Some(race) = race {
+            race.await;
+        }
+        self.memory.increase(id, max).await
+    }
+
+    async fn update(&self, id: &str, count: i64) -> utopia_abuse::Result<()> {
+        self.memory.update(id, count).await
+    }
+
+    async fn list(&self, offset: Option<i64>, limit: Option<i64>) -> utopia_abuse::Result<Vec<time_limit::Entry>> {
+        self.memory.list(offset, limit).await
+    }
+
+    async fn older(&self, time: &str) -> utopia_abuse::Result<Vec<time_limit::Entry>> {
+        self.memory.older(time).await
+    }
+
+    async fn delete(&self, id: &str) -> utopia_abuse::Result<()> {
+        self.memory.delete(id).await
+    }
+}
+
+/// `$limit->check()` of a database or tables limit, as a verdict or an
+/// error.
+async fn race_check(limit: AnyLimit) -> Value {
+    let r = match &limit {
+        AnyLimit::TlDatabase(l) => l.check().await,
+        AnyLimit::TlTables(l) => l.check().await,
+        _ => return json!({ "error": "not a racing limit" }),
+    };
+    match r {
+        Ok(v) => verdict(v),
+        Err(e) => json!({ "error": e.php_class(), "message": e.to_string() }),
+    }
+}
 
 /// Every limit a case can build.
 #[derive(Clone)]
@@ -859,13 +954,41 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             }
             Outcome::Ok(json!({ "key": each!(&l, x => x.key().to_owned()), "verdicts": verdicts }))
         }
+        "limit.race" => {
+            let l = limit(session)?;
+            let competing = session.get::<AnyLimit>(a.value("competing")?)?.clone();
+            let slot = Arc::new(Mutex::new(Value::Null));
+            let out = Arc::clone(&slot);
+            let race: Race = Box::pin(async move {
+                let v = race_check(competing).await;
+                *out.lock().unwrap_or_else(|e| e.into_inner()) = v;
+            });
+            let store = a.value("store")?;
+            if let Ok(db) = session.get::<Db>(store) {
+                db.arm(race);
+            } else {
+                session.get::<FakeTables>(store)?.state().race = Some(race);
+            }
+            let r = match &l {
+                AnyLimit::TlDatabase(l) => l.check().await,
+                AnyLimit::TlTables(l) => l.check().await,
+                _ => return Err(Fault::new("not a racing limit")),
+            };
+            match r {
+                Ok(v) => {
+                    let competing = slot.lock().unwrap_or_else(|e| e.into_inner()).clone();
+                    Outcome::Ok(json!({ "result": verdict(v), "competing": competing }))
+                }
+                Err(e) => err(e),
+            }
+        }
         "database.new" => {
             let db = if a.opt_bool("exists")?.unwrap_or(true) {
                 time_limit::Memory::new()
             } else {
                 time_limit::Memory::without_database()
             };
-            Outcome::Ok(session.handle::<Db>(Arc::new(db)))
+            Outcome::Ok(session.handle::<Db>(Arc::new(Racing::new(db))))
         }
         "database.setup" => match limit(session)? {
             AnyLimit::TlDatabase(l) => match l.store().setup().await {

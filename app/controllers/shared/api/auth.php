@@ -14,19 +14,10 @@ use Utopia\System\System;
 
 Http::init()
     ->groups(['mfaProtected'])
+    ->inject('user')
     ->inject('session')
-    ->action(function (Document $session) {
-        $isSessionFresh = false;
-
-        $lastUpdate = $session->getAttribute('mfaUpdatedAt');
-        if (!empty($lastUpdate)) {
-            $now = DateTime::now();
-            $maxAllowedDate = DateTime::addSeconds(new \DateTime($lastUpdate), MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
-
-            $isSessionFresh = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
-        }
-
-        if (!$isSessionFresh) {
+    ->action(function (User $user, Document $session) {
+        if (!$user->sessionChallengeRecent($session->getId())) {
             throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
         }
     });

@@ -943,18 +943,15 @@ impl ParsedQuery {
                         _ => OrderDirection::Random,
                     });
                 }
+                // `$limit ??= self::toInteger($values[0] ?? null)`.
                 Method::Limit => {
-                    if parsed.limit.is_none()
-                        && let Some(v) = first.filter(|v| is_numeric(v))
-                    {
-                        parsed.limit = Some(intval(v));
+                    if parsed.limit.is_none() {
+                        parsed.limit = first.and_then(to_integer);
                     }
                 }
                 Method::Offset => {
-                    if parsed.offset.is_none()
-                        && let Some(v) = first.filter(|v| is_numeric(v))
-                    {
-                        parsed.offset = Some(intval(v));
+                    if parsed.offset.is_none() {
+                        parsed.offset = first.and_then(to_integer);
                     }
                 }
                 Method::CursorAfter | Method::CursorBefore => {
@@ -1015,17 +1012,28 @@ fn is_numeric(value: &QValue) -> bool {
     }
 }
 
-/// `intval($value)`.
-fn intval(value: &QValue) -> i64 {
-    match value {
-        QValue::Int(i) => *i,
-        QValue::Float(f) => php_std::format::dval_to_lval(*f),
-        QValue::Str(s) => php_std::format::Arg::Str(s.as_bytes()).to_int(),
-        QValue::Bool(b) => i64::from(*b),
-        QValue::Null => 0,
-        QValue::Array(a) => i64::from(!a.is_empty()),
-        QValue::Object(_) | QValue::Ext(_) => 1,
+/// `Utopia\Query\Query::toInteger()`: an integer as is, a numeric value
+/// `FILTER_VALIDATE_INT` accepts, or a finite float within `int`'s range
+/// truncated; anything else (`"7e38"`, `"abc"`) is null.
+fn to_integer(value: &QValue) -> Option<i64> {
+    use php_std::filter as f;
+    let text = match value {
+        QValue::Int(i) => return Some(*i),
+        _ if !is_numeric(value) => return None,
+        QValue::Float(x) => f::Value::Float(*x),
+        QValue::Str(s) => f::Value::Str(s.as_bytes().to_vec()),
+        _ => return None,
+    };
+    if let Ok(f::Filtered { value: f::Value::Int(i), .. }) =
+        f::filter_var(&text, f::FILTER_VALIDATE_INT, &f::Options::Flags(0))
+    {
+        return Some(i);
     }
+    let number = value.to_double();
+    if !number.is_finite() || number < i64::MIN as f64 || number >= i64::MAX as f64 {
+        return None;
+    }
+    Some(number as i64)
 }
 
 #[cfg(test)]
@@ -1040,5 +1048,24 @@ mod statement_error_tests {
         assert_eq!(error.kind(), Kind::QueryValidation);
         assert_eq!(error.php_class(), "Utopia\\Query\\Exception\\ValidationException");
         assert_eq!(query_error(utopia_query::Error::Validation("x".into())).kind(), Kind::Query);
+    }
+}
+
+#[cfg(test)]
+mod to_integer_tests {
+    use super::{QValue, to_integer};
+
+    // PHP: Utopia\Query\Query::toInteger(), which groupByType() reads limit and offset with.
+    #[test]
+    fn limits_php_cannot_make_an_integer_are_null() {
+        assert_eq!(to_integer(&QValue::Int(7)), Some(7));
+        assert_eq!(to_integer(&QValue::Str("25".into())), Some(25));
+        assert_eq!(to_integer(&QValue::Str("2.9".into())), Some(2));
+        assert_eq!(to_integer(&QValue::Float(-3.5)), Some(-3));
+        assert_eq!(to_integer(&QValue::Str("7e38".into())), None);
+        assert_eq!(to_integer(&QValue::Str("9223372036854775808".into())), None);
+        assert_eq!(to_integer(&QValue::Float(f64::NAN)), None);
+        assert_eq!(to_integer(&QValue::Str("abc".into())), None);
+        assert_eq!(to_integer(&QValue::Null), None);
     }
 }

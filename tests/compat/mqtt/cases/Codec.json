@@ -185,9 +185,10 @@
             "offset": 0
           },
           "expect": {
-            "properties": [],
-            "offset": 201,
-            "user": []
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Malformed MQTT property block"
+            }
           }
         },
         {
@@ -201,7 +202,7 @@
           "expect": {
             "$error": {
               "class": "RuntimeException",
-              "message": "Unknown MQTT property 0x0"
+              "message": "Malformed MQTT property block"
             }
           }
         },
@@ -214,14 +215,10 @@
             "offset": 0
           },
           "expect": {
-            "properties": [
-              [
-                11,
-                3.8685626227668134e+25
-              ]
-            ],
-            "offset": 15,
-            "user": []
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Malformed MQTT property block"
+            }
           }
         }
       ]
@@ -262,7 +259,7 @@
       ]
     },
     {
-      "name": "User Properties: integer keys are renumbered by array_merge(), string keys replace in place",
+      "name": "User Properties: integer keys and string keys alike replace in place",
       "steps": [
         {
           "op": "properties.encode",
@@ -419,7 +416,7 @@
             "offset": 45,
             "user": [
               [
-                "0",
+                "7",
                 "a"
               ],
               [
@@ -427,7 +424,7 @@
                 "d"
               ],
               [
-                "1",
+                "-1",
                 "c"
               ],
               [
@@ -435,7 +432,7 @@
                 "e"
               ],
               [
-                "2",
+                "0",
                 "f"
               ]
             ]
@@ -683,7 +680,7 @@
           "expect": {
             "$error": {
               "class": "RuntimeException",
-              "message": "Unknown MQTT property 0x0"
+              "message": "Malformed MQTT property block"
             }
           }
         }
@@ -910,11 +907,10 @@
             "body": "\u0018"
           },
           "expect": {
-            "reason_code": 24,
-            "method": "",
-            "data": "",
-            "properties": [],
-            "user": []
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Malformed MQTT property block"
+            }
           }
         },
         {
@@ -1008,14 +1004,10 @@
             "protocol": 5
           },
           "expect": {
-            "topic": "t",
-            "payload": "",
-            "qos": 1,
-            "dup": false,
-            "retain": false,
-            "packet_id": 0,
-            "properties": [],
-            "user": []
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Malformed MQTT property block"
+            }
           }
         },
         {
@@ -1119,13 +1111,13 @@
         "subscribe": {
           "$error": {
             "class": "RuntimeException",
-            "message": "Unknown MQTT property 0x2f"
+            "message": "Malformed MQTT property block"
           }
         },
         "unsubscribe": {
           "$error": {
             "class": "RuntimeException",
-            "message": "Unknown MQTT property 0x2f"
+            "message": "Malformed MQTT property block"
           }
         },
         "properties": {
@@ -1210,33 +1202,32 @@
           "properties": null
         },
         "publish": {
-          "topic": "",
-          "payload": "",
-          "qos": 2,
-          "dup": true,
-          "retain": false,
-          "packet_id": 0,
-          "properties": [],
-          "user": []
+          "$error": {
+            "class": "RuntimeException",
+            "message": "Malformed MQTT property block"
+          }
         },
         "puback": {
           "packet_id": 0,
           "reason_code": 0
         },
         "subscribe": {
-          "packet_id": 0,
-          "filters": [],
-          "properties": []
+          "$error": {
+            "class": "RuntimeException",
+            "message": "Malformed MQTT property block"
+          }
         },
         "unsubscribe": {
-          "packet_id": 0,
-          "filters": [],
-          "properties": []
+          "$error": {
+            "class": "RuntimeException",
+            "message": "Malformed MQTT property block"
+          }
         },
         "properties": {
-          "properties": [],
-          "offset": 1,
-          "user": []
+          "$error": {
+            "class": "RuntimeException",
+            "message": "Malformed MQTT property block"
+          }
         },
         "skip": 1
       }

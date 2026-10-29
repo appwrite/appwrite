@@ -225,6 +225,71 @@
       ]
     },
     {
+      "name": "testGetEventPushKeepsBranchNamedLikeRef",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repo:push",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"push\":{\"changes\":[{\"created\":false,\"closed\":false,\"old\":{\"type\":\"branch\",\"name\":\"refs\\/heads\\/master\",\"target\":{\"hash\":\"def456\",\"message\":\"Test commit message\",\"author\":{\"raw\":\"Test Author <author@example.com>\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\\/commits\\/def456\"}}}},\"new\":{\"type\":\"branch\",\"name\":\"refs\\/heads\\/master\",\"target\":{\"hash\":\"def456\",\"message\":\"Test commit message\",\"author\":{\"raw\":\"Test Author <author@example.com>\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\\/commits\\/def456\"}}}}}]}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "refs/heads/master",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/refs/heads/master",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
       "name": "testGetEventPushDetectsBranchCreated",
       "steps": [
         {

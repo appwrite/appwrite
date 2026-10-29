@@ -242,6 +242,116 @@
       ]
     },
     {
+      "name": "testUserPropertiesKeepNumericKeys",
+      "steps": [
+        {
+          "op": "properties.encode",
+          "args": {
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "7",
+                      "seven"
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "region",
+                      "fra"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": "\u0019&\u0000\u00017\u0000\u0005seven&\u0000\u0006region\u0000\u0003fra"
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            },
+            "offset": 0
+          },
+          "expect": {
+            "properties": [
+              [
+                38,
+                {
+                  "pair": [
+                    [
+                      "7",
+                      "seven"
+                    ]
+                  ]
+                }
+              ],
+              [
+                38,
+                {
+                  "pair": [
+                    [
+                      "region",
+                      "fra"
+                    ]
+                  ]
+                }
+              ]
+            ],
+            "offset": 26,
+            "user": [
+              [
+                "7",
+                "seven"
+              ],
+              [
+                "region",
+                "fra"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTruncatedBlockThrows",
+      "op": "properties.parse",
+      "args": {
+        "data": "\n\u0001\u0001",
+        "offset": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "RuntimeException",
+          "message": "Malformed MQTT property block"
+        }
+      }
+    },
+    {
+      "name": "testPropertyOverrunningBlockThrows",
+      "op": "properties.parse",
+      "args": {
+        "data": "\u0002\u0011\u0000\u0000\u0000\u0000",
+        "offset": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "RuntimeException",
+          "message": "Malformed MQTT property block"
+        }
+      }
+    },
+    {
       "name": "testAuthMethodAndDataRoundTrip",
       "steps": [
         {

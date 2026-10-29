@@ -174,6 +174,7 @@
             "getDatabase": "",
             "getDatabaseName": "test",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "test",
@@ -3077,6 +3078,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\User",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDisabled": false,
             "getEmail": "",
             "getEmailVerified": false,
@@ -3287,6 +3289,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "db",
               "name": "DB",
               "createdAt": "",
@@ -3296,6 +3299,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "tbl",

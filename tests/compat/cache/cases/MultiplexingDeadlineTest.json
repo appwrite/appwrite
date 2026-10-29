@@ -137,6 +137,73 @@
       "state": [
         "redis@cache-redis-mux/10,15"
       ]
+    },
+    {
+      "name": "testAWriteThatMissesItsDeadlineCountsItsCause",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "read_timeout": 0.05,
+              "liveness_timeout": 5.0,
+              "write_failures": true,
+              "silent": true
+            },
+            "steps": [
+              {
+                "op": "save",
+                "args": {
+                  "key": "slow",
+                  "data": "value",
+                  "hash": "slow"
+                }
+              },
+              {
+                "op": "save_many",
+                "args": {
+                  "key": "slow",
+                  "data": [
+                    [
+                      "field",
+                      "value"
+                    ]
+                  ]
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "leased",
+                  "data": "value",
+                  "hash": "leased",
+                  "generation": "0"
+                }
+              }
+            ]
+          },
+          "expect": [
+            false,
+            false,
+            false,
+            [
+              {
+                "operation": "save",
+                "error": "TimeoutException"
+              },
+              {
+                "operation": "saveMany",
+                "error": "TimeoutException"
+              },
+              {
+                "operation": "saveWithLease",
+                "error": "TimeoutException"
+              }
+            ]
+          ]
+        }
+      ]
     }
   ]
 }

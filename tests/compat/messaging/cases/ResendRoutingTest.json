@@ -54,13 +54,15 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "b@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -171,13 +173,15 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "b@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -308,13 +312,15 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "b@example.com",
                   "status": "failure",
                   "error": "Invalid recipient",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -429,7 +435,8 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -506,7 +513,8 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -731,13 +739,15 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "b@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -827,7 +837,8 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -928,19 +939,22 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "b@example.com",
                   "status": "failure",
                   "error": "Invalid to",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "c@example.com",
                   "status": "failure",
                   "error": "404",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1147,7 +1161,8 @@
                   "recipient": "a@example.com",
                   "status": "failure",
                   "error": "Forbidden",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1204,7 +1219,8 @@
                   "recipient": "a@example.com",
                   "status": "failure",
                   "error": "Server error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1313,7 +1329,8 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1412,19 +1429,22 @@
                   "recipient": "a@example.com",
                   "status": "failure",
                   "error": "no",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "b@example.com",
                   "status": "failure",
                   "error": "down",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "c@example.com",
                   "status": "failure",
                   "error": "Server error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1618,13 +1638,15 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "b@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },

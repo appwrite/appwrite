@@ -5298,6 +5298,386 @@
           }
         }
       ]
+    },
+    {
+      "name": "testExactSearchFindsRowsCommittedOutOfOrder",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "profiles"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "search"
+              ]
+            ]
+          },
+          {
+            "call": "filterSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "search",
+              "\"users.service@updated.com\""
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `search` FROM `profiles` WHERE (MATCH(`search`) AGAINST(? IN BOOLEAN MODE) AND `search` REGEXP ?) ORDER BY `id` ASC",
+            "bindings": [
+              "+users +service +updated",
+              "(^|[^[:alnum:]_])users[^[:alnum:]_]+service[^[:alnum:]_]+updated[^[:alnum:]_]+com([^[:alnum:]_]|$)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExactSearchMatchesWholeWordsInOrder",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "profiles"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "search"
+              ]
+            ]
+          },
+          {
+            "call": "filterSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "search",
+              "\"fresh tomatoes\""
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "profiles"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "search"
+              ]
+            ]
+          },
+          {
+            "call": "filterSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "search",
+              "\"FRESH tomatoes\""
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "profiles"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "search"
+              ]
+            ]
+          },
+          {
+            "call": "filterNotSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "search",
+              "\"fresh tomatoes\""
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `search` FROM `profiles` WHERE (MATCH(`search`) AGAINST(? IN BOOLEAN MODE) AND `search` REGEXP ?) ORDER BY `id` ASC",
+            "bindings": [
+              "+fresh +tomatoes",
+              "(^|[^[:alnum:]_])fresh[^[:alnum:]_]+tomatoes([^[:alnum:]_]|$)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `search` FROM `profiles` WHERE (MATCH(`search`) AGAINST(? IN BOOLEAN MODE) AND `search` REGEXP ?) ORDER BY `id` ASC",
+            "bindings": [
+              "+FRESH +tomatoes",
+              "(^|[^[:alnum:]_])FRESH[^[:alnum:]_]+tomatoes([^[:alnum:]_]|$)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT `search` FROM `profiles` WHERE NOT (MATCH(`search`) AGAINST(? IN BOOLEAN MODE) AND `search` REGEXP ?) ORDER BY `id` ASC",
+            "bindings": [
+              "+fresh +tomatoes",
+              "(^|[^[:alnum:]_])fresh[^[:alnum:]_]+tomatoes([^[:alnum:]_]|$)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
     }
   ]
 }

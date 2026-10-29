@@ -83,6 +83,11 @@ pub const OPS: &[&str] = &[
     "fake.connect_payload",
     "fake.state",
     "fake.tls_options",
+    "fake.connect_passes",
+    "fake.discovered",
+    "transport.tls_failure",
+    "conn.connect_counted",
+    "conn.connect_failure",
     "conn.connect",
     "conn.publish",
     "conn.subscribe",
@@ -337,6 +342,9 @@ struct FakeState {
     inbound: Vec<u8>,
     connected: bool,
     captured: Vec<String>,
+    refuse: Option<Value>,
+    refuse_hosts: Vec<String>,
+    host: String,
 }
 
 /// The twin of `tests/compat/nats/Fake.php`: an in-memory transport serving
@@ -474,8 +482,17 @@ fn rule_matches(when: &Value, data: &[u8]) -> bool {
 
 #[async_trait]
 impl Transport for Fake {
-    async fn connect(&mut self, _host: &str, _port: u16, _timeout: Duration) -> utopia_nats::Result<()> {
+    async fn connect(&mut self, host: &str, port: u16, _timeout: Duration) -> utopia_nats::Result<()> {
         let mut state = self.lock();
+        state.host = host.to_owned();
+        if let Some(refuse) = &state.refuse {
+            return Err(scripted_error(refuse));
+        }
+        if state.refuse_hosts.iter().any(|h| h == host) {
+            return Err(Error::Connection(format!(
+                "Failed to connect to tcp://{host}:{port}: [111] Connection refused"
+            )));
+        }
         state.connected = true;
         state.connects += 1;
         let mut info = Map::new();
@@ -571,6 +588,7 @@ fn scripted_error(spec: &Value) -> Error {
         "NatsException" => Error::Nats(message),
         "ConnectionException" => Error::Connection(message),
         "TimeoutException" => Error::Timeout(message),
+        "TlsException" => Error::Tls(message),
         "ProtocolException" => Error::protocol(message),
         "AuthenticationException" => Error::Authentication(message),
         "ServiceException" => {
@@ -783,6 +801,7 @@ fn options_value(o: &ConnectionOptions) -> Value {
         "subPendingMsgsLimit": o.sub_pending_msgs_limit, "subPendingBytesLimit": o.sub_pending_bytes_limit, "connectTimeout": secs(o.connect_timeout),
         "requestTimeout": secs(o.request_timeout), "drainTimeout": secs(o.drain_timeout), "pingInterval": secs(o.ping_interval), "maxPingsOut": o.max_pings_out,
         "verbose": o.verbose, "pedantic": o.pedantic, "echo": o.echo, "noRandomize": o.no_randomize, "inboxPrefix": o.inbox_prefix,
+        "connectAttempts": o.connect_attempts, "connectRetryWait": secs(o.connect_retry_wait), "connectRetryJitter": secs(o.connect_retry_jitter),
     })
 }
 
@@ -926,6 +945,7 @@ fn connection_options(v: &Value, log: &Log) -> Result<ConnectionOptions, Fault> 
         ("subPendingMsgsLimit", &mut o.sub_pending_msgs_limit),
         ("subPendingBytesLimit", &mut o.sub_pending_bytes_limit),
         ("maxPingsOut", &mut o.max_pings_out),
+        ("connectAttempts", &mut o.connect_attempts),
     ] {
         if let Some(n) = a.opt_i64(key)? {
             *field = n;
@@ -939,6 +959,8 @@ fn connection_options(v: &Value, log: &Log) -> Result<ConnectionOptions, Fault> 
         ("requestTimeout", &mut o.request_timeout),
         ("drainTimeout", &mut o.drain_timeout),
         ("pingInterval", &mut o.ping_interval),
+        ("connectRetryWait", &mut o.connect_retry_wait),
+        ("connectRetryJitter", &mut o.connect_retry_jitter),
     ] {
         if let Some(t) = a.opt(key) {
             *field = duration(t)?;
@@ -1671,6 +1693,201 @@ async fn authenticate(args: &Args<'_>, session: &Session) -> OpResult {
     Ok(Outcome::ok(json!({"fields": php_json(&Value::Object(try_lib!(auth.authenticate(nonce))))})))
 }
 
+/// A connect error with its previous (`connectError()` in Adapter.php):
+/// {class, message, previous: {class, message} or {class, contains}}.
+fn connect_error(e: &Error, contains: Option<&str>) -> Value {
+    let previous = e.previous().map(|p| match contains {
+        None => json!({"class": p.php_class(), "message": bytes_value(&p.message_bytes())}),
+        Some(needle) => json!({"class": p.php_class(), "contains": p.to_string().contains(needle)}),
+    });
+    json!({"class": e.php_class(), "message": bytes_value(&e.message_bytes()), "previous": previous})
+}
+
+/// `connectPasses()` in Adapter.php: Connection::connect() over a new fake
+/// transport per attempt, the i-th built from `transports[i]` (the last one
+/// repeated).
+async fn connect_passes(a: &Args<'_>) -> OpResult {
+    let specs = a.array("transports")?.clone();
+    if specs.is_empty() {
+        return Err(Fault::new("transports must not be empty"));
+    }
+    let fakes: Arc<Mutex<Vec<Fake>>> = Arc::default();
+    let starts: Arc<Mutex<Vec<Instant>>> = Arc::default();
+    let delay = a.opt_i64("factory_sleep_ms")?.unwrap_or(0).max(0) as u64;
+    let log = Log::default();
+    let options = connection_options(a.opt("options").unwrap_or(&json!({})), &log)?;
+    let (factory_fakes, factory_starts) = (fakes.clone(), starts.clone());
+    let options = ConnectionOptions {
+        transport_factory: Some(Arc::new(move |_scheme: &str| {
+            factory_starts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(Instant::now());
+            if delay > 0 {
+                std::thread::sleep(Duration::from_millis(delay));
+            }
+            let mut fakes = factory_fakes.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let spec = &specs[fakes.len().min(specs.len() - 1)];
+            let fake = Fake::new(spec.get("info").and_then(Value::as_object).cloned().unwrap_or_default());
+            fake.set_rules(spec.get("rules").and_then(Value::as_array).cloned().unwrap_or_default());
+            {
+                let mut state = fake.lock();
+                state.answer_pings = spec.get("answer_pings").and_then(Value::as_bool).unwrap_or(true);
+                state.refuse = spec.get("refuse").filter(|v| !v.is_null()).cloned();
+            }
+            fakes.push(fake.clone());
+            Ok(Box::new(fake) as Box<dyn Transport>)
+        })),
+        ..options
+    };
+    let called = Instant::now();
+    let result = Connection::connect(options).await;
+    let returned = called.elapsed();
+    let fakes: Vec<Fake> = fakes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+    let starts: Vec<Instant> = starts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+    let mut out = Map::new();
+    out.insert("connected".into(), json!(result.as_ref().is_ok_and(Connection::is_connected)));
+    out.insert("error".into(), result.as_ref().err().map_or(Value::Null, |e| connect_error(e, None)));
+    match a.opt("connects_between").and_then(Value::as_array) {
+        // How many passes fit is timing: only the range is compared.
+        Some(range) => {
+            let bound = |i: usize| range.get(i).and_then(Value::as_u64).unwrap_or(0) as usize;
+            out.insert("connects_between".into(), json!(fakes.len() >= bound(0) && fakes.len() < bound(1)));
+        }
+        None => {
+            out.insert("hosts".into(), json!(fakes.iter().map(|f| f.lock().host.clone()).collect::<Vec<_>>()));
+            out.insert("open".into(), json!(fakes.iter().map(|f| f.lock().connected).collect::<Vec<_>>()));
+            out.insert("connects".into(), json!(fakes.len()));
+        }
+    }
+    let mut connection = result.ok();
+    if let (Some(publish), Some(conn), Some(last)) = (a.opt("publish"), connection.as_mut(), fakes.last()) {
+        let subject = publish.get("subject").and_then(Value::as_str).unwrap_or_default();
+        let data = publish.get("data").and_then(Value::as_str).unwrap_or_default();
+        let mark = last.lock().written.len();
+        try_lib!(conn.publish(subject, data, None, None).await);
+        out.insert("published".into(), bytes_value(&last.lock().written[mark..]));
+    }
+    if let Some(gap) = a.opt_f64("gap_at_least")? {
+        let ok = starts.windows(2).all(|w| (w[1] - w[0]).as_secs_f64() >= gap);
+        out.insert("gaps_at_least".into(), json!(ok));
+    }
+    if let Some(within) = a.opt_f64("within")? {
+        let ok = starts.iter().all(|s| (*s - called).as_secs_f64() < within);
+        out.insert("starts_within".into(), json!(ok));
+        out.insert("returned_within".into(), json!(returned.as_secs_f64() < within));
+    }
+    if let Some(mut conn) = connection {
+        let _ = conn.close().await;
+    }
+    Ok(Outcome::ok(Value::Object(out)))
+}
+
+/// `tlsFailure()` in Adapter.php: TlsFailureTest against a loopback
+/// listener.
+async fn tls_failure(a: &Args<'_>) -> OpResult {
+    use std::io::{Read, Write};
+    let server = std::net::TcpListener::bind("127.0.0.1:0")
+        .map_err(|e| Fault::new(format!("Could not open a loopback listener: {e}")))?;
+    let port = server.local_addr().map_err(|e| Fault::new(e.to_string()))?.port();
+    let error = |e: &Error| json!({"class": e.php_class(), "message": bytes_value(&e.message_bytes())});
+    if a.str("mode")? == "refused" {
+        drop(server);
+        let mut transport = TlsTransport::new(TlsOptions::default());
+        let result = transport.connect("127.0.0.1", port, Duration::from_secs(1)).await;
+        // The message carries the OS's errno, which differs between systems.
+        let error = result.err().map(|e| json!({"class": e.php_class()}));
+        return Ok(Outcome::ok(json!({"error": error, "connected": transport.is_connected()})));
+    }
+    let mut transport = TcpTransport::new();
+    try_lib!(transport.connect("127.0.0.1", port, Duration::from_secs(2)).await);
+    let (mut peer, _) = server.accept().map_err(|e| Fault::new(format!("the listener accepted nothing: {e}")))?;
+    let _ = peer.write_all(b"HTTP/1.1 400 Bad Request\r\n\r\n");
+    let peer = if a.opt_bool("close_peer")?.unwrap_or(false) {
+        drop(peer);
+        None
+    } else {
+        Some(peer)
+    };
+    let options = TlsOptions { verify_peer: false, verify_peer_name: false, ..TlsOptions::default() };
+    let result = transport.upgrade_tls(&options).await;
+    let mut out = json!({"error": result.err().as_ref().map(error), "connected": transport.is_connected()});
+    if let Some(mut peer) = peer {
+        // The peer reads EOF once the client closes.
+        let _ = peer.set_read_timeout(Some(Duration::from_secs(1)));
+        let mut buf = [0u8; 8192];
+        let eof = loop {
+            match peer.read(&mut buf) {
+                Ok(0) => break true,
+                Ok(_) => {}
+                Err(_) => break false,
+            }
+        };
+        out["peer_eof"] = json!(eof);
+    }
+    transport.close().await;
+    Ok(Outcome::ok(out))
+}
+
+/// `fake.discovered` in Adapter.php: a server advertising `peer:4222` in its
+/// INFO, then entering lame duck mode; the scheme the peer is dialled with.
+async fn discovered(a: &Args<'_>) -> OpResult {
+    let fakes: Arc<Mutex<Vec<(String, Fake)>>> = Arc::default();
+    let log = Log::default();
+    let options = connection_options(a.opt("options").unwrap_or(&json!({})), &log)?;
+    let factory_fakes = fakes.clone();
+    let options = ConnectionOptions {
+        transport_factory: Some(Arc::new(move |scheme: &str| {
+            let mut info = Map::new();
+            info.insert("connect_urls".into(), json!(["peer:4222"]));
+            let fake = Fake::new(info);
+            fake.lock().refuse_hosts = vec!["other".to_owned()];
+            factory_fakes
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .push((scheme.to_owned(), fake.clone()));
+            Ok(Box::new(fake) as Box<dyn Transport>)
+        })),
+        ..options
+    };
+    let mut conn = try_lib!(Connection::connect(options).await);
+    let first = fakes.lock().unwrap_or_else(std::sync::PoisonError::into_inner)[0].1.clone();
+    let first_host = first.lock().host.clone();
+    first.push(b"INFO {\"server_id\":\"FAKE\",\"ldm\":true}\r\n");
+    try_lib!(conn.process_message(Some(Duration::from_secs(1))).await);
+    let _ = conn.close().await;
+    let fakes = fakes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+    let (scheme, peer) = fakes.last().map(|(s, f)| (s.clone(), f.lock().host.clone())).unwrap_or_default();
+    Ok(Outcome::ok(json!({"first": first_host, "peer": peer, "scheme": scheme})))
+}
+
+/// Connection::connect() with a factory counting the TLS transports it
+/// builds (TlsTest's untrusted-certificate case).
+async fn connect_counted(a: &Args<'_>, session: &Session) -> OpResult {
+    let mut options = a.opt("options").cloned().unwrap_or_else(|| json!({}));
+    if options.get("servers").is_none() {
+        options["servers"] = json!(session.service(a.opt_str("service")?.unwrap_or("nats"))?);
+    }
+    let log = Log::default();
+    let options = connection_options(&options, &log)?;
+    let tls = tls_options(a.opt("tls"));
+    let connects = Arc::new(Mutex::new(0i64));
+    let counter = connects.clone();
+    let options = ConnectionOptions {
+        transport_factory: Some(Arc::new(move |_scheme: &str| {
+            *counter.lock().unwrap_or_else(std::sync::PoisonError::into_inner) += 1;
+            Ok(Box::new(TlsTransport::new(tls.clone())) as Box<dyn Transport>)
+        })),
+        ..options
+    };
+    let error = match Connection::connect(options).await {
+        Ok(mut conn) => {
+            let _ = conn.close().await;
+            Value::Null
+        }
+        Err(e) => connect_error(&e, a.opt_str("contains")?),
+    };
+    let connects = *connects.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    Ok(Outcome::ok(json!({"error": error, "connects": connects})))
+}
+
 async fn round_trip(args: &Args<'_>, session: &Session) -> OpResult {
     let url = session.service(args.str("service")?)?.to_owned();
     let parsed = php_std::url::parse_url(url.as_bytes()).ok_or_else(|| Fault::new("bad service URL"))?;
@@ -2197,6 +2414,22 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
 
         "transport.round_trip" => round_trip(&a, session).await,
+        "fake.connect_passes" => connect_passes(&a).await,
+        "fake.discovered" => discovered(&a).await,
+        "transport.tls_failure" => tls_failure(&a).await,
+        "conn.connect_counted" => connect_counted(&a, session).await,
+        "conn.connect_failure" => {
+            let log = Log::default();
+            let options = connection_options(a.opt("options").unwrap_or(&json!({})), &log)?;
+            let error = match Connection::connect(options).await {
+                Ok(mut conn) => {
+                    let _ = conn.close().await;
+                    Value::Null
+                }
+                Err(e) => connect_error(&e, a.opt_str("contains")?),
+            };
+            Ok(Outcome::ok(json!({"error": error})))
+        }
 
         _ => call_jetstream(op, &a, session).await,
     }

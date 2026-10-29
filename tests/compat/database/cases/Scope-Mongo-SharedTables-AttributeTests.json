@@ -6176,6 +6176,386 @@
       ]
     },
     {
+      "name": "AttributeTests::testDottedAttributeKeysInBatchWrites",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Upserts"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "dotted_keys_d725b9",
+                "name": "dotted_keys_d725b9",
+                "attributes": [
+                  {
+                    "$id": "dots.name",
+                    "key": "dots.name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "dots.score",
+                    "key": "dots.score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dotted_keys_d725b9",
+              "name": "dotted_keys_d725b9",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "dots.name",
+                    "key": "dots.name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "dots.score",
+                    "key": "dots.score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "dotted_keys_d725b9",
+            "document": {
+              "$document": {
+                "$id": "a",
+                "dots.name": "v",
+                "dots.score": 2
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "dots.name": "v",
+              "dots.score": 2,
+              "$collection": "dotted_keys_d725b9",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "dotted_keys_d725b9",
+            "document": {
+              "$document": {
+                "$id": "b",
+                "dots.name": "v",
+                "dots.score": 3
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "dots.name": "v",
+              "dots.score": 3,
+              "$collection": "dotted_keys_d725b9",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "dotted_keys_d725b9",
+            "document": {
+              "$document": {
+                "$id": "c",
+                "dots.name": "w",
+                "dots.score": 5
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c",
+              "dots.name": "w",
+              "dots.score": 5,
+              "$collection": "dotted_keys_d725b9",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "dotted_keys_d725b9",
+            "document": {
+              "$document": {
+                "$id": "d"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "d",
+              "$collection": "dotted_keys_d725b9",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "999",
+              "$sequence": "<uuid7>",
+              "dots.name": null,
+              "dots.score": null
+            }
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "dotted_keys_d725b9",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "e",
+                  "dots.name": "x",
+                  "dots.score": 7
+                }
+              },
+              {
+                "$document": {
+                  "$id": "f",
+                  "dots.name": "x",
+                  "dots.score": 11
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.upsert_documents",
+                  "args": {
+                    "collection": "dotted_keys_d725b9",
+                    "documents": [
+                      {
+                        "$document": {
+                          "$id": "e",
+                          "dots.name": "y",
+                          "dots.score": 7
+                        }
+                      },
+                      {
+                        "$document": {
+                          "$id": "g",
+                          "dots.name": "y",
+                          "dots.score": 13
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 2,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    2
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "dotted_keys_d725b9",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "dots.name",
+                  "values": [
+                    "y"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "dots.name": "y",
+                "dots.score": 7,
+                "$collection": "dotted_keys_d725b9",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "e",
+                "$tenant": "999"
+              }
+            },
+            {
+              "$document": {
+                "$createdAt": "<now>",
+                "$permissions": [],
+                "$updatedAt": "<now>",
+                "dots.name": "y",
+                "dots.score": 13,
+                "$sequence": "<uuid7>",
+                "$id": "g",
+                "$tenant": "999",
+                "$collection": "dotted_keys_d725b9"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "dotted_keys_d725b9",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "dots.name",
+                  "values": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "dots.name": "x",
+                "dots.score": 11,
+                "$collection": "dotted_keys_d725b9",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "f",
+                "$tenant": "999"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "dotted_keys_d725b9"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
       "name": "AttributeTests::testUpdateAttributeDefault",
       "state": [
         "mongo@database-mongo"

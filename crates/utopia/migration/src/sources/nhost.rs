@@ -91,6 +91,8 @@ pub struct NHost {
     pub storage_url: String,
     pub(crate) connection: Connection,
     pub(crate) pg: Option<Pg>,
+    /// The address the database host is connected on (`$databaseAddress`).
+    database_address: String,
 }
 
 impl std::fmt::Debug for NHost {
@@ -129,7 +131,44 @@ impl NHost {
                 password: password.to_owned(),
             },
             pg: None,
+            database_address: String::new(),
         }
+    }
+
+    /// The Postgres host the source connects to, so a caller can check
+    /// where it resolves before connecting.
+    ///
+    /// PHP: `getDatabaseHost()`.
+    pub fn database_host(&self) -> String {
+        format!("{}.db.{}.nhost.run", self.subdomain, self.region)
+    }
+
+    /// Connects to the database host on `address` (libpq `hostaddr`), so the
+    /// connection lands where the caller checked rather than wherever the
+    /// host resolves at connect time. TLS still verifies the host. Set it
+    /// before the first connection.
+    ///
+    /// PHP: `setDatabaseAddress()`.
+    pub fn set_database_address(&mut self, address: &str) -> &mut Self {
+        self.database_address = address.to_owned();
+        self
+    }
+
+    /// The DSN the source connects with.
+    ///
+    /// PHP: `getDatabaseDsn()`.
+    pub fn database_dsn(&self) -> String {
+        self.dsn_for(&self.database_host())
+    }
+
+    /// The DSN of `host`, on the address set with [`Self::set_database_address`].
+    pub(crate) fn dsn_for(&self, host: &str) -> String {
+        let address = if self.database_address.is_empty() {
+            String::new()
+        } else {
+            format!(";hostaddr={}", self.database_address)
+        };
+        format!("pgsql:host={host}{address};port={};dbname={}", self.connection.port, self.connection.database)
     }
 
     /// Reads the database at `host:port` instead of the project's (PHP
@@ -152,7 +191,8 @@ impl NHost {
     pub(crate) async fn database(&mut self) -> Result<&Pg> {
         if self.pg.is_none() {
             let c = &self.connection;
-            match Pg::connect(&c.host, &c.port, &c.database, &c.user, &c.password).await {
+            let address = (!self.database_address.is_empty()).then_some(self.database_address.as_str());
+            match Pg::connect_at(&c.host, address, &c.port, &c.database, &c.user, &c.password).await {
                 Ok(pg) => self.pg = Some(pg),
                 Err(e) => {
                     let code = status_code_from_error(&e);
@@ -633,6 +673,7 @@ pub(crate) fn bucket(name: String, max_file_size: Option<i64>, extensions: Array
         anti_virus: false,
         update_limits: false,
         transformations: false,
+        strip_metadata: false,
     }
 }
 

@@ -25,19 +25,22 @@
                     "recipient": "+1",
                     "status": "success",
                     "error": "",
-                    "permanent": false
+                    "permanent": false,
+                    "code": 0
                   },
                   {
                     "recipient": "+2",
                     "status": "success",
                     "error": "",
-                    "permanent": false
+                    "permanent": false,
+                    "code": 0
                   },
                   {
                     "recipient": "+3",
                     "status": "failure",
                     "error": "Nope",
-                    "permanent": false
+                    "permanent": false,
+                    "code": 0
                   }
                 ]
               }
@@ -77,19 +80,22 @@
                   "recipient": "+1",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+2",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+3",
                   "status": "failure",
                   "error": "Nope",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -216,13 +222,15 @@
                     "recipient": "+1",
                     "status": "success",
                     "error": "",
-                    "permanent": false
+                    "permanent": false,
+                    "code": 0
                   },
                   {
                     "recipient": "+2",
                     "status": "failure",
                     "error": "",
-                    "permanent": false
+                    "permanent": false,
+                    "code": 0
                   }
                 ]
               }
@@ -260,13 +268,15 @@
                   "recipient": "+1",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+2",
                   "status": "failure",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -340,7 +350,8 @@
                     "recipient": "+911234567890",
                     "status": "success",
                     "error": "",
-                    "permanent": false
+                    "permanent": false,
+                    "code": 0
                   }
                 ]
               }
@@ -426,7 +437,8 @@
                     "recipient": "+911234567890",
                     "status": "success",
                     "error": "",
-                    "permanent": false
+                    "permanent": false,
+                    "code": 0
                   }
                 ]
               }
@@ -470,7 +482,8 @@
                     "recipient": "+1",
                     "status": "success",
                     "error": "",
-                    "permanent": false
+                    "permanent": false,
+                    "code": 0
                   }
                 ]
               }
@@ -504,7 +517,8 @@
                   "recipient": "+1",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }

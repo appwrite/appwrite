@@ -78,7 +78,7 @@ impl Value {
     }
 
     /// The value as PHP prints it: `(string) $value` (`true` is `1`, `false`
-    /// and `null` are empty, floats have 14 significant digits).
+    /// and `null` are empty, floats at the `precision` setting).
     pub fn to_php_string(&self) -> Vec<u8> {
         match self {
             Value::Null | Value::Bool(false) => Vec::new(),

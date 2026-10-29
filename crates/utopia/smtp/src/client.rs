@@ -351,7 +351,17 @@ impl<T: Transport> Client<T> {
             return Err(e);
         }
 
-        let reply = self.exchange(&[250], b"").await?;
+        // The dot is already written, so a missing reply is not a refusal:
+        // the server may have queued the message. Nor is a 421, which closes
+        // the channel whether or not the message was taken.
+        let reply = match self.exchange(&[250], b"").await {
+            Ok(reply) => reply,
+            Err(Error::Transaction(refusal)) if refusal.reply.code() == 421 => {
+                return Err(Error::unconfirmed(Error::Transaction(refusal)));
+            }
+            Err(e) if e.is_connection() || matches!(e, Error::Protocol(_)) => return Err(Error::unconfirmed(e)),
+            Err(e) => return Err(e),
+        };
         let delivery = Delivery { message_id: message_id(&reply.text()), accepted, rejected };
         self.transactions += 1;
         Ok(delivery)

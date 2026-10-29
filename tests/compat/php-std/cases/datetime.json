@@ -3666,8 +3666,10 @@
         "fraction": false,
         "warning_count": 0,
         "warnings": [],
-        "error_count": 0,
-        "errors": [],
+        "error_count": 1,
+        "errors": [
+          "Empty string"
+        ],
         "is_localtime": false
       }
     },

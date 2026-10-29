@@ -191,6 +191,14 @@ impl Adapter for GitLab {
         "gitlab"
     }
 
+    fn set_self_signed(&mut self, self_signed: bool) {
+        self.transport.self_signed = self_signed;
+    }
+
+    fn is_self_signed(&self) -> bool {
+        self.transport.self_signed
+    }
+
     fn vcs_type(&self) -> VcsType {
         VcsType::Git
     }
@@ -472,7 +480,7 @@ impl Adapter for GitLab {
         Ok(comment_id.to_owned())
     }
 
-    fn clone_command(
+    async fn clone_command(
         &self,
         owner: &str,
         repository_name: &str,
@@ -518,7 +526,7 @@ impl Adapter for GitLab {
                 }
 
                 let repository_url = or(at(&project, "web_url"), "");
-                let branch = php::str_replace("refs/heads/", "", &or(at(&payload, "ref"), ""));
+                let branch = crate::github::push_branch(&at(&payload, "ref"));
                 let branch_url = concat_if_both(&repository_url, "/-/tree/", &branch);
 
                 let mut affected: Array = Array::new();

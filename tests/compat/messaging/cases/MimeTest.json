@@ -70,6 +70,26 @@
       "expect": "Date: <date>\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: \"John Doe\" <john@example.test>\r\nReply-To: \"Jane Doe\" <jane@example.test>\r\nSubject: Test Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nHello world\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<style>p{color:red}</style><p>Hello <b>world</b></p>\r\n--=_BOUNDARY1--\r\n"
     },
     {
+      "name": "the plain alternative reads entities as text",
+      "op": "mime.message",
+      "args": {
+        "email": {
+          "to": [
+            {
+              "email": "john@example.test",
+              "name": "John Doe"
+            }
+          ],
+          "subject": "Test Subject",
+          "content": "<p>It&#039;s &lt;b&gt; &amp; &quot;caf&eacute;&quot; &#x263A;</p>",
+          "html": true,
+          "from_name": "Jane Doe",
+          "from_email": "jane@example.test"
+        }
+      },
+      "expect": "Date: <date>\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: \"John Doe\" <john@example.test>\r\nReply-To: \"Jane Doe\" <jane@example.test>\r\nSubject: Test Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nIt's <b> & \"caf=C3=A9\" =E2=98=BA\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<p>It&#039;s &lt;b&gt; &amp; &quot;caf&eacute;&quot; &#x263A;</p>\r\n--=_BOUNDARY1--\r\n"
+    },
+    {
       "name": "an attachment is wrapped around the body",
       "op": "mime.message",
       "args": {
@@ -452,7 +472,7 @@
               "html": true
             }
           },
-          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nOne\r\nTwo &amp; three < b >kept\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<STYLE type=3D\"x\">a{}</style>  <p>One</p>\r\n<p>Two &amp; three</p> < b >kept<br/>\r\n--=_BOUNDARY1--\r\n"
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nOne\r\n\r\nTwo & three\r\n\r\n< b >kept\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<STYLE type=3D\"x\">a{}</style>  <p>One</p>\r\n<p>Two &amp; three</p> < b >kept<br/>\r\n--=_BOUNDARY1--\r\n"
         },
         {
           "op": "mime.message",
@@ -479,6 +499,123 @@
             }
           },
           "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nshown\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<!-- hidden --><?php echo 1; ?>shown\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "<a href=\" https://example.test/a \">Open</a> <a href=\"https://example.test/b\"></a> <a href=\"https://example.test/c\">https://example.test/c</a> <a href=\"#top\">Top</a> <a href=\"JavaScript:void(0)\">Run</a> <a>None</a>",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nOpen: https://example.test/a https://example.test/b https://example.test/c =\r\nTop Run None\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<a href=3D\" https://example.test/a \">Open</a> <a href=3D\"https://example.te=\r\nst/b\"></a> <a href=3D\"https://example.test/c\">https://example.test/c</a> <a=\r\n href=3D\"#top\">Top</a> <a href=3D\"JavaScript:void(0)\">Run</a> <a>None</a>\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "<p>one<br>two</p><pre>\n  a\n    b  </pre><textarea>x\n y</textarea><p>  spaced \t out\n  words  </p>",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\none\r\ntwo\r\n\r\na\r\n    b\r\n\r\nx\r\n y\r\n\r\nspaced out words\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<p>one<br>two</p><pre>\r\n  a\r\n    b  </pre><textarea>x\r\n y</textarea><p>  spaced =09 out\r\n  words  </p>\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "<div> ​‌  </div><p>a b‍c</p><p>x&#13;y&#13;&#10;z</p>",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\na=C2=A0b=E2=80=8Dc\r\n\r\nx y z\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<div>=C2=A0=E2=80=8B=E2=80=8C =C2=A0</div><p>a=C2=A0b=E2=80=8Dc</p><p>x&#13=\r\n;y&#13;&#10;z</p>\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "<head><title>T</title><script>s()</script></head><body><template><p>t</p></template><noscript><b>ns</b></noscript><table><tr><td>1</td><td>2</td></tr><tr><td>3</td></tr></table><ul><li>i</li><li>j</li></ul><blockquote>q</blockquote><h1>h</h1><hr><section>s</section><header>h</header><footer>f</footer></body>",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nns\r\n\r\n12\r\n\r\n3\r\n\r\ni\r\n\r\nj\r\n\r\nq\r\n\r\nh\r\n\r\ns\r\n\r\nh\r\n\r\nf\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<head><title>T</title><script>s()</script></head><body><template><p>t</p></=\r\ntemplate><noscript><b>ns</b></noscript><table><tr><td>1</td><td>2</td></tr>=\r\n<tr><td>3</td></tr></table><ul><li>i</li><li>j</li></ul><blockquote>q</bloc=\r\nkquote><h1>h</h1><hr><section>s</section><header>h</header><footer>f</foote=\r\nr></body>\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "lead<svg><a href=\"u\">l</a><title>t</title><style>s</style></svg><math><mi>m</mi></math></body>tail",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nleadl: umtail\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nlead<svg><a href=3D\"u\">l</a><title>t</title><style>s</style></svg><math><mi=\r\n>m</mi></math></body>tail\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "<b>1<i>2</b>3</i><table>x<tr><td>c</td></tr></table><p>a<p>b",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n123x\r\n\r\nc\r\n\r\na\r\n\r\nb\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<b>1<i>2</b>3</i><table>x<tr><td>c</td></tr></table><p>a<p>b\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "<frameset><frame></frameset>",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<frameset><frame></frameset>\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n\r\n--=_BOUNDARY1--\r\n"
+        },
+        {
+          "op": "mime.message",
+          "args": {
+            "email": {
+              "to": [
+                "a@example.test"
+              ],
+              "content": "<meta charset=\"windows-1252\"><p>café</p>",
+              "html": true
+            }
+          },
+          "expect": "Date: <date>\r\nFrom: \"Sender\" <sender@example.test>\r\nTo: <a@example.test>\r\nReply-To: \"Sender\" <sender@example.test>\r\nSubject: Subject\r\nMessage-ID: <<id>@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\ncaf=C3=83=C2=A9\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<meta charset=3D\"windows-1252\"><p>caf=C3=A9</p>\r\n--=_BOUNDARY1--\r\n"
         }
       ]
     },

@@ -241,7 +241,13 @@ impl Database {
         let result = crate::adapter::with_transaction(adapter.as_ref(), || {
             returned.store(false, std::sync::atomic::Ordering::SeqCst);
             discard();
-            let run = callback();
+            // Boxed: the callback's future can be large (a transaction's
+            // writes, each through the hooks), and every layer below (the
+            // attempts, the transaction scope) would otherwise keep it, and
+            // the temporaries of polling it, inline. Unoptimized builds
+            // reserve stack for each copy, which overflowed a worker's stack
+            // with a transaction nested in another.
+            let run = Box::pin(callback());
             let returned = &returned;
             async move {
                 let value = run.await?;
@@ -323,28 +329,33 @@ impl Database {
                 Err(error)
             }
             Ok(value) => {
-                let mut failure = self
-                    .purge_written_documents(&state.document_cache_purges, &state.document_cache_definitions)
-                    .await
-                    .err();
-                if let Err(e) = self
-                    .activate_document_invalidation(&state.document_cache_mutations, &state.document_cache_definitions)
-                    .await
-                {
-                    failure.get_or_insert(e);
-                }
-                if let Err(e) = self.activate_invalidation(&state.query_cache_mutations).await {
-                    failure.get_or_insert(e);
-                }
-                if let Some(e) = self.announce_document_purges(state.document_purge_events).await {
-                    failure.get_or_insert(e);
-                }
-                if let Some(mut failure) = failure {
+                self.invalidate_committed(&state).await;
+                if let Some(mut failure) = self.announce_document_purges(state.document_purge_events).await {
                     failure.mark(Mark::Committed);
                     return Err(failure);
                 }
                 self.cache_transaction_definitions(state.definition_refills).await;
                 Ok(value)
+            }
+        }
+    }
+
+    /// Invalidates the cache for writes that have committed
+    /// (`invalidateCommitted()`). The writes are stored whatever the cache
+    /// answers, and each step that cannot be confirmed leaves the cache
+    /// fail-closed: a tombstone left in place lapses into a new epoch, never
+    /// back to the old one. A failure is logged, as returning it would
+    /// report a stored write as failed.
+    async fn invalidate_committed(&self, state: &ContextState) {
+        let steps = [
+            self.purge_written_documents(&state.document_cache_purges, &state.document_cache_definitions).await,
+            self.activate_document_invalidation(&state.document_cache_mutations, &state.document_cache_definitions)
+                .await,
+            self.activate_invalidation(&state.query_cache_mutations).await,
+        ];
+        for step in steps {
+            if let Err(error) = step {
+                super::warning(format!("Warning: Failed to invalidate the cache after a commit: {}", error.message()));
             }
         }
     }

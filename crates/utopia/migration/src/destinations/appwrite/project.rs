@@ -194,6 +194,7 @@ impl Appwrite {
             ("resourceId", s("")),
             ("resourceType", s("project")),
             ("key", s(&v.key)),
+            ("description", s(&r.description())),
             ("value", s(&v.value)),
             ("secret", DbValue::Bool(v.secret)),
             ("search", s(&format!("{variable_id} {} project", v.key))),
@@ -249,6 +250,7 @@ impl Appwrite {
             ("projectInternalId", s(&self.project_internal_id)),
             ("projectId", s(&self.project_id)),
             ("name", s(&w.name)),
+            ("description", s(&r.description())),
             ("events", list(&w.events)),
             ("url", s(&w.url)),
             ("security", DbValue::Bool(w.security)),
@@ -340,6 +342,7 @@ impl Appwrite {
             ("resourceId", s(&self.project_id)),
             ("resourceType", s("projects")),
             ("name", s(&k.name)),
+            ("description", s(&r.description())),
             ("scopes", list(&k.scopes)),
             ("expire", expire),
             ("sdks", list(&k.sdks)),
@@ -470,6 +473,7 @@ impl Appwrite {
             ("corporateEmails", flag(p.deny_corporate_email)),
             ("passwordPwned", p.password_pwned.clone().map(Value::Array)),
             ("passwordRotation", p.password_rotation.clone().map(Value::Array)),
+            ("realtimeGuests", flag(p.deny_realtime_guests)),
             ("passkeyRpId", passkey_rp_id.map(|id| Value::from(id.as_str()))),
         ];
         for (k, v) in reported {

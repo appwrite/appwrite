@@ -11,8 +11,9 @@ use std::sync::{Arc, Mutex};
 
 use serde_json::{Map, Value, json};
 use utopia_balancer::{Balancer as Options, First};
+use utopia_cdn::aws::Signature;
 use utopia_cdn::cache::{self, Adapter as _, Balancer, Cache};
-use utopia_cdn::certificates::{self, Certificates, Challenge, FastlyTls, Proxy, Status};
+use utopia_cdn::certificates::{self, Certificates, Challenge, FastlyTls, Proxy, Status, ValidationToken};
 use utopia_cdn::{BoxFuture, CdnOption, Error, domain};
 use utopia_client::{Adapter as Client, Body, Client as HttpClient, Http, Request, Response, Sink};
 
@@ -34,6 +35,8 @@ pub const OPS: &[&str] = &[
     "certificates.call",
     "certificates.once",
     "challenge.new",
+    "validation_token.new",
+    "aws.sign",
     "exception.certificate",
     "exception.purge",
     "constants",
@@ -188,6 +191,58 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             Err(e) => Outcome::err(e.php_class(), e.message()),
         },
         "challenge.new" => Outcome::Ok(challenge_value(&challenge(args)?)),
+        "validation_token.new" => Outcome::Ok(token_value(&ValidationToken {
+            domain: a.str("domain")?.into(),
+            from: a.str("from")?.into(),
+            to: a.str("to")?.into(),
+        })),
+        "aws.sign" => {
+            let mut request = Request::new(a.opt_str("method")?.unwrap_or("GET"), a.str("url")?)
+                .map_err(|e| Fault::new(e.to_string()))?;
+            if let Some(Value::Object(headers)) = a.opt("headers") {
+                for (name, value) in headers {
+                    request = request
+                        .header(name, value.as_str().unwrap_or_default())
+                        .map_err(|e| Fault::new(e.to_string()))?;
+                }
+            }
+            if let Some(body) = a.opt_str("body")? {
+                request = request.body(body.to_owned());
+            }
+            let time = match a.opt_str("time")? {
+                Some(time) => Some(
+                    php_std::datetime::strtotime(
+                        time.as_bytes(),
+                        php_std::datetime::time(),
+                        &php_std::datetime::TzInfo::utc(),
+                    )
+                    .ok_or_else(|| Fault::new(format!("`{time}` is not a time")))?,
+                ),
+                None => None,
+            };
+            let signature =
+                Signature::new(a.str("access_key_id")?, a.str("secret_access_key")?, a.opt_str("session_token")?);
+            match signature.sign(request, a.str("service")?, a.str("region")?, time) {
+                Ok(signed) => {
+                    let mut headers: Vec<(String, String)> = signed
+                        .headers()
+                        .iter()
+                        .filter(|(name, _)| !name.eq_ignore_ascii_case("host"))
+                        .map(|(name, values)| (name.to_ascii_lowercase(), values.join(", ")))
+                        .collect();
+                    headers.sort_by(|a, b| a.0.cmp(&b.0));
+                    let headers: Value =
+                        Value::Object(headers.into_iter().map(|(n, v)| (n, Value::String(v))).collect());
+                    if time.is_some() {
+                        Outcome::Ok(headers)
+                    } else {
+                        let stable = Stable::normalize(json!([{ "headers": headers }]));
+                        Outcome::Ok(stable[0]["headers"].clone())
+                    }
+                }
+                Err(e) => Outcome::err(e.php_class(), e.message()),
+            }
+        }
         "exception.certificate" => {
             let status = status(a.str("status")?)?;
             let challenges = a.opt("challenges").and_then(Value::as_array).map_or(&[][..], Vec::as_slice);
@@ -205,6 +260,19 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 "PATHS_PER_PURGE": cache::Cloudflare::PATHS_PER_PURGE,
                 "KEYS_PER_PURGE": cache::Cloudflare::KEYS_PER_PURGE,
             },
+            "cloudfront": {
+                "SIGNING_SERVICE": cache::CloudFront::SIGNING_SERVICE,
+                "SIGNING_REGION": cache::CloudFront::SIGNING_REGION,
+                "API_VERSION": cache::CloudFront::API_VERSION,
+                "PATHS_PER_PURGE": cache::CloudFront::PATHS_PER_PURGE,
+                "KEYS_PER_PURGE": cache::CloudFront::KEYS_PER_PURGE,
+                "THROTTLE_RETRIES": cache::CloudFront::THROTTLE_RETRIES,
+                "KEY_MAX_LENGTH": cache::CloudFront::KEY_MAX_LENGTH,
+                "VALIDATION_TOKEN_HOST_CLOUDFRONT": certificates::CloudFront::VALIDATION_TOKEN_HOST_CLOUDFRONT,
+                "VALIDATION_TOKEN_HOST_SELF_HOSTED": certificates::CloudFront::VALIDATION_TOKEN_HOST_SELF_HOSTED,
+                "RECHECK_INTERVAL": certificates::CloudFront::RECHECK_INTERVAL,
+            },
+            "aws": { "ALGORITHM": Signature::ALGORITHM },
             "fastly": { "KEYS_PER_PURGE": cache::Fastly::KEYS_PER_PURGE },
             "option": {
                 "ADAPTER": CdnOption::ADAPTER,
@@ -212,6 +280,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 "EDGE": CdnOption::EDGE,
                 "PROVIDER_FASTLY": CdnOption::PROVIDER_FASTLY,
                 "PROVIDER_CLOUDFLARE": CdnOption::PROVIDER_CLOUDFLARE,
+                "PROVIDER_CLOUDFRONT": CdnOption::PROVIDER_CLOUDFRONT,
             },
             "status": Status::ALL.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
             "fastly_tls": { "CHALLENGE_MANAGED_DNS": FastlyTls::CHALLENGE_MANAGED_DNS },
@@ -239,6 +308,115 @@ fn challenge(value: &Value) -> Result<Challenge, Fault> {
         record_name: a.str("record_name")?.into(),
         values: strings(a.array("values")?)?,
     })
+}
+
+fn token_value(token: &ValidationToken) -> Value {
+    json!({ "domain": token.domain, "from": token.from, "to": token.to })
+}
+
+/// What both transports do to the responses queued and the requests
+/// taken: the twin of `Stable` in `tests/compat/cdn/Transport.php`.
+struct Stable;
+
+impl Stable {
+    /// A queued response with every string `@days:<n>` in its `json`
+    /// replaced by the UTC time `n` days from now (`Y-m-d\TH:i:s\Z`).
+    fn prepare(response: &Value) -> Value {
+        fn relative(value: &Value) -> Value {
+            match value {
+                Value::Array(items) => Value::Array(items.iter().map(relative).collect()),
+                Value::Object(map) => Value::Object(map.iter().map(|(k, v)| (k.clone(), relative(v))).collect()),
+                Value::String(s) if s.starts_with("@days:") => {
+                    // (int) substr($value, 6): leading digits, 0 when none.
+                    let rest = &s[6..];
+                    let digits: String = rest
+                        .char_indices()
+                        .take_while(|(i, c)| c.is_ascii_digit() || (*i == 0 && (*c == '-' || *c == '+')))
+                        .map(|(_, c)| c)
+                        .collect();
+                    let days: i64 = digits.parse().unwrap_or(0);
+                    let at = php_std::datetime::time() + days * 86400;
+                    let date = php_std::datetime::DateTime::new(
+                        format!("@{at}").as_bytes(),
+                        None,
+                        &php_std::datetime::TzInfo::utc(),
+                    )
+                    .map(|d| String::from_utf8_lossy(&d.format(b"Y-m-d\\TH:i:s\\Z")).into_owned())
+                    .unwrap_or_default();
+                    Value::String(date)
+                }
+                other => other.clone(),
+            }
+        }
+        let mut response = response.clone();
+        if let Some(Value::Object(map)) = Some(&mut response)
+            && let Some(json) = map.get("json").map(relative)
+        {
+            map.insert("json".into(), json);
+        }
+        response
+    }
+
+    /// Requests with what changes on every run made stable: an AWS
+    /// signature's date and signature, the `x-amz-date` header, and each
+    /// random invalidation `CallerReference`, numbered by first appearance.
+    fn normalize(mut requests: Value) -> Value {
+        const PREFIX: &str = "AWS4-HMAC-SHA256 Credential=";
+        const OPEN: &str = "<CallerReference>";
+        let mut references: Vec<String> = Vec::new();
+        let Value::Array(list) = &mut requests else {
+            return requests;
+        };
+        for request in list {
+            let Value::Object(request) = request else {
+                continue;
+            };
+            if let Some(Value::Object(headers)) = request.get_mut("headers") {
+                if headers.contains_key("x-amz-date") {
+                    headers.insert("x-amz-date".into(), Value::from("<date>"));
+                }
+                if let Some(Value::String(authorization)) = headers.get_mut("authorization")
+                    && authorization.starts_with(PREFIX)
+                {
+                    let mut value = authorization.clone();
+                    if let Some(slash) = value[PREFIX.len()..].find('/').map(|i| i + PREFIX.len()) {
+                        let after = value.get(slash + 9..).unwrap_or_default().to_owned();
+                        value = format!("{}<date>{after}", &value[..=slash]);
+                    }
+                    if let Some(signature) = value.find(", Signature=") {
+                        value = format!("{}, Signature=<signature>", &value[..signature]);
+                    }
+                    *authorization = value;
+                }
+            }
+            if let Some(Value::String(body)) = request.get_mut("body")
+                && let Some(start) = body.find(OPEN)
+                && let Some(end) = body[start..].find("</CallerReference>").map(|i| i + start)
+            {
+                let reference = body[start + OPEN.len()..end].to_owned();
+                let index = match references.iter().position(|r| *r == reference) {
+                    Some(i) => i,
+                    None => {
+                        references.push(reference);
+                        references.len() - 1
+                    }
+                };
+                *body = format!("{}ref-{}{}", &body[..start + OPEN.len()], index + 1, &body[end..]);
+            }
+        }
+        requests
+    }
+}
+
+/// The CloudFront provider's validation tokens, whatever its client.
+trait Tokens: Send + Sync {
+    fn tokens<'a>(&'a self, domain: &'a str) -> BoxFuture<'a, Result<Vec<ValidationToken>, Error>>;
+}
+
+impl<C: Client> Tokens for certificates::CloudFront<C> {
+    fn tokens<'a>(&'a self, domain: &'a str) -> BoxFuture<'a, Result<Vec<ValidationToken>, Error>> {
+        Box::pin(self.validation_tokens(domain))
+    }
 }
 
 fn challenge_value(challenge: &Challenge) -> Value {
@@ -431,13 +609,15 @@ impl Recorded {
                 tape.answers.push_back(Answer::Error(message.as_str().unwrap_or_default().to_owned()));
                 continue;
             }
-            tape.answers.push_back(Answer::Response(response(r)?));
+            tape.answers.push_back(Answer::Response(response(&Stable::prepare(r))?));
         }
         Ok(())
     }
 
     fn take(&self) -> Value {
-        Value::Array(std::mem::take(&mut self.tape.lock().unwrap_or_else(|e| e.into_inner()).requests))
+        Stable::normalize(Value::Array(std::mem::take(
+            &mut self.tape.lock().unwrap_or_else(|e| e.into_inner()).requests,
+        )))
     }
 
     fn answer(&self, request: &Request) -> Result<Response, utopia_client::Error> {
@@ -585,11 +765,12 @@ impl Fixture {
     }
 
     async fn queue(&self, responses: &[Value]) -> Result<(), Fault> {
-        self.call(&format!("/_queue/{}", self.ns), Some(Value::from(responses.to_vec()).to_string())).await.map(|_| ())
+        let prepared: Vec<Value> = responses.iter().map(Stable::prepare).collect();
+        self.call(&format!("/_queue/{}", self.ns), Some(Value::from(prepared).to_string())).await.map(|_| ())
     }
 
     async fn take(&self) -> Result<Value, Fault> {
-        self.call(&format!("/_take/{}", self.ns), None).await
+        self.call(&format!("/_take/{}", self.ns), None).await.map(Stable::normalize)
     }
 }
 
@@ -690,6 +871,41 @@ fn cache_new(a: &Args<'_>, session: &Session) -> Result<CacheHandle, Fault> {
                 Wire::Fixture(_) => plain(Arc::new(adapter), Some(wire)),
             }
         }
+        "cloudfront" => {
+            let (wire, base) = wire(a, session, "https://cloudfront.amazonaws.com")?;
+            let tenant = a.opt_str("tenant")?;
+            let session_token = a.opt_str("session_token")?;
+            let interval = Some(u64::try_from(a.opt_i64("batch_interval")?.unwrap_or(0)).unwrap_or(0));
+            let (key, secret, prefix) = (a.str("access_key_id")?, a.str("secret_access_key")?, a.str("prefix")?);
+            match &wire {
+                Wire::Recorded(r) => plain(
+                    Arc::new(cache::CloudFront::new(
+                        key,
+                        secret,
+                        prefix,
+                        tenant,
+                        session_token,
+                        r.clone(),
+                        Some(&base),
+                        interval,
+                    )),
+                    Some(wire),
+                ),
+                Wire::Fixture(_) => plain(
+                    Arc::new(cache::CloudFront::new(
+                        key,
+                        secret,
+                        prefix,
+                        tenant,
+                        session_token,
+                        utopia_cdn::default_client(),
+                        Some(&base),
+                        interval,
+                    )),
+                    Some(wire),
+                ),
+            }
+        }
         "recorder" => plain(
             Arc::new(CacheRecorder {
                 name: a.str("name")?.into(),
@@ -761,11 +977,13 @@ struct ProviderHandle {
     provider: Arc<dyn certificates::Provider>,
     facade: bool,
     wire: Option<Wire>,
+    /// The CloudFront provider's validation tokens, for that provider only.
+    tokens: Option<Arc<dyn Tokens>>,
 }
 
 fn provider_new(a: &Args<'_>, session: &Session) -> Result<Result<ProviderHandle, Error>, Fault> {
     let plain = |provider: Arc<dyn certificates::Provider>, wire: Option<Wire>| {
-        Ok(ProviderHandle { provider, facade: false, wire })
+        Ok(ProviderHandle { provider, facade: false, wire, tokens: None })
     };
     let handle = |value: &Value| -> Result<Arc<dyn certificates::Provider>, Fault> {
         let handle = session.get::<ProviderHandle>(value)?;
@@ -809,6 +1027,21 @@ fn provider_new(a: &Args<'_>, session: &Session) -> Result<Result<ProviderHandle
                 Wire::Fixture(_) => plain(Arc::new(provider), Some(wire)),
             }
         }
+        "cloudfront" => {
+            let (wire, base) = wire(a, session, "https://cloudfront.amazonaws.com")?;
+            let parameters: Vec<(String, String)> = match a.opt("parameters") {
+                Some(Value::Object(map)) => {
+                    map.iter().map(|(k, v)| (k.clone(), v.as_str().unwrap_or_default().to_owned())).collect()
+                }
+                _ => Vec::new(),
+            };
+            match &wire {
+                Wire::Recorded(r) => cloudfront_provider(a, &parameters, &base, r.clone(), wire.clone())?,
+                Wire::Fixture(_) => {
+                    cloudfront_provider(a, &parameters, &base, utopia_cdn::default_client(), wire.clone())?
+                }
+            }
+        }
         "recorder" => plain(
             Arc::new(ProviderRecorder {
                 name: a.str("name")?.into(),
@@ -830,10 +1063,40 @@ fn provider_new(a: &Args<'_>, session: &Session) -> Result<Result<ProviderHandle
         }
         "facade" => {
             let inner = session.get::<ProviderHandle>(a.value("provider")?)?;
-            Ok(ProviderHandle { provider: handle(a.value("provider")?)?, facade: true, wire: inner.wire.clone() })
+            Ok(ProviderHandle {
+                provider: handle(a.value("provider")?)?,
+                facade: true,
+                wire: inner.wire.clone(),
+                tokens: None,
+            })
         }
         other => return Err(Fault::new(format!("unknown provider type `{other}`"))),
     })
+}
+
+fn cloudfront_provider<C: Client + 'static>(
+    a: &Args<'_>,
+    parameters: &[(String, String)],
+    base: &str,
+    client: C,
+    wire: Wire,
+) -> Result<Result<ProviderHandle, Error>, Fault> {
+    let parameters: Vec<(&str, &str)> = parameters.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    let provider = certificates::CloudFront::new(
+        a.str("access_key_id")?,
+        a.str("secret_access_key")?,
+        a.str("distribution")?,
+        a.opt_str("connection_group")?,
+        a.opt_str("validation_token_host")?,
+        &parameters,
+        a.opt_str("session_token")?,
+        client,
+        Some(base),
+    );
+    Ok(provider.map(|provider| {
+        let provider = Arc::new(provider);
+        ProviderHandle { provider: provider.clone(), facade: false, wire: Some(wire), tokens: Some(provider) }
+    }))
 }
 
 async fn provider_call(handle: &ProviderHandle, a: &Args<'_>) -> Result<Value, Fault> {
@@ -843,6 +1106,15 @@ async fn provider_call(handle: &ProviderHandle, a: &Args<'_>) -> Result<Value, F
     let cert = a.opt_str("cert_name")?.unwrap_or("cert");
     let wire = handle.wire.as_ref();
     let p = &handle.provider;
+    if method == "getValidationTokens" {
+        let Some(tokens) = &handle.tokens else {
+            return Err(Fault::new("only a CloudFront provider has validation tokens"));
+        };
+        return record(wire, a, async {
+            tokens.tokens(domain).await.map(|list| Value::Array(list.iter().map(token_value).collect()))
+        })
+        .await;
+    }
     if handle.facade {
         let c = Certificates::new(p.clone());
         return match method {

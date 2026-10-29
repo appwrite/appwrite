@@ -1091,6 +1091,7 @@
             "getDatabase": "",
             "getDatabaseName": "public",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "public",

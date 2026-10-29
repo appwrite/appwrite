@@ -263,6 +263,19 @@ async fn read_line(stream: &mut BufStream<TcpStream>) -> std::io::Result<Vec<u8>
 }
 
 /// Runs a request, retrying connection failures (`execute`).
+/// A purge of a key the client refuses to send (empty, over 250 bytes, or
+/// holding a space or control character) fails, as distinct from a key
+/// that is not there.
+///
+/// PHP: `MemcachedException` from `purge()` when the extension reports
+/// `RES_BAD_KEY_PROVIDED` rather than `RES_NOTFOUND`.
+fn rejected_purge(key: &str) -> Result<()> {
+    if key.is_empty() || key.len() > 250 || key.bytes().any(|b| !b.is_ascii_graphic()) {
+        return Err(Error::Memcached(format!("Failed to purge {key}: A BAD KEY WAS PROVIDED/CHARACTERS OUT OF RANGE")));
+    }
+    Ok(())
+}
+
 macro_rules! execute {
     ($retry:expr, $label:literal, $request:expr) => {{
         let mut attempts = 0u32;
@@ -389,6 +402,7 @@ impl Adapter for Memcached {
     }
 
     async fn purge(&self, key: &str, _hash: &str) -> Result<bool> {
+        rejected_purge(key)?;
         execute!(self.retry, "Memcached", self.client.delete(key).await)
     }
 
@@ -515,6 +529,7 @@ impl<K: Codec> Adapter for Hazelcast<K> {
     }
 
     async fn purge(&self, key: &str, _hash: &str) -> Result<bool> {
+        rejected_purge(key)?;
         execute!(self.retry, "Hazelcast", self.client.delete(key).await)
     }
 

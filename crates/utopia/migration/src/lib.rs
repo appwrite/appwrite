@@ -19,7 +19,7 @@
 //! | `Utopia\Migration\Exception` | [`Exception`] |
 //! | `Utopia\Migration\Warning` | [`Warning`] |
 //! | `Utopia\Migration\Sources\Appwrite` and `Appwrite\Reader\*` | [`sources::appwrite`] |
-//! | `Utopia\Migration\Sources\Appwrite\Client` and `Client\RedirectRefusal` | [`sdk::Client`] ([`sdk::Client::refuse_redirects`]) |
+//! | `Utopia\Migration\Sources\Appwrite\Client` | [`sdk::Client`] |
 //! | `Utopia\Migration\Sources\CSV`, `JSON` | [`sources::csv`], [`sources::json`] |
 //! | `Utopia\Migration\Sources\Firebase` | `sources::firebase` (feature `firebase`) |
 //! | `Utopia\Migration\Sources\NHost`, `Supabase` | `sources::nhost`, `sources::supabase` (feature `nhost`) |

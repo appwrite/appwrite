@@ -16,7 +16,7 @@ use crate::Error;
 pub type DefaultClient = utopia_client::Client<utopia_client::Http>;
 
 /// A new [`DefaultClient`].
-pub(crate) fn default_client() -> DefaultClient {
+pub fn default_client() -> DefaultClient {
     utopia_client::Client::new(utopia_client::Http::new())
 }
 

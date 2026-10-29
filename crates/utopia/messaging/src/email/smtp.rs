@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use indexmap::IndexMap;
 use utopia_async::sync::Mutex;
 use utopia_smtp::auth::{Login, Plain};
 use utopia_smtp::{Client, Encryption, Outcome, TcpTransport, Timeouts, Tls};
@@ -25,7 +26,8 @@ pub struct Host {
 
 /// Every host in the list failed before a session was open: the message
 /// names each host's failure, and `permanent` says whether trying the list
-/// again can go differently (only when every host refused for good).
+/// again can go differently (only when every host refused for good). Its
+/// `code` is the first reply code a host refused with, or 0 when none replied.
 ///
 /// PHP: `Utopia\Messaging\Adapter\Email\SMTP\NoHostAnswered`, a
 /// `Utopia\SMTP\Exception\ConnectionException`.
@@ -35,15 +37,19 @@ pub struct NoHostAnswered {
     pub message: String,
     /// Whether every host refused for good.
     pub permanent: bool,
+    /// The first reply code a host refused with, or 0 when none replied.
+    ///
+    /// PHP: `getCode()`.
+    pub code: i64,
 }
 
 impl NoHostAnswered {
     /// The PHP class.
     pub const CLASS: &'static str = "Utopia\\Messaging\\Adapter\\Email\\SMTP\\NoHostAnswered";
 
-    /// PHP: `new NoHostAnswered($message, $permanent)`.
-    pub fn new(message: impl Into<String>, permanent: bool) -> NoHostAnswered {
-        NoHostAnswered { message: message.into(), permanent }
+    /// PHP: `new NoHostAnswered($message, $permanent, $code)`.
+    pub fn new(message: impl Into<String>, permanent: bool, code: i64) -> NoHostAnswered {
+        NoHostAnswered { message: message.into(), permanent, code }
     }
 }
 
@@ -74,6 +80,15 @@ impl Failure {
             Failure::Smtp(_) => false,
         }
     }
+
+    /// The reply code the server refused with, or 0 when no reply stands
+    /// behind the failure.
+    fn code(&self) -> i64 {
+        match self {
+            Failure::NoHost(e) => e.code,
+            Failure::Smtp(e) => i64::from(e.code()),
+        }
+    }
 }
 
 /// An SMTP relay: one or several hosts tried in order, with STARTTLS or
@@ -95,6 +110,7 @@ pub struct Smtp {
     time_limit: i64,
     ping_threshold: i64,
     restart_threshold: i64,
+    addresses: IndexMap<String, String>,
     client: Mutex<Option<Client<TcpTransport>>>,
     base: Base,
 }
@@ -126,6 +142,7 @@ impl Smtp {
             time_limit: 30,
             ping_threshold: 30,
             restart_threshold: 100,
+            addresses: IndexMap::new(),
             client: Mutex::new(None),
             base: Base::new(Http::new("SMTP")),
         }
@@ -195,6 +212,16 @@ impl Smtp {
         self
     }
 
+    /// Host => address to dial it on, as each host appears in the host
+    /// string (`smtp1.example.com` => `203.0.113.10`, `[2001:db8::1]` for
+    /// IPv6), so the connection lands on an address the caller checked. The
+    /// certificate is still verified against the host. A host not listed is
+    /// dialled by name.
+    pub fn with_addresses(mut self, addresses: IndexMap<String, String>) -> Smtp {
+        self.addresses = addresses;
+        self
+    }
+
     /// The servers to try, in order.
     ///
     /// PHP: the private `hosts()`.
@@ -260,10 +287,17 @@ impl Smtp {
         if domain.is_empty() {
             domain = "localhost".into();
         }
-        let mut client = Client::new(TcpTransport::new(host.host.clone(), port, Tls::default()))
-            .with_domain(domain)
-            .with_encryption(host.encryption)
-            .with_timeouts(timeouts);
+        let mut client = Client::new(match self.addresses.get(&host.host) {
+            Some(address) => TcpTransport::new(
+                address.clone(),
+                port,
+                Tls { peer_name: Some(host.host.trim_matches(['[', ']']).to_owned()), ..Tls::default() },
+            ),
+            None => TcpTransport::new(host.host.clone(), port, Tls::default()),
+        })
+        .with_domain(domain)
+        .with_encryption(host.encryption)
+        .with_timeouts(timeouts);
         let absent = |s: &str| matches!(s, "" | "0");
         if !absent(&self.username) && !absent(&self.password) {
             client = client
@@ -277,7 +311,13 @@ impl Smtp {
     async fn dial(&self) -> Result<Result<Client<TcpTransport>, Failure>, Error> {
         let mut failures = Vec::new();
         let mut permanent = true;
+        let mut code = 0;
         for host in self.hosts() {
+            // A host the caller did not check is refused rather than dialled by name.
+            if !self.addresses.is_empty() && !self.addresses.contains_key(&host.host) {
+                failures.push(format!("{}:{} (no checked address)", host.host, host.port));
+                continue;
+            }
             let mut client = self.client_for(&host)?;
             match client.capabilities().await {
                 Ok(_) => return Ok(Ok(client)),
@@ -285,12 +325,15 @@ impl Smtp {
                     let failure = Failure::Smtp(e);
                     failures.push(format!("{}:{} ({})", host.host, host.port, failure.message()));
                     permanent = permanent && failure.permanent();
+                    if code == 0 {
+                        code = failure.code();
+                    }
                 }
                 Err(e) => return Err(e.into()),
             }
         }
         let message = format!("No SMTP host answered: {}", failures.join("; "));
-        Ok(Err(Failure::NoHost(NoHostAnswered::new(message, !failures.is_empty() && permanent))))
+        Ok(Err(Failure::NoHost(NoHostAnswered::new(message, !failures.is_empty() && permanent, code))))
     }
 
     async fn reusable(&self, client: &mut Client<TcpTransport>) -> Result<bool, Error> {
@@ -327,38 +370,54 @@ impl Smtp {
     }
 
     async fn send_email(&self, message: &Message) -> Result<Sent, Error> {
+        let (sent, stale) = self.deliver(message, true).await?;
+        // The kept socket failed before this message was submitted. The dot
+        // was not written, so this dials once more. A second failure stands.
+        if stale {
+            return Ok(self.deliver(message, false).await?.0);
+        }
+        Ok(sent)
+    }
+
+    /// Sends one message, and tells whether the kept session it was given
+    /// died under it before the message was submitted (only when `retry`).
+    ///
+    /// PHP: `deliver($message, $retry)`.
+    async fn deliver(&self, message: &Message, retry: bool) -> Result<(Sent, bool), Error> {
         let email = email(message);
         let mut response = Response::new(TYPE);
         let recipients = Smtp::recipients(email);
 
         let mut kept = self.client.lock().await;
-        let opened = if self.keep_alive {
-            let mut reused = None;
-            if let Some(mut client) = kept.take() {
-                if self.reusable(&mut client).await? {
-                    reused = Some(client);
-                } else {
-                    client.close().await;
-                }
+        // A fresh dial is not a reuse: a failure there is the server just
+        // reached, and sending the message again would not be the stale socket.
+        let mut reused = None;
+        if self.keep_alive
+            && let Some(mut client) = kept.take()
+        {
+            if self.reusable(&mut client).await? {
+                reused = Some(client);
+            } else {
+                client.close().await;
             }
-            match reused {
-                Some(client) => Ok(client),
-                None => self.dial().await?,
-            }
-        } else {
-            self.dial().await?
+        }
+        let was_reused = reused.is_some();
+        let opened = match reused {
+            Some(client) => Ok(client),
+            None => self.dial().await?,
         };
         let mut client = match opened {
             Ok(client) => client,
             Err(failure) => {
                 for recipient in &recipients {
-                    response.add_result(recipient, failure.message(), failure.permanent());
+                    response.add_result(recipient, failure.message(), failure.permanent(), failure.code());
                 }
-                return Ok(Sent::Response(response));
+                return Ok((Sent::Response(response), false));
             }
         };
 
         let mut keep = self.keep_alive;
+        let mut stale = false;
         let outcome = match self.build(email) {
             Ok(built) => Ok(client.send(&built).await),
             Err(e) => Err(e),
@@ -371,22 +430,41 @@ impl Smtp {
                     response.add_success(accepted);
                 }
                 for (address, reply) in &delivery.rejected {
-                    response.add_result(address, reply.to_string(), reply.outcome() == Outcome::Permanent);
+                    response.add_result(
+                        address,
+                        reply.to_string(),
+                        reply.outcome() == Outcome::Permanent,
+                        i64::from(reply.code()),
+                    );
                 }
                 Ok(())
             }
             Ok(Err(utopia_smtp::Error::Transaction(refusal))) => {
                 for recipient in &recipients {
                     let reply = refusal.rejected.get(recipient).unwrap_or(&refusal.reply);
-                    response.add_result(recipient, reply.to_string(), reply.outcome() == Outcome::Permanent);
+                    response.add_result(
+                        recipient,
+                        reply.to_string(),
+                        reply.outcome() == Outcome::Permanent,
+                        i64::from(reply.code()),
+                    );
                 }
+                // A 421 during RCPT ends the session with the transaction.
+                // It is also how a kept socket answers the first command
+                // after the server has closed it, before the message is
+                // submitted.
                 keep = keep && client.idle().is_some();
+                stale = retry && was_reused && refusal.reply.code() == 421;
                 Ok(())
             }
             Ok(Err(e)) if e.is_smtp() => {
+                // A kept socket that died before the dot. An unconfirmed
+                // send means the dot was written and the server may have
+                // the message.
+                stale = retry && was_reused && (e.is_connection() || matches!(e, utopia_smtp::Error::Protocol(_)));
                 let failure = Failure::Smtp(e);
                 for recipient in &recipients {
-                    response.add_result(recipient, failure.message(), failure.permanent());
+                    response.add_result(recipient, failure.message(), failure.permanent(), failure.code());
                 }
                 keep = false;
                 Ok(())
@@ -398,7 +476,7 @@ impl Smtp {
         } else {
             client.close().await;
         }
-        result.map(|()| Sent::Response(response))
+        result.map(|()| (Sent::Response(response), stale))
     }
 }
 

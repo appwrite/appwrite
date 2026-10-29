@@ -91,6 +91,39 @@ fn second(values: &Array) -> Option<&Value> {
 }
 
 impl Database {
+    /// Brings a collection created by an earlier schema up to date: creates
+    /// the declared attributes, then indexes, it lacks. Attributes come first,
+    /// since a new index may cover a new attribute; a duplicate from a
+    /// concurrent setup() is ignored.
+    ///
+    /// PHP: `Database::addMissing()` (private).
+    async fn add_missing(&self, attributes: Vec<DbAttribute>, indexes: Vec<DbIndex>) -> Result<()> {
+        let collection = self.db.get_collection(COLLECTION).await?;
+        let existing: Vec<String> = collection.attributes()?.iter().map(|a| a.key.clone()).collect();
+        for attribute in attributes {
+            if existing.contains(&attribute.key) {
+                continue;
+            }
+            match self.db.create_attribute(COLLECTION, attribute).await {
+                Ok(_) => {}
+                Err(e) if e.is_a(DbKind::Duplicate) => {}
+                Err(e) => return Err(e.into()),
+            }
+        }
+        let existing: Vec<String> = collection.indexes()?.iter().map(|i| i.key.clone()).collect();
+        for index in indexes {
+            if existing.contains(&index.key) {
+                continue;
+            }
+            match self.db.create_index(COLLECTION, index).await {
+                Ok(_) => {}
+                Err(e) if e.is_a(DbKind::Duplicate) => {}
+                Err(e) => return Err(e.into()),
+            }
+        }
+        Ok(())
+    }
+
     /// The adapter over `db` (whose database must exist before [`Adapter::setup`]).
     ///
     /// PHP: `new Database($db)`.
@@ -334,12 +367,15 @@ impl Adapter for Database {
         attributes.push(DbAttribute::string("type", 16));
         indexes.push(DbIndex::key("index-type", ["type"], Vec::new(), Vec::new())?);
 
-        let collection = Collection::create(COLLECTION, "", attributes, indexes, None, true, Default::default())?;
+        let collection =
+            Collection::create(COLLECTION, "", attributes.clone(), indexes.clone(), None, true, Default::default())?;
         match self.db.create_collection(collection).await {
-            Ok(_) => Ok(()),
-            Err(e) if e.is_a(DbKind::Duplicate) => Ok(()),
-            Err(e) => Err(e.into()),
+            Ok(_) => return Ok(()),
+            // Created by an earlier setup(); brought up to date below.
+            Err(e) if e.is_a(DbKind::Duplicate) => {}
+            Err(e) => return Err(e.into()),
         }
+        self.add_missing(attributes, indexes).await
     }
 
     async fn add_batch(&self, metrics: &[Entry], kind: Kind, batch_size: i64) -> Result<bool> {

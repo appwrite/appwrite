@@ -136,6 +136,55 @@ fn mask_at(value: &mut Value, segments: &[&str]) {
     }
 }
 
+/// Replaces each float at `paths` in `expect` with the one at the same place
+/// in `got` when they are within `tolerance` of each other (relative to the
+/// larger), so only a difference beyond it is reported.
+pub fn settle(expect: &mut Value, got: &Value, paths: &[String], tolerance: f64) {
+    for path in paths {
+        let segments: Vec<&str> = path.split('/').skip(1).collect();
+        settle_at(expect, got, &segments, tolerance);
+    }
+}
+
+fn settle_at(expect: &mut Value, got: &Value, segments: &[&str], tolerance: f64) {
+    let Some((first, rest)) = segments.split_first() else {
+        if let (Some(e), Some(g)) = (expect.as_f64(), got.as_f64())
+            && expect.is_f64()
+            && got.is_f64()
+            && (e - g).abs() <= tolerance * e.abs().max(g.abs())
+        {
+            *expect = got.clone();
+        }
+        return;
+    };
+    match (expect, got) {
+        (Value::Object(e), Value::Object(g)) => {
+            if *first == "*" {
+                for (k, v) in e.iter_mut() {
+                    if let Some(w) = g.get(k) {
+                        settle_at(v, w, rest, tolerance);
+                    }
+                }
+            } else {
+                let key = unescape(first);
+                if let (Some(v), Some(w)) = (e.get_mut(&key), g.get(&key)) {
+                    settle_at(v, w, rest, tolerance);
+                }
+            }
+        }
+        (Value::Array(e), Value::Array(g)) => {
+            if *first == "*" {
+                e.iter_mut().zip(g).for_each(|(v, w)| settle_at(v, w, rest, tolerance));
+            } else if let Some(i) = first.parse::<usize>().ok()
+                && let (Some(v), Some(w)) = (e.get_mut(i), g.get(i))
+            {
+                settle_at(v, w, rest, tolerance);
+            }
+        }
+        _ => {}
+    }
+}
+
 fn unescape(segment: &str) -> String {
     segment.replace("~1", "/").replace("~0", "~")
 }
@@ -251,6 +300,14 @@ pub fn substitute(args: &Value, bindings: &HashMap<String, Value>, ns: &str) -> 
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn settle_accepts_floats_within_the_tolerance() {
+        let got = json!([{ "d": 0.06812198497764155 }, { "d": 0.5 }]);
+        let mut expect = json!([{ "d": 0.06812206267745391 }, { "d": 0.6 }]);
+        settle(&mut expect, &got, &["/*/d".to_owned()], 1e-4);
+        assert_eq!(expect, json!([{ "d": 0.06812198497764155 }, { "d": 0.6 }]));
+    }
 
     #[test]
     fn ints_and_floats_differ() {

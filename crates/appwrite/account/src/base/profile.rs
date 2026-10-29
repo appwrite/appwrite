@@ -3,7 +3,6 @@
 //! routes queue, and the request resources they read (`redirectValidator`,
 //! `domainVerification`, `cookieDomain`).
 
-use async_trait::async_trait;
 use bytes::Bytes;
 use serde_json::{Map, Value as Json, json};
 use utopia_auth::Hash;
@@ -11,9 +10,8 @@ use utopia_auth::hashes::{Argon2, Sha};
 use utopia_auth::proofs::Password;
 use utopia_database::Permission;
 use utopia_database::Role;
-use utopia_database::database::Callback;
 use utopia_database::value::{from_plain, list, to_long};
-use utopia_database::{Database, Document, Kind, Query, Value};
+use utopia_database::{Database, Document, Query, Value};
 use utopia_emails::Email;
 use utopia_http::Response;
 use utopia_validators::Validator;
@@ -345,6 +343,55 @@ pub async fn create_token(ctx: &mut Context, user_id: &str, mut token: Document)
     Ok(db.create_document("tokens", token).await?)
 }
 
+/// `createDocument('tokens', $token)` in a transaction holding the user's row
+/// lock (`getDocument('users', $id, forUpdate: true)`), with authorization
+/// skipped, only while the locked user `allows` it: `None` when it no longer
+/// does (deleted, or its address changed meanwhile).
+pub async fn create_bound_token<F>(db: &Database, user_id: &str, token: Document, allows: F) -> Result<Option<Document>>
+where
+    F: Fn(&Document) -> bool + Send + Sync,
+{
+    let allows = &allows;
+    let created = db
+        .authorization()
+        .skip(db.with_transaction(|| {
+            let db = db.clone();
+            let user_id = user_id.to_owned();
+            let token = token.clone();
+            async move {
+                let current = db.get_document("users", &user_id, Vec::new(), true).await?;
+                if current.is_empty() || !allows(&current) {
+                    return Ok(None);
+                }
+                Ok(Some(db.create_document("tokens", token).await?))
+            }
+        }))
+        .await?;
+    Ok(created)
+}
+
+/// `strtolower($user->getAttribute('email')) === $email`: the locked user
+/// still has the address (`email` lowercased already).
+pub fn has_email(user: &Document, email: &str) -> bool {
+    user.string_or_empty("email").to_ascii_lowercase() == email
+}
+
+/// A token that binds no one: a fresh user ID and internal ID with that
+/// user's permissions, created and deleted at once with authorization
+/// skipped (the response does not tell an undeliverable request apart).
+pub async fn create_unbound_token(db: &Database, mut token: Document, delete: bool) -> Result<Document> {
+    let user_id = appwrite_core::database::unique_id();
+    token.put("userId", Value::from(user_id.as_str()));
+    token.put("userInternalId", Value::from(appwrite_core::database::unique_id().as_str()));
+    token.set("$permissions", owner_permissions(&user_id))?;
+    let authorization = db.authorization();
+    let token = authorization.skip(db.create_document("tokens", token)).await?;
+    if delete {
+        authorization.skip(db.delete_document("tokens", token.id())).await?;
+    }
+    Ok(token)
+}
+
 /// `$profile->tokenVerify($type, $secret, $proof)`: the user's first token
 /// of `kind` whose secret matches and that has not expired.
 pub fn token_verify(user: &Document, kind: i64, secret: &str) -> Option<Document> {
@@ -370,26 +417,8 @@ pub fn token_payload(token: &Token) -> Bytes {
         secret: None,
         phrase: "",
         reveal: false,
-        render: Render { sensitive: true, format: None },
+        render: Render { sensitive: true, hide_credentials: false, format: None },
     }))
-}
-
-// ---- queues -----------------------------------------------------------------
-
-/// `$mqtt->revoke($projectId, $userId)`: asks the MQTT brokers to drop the
-/// user's connections. Failures are logged, as in PHP.
-pub async fn mqtt_revoke(ctx: &Context, user_id: &str) {
-    let message = appwrite_core::json::to_string(&json!({
-        "action": "revoke",
-        "project": ctx.project.id,
-        "userId": user_id,
-    }));
-    let mut pubsub = ctx.state.pubsub.clone();
-    let sent: std::result::Result<i64, _> =
-        utopia_cache::redis::cmd("PUBLISH").arg("mqtt").arg(message).query_async(&mut pubsub).await;
-    if let Err(e) = sent {
-        tracing::error!(error = %e, "Failed to revoke MQTT connections");
-    }
 }
 
 // ---- templates ----------------------------------------------------------------
@@ -429,6 +458,8 @@ pub struct Mail {
     pub preview: String,
     pub body: String,
     pub variables: Map<String, Json>,
+    /// Extra mail headers (the `OTP-Token` of a code sent by email).
+    pub headers: Map<String, Json>,
 }
 
 /// The project's SMTP base template (`smtpBaseTemplate`): the console's
@@ -554,7 +585,7 @@ pub fn queue_mail(ctx: &mut Context, mail: Mail) {
         "customMailOptions": custom_options,
         "events": [],
         "platform": platform,
-        "headers": [],
+        "headers": if mail.headers.is_empty() { Json::Array(Vec::new()) } else { Json::Object(mail.headers) },
     });
     let queue = ctx.state.config.queue_mails.clone();
     ctx.events.queued.push((queue, message));
@@ -635,85 +666,8 @@ pub fn cookie_name(ctx: &Context) -> String {
 /// `Deletes\Targets::delete`: the user's targets, each with its subscribers
 /// (decrementing their topics' totals).
 pub async fn delete_user_targets(db: &Database, user_sequence: i64) -> Result<()> {
-    db.delete_documents(
-        "targets",
-        vec![Query::equal("userInternalId", [user_sequence.to_string()]), Query::order_asc("", None)],
-        utopia_database::database::BATCH_SIZE,
-        Some(&mut DeleteSubscribers { db }),
-    )
-    .await?;
-    Ok(())
-}
-
-/// `Deletes\Targets::deleteSubscribers`, for each deleted target.
-struct DeleteSubscribers<'a> {
-    db: &'a Database,
-}
-
-#[async_trait]
-impl Callback<Document> for DeleteSubscribers<'_> {
-    async fn call(&mut self, target: Document) -> utopia_database::Result<()> {
-        let mut topics = DecreaseTopic { db: self.db, provider_type: target.string_or_empty("providerType") };
-        self.db
-            .delete_documents(
-                "subscribers",
-                vec![
-                    Query::equal("targetInternalId", [documents::query_value(target.sequence())]),
-                    Query::order_asc("", None),
-                ],
-                utopia_database::database::BATCH_SIZE,
-                Some(&mut topics),
-            )
-            .await?;
-        Ok(())
-    }
-}
-
-/// Decrements the subscriber total of a deleted subscriber's topic.
-struct DecreaseTopic<'a> {
-    db: &'a Database,
-    provider_type: String,
-}
-
-#[async_trait]
-impl Callback<Document> for DecreaseTopic<'_> {
-    async fn call(&mut self, subscriber: Document) -> utopia_database::Result<()> {
-        let db = self.db;
-        let topic_id = subscriber.string_or_empty("topicId");
-        let topic_internal_id = documents::query_value(subscriber.get("topicInternalId"));
-        let skipped = filters::names(filters::TOPICS_SUBQUERIES);
-        let topic = db
-            .skip_filters(
-                Some(skipped.as_slice()),
-                db.find_one(
-                    "topics",
-                    vec![Query::select(["$id", "$sequence"]), Query::equal("$sequence", [topic_internal_id])],
-                ),
-            )
-            .await?;
-        if topic.is_empty() {
-            return Ok(());
-        }
-        let total = match self.provider_type.as_str() {
-            "email" => "emailTotal",
-            "sms" => "smsTotal",
-            "push" => "pushTotal",
-            _ => return Err(utopia_database::Error::new(Kind::Exception, "Invalid target provider type")),
-        };
-        let decreased = db
-            .skip_filters(
-                Some(skipped.as_slice()),
-                db.decrease_document_attribute("topics", &topic_id, total, Value::Int(1), Some(Value::Int(0))),
-            )
-            .await;
-        match decreased {
-            Err(e) if e.is_a(Kind::Limit) => {
-                tracing::error!(topic = topic_id, error = %e, "Delete subscribers decreaseDocumentAttribute");
-                Ok(())
-            }
-            other => other.map(|_| ()),
-        }
-    }
+    appwrite_core::database::targets::delete(db, vec![Query::equal("userInternalId", [user_sequence.to_string()])])
+        .await
 }
 
 /// `Deletes\Identities::delete`: the user's identities.

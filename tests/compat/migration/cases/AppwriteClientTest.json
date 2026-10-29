@@ -69,7 +69,7 @@
             "error": {
               "class": "Appwrite\\AppwriteException",
               "code": 302,
-              "message": "302: Redirects are not followed"
+              "message": "Redirect to /p/cli-${ns}/echo not followed"
             }
           }
         },
@@ -92,11 +92,11 @@
               "headers": {
                 "accept": "*/*",
                 "user-agent": "<masked>",
-                "x-appwrite-response-format": "2.0.0",
+                "x-appwrite-response-format": "2.6.2",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.4.0"
+                "x-sdk-version": "32.1.0"
               },
               "body": ""
             }
@@ -192,11 +192,11 @@
               "headers": {
                 "accept": "*/*",
                 "user-agent": "<masked>",
-                "x-appwrite-response-format": "2.0.0",
+                "x-appwrite-response-format": "2.6.2",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.4.0"
+                "x-sdk-version": "32.1.0"
               },
               "body": ""
             }
@@ -775,18 +775,63 @@
               "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/30.4.0 ()",
+                "user-agent": "AppwritePHPSDK/32.1.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "cli-${ns}",
-                "x-appwrite-response-format": "2.0.0",
+                "x-appwrite-response-format": "2.6.2",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.4.0"
+                "x-sdk-version": "32.1.0"
               },
               "body": ""
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "a compressed response decoding past the limit is abandoned",
+      "steps": [
+        {
+          "op": "appwrite_client.new",
+          "args": {
+            "endpoint": "{api}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/__compressed/33554433"
+          },
+          "expect": {
+            "error": {
+              "class": "Appwrite\\AppwriteException",
+              "code": 63,
+              "message": "Would have exceeded max file size"
+            }
+          }
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/__compressed/1024"
+          },
+          "expect": {
+            "response": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
         }
       ]
     }

@@ -122,6 +122,9 @@ cc = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 crc32fast = "1"
 ctr = "0.9"
+# The WHATWG encodings, for a document whose <meta> declares one (utopia-messaging,
+# decoding it as lexbor does for PHP's Dom\HTMLDocument).
+encoding_rs = "0.8"
 fancy-regex = "0.14"
 # The PostgreSQL wire protocol and SCRAM (utopia-database's Postgres adapter,
 # which speaks libpq's simple query protocol itself to send statements as the
@@ -146,6 +149,9 @@ gif = "0.14"
 gost94 = "0.10"
 hex = "0.4"
 hmac = "0.12"
+# The HTML5 parsing algorithm (Servo's), for the tree PHP's Dom\HTMLDocument
+# (lexbor) builds: utopia-messaging reads the plain-text part of an email off it.
+html5ever = "0.40"
 http = "1"
 http-body-util = "0.1"
 # HTTP/1 request parsing (hyper's parser), for the compat http benchmarks.
@@ -283,7 +289,7 @@ webpki-roots = "1"
 whirlpool = "0.10"
 # XXH3 and XXH128 for php-std hash(); pure Rust.
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
-zstd = { version = "0.13", default-features = false }
+zstd = { version = "0.14", default-features = false }
 # libyaml 0.2.5 translated to Rust (php-std yaml_parse(), which must accept and
 # refuse documents as the libyaml of PHP's ext-yaml does); no C toolchain needed.
 unsafe-libyaml = "0.2"

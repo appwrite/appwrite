@@ -96,7 +96,6 @@
               "headers": {
                 "accept-encoding": "identity",
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "127.0.0.1:9000",
@@ -381,7 +380,6 @@
               "headers": {
                 "accept-encoding": "identity",
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "127.0.0.1:9000",
@@ -398,7 +396,6 @@
               "headers": {
                 "accept-encoding": "identity",
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "127.0.0.1:9000",
@@ -415,7 +412,6 @@
               "headers": {
                 "accept-encoding": "identity",
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "127.0.0.1:9000",
@@ -984,7 +980,6 @@
               "headers": {
                 "accept-encoding": "identity",
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "127.0.0.1:9000",
@@ -1001,7 +996,6 @@
               "headers": {
                 "accept-encoding": "identity",
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "127.0.0.1:9000",
@@ -1084,7 +1078,6 @@
               "headers": {
                 "accept-encoding": "identity",
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "127.0.0.1:9000",
@@ -1100,7 +1093,6 @@
               "headers": {
                 "accept-encoding": "identity",
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "127.0.0.1:9000",
@@ -1208,7 +1200,6 @@
               "headers": {
                 "accept-encoding": "identity",
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "127.0.0.1:9000",

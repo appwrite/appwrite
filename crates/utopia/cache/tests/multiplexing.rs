@@ -46,7 +46,7 @@ impl Server {
                     loop {
                         let mut offset = 0;
                         while let Ok(Some(Reply::Array(args))) = resp::parse(&buffer, &mut offset) {
-                            buffer.drain(..offset);
+                            buffer.drain(..offset as usize);
                             offset = 0;
                             while s.load(Ordering::SeqCst) {
                                 r.notified().await;

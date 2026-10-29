@@ -530,6 +530,7 @@ impl Firebase {
                     anti_virus: false,
                     update_limits: false,
                     transformations: false,
+                    strip_metadata: false,
                 }
                 .resource(sanitize_bucket_id(&id), Vec::new());
                 b.set_original_id(id);

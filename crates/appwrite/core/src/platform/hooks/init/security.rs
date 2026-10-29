@@ -3,25 +3,24 @@
 //! `security`). The headers themselves are added when the response is sent
 //! ([`crate::platform::lifecycle`]'s `finalize`).
 
+use crate::auth::roles;
 use crate::error::{Error, ErrorType};
 use crate::platform::context::Context;
-use crate::platform::hooks::resources::hostnames::{allowed_hostnames, allowed_schemes};
 use crate::{Result, network};
 
 /// Turns the security headers on and rejects a browser origin that is not
-/// an allowed platform, unless an API key is sent or the route allows any
-/// origin.
-pub(in crate::platform) fn security(ctx: &mut Context, key_header: &str) -> Result<()> {
-    let state = ctx.state.clone();
+/// an allowed platform, unless a valid, unexpired key of the `keys` role
+/// authenticates the request or the route allows any origin.
+pub(in crate::platform) fn security(ctx: &mut Context) -> Result<()> {
     // `general.php` adds the security headers after the resources above.
     ctx.secured = true;
 
     // -- CORS / origin (I4) ----------------------------------------------------
     let origin = ctx.request.header_or_empty("origin").to_owned();
-    if !origin.is_empty() && key_header.is_empty() && !ctx.route.labels.any_origin {
-        let allowed =
-            allowed_hostnames(&state, &ctx.project, ctx.project_found, &ctx.request, ctx.rule_domain.as_deref());
-        let schemes = allowed_schemes(&state, &ctx.project, ctx.project_found);
+    let authenticated_by_key = ctx.key.as_ref().is_some_and(|k| k.role == roles::KEYS && !k.expired);
+    if !origin.is_empty() && !authenticated_by_key && !ctx.route.labels.any_origin {
+        let allowed = ctx.allowed_hostnames();
+        let schemes = ctx.allowed_schemes();
         if let Err(description) = network::validate_origin(&origin, &allowed, &schemes) {
             return Err(Error::with_message(ErrorType::GeneralUnknownOrigin, description));
         }

@@ -7,7 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use serde_json::{Value, json};
 
 use super::cases::{self, Case, CaseFile, Step};
-use super::compare::{diff, mask, normalize, short, sort_keys, sort_rows, substitute};
+use super::compare::{diff, mask, normalize, settle, short, sort_keys, sort_rows, substitute};
 use super::config::Config;
 use super::generate::{self, Rng};
 use super::process::Driver;
@@ -95,7 +95,9 @@ fn comparable(result: &Outcome, ns: &str, masks: &[&Mask], scrub: &Scrubber) -> 
     let mut v = normalize(&result.to_json(), ns);
     scrub.apply(&mut v);
     for m in masks {
-        if m.order {
+        if m.tolerance.is_some() {
+            // Applied against the recording only (`off_record`).
+        } else if m.order {
             sort_keys(&mut v, &m.paths);
         } else if m.rows {
             sort_rows(&mut v, &m.paths);
@@ -104,6 +106,21 @@ fn comparable(result: &Outcome, ns: &str, masks: &[&Mask], scrub: &Scrubber) -> 
         }
     }
     v
+}
+
+/// The first difference between a step's recording and a result, after its
+/// tolerance masks accept floats close to the recorded ones.
+fn off_record(expect: &Value, got: &Value, masks: &[&Mask]) -> Option<String> {
+    if masks.iter().all(|m| m.tolerance.is_none()) {
+        return diff(expect, got);
+    }
+    let mut expect = expect.clone();
+    for m in masks {
+        if let Some(t) = m.tolerance {
+            settle(&mut expect, got, &m.paths, t);
+        }
+    }
+    diff(&expect, got)
 }
 
 fn step_masks<'a>(spec: &'a Spec, step: &'a Step) -> Vec<&'a Mask> {
@@ -275,18 +292,19 @@ impl Engine {
         self.restart();
         let spec = spec::load(&self.cfg.root, lib)?;
         self.build_tasks(&spec)?;
-        let files = cases::load_dir(&spec::lib_dir(&self.cfg.root, lib).join("cases"))?;
+        let paths = cases::paths(&spec::lib_dir(&self.cfg.root, lib).join("cases"));
         if let Some(shard) = shard
             && !spec.shards.contains_key(shard)
         {
             return Err(format!("{lib}: no shard `{shard}` (spec.json `shards`)"));
         }
         let mut report = Report::default();
-        for file in &files {
-            let file_name = file.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
+        for path in &paths {
+            let file_name = path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
             if shard.is_some_and(|s| spec.shard_of(&file_name) != Some(s)) {
                 continue;
             }
+            let file = &cases::load_file(path)?;
             for case in &file.cases {
                 let name = label(lib, file, case);
                 if filter.is_some_and(|f| !cases::selected(f, &name)) {
@@ -411,7 +429,7 @@ impl Engine {
             let masks = step_masks(spec, step);
             let (cp, cr) = (comparable(&op, &ns_p, &masks, &scrub), comparable(&or, &ns_r, &masks, &scrub));
             let differs = diff(&cp, &cr);
-            let off = step.expect.as_ref().and_then(|e| diff(e, &cp));
+            let off = step.expect.as_ref().and_then(|e| off_record(e, &cp, &masks));
             if let Some(d) = &differs {
                 report.differences.push(format!(
                     "{at}: php and rust differ at {d}\n      php:  {}\n      rust: {}",
@@ -494,9 +512,10 @@ impl Engine {
                 };
                 match self.driver(side)?.call(lib, &step.op, &args)? {
                     Ok(out) => {
-                        let c = comparable(&out, &ns, &step_masks(spec, step), &scrub);
+                        let masks = step_masks(spec, step);
+                        let c = comparable(&out, &ns, &masks, &scrub);
                         if let Some(expect) = &step.expect
-                            && let Some(d) = diff(expect, &c)
+                            && let Some(d) = off_record(expect, &c, &masks)
                         {
                             report.differences.push(format!(
                                 "{at}: differs from the recorded expectation at {d}\n      expect: {}\n      got:    {}",
@@ -546,7 +565,7 @@ impl Engine {
                 };
                 let (php, rust) = if step.side.as_deref() == Some("a") { (x, y) } else { (y, x) };
                 let differs = diff(php, rust);
-                let off = step.expect.as_ref().and_then(|e| diff(e, php));
+                let off = step.expect.as_ref().and_then(|e| off_record(e, php, &step_masks(spec, step)));
                 self.trace_step(|| {
                     json!({
                         "op": step.op,
@@ -651,6 +670,11 @@ impl Engine {
                     self.configure("php", &ns_p)?;
                     self.configure("rust", &ns_r)?;
                 }
+                let scrub = if profile.scrub.is_empty() {
+                    scrub.clone()
+                } else {
+                    Scrubber::new(&[spec.scrub.as_slice(), profile.scrub.as_slice()].concat())
+                };
                 let iterations = opts.iterations.unwrap_or(profile.iterations);
                 let mut rng = Rng::new(opts.seed ^ fnv(&title));
                 let masks: Vec<&Mask> = op.mask.iter().collect();
@@ -978,11 +1002,11 @@ pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
     let services = std::env::var("COMPAT_SERVICES").is_ok_and(|v| v == "1");
     let mut report = Report::default();
     let scrub = Scrubber::new(&spec.scrub);
-    let files = cases::load_dir(&spec::lib_dir(&cfg.root, lib).join("cases"))?;
     // `COMPAT_CASE` keeps only the cases whose label contains it.
     let only = std::env::var("COMPAT_CASE").ok().filter(|f| !f.is_empty());
     let mut counter = 0;
-    for file in &files {
+    for path in cases::paths(&spec::lib_dir(&cfg.root, lib).join("cases")) {
+        let file = &cases::load_file(&path)?;
         for case in &file.cases {
             if only.as_deref().is_some_and(|f| !label(lib, file, case).contains(f)) {
                 continue;
@@ -1019,9 +1043,10 @@ pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
                 let result: OpResult = crate::driver::handle(&request, &mut session).await;
                 match result {
                     Ok(out) => {
-                        let c = comparable(&out, &ns, &step_masks(&spec, step), &scrub);
+                        let masks = step_masks(&spec, step);
+                        let c = comparable(&out, &ns, &masks, &scrub);
                         if let Some(expect) = &step.expect
-                            && let Some(d) = diff(expect, &c)
+                            && let Some(d) = off_record(expect, &c, &masks)
                         {
                             report.differences.push(format!(
                                 "{}: step {} `{}` differs from PHP's recorded result at {d}\n      expect: {}\n      rust:   {}",

@@ -910,99 +910,11 @@
             ]
           },
           "expect": {
-            "result": null,
-            "requests": [
-              {
-                "method": "POST",
-                "url": "https://api.fastly.com/purge/example.com/caf%C3%A9",
-                "headers": {
-                  "accept": "application/json",
-                  "fastly-key": "token",
-                  "user-agent": "Utopia CDN Fastly Adapter"
-                },
-                "body": ""
-              },
-              {
-                "method": "POST",
-                "url": "https://api.fastly.com/purge/example.com/a%23b",
-                "headers": {
-                  "accept": "application/json",
-                  "fastly-key": "token",
-                  "user-agent": "Utopia CDN Fastly Adapter"
-                },
-                "body": ""
-              },
-              {
-                "method": "POST",
-                "url": "https://api.fastly.com/purge/example.com/%41%25zz",
-                "headers": {
-                  "accept": "application/json",
-                  "fastly-key": "token",
-                  "user-agent": "Utopia CDN Fastly Adapter"
-                },
-                "body": ""
-              },
-              {
-                "method": "POST",
-                "url": "https://api.fastly.com/purge/example.com/a?b=c&d=e:f+g",
-                "headers": {
-                  "accept": "application/json",
-                  "fastly-key": "token",
-                  "user-agent": "Utopia CDN Fastly Adapter"
-                },
-                "body": ""
-              },
-              {
-                "method": "POST",
-                "url": "https://api.fastly.com/purge/example.com/~user/./..",
-                "headers": {
-                  "accept": "application/json",
-                  "fastly-key": "token",
-                  "user-agent": "Utopia CDN Fastly Adapter"
-                },
-                "body": ""
-              },
-              {
-                "method": "POST",
-                "url": "https://api.fastly.com/purge/example.com/%C3%A4%20%C3%B6",
-                "headers": {
-                  "accept": "application/json",
-                  "fastly-key": "token",
-                  "user-agent": "Utopia CDN Fastly Adapter"
-                },
-                "body": ""
-              },
-              {
-                "method": "POST",
-                "url": "https://api.fastly.com/purge/example.com/%E2%98%83",
-                "headers": {
-                  "accept": "application/json",
-                  "fastly-key": "token",
-                  "user-agent": "Utopia CDN Fastly Adapter"
-                },
-                "body": ""
-              },
-              {
-                "method": "POST",
-                "url": "https://api.fastly.com/purge/example.com/a%22b%27c%3Cd%3E",
-                "headers": {
-                  "accept": "application/json",
-                  "fastly-key": "token",
-                  "user-agent": "Utopia CDN Fastly Adapter"
-                },
-                "body": ""
-              },
-              {
-                "method": "POST",
-                "url": "https://api.fastly.com/purge/example.com//double",
-                "headers": {
-                  "accept": "application/json",
-                  "fastly-key": "token",
-                  "user-agent": "Utopia CDN Fastly Adapter"
-                },
-                "body": ""
-              }
-            ]
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Cache paths must not contain \".\" or \"..\" segments."
+            },
+            "requests": []
           }
         }
       ]
@@ -1370,6 +1282,30 @@
           }
         }
       ]
+    },
+    {
+      "name": "path purge refuses dot segments before sending",
+      "op": "cache.once",
+      "args": {
+        "type": "fastly",
+        "token": "token",
+        "prefix": "domain-",
+        "service": "service-id",
+        "soft": false,
+        "method": "purgePaths",
+        "responses": [],
+        "domain": "example.com",
+        "paths": [
+          "/../../service/service-id/purge_all"
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "InvalidArgumentException",
+          "message": "Cache paths must not contain \".\" or \"..\" segments."
+        },
+        "requests": []
+      }
     }
   ]
 }

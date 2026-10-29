@@ -259,8 +259,6 @@ impl Relationships {
                         if related.is_empty() {
                             self.refuse_unreadable(db, related_collection, &id, PermissionType::Read).await?;
                             document.put(key, Value::Null);
-                        } else if Some(&id) != old_id.as_ref() {
-                            self.authorize_link(db, related_collection, &related)?;
                         }
                     }
                     Some(Value::Ext(Ext::Document(related))) => {
@@ -494,8 +492,6 @@ impl Relationships {
                     if related.is_empty() {
                         self.refuse_unreadable(db, related_collection, &id, PermissionType::Read).await?;
                         document.put(key, Value::Null);
-                    } else if Some(&id) != old_id.as_ref() {
-                        self.authorize_link(db, related_collection, &related)?;
                     }
                     db.purge_cached_document(rc, &id).await?;
                 }
@@ -516,8 +512,6 @@ impl Relationships {
                             value.set(document::PERMISSIONS, permissions_of(document))?;
                         }
                         db.create_document(rc, value.clone()).await?;
-                    } else if Some(value.id()) != old_id.as_deref() {
-                        self.authorize_link(db, related_collection, &related)?;
                     }
 
                     if !related.is_empty() && attributes_differ(&related, &value) {

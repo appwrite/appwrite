@@ -2763,8 +2763,10 @@
             ]
           },
           "expect": {
-            "content": "x",
-            "role": "user"
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Header values must not contain CR, LF or NUL characters."
+            }
           }
         }
       ]

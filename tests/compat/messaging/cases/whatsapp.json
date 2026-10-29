@@ -130,7 +130,8 @@
                   "recipient": "+1",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -377,7 +378,8 @@
                   "recipient": "+1",
                   "status": "failure",
                   "error": "Timed out",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -456,7 +458,8 @@
                   "recipient": "+1",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -545,7 +548,8 @@
                   "recipient": "+1",
                   "status": "failure",
                   "error": "Error Array: Error [1]",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -631,7 +635,8 @@
                   "recipient": "+1",
                   "status": "failure",
                   "error": "Same",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -712,7 +717,8 @@
                   "recipient": "+1",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -793,7 +799,8 @@
                   "recipient": "+1",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },

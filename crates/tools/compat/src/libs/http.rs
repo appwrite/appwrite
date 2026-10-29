@@ -310,10 +310,17 @@ pub async fn call(op: &str, args: &Value, _session: &mut crate::adapter::Session
                 a.opt(k).and_then(Value::as_array).map(|l| l.iter().map(php_string).collect()).unwrap_or_default()
             };
             let t = match a.opt("proto") {
-                Some(_) => TrustedHeaders::new(list("ip"), list("proto")),
-                None => TrustedHeaders::new(list("ip"), ["x-forwarded-proto"]),
+                Some(_) => TrustedHeaders::new(list("ip"), list("proto"), list("host"), list("port")),
+                None => TrustedHeaders::new(list("ip"), ["x-forwarded-proto"], list("host"), list("port")),
             };
-            Ok(json!({"ip": t.ip(), "proto": t.proto()}))
+            let mut out = json!({"ip": t.ip(), "proto": t.proto()});
+            // Only when the case names them, so cases recorded before they existed keep their results.
+            for (key, list) in [("host", t.host()), ("port", t.port())] {
+                if a.opt(key).is_some() {
+                    out[key] = json!(list);
+                }
+            }
+            Ok(out)
         }
         "mode.settings" => Ok(settings(a.str("mode")?)),
         "compression.negotiate" => {
@@ -464,6 +471,8 @@ fn request(spec: &Value) -> Result<Request, Fault> {
         let trusted = TrustedHeaders::new(
             list("ip").unwrap_or_default(),
             list("proto").unwrap_or_else(|| vec!["x-forwarded-proto".into()]),
+            list("host").unwrap_or_default(),
+            list("port").unwrap_or_default(),
         );
         request = request.with_trusted(Arc::new(trusted));
     }

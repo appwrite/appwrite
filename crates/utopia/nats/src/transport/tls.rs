@@ -41,16 +41,15 @@ impl TlsTransport {
 #[async_trait]
 impl Transport for TlsTransport {
     async fn connect(&mut self, host: &str, port: u16, timeout: Duration) -> Result<()> {
-        let address = format!("tls://{host}:{port}");
+        // Connect TCP first so a refused connection is told apart from a
+        // failed handshake.
         let tcp = dial(host, port, timeout)
             .await
-            .map_err(|e| Error::Connection(format!("Failed to connect to {address}: {e}")))?;
+            .map_err(|e| Error::Connection(format!("Failed to connect to tls://{host}:{port}: {e}")))?;
         let tls = match utopia_async::timeout(timeout, handshake(tcp, host, &self.options)).await {
             Ok(Ok(tls)) => tls,
-            Ok(Err(e)) => return Err(Error::Connection(format!("Failed to connect to {address}: [0] {e}"))),
-            Err(_) => {
-                return Err(Error::Connection(format!("Failed to connect to {address}: [110] Connection timed out")));
-            }
+            Ok(Err(e)) => return Err(Error::Tls(format!("TLS handshake with {host}:{port} failed: {e}"))),
+            Err(_) => return Err(Error::Tls(format!("TLS handshake with {host}:{port} failed: no reason given"))),
         };
         self.stream = Some(Stream::Tls(Box::new(tls)));
         self.timeout = timeout;

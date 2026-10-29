@@ -3,7 +3,7 @@
     python3 unicode.py <unicode_data.h> ../src/mb/unicode.rs
 
 <unicode_data.h> is php-src `ext/mbstring/unicode_data.h` at the PHP version
-the compat tester runs (tag php-8.5.10). Extracted: the lower case table
+the compat tester runs (tag php-8.5.11). Extracted: the lower case table
 (`_uccase_lower_table`, sorted by code point), `_uccase_extra_table`, and the
 `UC_CASED` and `UC_CASE_IGNORABLE` ranges of `_ucprop_ranges`. After
 regenerating, re-run `bin/compat fuzz php-std --op mb.strtolower`.
@@ -60,7 +60,7 @@ def fmt_list(items):
 
 
 out = ["""//! Unicode case data of PHP's mbstring, generated from php-src
-//! `ext/mbstring/unicode_data.h` (tag `php-8.5.10`) by `data/unicode.py`.
+//! `ext/mbstring/unicode_data.h` (tag `php-8.5.11`) by `data/unicode.py`.
 //! Do not edit by hand.
 //!
 //! The case table maps a code point to its simple mapping, or, when the value

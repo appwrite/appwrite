@@ -121,7 +121,8 @@ impl Udp {
 ///
 /// A connection is closed when it sends a zero-length or oversized frame,
 /// when its unanswered bytes exceed `max_buffer_size`, after `idle_timeout`
-/// without data, or when an answer exceeds 65535 bytes. Connections beyond
+/// without data, when an answer exceeds 65535 bytes, or when the client does
+/// not take an answer within `write_timeout`. Connections beyond
 /// `max_clients` are closed at once. With `proxy_protocol`, every
 /// connection must start with a PROXY protocol header, whose source
 /// address is the client's.
@@ -143,11 +144,16 @@ pub struct Tcp {
     pub idle_timeout: Duration,
     /// Whether connections start with a PROXY protocol header.
     pub proxy_protocol: bool,
+    /// How long an answer may wait on a client that does not read it.
+    ///
+    /// PHP: `$writeTimeout`.
+    pub write_timeout: Duration,
 }
 
 impl Tcp {
     /// A TCP transport on `host`:`port`: 100 clients, 16 KiB buffers,
-    /// 65535-byte frames, 30 seconds of idleness, no PROXY protocol.
+    /// 65535-byte frames, 30 seconds of idleness, no PROXY protocol, 5
+    /// seconds to take an answer.
     pub fn new(host: &str, port: u16) -> Tcp {
         Tcp {
             host: host.to_owned(),
@@ -157,6 +163,7 @@ impl Tcp {
             max_frame_size: MAX_SIZE,
             idle_timeout: Duration::from_secs(30),
             proxy_protocol: false,
+            write_timeout: Duration::from_secs(5),
         }
     }
 }
@@ -423,7 +430,7 @@ async fn connection<H: Handler>(mut stream: TcpStream, peer: SocketAddr, options
             let mut frame = Vec::with_capacity(answer.len() + 2);
             frame.extend_from_slice(&(answer.len() as u16).to_be_bytes());
             frame.extend_from_slice(&answer);
-            if stream.write_all(&frame).await.is_err() {
+            if !matches!(utopia_async::timeout(options.write_timeout, stream.write_all(&frame)).await, Ok(Ok(()))) {
                 return;
             }
         }
@@ -520,7 +527,8 @@ async fn read_query(request: Request<Incoming>) -> Option<Vec<u8>> {
             if media != CONTENT_TYPE.as_bytes() {
                 return None;
             }
-            let body = request.into_body().collect().await.ok()?.to_bytes();
+            // A body over the largest DNS message is refused without reading it all.
+            let body = http_body_util::Limited::new(request.into_body(), MAX_SIZE).collect().await.ok()?.to_bytes();
             if body.is_empty() { None } else { Some(body.to_vec()) }
         }
         _ => None,

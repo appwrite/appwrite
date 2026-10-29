@@ -171,6 +171,10 @@ class Update extends Base
         if (!empty($storedRaw)) {
             $existing = \json_decode($storedRaw, true) ?: [];
         }
+        $this->requireSecretOnEndpointChange($clientSecret, $existing, [
+            'keycloakDomain' => $endpoint,
+            'keycloakRealm' => $realmName,
+        ]);
         $encodedSecret = \json_encode([
             'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
             'keycloakDomain' => $endpoint ?? ($existing['keycloakDomain'] ?? ''),

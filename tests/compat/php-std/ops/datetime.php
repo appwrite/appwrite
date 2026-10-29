@@ -18,6 +18,10 @@
 
 $zone = static fn (?string $name): ?DateTimeZone => $name === null ? null : new DateTimeZone($name);
 $dependsOnNow = static function (string $s): bool {
+    // The constructors read "" as "now", though date_parse('') is an error.
+    if ($s === '') {
+        return true;
+    }
     $p = date_parse($s);
 
     return $p['error_count'] === 0 && ($p['year'] === false || $p['month'] === false || $p['day'] === false);
@@ -46,7 +50,9 @@ return [
         $d = new DateTimeImmutable($a['s'], $zone($a['tz'] ?? null));
         return [$d->getTimestamp(), $d->getOffset(), $d->getMicrosecond(), $d->getTimezone()->getName()];
     }),
-    'datetime.format' => fn (array $a) => $catching(fn () => (new DateTimeImmutable($a['at']))->setTimezone(new DateTimeZone($a['tz']))->format($a['format'])),
+    'datetime.format' => fn (array $a) => $catching(fn () => $a['at'] === ''
+        ? $now
+        : (new DateTimeImmutable($a['at']))->setTimezone(new DateTimeZone($a['tz']))->format($a['format'])),
     'datetime.modify' => fn (array $a) => $catching(fn () => $dependsOnNow($a['base'])
         ? $now
         : (new DateTimeImmutable($a['base']))->modify($a['s'])->format($a['format'])),

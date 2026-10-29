@@ -10,8 +10,16 @@ use crate::api::{self, DefaultClient, Reply};
 use crate::certificates::{Challenge, Provider, Status};
 use crate::{BoxFuture, Error};
 
-/// The source file PHP names in a `TypeError` raised inside the provider.
-const SOURCE: &str = "FastlyTls.php";
+/// The source file PHP names in a `TypeError` raised inside the provider:
+/// where the dev image has the package.
+const SOURCE: &str = "/usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php";
+
+/// Seconds before a certificate expires by which Fastly should have issued
+/// its replacement. Fastly renews from about ten days before expiry, so a
+/// newest certificate this close to expiry means the renewal is stuck.
+///
+/// PHP: `FastlyTls::RENEWAL_DEADLINE` (private).
+const RENEWAL_DEADLINE: i64 = 7 * 24 * 60 * 60;
 
 /// Certificates as Fastly TLS subscriptions, issued by a certificate
 /// authority Fastly works with (`certainly` by default).
@@ -158,8 +166,8 @@ impl<C: Client> FastlyTls<C> {
     pub(crate) async fn issue(&self, domain: &str) -> Result<Option<String>, Error> {
         let subscription = match self.find_subscription(domain).await? {
             None => self.create_subscription(domain).await?,
-            Some(subscription) if state(&subscription.resource, 43)? == Status::Failed => {
-                let id = argument(api::get(&subscription.resource, "id"), "retrySubscription", "subscriptionId", 44)?;
+            Some(subscription) if state(&subscription.resource, 50)? == Status::Failed => {
+                let id = argument(api::get(&subscription.resource, "id"), "retrySubscription", "subscriptionId", 51)?;
                 self.retry_subscription(&id).await?
             }
             Some(subscription) => subscription,
@@ -175,14 +183,18 @@ impl<C: Client> FastlyTls<C> {
         let Some(subscription) = self.find_subscription(domain).await? else {
             return Ok(Status::Unknown);
         };
-        let status = state(&subscription.resource, 71)?;
+        let status = state(&subscription.resource, 78)?;
         if status == Status::Issued && !self.ensure_activated(&subscription, domain).await? {
             return Ok(Status::Processing);
         }
+        // Fastly marks a subscription failed only days after its certificate
+        // expired, so a renewal stuck until this close to expiry is reported first.
+        let expiring = newest_certificate(&subscription)
+            .is_some_and(|(_, expiry)| expiry - php_std::datetime::time() <= RENEWAL_DEADLINE);
         // An issued certificate needs nothing from the domain owner,
         // whatever an authorization left over from an earlier order says.
         if status == Status::Issued || status == Status::Unknown {
-            return Ok(status);
+            return Ok(if expiring && status == Status::Issued { Status::Expiring } else { status });
         }
         // Fastly keeps the subscription pending while an authorization is
         // blocked on a record only the domain owner can add.
@@ -191,7 +203,7 @@ impl<C: Client> FastlyTls<C> {
             if status == Status::Renewing && !self.ensure_activated(&subscription, domain).await? {
                 return Ok(Status::Processing);
             }
-            return Ok(status);
+            return Ok(if expiring { Status::Expiring } else { status });
         }
         let status = if status == Status::Failed { Status::Failed } else { Status::Blocked };
         let challenges = extract_challenges(&authorizations);
@@ -202,7 +214,7 @@ impl<C: Client> FastlyTls<C> {
     pub(crate) async fn renew_required(&self, domain: &str) -> Result<bool, Error> {
         match self.find_subscription(domain).await? {
             None => Ok(true),
-            Some(subscription) => Ok(state(&subscription.resource, 110)? == Status::Failed),
+            Some(subscription) => Ok(state(&subscription.resource, 122)? == Status::Failed),
         }
     }
 
@@ -317,7 +329,10 @@ impl<C: Client> FastlyTls<C> {
         if self.tls_configuration_id.is_empty() {
             return Ok(true);
         }
-        let Some(certificate) = issued_certificate_id(subscription) else {
+        // The latest-expiring certificate, so a renewal activates the new one.
+        // Without an expiry to compare, the last reference is the newest.
+        let newest = newest_certificate(subscription).map(|(id, _)| id);
+        let Some(certificate) = newest.or_else(|| references(&subscription.resource, "tls_certificates").pop()) else {
             return Ok(false);
         };
         // Every hostname on the subscription, so the apex also activates www
@@ -634,66 +649,43 @@ fn timestamp(date: &str) -> Option<i64> {
     php_std::datetime::strtotime(date.as_bytes(), php_std::datetime::time(), &TzInfo::utc())
 }
 
-/// The latest-expiring certificate of the subscription, so a renewal
-/// activates the new one; without an expiry to compare, the last
-/// reference.
-fn issued_certificate_id(subscription: &Subscription) -> Option<String> {
+/// The subscription's latest-expiring certificate: its ID and its
+/// `not_after` as a Unix timestamp. During a renewal the subscription
+/// references both the new certificate and the one it replaces.
+fn newest_certificate(subscription: &Subscription) -> Option<(String, i64)> {
     let ids = references(&subscription.resource, "tls_certificates");
-    let mut best: Option<(i64, String)> = None;
+    let mut newest: Option<(String, i64)> = None;
     for included in &subscription.included {
-        if api::string(api::get(included, "type")) != Some("tls_certificate") || !listed(api::get(included, "id"), &ids)
-        {
+        let Some(id) = api::string(api::get(included, "id")) else {
+            continue;
+        };
+        if api::string(api::get(included, "type")) != Some("tls_certificate") || !ids.iter().any(|i| i == id) {
             continue;
         }
         let Some(expiry) = api::string(api::path(included, &["attributes", "not_after"])).and_then(timestamp) else {
             continue;
         };
-        if best.as_ref().is_none_or(|(b, _)| expiry > *b) {
-            best = api::string(api::get(included, "id")).map(|id| (expiry, id.to_owned()));
+        if newest.as_ref().is_none_or(|(_, n)| expiry > *n) {
+            newest = Some((id.to_owned(), expiry));
         }
     }
-    best.map(|(_, id)| id).or_else(|| ids.last().cloned())
+    newest
 }
 
-/// Thirty days before the latest expiry among the subscription's issued
-/// certificates (`Y-m-d H:i:s.v`), when it is issued or renewing.
+/// When to check the certificate again (`Y-m-d H:i:s.v`, UTC): the
+/// renewal deadline before the newest certificate expires, by when Fastly
+/// should have renewed it; when the subscription is issued or renewing.
 fn extract_renew_date(subscription: &Subscription) -> Result<Option<String>, Error> {
-    let state = state(&subscription.resource, 642)?;
+    let state = state(&subscription.resource, 656)?;
     if state != Status::Issued && state != Status::Renewing {
         return Ok(None);
     }
-    let ids = references(&subscription.resource, "tls_certificates");
-    let mut dates: Vec<(usize, &str)> = subscription
-        .included
-        .iter()
-        .filter(|i| api::string(api::get(i, "type")) == Some("tls_certificate") && listed(api::get(i, "id"), &ids))
-        .filter_map(|i| api::string(api::path(i, &["attributes", "not_after"])))
-        .filter(|d| !d.is_empty())
-        .enumerate()
-        .collect();
-    if dates.is_empty() {
+    let Some((_, expiry)) = newest_certificate(subscription) else {
         return Ok(None);
-    }
-    // usort by strtotime(), latest first; PHP's sort is stable.
-    let times: Vec<Option<i64>> = dates.iter().map(|(_, d)| timestamp(d)).collect();
-    php_std::sort::zend_sort(&mut dates, &mut |(a, _), (b, _)| match compare(times[*b], times[*a]) {
-        0 => (*a as i32) - (*b as i32),
-        c => c,
-    });
-    let latest = dates[0].1;
-    let date = DateTime::new(latest.as_bytes(), None, &TzInfo::utc())
-        .and_then(|d| d.modified(b"-30 days"))
+    };
+    let date = DateTime::new(format!("@{}", expiry - RENEWAL_DEADLINE).as_bytes(), None, &TzInfo::utc())
         .map_err(|e| Error::Date { class: e.php_class(), message: e.message().into_owned() })?;
     Ok(Some(String::from_utf8_lossy(&date.format(b"Y-m-d H:i:s.v")).into_owned()))
-}
-
-/// `$a <=> $b` of two `strtotime()` results (`false` is `None`).
-fn compare(a: Option<i64>, b: Option<i64>) -> i32 {
-    let as_bool = |t: Option<i64>| t.is_some_and(|t| t != 0);
-    match (a, b) {
-        (Some(a), Some(b)) => a.cmp(&b) as i32,
-        (a, b) => as_bool(a).cmp(&as_bool(b)) as i32,
-    }
 }
 
 fn format_error(prefix: &str, reply: &Reply) -> String {

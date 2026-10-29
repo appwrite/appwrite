@@ -42,7 +42,8 @@ pub struct Store {
 /// Event state filled by actions (`$queueForEvents`).
 #[derive(Debug, Default)]
 pub struct EventState {
-    /// `setEvent()`: replaces the route's event pattern.
+    /// `setEvent()`: replaces the route's event pattern (empty after
+    /// `reset()`: no event).
     pub event: Option<String>,
     pub params: Vec<(String, String)>,
     /// Explicit payload (`setPayload`); defaults to the response body.
@@ -82,6 +83,9 @@ pub struct Context {
     /// Impersonated user (roles come from this user when set).
     pub target_user: Option<User>,
     pub key: Option<ApiKey>,
+    /// `$response->setHideCredentials(true)`: the impersonator's discovery
+    /// grant authorises the read.
+    pub hide_credentials: bool,
     pub role: String,
     pub roles: Vec<String>,
     pub scopes: Vec<String>,
@@ -103,7 +107,7 @@ pub struct Context {
     pub secured: bool,
     /// The domain of the custom domain rule the request comes from, when it
     /// serves the project (the `rule` resource).
-    pub rule_domain: Option<String>,
+    pub rule: Option<hostnames::Rule>,
     /// The abuse keys' parameters (`{projectId}`, `{ip}`, ...), for the
     /// limits' reset after the action.
     pub abuse_params: Vec<(String, String)>,
@@ -141,7 +145,7 @@ impl Context {
             &state.config.trusted_headers,
             &state.config.trusted_proxies,
         );
-        let hostname = request_hostname(&request);
+        let hostname = request_hostname(&request, &state.config.trusted_proxies);
         let locale = state.config.locale.clone();
         Self {
             path_params: path_params.into_iter().map(|(k, v)| (k, Value::String(v))).collect(),
@@ -152,7 +156,7 @@ impl Context {
             project: console,
             project_found: true,
             secured: false,
-            rule_domain: None,
+            rule: None,
             abuse_params: Vec::new(),
             account_keys: Vec::new(),
             failed: false,
@@ -167,6 +171,7 @@ impl Context {
             session: None,
             target_user: None,
             key: None,
+            hide_credentials: false,
             role: roles::GUESTS.to_owned(),
             roles: vec!["any".to_owned()],
             scopes: Vec::new(),
@@ -179,6 +184,13 @@ impl Context {
             db: None,
             platform_db: OnceLock::new(),
         }
+    }
+
+    /// The value a trusted proxy forwarded in `header` (`x-forwarded-host`,
+    /// `x-forwarded-port`): its rightmost entry, or `None` when the request
+    /// does not come from `_APP_TRUSTED_PROXIES` or the header is empty.
+    pub fn forwarded(&self, header: &str) -> Option<String> {
+        forwarded(&self.request, &self.state.config.trusted_proxies, header)
     }
 
     /// `dbForProject`.
@@ -207,7 +219,11 @@ impl Context {
 
     /// Whether sensitive fields are visible (API keys and privileged users).
     pub fn render(&self) -> Render {
-        Render { sensitive: roles::is_key(&self.roles) || roles::is_privileged(&self.roles), format: self.format }
+        Render {
+            sensitive: roles::is_key(&self.roles) || roles::is_privileged(&self.roles),
+            hide_credentials: self.hide_credentials || self.target_user.is_some(),
+            format: self.format,
+        }
     }
 
     pub fn is_key(&self) -> bool {
@@ -313,6 +329,104 @@ impl Context {
         }
     }
 
+    /// `$mqtt->revoke($projectId, $userId)`: asks the MQTT brokers to drop
+    /// the user's connections. Failures are logged, as in PHP.
+    pub async fn mqtt_revoke(&self, user_id: &str) {
+        mqtt_revoke(&self.state, &self.project.id, user_id).await;
+    }
+
+    /// `(clone $queueForRealtime)->reset()->setProject($project)
+    /// ->setEvent('users.[userId].sessions.delete')->setParam('userId', $id)
+    /// ->trigger()`: tells the user's realtime connections, now and with no
+    /// payload, that their sessions are gone (an account just claimed).
+    pub async fn realtime_sessions_deleted(&self, user_id: &str) {
+        let params = [("userId".to_owned(), user_id.to_owned())];
+        let Ok(events) = crate::event::generate_events("users.[userId].sessions.delete", &params) else { return };
+        let Some(target) = events.first().and_then(|e| crate::event::realtime_target(e, None)) else { return };
+        let Ok(payload) = serde_json::value::RawValue::from_string("[]".to_owned()) else { return };
+        let message = crate::event::realtime_message(&self.project.id, &target, Some(user_id), &events, &payload);
+        let mut pubsub = self.state.pubsub.clone();
+        let sent: std::result::Result<i64, _> =
+            utopia_cache::redis::cmd("PUBLISH").arg("realtime").arg(&message[..]).query_async(&mut pubsub).await;
+        if let Err(e) = sent {
+            tracing::warn!(error = %e, "realtime publish failed");
+        }
+    }
+
+    /// `PresenceState::deleteForUser()`: the presences of a user who can no
+    /// longer be online (blocked or deleted) are deleted now, not at their
+    /// `expiresAt`, and their subscribers told. The user is already blocked
+    /// or deleted, so a failure is logged, not returned.
+    pub async fn delete_presences(&mut self, user: &crate::database::documents::User) {
+        let deleted = match self.delete_user_presences(user).await {
+            Ok(deleted) => deleted,
+            Err(e) => {
+                tracing::warn!(error = %e, project = %self.project.id, user = %user.id, "presence cleanup failed");
+                return;
+            }
+        };
+        if deleted.is_empty() {
+            return;
+        }
+        self.metric("users.presence", -(deleted.len() as i64));
+        let mut pubsub = self.state.pubsub.clone();
+        for mut presence in deleted {
+            for attribute in ["$collection", "$tenant", "hostname", "permissionsHash", "userInternalId", "connections"]
+            {
+                presence.remove(attribute);
+            }
+            let params = [("presenceId".to_owned(), presence.id().to_owned())];
+            let Ok(events) = crate::event::generate_events("presences.[presenceId].delete", &params) else { continue };
+            let Some(mut target) = events.first().and_then(|e| crate::event::realtime_target(e, None)) else {
+                continue;
+            };
+            target.roles = presence.permissions_by_type("read").unwrap_or_default();
+            let json = utopia_database::value::to_plain(&utopia_database::Value::from(presence)).to_json();
+            let Ok(payload) = serde_json::value::RawValue::from_string(crate::json::to_string(&json)) else { continue };
+            let message = crate::event::realtime_message(&self.project.id, &target, None, &events, &payload);
+            let sent: std::result::Result<i64, _> =
+                utopia_cache::redis::cmd("PUBLISH").arg("realtime").arg(&message[..]).query_async(&mut pubsub).await;
+            if let Err(e) = sent {
+                tracing::warn!(error = %e, "realtime publish failed");
+            }
+        }
+    }
+
+    /// Deletes `user`'s presences (skipping authorization) and purges the
+    /// presences list cache, returning the deleted documents.
+    async fn delete_user_presences(
+        &mut self,
+        user: &crate::database::documents::User,
+    ) -> Result<Vec<utopia_database::Document>> {
+        let db = self.db()?;
+        let mut deleted: Vec<utopia_database::Document> = Vec::new();
+        let mut collect = |presence: utopia_database::Document| -> utopia_database::Result<()> {
+            deleted.push(presence);
+            Ok(())
+        };
+        db.authorization()
+            .skip(db.delete_documents(
+                "presences",
+                vec![utopia_database::Query::equal("userInternalId", [user.sequence.to_string()])],
+                utopia_database::database::BATCH_SIZE,
+                Some(&mut collect),
+            ))
+            .await?;
+        if !deleted.is_empty() {
+            // `purgeListCache()`: the collection's cache key.
+            let (key, _, _) = db.cache_keys("presences", None, &[]).await?;
+            db.cache().purge(&key, "").await.map_err(|e| crate::Error::internal(e.to_string()))?;
+        }
+        Ok(deleted)
+    }
+
+    /// `setPayload($response->output(...), sensitive: $keys)`: the payload,
+    /// with the keys realtime leaves out.
+    pub fn event_payload_sensitive<T: Serialize>(&mut self, payload: &T, sensitive: &[&'static str]) {
+        self.event_payload(payload);
+        self.events.sensitive = sensitive.to_vec();
+    }
+
     /// `$queueForEvents->setPayload(...)`.
     /// `setPayload($response->output(...))`: rendered before the response
     /// format's filters, as PHP's `output()` renders it.
@@ -392,26 +506,21 @@ impl Context {
             &self.project,
             self.project_found,
             &self.request,
-            self.rule_domain.as_deref(),
+            self.rule.as_ref(),
+            self.mode == Mode::Admin,
         )
     }
 
     /// The `allowedSchemes` resource.
     pub fn allowed_schemes(&self) -> Vec<String> {
-        hostnames::allowed_schemes(&self.state, &self.project, self.project_found)
+        hostnames::allowed_schemes(&self.state, &self.project, self.project_found, self.mode == Mode::Admin)
     }
 
     /// The `redirectValidator` resource: `url` must be on an allowed
     /// hostname or scheme. The error is the validator's description.
     pub fn validate_redirect(&self, url: &str) -> std::result::Result<(), String> {
-        let hosts = hostnames::allowed_hostnames(
-            &self.state,
-            &self.project,
-            self.project_found,
-            &self.request,
-            self.rule_domain.as_deref(),
-        );
-        let schemes = hostnames::allowed_schemes(&self.state, &self.project, self.project_found);
+        let hosts = self.allowed_hostnames();
+        let schemes = self.allowed_schemes();
         crate::network::validate_redirect(url, &hosts, &schemes)
     }
 
@@ -428,14 +537,43 @@ impl Context {
     }
 }
 
-/// Request hostname (`x-forwarded-host` or `host`, lower-cased, no port).
-fn request_hostname(request: &Request) -> String {
+/// The value the nearest trusted proxy wrote to a forwarded header (its
+/// rightmost entry); `None` when the connection is not from a trusted proxy
+/// or the header is missing or empty.
+///
+/// PHP: `Request::trustedValue()` over the `host` / `port` lists
+/// `Appwrite\Utopia\Request` trusts only from `_APP_TRUSTED_PROXIES`.
+fn forwarded(request: &Request, trusted_proxies: &[String], header: &str) -> Option<String> {
+    if !crate::network::from_proxy(request.remote_addr(), trusted_proxies) {
+        return None;
+    }
+    crate::network::forwarded(request.headers(), header)
+}
+
+/// Request hostname (a trusted proxy's `x-forwarded-host`, else `host`,
+/// lower-cased, no port).
+fn request_hostname(request: &Request, trusted_proxies: &[String]) -> String {
     let raw =
-        request.header("x-forwarded-host").filter(|h| !h.is_empty()).or_else(|| request.header("host")).unwrap_or("");
+        forwarded(request, trusted_proxies, "x-forwarded-host").unwrap_or_else(|| request.header_line_or("host", ""));
     let host = if raw.starts_with('[') {
         raw.split(']').next().map(|h| format!("{h}]")).unwrap_or_default()
     } else {
         raw.split(':').next().unwrap_or("").to_owned()
     };
     host.to_lowercase()
+}
+
+/// `$mqtt->revoke($projectId, $userId)`, for hooks without a [`Context`].
+pub(crate) async fn mqtt_revoke(state: &State, project_id: &str, user_id: &str) {
+    let message = crate::json::to_string(&serde_json::json!({
+        "action": "revoke",
+        "project": project_id,
+        "userId": user_id,
+    }));
+    let mut pubsub = state.pubsub.clone();
+    let sent: std::result::Result<i64, _> =
+        utopia_cache::redis::cmd("PUBLISH").arg("mqtt").arg(message).query_async(&mut pubsub).await;
+    if let Err(e) = sent {
+        tracing::error!(error = %e, "Failed to revoke MQTT connections");
+    }
 }

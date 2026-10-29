@@ -344,6 +344,7 @@ async fn run(op: &str, a: &Value, s: &mut Session) -> R<Value> {
                 "authentication" => Error::Authentication { message: message()?, code: 0 },
                 "capability" => Error::Capability(message()?),
                 "message" => Error::Message(message()?),
+                "unconfirmed" => Error::Unconfirmed { message: message()?, code: 0, previous: None },
                 "transaction" => {
                     let mut rejected = indexmap::IndexMap::new();
                     if let Some(Value::Object(r)) = a.get("rejected") {

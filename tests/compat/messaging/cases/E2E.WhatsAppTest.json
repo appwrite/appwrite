@@ -347,7 +347,8 @@
                   "recipient": "+1 (555) 000-0001",
                   "status": "failure",
                   "error": "Error 132001: (#132001) Template name does not exist in the translation: template name (utopia_messaging_test) does not exist in en_US",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -451,7 +452,8 @@
                   "recipient": "+15550000001",
                   "status": "failure",
                   "error": "Error 132001: (#132001) Template name does not exist in the translation",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -554,7 +556,8 @@
                   "recipient": "+15550000001",
                   "status": "failure",
                   "error": "Error 131030: (#131030) Recipient phone number not in allowed list: Recipient phone number not in allowed list",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -653,7 +656,8 @@
                   "recipient": "+15550000001",
                   "status": "failure",
                   "error": "Error 190: Invalid OAuth access token - Cannot parse access token",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -754,7 +758,8 @@
                   "recipient": "+44 7700 900000",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },

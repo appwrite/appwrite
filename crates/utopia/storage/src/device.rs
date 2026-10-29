@@ -94,6 +94,9 @@ pub struct FileInfo {
     /// Its ETag, if known: the MD5 hash of a local file, the object's ETag
     /// on S3.
     pub etag: Option<String>,
+    /// Its MIME type, if known: detected from a local file's content, the
+    /// object's `Content-Type` (without parameters) on S3.
+    pub mime_type: Option<String>,
 }
 
 /// One page of a file listing.

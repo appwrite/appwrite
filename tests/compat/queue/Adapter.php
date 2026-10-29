@@ -17,6 +17,7 @@ use Utopia\DSN\DSN;
 use Utopia\NATS\Connection as NatsConnection;
 use Utopia\NATS\JetStream\DiscardPolicy;
 use Utopia\NATS\JetStream\StorageType;
+use Utopia\NATS\JetStream\StreamConfig;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool as UtopiaPool;
 use Utopia\Queue\Adapter\KubernetesJob;
@@ -132,7 +133,7 @@ final class Adapter implements Base, Benchmarks
                 isset($a['terminal']) && $m->terminal($a['terminal']);
                 \array_key_exists('size', $a) && $m->setSize($a['size']);
 
-                return Typed::dump([
+                $out = [
                     'pid' => $m->getPid(),
                     'queue' => $m->getQueue(),
                     'timestamp' => $m->getTimestamp(),
@@ -143,7 +144,15 @@ final class Adapter implements Base, Benchmarks
                     'terminal' => $m->isTerminal(),
                     'size' => $m->getSize(),
                     'array' => $m->asArray(),
-                ]);
+                ];
+                // Only when the case sets it, so cases recorded before it existed keep their results.
+                if (\array_key_exists('max_attempts', $a)) {
+                    $m->setMaxAttempts($a['max_attempts']);
+                    $out['max_attempts'] = $m->getMaxAttempts();
+                    $out['last_attempt'] = $m->isLastAttempt();
+                }
+
+                return Typed::dump($out);
             },
             // What warnIfLarge() logs, read back from a scratch error_log file,
             // without the date error_log() prefixes there; null when nothing.
@@ -185,7 +194,7 @@ final class Adapter implements Base, Benchmarks
                 $receive = isset($a['receive']) ? $s->get($a['receive']) : self::connection(['kind' => 'redis'], $s);
                 $commands = isset($a['commands']) ? $s->get($a['commands']) : new Locking(self::connection(['kind' => 'redis'], $s));
 
-                return $s->handle(new Redis($receive, $commands, self::codec($a['codec'] ?? 'json'), $a['reap_after'] ?? 90_000));
+                return $s->handle(new Redis($receive, $commands, self::codec($a['codec'] ?? 'json'), $a['reap_after'] ?? 90_000, $a['reap_max_attempts'] ?? null, $a['reap_max_age'] ?? null));
             },
             'broker.round_trip' => function (array $a, Session $s): array {
                 Clock::fix(1700000000, 'fz');
@@ -340,6 +349,7 @@ final class Adapter implements Base, Benchmarks
                     provisioning: ($a['require'] ?? false) ? Provisioning::Require : Provisioning::Ensure,
                     codec: self::codec($a['codec'] ?? 'json'),
                     releaseDelay: $a['release_delay'] ?? 5.0,
+                    strandedAfter: $a['stranded_after'] ?? 60.0,
                 );
                 self::$reports[spl_object_id($broker)] = $reports;
 
@@ -389,6 +399,65 @@ final class Adapter implements Base, Benchmarks
                 }
 
                 return ['subject' => $m->subject, 'data' => $m->data, 'content_type' => $m->headers?->get('Content-Type'), 'id' => $m->headers?->get('Nats-Msg-Id')];
+            },
+            'sleep' => function (array $a, Session $s): null {
+                usleep((int) ($a['ms'] * 1000));
+
+                return null;
+            },
+            'nats.lapse' => function (array $a, Session $s): array {
+                // Deliveries taken straight off the work consumer and left to
+                // lapse past ackWait, as a worker dying holding them would.
+                $worker = NatsConnection::connect($s->service('queue-nats'))->jetStream()->getConsumer(self::stream($a['queue'], false), 'worker');
+                $fetched = [];
+                for ($delivery = 0; $delivery < ($a['deliveries'] ?? 2); $delivery++) {
+                    $count = 0;
+                    foreach ($worker->fetch(1, 3.0, false) as $ignored) {
+                        $count++;
+                    }
+                    $fetched[] = $count;
+                    usleep((int) (($a['wait_ms'] ?? 1500) * 1000));
+                }
+
+                return $fetched;
+            },
+            'nats.ack_next' => function (array $a, Session $s): array {
+                // The next delivery off the work consumer, acknowledged, and the
+                // ack floor once it has moved there.
+                $js = NatsConnection::connect($s->service('queue-nats'))->jetStream();
+                $stream = self::stream($a['queue'], false);
+                $worker = $js->getConsumer($stream, 'worker');
+                $seq = null;
+                foreach ($worker->fetch(1, 3.0, false) as $delivery) {
+                    $seq = $delivery->metadata()->streamSequence;
+                    $delivery->ackSync();
+                }
+                $floor = 0;
+                $deadline = microtime(true) + 5.0;
+                while ($floor < ($seq ?? 0) && microtime(true) < $deadline) {
+                    usleep(50_000);
+                    $floor = $worker->info(true)->ackFloor->streamSeq;
+                }
+
+                return ['seq' => $seq, 'floor' => $floor, 'first' => $js->getStreamInfo($stream)->state->firstSeq];
+            },
+            'nats.reconfigure' => function (array $a, Session $s): null {
+                $js = NatsConnection::connect($s->service('queue-nats'))->jetStream();
+                $name = self::stream($a['queue'], $a['dead'] ?? false);
+                // Empty sections are dropped: they round-trip as a JSON list the server refuses.
+                $config = array_filter($js->getStreamInfo($name)->config->toArray(), static fn (mixed $value): bool => $value !== []);
+                $js->updateStream(StreamConfig::fromArray([...$config, ...$a['changes']]));
+
+                return null;
+            },
+            'nats.recreate_consumer' => function (array $a, Session $s): null {
+                $js = NatsConnection::connect($s->service('queue-nats'))->jetStream();
+                $stream = self::stream($a['queue'], false);
+                $config = $js->getConsumer($stream, 'worker')->info(true)->config;
+                $js->deleteConsumer($stream, 'worker');
+                $js->createConsumer($stream, $config);
+
+                return null;
             },
             'nats.delete' => function (array $a, Session $s): null {
                 $js = NatsConnection::connect($s->service('queue-nats'))->jetStream();
@@ -750,20 +819,26 @@ final class Adapter implements Base, Benchmarks
         return $events;
     }
 
-    /** What a run recorded: each duration histogram's size and sign, the message sizes (sorted), each depth gauge observed twice. */
+    /** What a run recorded: each duration histogram's size, sign and attributes, the message sizes and their attributes (each sorted), each depth gauge observed twice. */
     private static function telemetry(TestTelemetry $telemetry): array
     {
         $out = [];
         foreach (['messaging.process.wait.duration', 'messaging.process.duration'] as $name) {
+            $histogram = isset($telemetry->histograms[$name]) ? get_object_vars($telemetry->histograms[$name]) : [];
             /** @var list<float|int> $values */
-            $values = isset($telemetry->histograms[$name]) ? get_object_vars($telemetry->histograms[$name])['values'] ?? [] : [];
-            $out[$name] = ['count' => \count($values), 'non_negative' => array_filter($values, fn (float|int $v): bool => $v < 0) === []];
+            $values = $histogram['values'] ?? [];
+            $out[$name] = [
+                'count' => \count($values),
+                'non_negative' => array_filter($values, fn (float|int $v): bool => $v < 0) === [],
+                'attributes' => self::attributes($histogram['attributes'] ?? []),
+            ];
         }
         $name = 'messaging.process.message.size';
+        $histogram = isset($telemetry->histograms[$name]) ? get_object_vars($telemetry->histograms[$name]) : [];
         /** @var list<int> $sizes */
-        $sizes = isset($telemetry->histograms[$name]) ? get_object_vars($telemetry->histograms[$name])['values'] ?? [] : [];
+        $sizes = $histogram['values'] ?? [];
         sort($sizes);
-        $out[$name] = $sizes;
+        $out[$name] = ['values' => $sizes, 'attributes' => self::attributes($histogram['attributes'] ?? [])];
         foreach (['messaging.queue.depth', 'messaging.queue.failed.depth'] as $name) {
             $observed = [];
             for ($round = 0; $round < 2; $round++) {
@@ -777,5 +852,19 @@ final class Adapter implements Base, Benchmarks
         }
 
         return $out;
+    }
+
+    /**
+     * Each recording's attributes, sorted by their JSON (queues are consumed
+     * concurrently, so recordings arrive in any order).
+     *
+     * @param list<array<string, mixed>> $attributes
+     * @return list<array<string, mixed>>
+     */
+    private static function attributes(array $attributes): array
+    {
+        usort($attributes, fn (array $a, array $b): int => strcmp((string) json_encode($a), (string) json_encode($b)));
+
+        return $attributes;
     }
 }

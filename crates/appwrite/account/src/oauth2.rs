@@ -18,7 +18,7 @@ use utopia_validators::{ArrayList, Range, Text, WhiteList};
 use appwrite_core::database::documents::{self, Attributes, Session, User};
 use appwrite_core::datetime;
 use appwrite_core::platform::Context;
-use appwrite_core::response::SessionModel;
+use appwrite_core::response::{SESSION_SENSITIVE, SessionModel};
 use appwrite_core::{Error, ErrorType, Result};
 
 use crate::base::{self, Metadata, UrlParts, token_type};
@@ -1154,6 +1154,18 @@ fn credentials(ctx: &Context, provider: &str) -> (String, String) {
     (app_id, secret)
 }
 
+/// The state's `binding`: the flow's nonce bound to the user who started it
+/// (`hash_hmac('sha256', "$nonce:$userId", _APP_OPENSSL_KEY_V1)`), since a
+/// sibling site can plant the nonce cookie.
+fn binding(ctx: &Context, nonce: &str, user_id: &str) -> String {
+    use hmac::{Hmac, Mac};
+    let Ok(mut mac) = Hmac::<sha2::Sha256>::new_from_slice(ctx.state.config.openssl_key_v1.as_bytes()) else {
+        return String::new();
+    };
+    mac.update(format!("{nonce}:{user_id}").as_bytes());
+    hex::encode(mac.finalize().into_bytes())
+}
+
 /// The OAuth2 nonce cookie (`a_oauth2_<project>`), with the newest nonce
 /// first and at most five kept.
 fn nonce_cookie(ctx: &Context, nonce: &str, response: &mut Response) {
@@ -1241,6 +1253,8 @@ async fn start(ctx: &mut Context, token: bool) -> Result<Response> {
     state.insert("failure".into(), Json::String(failure));
     state.insert("token".into(), Json::Bool(token));
     state.insert("nonce".into(), Json::String(nonce.clone()));
+    let user_id = ctx.user.as_ref().map(|u| u.id.clone()).unwrap_or_default();
+    state.insert("binding".into(), Json::String(binding(ctx, &nonce, &user_id)));
     state.insert("state".into(), Json::String(state_param));
     let mut adapter = Provider::new(&provider, &app_id, &app_secret, &callback, state, &scopes);
     let url = adapter.login_url()?;
@@ -1461,10 +1475,22 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
         Some(Json::String(s)) => s.clone(),
         _ => String::new(),
     };
+    // A sibling site can plant the nonce cookie, so the flow is also bound
+    // to the user who started it. A guest callback accepts a state without
+    // a binding: flows started before it existed still finish.
+    let state_binding = match state_map.get("binding") {
+        Some(Json::String(s)) => s.clone(),
+        _ => String::new(),
+    };
+    let user_id = ctx.user.as_ref().map(|u| u.id.clone()).unwrap_or_default();
+    let expected = binding(ctx, &state_nonce, &user_id);
+    let user_bound = utopia_auth::hash_equals(expected.as_bytes(), state_binding.as_bytes())
+        || (state_binding.is_empty() && ctx.user.is_none());
     let bound = held
         .split(',')
         .filter(|n| !n.is_empty())
-        .any(|n| utopia_auth::hash_equals(n.as_bytes(), state_nonce.as_bytes()));
+        .any(|n| utopia_auth::hash_equals(n.as_bytes(), state_nonce.as_bytes()))
+        && user_bound;
     let mut user = ctx.user.clone();
     if !bound {
         if !token {
@@ -1686,7 +1712,7 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
         ctx.event_param("sessionId", session.id.clone());
         let model =
             SessionModel { session: &session, country_name: "", current: false, secret: None, render: ctx.render() };
-        ctx.event_payload(&model);
+        ctx.event_payload_sensitive(&model, SESSION_SENSITIVE);
         if success_url.host.as_deref() == Some(console_host.as_str())
             && success_url.path.as_deref() == Some(DEFAULT_SUCCESS)
         {
@@ -1747,7 +1773,8 @@ fn parse_email(ctx: &Context, provider_email: &str, verified: bool) -> Result<(S
         provider_email.to_owned()
     };
     let mut emails: Vec<String> = Vec::new();
-    for e in [&email, &provider_email.to_owned(), &canonical] {
+    // The provider's own address only, never a cross-domain canonical form.
+    for e in [&email, &provider_email.to_owned(), &provider_email.to_lowercase()] {
         if !e.is_empty() && e != "0" && !emails.contains(e) {
             emails.push(e.clone());
         }
@@ -1877,6 +1904,16 @@ async fn resolve_user(
                     return fail(ctx, Error::new(ErrorType::GeneralBadRequest));
                 }
                 let mut found = User::from(&found);
+                // The verified owner of the address claims an unverified account: nobody else keeps access.
+                if found.email_verification != Some(true) {
+                    db.authorization()
+                        .skip(Box::pin(found.revoke_credentials(&db, ctx.project.is_console(), "email")))
+                        .await?;
+                    db.purge_cached_document("users", &found.id).await?;
+                    ctx.mqtt_revoke(&found.id).await;
+                    // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data.
+                    ctx.realtime_sessions_deleted(&found.id).await;
+                }
                 let domain = |e: &str| utopia_emails::Email::new(e).map(|p| p.domain().to_owned()).unwrap_or_default();
                 if domain(found.email.as_deref().unwrap_or("")) == domain(provider_email) {
                     found.email_verification = Some(true);
@@ -2237,83 +2274,13 @@ async fn verify_id_token(
     Ok(claims)
 }
 
-/// The email policies as the ID token flow checks them: in CE only on the
-/// console (its plan check has no empty-plan default).
+/// The email policies of the ID token flow: none for a token without an
+/// address.
 fn id_token_email_policy(ctx: &Context, meta: &Metadata, email: &str, canonicalized: bool) -> Result<()> {
     if email.is_empty() {
         return Ok(());
     }
-    let gate = |flag: &str| {
-        ctx.project.is_console()
-            || ctx
-                .state
-                .hooks
-                .plan(&ctx.project)
-                .is_some_and(|p| p.get(flag).is_some_and(utopia_validators::php::truthy))
-    };
-    let auths = &ctx.project;
-    if gate("supportsDisposableEmailValidation")
-        && auths.auth_bool("disposableEmails", false)
-        && meta.is_disposable == Some(true)
-    {
-        return Err(Error::new(ErrorType::UserEmailDisposable));
-    }
-    if gate("supportsCanonicalEmailValidation")
-        && auths.auth_bool("canonicalEmails", false)
-        && meta.is_canonical == Some(false)
-        && !canonicalized
-    {
-        return Err(Error::new(ErrorType::UserEmailNotCanonical));
-    }
-    if gate("supportsFreeEmailValidation") && auths.auth_bool("freeEmails", false) && meta.is_free == Some(true) {
-        return Err(Error::new(ErrorType::UserEmailFree));
-    }
-    if gate("supportsCorporateEmailValidation")
-        && auths.auth_bool("corporateEmails", false)
-        && meta.is_corporate != Some(true)
-    {
-        return Err(Error::new(ErrorType::UserEmailNotCorporate));
-    }
-    Ok(())
-}
-
-/// `parseEmail()` of the ID token flow (its canonical gate has no
-/// empty-plan default either).
-fn id_token_email(
-    ctx: &Context,
-    provider_email: &str,
-    verified: bool,
-) -> Result<(String, Vec<String>, Metadata, bool)> {
-    let parsed = utopia_emails::Email::new(provider_email).map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?;
-    let canonical = parsed.canonical().map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?;
-    let gate = ctx.project.is_console()
-        || ctx
-            .state
-            .hooks
-            .plan(&ctx.project)
-            .is_some_and(|p| p.get("supportsCanonicalEmailValidation").is_some_and(utopia_validators::php::truthy));
-    let canonicalize = gate && ctx.project.auth_bool("canonicalEmails", false) && verified;
-    let email = if canonicalize {
-        let local = canonical.split('@').next().unwrap_or("");
-        let domain = provider_email.to_lowercase().split_once('@').map(|(_, d)| d.to_owned()).unwrap_or_default();
-        format!("{local}@{domain}")
-    } else {
-        provider_email.to_owned()
-    };
-    let mut emails: Vec<String> = Vec::new();
-    for e in [&email, &provider_email.to_owned(), &canonical] {
-        if !e.is_empty() && e != "0" && !emails.contains(e) {
-            emails.push(e.clone());
-        }
-    }
-    let meta = Metadata {
-        is_canonical: Some(email.to_lowercase() == canonical),
-        canonical: Some(canonical),
-        is_corporate: Some(parsed.is_corporate()),
-        is_disposable: Some(parsed.is_disposable()),
-        is_free: Some(parsed.is_free()),
-    };
-    Ok((email, emails, meta, canonicalize))
+    base::check_email_policy(ctx, meta, canonicalized)
 }
 
 /// `POST /v1/account/sessions/id-token`.
@@ -2446,7 +2413,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
         let mut meta = Metadata::default();
         let mut canonicalize = false;
         if user.is_none() && !provider_email.is_empty() {
-            (email, emails, meta, canonicalize) = id_token_email(ctx, &provider_email, is_verified)?;
+            (email, emails, meta, canonicalize) = parse_email(ctx, &provider_email, is_verified)?;
         }
         if user.is_none() && !email.is_empty() {
             let found = db
@@ -2457,6 +2424,16 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
                     return Err(Error::new(ErrorType::GeneralBadRequest));
                 }
                 let mut found = User::from(&found);
+                // The verified owner of the address claims an unverified account: nobody else keeps access.
+                if found.email_verification != Some(true) {
+                    db.authorization()
+                        .skip(Box::pin(found.revoke_credentials(&db, ctx.project.is_console(), "email")))
+                        .await?;
+                    db.purge_cached_document("users", &found.id).await?;
+                    ctx.mqtt_revoke(&found.id).await;
+                    // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data.
+                    ctx.realtime_sessions_deleted(&found.id).await;
+                }
                 let domain = |e: &str| utopia_emails::Email::new(e).map(|p| p.domain().to_owned()).unwrap_or_default();
                 if domain(found.email.as_deref().unwrap_or("")) == domain(&provider_email) {
                     found.email_verification = Some(true);
@@ -2519,7 +2496,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::UserBlocked));
     }
     if user.email.as_deref().is_none_or(|e| e.is_empty() || e == "0") && !provider_email.is_empty() {
-        let (email, emails, meta, canonicalize) = id_token_email(ctx, &provider_email, is_verified)?;
+        let (email, emails, meta, canonicalize) = parse_email(ctx, &provider_email, is_verified)?;
         let others = db
             .find(
                 "users",
@@ -2679,11 +2656,13 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
     base::add_session_cookies(ctx, &mut response, &encoded, &cookie_expire);
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
-    ctx.event_payload(&model);
+    ctx.event_payload_sensitive(&model, SESSION_SENSITIVE);
     if let Err(e) = base::session_alert(ctx, &user, &session).await {
         tracing::warn!(error = %e, "session alert failed");
     }
-    // The replaced session goes once the caller holds the new one.
+    // The replaced session goes once the caller holds the new one, and its
+    // live connections with it.
+    let replaced = current.is_some();
     if let Some(current) = current {
         let document = db.get_document("sessions", &current.id, Vec::new(), false).await?;
         if !document.is_empty() {
@@ -2691,6 +2670,9 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
         }
     }
     db.purge_cached_document("users", &user.id).await?;
+    if replaced {
+        ctx.mqtt_revoke(&user.id).await;
+    }
     Ok(response)
 }
 

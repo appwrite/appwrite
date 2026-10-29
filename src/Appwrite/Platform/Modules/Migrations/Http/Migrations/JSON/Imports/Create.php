@@ -54,7 +54,7 @@ class Create extends Action
                 group: null,
                 name: 'createJSONImport',
                 description: '/docs/references/migrations/migration-json-import.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -73,6 +73,7 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('project')
+            ->inject('user')
             ->inject('platform')
             ->inject('deviceForFiles')
             ->inject('deviceForMigrations')
@@ -93,6 +94,7 @@ class Create extends Action
         Database $dbForPlatform,
         Authorization $authorization,
         Document $project,
+        Document $user,
         array $platform,
         Device $deviceForFiles,
         Device $deviceForMigrations,
@@ -111,7 +113,11 @@ class Create extends Action
         }
 
         $file = $authorization->skip(fn () => $internalFile ? $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $fileId) : $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-        if ($file->isEmpty()) {
+        // An internal file is readable only by the project that exported it, or the console user who uploaded it
+        $metadata = $file->getAttribute('metadata', []);
+        $owned = ($metadata['projectInternalId'] ?? null) === $project->getSequence()
+            || (!$user->isEmpty() && ($metadata['uploaderId'] ?? null) === $user->getId());
+        if ($file->isEmpty() || ($internalFile && !$owned)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -119,6 +125,18 @@ class Create extends Action
         if (!$deviceForFiles->exists($path)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }
+
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $databaseType = $database->getAttribute('type');
 
         // No encryption or compression on files above 20MB.
         $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
@@ -162,18 +180,6 @@ class Create extends Action
         }
 
         $fileSize = $deviceForMigrations->getFileSize($newPath);
-
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
-        }
-
-        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
-        if ($collection->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
-        }
-
-        $databaseType = $database->getAttribute('type');
         $resources = Transfer::extractServices([self::transferGroupForDatabaseType($databaseType)]);
         $parentResourceType = self::resourceTypeForDatabaseType($databaseType);
 

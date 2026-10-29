@@ -47,6 +47,7 @@ const MARKDOC_ICON_FILE_OVERRIDES: Record<string, string> = {
   c: 'cpp.svg',
   'react-native': 'react-native.svg',
   dotnet: 'dotnet.svg',
+  unity: 'unity.svg',
   aws: 'amazon.svg',
   azure: 'microsoft.svg',
   openai: 'chatgpt.svg',

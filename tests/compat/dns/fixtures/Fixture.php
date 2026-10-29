@@ -46,7 +46,7 @@ final class Fixture
                     $question = $query->message->questions[0];
                     $rule = $this->rules[(string) $question->type] ?? $this->rules['*'] ?? ['rcode' => 0];
                     $answers = isset($rule['answer'])
-                        ? [new Record($question->name, $question->type, ttl: 60, rdata: $rule['answer'])]
+                        ? [new Record($question->name, $question->type, ttl: 60, rdata: str_repeat($rule['answer'], $rule['repeat'] ?? 1))]
                         : [];
 
                     return Message::response($query->message->header, $rule['rcode'] ?? 0, $query->message->questions, $answers);

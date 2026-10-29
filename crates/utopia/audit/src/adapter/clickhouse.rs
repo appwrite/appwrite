@@ -464,13 +464,15 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
     }
 
     /// The `SELECT` list of a `select` query: `id` (and `tenant` with shared
-    /// tables) first, then the selected columns, without duplicates.
-    fn projection(&self, select: Option<&[String]>) -> Result<String> {
+    /// tables) first, then the order columns, so any returned row can be the
+    /// next cursor, then the selected columns, without duplicates.
+    fn projection(&self, select: Option<&[String]>, orders: &[Order]) -> Result<String> {
         let Some(select) = select else { return Ok(self.select_columns()) };
         let mut forced = vec!["id"];
         if self.shared_tables {
             forced.push("tenant");
         }
+        forced.extend(orders.iter().map(|o| o.attribute.as_str()));
         let mut seen: Vec<&str> = Vec::new();
         let mut columns = Vec::new();
         for column in forced {
@@ -932,6 +934,22 @@ fn named_params(bindings: Option<&QArray>) -> Result<Vec<(String, Vec<u8>)>> {
     Ok(params)
 }
 
+/// Newest first by default, always ending in `id` so the order is total.
+/// Every page, cursor or not, must sort by the columns the cursor compares on,
+/// or rows tied on `time` are skipped or repeated between pages.
+///
+/// PHP: `ClickHouse::resolveOrder()`.
+fn resolve_order(mut orders: Vec<Order>) -> Vec<Order> {
+    if orders.is_empty() {
+        orders.push(Order { attribute: "time".into(), descending: true });
+    }
+    if !orders.iter().any(|o| o.attribute == "id") {
+        let descending = orders.last().is_some_and(|o| o.descending);
+        orders.push(Order { attribute: "id".into(), descending });
+    }
+    orders
+}
+
 /// A cursor row: a log's (or any row's) fields, or an array, with `$id`
 /// as `id`.
 fn normalize_cursor_row(raw: &QValue) -> Result<QArray> {
@@ -1299,27 +1317,23 @@ impl<A: utopia_client::Adapter> Adapter for ClickHouse<A> {
         if parsed.random && !parsed.orders.is_empty() {
             return Err(Error::exception("orderRandom cannot be combined with orderAsc/orderDesc"));
         }
-        let projection = self.projection(parsed.select.as_deref())?;
+        let orders = if parsed.random { Vec::new() } else { resolve_order(parsed.orders) };
+        let projection = self.projection(parsed.select.as_deref(), &orders)?;
         let mut builder = self.builder()?;
         builder.from(self.qualified_table(), "").select_raw(projection, QArray::new()).filter(parsed.filters);
         self.apply_tenant_filter(&mut builder);
 
-        let mut orders = parsed.orders;
         let mut cursor_params = Vec::new();
         let before = parsed.cursor.as_ref().is_some_and(|(_, before)| *before);
-        if let Some((cursor, before)) = &parsed.cursor {
-            if !orders.iter().any(|o| o.attribute == "id") {
-                let descending = orders.last().is_none_or(|o| o.descending);
-                orders.push(Order { attribute: "id".into(), descending });
-            }
-            let (clause, params) = self.cursor_where(&orders, cursor, *before)?;
-            builder.where_raw(clause, QArray::new());
-            cursor_params = params;
-        }
         if parsed.random {
             builder.sort_random();
         } else {
-            Self::apply_order_by(&mut builder, &orders, parsed.cursor.is_some() && before);
+            if let Some((cursor, before)) = &parsed.cursor {
+                let (clause, params) = self.cursor_where(&orders, cursor, *before)?;
+                builder.where_raw(clause, QArray::new());
+                cursor_params = params;
+            }
+            Self::apply_order_by(&mut builder, &orders, before);
         }
         if let Some(limit) = parsed.limit {
             builder.limit(limit);

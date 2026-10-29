@@ -7435,27 +7435,27 @@
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO `${ns}`.`ns_up` (`$document`, `_createdAt`, `_permissions`, `_uid`, `_updatedAt`) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `$document` = VALUES(`$document`), `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`)"
+              "query": "INSERT INTO `${ns}`.`ns_up` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `document`) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`), `document` = VALUES(`document`)"
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO `${ns}`.`ns_up` (`$document`, `_createdAt`, `_permissions`, `_uid`, `_updatedAt`) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `$document` = VALUES(`$document`), `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`)"
+              "query": "INSERT INTO `${ns}`.`ns_up` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `document`) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`), `document` = VALUES(`document`)"
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO `${ns}`.`ns_up` (`$document`, `_createdAt`, `_permissions`, `_uid`, `_updatedAt`) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `$document` = VALUES(`$document`), `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`)"
+              "query": "INSERT INTO `${ns}`.`ns_up` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `document`) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`), `document` = VALUES(`document`)"
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO `${ns}`.`ns_up` (`$document`, `_createdAt`, `_permissions`, `_uid`, `_updatedAt`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `$document` = VALUES(`$document`), `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`)"
+              "query": "INSERT INTO `${ns}`.`ns_up` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `document`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`), `document` = VALUES(`document`)"
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO `${ns}`.`ns_up` (`$document`, `_createdAt`, `_permissions`, `_uid`, `_updatedAt`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `$document` = VALUES(`$document`), `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`)"
+              "query": "INSERT INTO `${ns}`.`ns_up` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `document`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`), `document` = VALUES(`document`)"
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO `${ns}`.`ns_up` (`$document`, `_createdAt`, `_permissions`, `_uid`, `_updatedAt`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `$document` = VALUES(`$document`), `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`)"
+              "query": "INSERT INTO `${ns}`.`ns_up` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `document`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `_permissions` = VALUES(`_permissions`), `_updatedAt` = VALUES(`_updatedAt`), `document` = VALUES(`document`)"
             }
           ]
         },
@@ -9135,7 +9135,7 @@
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO `${ns}`.`ns_sh` (`$document`, `_createdAt`, `_permissions`, `_tenant`, `_uid`, `_updatedAt`) VALUES (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `$document` = IF(_tenant = VALUES(_tenant), VALUES(`document`), `document`), `_permissions` = IF(_tenant = VALUES(_tenant), VALUES(`_permissions`), `_permissions`), `_updatedAt` = IF(_tenant = VALUES(_tenant), VALUES(`_updatedAt`), `_updatedAt`)"
+              "query": "INSERT INTO `${ns}`.`ns_sh` (`_createdAt`, `_permissions`, `_tenant`, `_uid`, `_updatedAt`, `document`) VALUES (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `_permissions` = IF(_tenant = VALUES(_tenant), VALUES(`_permissions`), `_permissions`), `_updatedAt` = IF(_tenant = VALUES(_tenant), VALUES(`_updatedAt`), `_updatedAt`), `document` = IF(_tenant = VALUES(_tenant), VALUES(`document`), `document`)"
             },
             {
               "transform": "document_increase",

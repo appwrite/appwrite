@@ -9,7 +9,7 @@ transition and abbreviation exactly like the PHP build it is checked
 against.
 
 Usage (from a php-src checkout of the PHP version the dev image runs,
-e.g. tag php-8.5.10):
+e.g. tag php-8.5.12):
 
     python3 crates/support/php-std/data/timezonedb.py /path/to/php-src/ext/date/lib
 

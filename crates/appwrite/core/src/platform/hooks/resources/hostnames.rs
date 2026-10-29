@@ -12,19 +12,31 @@ use crate::database::documents::Attributes;
 use crate::platform::State;
 use crate::{Result, network};
 
-/// The `allowedHostnames` resource.
+/// The custom domain rule the request comes from (the `rule` resource).
+#[derive(Debug, Clone)]
+pub struct Rule {
+    pub domain: String,
+    /// The rule belongs to a trusted console project
+    /// (`_APP_CONSOLE_TRUSTED_PROJECTS`).
+    pub trusted: bool,
+}
+
+/// The `allowedHostnames` resource. Admin mode carries the console session,
+/// so only console hosts may use it: no platform hostnames, and a rule only
+/// of a trusted console project.
 pub(in crate::platform) fn allowed_hostnames(
     ctx_state: &State,
     project: &Project,
     project_found: bool,
     request: &Request,
-    rule_domain: Option<&str>,
+    rule: Option<&Rule>,
+    admin: bool,
 ) -> Vec<String> {
     let mut allowed = ctx_state.config.platform_hostnames();
     if let Some(host) = network::url_host(&ctx_state.config.console_url) {
         allowed.push(host);
     }
-    if project_found && !project.is_console() && !project.id.is_empty() {
+    if project_found && !project.is_console() && !project.id.is_empty() && !admin {
         allowed.extend(network::platform_hostnames(&project.platforms));
     }
     if request.method() == Method::OPTIONS {
@@ -33,8 +45,8 @@ pub(in crate::platform) fn allowed_hostnames(
             allowed.push(host);
         }
     }
-    if let Some(domain) = rule_domain.filter(|d| !d.is_empty()) {
-        allowed.push(domain.to_owned());
+    if let Some(rule) = rule.filter(|r| !r.domain.is_empty() && (!admin || r.trusted)) {
+        allowed.push(rule.domain.clone());
     }
     let mut unique: Vec<String> = Vec::with_capacity(allowed.len());
     for h in allowed {
@@ -46,10 +58,15 @@ pub(in crate::platform) fn allowed_hostnames(
 }
 
 /// The `allowedSchemes` resource: the console's schemes, and for a project
-/// `exp`, its callback scheme and its platforms' schemes.
-pub(in crate::platform) fn allowed_schemes(state: &State, project: &Project, project_found: bool) -> Vec<String> {
+/// outside admin mode `exp`, its callback scheme and its platforms' schemes.
+pub(in crate::platform) fn allowed_schemes(
+    state: &State,
+    project: &Project,
+    project_found: bool,
+    admin: bool,
+) -> Vec<String> {
     let mut schemes = state.config.console_schemas.clone();
-    if project_found && !project.is_console() {
+    if project_found && !project.is_console() && !admin {
         schemes.push("exp".to_owned());
         schemes.push(format!("appwrite-callback-{}", project.id));
         schemes.extend(network::platform_schemes(&project.platforms));
@@ -70,7 +87,7 @@ pub(in crate::platform) async fn rule_domain(
     platform_db: &Database,
     project: &Project,
     request: &Request,
-) -> Result<Option<String>> {
+) -> Result<Option<Rule>> {
     let source = request.header("origin").and_then(network::url_host).filter(|h| !h.is_empty());
     let Some(domain) =
         source.or_else(|| request.header("referer").and_then(network::url_host)).filter(|h| !h.is_empty())
@@ -95,5 +112,5 @@ pub(in crate::platform) async fn rule_domain(
     if !permits && !trusted {
         return Ok(None);
     }
-    Ok(Some(rule.string_or_empty("domain")))
+    Ok(Some(Rule { domain: rule.string_or_empty("domain"), trusted }))
 }

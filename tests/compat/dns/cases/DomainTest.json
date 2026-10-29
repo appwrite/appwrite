@@ -574,6 +574,105 @@
           }
         }
       ]
+    },
+    {
+      "name": "decode accepts pointer chain at limit",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "AMAAwAHAA8AFwAfACcALwA3AD8ARwBPAFcAXwBnAG8AdwB/AIcAjwCXAJ8ApwCvALcAvwDHAM8A1wDfAOcA7wD3AP8BBwEPARcBHwEnAS8BNwE/AUcBTwFXAV8BZwFvAXcBfwGHAY8BlwGfAacBrwG3Ab8BxwHPAdcB3wHnAe8B9wH/AgcCDwIXAh8CJwIvAjcCPwJHAk8CVwJfAmcCbwJ3An8ChwKPApcCnwKnAq8CtwK/AscCzwLXAt8C5wLvAvcC/wMHAw8DFwMfAycDLwM3Az8DRwNPA1cDXwNnA28DdwN/A4cDjwOXA58DpwOvA7cDvwPHA88D1wPfA+Q=="
+            },
+            "offset": 251
+          },
+          "expect": {
+            "name": "",
+            "offset": 253
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode rejects pointer chain over limit",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "AMAAwAHAA8AFwAfACcALwA3AD8ARwBPAFcAXwBnAG8AdwB/AIcAjwCXAJ8ApwCvALcAvwDHAM8A1wDfAOcA7wD3AP8BBwEPARcBHwEnAS8BNwE/AUcBTwFXAV8BZwFvAXcBfwGHAY8BlwGfAacBrwG3Ab8BxwHPAdcB3wHnAe8B9wH/AgcCDwIXAh8CJwIvAjcCPwJHAk8CVwJfAmcCbwJ3An8ChwKPApcCnwKnAq8CtwK/AscCzwLXAt8C5wLvAvcC/wMHAw8DFwMfAycDLwM3Az8DRwNPA1cDXwNnA28DdwN/A4cDjwOXA58DpwOvA7cDvwPHA88D1wPfA+cD7"
+            },
+            "offset": 253
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Domain name exceeds maximum compression pointer count"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode accepts name at maximum length",
+      "steps": [
+        {
+          "op": "domain.encode",
+          "args": {
+            "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "expect": "?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\u0000"
+        },
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\u0000",
+            "offset": 0
+          },
+          "expect": {
+            "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "offset": 255
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode rejects name over maximum length",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": "?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u0000",
+            "offset": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Domain name exceeds maximum length of 255 bytes"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode rejects name over maximum length across pointers",
+      "steps": [
+        {
+          "op": "domain.decode",
+          "args": {
+            "data": {
+              "$bytes": "P2FhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYT9hYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWEAP2FhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYT9hYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWHAAA=="
+            },
+            "offset": 129
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Domain name exceeds maximum length of 255 bytes"
+            }
+          }
+        }
+      ]
     }
   ]
 }

@@ -172,7 +172,7 @@ impl Config {
                     port: parsed.port().unwrap_or(5432),
                     user: text(parsed.user()),
                     password: text(parsed.password()),
-                    database: parsed.path().to_owned(),
+                    database: String::from_utf8_lossy(parsed.path()).into_owned(),
                 });
             }
         }

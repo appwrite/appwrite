@@ -242,16 +242,18 @@ impl Validator for PasswordStrength {
     }
 }
 
-/// `PasswordDictionary($dictionary, $enabled, $allowEmpty)`.
+/// `PasswordDictionary($dictionary, $enabled, $allowEmpty, $denyList)`.
 pub struct PasswordDictionary<'a> {
     pub dictionary: &'a HashSet<String>,
     pub enabled: bool,
     pub allow_empty: bool,
+    /// The project's own blocked passwords (`auths.passwordDictionaryDenyList`).
+    pub deny_list: Vec<String>,
 }
 
 impl Validator for PasswordDictionary<'_> {
     fn description(&self) -> String {
-        "Password must be between 8 and 265 characters long, and should not be one of the commonly used password."
+        "Password must be between 8 and 256 characters long, and must not be a common or custom blocked password."
             .to_owned()
     }
 
@@ -260,13 +262,14 @@ impl Validator for PasswordDictionary<'_> {
             return false;
         }
         match value {
-            Value::String(s) => !(self.enabled && self.dictionary.contains(s)),
+            Value::String(s) => !(self.enabled && (self.dictionary.contains(s) || self.deny_list.contains(s))),
             _ => false,
         }
     }
 }
 
-/// `PersonalData($userId, $email, $name, $phone, strict: false, $allowEmpty)`.
+/// `PersonalData($userId, $email, $name, $phone, strict: false, $allowEmpty,
+/// $denyList)`.
 pub fn personal_data_ok(
     password: Option<&str>,
     user_id: &str,
@@ -274,6 +277,7 @@ pub fn personal_data_ok(
     name: Option<&str>,
     phone: Option<&str>,
     allow_empty: bool,
+    deny_list: &[String],
 ) -> bool {
     let Some(password) = password else { return false };
     if !Password::ok(&Value::String(password.to_owned()), allow_empty) {
@@ -307,7 +311,7 @@ pub fn personal_data_ok(
     {
         return false;
     }
-    true
+    !deny_list.iter().any(|term| check(term))
 }
 
 /// Reads the common-password dictionary file (one password per line).
@@ -363,7 +367,25 @@ mod tests {
         assert!(!s.is_valid(&json!("password")));
         assert!(s.is_valid(&json!("Password")));
         assert_eq!(s.description(), "Password must be between 8 and 256 characters long, include an uppercase letter.");
-        assert!(personal_data_ok(Some("secret-pass"), "user1", Some("zz@b.com"), Some("John"), None, false));
-        assert!(!personal_data_ok(Some("john-secret"), "user1", None, Some("John"), None, false));
+        assert!(personal_data_ok(Some("secret-pass"), "user1", Some("zz@b.com"), Some("John"), None, false, &[]));
+        assert!(!personal_data_ok(Some("john-secret"), "user1", None, Some("John"), None, false, &[]));
+    }
+
+    #[test]
+    fn deny_lists() {
+        let deny = vec!["Acme".to_owned(), String::new()];
+        // Personal data: a blocked term anywhere, case-insensitively; an empty term blocks nothing.
+        assert!(!personal_data_ok(Some("my-acme-pass"), "user1", None, None, None, false, &deny));
+        assert!(personal_data_ok(Some("other-pass"), "user1", None, None, None, false, &deny));
+        // Dictionary: the whole password, exactly, and only when the dictionary is enabled.
+        let dictionary = HashSet::new();
+        let deny_list = vec!["acmecorp1".to_owned()];
+        let mut validator =
+            PasswordDictionary { dictionary: &dictionary, enabled: true, allow_empty: false, deny_list };
+        assert!(!validator.is_valid(&json!("acmecorp1")));
+        assert!(validator.is_valid(&json!("Acmecorp1")));
+        assert!(validator.is_valid(&json!("acmecorp12")));
+        validator.enabled = false;
+        assert!(validator.is_valid(&json!("acmecorp1")));
     }
 }

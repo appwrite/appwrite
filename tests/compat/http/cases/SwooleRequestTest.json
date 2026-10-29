@@ -745,6 +745,275 @@
       ]
     },
     {
+      "name": "ignores the forwarded host by default",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-Forwarded-Host",
+              "example.com:8443"
+            ],
+            [
+              "X-Forwarded-Port",
+              "8443"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "hostname"
+          },
+          {
+            "get": "port"
+          }
+        ]
+      },
+      "expect": [
+        "localhost",
+        ""
+      ]
+    },
+    {
+      "name": "trusts a named forwarded host",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-Forwarded-Host",
+              "spoofed.example:9000, Example.com:8443"
+            ]
+          ],
+          "trusted": {
+            "host": [
+              "x-forwarded-host"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "hostname"
+          },
+          {
+            "get": "port"
+          }
+        ]
+      },
+      "expect": [
+        "example.com",
+        "8443"
+      ]
+    },
+    {
+      "name": "trusts a named forwarded port",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-Forwarded-Port",
+              "8443"
+            ]
+          ],
+          "trusted": {
+            "port": [
+              "x-forwarded-port"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "port"
+          }
+        ]
+      },
+      "expect": [
+        "8443"
+      ]
+    },
+    {
+      "name": "skips a trusted port header that is not a number",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-Forwarded-Port",
+              "not-a-port"
+            ]
+          ],
+          "trusted": {
+            "port": [
+              "x-forwarded-port"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "port"
+          }
+        ]
+      },
+      "expect": [
+        ""
+      ]
+    },
+    {
+      "name": "a trusted port header that is not a number falls back to the forwarded host's",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-Forwarded-Host",
+              "a.example:9000"
+            ],
+            [
+              "X-Forwarded-Port",
+              "80, -1"
+            ]
+          ],
+          "trusted": {
+            "host": [
+              "x-forwarded-host"
+            ],
+            "port": [
+              "x-forwarded-port"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "hostname"
+          },
+          {
+            "get": "port"
+          }
+        ]
+      },
+      "expect": [
+        "a.example",
+        "9000"
+      ]
+    },
+    {
+      "name": "the first trusted host header with a value wins, empty nearest entries are skipped",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-Forwarded-Host",
+              "a.example, "
+            ],
+            [
+              "X-Host",
+              " B.example:81 "
+            ]
+          ],
+          "trusted": {
+            "host": [
+              "x-forwarded-host",
+              "x-host"
+            ],
+            "port": [
+              "x-forwarded-port"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "hostname"
+          },
+          {
+            "get": "port"
+          }
+        ]
+      },
+      "expect": [
+        "b.example",
+        "81"
+      ]
+    },
+    {
+      "name": "a trusted forwarded host without a port keeps the Host header out",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/v1/documents",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ],
+            [
+              "X-Forwarded-Host",
+              "a.example"
+            ],
+            [
+              "Host",
+              "ignored:9"
+            ]
+          ],
+          "trusted": {
+            "host": [
+              "x-forwarded-host"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "hostname"
+          },
+          {
+            "get": "port"
+          }
+        ]
+      },
+      "expect": [
+        "a.example",
+        ""
+      ]
+    },
+    {
       "name": "cookies: Swoole rules",
       "op": "request.inspect",
       "args": {
@@ -1027,6 +1296,146 @@
         [],
         [],
         []
+      ]
+    },
+    {
+      "name": "spoofed upload is neutralized",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/storage/buckets/files",
+          "headers": [
+            [
+              "Content-Type",
+              "multipart/form-data; boundary=upload-boundary"
+            ]
+          ],
+          "body": "--upload-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"upload.txt\"\r\nContent-Type: text/plain\r\nSwoole-Upload-File: /nonexistent/compat-spoofed-target\r\n\r\npayload\r\n--upload-boundary--\r\n"
+        },
+        "steps": [
+          {
+            "get": [
+              "files",
+              "file"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "type": "text/plain",
+          "tmp_name": "",
+          "size": 0,
+          "name": "upload.txt",
+          "error": 7
+        }
+      ]
+    },
+    {
+      "name": "spoofed upload inside a nested field is neutralized",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/storage/buckets/files",
+          "headers": [
+            [
+              "Content-Type",
+              "multipart/form-data; boundary=upload-boundary"
+            ]
+          ],
+          "body": "--upload-boundary\r\nContent-Disposition: form-data; name=\"file[0][part]\"; filename=\"upload.txt\"\r\nContent-Type: text/plain\r\nswoole-UPLOAD-file:  /nonexistent/compat-spoofed-target\r\n\r\npayload\r\n--upload-boundary\r\nContent-Disposition: form-data; name=\"file[0][other]\"; filename=\"upload.txt\"\r\nContent-Type: text/plain\r\n\r\npayload\r\n--upload-boundary\r\nContent-Disposition: form-data; name=\"empty\"; filename=\"\"\r\nContent-Type: text/plain\r\n\r\n\r\n--upload-boundary--\r\n"
+        },
+        "steps": [
+          {
+            "get": [
+              "files",
+              "file"
+            ]
+          },
+          {
+            "get": [
+              "files",
+              "empty"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "name": [
+            {
+              "part": "upload.txt",
+              "other": "upload.txt"
+            }
+          ],
+          "type": [
+            {
+              "part": "text/plain",
+              "other": "text/plain"
+            }
+          ],
+          "tmp_name": [
+            {
+              "part": "",
+              "other": "payload"
+            }
+          ],
+          "error": [
+            {
+              "part": 7,
+              "other": 0
+            }
+          ],
+          "size": [
+            {
+              "part": 0,
+              "other": 7
+            }
+          ]
+        },
+        {
+          "type": "",
+          "tmp_name": "",
+          "size": 0,
+          "name": "",
+          "error": 4
+        }
+      ]
+    },
+    {
+      "name": "upload mentioning the marker stays intact",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/storage/buckets/files",
+          "headers": [
+            [
+              "Content-Type",
+              "multipart/form-data; boundary=upload-boundary"
+            ]
+          ],
+          "body": "--upload-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"upload.txt\"\r\nContent-Type: text/plain\r\n\r\nnotes\nSwoole-Upload-File: /nonexistent/compat-spoofed-target\n\r\n--upload-boundary--\r\n"
+        },
+        "steps": [
+          {
+            "get": [
+              "files",
+              "file"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "type": "text/plain",
+          "tmp_name": "notes\nSwoole-Upload-File: /nonexistent/compat-spoofed-target\n",
+          "size": 61,
+          "name": "upload.txt",
+          "error": 0
+        }
       ]
     },
     {

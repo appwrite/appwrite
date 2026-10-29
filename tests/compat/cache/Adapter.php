@@ -167,6 +167,11 @@ final class Adapter implements Base, Benchmarks
 
                 return $s->handle($adapter);
             },
+            'cluster.raw_set' => function (array $a, Session $s) {
+                $seeds = explode(',', substr($s->service('cache-cluster'), \strlen('redis-cluster://')));
+
+                return (bool) (new \RedisCluster(null, $seeds, 1.5, 1.5))->set($a['key'], $a['value']);
+            },
             'cluster.info' => function (array $a, Session $s) {
                 $adapter = self::adapter($a['adapter'], $s);
 
@@ -183,14 +188,60 @@ final class Adapter implements Base, Benchmarks
             },
             'circuit_breaker.new' => fn (array $a, Session $s) => $s->handle(new CircuitBreaker(
                 self::adapter($a['adapter'], $s),
-                new Breaker(...(isset($a['minimum_throughput']) ? ['minimumThroughput' => $a['minimum_throughput']] : [])),
+                isset($a['breaker']) ? self::breaker($a['breaker'], $s) : new Breaker(...(isset($a['minimum_throughput']) ? ['minimumThroughput' => $a['minimum_throughput']] : [])),
             )),
+            'breaker.new' => function (array $a, Session $s) {
+                $breaker = new Breaker(...array_filter([
+                    'minimumThroughput' => $a['minimum_throughput'] ?? null,
+                    'timeout' => $a['timeout'] ?? null,
+                ], fn ($v) => $v !== null));
+                if ($a['trip'] ?? false) {
+                    $breaker->trip();
+                }
+
+                return $s->handle($breaker);
+            },
+            'breaker.is_open' => fn (array $a, Session $s) => self::breaker($a['breaker'], $s)->isOpen(),
             'failing.new' => fn (array $a, Session $s) => $s->handle(new FailingAdapter()),
             'counting_failing.new' => fn (array $a, Session $s) => $s->handle(new CountingFailingAdapter()),
             'counting_failing.loads' => function (array $a, Session $s) {
                 $adapter = $s->get($a['adapter']);
 
                 return $adapter instanceof CountingFailingAdapter ? $adapter->loads : throw new Fault('not a counting adapter');
+            },
+            'counting_failing.purges' => function (array $a, Session $s) {
+                $adapter = $s->get($a['adapter']);
+
+                return $adapter instanceof CountingFailingAdapter ? $adapter->purges : throw new Fault('not a counting adapter');
+            },
+            'adapter.purge_failure' => function (array $a, Session $s) {
+                try {
+                    return ['result' => self::adapter($a['adapter'], $s)->purge($a['key'], $a['hash'] ?? '')];
+                } catch (\Throwable $e) {
+                    $previous = $e->getPrevious();
+
+                    return ['error' => [
+                        'class' => $e::class,
+                        'message' => $e->getMessage(),
+                        'previous' => $previous === null ? null : ['class' => $previous::class, 'message' => $previous->getMessage()],
+                    ]];
+                }
+            },
+            'fs.mkdir' => fn (array $a, Session $s) => mkdir($a['path'], 0755, true),
+            'fs.delete' => function (array $a, Session $s) {
+                $delete = function (string $path) use (&$delete): void {
+                    if (is_dir($path) && !is_link($path)) {
+                        foreach (array_diff(scandir($path) ?: [], ['.', '..']) as $entry) {
+                            $delete("{$path}/{$entry}");
+                        }
+                        rmdir($path);
+                    } elseif (file_exists($path) || is_link($path)) {
+                        unlink($path);
+                    }
+                };
+                $delete($a['path']);
+
+                return;
             },
             'probe.new' => fn (array $a, Session $s) => $s->handle(new ProbeAdapter()),
             'probe.calls' => function (array $a, Session $s) {
@@ -434,6 +485,13 @@ final class Adapter implements Base, Benchmarks
     {
         $results = [];
         $url = parse_url($s->service($a['service'] ?? 'cache-redis'));
+        $silent = null;
+        if (\is_array($a['options'] ?? null) && ($a['options']['silent'] ?? false)) {
+            // A server that accepts connections (the kernel's backlog does) and never answers.
+            $silent = stream_socket_server('tcp://127.0.0.1:0') ?: throw new Fault('Could not open a loopback listener');
+            [, $port] = explode(':', (string) stream_socket_get_name($silent, false));
+            $url = ['host' => '127.0.0.1', 'port' => (int) $port, 'path' => '/0'];
+        }
         run(function () use ($a, $url, &$results): void {
             $o = $a['options'] ?? [];
             $o = $o instanceof \stdClass ? [] : $o;
@@ -460,6 +518,11 @@ final class Adapter implements Base, Benchmarks
             if ($o['case_sensitive'] ?? false) {
                 $cache->setCaseSensitivity(true);
             }
+            $telemetry = null;
+            if ($o['write_failures'] ?? false) {
+                $telemetry = new RecordingTelemetry();
+                $cache->setTelemetry($telemetry);
+            }
             try {
                 foreach ($a['steps'] as $step) {
                     $args = $step['args'] ?? [];
@@ -480,10 +543,16 @@ final class Adapter implements Base, Benchmarks
                         $results[] = ['$error' => ['class' => $e::class, 'message' => $e->getMessage()]];
                     }
                 }
+                if ($telemetry !== null) {
+                    $results[] = array_column($telemetry->dump()['counter:cache.redis_multiplexing.write.failures'] ?? [], 'attributes');
+                }
             } finally {
                 $adapter->disconnect();
             }
         });
+        if ($silent !== null) {
+            fclose($silent);
+        }
 
         return $results;
     }
@@ -628,6 +697,13 @@ final class Adapter implements Base, Benchmarks
         return $adapter instanceof CacheAdapter ? $adapter : throw new Fault('not an adapter');
     }
 
+    private static function breaker(mixed $handle, Session $s): Breaker
+    {
+        $breaker = $s->get($handle);
+
+        return $breaker instanceof Breaker ? $breaker : throw new Fault('not a breaker');
+    }
+
     /**
      * @param array<string, mixed> $a
      */
@@ -697,11 +773,20 @@ final class CountingFailingAdapter extends FailingAdapter
 {
     public int $loads = 0;
 
+    public int $purges = 0;
+
     public function load(string $key, int $ttl, string $hash = ''): mixed
     {
         $this->loads++;
 
         return parent::load($key, $ttl, $hash);
+    }
+
+    public function purge(string $key, string $hash = ''): bool
+    {
+        $this->purges++;
+
+        return parent::purge($key, $hash);
     }
 }
 

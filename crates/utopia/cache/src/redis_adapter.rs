@@ -112,8 +112,11 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Redis<C, K> {
     }
 
     /// Runs a command, retrying connection failures. A server error reply is
-    /// `Ok(Reply::Error)`.
-    async fn execute(&self, cmd: &redis::Cmd) -> Result<Reply> {
+    /// `Ok(Reply::Error)`. A script is not `idempotent`: when its reply is
+    /// lost Redis may already have run it, so it is never replayed.
+    ///
+    /// PHP: `Redis::execute()` (private).
+    async fn execute(&self, cmd: &redis::Cmd, idempotent: bool) -> Result<Reply> {
         let mut attempts = 0;
         loop {
             let mut connection = self.connection.clone();
@@ -122,7 +125,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Redis<C, K> {
                 Err(e) if !connection_error(&e) => return Ok(Reply::Error(server_error(&e).into_bytes())),
                 Err(e) => {
                     attempts += 1;
-                    if attempts > self.retry.max_retries() {
+                    if !idempotent || attempts > self.retry.max_retries() {
                         return Err(Error::Redis(e.to_string()));
                     }
                     self.retry.pause().await;
@@ -132,14 +135,14 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Redis<C, K> {
     }
 
     async fn hget(&self, key: &str, field: &str) -> Result<Option<Vec<u8>>> {
-        Ok(match self.execute(redis::cmd("HGET").arg(key).arg(field)).await? {
+        Ok(match self.execute(redis::cmd("HGET").arg(key).arg(field), true).await? {
             Reply::Str(s) => Some(s),
             _ => None,
         })
     }
 
     async fn hset(&self, key: &str, field: &str, value: &[u8]) -> Result<Reply> {
-        self.execute(redis::cmd("HSET").arg(key).arg(field).arg(value)).await
+        self.execute(redis::cmd("HSET").arg(key).arg(field).arg(value), true).await
     }
 }
 
@@ -149,7 +152,19 @@ fn connection_error(e: &redis::RedisError) -> bool {
     e.is_io_error() || e.is_connection_dropped() || e.is_connection_refusal() || e.is_timeout()
 }
 
-fn server_error(e: &redis::RedisError) -> String {
+/// A lease script replies with an integer, so an error reply is a failure,
+/// not a result.
+///
+/// PHP: `Redis::confirmScript()` (private).
+fn confirm_script(reply: Reply) -> Result<Reply> {
+    match reply {
+        Reply::Error(e) if e.is_empty() => Err(Error::Redis("Lease script failed".into())),
+        Reply::Error(e) => Err(Error::Redis(text(&e))),
+        other => Ok(other),
+    }
+}
+
+pub(crate) fn server_error(e: &redis::RedisError) -> String {
     match (e.code(), e.detail()) {
         (Some(code), Some(detail)) => format!("{code} {detail}"),
         (Some(code), None) => code.to_owned(),
@@ -192,9 +207,9 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Transport for 
         for arg in args {
             cmd.arg(*arg);
         }
-        match self.execute(&cmd).await? {
+        match self.execute(&cmd, false).await? {
             Reply::Error(e) if crate::resp::is_noscript(&text(&e)) => Err(Error::NoScript(text(&e))),
-            other => Ok(other),
+            other => confirm_script(other),
         }
     }
 
@@ -205,7 +220,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Transport for 
         for arg in args {
             cmd.arg(*arg);
         }
-        self.execute(&cmd).await
+        confirm_script(self.execute(&cmd, false).await?)
     }
 
     /// The value of one field of a hash, `None` when missing.
@@ -240,7 +255,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
         if self.hset(key, hash, &value).await.is_err() {
             return Ok(false);
         }
-        if ttl > 0 && self.execute(redis::cmd("EXPIRE").arg(key).arg(ttl)).await.is_err() {
+        if ttl > 0 && self.execute(redis::cmd("EXPIRE").arg(key).arg(ttl), true).await.is_err() {
             return Ok(false);
         }
         Ok(true)
@@ -257,7 +272,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
     }
 
     async fn list(&self, key: &str) -> Result<Vec<String>> {
-        Ok(match self.execute(redis::cmd("HKEYS").arg(key)).await? {
+        Ok(match self.execute(redis::cmd("HKEYS").arg(key), true).await? {
             Reply::Array(fields) => {
                 fields.into_iter().filter_map(|f| f.as_bytes().map(text)).filter(|f| !is_reserved(f)).collect()
             }
@@ -270,7 +285,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
     }
 
     async fn flush(&self) -> Result<bool> {
-        Ok(self.execute(&redis::cmd("FLUSHDB")).await?.truthy())
+        Ok(self.execute(&redis::cmd("FLUSHDB"), true).await?.truthy())
     }
 
     async fn ping(&self) -> Result<bool> {
@@ -282,7 +297,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
     }
 
     async fn size(&self) -> Result<i64> {
-        Ok(match self.execute(&redis::cmd("DBSIZE")).await? {
+        Ok(match self.execute(&redis::cmd("DBSIZE"), true).await? {
             Reply::Int(size) => size,
             _ => 0,
         })
@@ -300,7 +315,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
         let now = now();
         let mut raw: IndexMap<String, Option<Vec<u8>>> = IndexMap::new();
         if fields.is_empty() {
-            if let Reply::Array(flat) = self.execute(redis::cmd("HGETALL").arg(key)).await? {
+            if let Reply::Array(flat) = self.execute(redis::cmd("HGETALL").arg(key), true).await? {
                 let mut flat = flat.into_iter();
                 while let (Some(f), Some(v)) = (flat.next(), flat.next()) {
                     raw.insert(f.as_bytes().map(text).unwrap_or_default(), v.as_bytes().map(<[u8]>::to_vec));
@@ -312,7 +327,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
             for f in fields {
                 cmd.arg(*f);
             }
-            if let Reply::Array(values) = self.execute(&cmd).await? {
+            if let Reply::Array(values) = self.execute(&cmd, true).await? {
                 for (f, v) in fields.iter().zip(values) {
                     raw.insert((*f).to_owned(), v.as_bytes().map(<[u8]>::to_vec));
                 }
@@ -345,10 +360,10 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
         if !any {
             return Ok(false);
         }
-        if self.execute(&cmd).await.is_err() {
+        if self.execute(&cmd, true).await.is_err() {
             return Ok(false);
         }
-        if ttl > 0 && self.execute(redis::cmd("EXPIRE").arg(key).arg(ttl)).await.is_err() {
+        if ttl > 0 && self.execute(redis::cmd("EXPIRE").arg(key).arg(ttl), true).await.is_err() {
             return Ok(false);
         }
         Ok(true)
@@ -386,7 +401,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
             return Ok(false);
         }
         if ttl > 0
-            && !matches!(self.execute(redis::cmd("EXPIRE").arg(key).arg(ttl)).await, Ok(reply) if !matches!(reply, Reply::Error(_)))
+            && !matches!(self.execute(redis::cmd("EXPIRE").arg(key).arg(ttl), true).await, Ok(reply) if !matches!(reply, Reply::Error(_)))
         {
             return Ok(false);
         }

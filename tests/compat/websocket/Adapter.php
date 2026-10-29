@@ -284,6 +284,38 @@ final class Adapter implements Base, Benchmarks
                 return $result['ok'];
             },
             'e2e.run' => fn (array $a, Session $s) => self::e2e($a['steps'], (float) ($a['send_timeout'] ?? 1.0)),
+            // A plain TCP listener on a free port takes one connection and
+            // keeps the first bytes a client on `<scheme>://127.0.0.1:<port>`
+            // sends: a TLS ClientHello starts with a handshake record (0x16).
+            'tls.probe' => fn (array $a, Session $s) => self::coroutine(function () use ($a): array {
+                // Swoole reports the failed handshake as a NOTICE on stdout, the driver's channel.
+                Coroutine::set(['log_level' => SWOOLE_LOG_WARNING]);
+                $server = new Socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+                $server->bind('127.0.0.1', 0);
+                $server->listen();
+                $port = $server->getsockname()['port'];
+                $received = '';
+                Coroutine::create(function () use ($server, &$received): void {
+                    $connection = $server->accept(5);
+                    if ($connection instanceof Socket) {
+                        $data = $connection->recv(65535, 5);
+                        $received = \is_string($data) ? $data : '';
+                        $connection->close();
+                    }
+                });
+                $client = new Client($a['scheme'] . '://127.0.0.1:' . $port, self::options(['headers' => $a['headers'], 'timeout' => 2]));
+                try {
+                    $client->connect();
+                } catch (\RuntimeException) {
+                }
+                $server->close();
+
+                return [
+                    'received' => $received !== '',
+                    'handshake' => ($received[0] ?? '') === "\x16",
+                    'leaked' => array_values(array_filter(array_column($a['headers'], 1), static fn (string $value) => str_contains($received, $value))),
+                ];
+            }),
         ];
     }
 

@@ -15,7 +15,7 @@ use crate::platform::hooks::resources::user::session_store;
 pub(in crate::platform) fn preflight(state: &Arc<State>, request: &Request) -> Response {
     let mut response = Response::no_content_response();
     let console = state.projects.console();
-    let allowed = allowed_hostnames(state, &console, true, request, None);
+    let allowed = allowed_hostnames(state, &console, true, request, None, false);
     for (k, v) in network::cors_headers(request.header_or_empty("origin"), &allowed) {
         response.add(k, &v);
     }

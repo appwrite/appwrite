@@ -2678,6 +2678,7 @@
               "back": "b1",
               "extra": "e1"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r1",
             "getMessage": "",
@@ -2689,7 +2690,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -2754,6 +2757,7 @@
               "back": "",
               "extra": ""
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r2",
             "getMessage": "",
@@ -2763,7 +2767,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -2830,6 +2836,7 @@
               "back": "null",
               "extra": "null"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": " r3 ",
             "getMessage": "",
@@ -2841,7 +2848,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -2918,6 +2927,7 @@
               "back": "",
               "extra": ""
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r4",
             "getMessage": "",
@@ -2930,7 +2940,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -5410,6 +5422,7 @@
               "a": "3",
               "5": 2
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "unique()",
             "getMessage": "",
@@ -5419,7 +5432,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -6305,6 +6320,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Row",
             "getCreatedAt": "",
             "getData": [],
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r1",
             "getMessage": "",
@@ -6314,7 +6330,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -6823,6 +6841,7 @@
             "getData": {
               "a": "1"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "unique()",
             "getMessage": "",
@@ -6832,7 +6851,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "test_db",
                 "createdAt": "",
@@ -10525,6 +10546,1137 @@
             "path": "/tmp/compat-fs/${ns}/in/data.csv"
           },
           "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCSVExportFailureLeavesNoFile",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "special_row",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "quote_field": "Text with \"quotes\"",
+                "comma_field": "Text, with, commas",
+                "newline_field": "Text with\nnewlines",
+                "mixed_field": "Text with \"quotes\", commas, and\\nnewlines"
+              }
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "csv_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "r"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "special_row",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.csv"
+          },
+          "expect": true
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "error"
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.csv"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCSVExportFailureKeepsAFileItDoesNotOwn",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "special_row",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "quote_field": "Text with \"quotes\"",
+                "comma_field": "Text, with, commas",
+                "newline_field": "Text with\nnewlines",
+                "mixed_field": "Text with \"quotes\", commas, and\\nnewlines"
+              }
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "csv_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "r"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "special_row",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          },
+          "expect": null
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "success"
+          },
+          "expect": null
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "error"
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.csv"
+          },
+          "expect": true
+        },
+        {
+          "op": "csv_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "retry",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "retry"
+            },
+            "hook": "error"
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.csv"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "formula-like values are quoted on export",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "compat_row",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "eq": "=SUM(A1:A2)",
+                "plus": "+1",
+                "minus": "-1",
+                "at": "@cmd",
+                "tab": "\tx",
+                "cr": "\rx",
+                "quoted": "'=1",
+                "twice": "''+1",
+                "quote": "'",
+                "plain": "a=b",
+                "lone": "'abc",
+                "empty": "",
+                "int": -5,
+                "float": -1.5,
+                "bool": false,
+                "list": [
+                  "=1",
+                  "-2"
+                ],
+                "nested": {
+                  "k": "=v"
+                }
+              }
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "r"
+            },
+            "method": "setPermissions",
+            "args": {
+              "permissions": [
+                "read(\"user:123\")"
+              ]
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "csv_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "r"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "compat_row",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "export.local_file",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "expect": "$id,$permissions,$createdAt,$updatedAt,eq,plus,minus,at,tab,cr,quoted,twice,quote,plain,lone,empty,int,float,bool,list,nested\ncompat_row,\"[\"\"read(\\\"\"user:123\\\"\")\"\"]\",,,'=SUM(A1:A2),'+1,'-1,'@cmd,'\tx,\"'\rx\",''=1,'''+1,',a=b,'abc,,-5,-1.5,false,\"[\"\"=1\"\",\"\"-2\"\"]\",\"{\"\"k\"\":\"\"=v\"\"}\"\n"
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "export.discard_local",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "a quote before a formula-like value is removed on import",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "test_db",
+              "name": "Test DB",
+              "type": "tablesdb"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "database_1",
+            "document": {
+              "$id": "test_table",
+              "name": "Test table"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_0",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "eq",
+              "type": "string"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_1",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "plus",
+              "type": "string"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_2",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "minus",
+              "type": "string"
+            }
+          },
+          "expect": "3"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_3",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "at",
+              "type": "string"
+            }
+          },
+          "expect": "4"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_4",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "tab",
+              "type": "string"
+            }
+          },
+          "expect": "5"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_5",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "cr",
+              "type": "string"
+            }
+          },
+          "expect": "6"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_6",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "twice",
+              "type": "string"
+            }
+          },
+          "expect": "7"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_7",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "quote",
+              "type": "string"
+            }
+          },
+          "expect": "8"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_8",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "plain",
+              "type": "string"
+            }
+          },
+          "expect": "9"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_9",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "lone",
+              "type": "string"
+            }
+          },
+          "expect": "10"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_10",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": false,
+              "key": "num",
+              "type": "integer"
+            }
+          },
+          "expect": "11"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "attributes",
+            "document": {
+              "$id": "1_1_11",
+              "databaseInternalId": "1",
+              "collectionInternalId": "1",
+              "required": false,
+              "array": true,
+              "key": "tags",
+              "type": "string"
+            }
+          },
+          "expect": "12"
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/in/data.csv",
+            "contents": "$id,eq,plus,minus,at,tab,cr,twice,quote,plain,lone,num,tags\nr1,'=SUM(A1:A2),'+1,'-1,'@cmd,\"'\tx\",\"'\rx\",'''+1,',a=b,'abc,'-5,\"[\"\"'=1\"\"]\"\nr2,=1,+1,-1,@x,\" '=1\",'',''=x,'''',''a,'1,-5,\n"
+          },
+          "expect": true
+        },
+        {
+          "op": "csv_source.new",
+          "args": {
+            "resource_id": "test_db:test_table",
+            "file_path": "/tmp/compat-fs/${ns}/in/data.csv",
+            "root": "/tmp/compat-fs/${ns}/in",
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "row": 3
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {},
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "row"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "r1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "r2",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "mock.destination_state",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "runCount": null,
+            "data": {
+              "databases": {
+                "row": [
+                  "r1",
+                  "r2"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "row",
+            "id": "r1"
+          },
+          "bind": "r_r1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r_r1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": {
+              "eq": "=SUM(A1:A2)",
+              "plus": "+1",
+              "minus": "-1",
+              "at": "@cmd",
+              "tab": "\tx",
+              "cr": "\rx",
+              "twice": "''+1",
+              "quote": "'",
+              "plain": "a=b",
+              "lone": "'abc",
+              "num": -5,
+              "tags": [
+                "'=1"
+              ]
+            },
+            "getDescription": "",
+            "getGroup": "databases",
+            "getId": "r1",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "description": "",
+              "database": {
+                "description": "",
+                "id": "test_db",
+                "name": "Test DB",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "database",
+                "database": "",
+                "status": null
+              },
+              "id": "test_table",
+              "name": "test_table",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "mock.destination_get",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "group": "databases",
+            "type": "row",
+            "id": "r2"
+          },
+          "bind": "r_r2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r_r2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Database\\Row",
+            "getCreatedAt": "",
+            "getData": {
+              "eq": "=1",
+              "plus": "+1",
+              "minus": "-1",
+              "at": "@x",
+              "tab": "=1",
+              "cr": "''",
+              "twice": "'=x",
+              "quote": "''''",
+              "plain": "''a",
+              "lone": "'1",
+              "num": -5,
+              "tags": []
+            },
+            "getDescription": "",
+            "getGroup": "databases",
+            "getId": "r2",
+            "getMessage": "",
+            "getName": "row",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getTable": {
+              "description": "",
+              "database": {
+                "description": "",
+                "id": "test_db",
+                "name": "Test DB",
+                "createdAt": "",
+                "updatedAt": "",
+                "enabled": true,
+                "type": "database",
+                "database": "",
+                "status": null
+              },
+              "id": "test_table",
+              "name": "test_table",
+              "rowSecurity": false,
+              "permissions": [],
+              "createdAt": "",
+              "updatedAt": "",
+              "enabled": true
+            },
+            "getUpdatedAt": ""
+          }
         }
       ]
     }

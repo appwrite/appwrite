@@ -249,6 +249,8 @@ pub struct Policies {
     pub password_rotation: Option<Array>,
     /// The passkey relying party ID.
     pub passkey_rp_id: Option<String>,
+    /// Reject realtime connections without a session.
+    pub deny_realtime_guests: Option<bool>,
 }
 
 impl Default for Policies {
@@ -277,6 +279,7 @@ impl Default for Policies {
             password_pwned: None,
             password_rotation: None,
             passkey_rp_id: None,
+            deny_realtime_guests: None,
         }
     }
 }
@@ -338,6 +341,7 @@ impl Policies {
             password_pwned: to_opt_array(&i.or("passwordPwned", Value::Null), &p(24, "passwordPwned"))?,
             password_rotation: to_opt_array(&i.or("passwordRotation", Value::Null), &p(25, "passwordRotation"))?,
             passkey_rp_id: to_opt_string(&i.or("passkeyRpId", Value::Null), &p(26, "passkeyRpId"))?,
+            deny_realtime_guests: to_opt_bool(&i.or("denyRealtimeGuests", Value::Null), &p(27, "denyRealtimeGuests"))?,
             ..policies
         };
         Ok(policies.resource(id, created, updated))

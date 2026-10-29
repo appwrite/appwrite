@@ -40,6 +40,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Collection",
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDatabase": {
+              "description": "",
               "id": "vectors",
               "name": "Vectors",
               "createdAt": "",
@@ -49,6 +50,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getDimension": 1536,
             "getEnabled": true,
             "getGroup": "databases",
@@ -72,7 +74,9 @@
             }
           },
           "expect": {
+            "description": "",
             "database": {
+              "description": "",
               "id": "vectors",
               "name": "Vectors",
               "createdAt": "",
@@ -99,7 +103,7 @@
               "$ref": "c"
             }
           },
-          "expect": "{\"database\":{\"id\":\"vectors\",\"name\":\"Vectors\",\"createdAt\":\"\",\"updatedAt\":\"\",\"enabled\":true,\"type\":\"vectorsdb\",\"database\":\"\",\"status\":null},\"id\":\"embeddings-store\",\"name\":\"Embeddings Store\",\"rowSecurity\":true,\"permissions\":[],\"createdAt\":\"2026-01-01T00:00:00.000+00:00\",\"updatedAt\":\"2026-01-01T00:00:00.000+00:00\",\"enabled\":true,\"dimension\":1536}"
+          "expect": "{\"description\":\"\",\"database\":{\"description\":\"\",\"id\":\"vectors\",\"name\":\"Vectors\",\"createdAt\":\"\",\"updatedAt\":\"\",\"enabled\":true,\"type\":\"vectorsdb\",\"database\":\"\",\"status\":null},\"id\":\"embeddings-store\",\"name\":\"Embeddings Store\",\"rowSecurity\":true,\"permissions\":[],\"createdAt\":\"2026-01-01T00:00:00.000+00:00\",\"updatedAt\":\"2026-01-01T00:00:00.000+00:00\",\"enabled\":true,\"dimension\":1536}"
         }
       ]
     },
@@ -141,6 +145,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Collection",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "vectors",
               "name": "Vectors",
               "createdAt": "",
@@ -150,6 +155,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getDimension": null,
             "getEnabled": true,
             "getGroup": "databases",
@@ -173,7 +179,9 @@
             }
           },
           "expect": {
+            "description": "",
             "database": {
+              "description": "",
               "id": "vectors",
               "name": "Vectors",
               "createdAt": "",
@@ -228,6 +236,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Collection",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "d",
               "name": "D",
               "createdAt": "",
@@ -237,6 +246,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getDimension": null,
             "getEnabled": true,
             "getGroup": "databases",
@@ -283,6 +293,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Collection",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "d",
               "name": "D",
               "createdAt": "",
@@ -292,6 +303,7 @@
               "database": null,
               "status": null
             },
+            "getDescription": "",
             "getDimension": 12,
             "getEnabled": true,
             "getGroup": "databases",
@@ -357,7 +369,9 @@
             }
           },
           "expect": {
+            "description": "",
             "database": {
+              "description": "",
               "id": "d",
               "name": "D",
               "createdAt": "",
@@ -400,7 +414,9 @@
             }
           },
           "expect": {
+            "description": "",
             "database": {
+              "description": "",
               "id": "d",
               "name": "D",
               "createdAt": "",

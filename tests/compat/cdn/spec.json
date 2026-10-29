@@ -1,6 +1,6 @@
 {
   "lib": "cdn",
-  "description": "utopia-php/cdn: domain and path checks, cache purges through Cloudflare, Fastly and a balancer fan-out, and certificate providers (Cloudflare custom hostnames, Fastly domains, Fastly TLS subscriptions, and a proxy between them). Providers send through a recorded transport, or their default client against the cdn-http fixture server: no CDN is ever called.",
+  "description": "utopia-php/cdn: domain and path checks, cache purges through Cloudflare, Fastly, CloudFront (distribution tenants, AWS SigV4-signed) and a balancer fan-out, and certificate providers (Cloudflare custom hostnames, Fastly domains, Fastly TLS subscriptions, CloudFront managed certificates, and a proxy between them). Providers send through a recorded transport, or their default client against the cdn-http fixture server: no CDN is ever called. Both transports blank what changes on every run (an AWS signature's date and signature, random invalidation caller references) and turn `@days:<n>` in queued JSON into a time n days from now.",
   "complete": true,
   "php": {
     "src": [
@@ -89,12 +89,13 @@
       "covers": []
     },
     "cache.new": {
-      "doc": "a cache adapter or the Cache facade: {type: cloudflare|fastly|recorder|balancer|facade, ...}; providers get a recorded transport unless `transport` is `http`",
+      "doc": "a cache adapter or the Cache facade: {type: cloudflare|fastly|cloudfront|recorder|balancer|facade, ...}; providers get a recorded transport unless `transport` is `http`",
       "covers": [
         "Utopia\\Cdn\\Cache::__construct",
         "Utopia\\Cdn\\Cache\\Adapter\\Cloudflare::__construct",
         "Utopia\\Cdn\\Cache\\Adapter\\Fastly::__construct",
-        "Utopia\\Cdn\\Cache\\Adapter\\Balancer::__construct"
+        "Utopia\\Cdn\\Cache\\Adapter\\Balancer::__construct",
+        "Utopia\\Cdn\\Cache\\Adapter\\CloudFront::__construct"
       ]
     },
     "cache.call": {
@@ -115,7 +116,11 @@
         "Utopia\\Cdn\\Cache\\Adapter\\Balancer::purgePaths",
         "Utopia\\Cdn\\Cache\\Adapter\\Balancer::purgeDomain",
         "Utopia\\Cdn\\Cache\\Adapter\\Balancer::purgeKeys",
-        "Utopia\\Cdn\\Cache\\Adapter\\Balancer::purgeZone"
+        "Utopia\\Cdn\\Cache\\Adapter\\Balancer::purgeZone",
+        "Utopia\\Cdn\\Cache\\Adapter\\CloudFront::purgePaths",
+        "Utopia\\Cdn\\Cache\\Adapter\\CloudFront::purgeDomain",
+        "Utopia\\Cdn\\Cache\\Adapter\\CloudFront::purgeKeys",
+        "Utopia\\Cdn\\Cache\\Adapter\\CloudFront::purgeZone"
       ]
     },
     "cache.once": {
@@ -273,6 +278,101 @@
             }
           },
           "iterations": 1500
+        },
+        {
+          "name": "cloudfront",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "const",
+                "value": "cloudfront"
+              },
+              "access_key_id": {
+                "gen": "const",
+                "value": "key"
+              },
+              "secret_access_key": {
+                "gen": "const",
+                "value": "secret"
+              },
+              "prefix": {
+                "gen": "pick",
+                "from": [
+                  "domain-",
+                  ""
+                ]
+              },
+              "tenant": {
+                "gen": "pick",
+                "from": [
+                  "dt_main",
+                  "",
+                  null
+                ]
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "purgePaths",
+                  "purgeKeys",
+                  "purgeDomain",
+                  "purgeZone"
+                ]
+              },
+              "domain": {
+                "gen": "ref",
+                "name": "domain"
+              },
+              "paths": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "path"
+                },
+                "min": 0,
+                "max": 3
+              },
+              "keys": {
+                "gen": "array",
+                "items": {
+                  "gen": "string",
+                  "alphabet": "unicode",
+                  "max": 12,
+                  "tricky": 0.3
+                },
+                "min": 0,
+                "max": 3
+              },
+              "responses": {
+                "gen": "array",
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "status": {
+                      "gen": "pick",
+                      "from": [
+                        200,
+                        201,
+                        201,
+                        400,
+                        404,
+                        429,
+                        500
+                      ]
+                    },
+                    "body": {
+                      "gen": "ref",
+                      "name": "cloudfront_body"
+                    }
+                  }
+                },
+                "min": 0,
+                "max": 5
+              }
+            }
+          },
+          "iterations": 1500
         }
       ]
     },
@@ -301,11 +401,12 @@
         "Utopia\\Cdn\\Certificates\\Provider\\Cloudflare::__construct",
         "Utopia\\Cdn\\Certificates\\Provider\\Fastly::__construct",
         "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::__construct",
-        "Utopia\\Cdn\\Certificates\\Provider\\Proxy::__construct"
+        "Utopia\\Cdn\\Certificates\\Provider\\Proxy::__construct",
+        "Utopia\\Cdn\\Certificates\\Provider\\CloudFront::__construct"
       ]
     },
     "certificates.call": {
-      "doc": "one provider method (issueCertificate, isInstantGeneration, getCertificateStatus, isRenewRequired, deleteCertificate) with the queued `responses`: {result | error, requests}; a Certificate error reports its status, challenges and warnings",
+      "doc": "one provider method (issueCertificate, isInstantGeneration, getCertificateStatus, isRenewRequired, deleteCertificate) with the queued `responses`: {result | error, requests}; a Certificate error reports its status, challenges and warnings; `getValidationTokens` on a CloudFront provider",
       "covers": [
         "Utopia\\Cdn\\Certificates::issueCertificate",
         "Utopia\\Cdn\\Certificates::isInstantGeneration",
@@ -336,7 +437,13 @@
         "Utopia\\Cdn\\Exception\\Certificate::getChallenges",
         "Utopia\\Cdn\\Exception\\Certificate::getWarnings",
         "Utopia\\Cdn\\Exception\\Certificate::isBlocked",
-        "Utopia\\Cdn\\Exception\\Purge::getErrors"
+        "Utopia\\Cdn\\Exception\\Purge::getErrors",
+        "Utopia\\Cdn\\Certificates\\Provider\\CloudFront::issueCertificate",
+        "Utopia\\Cdn\\Certificates\\Provider\\CloudFront::isInstantGeneration",
+        "Utopia\\Cdn\\Certificates\\Provider\\CloudFront::getCertificateStatus",
+        "Utopia\\Cdn\\Certificates\\Provider\\CloudFront::isRenewRequired",
+        "Utopia\\Cdn\\Certificates\\Provider\\CloudFront::deleteCertificate",
+        "Utopia\\Cdn\\Certificates\\Provider\\CloudFront::getValidationTokens"
       ]
     },
     "certificates.once": {
@@ -412,6 +519,97 @@
             }
           },
           "iterations": 4000
+        },
+        {
+          "name": "cloudfront tenants",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "const",
+                "value": "cloudfront"
+              },
+              "access_key_id": {
+                "gen": "const",
+                "value": "key"
+              },
+              "secret_access_key": {
+                "gen": "const",
+                "value": "secret"
+              },
+              "distribution": {
+                "gen": "const",
+                "value": "dist"
+              },
+              "connection_group": {
+                "gen": "pick",
+                "from": [
+                  "cg_1",
+                  null
+                ]
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "issueCertificate",
+                  "getCertificateStatus",
+                  "isRenewRequired",
+                  "deleteCertificate",
+                  "getValidationTokens",
+                  "isInstantGeneration"
+                ]
+              },
+              "domain": {
+                "gen": "pick",
+                "from": [
+                  "example.com",
+                  "Example.COM",
+                  "www.example.com",
+                  "bad domain"
+                ]
+              },
+              "responses": {
+                "gen": "array",
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "status": {
+                      "gen": "pick",
+                      "from": [
+                        200,
+                        200,
+                        200,
+                        201,
+                        204,
+                        404,
+                        409,
+                        500
+                      ]
+                    },
+                    "headers": {
+                      "gen": "pick",
+                      "from": [
+                        {
+                          "ETag": "E1"
+                        },
+                        {
+                          "ETag": "E2"
+                        },
+                        {}
+                      ]
+                    },
+                    "body": {
+                      "gen": "ref",
+                      "name": "cloudfront_body"
+                    }
+                  }
+                },
+                "min": 1,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 2000
         }
       ]
     },
@@ -419,6 +617,136 @@
       "doc": "new Challenge(type, recordType, recordName, values) read back",
       "covers": [
         "Utopia\\Cdn\\Certificates\\Challenge::__construct"
+      ]
+    },
+    "validation_token.new": {
+      "doc": "new ValidationToken(domain, from, to), read back",
+      "covers": [
+        "Utopia\\Cdn\\Certificates\\ValidationToken::__construct"
+      ]
+    },
+    "aws.sign": {
+      "doc": "Signature(access_key_id, secret_access_key, session_token?)->sign() of a request (method, url, headers, body) for service and region at `time` (a date string; now when absent, then the date and signature are blanked): the signed headers but Host",
+      "covers": [
+        "Utopia\\Cdn\\Aws\\Signature::__construct",
+        "Utopia\\Cdn\\Aws\\Signature::sign"
+      ],
+      "fuzz": [
+        {
+          "name": "requests",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "access_key_id": {
+                "gen": "const",
+                "value": "AKIDEXAMPLE"
+              },
+              "secret_access_key": {
+                "gen": "pick",
+                "from": [
+                  "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+                  "",
+                  "secret"
+                ]
+              },
+              "session_token": {
+                "gen": "pick",
+                "from": [
+                  null,
+                  "",
+                  "session-token"
+                ]
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "GET",
+                  "post",
+                  "PUT",
+                  "DELETE"
+                ]
+              },
+              "url": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "https://cloudfront.amazonaws.com",
+                      "http://localhost:8080",
+                      "https://example.amazonaws.com:443"
+                    ]
+                  },
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "/"
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "url",
+                        "max": 24
+                      }
+                    ]
+                  }
+                ]
+              },
+              "headers": {
+                "gen": "object",
+                "fields": {
+                  "Content-Type": {
+                    "gen": "pick",
+                    "from": [
+                      "application/xml",
+                      " text/plain ;  charset=utf-8 ",
+                      "a\tb"
+                    ]
+                  },
+                  "X-Amz-Meta": {
+                    "gen": "string",
+                    "alphabet": "ascii",
+                    "max": 12
+                  },
+                  "User-Agent": {
+                    "gen": "const",
+                    "value": "ua"
+                  }
+                }
+              },
+              "body": {
+                "gen": "string",
+                "alphabet": "unicode",
+                "max": 24,
+                "tricky": 0.3
+              },
+              "service": {
+                "gen": "pick",
+                "from": [
+                  "cloudfront",
+                  "service"
+                ]
+              },
+              "region": {
+                "gen": "pick",
+                "from": [
+                  "us-east-1",
+                  "eu-west-1"
+                ]
+              },
+              "time": {
+                "gen": "pick",
+                "from": [
+                  "2015-08-30T12:36:00Z",
+                  "2026-10-23T16:56:24Z",
+                  "2015-08-30T14:36:00+02:00"
+                ]
+              }
+            }
+          },
+          "iterations": 1500
+        }
       ]
     },
     "exception.certificate": {
@@ -558,7 +886,15 @@
             "/café",
             "/a?b=c&d=e",
             "/☃",
-            "relative"
+            "relative",
+            "/../x",
+            "/%2e%2E/purge_all",
+            "/a/./b",
+            "/..png",
+            "/redirect?to=../x",
+            "/.%2e",
+            "/100%.png",
+            "/caf%C3%A9"
           ]
         }
       ]
@@ -1358,6 +1694,39 @@
           "max": 4
         }
       }
+    },
+    "cloudfront_body": {
+      "gen": "pick",
+      "from": [
+        "",
+        "not xml",
+        "<Broken>",
+        "{\"json\":true}",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>active</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled></DistributionTenant>",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>active</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>false</Enabled></DistributionTenant>",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>active</Status></DomainResult><DomainResult><Domain>www.example.com</Domain><Status>active</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled></DistributionTenant>",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>*.example.com</Domain><Status>active</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled></DistributionTenant>",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Name>example.com</Name><DistributionId>other</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains><DomainResult><Domain>example.com</Domain><Status>active</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled></DistributionTenant>",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Domains></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled></DistributionTenant>",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>tenant_1</Id><Name>example.com</Name><DistributionId>dist</DistributionId><ConnectionGroupId>cg_1</ConnectionGroupId><Customizations><Certificate><Arn>arn:old</Arn></Certificate><WebAcl><Action>override</Action><Arn>a&amp;b</Arn></WebAcl></Customizations><Domains><DomainResult><Domain>example.com</Domain><Status>active</Status></DomainResult></Domains><Parameters><Parameter><Name>origin</Name><Value>fra</Value></Parameter></Parameters><Enabled>true</Enabled></DistributionTenant>",
+        "<DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Name>no id</Name></DistributionTenant>",
+        "<DistributionTenant><Id> tenant 2 </Id></DistributionTenant>",
+        "<?xml version=\"1.0\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateStatus>issued</CertificateStatus><ValidationTokenDetails><ValidationTokenDetail><Domain>Example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/a.txt</RedirectFrom><RedirectTo>https://validation.example/a.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>",
+        "<?xml version=\"1.0\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateStatus>pending-validation</CertificateStatus><ValidationTokenDetails><ValidationTokenDetail><Domain>Example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/a.txt</RedirectFrom><RedirectTo>https://validation.example/a.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>",
+        "<?xml version=\"1.0\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateStatus>failed</CertificateStatus><ValidationTokenDetails><ValidationTokenDetail><Domain>Example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/a.txt</RedirectFrom><RedirectTo>https://validation.example/a.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>",
+        "<?xml version=\"1.0\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateStatus>revoked</CertificateStatus><ValidationTokenDetails><ValidationTokenDetail><Domain>Example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/a.txt</RedirectFrom><RedirectTo>https://validation.example/a.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>",
+        "<?xml version=\"1.0\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateStatus>inactive</CertificateStatus><ValidationTokenDetails><ValidationTokenDetail><Domain>Example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/a.txt</RedirectFrom><RedirectTo>https://validation.example/a.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>",
+        "<?xml version=\"1.0\"?><ManagedCertificateDetails xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><CertificateStatus></CertificateStatus><ValidationTokenDetails><ValidationTokenDetail><Domain>Example.com</Domain><RedirectFrom>http://example.com/.well-known/pki-validation/a.txt</RedirectFrom><RedirectTo>https://validation.example/a.txt</RedirectTo></ValidationTokenDetail></ValidationTokenDetails></ManagedCertificateDetails>",
+        "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityNotFound</Code><Message></Message></Error></ErrorResponse>",
+        "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>EntityAlreadyExists</Code><Message></Message></Error></ErrorResponse>",
+        "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>ResourceNotDisabled</Code><Message></Message></Error></ErrorResponse>",
+        "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>Throttling</Code><Message>Rate exceeded.</Message></Error></ErrorResponse>",
+        "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>TooManyInvalidationsInProgress</Code><Message></Message></Error></ErrorResponse>",
+        "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>InvalidArgument</Code><Message>Bad path.</Message></Error></ErrorResponse>",
+        "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code>0</Code><Message></Message></Error></ErrorResponse>",
+        "<?xml version=\"1.0\"?><ErrorResponse xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Error><Type>Sender</Type><Code></Code><Message></Message></Error></ErrorResponse>",
+        "<?xml version=\"1.0\"?><Invalidation xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>I1</Id><Status>InProgress</Status></Invalidation>"
+      ]
     }
   },
   "waivers": {},
@@ -1391,18 +1760,23 @@
     {
       "symbol": "Utopia\\Cdn\\Certificates\\Provider\\Proxy::getCertificateStatus",
       "php": "a provider may report any string as a status, and Proxy (and Certificates) return it unchanged.",
-      "reason": "certificates::Provider::certificate_status returns certificates::Status, the seven Status constants."
+      "reason": "certificates::Provider::certificate_status returns certificates::Status, the eight Status constants."
     },
     {
       "symbol": "Utopia\\Cdn\\Exception\\Certificate::__construct",
       "php": "`$status` is any string; isBlocked() is true only for `blocked`.",
       "reason": "Blocked::status is a certificates::Status."
+    },
+    {
+      "symbol": "Utopia\\Cdn\\Aws\\Signature::sign",
+      "php": "`$time` is a DateTimeImmutable in any timezone (converted to UTC); only its whole seconds are signed.",
+      "reason": "aws::Signature::sign takes the signing time as Unix seconds (an Option<i64>), which is what the signature uses of it."
     }
   ],
   "quirks": [
     {
       "symbol": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::issueCertificate",
-      "description": "FastlyTls.php has no strict_types, so a subscription ID or state of the wrong type is coerced to a string (an integer ID retries `/tls/subscriptions/7`); an array, or a missing ID, raises TypeError. PHP's message names the source file and line; Rust's ends `called in FastlyTls.php on line <n>`, so the message is masked.",
+      "description": "FastlyTls.php has no strict_types, so a subscription ID or state of the wrong type is coerced to a string (an integer ID retries `/tls/subscriptions/7`); an array, or a missing ID, raises TypeError. The message names the caller as PHP does: the provider's path in the dev image (`/usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php`) and line.",
       "case": "FastlyTlsTest.json#retry of a subscription without an id"
     },
     {

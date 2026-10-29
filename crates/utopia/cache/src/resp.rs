@@ -98,11 +98,14 @@ pub fn encode_into<A: AsRef<[u8]>>(out: &mut Vec<u8>, args: &[A]) {
 /// $offset = 0;
 /// var_dump(Client::parse("\$5\r\nhel", $offset) === Client::INCOMPLETE); // bool(true)
 /// ```
-pub fn parse(buffer: &[u8], offset: &mut usize) -> Result<Option<Reply>> {
-    let Some(&kind) = buffer.get(*offset) else { return Ok(None) };
-    let Some(end) = find_crlf(buffer, *offset + 1) else { return Ok(None) };
-    let line = &buffer[*offset + 1..end];
-    *offset = end + 2;
+pub fn parse(buffer: &[u8], offset: &mut i64) -> Result<Option<Reply>> {
+    // A negative offset counts from the end, as PHP's string offsets do: a
+    // bulk string with a negative length moves it back.
+    let Some(at) = position(buffer, *offset) else { return Ok(None) };
+    let kind = buffer[at];
+    let Some(end) = find_crlf(buffer, at + 1) else { return Ok(None) };
+    let line = substr(buffer, *offset + 1, end as i64 - *offset - 1);
+    *offset = end as i64 + 2;
     Ok(Some(match kind {
         b'+' => Reply::Str(line.to_vec()),
         b'-' => Reply::Error(line.to_vec()),
@@ -112,12 +115,11 @@ pub fn parse(buffer: &[u8], offset: &mut usize) -> Result<Option<Reply>> {
             if len == -1 {
                 return Ok(Some(Reply::Nil));
             }
-            let start = *offset as i64;
-            if (buffer.len() as i64) < start.saturating_add(len).saturating_add(2) {
+            if (buffer.len() as i64) < offset.saturating_add(len).saturating_add(2) {
                 return Ok(None);
             }
             let value = substr(buffer, *offset, len);
-            *offset = (start + len + 2).max(0) as usize;
+            *offset = offset.saturating_add(len).saturating_add(2);
             Reply::Str(value.to_vec())
         }
         b'*' => {
@@ -142,19 +144,36 @@ pub fn parse(buffer: &[u8], offset: &mut usize) -> Result<Option<Reply>> {
     }))
 }
 
+/// The byte `$buffer[$offset]` reads, a negative offset counting from the
+/// end; `None` where `isset()` is false.
+fn position(buffer: &[u8], offset: i64) -> Option<usize> {
+    let size = buffer.len() as i64;
+    let at = if offset < 0 { size + offset } else { offset };
+    (0..size).contains(&at).then_some(at as usize)
+}
+
 fn find_crlf(buffer: &[u8], from: usize) -> Option<usize> {
     buffer.get(from..)?.windows(2).position(|w| w == b"\r\n").map(|i| from + i)
 }
 
-/// `substr($buffer, $offset, $len)` for `$len >= -strlen`.
-fn substr(buffer: &[u8], offset: usize, len: i64) -> &[u8] {
-    let rest = &buffer[offset.min(buffer.len())..];
-    if len >= 0 {
-        &rest[..(len as usize).min(rest.len())]
-    } else {
-        let keep = rest.len() as i64 + len;
-        if keep <= 0 { &[] } else { &rest[..keep as usize] }
+/// `substr($buffer, $start, $len)`: a negative start counts from the end, a
+/// negative length leaves that many bytes off the end.
+fn substr(buffer: &[u8], start: i64, len: i64) -> &[u8] {
+    let size = buffer.len() as i64;
+    if start > size {
+        return &[];
     }
+    let start = if start < 0 { (size + start).max(0) } else { start };
+    let rest = size - start;
+    let len = if len < 0 { (rest + len).max(0) } else { len.min(rest) };
+    &buffer[start as usize..(start + len) as usize]
+}
+
+/// The bytes of `buffer` a reply ending at `offset` consumed: those before
+/// `substr($buffer, $offset)`, the rest PHP keeps.
+pub(crate) fn consumed(buffer: &[u8], offset: i64) -> usize {
+    let size = buffer.len() as i64;
+    (if offset < 0 { (size + offset).max(0) } else { offset.min(size) }) as usize
 }
 
 /// The reply with every error reply in it raised: the first one found,

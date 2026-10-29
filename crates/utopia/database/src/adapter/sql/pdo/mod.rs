@@ -20,9 +20,9 @@
 //! - **Values.** Every fetched value is a string or `null`, as
 //!   `ATTR_STRINGIFY_FETCHES` makes them: PostgreSQL booleans are `"1"`/`"0"`,
 //!   floats of PostgreSQL and SQLite are printed as PHP prints them when they
-//!   are fetched, at the `precision` ini (14, or the round-trip digits while
-//!   [`Statement::fetch_exactly`] runs), integers and text are the bytes the
-//!   engine sent.
+//!   are fetched, at the `precision` ini ([`php_std::number::PRECISION`],
+//!   and the round-trip digits while [`Statement::fetch_exactly`] runs),
+//!   integers and text are the bytes the engine sent.
 //! - **Errors** are [`Kind::Pdo`](crate::Kind::Pdo) errors carrying PHP's
 //!   exact `PDOException` message, the SQLSTATE ([`crate::Error::state`],
 //!   `errorInfo[0]`), the driver's code ([`crate::Error::driver_code`],
@@ -1038,8 +1038,9 @@ pub struct Statement {
     /// Held while results after the current one are unread (MySQL), which
     /// refuses other statements on the connection, as mysqlnd does.
     pending: Option<Arc<Link>>,
-    /// The `precision` ini a fetched float is printed at (14; -1 while
-    /// [`Statement::fetch_exactly`] runs).
+    /// The `precision` ini a fetched float is printed at
+    /// ([`php_std::number::PRECISION`]; -1 while [`Statement::fetch_exactly`]
+    /// runs).
     precision: i32,
 }
 
@@ -1055,13 +1056,13 @@ impl Statement {
             set: 0,
             row: 0,
             pending: None,
-            precision: 14,
+            precision: php_std::number::PRECISION,
         }
     }
 
     /// Runs `fetch` at the precision that round-trips every double: PDO
     /// prints a float it fetches (from PostgreSQL and SQLite) at the
-    /// `precision` ini, 14 significant digits by default.
+    /// `precision` ini, which may be set to fewer digits (PHP's default is 14).
     ///
     /// PHP: `SQL::fetchExactly()` (utopia-php/database 8.3.4), which sets
     /// `precision` to `-1` around the fetch.

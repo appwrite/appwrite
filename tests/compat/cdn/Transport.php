@@ -41,7 +41,7 @@ final class Transport implements ClientInterface
             if (!\is_array($response)) {
                 throw new Fault('a queued response must be an object');
             }
-            $this->responses[] = $response;
+            $this->responses[] = Stable::prepare($response);
         }
     }
 
@@ -56,7 +56,7 @@ final class Transport implements ClientInterface
         $requests = $this->requests;
         $this->requests = [];
 
-        return $requests;
+        return Stable::normalize($requests);
     }
 
     public function sendRequest(RequestInterface $request): ResponseInterface
@@ -110,13 +110,13 @@ final class Fixture
     /** @param list<array<string, mixed>> $responses */
     public function queue(array $responses): void
     {
-        $this->call('/_queue/' . $this->ns, json_encode($responses, JSON_THROW_ON_ERROR));
+        $this->call('/_queue/' . $this->ns, json_encode(array_map(Stable::prepare(...), $responses), JSON_THROW_ON_ERROR));
     }
 
     /** @return list<array<string, mixed>> */
     public function take(): array
     {
-        return json_decode($this->call('/_take/' . $this->ns, null), true, flags: JSON_THROW_ON_ERROR);
+        return Stable::normalize(json_decode($this->call('/_take/' . $this->ns, null), true, flags: JSON_THROW_ON_ERROR));
     }
 
     private function call(string $path, ?string $body): string
@@ -133,5 +133,88 @@ final class Fixture
         }
 
         return $result;
+    }
+}
+
+/**
+ * What both transports do to the responses queued and the requests taken.
+ * Its twin is `Stable` in crates/tools/compat/src/libs/cdn.rs.
+ */
+final class Stable
+{
+    /**
+     * A queued response with every string `@days:<n>` in its `json`
+     * replaced by the UTC time `n` days from now (`Y-m-d\TH:i:s\Z`), for
+     * responses whose meaning depends on the clock (a certificate's expiry).
+     *
+     * @param array<mixed> $response
+     * @return array<mixed>
+     */
+    public static function prepare(array $response): array
+    {
+        if (\array_key_exists('json', $response)) {
+            $response['json'] = self::relative($response['json']);
+        }
+
+        return $response;
+    }
+
+    private static function relative(mixed $value): mixed
+    {
+        if (\is_array($value)) {
+            return array_map(self::relative(...), $value);
+        }
+        if (\is_string($value) && str_starts_with($value, '@days:')) {
+            return gmdate('Y-m-d\TH:i:s\Z', time() + (int) substr($value, 6) * 86400);
+        }
+
+        return $value;
+    }
+
+    /**
+     * Requests with what changes on every run made stable: an AWS
+     * signature's date and signature (`<date>`, `<signature>`), the
+     * `x-amz-date` header, and each random invalidation `CallerReference`,
+     * numbered by first appearance (`ref-1`, ...) so a retried batch still
+     * shows it kept its reference.
+     *
+     * @param list<array<string, mixed>> $requests
+     * @return list<array<string, mixed>>
+     */
+    public static function normalize(array $requests): array
+    {
+        $prefix = 'AWS4-HMAC-SHA256 Credential=';
+        $open = '<CallerReference>';
+        $references = [];
+        foreach ($requests as $i => $request) {
+            $headers = $request['headers'] ?? [];
+            if (isset($headers['x-amz-date'])) {
+                $headers['x-amz-date'] = '<date>';
+            }
+            $authorization = $headers['authorization'] ?? null;
+            if (\is_string($authorization) && str_starts_with($authorization, $prefix)) {
+                $slash = strpos($authorization, '/', \strlen($prefix));
+                if ($slash !== false) {
+                    $authorization = substr($authorization, 0, $slash + 1) . '<date>' . substr($authorization, $slash + 9);
+                }
+                $signature = strpos($authorization, ', Signature=');
+                if ($signature !== false) {
+                    $authorization = substr($authorization, 0, $signature) . ', Signature=<signature>';
+                }
+                $headers['authorization'] = $authorization;
+            }
+            $request['headers'] = $headers;
+            $body = $request['body'] ?? '';
+            $start = \is_string($body) ? strpos($body, $open) : false;
+            $end = $start === false ? false : strpos($body, '</CallerReference>', $start);
+            if ($start !== false && $end !== false) {
+                $reference = substr($body, $start + \strlen($open), $end - $start - \strlen($open));
+                $references[$reference] ??= 'ref-' . (\count($references) + 1);
+                $request['body'] = substr($body, 0, $start + \strlen($open)) . $references[$reference] . substr($body, $end);
+            }
+            $requests[$i] = $request;
+        }
+
+        return $requests;
     }
 }

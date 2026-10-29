@@ -723,7 +723,7 @@
             }
           },
           "expect": {
-            "stdout": "",
+            "stdout": "{\"action\":\"bin\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"bytes\":\"\\ufffd\",\"ok\":\"fine\"}\n",
             "stderr": ""
           }
         }
@@ -796,6 +796,101 @@
           "expect": true
         }
       ]
+    },
+    {
+      "name": "export keeps a record with an invalid UTF-8 attribute",
+      "op": "exporter.export",
+      "args": {
+        "exporter": "stdout",
+        "options": {},
+        "span": {
+          "base": {
+            "trace_id": "0af7651916cd43dd8448eb211c80319c",
+            "span_id": "b7ad6b7169203331",
+            "started_at": 1700000000.25
+          },
+          "action": "http.request",
+          "attributes": [
+            {
+              "key": "http.locale",
+              "value": {
+                "$bytes": "ZW6xMQ=="
+              }
+            },
+            {
+              "key": "level",
+              "value": "error"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "stdout": "{\"level\":\"error\",\"action\":\"http.request\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"http.locale\":\"en\\ufffd1\"}\n",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "export writes an error span with invalid UTF-8 to the error stream",
+      "op": "exporter.export",
+      "args": {
+        "exporter": "stdout",
+        "options": {},
+        "span": {
+          "base": {
+            "trace_id": "0af7651916cd43dd8448eb211c80319c",
+            "span_id": "b7ad6b7169203331",
+            "started_at": 1700000000.25
+          },
+          "action": "http.request",
+          "attributes": [
+            {
+              "key": "http.locale",
+              "value": {
+                "$bytes": "sQ=="
+              }
+            }
+          ],
+          "error": {
+            "class": "RuntimeException",
+            "message": "boom",
+            "file": "/app/src/Test.php",
+            "line": 10
+          }
+        }
+      },
+      "expect": {
+        "stdout": "",
+        "stderr": "{\"action\":\"http.request\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"http.locale\":\"\\ufffd\",\"error.type\":\"RuntimeException\",\"error.message\":\"boom\",\"error.code\":0,\"error.file\":\"/app/src/Test.php\",\"error.line\":10,\"error.trace\":[]}\n"
+      }
+    },
+    {
+      "name": "an invalid UTF-8 error message is substituted",
+      "op": "exporter.export",
+      "args": {
+        "exporter": "stdout",
+        "options": {},
+        "span": {
+          "base": {
+            "trace_id": "0af7651916cd43dd8448eb211c80319c",
+            "span_id": "b7ad6b7169203331",
+            "started_at": 1700000000.25
+          },
+          "action": "x",
+          "attributes": [],
+          "error": {
+            "class": "RuntimeException",
+            "message": {
+              "$bytes": "YmFkIP8gYnl0ZQ=="
+            },
+            "file": "/app/src/Test.php",
+            "line": 10
+          }
+        }
+      },
+      "expect": {
+        "stdout": "",
+        "stderr": "{\"action\":\"x\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"error.type\":\"RuntimeException\",\"error.message\":\"bad \\ufffd byte\",\"error.code\":0,\"error.file\":\"/app/src/Test.php\",\"error.line\":10,\"error.trace\":[]}\n"
+      }
     }
   ]
 }

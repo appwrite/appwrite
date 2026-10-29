@@ -36,6 +36,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -111,6 +121,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -297,6 +317,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -563,8 +593,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "first Database",
+            "search": "first Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -595,8 +626,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "second Database",
+            "search": "second Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -640,6 +672,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -721,6 +763,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -907,6 +959,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1095,6 +1157,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -1223,8 +1295,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "first Database",
+            "search": "first Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -1268,6 +1341,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -1349,6 +1432,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1535,6 +1628,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1994,6 +2097,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2409,6 +2522,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2571,8 +2694,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "first Database",
+            "search": "first Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -2603,8 +2727,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "second Database",
+            "search": "second Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -2635,6 +2760,7 @@
           "expect": [
             {
               "key": "name",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "first",
               "collectionInternalId": "1",
@@ -2660,6 +2786,7 @@
             },
             {
               "key": "name",
+              "description": "",
               "databaseInternalId": "2",
               "databaseId": "second",
               "collectionInternalId": "1",

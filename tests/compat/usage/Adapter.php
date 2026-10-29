@@ -14,7 +14,10 @@ use Tests\Compat\Session;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
+use Utopia\Database\Index;
 use Utopia\Query\Method;
 use Utopia\Query\Query;
 use Utopia\Usage\Accumulator;
@@ -190,6 +193,41 @@ final class Adapter implements Base, Benchmarks
             'usage.new' => fn (array $a, Session $s) => $s->handle(new Usage(self::adapter($a['adapter'], $s))),
             'usage.adapter' => fn (array $a, Session $s) => self::usage($a, $s)->getAdapter()->getName(),
             'usage.health_check' => fn (array $a, Session $s) => self::usage($a, $s)->healthCheck(),
+            'database.collection' => function (array $a, Session $s) {
+                $adapter = self::adapter($a['adapter'], $s);
+                $database = self::$databases[$adapter] ?? throw new Fault('not a database adapter');
+                if (!$adapter instanceof DatabaseAdapter) {
+                    throw new Fault('not a database adapter');
+                }
+                $without = $a['without'];
+                $database->createCollection(Collection::create(
+                    id: DatabaseAdapter::COLLECTION,
+                    attributes: \array_values(\array_filter(
+                        $adapter->getAttributeDocuments(Usage::TYPE_EVENT),
+                        static fn (Attribute $attribute): bool => $attribute->key !== $without,
+                    )),
+                    indexes: \array_values(\array_filter(
+                        $adapter->getIndexDocuments(Usage::TYPE_EVENT),
+                        static fn (Index $index): bool => !\in_array($without, $index->attributes, true),
+                    )),
+                ));
+
+                return;
+            },
+            'database.schema' => function (array $a, Session $s) {
+                $adapter = self::adapter($a['adapter'], $s);
+                $database = self::$databases[$adapter] ?? throw new Fault('not a database adapter');
+                $collection = $database->getCollection(DatabaseAdapter::COLLECTION);
+                $attributes = array_map(static fn (Attribute $attribute): string => $attribute->key, $collection->attributes());
+                sort($attributes);
+                $indexes = [];
+                foreach ($collection->indexes() as $index) {
+                    $indexes[$index->key] = array_values($index->attributes);
+                }
+                ksort($indexes);
+
+                return ['attributes' => $attributes, 'indexes' => (object) $indexes];
+            },
             'usage.setup' => function (array $a, Session $s) {
                 self::usage($a, $s)->setup();
 
@@ -456,8 +494,15 @@ final class Adapter implements Base, Benchmarks
             $database->create();
         }
 
-        return new DatabaseAdapter($database);
+        $adapter = new DatabaseAdapter($database);
+        self::$databases ??= new \WeakMap();
+        self::$databases[$adapter] = $database;
+
+        return $adapter;
     }
+
+    /** @var \WeakMap<DatabaseAdapter, Database>|null the utopia Database under each adapter database.new built */
+    private static ?\WeakMap $databases = null;
 
     private static function adapter(mixed $handle, Session $s): UsageAdapter
     {

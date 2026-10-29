@@ -77,6 +77,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -95,7 +96,9 @@
             "getSize": 4,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "d",
                 "name": "D",
                 "createdAt": "",
@@ -143,6 +146,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -161,7 +165,9 @@
             "getSize": 4,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "d",
                 "name": "D",
                 "createdAt": "",
@@ -229,6 +235,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -251,7 +258,9 @@
             "getSize": 0,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "d",
                 "name": "D",
                 "createdAt": "",
@@ -320,6 +329,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
             "getCreatedAt": "",
             "getDefault": "a",
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "enum",
             "getFormatOptions": {
@@ -340,7 +350,9 @@
             "getSize": 255,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "d",
                 "name": "D",
                 "createdAt": "",
@@ -373,9 +385,12 @@
             }
           },
           "expect": {
+            "description": "",
             "key": "e",
             "table": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "d",
                 "name": "D",
                 "createdAt": "",
@@ -1142,7 +1157,7 @@
           "args": {
             "path": "/tmp/compat-fs/${ns}/backup/backup.json"
           },
-          "expect": "{\n    \"databases\": {\n        \"database\": [\n            \"{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null}\"\n        ],\n        \"table\": [\n            \"{\\\"database\\\":{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null},\\\"id\\\":\\\"t\\\",\\\"name\\\":\\\"T\\\",\\\"rowSecurity\\\":false,\\\"permissions\\\":[],\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true}\"\n        ],\n        \"row\": [\n            \"{\\\"id\\\":\\\"r1\\\",\\\"table\\\":{\\\"database\\\":{\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null},\\\"id\\\":\\\"t\\\",\\\"name\\\":\\\"T\\\",\\\"rowSecurity\\\":false,\\\"permissions\\\":[],\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true},\\\"data\\\":{\\\"a\\\":1},\\\"permissions\\\":[]}\"\n        ]\n    },\n    \"storage\": {\n        \"bucket\": [\n            \"{\\\"id\\\":\\\"b1\\\",\\\"name\\\":\\\"B\\\",\\\"fileSecurity\\\":false,\\\"enabled\\\":false,\\\"maxFileSize\\\":null,\\\"allowedFileExtensions\\\":[],\\\"compression\\\":\\\"none\\\",\\\"encryption\\\":false,\\\"antiVirus\\\":false,\\\"updateLimits\\\":false,\\\"transformations\\\":false}\"\n        ]\n    },\n    \"functions\": {\n        \"function\": [\n            \"{\\\"id\\\":\\\"fn1\\\",\\\"name\\\":\\\"Fn\\\",\\\"execute\\\":[],\\\"enabled\\\":true,\\\"runtime\\\":\\\"node-18.0\\\",\\\"events\\\":[],\\\"schedule\\\":\\\"\\\",\\\"timeout\\\":0,\\\"activeDeployment\\\":\\\"\\\",\\\"entrypoint\\\":\\\"\\\",\\\"commands\\\":\\\"\\\",\\\"logging\\\":true,\\\"scopes\\\":[],\\\"specification\\\":\\\"\\\",\\\"runtimeSpecification\\\":\\\"\\\",\\\"buildSpecification\\\":\\\"\\\",\\\"interval\\\":0,\\\"deploymentRetention\\\":0}\"\n        ],\n        \"deployment\": [\n            \"{\\\"id\\\":\\\"dep1\\\",\\\"func\\\":{\\\"id\\\":\\\"fn1\\\",\\\"name\\\":\\\"Fn\\\",\\\"execute\\\":[],\\\"enabled\\\":true,\\\"runtime\\\":\\\"node-18.0\\\",\\\"events\\\":[],\\\"schedule\\\":\\\"\\\",\\\"timeout\\\":0,\\\"activeDeployment\\\":\\\"\\\",\\\"entrypoint\\\":\\\"\\\",\\\"commands\\\":\\\"\\\",\\\"logging\\\":true,\\\"scopes\\\":[],\\\"specification\\\":\\\"\\\",\\\"runtimeSpecification\\\":\\\"\\\",\\\"buildSpecification\\\":\\\"\\\",\\\"interval\\\":0,\\\"deploymentRetention\\\":0},\\\"size\\\":4,\\\"entrypoint\\\":\\\"index.js\\\",\\\"start\\\":0,\\\"end\\\":3,\\\"data\\\":\\\"code\\\",\\\"activated\\\":false}\"\n        ]\n    }\n}"
+          "expect": "{\n    \"databases\": {\n        \"database\": [\n            \"{\\\"description\\\":\\\"\\\",\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null}\"\n        ],\n        \"table\": [\n            \"{\\\"description\\\":\\\"\\\",\\\"database\\\":{\\\"description\\\":\\\"\\\",\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null},\\\"id\\\":\\\"t\\\",\\\"name\\\":\\\"T\\\",\\\"rowSecurity\\\":false,\\\"permissions\\\":[],\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true}\"\n        ],\n        \"row\": [\n            \"{\\\"id\\\":\\\"r1\\\",\\\"table\\\":{\\\"description\\\":\\\"\\\",\\\"database\\\":{\\\"description\\\":\\\"\\\",\\\"id\\\":\\\"d\\\",\\\"name\\\":\\\"D\\\",\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true,\\\"type\\\":\\\"\\\",\\\"database\\\":\\\"\\\",\\\"status\\\":null},\\\"id\\\":\\\"t\\\",\\\"name\\\":\\\"T\\\",\\\"rowSecurity\\\":false,\\\"permissions\\\":[],\\\"createdAt\\\":\\\"\\\",\\\"updatedAt\\\":\\\"\\\",\\\"enabled\\\":true},\\\"data\\\":{\\\"a\\\":1},\\\"permissions\\\":[]}\"\n        ]\n    },\n    \"storage\": {\n        \"bucket\": [\n            \"{\\\"description\\\":\\\"\\\",\\\"id\\\":\\\"b1\\\",\\\"name\\\":\\\"B\\\",\\\"fileSecurity\\\":false,\\\"enabled\\\":false,\\\"maxFileSize\\\":null,\\\"allowedFileExtensions\\\":[],\\\"compression\\\":\\\"none\\\",\\\"encryption\\\":false,\\\"antiVirus\\\":false,\\\"updateLimits\\\":false,\\\"transformations\\\":false,\\\"stripMetadata\\\":false}\"\n        ]\n    },\n    \"functions\": {\n        \"function\": [\n            \"{\\\"description\\\":\\\"\\\",\\\"id\\\":\\\"fn1\\\",\\\"name\\\":\\\"Fn\\\",\\\"execute\\\":[],\\\"enabled\\\":true,\\\"runtime\\\":\\\"node-18.0\\\",\\\"events\\\":[],\\\"schedule\\\":\\\"\\\",\\\"timeout\\\":0,\\\"activeDeployment\\\":\\\"\\\",\\\"entrypoint\\\":\\\"\\\",\\\"commands\\\":\\\"\\\",\\\"logging\\\":true,\\\"scopes\\\":[],\\\"specification\\\":\\\"\\\",\\\"runtimeSpecification\\\":\\\"\\\",\\\"buildSpecification\\\":\\\"\\\",\\\"interval\\\":0,\\\"deploymentRetention\\\":0}\"\n        ],\n        \"deployment\": [\n            \"{\\\"id\\\":\\\"dep1\\\",\\\"func\\\":{\\\"description\\\":\\\"\\\",\\\"id\\\":\\\"fn1\\\",\\\"name\\\":\\\"Fn\\\",\\\"execute\\\":[],\\\"enabled\\\":true,\\\"runtime\\\":\\\"node-18.0\\\",\\\"events\\\":[],\\\"schedule\\\":\\\"\\\",\\\"timeout\\\":0,\\\"activeDeployment\\\":\\\"\\\",\\\"entrypoint\\\":\\\"\\\",\\\"commands\\\":\\\"\\\",\\\"logging\\\":true,\\\"scopes\\\":[],\\\"specification\\\":\\\"\\\",\\\"runtimeSpecification\\\":\\\"\\\",\\\"buildSpecification\\\":\\\"\\\",\\\"interval\\\":0,\\\"deploymentRetention\\\":0},\\\"size\\\":4,\\\"entrypoint\\\":\\\"index.js\\\",\\\"start\\\":0,\\\"end\\\":3,\\\"data\\\":\\\"code\\\",\\\"activated\\\":false}\"\n        ]\n    }\n}"
         },
         {
           "op": "fs.get",
@@ -1226,6 +1241,8 @@
             "getDenyCorporateEmail": false,
             "getDenyDisposableEmail": null,
             "getDenyFreeEmail": true,
+            "getDenyRealtimeGuests": null,
+            "getDescription": "",
             "getGroup": "auth",
             "getId": "p1",
             "getMembershipsUserAccessedAt": false,
@@ -1296,6 +1313,7 @@
             "passwordPwned": null,
             "passwordRotation": null,
             "passkeyRpId": null,
+            "denyRealtimeGuests": null,
             "createdAt": "",
             "updatedAt": ""
           }
@@ -1377,6 +1395,7 @@
             "getCommands": "",
             "getCreatedAt": "",
             "getDeploymentRetention": 7,
+            "getDescription": "",
             "getEnabled": true,
             "getEntrypoint": "",
             "getEvents": [],
@@ -1456,7 +1475,9 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Functions\\EnvVar",
             "getCreatedAt": "",
+            "getDescription": "",
             "getFunc": {
+              "description": "",
               "id": "fn",
               "name": "Fn",
               "execute": [],
@@ -1527,6 +1548,7 @@
             "getBuildSpecification": "",
             "getCreatedAt": "",
             "getDeploymentRetention": 3,
+            "getDescription": "",
             "getEnabled": true,
             "getFallbackFile": "",
             "getFramework": "nextjs",
@@ -1607,8 +1629,10 @@
             }
           },
           "expect": {
+            "description": "",
             "id": "sv",
             "site": {
+              "description": "",
               "id": "site",
               "name": "S",
               "framework": "nextjs",
@@ -1663,6 +1687,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Storage\\File",
             "getBucket": {
+              "description": "",
               "id": "b",
               "name": "B",
               "fileSecurity": false,
@@ -1673,11 +1698,13 @@
               "encryption": false,
               "antiVirus": false,
               "updateLimits": false,
-              "transformations": false
+              "transformations": false,
+              "stripMetadata": false
             },
             "getChunkSize": 0,
             "getCreatedAt": "",
             "getData": "",
+            "getDescription": "",
             "getEnd": 0,
             "getFileName": "a.txt",
             "getFolder": "docs/2024",

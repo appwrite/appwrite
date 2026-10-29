@@ -224,6 +224,119 @@
       ]
     },
     {
+      "name": "a concurrent hit cannot take the same last slot",
+      "state": [],
+      "steps": [
+        {
+          "op": "database.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "setup",
+            "limit": 1,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "setup",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.setup",
+          "args": {
+            "handle": {
+              "$ref": "setup"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "database",
+            "key": "login",
+            "limit": 2,
+            "seconds": 1000000000,
+            "database": {
+              "$ref": "db"
+            }
+          },
+          "bind": "login",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 2000000000
+          }
+        },
+        {
+          "op": "limit.race",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            },
+            "competing": {
+              "$ref": "login"
+            },
+            "store": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "result": {
+              "limited": true,
+              "limit": 2,
+              "remaining": 0,
+              "reset": 2000000000
+            },
+            "competing": {
+              "limited": false,
+              "limit": 2,
+              "remaining": 0,
+              "reset": 2000000000
+            }
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "login"
+            }
+          },
+          "expect": [
+            {
+              "key": "login",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "an earlier window does not count towards the current one",
       "state": [],
       "steps": [

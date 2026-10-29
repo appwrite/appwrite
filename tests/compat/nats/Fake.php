@@ -40,6 +40,15 @@ final class Fake implements Transport
 
     public int $connects = 0;
 
+    /** @var array{class: string, message: string}|null thrown by connect() when set */
+    public ?array $refuse = null;
+
+    /** @var list<string> hosts connect() refuses, as a server that is down would */
+    public array $refuseHosts = [];
+
+    /** The host connect() was asked for. */
+    public string $host = '';
+
     private string $inbound = '';
 
     private bool $connected = false;
@@ -54,6 +63,13 @@ final class Fake implements Transport
 
     public function connect(string $host, int $port, float $timeout): void
     {
+        $this->host = $host;
+        if ($this->refuse !== null) {
+            throw Errors::make($this->refuse);
+        }
+        if (\in_array($host, $this->refuseHosts, true)) {
+            throw Errors::make(['class' => 'ConnectionException', 'message' => "Failed to connect to tcp://{$host}:{$port}: [111] Connection refused"]);
+        }
         $this->connected = true;
         $this->connects++;
         $this->inbound .= 'INFO ' . json_encode(array_merge([

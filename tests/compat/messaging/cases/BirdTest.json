@@ -84,7 +84,8 @@
                   "recipient": "+31612345678",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -162,7 +163,8 @@
                   "recipient": "+31612345678",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -241,13 +243,15 @@
                   "recipient": "+14155550100",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+14155550101",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -341,13 +345,15 @@
                   "recipient": "+447700900000",
                   "status": "failure",
                   "error": "E12020 This destination country is not enabled for your workspace. to: country GB is not enabled",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+447700900001",
                   "status": "failure",
                   "error": "E12020 This destination country is not enabled for your workspace. to: country GB is not enabled",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -428,7 +434,8 @@
                   "recipient": "+31612345678",
                   "status": "failure",
                   "error": "Connection refused",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -667,7 +674,8 @@
                   "recipient": "+31612345678",
                   "status": "failure",
                   "error": "Array: 5",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -718,7 +726,8 @@
                   "recipient": "+31612345678",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -775,7 +784,8 @@
                   "recipient": "+31612345678",
                   "status": "failure",
                   "error": "7 1",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -872,7 +882,8 @@
                   "recipient": "+31612345678",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -962,13 +973,15 @@
                   "recipient": "+31612345678",
                   "status": "failure",
                   "error": "E1 Bad to: nope",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+31612345679",
                   "status": "failure",
                   "error": "E1 Bad to: nope",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1039,7 +1052,8 @@
                   "recipient": "+31612345678",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },

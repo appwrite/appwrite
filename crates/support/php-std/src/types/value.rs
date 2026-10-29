@@ -252,7 +252,7 @@ impl<X: Extension> Value<X> {
         }
     }
 
-    /// `(string) $v` (`zval_get_string`): floats with `precision` 14, arrays
+    /// `(string) $v` (`zval_get_string`): floats at the `precision` setting, arrays
     /// `"Array"` (PHP also warns); objects throw `Error`.
     pub fn to_php_string(&self) -> Result<Str, EngineError> {
         Ok(match self {

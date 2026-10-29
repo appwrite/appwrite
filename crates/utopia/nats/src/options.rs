@@ -138,6 +138,14 @@ pub struct ConnectionOptions {
     /// Builds the transport for each connection attempt, instead of the
     /// TCP, TLS and WebSocket transports chosen by URL scheme.
     pub transport_factory: Option<TransportFactory>,
+    /// Passes [`crate::Connection::connect`] makes over the server pool,
+    /// within `connect_timeout` of the call. Only failures a new
+    /// connection can fix are retried.
+    pub connect_attempts: i64,
+    /// The pause between two passes.
+    pub connect_retry_wait: Duration,
+    /// The most random time added to each pause.
+    pub connect_retry_jitter: Duration,
 }
 
 impl ConnectionOptions {
@@ -212,6 +220,9 @@ impl Default for ConnectionOptions {
             on_slow_consumer: None,
             on_lame_duck: None,
             transport_factory: None,
+            connect_attempts: 3,
+            connect_retry_wait: Duration::from_millis(100),
+            connect_retry_jitter: Duration::from_millis(100),
         }
     }
 }

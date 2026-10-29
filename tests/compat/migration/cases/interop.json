@@ -572,6 +572,7 @@
               "none": null,
               "ok": true
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "row1",
             "getMessage": "",
@@ -583,7 +584,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -642,6 +645,7 @@
               "none": null,
               "ok": false
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "row2",
             "getMessage": "",
@@ -651,7 +655,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -1027,6 +1033,7 @@
               "none": null,
               "ok": true
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "row1",
             "getMessage": "",
@@ -1038,7 +1045,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "",
                 "createdAt": "",
@@ -1097,6 +1106,7 @@
               "none": null,
               "ok": false
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "row2",
             "getMessage": "",
@@ -1106,7 +1116,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "",
                 "createdAt": "",

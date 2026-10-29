@@ -14,6 +14,7 @@ use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Adapter\Git\Bitbucket;
+use Utopia\VCS\Adapter\Git\Entire;
 use Utopia\VCS\Adapter\Git\Forgejo;
 use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -74,22 +75,24 @@ final class Adapter implements Base, Benchmarks
 {
     /** The adapter methods, as `vcs.<snake_case>` operations. */
     private const array METHODS = [
-        'batchGetRepositoryContents', 'batchUpsertCheckRuns', 'compareCommits', 'createBranch', 'createCheckRun', 'createComment',
+        'batchGetRepositoryContents', 'batchUpsertCheckRuns', 'compareCommits', 'compareFiles', 'createBranch', 'createCheckRun', 'createComment',
         'createFile', 'createOrganization', 'createPullRequest', 'createPullRequestReview', 'createRepository', 'createTag',
-        'createWebhook', 'deleteInstallation', 'deleteRepository', 'dismissPullRequestReview', 'generateCloneCommand',
+        'createWebhook', 'deleteInstallation', 'deleteRepository', 'dismissPullRequestReview', 'generateCloneCommand', 'generatePushCommand',
         'getAuthenticatedApp', 'getBlob', 'getBranchUrl', 'getCheckRun', 'getCheckSuite', 'getComment', 'getCommit',
-        'getCommitStatuses', 'getCommitUrl', 'getEventHeaderName', 'getEvents', 'getFileUrl', 'getInstallUrl',
-        'getInstallationRepository', 'getLatestCommit', 'getName', 'getOrganizationUrl', 'getOwnerName', 'getPullRequest',
-        'getPullRequestFiles', 'getPullRequestFromBranch', 'getRateLimit', 'getRepository', 'getRepositoryCloneHeaders',
+        'getCommitStatuses', 'getCommitUrl', 'getEventHeaderName', 'getEventType', 'getEvents', 'getFileUrl', 'getInstallUrl',
+        'getInstallationRepository', 'getLatestCommit', 'getMergeBase', 'getName', 'getOrganizationUrl', 'getOwnerName', 'getPullRequest',
+        'getPullRequestFiles', 'getPullRequestFromBranch', 'getPullRequestUrl', 'getRateLimit', 'getRepository', 'getRepositoryCloneHeaders',
         'getRepositoryCloneUrl', 'getRepositoryContent', 'getRepositoryName', 'getRepositoryPresignedUrl',
         'getRepositoryPresignedUrlHeaders', 'getRepositoryTree', 'getRepositoryUrl', 'getSignatureHeaderName', 'getSigningKeys',
-        'getSupportedWebhookScopes', 'getType', 'getUser', 'hasAccessToAllRepositories', 'initializeVariables', 'listBranches',
+        'getSupportedWebhookScopes', 'getType', 'getUser', 'getWebhookClaims', 'hasAccessToAllRepositories', 'initializeVariables',
+        'isSelfSigned', 'isTrustedCore', 'isTrustedIssuer', 'listBranches',
         'listCheckRunsForCommit', 'listCheckRunsForSuite', 'listCommitFiles', 'listCommits', 'listInstallations',
         'listNamespaces', 'listPullRequestComments', 'listPullRequestCommits', 'listPullRequestReviews', 'listPullRequests',
         'listRepositoryContents', 'listRepositoryLanguages', 'listTags', 'listWebhookDeliveries', 'mergePullRequest',
-        'redeliverWebhookDeliveries', 'searchRepositories', 'setEndpoint', 'supportsCommentImages', 'supportsPublicRepositories',
+        'redeliverWebhookDeliveries', 'searchRepositories', 'setEndpoint', 'setIssuer', 'setSelfSigned', 'setRepositoryEndpoint', 'supportsCommentImages',
+        'supportsPublicRepositories', 'supportsRepositoryCloneUrl',
         'supportsRepositoryArchives', 'supportsRepositoryCreation', 'supportsRepositoryDeletion', 'syncMirror', 'updateCheckRun',
-        'updateComment', 'updateCommitStatus', 'updatePullRequest', 'updatePullRequestReview', 'validateWebhookEvent', 'verifyReceipt',
+        'updateCheck', 'updateComment', 'updateCommitStatus', 'updateDeployment', 'updatePullRequest', 'updatePullRequestReview', 'validateWebhookEvent', 'verifyReceipt',
     ];
 
     public function benchmarks(): array
@@ -153,6 +156,7 @@ final class Adapter implements Base, Benchmarks
             'clone.ref' => fn (array $a, Session $s) => self::git(['-C', $a['repository'], 'update-ref', $a['ref'], $a['target']]),
             'clone.command' => fn (array $a, Session $s) => self::call(fn () => (string) (new LocalGit($a['repository']))->generateCloneCommand('owner', 'repository', $a['version'], $a['versionType'], $a['directory'], $a['rootDirectory']), $s),
             'clone.run' => fn (array $a, Session $s) => self::run(self::in($a['command'], $s), $a['directory'], $a['workspace'] ?? null),
+            'jwt.sign' => fn (array $a, Session $s) => ['token' => self::sign(self::in($a['header'] ?? [], $s), self::in($a['claims'] ?? [], $s), (string) hex2bin((string) $a['seed']))],
         ];
         foreach (self::METHODS as $method) {
             $ops['vcs.' . self::snake($method)] = fn (array $a, Session $s) => self::invoke($method, $a, $s);
@@ -213,8 +217,40 @@ final class Adapter implements Base, Benchmarks
             'gogs' => new Gogs($cache),
             'bitbucket' => isset($a['web']) ? new FixtureBitbucket($cache, self::in($a['web'], $s)) : new Bitbucket($cache),
             'origin' => $endpoint === '' ? new Origin($cache) : new FixtureOrigin($cache, $endpoint, self::in($a['web'] ?? '', $s), self::in($a['git'] ?? '', $s)),
+            'entire' => self::entire($cache, $endpoint, self::in($a['issuer'] ?? '', $s)),
             default => throw new Fault('unknown adapter ' . $a['adapter']),
         };
+    }
+
+    /** Entire on another core (setEndpoint) and with a registered issuer (setIssuer). */
+    private static function entire(Cache $cache, string $endpoint, string $issuer): Entire
+    {
+        $entire = new Entire($cache);
+        if ($endpoint !== '') {
+            $entire->setEndpoint($endpoint);
+        }
+        if ($issuer !== '') {
+            $entire->setIssuer($issuer);
+        }
+
+        return $entire;
+    }
+
+    /**
+     * An EdDSA JWT over $header and $claims, signed with the Ed25519 key of
+     * a 32-byte seed: the receipts and delivery tokens Entire signs, made
+     * where the core's address (which a receipt names) is this runtime's.
+     *
+     * @param array<string, mixed> $header
+     * @param array<string, mixed> $claims
+     */
+    private static function sign(array $header, array $claims, string $seed): string
+    {
+        $encode = static fn (string $data): string => rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+        $input = $encode((string) json_encode($header)) . '.' . $encode((string) json_encode($claims));
+        $secret = sodium_crypto_sign_secretkey(sodium_crypto_sign_seed_keypair($seed));
+
+        return $input . '.' . $encode(sodium_crypto_sign_detached($input, $secret));
     }
 
     private static function redis(Session $s): \Redis

@@ -176,6 +176,9 @@ impl MemoryTelemetry {
 
     /// The data points of the last instrument of `kind` named `name` that
     /// recorded; `None` when none did.
+    ///
+    /// PHP: `$telemetry->histograms[$name]->values` beside its `attributes`
+    /// (each recording's, by the same index).
     pub fn points(&self, kind: Kind, name: &str) -> Option<Vec<Point>> {
         let series = self.series(kind, name)?;
         Some(lock(&series).points())

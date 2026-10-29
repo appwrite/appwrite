@@ -92,7 +92,7 @@
       "doc": "`tasks` coroutines/tasks each holding the lock `hold_ms` via withLock(timeout): {count, max, contention}"
     },
     "lock.acquire_elapsed": {
-      "doc": "acquire(timeout) and whether the time it took is in [at_least, below)"
+      "doc": "acquire(timeout) and whether the time it took is in [at_least, below); with `release`, that lock is released `release_after_ms` in, while acquire() waits"
     },
     "distributed.refresh": {
       "doc": "$lock->refresh()",

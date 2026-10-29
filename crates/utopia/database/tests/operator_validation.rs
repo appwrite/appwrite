@@ -980,7 +980,7 @@ fn test_a_fractional_limit_on_an_integer_attribute_is_refused() {
         (Divide, "count", Value::Float(1.5), "1.5"),
         (Power, "count", Value::Float(1000.01), "1000.01"),
         (Increment, "count", Value::from("102.4"), "102.4"),
-        (Increment, "big", Value::Float(4.0e15 + 0.5), "4.0E+15"),
+        (Increment, "big", Value::Float(4.0e15 + 0.5), "4000000000000000.5"),
     ];
     for (method, attribute, limit, shown) in cases {
         let v = limit_validator();

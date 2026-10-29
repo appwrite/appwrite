@@ -39,6 +39,7 @@ pub struct Message {
     timestamp: i64,
     payload: Array,
     attempts: i64,
+    max_attempts: Option<i64>,
     sequence: Option<i64>,
     receipt: Option<String>,
     size: Option<i64>,
@@ -53,6 +54,7 @@ impl PartialEq for Message {
             && self.timestamp == o.timestamp
             && self.payload == o.payload
             && self.attempts == o.attempts
+            && self.max_attempts == o.max_attempts
             && self.sequence == o.sequence
             && self.receipt == o.receipt
             && self.size == o.size
@@ -73,6 +75,7 @@ impl Message {
             timestamp,
             payload,
             attempts: 0,
+            max_attempts: None,
             sequence: None,
             receipt: None,
             size: None,
@@ -109,6 +112,7 @@ impl Message {
             timestamp,
             payload,
             attempts,
+            max_attempts: None,
             sequence,
             receipt: None,
             size: None,
@@ -139,6 +143,22 @@ impl Message {
     /// Times this message has been requeued after a failed or stranded run.
     pub fn attempts(&self) -> i64 {
         self.attempts
+    }
+
+    /// Deliveries the broker allows before it dead-letters a failure; `None`
+    /// on a broker that does not say.
+    ///
+    /// PHP: `getMaxAttempts()`.
+    pub fn max_attempts(&self) -> Option<i64> {
+        self.max_attempts
+    }
+
+    /// Whether a failure on this delivery is dead-lettered: the attempt it
+    /// runs is the last the broker allows. Always `false` on Redis.
+    ///
+    /// PHP: `isLastAttempt()`.
+    pub fn is_last_attempt(&self) -> bool {
+        self.max_attempts.is_some_and(|max| self.attempts.saturating_add(1) >= max)
     }
 
     /// The broker's own position for this message where it has one (the
@@ -191,6 +211,14 @@ impl Message {
     /// Sets the attempt count.
     pub fn set_attempts(&mut self, attempts: i64) -> &mut Self {
         self.attempts = attempts;
+        self
+    }
+
+    /// Sets how many deliveries the broker allows.
+    ///
+    /// PHP: `setMaxAttempts($maxAttempts)`.
+    pub fn set_max_attempts(&mut self, max_attempts: Option<i64>) -> &mut Self {
+        self.max_attempts = max_attempts;
         self
     }
 

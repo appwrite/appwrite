@@ -11,6 +11,7 @@ pub mod collections;
 pub mod documents;
 pub mod filters;
 pub mod project;
+pub mod targets;
 
 use std::collections::HashMap;
 use std::sync::Arc;

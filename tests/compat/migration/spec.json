@@ -160,6 +160,7 @@
       "doc": "Every public get*/is* method of a resource without required parameters, by name (Values::describe)",
       "covers": [
         "Utopia\\Migration\\Resource::getCreatedAt",
+        "Utopia\\Migration\\Resource::getDescription",
         "Utopia\\Migration\\Resource::getId",
         "Utopia\\Migration\\Resource::getMessage",
         "Utopia\\Migration\\Resource::getOriginalId",
@@ -218,6 +219,7 @@
         "Utopia\\Migration\\Resources\\Auth\\Policies::getUserLimit",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyAliasedEmail",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyCorporateEmail",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyRealtimeGuests",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyDisposableEmail",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyFreeEmail",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getPasskeyRpId",
@@ -528,6 +530,7 @@
         "Utopia\\Migration\\Resources\\Storage\\Bucket::getGroup",
         "Utopia\\Migration\\Resources\\Storage\\Bucket::getMaxFileSize",
         "Utopia\\Migration\\Resources\\Storage\\Bucket::getName",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getStripMetadata",
         "Utopia\\Migration\\Resources\\Storage\\Bucket::getTransformations",
         "Utopia\\Migration\\Resources\\Storage\\File::getBucket",
         "Utopia\\Migration\\Resources\\Storage\\File::getChunkSize",
@@ -604,6 +607,7 @@
       "doc": "A setter ($resource->setStatus(...), ...): {\"$self\": true} for the fluent $this",
       "covers": [
         "Utopia\\Migration\\Resource::setCreatedAt",
+        "Utopia\\Migration\\Resource::setDescription",
         "Utopia\\Migration\\Resource::setId",
         "Utopia\\Migration\\Resource::setMessage",
         "Utopia\\Migration\\Resource::setOriginalId",
@@ -1052,7 +1056,11 @@
         "Utopia\\Migration\\Target::error",
         "Utopia\\Migration\\Target::cleanUp",
         "Utopia\\Migration\\Destinations\\CSV::shutdown",
-        "Utopia\\Migration\\Destinations\\JSON::shutdown"
+        "Utopia\\Migration\\Destinations\\CSV::success",
+        "Utopia\\Migration\\Destinations\\CSV::error",
+        "Utopia\\Migration\\Destinations\\JSON::shutdown",
+        "Utopia\\Migration\\Destinations\\JSON::success",
+        "Utopia\\Migration\\Destinations\\JSON::error"
       ]
     },
     "target.fetch": {
@@ -1119,6 +1127,15 @@
     },
     "fs.exists": {
       "doc": "file_exists() (glue)"
+    },
+    "fs.mkdir": {
+      "doc": "Creates a directory and its parents (glue)"
+    },
+    "fs.symlink": {
+      "doc": "symlink($target, $link) (glue)"
+    },
+    "fs.is_dir": {
+      "doc": "is_dir() (glue)"
     },
     "json_source.new": {
       "doc": "new Sources\\JSON($resourceId, $filePath, new Local($root), null), or JSON::fromResourceIds()",
@@ -1418,6 +1435,20 @@
         "Utopia\\Migration\\Sources\\Supabase::report"
       ]
     },
+    "nhost.database": {
+      "doc": "new Sources\\NHost(...) (no connection), setDatabaseAddress() when address is given: its getDatabaseHost() and getDatabaseDsn()",
+      "covers": [
+        "Utopia\\Migration\\Sources\\NHost::getDatabaseHost",
+        "Utopia\\Migration\\Sources\\NHost::setDatabaseAddress",
+        "Utopia\\Migration\\Sources\\NHost::getDatabaseDsn"
+      ]
+    },
+    "supabase.database": {
+      "doc": "new Sources\\Supabase(...) on the migration-supabase-db fixture, setDatabaseAddress() when address is given: its getDatabaseHost() and getDatabaseDsn()",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Supabase::getDatabaseHost"
+      ]
+    },
     "nhost.status_code": {
       "doc": "The protected NHost::statusCodeFromSqlState()",
       "fuzz": [
@@ -1498,10 +1529,8 @@
       ]
     },
     "appwrite_client.call": {
-      "doc": "$client->call($method, $path, [], $params, $responseType) on a client, or on a source's own client (`source`): `{response}` or `{error}` as target.request; the transport refuses redirects (Client\\RedirectRefusal) unless the response type is `location`",
-      "covers": [
-        "Utopia\\Migration\\Sources\\Appwrite\\Client\\RedirectRefusal::*"
-      ]
+      "doc": "$client->call($method, $path, [], $params, $responseType) on a client, or on a source's own client (`source`): `{response}` or `{error}` as target.request; the SDK refuses redirects unless the response type is `location`, and a body decoding past Target::MAX_RESPONSE_SIZE fails with cURL's error",
+      "covers": []
     }
   },
   "generators": {

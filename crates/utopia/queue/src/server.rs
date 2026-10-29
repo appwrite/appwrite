@@ -182,7 +182,8 @@ impl Server {
 
     /// Reports wait time, processing duration and consumed message size histograms, and queue
     /// depth gauges read through `publisher` (the consumer's own publisher
-    /// side: the broker, when it can count).
+    /// side: the broker, when it can count). Every recording and observation
+    /// names its queue (`messaging.destination.name` and `.namespace`).
     pub fn set_telemetry(&mut self, telemetry: Arc<dyn Telemetry>, publisher: Option<Arc<dyn Publisher>>) {
         self.wait_time = telemetry.histogram("messaging.process.wait.duration", "s", None, &DURATION_BUCKETS);
         self.process_duration = telemetry.histogram("messaging.process.duration", "s", None, &DURATION_BUCKETS);
@@ -363,12 +364,20 @@ impl Server {
             let server = server.clone();
             Box::pin(async move {
                 let received = php_std::datetime::microtime_float();
-                server.wait_time.record((received - message.timestamp() as f64).max(0.0));
+                // The depth gauges' attributes, so each recording names its queue.
+                let attributes = [
+                    (
+                        "messaging.destination.name".to_owned(),
+                        String::from_utf8_lossy(message.queue().as_bytes()).into_owned(),
+                    ),
+                    ("messaging.destination.namespace".to_owned(), server.adapter.namespace().to_owned()),
+                ];
+                server.wait_time.record((received - message.timestamp() as f64).max(0.0), &attributes);
                 if let Some(size) = message.size() {
-                    server.message_size.record(size as f64);
+                    server.message_size.record(size as f64, &attributes);
                 }
                 let result = server.handle(&message, &context).await;
-                server.process_duration.record(php_std::datetime::microtime_float() - received);
+                server.process_duration.record(php_std::datetime::microtime_float() - received, &attributes);
                 result
             })
         });

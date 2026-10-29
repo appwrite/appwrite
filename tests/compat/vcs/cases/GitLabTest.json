@@ -185,6 +185,60 @@
       ]
     },
     {
+      "name": "testGetEventPushKeepsBranchNamedLikeRef",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Push Hook",
+            "payload": "{\"object_kind\":\"push\",\"ref\":\"refs\\/heads\\/refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def456\",\"checkout_sha\":\"def456\",\"user_avatar\":\"http:\\/\\/example.com\\/avatar.png\",\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"commits\":[{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\\/-\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"},\"added\":[],\"removed\":[],\"modified\":[]}]}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "refs/heads/main",
+              "branchUrl": "http://example.com/test-owner/test-repo/-/tree/refs/heads/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://example.com/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "",
+              "authorAvatarUrl": "http://example.com/avatar.png",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "http://example.com/test-owner/test-repo/-/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
       "name": "testGetEventPushDetectsBranchCreated",
       "steps": [
         {

@@ -61,13 +61,142 @@
               {
                 "messaging.process.wait.duration": {
                   "count": 2,
-                  "non_negative": true
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "utopia-queue"
+                    },
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "utopia-queue"
+                    }
+                  ]
                 },
                 "messaging.process.duration": {
                   "count": 2,
-                  "non_negative": true
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "utopia-queue"
+                    },
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "utopia-queue"
+                    }
+                  ]
                 },
-                "messaging.process.message.size": [],
+                "messaging.process.message.size": {
+                  "values": [],
+                  "attributes": []
+                },
+                "messaging.queue.depth": [],
+                "messaging.queue.failed.depth": []
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "each recording names the queue its message came from",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "shard-1-pid",
+                "queue": "database_shard_1",
+                "timestamp": 1700000000,
+                "payload": []
+              },
+              {
+                "pid": "shard-2-pid",
+                "queue": "database_shard_2",
+                "timestamp": 1700000000,
+                "payload": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "database_shard_1",
+                "inject": [
+                  "message"
+                ]
+              },
+              {
+                "queue": "database_shard_2",
+                "inject": [
+                  "message"
+                ]
+              }
+            ],
+            "shared": false,
+            "namespace": "appwrite",
+            "telemetry": true
+          },
+          "expect": [
+            [
+              "job:database_shard_1",
+              [
+                "message:shard-1-pid"
+              ]
+            ],
+            [
+              "job:database_shard_2",
+              [
+                "message:shard-2-pid"
+              ]
+            ],
+            [
+              "telemetry",
+              {
+                "messaging.process.wait.duration": {
+                  "count": 2,
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "database_shard_1",
+                      "messaging.destination.namespace": "appwrite"
+                    },
+                    {
+                      "messaging.destination.name": "database_shard_2",
+                      "messaging.destination.namespace": "appwrite"
+                    }
+                  ]
+                },
+                "messaging.process.duration": {
+                  "count": 2,
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "database_shard_1",
+                      "messaging.destination.namespace": "appwrite"
+                    },
+                    {
+                      "messaging.destination.name": "database_shard_2",
+                      "messaging.destination.namespace": "appwrite"
+                    }
+                  ]
+                },
+                "messaging.process.message.size": {
+                  "values": [],
+                  "attributes": []
+                },
                 "messaging.queue.depth": [],
                 "messaging.queue.failed.depth": []
               }
@@ -142,16 +271,48 @@
               {
                 "messaging.process.wait.duration": {
                   "count": 2,
-                  "non_negative": true
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    },
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ]
                 },
                 "messaging.process.duration": {
                   "count": 2,
-                  "non_negative": true
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    },
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ]
                 },
-                "messaging.process.message.size": [
-                  75,
-                  75
-                ],
+                "messaging.process.message.size": {
+                  "values": [
+                    75,
+                    75
+                  ],
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    },
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ]
+                },
                 "messaging.queue.depth": [
                   [
                     0,
@@ -233,13 +394,28 @@
               {
                 "messaging.process.wait.duration": {
                   "count": 1,
-                  "non_negative": true
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "utopia-queue"
+                    }
+                  ]
                 },
                 "messaging.process.duration": {
                   "count": 1,
-                  "non_negative": true
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "utopia-queue"
+                    }
+                  ]
                 },
-                "messaging.process.message.size": [],
+                "messaging.process.message.size": {
+                  "values": [],
+                  "attributes": []
+                },
                 "messaging.queue.depth": [],
                 "messaging.queue.failed.depth": []
               }
@@ -503,17 +679,61 @@
               {
                 "messaging.process.wait.duration": {
                   "count": 3,
-                  "non_negative": true
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    },
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    },
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ]
                 },
                 "messaging.process.duration": {
                   "count": 3,
-                  "non_negative": true
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    },
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    },
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ]
                 },
-                "messaging.process.message.size": [
-                  75,
-                  188,
-                  379
-                ],
+                "messaging.process.message.size": {
+                  "values": [
+                    75,
+                    188,
+                    379
+                  ],
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    },
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    },
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ]
+                },
                 "messaging.queue.depth": [
                   [
                     0,
@@ -627,16 +847,48 @@
               {
                 "messaging.process.wait.duration": {
                   "count": 2,
-                  "non_negative": true
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "${ns}-sizes",
+                      "messaging.destination.namespace": "utopia-queue"
+                    },
+                    {
+                      "messaging.destination.name": "${ns}-sizes",
+                      "messaging.destination.namespace": "utopia-queue"
+                    }
+                  ]
                 },
                 "messaging.process.duration": {
                   "count": 2,
-                  "non_negative": true
+                  "non_negative": true,
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "${ns}-sizes",
+                      "messaging.destination.namespace": "utopia-queue"
+                    },
+                    {
+                      "messaging.destination.name": "${ns}-sizes",
+                      "messaging.destination.namespace": "utopia-queue"
+                    }
+                  ]
                 },
-                "messaging.process.message.size": [
-                  89,
-                  393
-                ],
+                "messaging.process.message.size": {
+                  "values": [
+                    89,
+                    393
+                  ],
+                  "attributes": [
+                    {
+                      "messaging.destination.name": "${ns}-sizes",
+                      "messaging.destination.namespace": "utopia-queue"
+                    },
+                    {
+                      "messaging.destination.name": "${ns}-sizes",
+                      "messaging.destination.namespace": "utopia-queue"
+                    }
+                  ]
+                },
                 "messaging.queue.depth": [
                   [
                     0,

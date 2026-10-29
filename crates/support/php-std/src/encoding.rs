@@ -1,7 +1,7 @@
 //! Encodings: URL encoding, `http_build_query`, base64, hex, HTML entities
 //! and quoted-printable.
 //!
-//! Ported from PHP 8.5.10 (`ext/standard/url.c`, `http.c`, `base64.c`,
+//! Ported from PHP 8.5.11 (`ext/standard/url.c`, `http.c`, `base64.c`,
 //! `string.c`, `html.c`, `quot_print.c`). Byte strings in, byte strings out;
 //! encoders whose output is always ASCII return `String`.
 //!
@@ -232,7 +232,7 @@ impl QueryBuilder<'_> {
 /// for data decoded from JSON (objects are PHP arrays; keys that are
 /// canonical integers are integer keys, which get `numeric_prefix` at the
 /// top level). Nested arrays become `a%5Bb%5D=...`; `null` values are
-/// skipped, booleans are `1`/`0`, floats use `precision` 14.
+/// skipped, booleans are `1`/`0`, floats use the `precision` setting.
 /// `arg_separator` `None` is PHP's `arg_separator.output` default, `&`.
 pub fn http_build_query(
     data: &Value,

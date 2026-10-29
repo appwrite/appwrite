@@ -627,7 +627,7 @@ pub fn explode<'a>(separator: &[u8], s: &'a [u8], limit: i64) -> Result<Vec<&'a 
 
 /// PHP's string conversion of a value as string functions perform it
 /// (`zval_get_string`): `null` and `false` are `""`, `true` is `"1"`,
-/// integers in decimal, floats with `precision` 14 ([`number::to_string`]),
+/// integers in decimal, floats at the `precision` setting ([`number::to_string`]),
 /// arrays `"Array"` (PHP also warns). A `stdClass` (an empty JSON object)
 /// has no string form: PHP's `Error`.
 pub fn to_php_string(value: &Value) -> Result<Cow<'_, str>, Error> {

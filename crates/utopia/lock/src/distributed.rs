@@ -143,18 +143,22 @@ impl<C: ConnectionLike + Clone + Send + Sync> Distributed<C> {
 
 impl<C: ConnectionLike + Clone + Send + Sync> Lock for Distributed<C> {
     /// Tries once, then, for a [`Wait::For`], retries with a growing,
-    /// jittered delay (50 ms doubling up to 1 s) until the wait runs out.
-    /// [`Wait::Forever`] tries once. Contention and timeouts go to the
-    /// logger.
+    /// jittered delay (50 ms doubling up to 1 s) until the wait runs out;
+    /// for [`Wait::Forever`], until it is released. Contention and timeouts
+    /// go to the logger.
     async fn acquire(&self, wait: Wait) -> Result<bool, Error> {
         if self.try_acquire().await? {
             return Ok(true);
         }
-        let Wait::For(timeout) = wait else { return Ok(false) };
-        let deadline = Instant::now() + timeout;
+        let (deadline, timeout) = match wait {
+            Wait::None => return Ok(false),
+            Wait::For(timeout) => (Some(Instant::now() + timeout), timeout),
+            Wait::Forever => (None, Duration::MAX),
+        };
         let mut delay = BACKOFF_MIN;
-        while Instant::now() < deadline {
-            let remaining = deadline.saturating_duration_since(Instant::now()).as_secs_f64();
+        while deadline.is_none_or(|d| Instant::now() < d) {
+            let remaining =
+                deadline.map_or(f64::INFINITY, |d| d.saturating_duration_since(Instant::now()).as_secs_f64());
             let sleep = Self::jitter(delay).min(remaining);
             if sleep > 0.0 {
                 utopia_async::sleep(Duration::from_micros((sleep * 1_000_000.0) as u64)).await;

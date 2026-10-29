@@ -1027,6 +1027,50 @@
         ]
       },
       "expect": [
+        "8080",
+        "localhost"
+      ]
+    },
+    {
+      "name": "forwarded port and host from a trusted proxy",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Host",
+              "localhost:8080"
+            ],
+            [
+              "X-Forwarded-Host",
+              "Example.COM:9000"
+            ],
+            [
+              "X-Forwarded-Port",
+              "443"
+            ]
+          ],
+          "trusted": {
+            "host": [
+              "x-forwarded-host"
+            ],
+            "port": [
+              "x-forwarded-port"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "port"
+          },
+          {
+            "get": "hostname"
+          }
+        ]
+      },
+      "expect": [
         "443",
         "example.com"
       ]

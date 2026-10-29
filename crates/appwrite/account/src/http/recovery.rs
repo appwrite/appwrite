@@ -7,7 +7,8 @@ use utopia_emails::EmailValidator;
 use utopia_http::Response;
 use utopia_validators::{AllOf, Boolean, Text, Validator, php};
 
-use appwrite_core::database::documents::{self, Token, User};
+use appwrite_core::auth::otp_token::OtpToken;
+use appwrite_core::database::documents::{self, Attributes, Token, User};
 use appwrite_core::datetime;
 use appwrite_core::platform::{Context, Route};
 use appwrite_core::response::TokenModel;
@@ -89,6 +90,7 @@ fn password_param(ctx: &Context) -> Result<String> {
             dictionary: &state.dictionary,
             enabled: ctx.project.auth_bool("passwordDictionary", false),
             allow_empty: false,
+            deny_list: ctx.project.auth_strings("passwordDictionaryDenyList"),
         }),
     ]);
     ctx.required_str("password", &validator)
@@ -115,14 +117,28 @@ async fn recovery(ctx: &mut Context, email: &str, kind: i64, secret: String, exp
         Some(p) => (p.id.clone(), documents::internal_id(p.sequence)),
         None => (unique(), Value::from(unique().as_str())),
     };
-    let token = base::new_token(ctx, &user_id, internal_id, kind, &secret, expire)?;
-    let token = base::create_token(ctx, &user_id, token).await?;
+    let mut token = base::new_token(ctx, &user_id, internal_id, kind, &secret, expire)?;
+    token.set("$permissions", base::owner_permissions(&user_id))?;
+    let authorization = db.authorization();
+    // The token is stored only while the user (its row locked) is still
+    // active with that address; otherwise it binds no one, and nothing is
+    // delivered.
+    let (profile, token) = match profile {
+        Some(p) => {
+            let allows =
+                |current: &Document| current.boolean("status") != Some(false) && base::has_email(current, email);
+            match base::create_bound_token(&db, &p.id, token.clone(), allows).await? {
+                Some(created) => (Some(p), created),
+                None => (None, base::create_unbound_token(&db, token, false).await?),
+            }
+        }
+        None => (None, authorization.skip(db.create_document("tokens", token)).await?),
+    };
     match &profile {
         Some(p) => {
             db.purge_cached_document("users", &p.id).await?;
         }
         None => {
-            let authorization = db.authorization();
             authorization.skip(db.delete_document("tokens", token.id())).await?;
         }
     }
@@ -188,6 +204,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
                 key: "recovery",
                 template: "recovery",
                 recipient: profile.email.clone().unwrap_or_default(),
+                headers: Map::new(),
                 name: profile.name.clone().unwrap_or_default(),
                 subject: ctx.text("emails.recovery.subject", None),
                 preview: ctx.text("emails.recovery.preview", None),
@@ -242,6 +259,7 @@ pub async fn create_otp(ctx: &mut Context) -> Result<Response> {
                 key: "otpRecovery",
                 template: "otp-recovery",
                 recipient: profile.email.clone().unwrap_or_default(),
+                headers: OtpToken::headers(&recovery.secret, ctx.request.header("origin").unwrap_or_default()),
                 name: profile.name.clone().unwrap_or_default(),
                 subject: ctx.text("emails.otpRecovery.subject", None),
                 preview: ctx.text("emails.otpRecovery.preview", None),
@@ -300,11 +318,12 @@ async fn confirm(ctx: &mut Context, kind: i64) -> Result<Response> {
     // The token is claimed and the password set together: of concurrent
     // confirmations only the one that deletes the token changes it.
     let token_id = verified.id().to_owned();
-    let claimed = db
+    let console = ctx.project.is_console();
+    let confirmed = db
         .with_transaction(|| {
             let db = db.clone();
             let token_id = token_id.clone();
-            let profile_id = profile.id.clone();
+            let mut profile = profile.clone();
             let mut updates = Document::default();
             base::password_updates(&mut updates, &hashed, &history, pwned);
             updates.put("emailVerification", Value::Bool(true));
@@ -313,13 +332,23 @@ async fn confirm(ctx: &mut Context, kind: i64) -> Result<Response> {
                 if !db.delete_document("tokens", &token_id).await? {
                     return Ok(None);
                 }
+                // Recovery proves an unverified email, so whoever registered
+                // it keeps no other way in.
+                let auth = db.authorization();
+                let locked = auth.skip(db.get_document("users", &profile.id, Vec::new(), true)).await?;
+                let claimed = !matches!(locked.get("emailVerification"), Some(Value::Bool(true)));
+                if claimed {
+                    auth.skip(Box::pin(profile.revoke_credentials(&db, console, "email"))).await.map_err(|e| {
+                        utopia_database::Error::new(utopia_database::Kind::Exception, e.message.into_owned())
+                    })?;
+                }
                 let skipped = base::skipped(&[]);
-                db.skip_filters(Some(skipped.as_slice()), db.update_document("users", &profile_id, updates)).await?;
-                Ok(Some(token))
+                db.skip_filters(Some(skipped.as_slice()), db.update_document("users", &profile.id, updates)).await?;
+                Ok(Some((token, claimed)))
             }
         })
         .await?;
-    let Some(token) = claimed else {
+    let Some((token, claimed)) = confirmed else {
         return Err(Error::new(ErrorType::UserInvalidToken));
     };
 
@@ -331,6 +360,12 @@ async fn confirm(ctx: &mut Context, kind: i64) -> Result<Response> {
         base::invalidate_authentication(&db, &updated, None).await?;
     }
     db.purge_cached_document("users", &updated.id).await?;
+    ctx.mqtt_revoke(&updated.id).await;
+    if claimed {
+        // Sent before the request's own event, which would otherwise reach
+        // the registrant with the claimant's data.
+        ctx.realtime_sessions_deleted(&updated.id).await;
+    }
 
     let token = Token::from(&token);
     ctx.event_param("userId", updated.id.clone());

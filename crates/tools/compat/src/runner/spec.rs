@@ -184,6 +184,11 @@ pub struct FuzzSpec {
     /// engine's own functions such as `filter_var` fill too).
     #[serde(default)]
     pub isolate: bool,
+    /// Scrubs for this profile only, on top of the spec's: for inputs a
+    /// library resolves against the clock (a garbage date PHP reads as
+    /// relative to now) where the spec's other results must keep theirs.
+    #[serde(default)]
+    pub scrub: Vec<Scrub>,
 }
 
 fn default_iterations() -> u64 {
@@ -205,6 +210,13 @@ pub struct Mask {
     /// `distinct()` read without an order).
     #[serde(default)]
     pub rows: bool,
+    /// Instead of hiding the values at `paths`, accept a recorded float
+    /// within this relative tolerance of the result: for values the engine
+    /// computes with the host CPU's vector instructions (pgvector distances),
+    /// which change with the machine that recorded them. PHP and Rust are
+    /// still compared exactly.
+    #[serde(default)]
+    pub tolerance: Option<f64>,
 }
 
 #[derive(Debug, Deserialize)]

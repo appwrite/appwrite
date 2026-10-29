@@ -9,7 +9,6 @@ import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
-  useQueries,
   queryOptions,
   keepPreviousData,
 } from '@tanstack/react-query'
@@ -1299,7 +1298,7 @@ export function platformsQueryOptions(projectId: string | null | undefined) {
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
     meta: {
-      // Overview / org cards prefetch platforms in the background; never hold the
+      // Project overview prefetches platforms in the background; never hold the
       // fullscreen initial loader for this non-critical call.
       skipInitialLoader: true,
     },
@@ -1332,47 +1331,6 @@ export function usePlatforms(projectId: string | null | undefined) {
     error,
     refetch,
   }
-}
-
-export type ProjectListPlatformsEntry = {
-  isLoading: boolean
-  isError: boolean
-  platforms: Models.PlatformList['platforms']
-  /** Skip fetch / show N/A (e.g. org budget-locked projects). */
-  unavailable?: boolean
-}
-
-/**
- * Fetches platforms for many projects in parallel (org project cards).
- */
-export function useProjectListPlatforms(
-  projectIds: string[],
-  enabled: boolean,
-): Map<string, ProjectListPlatformsEntry> {
-  const uniqueIds = useMemo(
-    () => [...new Set(projectIds.filter(Boolean))],
-    [projectIds],
-  )
-
-  const queries = useQueries({
-    queries: uniqueIds.map((projectId) => ({
-      ...platformsQueryOptions(projectId),
-      enabled: enabled && !!projectId,
-    })),
-  })
-
-  return useMemo(() => {
-    const map = new Map<string, ProjectListPlatformsEntry>()
-    uniqueIds.forEach((projectId, index) => {
-      const query = queries[index]
-      map.set(projectId, {
-        isLoading: query.isPending && !query.data && !query.isError,
-        isError: query.isError,
-        platforms: query.data?.platforms ?? [],
-      })
-    })
-    return map
-  }, [uniqueIds, queries])
 }
 
 /**

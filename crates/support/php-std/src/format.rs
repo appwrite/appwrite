@@ -2,7 +2,7 @@
 //! `intval`/`floatval` and the `(int)` / `(float)` casts, `fmod`, `max`/`min`
 //! of numbers.
 //!
-//! Ported from PHP 8.5.10 (`ext/standard/formatted_print.c`, `math.c`,
+//! Ported from PHP 8.5.11 (`ext/standard/formatted_print.c`, `math.c`,
 //! `type.c`, `array.c`, `Zend/zend_operators.c`, `main/snprintf.c`).
 //! Floating-point digits come from Rust's correctly rounded formatting,
 //! which agrees with PHP's `zend_dtoa` (also correctly rounded, ties to
@@ -123,7 +123,7 @@ impl Arg<'_> {
         }
     }
 
-    /// `zval_get_string`, the `(string)` cast: floats with `precision` 14,
+    /// `zval_get_string`, the `(string)` cast: floats at the `precision` setting,
     /// arrays `"Array"`; a `stdClass` throws `Error`.
     pub fn to_bytes(&self) -> Result<Cow<'_, [u8]>, Error> {
         Ok(match *self {
@@ -989,10 +989,15 @@ fn round_helper(integral: f64, value: f64, exponent: f64, places: i32, mode: Rou
     }
 }
 
-/// `_php_math_round` (PHP 8.5.10): `value` rounded to `places` decimal
+/// `_php_math_round` (PHP 8.5.11): `value` rounded to `places` decimal
 /// places, with PHP's pre-rounding correction for values like 0.285.
 fn math_round(value: f64, places: i32, mode: RoundingMode) -> f64 {
     if !value.is_finite() || value == 0.0 {
+        return value;
+    }
+    // GH-22410 (8.5.11): an integral value rounded to 0 places is returned
+    // as it is (8.5.11 rounded 2^52 up to 2^52 + 1 in the pre-rounding step).
+    if places == 0 && value == value.trunc() {
         return value;
     }
     let places = places.max(i32::MIN + 1);
@@ -1407,5 +1412,7 @@ mod tests {
         assert_eq!(round(Number::Float(0.285), 2, RoundingMode::HalfAwayFromZero), 0.29);
         assert_eq!(round(Number::Float(2.5), 0, RoundingMode::HalfEven), 2.0);
         assert_eq!(round(Number::Int(1234), -2, RoundingMode::HalfAwayFromZero), 1200.0);
+        // GH-22410 (PHP 8.5.11): integral floats at 0 places stay as they are.
+        assert_eq!(round(Number::Float(4503599627370496.0), 0, RoundingMode::HalfAwayFromZero), 4503599627370496.0);
     }
 }

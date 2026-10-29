@@ -54,6 +54,7 @@ foreach (['tcp' => false, 'proxy' => true] as $kind => $proxy) {
             maxFrameSize: $tcp['maxFrameSize'] ?? 65535,
             idleTimeout: $tcp['idleTimeout'] ?? 30,
             proxyProtocol: $proxy,
+            writeTimeout: $tcp['writeTimeout'] ?? 5,
         )
         : new Swoole\Tcp($host, $ports[$kind], proxyProtocol: $proxy);
 }

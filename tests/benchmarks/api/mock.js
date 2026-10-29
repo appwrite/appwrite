@@ -65,6 +65,12 @@ const bench = define({
             run: (api, d) => api.call('GET', `/mock/github/callback?providerInstallationId=${unique('inst')}&projectId=${unique('missing')}`, null, [404], d.guest),
         },
     ],
+    skipped: [
+        { skipped: 'GET /v1/mock/tests/avatars/bad-icon.png', reason: 'a fixture the avatars service fetches in its own tests (a broken or truncated icon, a favicon page), not an API a client calls' },
+        { skipped: 'GET /v1/mock/tests/avatars/favicon-page', reason: 'a fixture the avatars service fetches in its own tests (a broken or truncated icon, a favicon page), not an API a client calls' },
+        { skipped: 'GET /v1/mock/tests/avatars/favicon-page-truncated', reason: 'a fixture the avatars service fetches in its own tests (a broken or truncated icon, a favicon page), not an API a client calls' },
+        { skipped: 'GET /v1/mock/tests/avatars/truncated-icon.png', reason: 'a fixture the avatars service fetches in its own tests (a broken or truncated icon, a favicon page), not an API a client calls' },
+    ],
 });
 
 export const options = bench.options;

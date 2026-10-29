@@ -260,8 +260,13 @@ fn json_or_bytes(b: &[u8]) -> Value {
 /// the clock are scrubbed: the order of entries and members.
 fn shape(value: &Value, ns: &str) -> String {
     let scrubber = super::scrub::Scrubber::new(&[
-        super::scrub::Scrub { kind: super::scrub::Kind::Uniqid, reason: String::new(), seconds: None },
-        super::scrub::Scrub { kind: super::scrub::Kind::Now, reason: String::new(), seconds: Some(180_000) },
+        super::scrub::Scrub { kind: super::scrub::Kind::Uniqid, reason: String::new(), seconds: None, any_year: false },
+        super::scrub::Scrub {
+            kind: super::scrub::Kind::Now,
+            reason: String::new(),
+            seconds: Some(180_000),
+            any_year: false,
+        },
     ]);
     let mut v = super::compare::normalize(value, ns);
     scrubber.apply(&mut v);

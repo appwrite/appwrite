@@ -8,7 +8,7 @@ use php_std::{Array, ArrayKey, Value};
 use utopia_cache::Cache;
 use utopia_console::Command;
 
-use crate::adapter::{Adapter, CheckRun, Git, VcsType, WebhookId, WebhookScope, unsupported};
+use crate::adapter::{Adapter, CheckRun, Git, VcsType, WebhookId, WebhookScope, commit_status_state, unsupported};
 use crate::error::{Error, Result};
 use crate::git::{self, clone_command, normalize_repository_path};
 use crate::github::{concat_if_both, contents_listing, joined};
@@ -296,13 +296,7 @@ impl Gitea {
     ) -> Result<Value> {
         let dir = self.git_clone(owner, repository_name, branch).await?;
         let result = async {
-            let full = format!("{dir}/{filepath}");
-            if let Some(parent) = std::path::Path::new(&full).parent()
-                && !parent.is_dir()
-            {
-                let _ = utopia_async::fs::create_dir_all(parent).await;
-            }
-            let _ = utopia_async::fs::write(&full, content).await;
+            git::write_checkout_file(&dir, filepath, content).await?;
             exec(&git::git(&dir)?.argument("add")?.argument("--")?.argument(filepath)?).await?;
             exec(&git::git(&dir)?.argument("commit")?.option("-m", message)?).await?;
             exec(&git::git(&dir)?.argument("push")?.argument("origin")?.argument(branch)?).await?;
@@ -393,6 +387,14 @@ fn commit_shape(body: &Value) -> Value {
 impl Adapter for Gitea {
     fn name(&self) -> &str {
         self.flavor.name()
+    }
+
+    fn set_self_signed(&mut self, self_signed: bool) {
+        self.transport.self_signed = self_signed;
+    }
+
+    fn is_self_signed(&self) -> bool {
+        self.transport.self_signed
     }
 
     fn vcs_type(&self) -> VcsType {
@@ -722,7 +724,7 @@ impl Adapter for Gitea {
         Ok(php::text(&php::string(&or(at(&body, "id"), ""))))
     }
 
-    fn clone_command(
+    async fn clone_command(
         &self,
         owner: &str,
         repository_name: &str,
@@ -753,7 +755,7 @@ impl Adapter for Gitea {
                 let head_commit = or(at(&payload, "head_commit"), Value::Array(Array::new()));
                 let head_commit_author = or(at(&head_commit, "author"), Value::Array(Array::new()));
 
-                let branch = php::str_replace("refs/heads/", "", &or(at(&payload, "ref"), ""));
+                let branch = crate::github::push_branch(&at(&payload, "ref"));
                 let repository_url = or(at(&repository, "html_url"), "");
                 let branch_url = concat_if_both(&repository_url, "/src/branch/", &branch);
 
@@ -920,7 +922,7 @@ impl Adapter for Gitea {
         if self.is_gogs() {
             return Err(Error::exception("Commit status API is not supported by Gogs", 0));
         }
-        let mut body = object([("state", s(state))]);
+        let mut body = object([("state", s(commit_status_state(state)))]);
         if php::filled(description) {
             php::set(&mut body, "description", s(description));
         }
@@ -1147,6 +1149,8 @@ impl Git for Gitea {
         branch: &str,
     ) -> Result<Value> {
         if self.is_gogs() {
+            let confined = git::confined_path(filepath)?;
+            let filepath = confined.as_str();
             if php::filled(branch) {
                 let response = self.get(format!("/repos/{owner}/{repository_name}")).await?;
                 let default = or(response.at("default_branch"), "master");

@@ -5,3 +5,11 @@ reason = "paste is unmaintained, not vulnerable. It is a proc-macro, so it runs 
 [[IgnoredVulns]]
 id = "RUSTSEC-2024-0449"
 reason = "unsafe-libyaml is unmaintained (archived), not reported vulnerable. php-std's yaml_parse must reproduce PHP's ext-yaml, which is libyaml, quirks included; the suggested safe-Rust parsers (saphyr, noyalib) parse differently. The fuzz profiles keep away from the one input shape where ext-yaml itself corrupts its heap. Replacing it with the vendored C libyaml (as php-std vendors PCRE2) removes this entry."
+
+[[IgnoredVulns]]
+id = "GHSA-qwgh-2vcv-g2f7"
+reason = "block-buffer 0.10 has no fixed release. It is reached only through digest 0.10, which the RustCrypto 0.10 hash and curve crates (sha2, blake2, ecdsa, elliptic-curve and others) still depend on; it goes away when those move to digest 0.11."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0387"
+reason = "crypto-bigint 0.5 is reached only through elliptic-curve 0.13 (p256 0.13, used for ES256 JWT signing and WebAuthn passkeys). The fix exists only in crypto-bigint 0.7, which needs the p256 0.14 / elliptic-curve 0.14 line, a breaking upgrade of the signing and verification code."

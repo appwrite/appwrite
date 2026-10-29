@@ -17,7 +17,6 @@ use crate::error::{Error, Result};
 use crate::message::{Message, envelope};
 use crate::queue::Queue;
 
-const POP_TIMEOUT: i64 = 2;
 const RECONNECT_BACKOFF_MS: u64 = 100;
 const RECONNECT_MAX_BACKOFF_MS: u64 = 5_000;
 /// Heartbeat lifetime; handlers refresh it every third of this interval.
@@ -35,6 +34,7 @@ const EXPIRED: &str = include_str!("redis/expired.lua");
 const RECOVER: &str = include_str!("redis/recover.lua");
 const RECLAIM: &str = include_str!("redis/reclaim.lua");
 const ABANDON: &str = include_str!("redis/abandon.lua");
+const RETRY: &str = include_str!("redis/retry.lua");
 
 /// Called when a receive fails on the transport: the queue, the error, the
 /// attempt number and the milliseconds the broker sleeps before returning.
@@ -91,6 +91,8 @@ pub struct Redis {
     commands: Arc<dyn Connection>,
     codec: Arc<dyn Codec>,
     reap_after: i64,
+    reap_max_attempts: Option<i64>,
+    reap_max_age: Option<i64>,
     clock: Arc<dyn Clock>,
     closed: AtomicBool,
     settlements: Mutex<HashMap<String, Arc<Buffer<Settlement, i64>>>>,
@@ -108,6 +110,8 @@ impl Redis {
             commands,
             codec: Arc::new(Json),
             reap_after: 90_000,
+            reap_max_attempts: None,
+            reap_max_age: None,
             clock: Arc::new(SystemClock),
             closed: AtomicBool::new(false),
             settlements: Mutex::new(HashMap::new()),
@@ -130,6 +134,36 @@ impl Redis {
     pub fn with_reap_after(mut self, seconds: i64) -> Self {
         self.reap_after = seconds;
         self
+    }
+
+    /// Bounds what [`Redis::maintain`] recovers: claims older than `after`
+    /// seconds without a live heartbeat count as stranded, as with
+    /// [`Redis::with_reap_after`]; those requeued `max_attempts` times, or
+    /// published more than `max_age` seconds ago, are parked on the dead
+    /// queue instead (`None` requeues them unbounded, at any age).
+    ///
+    /// Fails with [`Error::InvalidArgument`] for a `max_attempts` below 1, or
+    /// a `max_age` at or below `after`: every claim the sweep reaches is
+    /// already `after` old, so it would park them all and recover none.
+    ///
+    /// PHP: `new Redis(..., reapAfter: $after, reapMaxAttempts: $maxAttempts, reapMaxAge: $maxAge)`.
+    pub fn with_reap(mut self, after: i64, max_attempts: Option<i64>, max_age: Option<i64>) -> Result<Self> {
+        if max_attempts.is_some_and(|n| n < 1) {
+            return Err(Error::InvalidArgument(
+                "reapMaxAttempts must be at least 1, or null to requeue unbounded".to_owned(),
+            ));
+        }
+        if let Some(age) = max_age
+            && age <= after
+        {
+            return Err(Error::InvalidArgument(format!(
+                "reapMaxAge ({age}) must exceed reapAfter ({after}), or be null to requeue at any age"
+            )));
+        }
+        self.reap_after = after;
+        self.reap_max_attempts = max_attempts;
+        self.reap_max_age = max_age;
+        Ok(self)
     }
 
     /// The clock and id source (tests pin it).
@@ -394,7 +428,15 @@ impl Redis {
                 keys.extend(expired);
                 self.commands.execute(RECOVER, &keys, &[int(REAP_LIMIT)]).await?;
             }
-            self.reap(&queue, self.reap_after, Some(REAP_LIMIT), None, None, Some(REAP_LIMIT * 2)).await?;
+            self.reap(
+                &queue,
+                self.reap_after,
+                Some(REAP_LIMIT),
+                self.reap_max_attempts,
+                self.reap_max_age,
+                Some(REAP_LIMIT * 2),
+            )
+            .await?;
         }
         Ok(())
     }
@@ -414,27 +456,49 @@ impl Redis {
         let failed = Self::key(queue, "failed");
         let mut processed = 0;
         while limit.is_none_or(|l| processed < l) {
-            let Some(pid) = self.commands.right_pop(&failed, POP_TIMEOUT).await? else {
+            // No more jobs to retry
+            let Some(pid) = self.commands.list_range(&failed, 1, -1).await?.into_iter().next() else {
                 break;
             };
+            // An expired payload leaves nothing to requeue. One the codec
+            // cannot read is parked, so it stays inspectable and something
+            // references it.
             let Some(job) = self.job(queue, &pid).await? else {
+                let keys = if self.commands.get(&Self::pid_key(queue, "jobs", &pid)).await?.is_some() {
+                    vec![failed.clone(), Self::key(queue, "dead")]
+                } else {
+                    vec![failed.clone()]
+                };
+                self.commands.execute(RETRY, &keys, &[pid.clone(), pid]).await?;
                 continue;
             };
+            // Wrapped around to a job this sweep already requeued: stop.
             if job.timestamp() >= start {
-                self.commands.right_push(&failed, &pid).await?;
                 break;
             }
             if max_attempts.is_some_and(|m| job.attempts() >= m)
                 || newer_than.is_some_and(|n| job.timestamp() < start - n)
             {
-                self.commands.left_push(&Self::key(queue, "dead"), &pid).await?;
+                let keys = [failed.clone(), Self::key(queue, "dead")];
+                self.commands.execute(RETRY, &keys, &[pid.clone(), pid]).await?;
                 continue;
             }
-            let payload = self.retry_payload(queue, &job)?;
-            self.commands.left_push(&Self::key(queue, "queue"), &payload).await?;
-            processed += 1;
+            if self.requeue(queue, pid, &job).await? {
+                processed += 1;
+            }
         }
         Ok(())
+    }
+
+    /// Requeues with a fresh pid and timestamp, carrying the attempt count
+    /// forward so retry and reap can park messages that never succeed. The
+    /// failed entry and the payload under the old pid go in the same step, so
+    /// a sweep that stops part way leaves the job failed rather than nowhere,
+    /// and no payload is left behind that nothing references.
+    async fn requeue(&self, queue: &Queue, pid: Vec<u8>, job: &Message) -> Result<bool> {
+        let keys = [Self::key(queue, "failed"), Self::key(queue, "queue"), Self::pid_key(queue, "jobs", &pid)];
+        let args = [pid, self.retry_payload(queue, job)?];
+        Ok(matches!(self.commands.execute(RETRY, &keys, &args).await?, Reply::Int(1)))
     }
 
     /// Recovers claims left between receive and settlement: claims without a

@@ -82,7 +82,7 @@ function op(string $relative): string
         return match (true) {
             \str_starts_with($relative, 'Extra/Builder') => 'builder',
             \str_starts_with($relative, 'Extra/Schema') => 'schema',
-            \str_starts_with($relative, 'Extra/Visitor') => 'ast',
+            \str_starts_with($relative, 'Extra/Visitor'), \str_starts_with($relative, 'Extra/Grammar') => 'ast',
             default => 'query',
         };
     }

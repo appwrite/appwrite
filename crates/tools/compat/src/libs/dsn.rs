@@ -9,7 +9,8 @@ use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes_value};
 use crate::bench::Bench;
 
 /// Operations this adapter implements (must match `spec.json`).
-pub const OPS: &[&str] = &["dsn.new", "dsn.parse", "dsn.get", "dsn.param", "dsn.refusal_printed"];
+pub const OPS: &[&str] =
+    &["dsn.new", "dsn.parse", "dsn.get", "dsn.param", "dsn.refusal_printed", "dsn.from", "dsn.string"];
 
 /// A connection string as services configure them.
 const DSN: &str = "redis://appwrite:s3cret@cache.internal:6379/2?timeout=5&pool=16&tls=true";
@@ -47,7 +48,7 @@ fn parts(d: &Dsn) -> Value {
         "password": d.password().map(bytes_value),
         "host": d.host(),
         "port": d.port().map(|p| p.to_string()),
-        "path": d.path(),
+        "path": bytes_value(d.path()),
         "query": d.query(),
     })
 }
@@ -79,6 +80,56 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             Err(e) => err(e),
         },
         "dsn.get" => Outcome::Ok(parts(&dsn(session)?)),
+        "dsn.from" => {
+            let optional_bytes = |key: &str| -> Result<Option<Vec<u8>>, Fault> {
+                match a.opt(key) {
+                    None | Some(Value::Null) => Ok(None),
+                    Some(v) => {
+                        crate::adapter::bytes(v).map(Some).ok_or_else(|| Fault::new(format!("{key} must be a string")))
+                    }
+                }
+            };
+            let user = optional_bytes("user")?;
+            let password = optional_bytes("password")?;
+            let path = optional_bytes("path")?.unwrap_or_default();
+            let mut params = Vec::new();
+            if let Some(object) = a.opt("params").and_then(Value::as_object) {
+                for (key, value) in object {
+                    params.push((key.as_str(), value.as_str().ok_or_else(|| Fault::new("params must be strings"))?));
+                }
+            }
+            match Dsn::from(
+                a.str("scheme")?,
+                a.str("host")?,
+                user.as_deref(),
+                password.as_deref(),
+                a.opt_i64("port")?,
+                &path,
+                &params,
+            ) {
+                Ok(d) => {
+                    let mut out = parts(&d);
+                    out["string"] = Value::String(d.to_string());
+                    if let Some(keys) = a.opt("keys").and_then(Value::as_array) {
+                        let mut values = Vec::with_capacity(keys.len());
+                        for key in keys {
+                            let key = key.as_str().ok_or_else(|| Fault::new("keys must be strings"))?;
+                            values.push(match d.param_or(key, b"") {
+                                Ok(v) => bytes_value(v),
+                                Err(e) => err(e).to_json(),
+                            });
+                        }
+                        out["keys"] = Value::Array(values);
+                    }
+                    Outcome::Ok(out)
+                }
+                Err(e) => err(e),
+            }
+        }
+        "dsn.string" => match Dsn::parse(a.str("dsn")?) {
+            Ok(d) => Outcome::Ok(Value::String(d.to_string())),
+            Err(e) => err(e),
+        },
         "dsn.param" => {
             let d = dsn(session)?;
             let default = match a.opt("default") {

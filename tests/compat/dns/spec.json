@@ -686,7 +686,7 @@
       ]
     },
     "server.run": {
-      "doc": "starts fixture servers (tests/compat/dns/fixtures/server.php: Native or Swoole adapter, UDP, TCP, PROXY-protocol TCP and HTTP transports, a resolver of Fixture.php, a seed; Rust: the Network adapter in the driver) on local ports, runs steps (query, raw, doh, recursive, proxy, validate, errors, workers, telemetry, sleep) and stops them",
+      "doc": "starts fixture servers (tests/compat/dns/fixtures/server.php: Native or Swoole adapter, UDP, TCP, PROXY-protocol TCP and HTTP transports, a resolver of Fixture.php, a seed; Rust: the Network adapter in the driver) on local ports, runs steps (query, raw, stall, doh, recursive, proxy, validate, errors, workers, telemetry, sleep) and stops them",
       "covers": [
         "Utopia\\DNS\\Server::__construct",
         "Utopia\\DNS\\Server::error",

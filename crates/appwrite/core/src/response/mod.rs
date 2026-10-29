@@ -192,6 +192,9 @@ pub fn version_compare(a: &str, b: &str) -> std::cmp::Ordering {
 pub struct Render {
     /// Show `sensitive` fields (API keys and privileged users).
     pub sensitive: bool,
+    /// Blank `credential` fields (password hashes, provider tokens): the
+    /// impersonator's `users.read` grant or an impersonated request.
+    pub hide_credentials: bool,
     /// Client response format, when it differs from the latest.
     pub format: Option<Version>,
 }

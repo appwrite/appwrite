@@ -565,7 +565,7 @@ fn discord_out(d: &Discord) -> Value {
 }
 
 fn delivery_out(d: &Delivery) -> Value {
-    json!({"recipient": d.recipient, "status": d.status.as_str(), "error": d.error, "permanent": d.permanent})
+    json!({"recipient": d.recipient, "status": d.status.as_str(), "error": d.error, "permanent": d.permanent, "code": d.code})
 }
 
 fn response_out(r: &Response) -> Value {
@@ -1166,6 +1166,7 @@ impl Adapter for Scripted {
                     status: if result["status"] == "success" { Status::Success } else { Status::Failure },
                     error: result["error"].as_str().unwrap_or("").to_owned(),
                     permanent: result["permanent"].as_bool().unwrap_or(false),
+                    code: result["code"].as_i64().unwrap_or(0),
                 });
             }
             Ok(Sent::Response(response))
@@ -1182,40 +1183,50 @@ struct SmtpServer {
 }
 
 impl SmtpServer {
-    async fn start(replies: Vec<String>) -> Result<SmtpServer, Fault> {
+    /// One connection per script, in order (`smtp-server.php`): when a
+    /// script runs out the server hangs up and waits for the next one.
+    async fn start(sessions: Vec<Vec<String>>) -> Result<SmtpServer, Fault> {
         let listener = TcpListener::bind("127.0.0.1:0").await.map_err(|e| Fault::new(e.to_string()))?;
         let port = listener.local_addr().map_err(|e| Fault::new(e.to_string()))?.port();
         let task = utopia_async::spawn(async move {
             let mut commands = Vec::new();
-            let mut replies: VecDeque<String> = replies.into();
-            let Ok(Ok((stream, _))) = utopia_async::timeout(Duration::from_secs(10), listener.accept()).await else {
-                return commands;
-            };
-            let (read, mut write) = stream.into_split();
-            let mut reader = BufReader::new(read);
-            if let Some(greeting) = replies.pop_front() {
-                let _ = write.write_all(format!("{greeting}\r\n").as_bytes()).await;
-            }
-            while !replies.is_empty() {
-                let mut line = String::new();
-                match utopia_async::timeout(Duration::from_secs(10), reader.read_line(&mut line)).await {
-                    Ok(Ok(n)) if n > 0 => {}
-                    _ => break,
+            for replies in sessions {
+                let mut replies: VecDeque<String> = replies.into();
+                let Ok(Ok((stream, _))) = utopia_async::timeout(Duration::from_secs(10), listener.accept()).await
+                else {
+                    break;
+                };
+                let (read, mut write) = stream.into_split();
+                let mut reader = BufReader::new(read);
+                if let Some(greeting) = replies.pop_front() {
+                    let _ = write.write_all(format!("{greeting}\r\n").as_bytes()).await;
                 }
-                commands.push(line.trim_end_matches(['\r', '\n']).to_owned());
-                let reply = replies.pop_front().unwrap_or_default();
-                let _ = write.write_all(format!("{reply}\r\n").as_bytes()).await;
-                if reply.starts_with("354") && !replies.is_empty() {
-                    loop {
-                        let mut data = String::new();
-                        match reader.read_line(&mut data).await {
-                            Ok(n) if n > 0 && data != ".\r\n" => continue,
-                            _ => break,
+                while !replies.is_empty() {
+                    let mut line = String::new();
+                    match utopia_async::timeout(Duration::from_secs(10), reader.read_line(&mut line)).await {
+                        Ok(Ok(n)) if n > 0 => {}
+                        _ => break,
+                    }
+                    commands.push(line.trim_end_matches(['\r', '\n']).to_owned());
+                    let reply = replies.pop_front().unwrap_or_default();
+                    let _ = write.write_all(format!("{reply}\r\n").as_bytes()).await;
+                    // The reply to the data goes out the moment the
+                    // terminating dot is read; with none left, the dot is
+                    // met by a hang-up instead.
+                    if reply.starts_with("354") {
+                        loop {
+                            let mut data = String::new();
+                            match utopia_async::timeout(Duration::from_secs(10), reader.read_line(&mut data)).await {
+                                Ok(Ok(n)) if n > 0 && data != ".\r\n" => continue,
+                                _ => break,
+                            }
+                        }
+                        if let Some(next) = replies.pop_front() {
+                            let _ = write.write_all(format!("{next}\r\n").as_bytes()).await;
                         }
                     }
-                    let next = replies.pop_front().unwrap_or_default();
-                    let _ = write.write_all(format!("{next}\r\n").as_bytes()).await;
                 }
+                let _ = write.shutdown().await;
             }
             commands
         });
@@ -1233,6 +1244,18 @@ impl SmtpServer {
         }
         self.done.lock().unwrap().clone().unwrap_or_default()
     }
+}
+
+/// Listeners nobody accepts from, kept open for the life of the driver.
+static SILENT: Mutex<Vec<std::net::TcpListener>> = Mutex::new(Vec::new());
+
+/// A port whose listener never accepts: the kernel completes the connection
+/// from the backlog, and nothing ever greets.
+fn silent_port() -> Result<u16, Fault> {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").map_err(|e| Fault::new(e.to_string()))?;
+    let port = listener.local_addr().map_err(|e| Fault::new(e.to_string()))?.port();
+    SILENT.lock().unwrap().push(listener);
+    Ok(port)
 }
 
 /// A port nobody listens on.
@@ -1324,7 +1347,20 @@ async fn build_adapter(
                     )
                     .with_auto_tls(args.get("smtpAutoTLS").and_then(Value::as_bool).unwrap_or(false))
                     .with_x_mailer(arg_str(args, "xMailer")?.unwrap_or_default())
-                    .with_keep_alive(args.get("keepAlive").and_then(Value::as_bool).unwrap_or(false));
+                    .with_keep_alive(args.get("keepAlive").and_then(Value::as_bool).unwrap_or(false))
+                    .with_addresses(
+                        args.get("addresses")
+                            .and_then(Value::as_object)
+                            .map(|addresses| {
+                                addresses
+                                    .iter()
+                                    .map(|(host, address)| {
+                                        (host.clone(), address.as_str().unwrap_or_default().to_owned())
+                                    })
+                                    .collect()
+                            })
+                            .unwrap_or_default(),
+                    );
                 for (key, set) in [
                     ("timeout", Smtp::with_timeout as fn(Smtp, i64) -> Smtp),
                     ("timelimit", Smtp::with_time_limit),
@@ -1480,7 +1516,8 @@ fn service_account(account: &Value) -> Result<String, Fault> {
     php_std::json::encode(&value, php_std::json::Flags::NONE, 512).map_err(|e| Fault::new(e.message().to_owned()))
 }
 
-/// A host string with `{port<n>}`, `{closed}` and `{mailpit}` filled in.
+/// A host string with `{port<n>}`, `{closed}`, `{silent}` and `{mailpit}`
+/// filled in.
 async fn resolve_host(host: &str, a: &Args<'_>, s: &Session) -> Result<(String, Vec<(String, String)>), Fault> {
     let mut host = host.to_owned();
     let mut ports = Vec::new();
@@ -1489,12 +1526,18 @@ async fn resolve_host(host: &str, a: &Args<'_>, s: &Session) -> Result<(String, 
             let port = s.get::<Arc<SmtpServer>>(server)?.port.to_string();
             host = host.replace(&format!("{{port{i}}}"), &port);
             ports.push((format!("127.0.0.1:{port}"), format!("127.0.0.1:{{port{i}}}")));
+            ports.push((format!(":{port}"), format!(":{{port{i}}}")));
         }
     }
     if host.contains("{closed}") {
         let port = closed_port().await?.to_string();
         host = host.replace("{closed}", &port);
         ports.push((format!("127.0.0.1:{port}"), "127.0.0.1:{closed}".to_owned()));
+    }
+    if host.contains("{silent}") {
+        let port = silent_port()?.to_string();
+        host = host.replace("{silent}", &port);
+        ports.push((format!("127.0.0.1:{port}"), "127.0.0.1:{silent}".to_owned()));
     }
     if host.contains("{mailpit}") {
         host = host.replace("{mailpit}", s.service("messaging-smtp")?);
@@ -1640,6 +1683,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                             text(&list[0])?,
                             list.get(1).map(text).transpose()?.unwrap_or_default(),
                             list.get(2).and_then(Value::as_bool).unwrap_or(false),
+                            list.get(3).and_then(Value::as_i64).unwrap_or(0),
                         );
                     }
                     other => return Err(Fault::new(format!("unknown response step {other}"))),
@@ -1663,9 +1707,13 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             }))
         }
         "no_host_answered.new" => {
-            let e = email::NoHostAnswered::new(a.str("message")?, a.bool("permanent")?);
+            let e = email::NoHostAnswered::new(
+                a.str("message")?,
+                a.bool("permanent")?,
+                a.opt("code").and_then(Value::as_i64).unwrap_or(0),
+            );
             Outcome::Ok(
-                json!({"class": email::NoHostAnswered::CLASS, "message": e.message, "permanent": e.permanent, "connection": true}),
+                json!({"class": email::NoHostAnswered::CLASS, "message": e.message, "permanent": e.permanent, "code": e.code, "connection": true}),
             )
         }
         "enums" => Outcome::Ok(json!({
@@ -1812,8 +1860,14 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             Outcome::Ok(Value::Array(scripted.messages.lock().unwrap().iter().map(sms_out).collect()))
         }
         "smtp_server.new" => {
-            let replies = a.array("replies")?.iter().map(text).collect::<Result<Vec<_>, _>>()?;
-            let server = SmtpServer::start(replies).await?;
+            let mut sessions = vec![a.array("replies")?.iter().map(text).collect::<Result<Vec<_>, _>>()?];
+            if let Some(more) = args.get("more") {
+                for replies in more.as_array().ok_or_else(|| Fault::new("more: a list of reply lists"))? {
+                    let replies = replies.as_array().ok_or_else(|| Fault::new("more: a list of reply lists"))?;
+                    sessions.push(replies.iter().map(text).collect::<Result<Vec<_>, _>>()?);
+                }
+            }
+            let server = SmtpServer::start(sessions).await?;
             Outcome::Ok(s.handle(Arc::new(server)))
         }
         "smtp_server.commands" => {

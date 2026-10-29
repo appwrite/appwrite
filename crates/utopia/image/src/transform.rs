@@ -91,7 +91,7 @@ pub(crate) fn crop_thumbnail(frame: &mut Frame, width: u32, height: u32) -> Resu
         (round(ratio_y * f64::from(ow)), i64::from(height))
     };
     if new_w <= 0 || new_h <= 0 {
-        return Err(Error::imagick("negative or zero image size `' @ error/resize.c/SampleImage/3956"));
+        return Err(Error::imagick("negative or zero image size `' @ error/resize.c/SampleImage/3959"));
     }
     thumbnail(frame, new_w as u32, new_h as u32)?;
     if new_w == i64::from(width) && new_h == i64::from(height) {

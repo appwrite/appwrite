@@ -529,8 +529,8 @@ impl Database {
             .with_previous(error));
         }
 
-        self.with_retries(|| self.purge_cached_collection(&collection_id), 3, 100).await?;
-        self.with_retries(|| self.purge_cached_collection(&related_id), 3, 100).await?;
+        self.purge_committed_collection(&collection_id).await?;
+        self.purge_committed_collection(&related_id).await?;
 
         let listeners = self.listens(Event::AttributeUpdate);
         if !listeners.is_empty() {
@@ -634,6 +634,9 @@ impl Database {
             .await;
 
         if let Err(error) = written {
+            if self.may_have_committed(&error) {
+                return Err(error);
+            }
             let mut steps = Vec::new();
             if should_rollback {
                 steps.push(if side == RelationshipSide::Parent {
@@ -658,8 +661,8 @@ impl Database {
             .with_previous(error));
         }
 
-        self.with_retries(|| self.purge_cached_collection(&collection_id), 3, 100).await?;
-        self.with_retries(|| self.purge_cached_collection(&related_id), 3, 100).await?;
+        self.purge_committed_collection(&collection_id).await?;
+        self.purge_committed_collection(&related_id).await?;
 
         self.trigger(Event::AttributeDelete, || Domain::AttributeDeleted {
             collection: collection_id.clone(),

@@ -1994,10 +1994,16 @@
             "name": "orchestration-${ns}-main",
             "force": true
           },
+          "mask": {
+            "paths": [
+              "/error/message"
+            ],
+            "reason": "the Docker client's text for `docker rm --force` of a missing container depends on its version: 29.5 prints the daemon's `No such container`, 29.8 (appwrite/base 2.2.1) prints nothing, and either way remove() throws"
+          },
           "expect": {
             "error": {
               "class": "Utopia\\Orchestration\\Exception\\Orchestration",
-              "message": "Docker Error: Error response from daemon: No such container: orchestration-${ns}-main\n"
+              "message": "<masked>"
             }
           }
         },

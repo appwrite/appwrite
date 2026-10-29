@@ -54,6 +54,9 @@ pub struct Csv {
     local: Local,
     allowed_columns: Vec<String>,
     options: CsvOptions,
+    /// Set once `shutdown()` starts writing to the device, cleared once the
+    /// caller takes the file over (PHP: `$uploaded`).
+    uploaded: bool,
 }
 
 impl std::fmt::Debug for Csv {
@@ -85,6 +88,7 @@ impl Csv {
             local: temp_local("csv_export_").await?,
             allowed_columns,
             options,
+            uploaded: false,
         })
     }
 
@@ -155,6 +159,13 @@ impl Csv {
     }
 }
 
+/// Whether a value starts, after any single quotes, with a byte a
+/// spreadsheet reads as the start of a formula (`=`, `+`, `-`, `@`, a tab
+/// or a carriage return).
+pub(crate) fn formula_like(value: &[u8]) -> bool {
+    value.iter().find(|&&b| b != b'\'').is_some_and(|b| b"=+-@\t\r".contains(b))
+}
+
 /// `convertValueToCSV()`.
 pub(crate) fn csv_value(value: &Value) -> Vec<u8> {
     match value {
@@ -178,6 +189,19 @@ pub(crate) fn csv_value(value: &Value) -> Vec<u8> {
             }
         }
         Value::Object(_) => encode(value, Flags::NONE, 512).unwrap_or_default().into_bytes(),
+        Value::Str(text) => {
+            // Spreadsheets evaluate cells starting with these as formulas.
+            // Values already quoted before one get another quote too, so the
+            // CSV source strips exactly one and they import back unchanged.
+            let bytes = text.as_bytes();
+            if formula_like(bytes) {
+                let mut quoted = Vec::with_capacity(bytes.len() + 1);
+                quoted.push(b'\'');
+                quoted.extend_from_slice(bytes);
+                return quoted;
+            }
+            bytes.to_vec()
+        }
         other => other.to_php_string().map(|s| s.as_bytes().to_vec()).unwrap_or_default(),
     }
 }
@@ -243,6 +267,27 @@ impl Destination for Csv {
         callback(resources)
     }
 
+    /// The caller has taken the file over, so a later failure must leave it in place.
+    async fn success(&mut self) -> Result<()> {
+        self.uploaded = false;
+        Ok(())
+    }
+
+    /// `shutdown()` uploads the file before the caller learns whether the
+    /// export failed, so a failed export removes the file it uploaded along
+    /// with the local working copy. A file this run did not upload, or
+    /// already handed over, belongs to someone else.
+    async fn error(&mut self) -> Result<()> {
+        let path = self.device.path(&format!("{}/{}.csv", self.directory, self.output_file));
+        if self.uploaded && self.device.exists(&path).await? {
+            self.device.delete(&path, false).await?;
+            self.uploaded = false;
+        }
+        let root = utopia_storage::Device::root(&self.local).to_owned();
+        utopia_storage::Device::delete(&self.local, &root, true).await?;
+        Ok(())
+    }
+
     async fn shutdown(&mut self) -> Result<()> {
         let filename = format!("{}.csv", self.output_file);
         let source_path = utopia_storage::Device::path(&self.local, &filename);
@@ -253,6 +298,7 @@ impl Destination for Csv {
                 Exception::CODE_NOT_FOUND,
             ));
         }
+        self.uploaded = true;
         let result = async {
             let copied = utopia_storage::Device::copy(
                 &self.local,

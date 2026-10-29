@@ -569,6 +569,14 @@
       "expect": 0.29
     },
     {
+      "name": "round integral float at 2^52",
+      "op": "format.round",
+      "args": {
+        "num": 4503599627370496.0
+      },
+      "expect": 4503599627370496.0
+    },
+    {
       "name": "round half away from zero",
       "op": "format.round",
       "args": {

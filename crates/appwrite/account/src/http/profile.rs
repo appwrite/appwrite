@@ -7,7 +7,7 @@ use utopia_emails::EmailValidator;
 use utopia_http::{Cookie, Response};
 use utopia_validators::{AllOf, Assoc, Text, Validator};
 
-use appwrite_core::database::documents::User;
+use appwrite_core::database::documents::{Attributes, User};
 use appwrite_core::platform::{Context, Route};
 use appwrite_core::response::{UserModel, prefs_value};
 use appwrite_core::validators::{Password, PasswordDictionary, PasswordStrength, Phone};
@@ -142,7 +142,8 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     // The delete's own purge ran inside the transaction.
     db.purge_cached_document("users", &user.id).await?;
 
-    base::mqtt_revoke(ctx, &user.id).await;
+    ctx.mqtt_revoke(&user.id).await;
+    ctx.delete_presences(&user).await;
 
     let payload = Value::Array(document.array_copy()).to_json();
     let message = appwrite_core::event::delete_message(&ctx.project.message_payload(), "document", payload);
@@ -171,7 +172,8 @@ pub async fn status(ctx: &mut Context) -> Result<Response> {
     updates.put("status", Value::Bool(false));
     let user = base::update_user(&db, &user.id, updates, &[base::TARGETS]).await?;
 
-    base::mqtt_revoke(ctx, &user.id).await;
+    ctx.mqtt_revoke(&user.id).await;
+    ctx.delete_presences(&user).await;
 
     ctx.event_param("userId", user.id.clone());
     let payload = base::account_payload(ctx, &user);
@@ -233,6 +235,7 @@ pub async fn password(ctx: &mut Context) -> Result<Response> {
             dictionary: &state.dictionary,
             enabled: ctx.project.auth_bool("passwordDictionary", false),
             allow_empty: false,
+            deny_list: ctx.project.auth_strings("passwordDictionaryDenyList"),
         }),
     ]);
     let password = ctx.required_str("password", &validator)?;
@@ -267,6 +270,7 @@ pub async fn password(ctx: &mut Context) -> Result<Response> {
             user.name.as_deref(),
             user.phone.as_deref(),
             false,
+            &ctx.project.auth_strings("personalDataDenyList"),
         )
     {
         return Err(Error::new(ErrorType::UserPasswordPersonalData));
@@ -307,6 +311,7 @@ async fn first_password(
         dictionary: &ctx.state.dictionary,
         enabled: ctx.project.auth_bool("passwordDictionary", false),
         allow_empty: false,
+        deny_list: ctx.project.auth_strings("passwordDictionaryDenyList"),
     };
     if !dictionary.is_valid(&value) {
         return Err(Error::invalid_param("password", &dictionary.description()));
@@ -319,6 +324,7 @@ async fn first_password(
             user.name.as_deref(),
             phone.or(user.phone.as_deref()),
             false,
+            &ctx.project.auth_strings("personalDataDenyList"),
         )
     {
         return Err(Error::new(ErrorType::UserPasswordPersonalData));
@@ -352,20 +358,6 @@ async fn check_password(
     Ok(pwned)
 }
 
-/// The target with `old` as its identifier gets `new` (in the response's
-/// targets too, as PHP changes the document it holds).
-async fn move_target(db: &Database, user: &mut User, old: Option<&str>, new: &str) -> Result<()> {
-    let Some(old) = old else { return Ok(()) };
-    if let Some(target) = user.targets.iter_mut().find(|t| t.identifier == old) {
-        let mut updates = Document::default();
-        updates.put("identifier", Value::from(new));
-        let authorization = db.authorization();
-        authorization.skip(db.update_document("targets", &target.id, updates)).await?;
-        target.identifier = new.to_owned();
-    }
-    Ok(())
-}
-
 /// `findOne('targets', [equal('identifier', [$identifier])])`, skipping
 /// authorization.
 async fn target_exists(db: &Database, identifier: &str) -> Result<bool> {
@@ -381,7 +373,6 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     let user = base::session_user(ctx)?;
     let pwned = check_password(ctx, &user, &password, Some(&email), None).await?;
 
-    let old_email = user.email.clone();
     let email = email.to_lowercase();
     let db = ctx.db()?;
 
@@ -414,12 +405,58 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::UserTargetAlreadyExists));
     }
 
-    let result = async {
-        let mut updated = base::update_user(&db, &user.id, updates, &[base::TARGETS]).await?;
-        move_target(&db, &mut updated, old_email.as_deref(), &email).await?;
+    // Under the user's row lock: the address it had then moves its target,
+    // and a change of address voids the email-bound tokens sent to the old one.
+    let result = Box::pin(async {
+        let changed = db
+            .with_transaction(|| {
+                let db = db.clone();
+                let id = user.id.clone();
+                let updates = updates.clone();
+                let email = email.clone();
+                let sequence = user.sequence.to_string();
+                let user_sequence = user.sequence;
+                // Boxed: the transaction's future is large.
+                Box::pin(async move {
+                    let authorization = db.authorization();
+                    let current = authorization.skip(db.get_document("users", &id, Vec::new(), true)).await?;
+                    if current.is_empty() {
+                        return Ok(false);
+                    }
+                    let locked = current.string("email");
+                    let skipped = base::skipped(&[]);
+                    db.skip_filters(Some(skipped.as_slice()), db.update_document("users", &id, updates)).await?;
+                    if let Some(locked) = &locked {
+                        let target = authorization
+                            .skip(db.find_one(
+                                "targets",
+                                vec![
+                                    Query::equal("userInternalId", [sequence.as_str()]),
+                                    Query::equal("identifier", [locked.as_str()]),
+                                ],
+                            ))
+                            .await?;
+                        if !target.is_empty() {
+                            let mut moved = Document::default();
+                            moved.put("identifier", Value::from(email.as_str()));
+                            authorization.skip(db.update_document("targets", target.id(), moved)).await?;
+                        }
+                    }
+                    if locked.as_deref() != Some(email.as_str()) {
+                        authorization.skip(User::void_address_proofs(&db, user_sequence, "email")).await?;
+                    }
+                    Ok(true)
+                })
+            })
+            .await?;
+        if !changed {
+            return Err(Error::new(ErrorType::UserNotFound));
+        }
+        let reloaded = db.authorization().skip(base::user_document(&db, &user.id, &[base::TARGETS])).await?;
+        let updated = User::from(&reloaded);
         db.purge_cached_document("users", &updated.id).await?;
         Ok::<User, Error>(updated)
-    }
+    })
     .await;
     let user = result.map_err(|e| duplicate_as(e, ErrorType::GeneralBadRequest))?;
     ctx.event_param("userId", user.id.clone());
@@ -437,8 +474,6 @@ pub async fn phone(ctx: &mut Context) -> Result<Response> {
     if target_exists(&db, &phone).await? {
         return Err(Error::new(ErrorType::UserTargetAlreadyExists));
     }
-    let old_phone = user.phone.clone();
-
     let mut updates = Document::default();
     updates.put("phone", Value::from(phone.as_str()));
     updates.put("phoneVerification", Value::Bool(false));
@@ -446,12 +481,58 @@ pub async fn phone(ctx: &mut Context) -> Result<Response> {
         set_first_password(ctx, &mut updates, &password, pwned).await?;
     }
 
-    let result = async {
-        let mut updated = base::update_user(&db, &user.id, updates, &[base::TARGETS]).await?;
-        move_target(&db, &mut updated, old_phone.as_deref(), &phone).await?;
+    // Under the user's row lock: the number it had then moves its target,
+    // and a change of number voids the proofs sent to the old one.
+    let result = Box::pin(async {
+        let changed = db
+            .with_transaction(|| {
+                let db = db.clone();
+                let id = user.id.clone();
+                let updates = updates.clone();
+                let phone = phone.clone();
+                let sequence = user.sequence.to_string();
+                let user_sequence = user.sequence;
+                // Boxed: the transaction's future is large.
+                Box::pin(async move {
+                    let authorization = db.authorization();
+                    let current = authorization.skip(db.get_document("users", &id, Vec::new(), true)).await?;
+                    if current.is_empty() {
+                        return Ok(false);
+                    }
+                    let locked = current.string("phone");
+                    let skipped = base::skipped(&[]);
+                    db.skip_filters(Some(skipped.as_slice()), db.update_document("users", &id, updates)).await?;
+                    if let Some(locked) = &locked {
+                        let target = authorization
+                            .skip(db.find_one(
+                                "targets",
+                                vec![
+                                    Query::equal("userInternalId", [sequence.as_str()]),
+                                    Query::equal("identifier", [locked.as_str()]),
+                                ],
+                            ))
+                            .await?;
+                        if !target.is_empty() {
+                            let mut moved = Document::default();
+                            moved.put("identifier", Value::from(phone.as_str()));
+                            authorization.skip(db.update_document("targets", target.id(), moved)).await?;
+                        }
+                    }
+                    if locked.as_deref() != Some(phone.as_str()) {
+                        authorization.skip(User::void_address_proofs(&db, user_sequence, "phone")).await?;
+                    }
+                    Ok(true)
+                })
+            })
+            .await?;
+        if !changed {
+            return Err(Error::new(ErrorType::UserNotFound));
+        }
+        let reloaded = db.authorization().skip(base::user_document(&db, &user.id, &[base::TARGETS])).await?;
+        let updated = User::from(&reloaded);
         db.purge_cached_document("users", &updated.id).await?;
         Ok::<User, Error>(updated)
-    }
+    })
     .await;
     let user = result.map_err(|e| duplicate_as(e, ErrorType::UserPhoneAlreadyExists))?;
     ctx.event_param("userId", user.id.clone());

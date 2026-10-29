@@ -10,7 +10,7 @@ use appwrite_core::auth::jwt;
 use appwrite_core::database::documents::{self, Session, Token, text};
 use appwrite_core::datetime;
 use appwrite_core::platform::Context;
-use appwrite_core::response::{JwtModel, SessionListModel, SessionModel, TokenModel};
+use appwrite_core::response::{JwtModel, SESSION_SENSITIVE, SessionListModel, SessionModel, TokenModel};
 use appwrite_core::validators::{CustomId, KeywordId, uid};
 use appwrite_core::{Error, ErrorType, Result};
 
@@ -76,7 +76,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     };
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
-    ctx.event_payload(&model);
+    ctx.event_payload_sensitive(&model, SESSION_SENSITIVE);
     Ok(ctx.created(&model))
 }
 
@@ -111,12 +111,13 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     };
     db.delete_document("sessions", &session.id).await?;
     db.purge_cached_document("users", &user.id).await?;
+    ctx.mqtt_revoke(&user.id).await;
     let country = country_name(ctx, session.country_code.as_deref().unwrap_or(""));
     let model =
         SessionModel { session: &session, country_name: &country, current: false, secret: None, render: ctx.render() };
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
-    ctx.event_payload(&model);
+    ctx.event_payload_sensitive(&model, SESSION_SENSITIVE);
     Ok(ctx.no_content())
 }
 
@@ -130,6 +131,7 @@ pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
         db.delete_document("sessions", &session.id).await?;
     }
     db.purge_cached_document("users", &user.id).await?;
+    ctx.mqtt_revoke(&user.id).await;
     ctx.event_param("userId", user.id.clone());
     let payload = base::user_payload(ctx, &user);
     ctx.events.payload = Some(payload);
@@ -163,7 +165,7 @@ pub async fn token(ctx: &mut Context) -> Result<Response> {
     let model = TokenModel { token: &token, secret: Some(&secret), phrase: "", reveal: false, render: ctx.render() };
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("tokenId", token.id.clone());
-    ctx.event_payload(&model);
+    ctx.event_payload_sensitive(&model, &["secret"]);
     Ok(ctx.created(&model))
 }
 
@@ -176,6 +178,10 @@ pub async fn jwt(ctx: &mut Context) -> Result<Response> {
         ctx.optional_str("sessionId", "recent()", &KeywordId("recent()"))?.unwrap_or_else(|| "recent()".to_owned());
     let duration = ctx.optional("duration", json!(900), &Range::new(0, 3600))?;
     let duration = Range::value(&duration).unwrap_or(900);
+    // As on the account JWT route: a JWT can't mint the next one and outlive itself.
+    if !ctx.request.header_or_empty("x-appwrite-jwt").is_empty() {
+        return Err(Error::new(ErrorType::UserJwtCreationDenied));
+    }
     let user = base::user_or_404(ctx, &user_id, &[base::SESSIONS]).await?;
     let session =
         if session_id == "recent()" { user.sessions.last() } else { user.sessions.iter().find(|s| s.id == session_id) };

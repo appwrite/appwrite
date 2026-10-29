@@ -900,7 +900,15 @@
                 }
               }
             }
-          }
+          },
+          "scrub": [
+            {
+              "kind": "now",
+              "seconds": 604800,
+              "any_year": true,
+              "reason": "PHP's parser reads much garbage against the current time (\"now\", a lone time, \"+77:00\", a bare year such as \"6672\" with today's date and time), so the result carries the clock each runtime read; compared by month, day and time within a week, whatever the year, so the profile's fixed dates are still compared"
+            }
+          ]
         },
         {
           "name": "DateTime::formatTz: dates",
@@ -960,7 +968,15 @@
                 }
               }
             }
-          }
+          },
+          "scrub": [
+            {
+              "kind": "now",
+              "seconds": 604800,
+              "any_year": true,
+              "reason": "PHP's parser reads much garbage against the current time (\"now\", a lone time, \"+77:00\", a bare year such as \"6672\" with today's date and time), so the result carries the clock each runtime read; compared by month, day and time within a week, whatever the year, so the profile's fixed dates are still compared"
+            }
+          ]
         },
         {
           "name": "Query::parse",

@@ -116,7 +116,6 @@ impl Appwrite {
         queries: Vec<ReaderQuery>,
     ) -> Result<Self> {
         let mut client = Client::new();
-        client.refuse_redirects();
         client.set_endpoint(endpoint)?;
         client.set_project(project_id);
         client.set_key(key);
@@ -688,6 +687,7 @@ impl Appwrite {
         let pwned = supported("password-pwned").await?;
         let rotation = supported("password-rotation").await?;
         let passkey = supported("passkey").await?;
+        let realtime_guests = supported("deny-realtime-guests").await?;
         let fields = |model: &Option<Model>, keys: &[&str]| {
             model.as_ref().map(|m| {
                 let mut a = Array::new();
@@ -728,6 +728,7 @@ impl Appwrite {
             password_pwned: fields(&of(pwned, "PolicyPasswordPwned"), &["enabled", "sessions", "users"]),
             password_rotation: fields(&of(rotation, "PolicyPasswordRotation"), &["enabled", "maxAge"]),
             passkey_rp_id: of(passkey, "PolicyPasskey").map(|m| s(&m, "rpId")),
+            deny_realtime_guests: enabled(&of(realtime_guests, "PolicyDenyRealtimeGuests")),
         };
         let r = policies.resource(self.project_id.clone(), "", "");
         out.emit(vec![r]).await
@@ -1002,6 +1003,7 @@ impl Appwrite {
                     let mut a = Array::new();
                     a.set("id".into(), get("$id"));
                     a.set("name".into(), get("name"));
+                    a.set("description".into(), string_or_empty(get("description")));
                     a.set("createdAt".into(), get("$createdAt"));
                     a.set("updatedAt".into(), get("$updatedAt"));
                     a.set("type".into(), original.clone());
@@ -1050,11 +1052,13 @@ impl Appwrite {
                     let mut db = Array::new();
                     db.set("id".into(), v(&database.id()));
                     db.set("name".into(), v(&d.name));
+                    db.set("description".into(), v(&database.description()));
                     db.set("type".into(), v(&d.database_type));
                     db.set("database".into(), d.database.as_deref().map_or(Value::Null, v));
                     let mut a = Array::new();
                     a.set("id".into(), get("$id"));
                     a.set("name".into(), get("name"));
+                    a.set("description".into(), string_or_empty(get("description")));
                     a.set("rowSecurity".into(), row_security.clone());
                     a.set("documentSecurity".into(), row_security);
                     a.set("permissions".into(), get("$permissions"));
@@ -1102,6 +1106,7 @@ impl Appwrite {
                         continue;
                     }
                     let c = get_column(&table, column)?;
+                    c.set_description(cast_string(&string_or_empty(get("description"))));
                     columns.push(if vectors { Field::attribute_of(&c).expect("a column") } else { c });
                 }
                 if columns.is_empty() {
@@ -1145,7 +1150,9 @@ impl Appwrite {
                         lengths: arr(or(get("lengths"), Value::Array(Array::new()))),
                         orders: arr(or(get("orders"), Value::Array(Array::new()))),
                     };
-                    indexes.push(i.resource(cast_string(&get("$id")), created, updated));
+                    let i = i.resource(cast_string(&get("$id")), created, updated);
+                    i.set_description(cast_string(&string_or_empty(get("description"))));
+                    indexes.push(i);
                 }
                 if indexes.is_empty() {
                     break;
@@ -1172,8 +1179,9 @@ impl Appwrite {
         let entities = cache.resources(entity_name);
         for table in entities {
             let mut last: Option<ResourceRef> = None;
+            let mut limit = batch;
             loop {
-                let mut queries = vec![self.reader.query_limit(batch)];
+                let mut queries = vec![self.reader.query_limit(limit)];
                 queries.extend(self.queries.iter().cloned());
                 if let Some(l) = last.clone() {
                     queries.push(self.reader.query_cursor_after(Cursor::Resource(l)).await?);
@@ -1194,7 +1202,15 @@ impl Appwrite {
                     }
                 }
                 queries.push(self.reader.query_select(selects));
-                let response = self.reader.list_rows(&table, queries).await?;
+                let response = match self.reader.list_rows(&table, queries).await {
+                    Ok(response) => response,
+                    // A page of large rows can decode past the response size cap
+                    Err(Error::Appwrite { code: crate::http::CURLE_FILESIZE_EXCEEDED, .. }) if limit != 1 => {
+                        limit /= 2;
+                        continue;
+                    }
+                    Err(e) => return Err(e),
+                };
                 let Some(t) = table.as_table() else { break };
                 let d = table.database().and_then(|d| d.as_database().cloned());
                 let mut rows = Vec::new();
@@ -1251,7 +1267,7 @@ impl Appwrite {
                     rows.push(r);
                 }
                 out.emit(rows).await?;
-                if (response.len() as i64) < batch {
+                if (response.len() as i64) < limit {
                     break;
                 }
             }
@@ -1299,8 +1315,11 @@ impl Appwrite {
                 anti_virus: cast_bool(&b.value("antivirus")),
                 update_limits: false,
                 transformations: cast_bool(&or(b.value("transformations"), Value::Bool(false))),
+                strip_metadata: cast_bool(&b.value("stripMetadata")),
             };
-            buckets.push(bucket.resource(s(b, "id"), strings(&arr(b.value("permissions")))));
+            let bucket = bucket.resource(s(b, "id"), strings(&arr(b.value("permissions"))));
+            bucket.set_description(s(b, "description"));
+            buckets.push(bucket);
         }
         if buckets.is_empty() {
             return Ok(());
@@ -1439,6 +1458,7 @@ impl Appwrite {
                     deployment_retention: cast_int(&f.value("deploymentRetention")),
                 }
                 .resource(s(f, "id"));
+                func.set_description(s(f, "description"));
                 converted.push(func.clone());
                 count += 1;
                 last = Some(func.id());
@@ -1450,7 +1470,9 @@ impl Appwrite {
                         value: s(var, "value"),
                         secret: cast_bool(&var.value("secret")),
                     };
-                    converted.push(e.resource(s(var, "id")));
+                    let e = e.resource(s(var, "id"));
+                    e.set_description(s(var, "description"));
+                    converted.push(e);
                 }
             }
             out.emit(converted).await?;
@@ -1539,7 +1561,19 @@ impl Appwrite {
             r.set_sequence(r.id());
             r
         };
-        let Some(length) = headers.get("content-length").cloned() else {
+        // Archives past the server's read buffer stream without content-length
+        let length = headers.get("content-length").cloned();
+        let mut file_size = match &length {
+            Some(length) => cast_int(&Value::from(length.as_str())),
+            None => cast_int(&deployment.value("sourceSize")),
+        };
+        // Deployments that recorded no size report it in a ranged response
+        if length.is_none() && file_size == 0 {
+            let (_, range) = self.call("GET", &path, &[("range", "bytes=0-0".to_owned())]).await?;
+            let total = range.get("content-range").and_then(|r| r.split_once('/')).map_or("0", |(_, total)| total);
+            file_size = cast_int(&Value::from(total));
+        }
+        if length.is_none() && file_size == 0 {
             let (body, _) = self.call("GET", &path, &[]).await?;
             let data = body_bytes(body)?;
             let size = data.len() as i64;
@@ -1549,7 +1583,6 @@ impl Appwrite {
             let r = make(size, start, end, data);
             return out.emit(vec![r]).await;
         };
-        let file_size = crate::resources::cast_int(&Value::from(length.as_str()));
         if end >= file_size {
             end = file_size - 1;
         }
@@ -1627,6 +1660,7 @@ impl Appwrite {
                     scopes: arr(st.value("scopes")),
                 }
                 .resource(s(st, "id"));
+                site.set_description(s(st, "description"));
                 converted.push(site.clone());
                 count += 1;
                 last = Some(site.id());
@@ -1638,7 +1672,9 @@ impl Appwrite {
                         value: s(var, "value"),
                         secret: cast_bool(&var.value("secret")),
                     };
-                    converted.push(e.resource(s(var, "id")));
+                    let e = e.resource(s(var, "id"));
+                    e.set_description(s(var, "description"));
+                    converted.push(e);
                 }
             }
             out.emit(converted).await?;
@@ -1769,7 +1805,9 @@ impl Appwrite {
                     qos: opt_int(t.value("qos")),
                     expiry: opt_int(t.value("expiry")),
                 };
-                list.push(topic.resource(s(t, "id"), s(t, "createdAt"), s(t, "updatedAt")));
+                let topic = topic.resource(s(t, "id"), s(t, "createdAt"), s(t, "updatedAt"));
+                topic.set_description(s(t, "description"));
+                list.push(topic);
                 last = Some(s(t, "id"));
             }
             let n = list.len() as i64;
@@ -1954,7 +1992,9 @@ impl Appwrite {
                     accessed_at: s(k, "accessedAt"),
                     sdks: arr(k.value("sdks")),
                 };
-                list.push(key.resource(s(k, "id"), s(k, "createdAt"), s(k, "updatedAt")));
+                let key = key.resource(s(k, "id"), s(k, "createdAt"), s(k, "updatedAt"));
+                key.set_description(s(k, "description"));
+                list.push(key);
                 last = Some(s(k, "id"));
             }
             out.emit(list).await?;
@@ -1986,7 +2026,9 @@ impl Appwrite {
                     http_pass: s(w, "authPassword"),
                     enabled: cast_bool(&w.value("enabled")),
                 };
-                list.push(hook.resource(s(w, "id"), s(w, "createdAt"), s(w, "updatedAt")));
+                let hook = hook.resource(s(w, "id"), s(w, "createdAt"), s(w, "updatedAt"));
+                hook.set_description(s(w, "description"));
+                list.push(hook);
                 last = Some(s(w, "id"));
             }
             out.emit(list).await?;
@@ -2188,6 +2230,7 @@ impl Appwrite {
                     secret: cast_bool(&var.value("secret")),
                 }
                 .resource(s(var, "id"), s(var, "createdAt"), s(var, "updatedAt"));
+                r.set_description(s(var, "description"));
                 list.push(r);
                 last = Some(s(var, "id"));
             }
@@ -2405,5 +2448,13 @@ impl Source for Appwrite {
         let result = self.run(resources, sink, selector.scope_id(), selector.scope_type()).await;
         self.resource_child_id = previous;
         result
+    }
+}
+
+/// `\is_string($value) ? $value : ''`.
+fn string_or_empty(value: Value) -> Value {
+    match value {
+        Value::Str(_) => value,
+        _ => Value::from(""),
     }
 }

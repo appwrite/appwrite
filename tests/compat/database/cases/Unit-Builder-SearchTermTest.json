@@ -3574,9 +3574,10 @@
           "expect": {
             "$value": "Query\\Builder\\Condition",
             "fields": {
-              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "expression": "(MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
               "bindings": [
-                "\"foo bar baz\""
+                "+foo +bar +baz",
+                "(^|[^[:alnum:]_])foo[^[:alnum:]_]+bar[^[:alnum:]_]+baz([^[:alnum:]_]|$)"
               ]
             }
           }
@@ -3634,9 +3635,10 @@
           "expect": {
             "$value": "Query\\Builder\\Condition",
             "fields": {
-              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
               "bindings": [
-                "\"foo bar baz\""
+                "+foo +bar +baz",
+                "(^|[^[:alnum:]_])foo[^[:alnum:]_]+bar[^[:alnum:]_]+baz([^[:alnum:]_]|$)"
               ]
             }
           }
@@ -4834,9 +4836,10 @@
           "expect": {
             "$value": "Query\\Builder\\Condition",
             "fields": {
-              "expression": "MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+              "expression": "(MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
               "bindings": [
-                "\"foo bar baz\""
+                "+foo +bar +baz",
+                "(^|[^[:alnum:]_])foo[^[:alnum:]_]+bar[^[:alnum:]_]+baz([^[:alnum:]_]|$)"
               ]
             }
           }
@@ -4894,9 +4897,10 @@
           "expect": {
             "$value": "Query\\Builder\\Condition",
             "fields": {
-              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE))",
+              "expression": "NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
               "bindings": [
-                "\"foo bar baz\""
+                "+foo +bar +baz",
+                "(^|[^[:alnum:]_])foo[^[:alnum:]_]+bar[^[:alnum:]_]+baz([^[:alnum:]_]|$)"
               ]
             }
           }

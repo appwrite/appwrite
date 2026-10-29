@@ -34,12 +34,12 @@
       "expect": "1.0E+25"
     },
     {
-      "name": "precision 14",
+      "name": "precision -1 keeps every digit",
       "op": "value.to_string",
       "args": {
         "v": 0.30000000000000004
       },
-      "expect": "0.3"
+      "expect": "0.30000000000000004"
     },
     {
       "name": "negative zero",

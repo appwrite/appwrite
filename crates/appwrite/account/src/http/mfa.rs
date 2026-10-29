@@ -6,12 +6,14 @@ use utopia_database::{Document, Value};
 use utopia_http::Response;
 use utopia_validators::{Boolean, Text, WhiteList, php};
 
+use appwrite_core::auth::otp_token::OtpToken;
 use appwrite_core::database::documents::{self, Attributes, Challenge, Session, User};
 use appwrite_core::database::filters;
 use appwrite_core::datetime;
 use appwrite_core::platform::{Audit, Context, Labels, Route};
 use appwrite_core::response::{
-    AccountModel, MfaChallengeModel, MfaFactorsModel, MfaRecoveryCodesModel, MfaTypeModel, SessionModel,
+    AccountModel, MfaChallengeModel, MfaFactorsModel, MfaRecoveryCodesModel, MfaTypeModel, SESSION_SENSITIVE,
+    SessionModel,
 };
 use appwrite_core::{Error, ErrorType, Result};
 
@@ -404,7 +406,9 @@ pub async fn create_authenticator(ctx: &mut Context) -> Result<Response> {
     db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     let uri = provisioning_uri(&secret, &label, &issuer);
-    Ok(ctx.ok(&MfaTypeModel { secret: &secret, uri: &uri }))
+    let model = MfaTypeModel { secret: &secret, uri: &uri };
+    ctx.event_payload_sensitive(&model, &["secret", "uri"]);
+    Ok(ctx.ok(&model))
 }
 
 /// `PUT /v1/account/mfa/authenticators/:type`.
@@ -475,7 +479,9 @@ pub async fn create_recovery_codes(ctx: &mut Context) -> Result<Response> {
     }
     let codes = backup_codes()?;
     store_codes(ctx, &user, &codes).await?;
-    Ok(ctx.created(&MfaRecoveryCodesModel { recovery_codes: &codes }))
+    let model = MfaRecoveryCodesModel { recovery_codes: &codes };
+    ctx.event_payload_sensitive(&model, &["recoveryCodes"]);
+    Ok(ctx.created(&model))
 }
 
 /// `GET /v1/account/mfa/recovery-codes`.
@@ -495,7 +501,9 @@ pub async fn update_recovery_codes(ctx: &mut Context) -> Result<Response> {
     }
     let codes = backup_codes()?;
     store_codes(ctx, &user, &codes).await?;
-    Ok(ctx.ok(&MfaRecoveryCodesModel { recovery_codes: &codes }))
+    let model = MfaRecoveryCodesModel { recovery_codes: &codes };
+    ctx.event_payload_sensitive(&model, &["recoveryCodes"]);
+    Ok(ctx.ok(&model))
 }
 
 // ---- challenges ----------------------------------------------------------------
@@ -604,6 +612,7 @@ async fn challenge_email(ctx: &mut Context, user: &User, email: &str, code: &str
     }
     Mail {
         recipient: email.to_owned(),
+        headers: OtpToken::headers(code, ctx.request.header("origin").unwrap_or_default()),
         subject,
         template: "mfa-challenge",
         body_template: format!("{PHP_ROOT}/app/config/locale/templates/{template}.tpl"),
@@ -667,11 +676,8 @@ pub async fn update_challenge(ctx: &mut Context) -> Result<Response> {
     add_factor(ctx, &mut session, factors, Some(datetime::now())).await?;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
-    Ok(ctx.ok(&SessionModel {
-        session: &session,
-        country_name: "",
-        current: false,
-        secret: None,
-        render: ctx.render(),
-    }))
+    let model =
+        SessionModel { session: &session, country_name: "", current: false, secret: None, render: ctx.render() };
+    ctx.event_payload_sensitive(&model, SESSION_SENSITIVE);
+    Ok(ctx.ok(&model))
 }

@@ -179,7 +179,7 @@ impl Handler for Open {
 
 utopia_async::Runtime::new()?.block_on(async {
     let adapter = Network::new(vec![Transport::tcp("127.0.0.1", 0)], 1, None)?;
-    let server = Server::new(adapter.clone(), Open);
+    let server = Server::new(adapter.clone(), Open, utopia_mqtt::Store::new(), 0);
     let running = server.clone();
     let task = utopia_async::spawn(async move { running.start().await });
     let addr = adapter.listening().await[0];
@@ -305,7 +305,7 @@ impl Handler for Strict {
 }
 
 let adapter = Memory::new();
-let server = Server::new(adapter.clone(), Strict);
+let server = Server::new(adapter.clone(), Strict, utopia_mqtt::Store::new(), 0);
 utopia_async::Builder::current_thread().build()?.block_on(server.start());
 
 adapter.open(1)?;

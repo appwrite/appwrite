@@ -244,7 +244,15 @@ final class Adapter implements Base, Benchmarks
             'trusted.new' => function (array $a, Session $s) {
                 $t = new TrustedHeaders(...$a);
 
-                return ['ip' => $t->ip, 'proto' => $t->proto];
+                $out = ['ip' => $t->ip, 'proto' => $t->proto];
+                // Only when the case names them, so cases recorded before they existed keep their results.
+                foreach (['host', 'port'] as $key) {
+                    if (\array_key_exists($key, $a)) {
+                        $out[$key] = $t->{$key};
+                    }
+                }
+
+                return $out;
             },
             'mode.settings' => fn (array $a, Session $s) => self::settings($a['mode']),
             'compression.negotiate' => fn (array $a, Session $s) => Compression::fromAcceptEncoding($a['accept'], $a['supported'] ?? [])?->getContentEncoding(),

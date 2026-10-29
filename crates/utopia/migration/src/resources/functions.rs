@@ -89,7 +89,7 @@ impl Func {
         let p = |n, name| param("Utopia\\Migration\\Resources\\Functions\\Func::__construct", n, name);
         let id = to_string(&i.raw("id"), &p(1, "id"))?;
         let spec = |a: &str, b: &str| i.get(a).or_else(|| i.get(b)).cloned().unwrap_or_else(|| Value::from(""));
-        Ok(Func {
+        let func = Func {
             name: to_string(&i.raw("name"), &p(2, "name"))?,
             runtime: to_string(&i.raw("runtime"), &p(3, "runtime"))?,
             execute: to_array(&i.or("execute", Value::Array(Array::new())), &p(4, "execute"))?,
@@ -107,7 +107,8 @@ impl Func {
             interval: to_int(&i.or("interval", Value::Int(0)), &p(16, "interval"))?,
             deployment_retention: to_int(&i.or("deploymentRetention", Value::Int(0)), &p(17, "deploymentRetention"))?,
         }
-        .resource(id))
+        .resource(id);
+        Ok(super::described(func, super::description_if_string(&i)))
     }
 }
 
@@ -140,13 +141,14 @@ impl EnvVar {
         let func = Func::from_array(
             &i.array("func", &param("Utopia\\Migration\\Resources\\Functions\\Func::fromArray", 1, "array"))?,
         )?;
-        Ok(EnvVar {
+        let var = EnvVar {
             func,
             key: to_string(&i.raw("key"), &p(3, "key"))?,
             value: to_string(&i.raw("value"), &p(4, "value"))?,
             secret: super::cast_bool(&i.or("secret", Value::Bool(false))),
         }
-        .resource(id))
+        .resource(id);
+        Ok(super::described(var, super::description_if_string(&i)))
     }
 }
 

@@ -7,15 +7,22 @@
 //! left of the digits. The mantissa always has a fraction (`1.0E+25`).
 //!
 //! - `(string) $float`, `echo`, string interpolation, string comparison use
-//!   the `precision` setting (14): [`to_string`].
+//!   the `precision` setting ([`PRECISION`], -1 as Appwrite's `php.ini` sets
+//!   it): [`to_string`].
 //! - `json_encode`, `var_export` use `serialize_precision` (-1) and a
 //!   lowercase `e`: [`serialize`].
 
 use std::fmt::Write as _;
 
-/// `(string) $float` with PHP's default `precision = 14`.
+/// The `precision` ini Appwrite runs PHP with (`docker/php.ini`): `-1`, the
+/// shortest round-trip digits, so floats keep every digit when they become
+/// strings (PDO binds and fetches them as strings at this setting). PHP's own
+/// default is 14; [`gcvt`] prints at any other setting.
+pub const PRECISION: i32 = -1;
+
+/// `(string) $float` at the `precision` setting ([`PRECISION`]).
 pub fn to_string(f: f64) -> String {
-    gcvt(f, 14, 'E')
+    gcvt(f, PRECISION, 'E')
 }
 
 /// `json_encode($float)` / `var_export` with `serialize_precision = -1`.
@@ -220,20 +227,27 @@ mod tests {
 
     #[test]
     fn strings_like_php() {
+        // `precision = -1`: the shortest round-trip digits.
         assert_eq!(to_string(0.1), "0.1");
-        assert_eq!(to_string(0.1 + 0.2), "0.3");
+        assert_eq!(to_string(0.1 + 0.2), "0.30000000000000004");
         assert_eq!(to_string(1e25), "1.0E+25");
         assert_eq!(to_string(1.0), "1");
         assert_eq!(to_string(-0.0), "-0");
         assert_eq!(to_string(0.00001), "1.0E-5");
         assert_eq!(to_string(0.0001), "0.0001");
-        assert_eq!(to_string(123456789012345678.0), "1.2345678901235E+17");
-        assert_eq!(to_string(1e15), "1.0E+15");
-        assert_eq!(to_string(1e14), "1.0E+14");
-        assert_eq!(to_string(1e13), "10000000000000");
+        assert_eq!(to_string(123456789012345678.0), "1.2345678901234568E+17");
+        assert_eq!(to_string(1e15), "1000000000000000");
+        assert_eq!(to_string(1e14), "100000000000000");
+        assert_eq!(to_string(100000000000005.0), "100000000000005");
         assert_eq!(to_string(f64::INFINITY), "INF");
+        // `precision = 14`, PHP's own default.
+        assert_eq!(gcvt(0.1 + 0.2, 14, 'E'), "0.3");
+        assert_eq!(gcvt(123456789012345678.0, 14, 'E'), "1.2345678901235E+17");
+        assert_eq!(gcvt(1e15, 14, 'E'), "1.0E+15");
+        assert_eq!(gcvt(1e14, 14, 'E'), "1.0E+14");
+        assert_eq!(gcvt(1e13, 14, 'E'), "10000000000000");
         // A tie rounded down keeps its zeros, as `zend_dtoa`'s small-integer path does.
-        assert_eq!(to_string(100000000000005.0), "1.0000000000000E+14");
+        assert_eq!(gcvt(100000000000005.0, 14, 'E'), "1.0000000000000E+14");
         assert_eq!(gcvt(4975205.0, 6, 'E'), "4.97520E+6");
         assert_eq!(gcvt(4975005.0, 6, 'E'), "4.97500E+6");
         assert_eq!(gcvt(125.0, 2, 'E'), "1.2E+2");

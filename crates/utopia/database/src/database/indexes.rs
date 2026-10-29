@@ -109,7 +109,7 @@ impl Database {
         )
         .await?;
 
-        self.with_retries(|| self.purge_cached_collection(&id), 3, 100).await?;
+        self.purge_committed_collection(&id).await?;
 
         self.trigger(Event::IndexRename, || Domain::IndexRenamed {
             collection: id.clone(),
@@ -157,7 +157,7 @@ impl Database {
         )
         .await?;
 
-        self.with_retries(|| self.purge_cached_collection(&id), 3, 100).await?;
+        self.purge_committed_collection(&id).await?;
 
         self.trigger(Event::IndexDelete, || Domain::IndexDeleted { collection: id.clone(), index: deleted.clone() })
             .await?;
@@ -204,7 +204,7 @@ impl Database {
         )
         .await?;
 
-        self.with_retries(|| self.purge_cached_collection(&id), 3, 100).await?;
+        self.purge_committed_collection(&id).await?;
 
         let listeners = self.listens(Event::IndexCreate);
         if !listeners.is_empty() {

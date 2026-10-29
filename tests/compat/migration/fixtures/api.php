@@ -24,7 +24,8 @@ declare(strict_types=1);
  *   GET  /__timeout/<b>      TargetTimeoutTest's remotes: `streaming` sends 20 bytes, one every 0.2 s;
  *                            `stalled` sends a 20-byte response's head and first byte, then nothing;
  *                            `silent` never answers
- *   anything else            the first matching route of the project, or a 404 Appwrite error
+ *   GET  /__compressed/<n>   a gzip body (Content-Encoding: gzip) decoding to <n> bytes of `x`
+ *   anything else          the first matching route of the project, or a 404 Appwrite error
  *
  * A second port (`php api.php <port> <silent port>`) accepts TCP connections
  * and never sends a byte, so a TLS handshake there never completes.
@@ -66,6 +67,14 @@ final class Api
         }
         if (\str_starts_with($path, '/__timeout/')) {
             $this->timeout(\substr($path, \strlen('/__timeout/')), $response);
+
+            return;
+        }
+        if (\str_starts_with($path, '/__compressed/')) {
+            // TargetRequestTest's and AppwriteClientTest's `/compressed`: a
+            // gzip body that decodes to <n> bytes of `x`
+            $response->header('Content-Encoding', 'gzip');
+            $response->end((string) \gzencode(\str_repeat('x', (int) \substr($path, \strlen('/__compressed/'))), 9));
 
             return;
         }

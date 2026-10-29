@@ -192,11 +192,20 @@ impl Connection {
     /// Connects to the first server of the pool that completes the
     /// handshake (`INFO`, `CONNECT`, `PING`/`PONG`).
     ///
+    /// Makes up to [`ConnectionOptions::connect_attempts`] passes over the
+    /// pool, pausing `connect_retry_wait` plus up to `connect_retry_jitter`
+    /// between them. Only failures a new connection can fix are retried: an
+    /// authorization violation, a failed TLS handshake or a server at its
+    /// connection limit fails on the first pass. No pass starts after
+    /// `connect_timeout` has elapsed since the call, and a pause that would
+    /// end past that point is not taken.
+    ///
     /// # Errors
     ///
-    /// [`Error::Connection`] (`Failed to connect to any NATS server`) when
-    /// no server answers; [`Error::Authentication`] for an unreadable
-    /// credentials file.
+    /// [`Error::NoServer`] (`Failed to connect to any NATS server`, the
+    /// last attempt's failure as [`Error::previous`]) when no server
+    /// answers; [`Error::Authentication`] for an unreadable credentials
+    /// file.
     ///
     /// PHP: `Connection::connect()`.
     pub async fn connect(options: impl Into<ConnectionOptions>) -> Result<Connection> {
@@ -891,14 +900,60 @@ impl Connection {
 
     async fn do_connect(&mut self) -> Result<()> {
         self.status = Status::Connecting;
-        for url in self.server_pool.clone() {
-            if self.connect_to_server(&url).await.is_ok() {
-                self.status = Status::Connected;
-                return Ok(());
+        let mut last_error = None;
+        let deadline = Instant::now() + self.options.connect_timeout;
+        let mut attempt = 1;
+        loop {
+            let mut retryable = true;
+            for url in self.server_pool.clone() {
+                match self.connect_to_server(&url).await {
+                    Ok(()) => {
+                        self.status = Status::Connected;
+                        return Ok(());
+                    }
+                    Err(error) => {
+                        retryable = retryable && Self::retries_connect(&error);
+                        last_error = Some(Box::new(error));
+                        // Close the failed attempt's socket before the next one.
+                        if let Some(transport) = self.transport.as_deref_mut() {
+                            transport.close().await;
+                        }
+                    }
+                }
             }
+            if !retryable || attempt >= self.options.connect_attempts {
+                break;
+            }
+            // Give up rather than start a pass after connect_timeout.
+            let jitter: f64 = rand::rng().random();
+            let pause = self.options.connect_retry_wait.as_secs_f64()
+                + jitter * self.options.connect_retry_jitter.as_secs_f64();
+            let pause = Duration::from_secs_f64(pause.max(0.0));
+            if Instant::now() + pause >= deadline {
+                break;
+            }
+            if !pause.is_zero() {
+                utopia_async::sleep(pause).await;
+            }
+            attempt += 1;
         }
         self.status = Status::Disconnected;
-        Err(Error::Connection("Failed to connect to any NATS server".into()))
+        Err(Error::NoServer(last_error))
+    }
+
+    /// Whether a new connection could succeed: not for rejected auth or a
+    /// failed TLS handshake.
+    ///
+    /// PHP: `Connection::retriesConnect()` (private).
+    fn retries_connect(error: &Error) -> bool {
+        error.is_connection() && !matches!(error, Error::Tls(_)) && Self::reconnects_after(&error.to_string())
+    }
+
+    /// Whether a server reached under `scheme` speaks TLS.
+    ///
+    /// PHP: `Connection::isSecure()` (private).
+    fn is_secure(&self, scheme: &str) -> bool {
+        scheme == "tls" || scheme == "wss" || self.options.tls
     }
 
     async fn connect_to_server(&mut self, url: &str) -> Result<()> {
@@ -926,12 +981,15 @@ impl Connection {
             return Err(Error::protocol("Expected INFO to be an object"));
         }
         let info = ServerInfo::from_value(&data);
+        let secure = self.is_secure(&scheme);
         for connect_url in &info.connect_urls {
             if !self.server_pool.contains(connect_url) {
-                self.server_pool.push(normalize_url(connect_url));
+                self.server_pool.push(normalize_url(connect_url, secure));
             }
         }
-        let wants_upgrade = info.tls_required || (self.options.tls && info.tls_available);
+        // When the server requires TLS, or when the caller opted in, whatever
+        // the server advertises.
+        let wants_upgrade = info.tls_required || self.options.tls;
         let nonce = info.nonce.clone();
         let headers_supported = info.headers_supported;
         self.server_info = Some(info);
@@ -1149,8 +1207,9 @@ impl Connection {
             return Ok(());
         }
         let info = ServerInfo::from_value(&data);
+        let secure = self.is_secure(&parse_server_url(&self.current_server)?.0);
         for connect_url in &info.connect_urls {
-            let normalized = normalize_url(connect_url);
+            let normalized = normalize_url(connect_url, secure);
             if !self.server_pool.contains(&normalized) {
                 self.server_pool.push(normalized);
             }
@@ -1395,7 +1454,7 @@ async fn resolve_authenticator(options: &ConnectionOptions) -> Result<Box<dyn Au
 }
 
 fn build_server_pool(options: &ConnectionOptions) -> Vec<String> {
-    let mut servers: Vec<String> = options.servers.iter().map(|s| normalize_url(s)).collect();
+    let mut servers: Vec<String> = options.servers.iter().map(|s| normalize_url(s, false)).collect();
     if !options.no_randomize && servers.len() > 1 {
         let mut rng = rand::rng();
         for i in (1..servers.len()).rev() {
@@ -1406,10 +1465,14 @@ fn build_server_pool(options: &ConnectionOptions) -> Vec<String> {
     servers
 }
 
-/// Adds `nats://` to a URL without a known scheme.
-fn normalize_url(url: &str) -> String {
+/// Adds a scheme to a URL without a known one. Scheme-less URLs come from
+/// INFO `connect_urls`; `secure` carries the TLS of the server that advertised
+/// them, so a TLS connection never fails over to a plaintext one.
+fn normalize_url(url: &str, secure: bool) -> String {
     if ["nats://", "tls://", "ws://", "wss://"].iter().any(|scheme| url.starts_with(scheme)) {
         url.to_owned()
+    } else if secure {
+        format!("tls://{url}")
     } else {
         format!("nats://{url}")
     }

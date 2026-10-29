@@ -52,7 +52,8 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -147,7 +148,8 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -262,13 +264,15 @@
                   "recipient": "a@example.com",
                   "status": "failure",
                   "error": "Bad from",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "b@example.com",
                   "status": "failure",
                   "error": "Bad from",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -375,7 +379,8 @@
                   "recipient": "a@example.com",
                   "status": "failure",
                   "error": "Unauthorized",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -451,7 +456,8 @@
                   "recipient": "a@example.com",
                   "status": "failure",
                   "error": "5",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -523,7 +529,8 @@
                   "recipient": "a@example.com",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -687,7 +694,8 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -800,7 +808,8 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -908,7 +917,8 @@
                   "recipient": "a@example.com",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -981,7 +991,8 @@
                   "recipient": "a@example.com",
                   "status": "failure",
                   "error": "The from address does not match a verified Sender Identity.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1051,7 +1062,8 @@
                   "recipient": "a@example.com",
                   "status": "failure",
                   "error": "upstream down",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },

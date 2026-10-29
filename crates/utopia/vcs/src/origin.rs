@@ -1403,31 +1403,18 @@ fn is_sha(reference: &str) -> bool {
     (body.len() == 40 || body.len() == 64) && body.bytes().all(|b| b.is_ascii_hexdigit())
 }
 
-/// A file path confined to the repository, normalized lexically.
-fn confined_path(filepath: &str) -> Result<String> {
-    let mut segments: Vec<&str> = Vec::new();
-    let replaced = filepath.replace('\\', "/");
-    for segment in replaced.split('/') {
-        match segment {
-            "" | "." => continue,
-            ".." => {
-                if segments.pop().is_none() {
-                    return Err(Error::exception(format!("File path escapes the repository: {filepath}"), 0));
-                }
-            }
-            other => segments.push(other),
-        }
-    }
-    if segments.is_empty() {
-        return Err(Error::exception(format!("File path names no file: {filepath}"), 0));
-    }
-    Ok(segments.join("/"))
-}
-
 #[async_trait]
 impl Adapter for Origin {
     fn name(&self) -> &str {
         "origin"
+    }
+
+    fn set_self_signed(&mut self, self_signed: bool) {
+        self.transport.self_signed = self_signed;
+    }
+
+    fn is_self_signed(&self) -> bool {
+        self.transport.self_signed
     }
 
     fn vcs_type(&self) -> VcsType {
@@ -1647,7 +1634,7 @@ impl Adapter for Origin {
         Ok(php::text(&php::string(&at(&body, "id"))))
     }
 
-    fn clone_command(
+    async fn clone_command(
         &self,
         owner: &str,
         repository_name: &str,
@@ -2295,7 +2282,7 @@ impl Git for Origin {
         message: &str,
         branch: &str,
     ) -> Result<Value> {
-        let relative = confined_path(filepath)?;
+        let relative = git::confined_path(filepath)?;
         let repository = self.repository(owner, repository_name).await?;
         let default_branch = php::text(&php::string(&or(at(&repository, "defaultBranch"), "main")));
         let target = if php::filled(branch) { branch.to_owned() } else { default_branch.clone() };
@@ -2324,28 +2311,7 @@ impl Git for Origin {
                 )
                 .await?;
             }
-            let absolute = format!("{directory}/{relative}");
-            let parent = std::path::Path::new(&absolute).parent().map(|p| p.to_path_buf()).unwrap_or_default();
-            if !parent.is_dir() && utopia_async::fs::create_dir_all(&parent).await.is_err() {
-                return Err(Error::exception(format!("Failed to create directory for {filepath}"), 0));
-            }
-            let checkout = std::fs::canonicalize(&directory).ok();
-            let resolved = std::fs::canonicalize(&parent).ok();
-            let escapes = match (checkout, resolved) {
-                (Some(checkout), Some(resolved)) => {
-                    let root = format!("{}/", checkout.to_string_lossy());
-                    let inside = format!("{}/", resolved.to_string_lossy());
-                    !inside.starts_with(&root)
-                }
-                _ => true,
-            };
-            let is_link = std::fs::symlink_metadata(&absolute).map(|m| m.file_type().is_symlink()).unwrap_or(false);
-            if escapes || is_link {
-                return Err(Error::exception(format!("File path escapes the repository: {filepath}"), 0));
-            }
-            if utopia_async::fs::write(&absolute, content).await.is_err() {
-                return Err(Error::exception(format!("Failed to write {filepath}"), 0));
-            }
+            git::write_checkout_file(&directory, &relative, content).await?;
             self.execute(
                 &git::git(&directory)?.argument("add")?.argument("--")?.argument(relative.as_str())?,
                 "Staging the file",
@@ -2548,7 +2514,7 @@ impl Git for Origin {
         false
     }
 
-    fn repository_clone_url(&self, owner: &str, repository_name: &str) -> Result<String> {
+    async fn repository_clone_url(&self, owner: &str, repository_name: &str) -> Result<String> {
         Ok(format!(
             "{}/{}/{}.git",
             self.git_endpoint,

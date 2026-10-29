@@ -35,6 +35,7 @@
             "getCommands": "",
             "getCreatedAt": "",
             "getDeploymentRetention": 0,
+            "getDescription": "",
             "getEnabled": true,
             "getEntrypoint": "",
             "getEvents": [],
@@ -67,6 +68,7 @@
             }
           },
           "expect": {
+            "description": "",
             "id": "function",
             "name": "Function",
             "execute": [],
@@ -126,6 +128,7 @@
             "getBuildSpecification": "s-2vcpu-2gb",
             "getCreatedAt": "",
             "getDeploymentRetention": 0,
+            "getDescription": "",
             "getEnabled": true,
             "getFallbackFile": "",
             "getFramework": "other",
@@ -157,6 +160,7 @@
             }
           },
           "expect": {
+            "description": "",
             "id": "site",
             "name": "Site",
             "framework": "other",
@@ -213,6 +217,7 @@
             "getCommands": "",
             "getCreatedAt": "",
             "getDeploymentRetention": 0,
+            "getDescription": "",
             "getEnabled": true,
             "getEntrypoint": "",
             "getEvents": [],
@@ -276,6 +281,7 @@
             "getBuildSpecification": "legacy",
             "getCreatedAt": "",
             "getDeploymentRetention": 0,
+            "getDescription": "",
             "getEnabled": true,
             "getFallbackFile": "",
             "getFramework": "other",
@@ -329,6 +335,7 @@
             "getCommands": "",
             "getCreatedAt": "",
             "getDeploymentRetention": 0,
+            "getDescription": "",
             "getEnabled": true,
             "getEntrypoint": "",
             "getEvents": [],

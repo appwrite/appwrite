@@ -136,15 +136,19 @@ impl Filter {
     }
 
     /// A filter with `options`. Fails with `InvalidArgumentException` for a
-    /// document, permission document, role, type or scope column outside
+    /// document column outside `/^[a-zA-Z0-9_\-][a-zA-Z0-9_.\-]*$/` (it is
+    /// quoted, so it may start with a digit or a hyphen), or a permission
+    /// document, role, type or scope column outside
     /// `/^[a-zA-Z_][a-zA-Z0-9_.\-]*$/`.
     pub fn with_options(
         roles: Vec<String>,
         permissions_table: impl Fn(&str) -> String + Send + Sync + 'static,
         options: Options,
     ) -> Result<Self> {
+        if !matches_identifier(&options.document_column, is_word_or_dash, is_name_byte) {
+            return Err(Error::new(Kind::InvalidArgument, format!("Invalid column name: {}", options.document_column)));
+        }
         for column in [
-            &options.document_column,
             &options.permission_document_column,
             &options.permission_role_column,
             &options.permission_type_column,

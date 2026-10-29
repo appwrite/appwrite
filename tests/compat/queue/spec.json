@@ -91,7 +91,7 @@
       ]
     },
     "message.set": {
-      "doc": "every setter given, then every getter",
+      "doc": "every setter given, then every getter; max_attempts (when given) is set last and reported with isLastAttempt()",
       "covers": [
         "Utopia\\Queue\\Message::setPid",
         "Utopia\\Queue\\Message::setQueue",
@@ -110,7 +110,10 @@
         "Utopia\\Queue\\Message::getReceipt",
         "Utopia\\Queue\\Message::isTerminal",
         "Utopia\\Queue\\Message::setSize",
-        "Utopia\\Queue\\Message::getSize"
+        "Utopia\\Queue\\Message::getSize",
+        "Utopia\\Queue\\Message::setMaxAttempts",
+        "Utopia\\Queue\\Message::getMaxAttempts",
+        "Utopia\\Queue\\Message::isLastAttempt"
       ]
     },
     "message.warn_if_large": {
@@ -604,6 +607,21 @@
     },
     "nats.message": {
       "doc": "fixture: one stored message: subject, bytes, Content-Type and Nats-Msg-Id"
+    },
+    "sleep": {
+      "doc": "fixture: wait `ms` milliseconds"
+    },
+    "nats.lapse": {
+      "doc": "fixture: `deliveries` (2) fetches straight off a queue's work consumer, each left to lapse for `wait_ms` (1500): how many each fetched"
+    },
+    "nats.ack_next": {
+      "doc": "fixture: the next delivery off a queue's work consumer, acknowledged: {seq, floor (once it reached seq, within 5s), first (the work stream's first sequence)}"
+    },
+    "nats.reconfigure": {
+      "doc": "fixture: update a queue's work (or dead) stream with `changes` (deny_delete, duplicate_window in nanoseconds)"
+    },
+    "nats.recreate_consumer": {
+      "doc": "fixture: delete a queue's work consumer and create it again with the same configuration"
     },
     "nats.delete": {
       "doc": "fixture: delete the queues' streams"

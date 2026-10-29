@@ -7,7 +7,8 @@ use utopia_database::{Document, Value};
 use utopia_http::Response;
 use utopia_validators::{Boolean, Text, php};
 
-use appwrite_core::database::documents::{self, Token, User};
+use appwrite_core::auth::otp_token::OtpToken;
+use appwrite_core::database::documents::{self, Attributes, Token, User};
 use appwrite_core::datetime;
 use appwrite_core::platform::{Context, Labels, Route};
 use appwrite_core::response::TokenModel;
@@ -107,6 +108,35 @@ async fn verification(ctx: &mut Context, user: &User, kind: i64, secret: &str, e
     Ok(token)
 }
 
+/// A new email verification token of the session user, stored only while
+/// the user (its row locked) still has that address unverified; otherwise
+/// `user_email_already_verified` once verified meanwhile, else
+/// `user_email_not_found`.
+async fn email_verification(
+    ctx: &mut Context,
+    user: &User,
+    kind: i64,
+    secret: &str,
+    expire: &Value,
+) -> Result<Document> {
+    let email = user.email.as_deref().unwrap_or("").to_ascii_lowercase();
+    let mut token = base::new_token(ctx, &user.id, documents::internal_id(user.sequence), kind, secret, expire)?;
+    ctx.authorization.add_role(&format!("user:{}", user.id));
+    token.set("$permissions", base::owner_permissions(&user.id))?;
+    let db = ctx.db()?;
+    let allows =
+        |current: &Document| current.boolean("emailVerification") != Some(true) && base::has_email(current, &email);
+    let Some(token) = base::create_bound_token(&db, &user.id, token, allows).await? else {
+        let current = db.authorization().skip(db.get_document("users", &user.id, Vec::new(), false)).await?;
+        if !current.is_empty() && current.boolean("emailVerification") == Some(true) {
+            return Err(Error::new(ErrorType::UserEmailAlreadyVerified));
+        }
+        return Err(Error::new(ErrorType::UserEmailNotFound));
+    };
+    db.purge_cached_document("users", &user.id).await?;
+    Ok(token)
+}
+
 /// The session user, with an email still to verify.
 fn unverified_email(ctx: &Context) -> Result<User> {
     let user = base::session_user(ctx)?;
@@ -140,7 +170,8 @@ pub async fn create_email(ctx: &mut Context) -> Result<Response> {
     let secret = utopia_auth::proofs::Token::default().token();
     let expire = datetime::add_seconds(datetime::now(), base::TOKEN_EXPIRATION_CONFIRM);
     let expire_text = datetime::format_tz(&expire);
-    let token = verification(ctx, &user, base::TOKEN_TYPE_VERIFICATION, &secret, &datetime::value(&expire)).await?;
+    let token =
+        email_verification(ctx, &user, base::TOKEN_TYPE_VERIFICATION, &secret, &datetime::value(&expire)).await?;
 
     let url = appwrite_core::template::with_query(
         &url,
@@ -169,6 +200,7 @@ pub async fn create_email(ctx: &mut Context) -> Result<Response> {
             key: "verification",
             template: "verification",
             recipient: user.email.clone().unwrap_or_default(),
+            headers: Map::new(),
             name: user.name.clone().unwrap_or_default(),
             subject: ctx.text("emails.verification.subject", None),
             preview: ctx.text("emails.verification.preview", None),
@@ -188,7 +220,8 @@ pub async fn create_email_otp(ctx: &mut Context) -> Result<Response> {
 
     let secret = utopia_auth::proofs::Code::default().code();
     let expire = datetime::add_seconds(datetime::now(), base::TOKEN_EXPIRATION_OTP);
-    let token = verification(ctx, &user, base::TOKEN_TYPE_VERIFICATION_OTP, &secret, &datetime::value(&expire)).await?;
+    let token =
+        email_verification(ctx, &user, base::TOKEN_TYPE_VERIFICATION_OTP, &secret, &datetime::value(&expire)).await?;
 
     let detected = appwrite_core::detector::detect(&ctx.user_agent("UNKNOWN"));
     let message = base::template_file(ctx, "email-otp.tpl")
@@ -220,6 +253,7 @@ pub async fn create_email_otp(ctx: &mut Context) -> Result<Response> {
             key: "otpVerification",
             template: "otp-verification",
             recipient: user.email.clone().unwrap_or_default(),
+            headers: OtpToken::headers(&secret, ctx.request.header("origin").unwrap_or_default()),
             name: user.name.clone().unwrap_or_default(),
             subject: ctx.text("emails.otpVerification.subject", None),
             preview: ctx.text("emails.otpVerification.preview", None),

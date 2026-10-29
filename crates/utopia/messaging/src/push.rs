@@ -125,12 +125,17 @@ impl Apns {
         let jwt = crate::jwt::encode(&claims, self.auth_key.as_bytes(), "ES256", Some(&self.auth_key_id))?;
         let endpoint =
             if self.sandbox { "https://api.development.push.apple.com" } else { "https://api.push.apple.com" };
-        let urls = message.to().iter().map(|token| format!("{endpoint}/3/device/{token}")).collect();
+        // Results map back by request index, not by what the URL path appears to name
+        let tokens = message.to();
+        let urls = tokens
+            .iter()
+            .map(|token| format!("{endpoint}/3/device/{}", php_std::encoding::rawurlencode(token.as_bytes())))
+            .collect();
 
         // Each result is taken as its request completes, in completion order.
         let response = Mutex::new(Response::new(TYPE));
         let on_result = |result: Reply| -> Result<(), Error> {
-            let device = String::from_utf8_lossy(php_std::path::basename(result.url.as_bytes(), b"")).into_owned();
+            let device = result.index.and_then(|i| tokens.get(i)).cloned().unwrap_or_default();
             if result.status_code == 200 {
                 let mut response = locked(&response);
                 response.increment_delivered_to();
@@ -146,7 +151,7 @@ impl Apns {
                 let error = reason.unwrap_or_else(|| {
                     text(if result.error.is_empty() || result.error == "0" { "Unknown error" } else { &result.error })
                 });
-                result_text(&error, Site { argument: 2, file: "Adapter/Push/APNS.php", line: 158 })?
+                result_text(&error, Site { argument: 2, file: "Adapter/Push/APNS.php", line: 160 })?
             };
             locked(&response).add_failure(device, error);
             Ok(())

@@ -16,7 +16,7 @@ use php_std::{Array, ArrayKey, Str, Value as Php};
 use serde_json::{Map, Value, json};
 use utopia_validators::{
     AllOf, AnyOf, ArrayList, Assoc, Boolean, Contains, Domain, Error, Float, Globstar, HexColor, Host, Hostname,
-    Identifier, Input, Integer, Ip, IpVersion, Json, Multiple, NoneOf, Nullable, Numeric, Phone, Port, Range,
+    Identifier, Input, Integer, Ip, IpVersion, Json, Label, Multiple, NoneOf, Nullable, Numeric, Phone, Port, Range,
     Restriction, Text, Type, Url, Validator, Verdict, WhiteList, Wildcard, json as js,
 };
 
@@ -385,6 +385,7 @@ fn build(spec: &Value, session: &Session) -> Result<Result<Held, Error>, Fault> 
         "FloatValidator" => Held::new(Float { loose: a.bool("loose", false)? }),
         "Globstar" => Held::new(Globstar::new(a.strings("patterns")?)),
         "HexColor" => Held::new(HexColor),
+        "Label" => Held::new(Label),
         "Host" => Held::new(Host::new(a.strings("whitelist")?)),
         "Hostname" => Held::new(Hostname::new(a.strings("allowList")?)),
         "IP" => {

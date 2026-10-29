@@ -114,3 +114,48 @@ impl Validator for Host {
         Type::String
     }
 }
+
+/// A single DNS label as RFC 1123 allows it in a host name: 1 to
+/// [`Label::MAX_LENGTH`] lowercase ASCII letters, digits and hyphens, not
+/// starting or ending with a hyphen. Dots are refused, so a value can sit
+/// between fixed parts of a host name without adding or changing a label.
+///
+/// PHP: `Utopia\Validator\Label`.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Label;
+
+impl Label {
+    /// The longest label allowed.
+    ///
+    /// PHP: `Label::MAX_LENGTH`.
+    pub const MAX_LENGTH: usize = 63;
+}
+
+impl Validator for Label {
+    /// `Value must be 1 to 63 lowercase letters, digits and hyphens, and must
+    /// not start or end with a hyphen.`
+    fn description(&self) -> String {
+        format!(
+            "Value must be 1 to {} lowercase letters, digits and hyphens, and must not start or end with a hyphen.",
+            Self::MAX_LENGTH
+        )
+    }
+
+    is_valid_via_validate!();
+
+    /// Valid for a string that is a DNS label.
+    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
+        Ok(Verdict::of(value.as_str().is_some_and(|s| {
+            !s.is_empty()
+                && s.len() <= Self::MAX_LENGTH
+                && !s.starts_with(b"-")
+                && !s.ends_with(b"-")
+                && s.iter().all(|&b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+        })))
+    }
+
+    /// Expects a string ([`Type::String`]).
+    fn kind(&self) -> Type {
+        Type::String
+    }
+}

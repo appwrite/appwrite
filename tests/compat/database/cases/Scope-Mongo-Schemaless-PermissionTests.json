@@ -20414,6 +20414,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "operator_double_decode"
@@ -20437,421 +20458,6 @@
             }
           },
           "expect": true
-        },
-        {
-          "op": "db.authorization.skip",
-          "args": {
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.create_collection",
-                  "args": {
-                    "collection": {
-                      "$document": {
-                        "$id": "link_rule_parents_u000000000112",
-                        "name": "link_rule_parents_u000000000112",
-                        "attributes": [
-                          {
-                            "$id": "name",
-                            "key": "name",
-                            "type": "string",
-                            "size": 64,
-                            "required": false,
-                            "default": null,
-                            "signed": true,
-                            "array": false,
-                            "format": null,
-                            "formatOptions": [],
-                            "filters": []
-                          }
-                        ],
-                        "indexes": [],
-                        "documentSecurity": false,
-                        "$permissions": [
-                          "create(\"any\")",
-                          "read(\"any\")"
-                        ]
-                      },
-                      "$class": "Collection"
-                    }
-                  }
-                },
-                {
-                  "op": "database.create_collection",
-                  "args": {
-                    "collection": {
-                      "$document": {
-                        "$id": "link_rule_related_u000000000113",
-                        "name": "link_rule_related_u000000000113",
-                        "attributes": [
-                          {
-                            "$id": "name",
-                            "key": "name",
-                            "type": "string",
-                            "size": 64,
-                            "required": false,
-                            "default": null,
-                            "signed": true,
-                            "array": false,
-                            "format": null,
-                            "formatOptions": [],
-                            "filters": []
-                          }
-                        ],
-                        "indexes": [],
-                        "documentSecurity": false,
-                        "$permissions": [
-                          "read(\"users\")"
-                        ]
-                      },
-                      "$class": "Collection"
-                    }
-                  }
-                },
-                {
-                  "op": "database.create_relationship",
-                  "args": {
-                    "collection": "link_rule_parents_u000000000112",
-                    "relationship": {
-                      "$value": "Relationship",
-                      "fields": {
-                        "relatedCollection": "link_rule_related_u000000000113",
-                        "type": {
-                          "$enum": "RelationshipType::OneToOne"
-                        },
-                        "twoWay": true,
-                        "key": "related",
-                        "twoWayKey": "back",
-                        "onDelete": {
-                          "$enum": "RelationshipDeleteAction::SetNull"
-                        }
-                      }
-                    }
-                  }
-                },
-                {
-                  "op": "database.create_document",
-                  "args": {
-                    "collection": "link_rule_related_u000000000113",
-                    "document": {
-                      "$document": {
-                        "$id": "stored",
-                        "name": "Stored",
-                        "$permissions": []
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          "expect": {
-            "result": null,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "$id": "link_rule_parents_u000000000112",
-                        "name": "link_rule_parents_u000000000112",
-                        "attributes": [
-                          {
-                            "$document": {
-                              "$id": "name",
-                              "key": "name",
-                              "type": "string",
-                              "size": 64,
-                              "required": false,
-                              "default": null,
-                              "signed": true,
-                              "array": false,
-                              "format": null,
-                              "formatOptions": [],
-                              "filters": []
-                            }
-                          }
-                        ],
-                        "indexes": [],
-                        "documentSecurity": false,
-                        "$permissions": [
-                          "create(\"any\")",
-                          "read(\"any\")"
-                        ],
-                        "$collection": "_metadata",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$sequence": "<uuid7>"
-                      },
-                      "$class": "Collection"
-                    },
-                    {
-                      "$document": {
-                        "$id": "link_rule_related_u000000000113",
-                        "name": "link_rule_related_u000000000113",
-                        "attributes": [
-                          {
-                            "$document": {
-                              "$id": "name",
-                              "key": "name",
-                              "type": "string",
-                              "size": 64,
-                              "required": false,
-                              "default": null,
-                              "signed": true,
-                              "array": false,
-                              "format": null,
-                              "formatOptions": [],
-                              "filters": []
-                            }
-                          }
-                        ],
-                        "indexes": [],
-                        "documentSecurity": false,
-                        "$permissions": [
-                          "read(\"users\")"
-                        ],
-                        "$collection": "_metadata",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$sequence": "<uuid7>"
-                      },
-                      "$class": "Collection"
-                    },
-                    {
-                      "$value": "Relationship",
-                      "fields": {
-                        "relatedCollection": "link_rule_related_u000000000113",
-                        "type": {
-                          "$enum": "RelationshipType::OneToOne"
-                        },
-                        "twoWay": true,
-                        "key": "related",
-                        "twoWayKey": "back",
-                        "onDelete": {
-                          "$enum": "RelationshipDeleteAction::SetNull"
-                        }
-                      }
-                    },
-                    {
-                      "$document": {
-                        "$id": "stored",
-                        "name": "Stored",
-                        "$permissions": [],
-                        "$collection": "link_rule_related_u000000000113",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$sequence": "<uuid7>"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "op": "db.authorization.with_roles",
-          "args": {
-            "roles": [
-              "any",
-              "users",
-              "user:linker"
-            ],
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.authorize_create",
-                  "args": {
-                    "collection": "link_rule_parents_u000000000112",
-                    "document": {
-                      "$document": {
-                        "$id": "parent",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "related": "stored"
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
-            }
-          }
-        },
-        {
-          "op": "db.authorization.with_roles",
-          "args": {
-            "roles": [
-              "any",
-              "users",
-              "user:linker"
-            ],
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.with_transaction",
-                  "args": {
-                    "callback": {
-                      "steps": [
-                        {
-                          "op": "database.create_documents",
-                          "args": {
-                            "collection": "link_rule_parents_u000000000112",
-                            "documents": [
-                              {
-                                "$document": {
-                                  "$id": "parent",
-                                  "$permissions": [
-                                    "read(\"any\")"
-                                  ],
-                                  "related": "stored"
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
-            }
-          }
-        },
-        {
-          "op": "db.authorization.skip",
-          "args": {
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.get_document",
-                  "args": {
-                    "collection": "link_rule_related_u000000000113",
-                    "id": "stored"
-                  },
-                  "return": true
-                }
-              ]
-            }
-          },
-          "expect": {
-            "result": {
-              "$document": {
-                "name": "Stored",
-                "$permissions": [],
-                "$collection": "link_rule_related_u000000000113",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$sequence": "<uuid7>",
-                "$id": "stored",
-                "back": null
-              }
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "name": "Stored",
-                        "$permissions": [],
-                        "$collection": "link_rule_related_u000000000113",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$sequence": "<uuid7>",
-                        "$id": "stored",
-                        "back": null
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "op": "db.authorization.skip",
-          "args": {
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.get_document",
-                  "args": {
-                    "collection": "link_rule_parents_u000000000112",
-                    "id": "parent"
-                  },
-                  "return": true
-                }
-              ]
-            }
-          },
-          "expect": {
-            "result": {
-              "$document": {}
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {}
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "op": "db.authorization.skip",
-          "args": {
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.delete_collection",
-                  "args": {
-                    "collection": "link_rule_parents_u000000000112"
-                  }
-                },
-                {
-                  "op": "database.delete_collection",
-                  "args": {
-                    "collection": "link_rule_related_u000000000113"
-                  }
-                }
-              ]
-            }
-          },
-          "expect": {
-            "result": null,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    null,
-                    null
-                  ]
-                }
-              ]
-            }
-          }
         },
         {
           "op": "db.authorization.skip",
@@ -20914,9 +20520,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": true,
+                        "documentSecurity": false,
                         "$permissions": [
-                          "create(\"users\")"
+                          "read(\"users\")"
                         ]
                       },
                       "$class": "Collection"
@@ -21023,9 +20629,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": true,
+                        "documentSecurity": false,
                         "$permissions": [
-                          "create(\"users\")"
+                          "read(\"users\")"
                         ],
                         "$collection": "_metadata",
                         "$createdAt": "<now>",
@@ -21097,7 +20703,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'read'"
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -21143,7 +20749,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'read'"
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -21501,10 +21107,7 @@
                         "$permissions": [
                           "read(\"any\")"
                         ],
-                        "related": {
-                          "$id": "stored",
-                          "name": "Changed"
-                        }
+                        "related": "stored"
                       }
                     }
                   }
@@ -21515,7 +21118,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "message": "No permissions provided for action 'read'"
             }
           }
         },
@@ -21545,10 +21148,7 @@
                                   "$permissions": [
                                     "read(\"any\")"
                                   ],
-                                  "related": {
-                                    "$id": "stored",
-                                    "name": "Changed"
-                                  }
+                                  "related": "stored"
                                 }
                               }
                             ]
@@ -21564,7 +21164,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "message": "No permissions provided for action 'read'"
             }
           }
         },
@@ -21750,10 +21350,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": false,
+                        "documentSecurity": true,
                         "$permissions": [
-                          "read(\"users\")",
-                          "update(\"users\")"
+                          "create(\"users\")"
                         ]
                       },
                       "$class": "Collection"
@@ -21860,10 +21459,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": false,
+                        "documentSecurity": true,
                         "$permissions": [
-                          "read(\"users\")",
-                          "update(\"users\")"
+                          "create(\"users\")"
                         ],
                         "$collection": "_metadata",
                         "$createdAt": "<now>",
@@ -21924,7 +21522,10 @@
                         "$permissions": [
                           "read(\"any\")"
                         ],
-                        "related": "stored"
+                        "related": {
+                          "$id": "stored",
+                          "name": "Changed"
+                        }
                       }
                     }
                   }
@@ -21933,16 +21534,9 @@
             }
           },
           "expect": {
-            "result": null,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    null
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -21972,44 +21566,26 @@
                                   "$permissions": [
                                     "read(\"any\")"
                                   ],
-                                  "related": "stored"
+                                  "related": {
+                                    "$id": "stored",
+                                    "name": "Changed"
+                                  }
                                 }
                               }
                             ]
-                          },
-                          "return": true
+                          }
                         }
                       ]
                     }
-                  },
-                  "return": true
+                  }
                 }
               ]
             }
           },
           "expect": {
-            "result": 1,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "result": 1,
-                      "calls": {
-                        "callback": [
-                          {
-                            "args": [],
-                            "steps": [
-                              1
-                            ]
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -22039,19 +21615,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "stored",
-                "back": {
-                  "$document": {
-                    "$permissions": [
-                      "read(\"any\")"
-                    ],
-                    "$collection": "link_rule_parents_u000000000118",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$sequence": "<uuid7>",
-                    "$id": "parent",
-                    "name": null
-                  }
-                }
+                "back": null
               }
             },
             "calls": {
@@ -22068,20 +21632,42 @@
                         "$updatedAt": "<now>",
                         "$sequence": "<uuid7>",
                         "$id": "stored",
-                        "back": {
-                          "$document": {
-                            "$permissions": [
-                              "read(\"any\")"
-                            ],
-                            "$collection": "link_rule_parents_u000000000118",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$sequence": "<uuid7>",
-                            "$id": "parent",
-                            "name": null
-                          }
-                        }
+                        "back": null
                       }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "link_rule_parents_u000000000118",
+                    "id": "parent"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {}
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {}
                     }
                   ]
                 }
@@ -22187,7 +21773,8 @@
                         "indexes": [],
                         "documentSecurity": false,
                         "$permissions": [
-                          "read(\"users\")"
+                          "read(\"users\")",
+                          "update(\"users\")"
                         ]
                       },
                       "$class": "Collection"
@@ -22203,7 +21790,7 @@
                       "fields": {
                         "relatedCollection": "link_rule_related_u000000000121",
                         "type": {
-                          "$enum": "RelationshipType::OneToMany"
+                          "$enum": "RelationshipType::OneToOne"
                         },
                         "twoWay": true,
                         "key": "related",
@@ -22296,7 +21883,8 @@
                         "indexes": [],
                         "documentSecurity": false,
                         "$permissions": [
-                          "read(\"users\")"
+                          "read(\"users\")",
+                          "update(\"users\")"
                         ],
                         "$collection": "_metadata",
                         "$createdAt": "<now>",
@@ -22310,7 +21898,7 @@
                       "fields": {
                         "relatedCollection": "link_rule_related_u000000000121",
                         "type": {
-                          "$enum": "RelationshipType::OneToMany"
+                          "$enum": "RelationshipType::OneToOne"
                         },
                         "twoWay": true,
                         "key": "related",
@@ -22357,9 +21945,7 @@
                         "$permissions": [
                           "read(\"any\")"
                         ],
-                        "related": [
-                          "stored"
-                        ]
+                        "related": "stored"
                       }
                     }
                   }
@@ -22368,9 +21954,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
             }
           }
         },
@@ -22400,25 +21993,44 @@
                                   "$permissions": [
                                     "read(\"any\")"
                                   ],
-                                  "related": [
-                                    "stored"
-                                  ]
+                                  "related": "stored"
                                 }
                               }
                             ]
-                          }
+                          },
+                          "return": true
                         }
                       ]
                     }
-                  }
+                  },
+                  "return": true
                 }
               ]
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": 1,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              1
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -22448,7 +22060,19 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "stored",
-                "back": null
+                "back": {
+                  "$document": {
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "$collection": "link_rule_parents_u000000000120",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$sequence": "<uuid7>",
+                    "$id": "parent",
+                    "name": null
+                  }
+                }
               }
             },
             "calls": {
@@ -22465,42 +22089,20 @@
                         "$updatedAt": "<now>",
                         "$sequence": "<uuid7>",
                         "$id": "stored",
-                        "back": null
+                        "back": {
+                          "$document": {
+                            "$permissions": [
+                              "read(\"any\")"
+                            ],
+                            "$collection": "link_rule_parents_u000000000120",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$sequence": "<uuid7>",
+                            "$id": "parent",
+                            "name": null
+                          }
+                        }
                       }
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "op": "db.authorization.skip",
-          "args": {
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.get_document",
-                  "args": {
-                    "collection": "link_rule_parents_u000000000120",
-                    "id": "parent"
-                  },
-                  "return": true
-                }
-              ]
-            }
-          },
-          "expect": {
-            "result": {
-              "$document": {}
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {}
                     }
                   ]
                 }
@@ -22604,9 +22206,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": true,
+                        "documentSecurity": false,
                         "$permissions": [
-                          "create(\"users\")"
+                          "read(\"users\")"
                         ]
                       },
                       "$class": "Collection"
@@ -22713,9 +22315,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": true,
+                        "documentSecurity": false,
                         "$permissions": [
-                          "create(\"users\")"
+                          "read(\"users\")"
                         ],
                         "$collection": "_metadata",
                         "$createdAt": "<now>",
@@ -22789,7 +22391,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'read'"
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -22837,7 +22439,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'read'"
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -23196,10 +22798,7 @@
                           "read(\"any\")"
                         ],
                         "related": [
-                          {
-                            "$id": "stored",
-                            "name": "Changed"
-                          }
+                          "stored"
                         ]
                       }
                     }
@@ -23211,7 +22810,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "message": "No permissions provided for action 'read'"
             }
           }
         },
@@ -23242,10 +22841,7 @@
                                     "read(\"any\")"
                                   ],
                                   "related": [
-                                    {
-                                      "$id": "stored",
-                                      "name": "Changed"
-                                    }
+                                    "stored"
                                   ]
                                 }
                               }
@@ -23262,7 +22858,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "message": "No permissions provided for action 'read'"
             }
           }
         },
@@ -23448,10 +23044,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": false,
+                        "documentSecurity": true,
                         "$permissions": [
-                          "read(\"users\")",
-                          "update(\"users\")"
+                          "create(\"users\")"
                         ]
                       },
                       "$class": "Collection"
@@ -23558,10 +23153,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": false,
+                        "documentSecurity": true,
                         "$permissions": [
-                          "read(\"users\")",
-                          "update(\"users\")"
+                          "create(\"users\")"
                         ],
                         "$collection": "_metadata",
                         "$createdAt": "<now>",
@@ -23623,7 +23217,10 @@
                           "read(\"any\")"
                         ],
                         "related": [
-                          "stored"
+                          {
+                            "$id": "stored",
+                            "name": "Changed"
+                          }
                         ]
                       }
                     }
@@ -23633,16 +23230,9 @@
             }
           },
           "expect": {
-            "result": null,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    null
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -23673,45 +23263,27 @@
                                     "read(\"any\")"
                                   ],
                                   "related": [
-                                    "stored"
+                                    {
+                                      "$id": "stored",
+                                      "name": "Changed"
+                                    }
                                   ]
                                 }
                               }
                             ]
-                          },
-                          "return": true
+                          }
                         }
                       ]
                     }
-                  },
-                  "return": true
+                  }
                 }
               ]
             }
           },
           "expect": {
-            "result": 1,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "result": 1,
-                      "calls": {
-                        "callback": [
-                          {
-                            "args": [],
-                            "steps": [
-                              1
-                            ]
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -23741,19 +23313,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "stored",
-                "back": {
-                  "$document": {
-                    "$permissions": [
-                      "read(\"any\")"
-                    ],
-                    "$collection": "link_rule_parents_u000000000126",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$sequence": "<uuid7>",
-                    "$id": "parent",
-                    "name": null
-                  }
-                }
+                "back": null
               }
             },
             "calls": {
@@ -23770,20 +23330,42 @@
                         "$updatedAt": "<now>",
                         "$sequence": "<uuid7>",
                         "$id": "stored",
-                        "back": {
-                          "$document": {
-                            "$permissions": [
-                              "read(\"any\")"
-                            ],
-                            "$collection": "link_rule_parents_u000000000126",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$sequence": "<uuid7>",
-                            "$id": "parent",
-                            "name": null
-                          }
-                        }
+                        "back": null
                       }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "link_rule_parents_u000000000126",
+                    "id": "parent"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {}
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {}
                     }
                   ]
                 }
@@ -23889,7 +23471,8 @@
                         "indexes": [],
                         "documentSecurity": false,
                         "$permissions": [
-                          "read(\"users\")"
+                          "read(\"users\")",
+                          "update(\"users\")"
                         ]
                       },
                       "$class": "Collection"
@@ -23905,7 +23488,7 @@
                       "fields": {
                         "relatedCollection": "link_rule_related_u000000000129",
                         "type": {
-                          "$enum": "RelationshipType::ManyToOne"
+                          "$enum": "RelationshipType::OneToMany"
                         },
                         "twoWay": true,
                         "key": "related",
@@ -23998,7 +23581,8 @@
                         "indexes": [],
                         "documentSecurity": false,
                         "$permissions": [
-                          "read(\"users\")"
+                          "read(\"users\")",
+                          "update(\"users\")"
                         ],
                         "$collection": "_metadata",
                         "$createdAt": "<now>",
@@ -24012,7 +23596,7 @@
                       "fields": {
                         "relatedCollection": "link_rule_related_u000000000129",
                         "type": {
-                          "$enum": "RelationshipType::ManyToOne"
+                          "$enum": "RelationshipType::OneToMany"
                         },
                         "twoWay": true,
                         "key": "related",
@@ -24030,8 +23614,7 @@
                         "$collection": "link_rule_related_u000000000129",
                         "$createdAt": "<now>",
                         "$updatedAt": "<now>",
-                        "$sequence": "<uuid7>",
-                        "back": []
+                        "$sequence": "<uuid7>"
                       }
                     }
                   ]
@@ -24060,7 +23643,9 @@
                         "$permissions": [
                           "read(\"any\")"
                         ],
-                        "related": "stored"
+                        "related": [
+                          "stored"
+                        ]
                       }
                     }
                   }
@@ -24069,9 +23654,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
             }
           }
         },
@@ -24101,23 +23693,46 @@
                                   "$permissions": [
                                     "read(\"any\")"
                                   ],
-                                  "related": "stored"
+                                  "related": [
+                                    "stored"
+                                  ]
                                 }
                               }
                             ]
-                          }
+                          },
+                          "return": true
                         }
                       ]
                     }
-                  }
+                  },
+                  "return": true
                 }
               ]
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": 1,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              1
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -24147,7 +23762,19 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "stored",
-                "back": []
+                "back": {
+                  "$document": {
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "$collection": "link_rule_parents_u000000000128",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$sequence": "<uuid7>",
+                    "$id": "parent",
+                    "name": null
+                  }
+                }
               }
             },
             "calls": {
@@ -24164,42 +23791,20 @@
                         "$updatedAt": "<now>",
                         "$sequence": "<uuid7>",
                         "$id": "stored",
-                        "back": []
+                        "back": {
+                          "$document": {
+                            "$permissions": [
+                              "read(\"any\")"
+                            ],
+                            "$collection": "link_rule_parents_u000000000128",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$sequence": "<uuid7>",
+                            "$id": "parent",
+                            "name": null
+                          }
+                        }
                       }
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "op": "db.authorization.skip",
-          "args": {
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.get_document",
-                  "args": {
-                    "collection": "link_rule_parents_u000000000128",
-                    "id": "parent"
-                  },
-                  "return": true
-                }
-              ]
-            }
-          },
-          "expect": {
-            "result": {
-              "$document": {}
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {}
                     }
                   ]
                 }
@@ -24303,9 +23908,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": true,
+                        "documentSecurity": false,
                         "$permissions": [
-                          "create(\"users\")"
+                          "read(\"users\")"
                         ]
                       },
                       "$class": "Collection"
@@ -24412,9 +24017,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": true,
+                        "documentSecurity": false,
                         "$permissions": [
-                          "create(\"users\")"
+                          "read(\"users\")"
                         ],
                         "$collection": "_metadata",
                         "$createdAt": "<now>",
@@ -24485,9 +24090,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'read'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
             }
           }
         },
@@ -24521,19 +24133,40 @@
                                 }
                               }
                             ]
-                          }
+                          },
+                          "return": true
                         }
                       ]
                     }
-                  }
+                  },
+                  "return": true
                 }
               ]
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'read'"
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": 1,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              1
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -24563,7 +24196,21 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "stored",
-                "back": []
+                "back": [
+                  {
+                    "$document": {
+                      "$permissions": [
+                        "read(\"any\")"
+                      ],
+                      "$collection": "link_rule_parents_u000000000130",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$sequence": "<uuid7>",
+                      "$id": "parent",
+                      "name": null
+                    }
+                  }
+                ]
               }
             },
             "calls": {
@@ -24580,42 +24227,22 @@
                         "$updatedAt": "<now>",
                         "$sequence": "<uuid7>",
                         "$id": "stored",
-                        "back": []
+                        "back": [
+                          {
+                            "$document": {
+                              "$permissions": [
+                                "read(\"any\")"
+                              ],
+                              "$collection": "link_rule_parents_u000000000130",
+                              "$createdAt": "<now>",
+                              "$updatedAt": "<now>",
+                              "$sequence": "<uuid7>",
+                              "$id": "parent",
+                              "name": null
+                            }
+                          }
+                        ]
                       }
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "op": "db.authorization.skip",
-          "args": {
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.get_document",
-                  "args": {
-                    "collection": "link_rule_parents_u000000000130",
-                    "id": "parent"
-                  },
-                  "return": true
-                }
-              ]
-            }
-          },
-          "expect": {
-            "result": {
-              "$document": {}
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {}
                     }
                   ]
                 }
@@ -24892,10 +24519,7 @@
                         "$permissions": [
                           "read(\"any\")"
                         ],
-                        "related": {
-                          "$id": "stored",
-                          "name": "Changed"
-                        }
+                        "related": "stored"
                       }
                     }
                   }
@@ -24906,7 +24530,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "message": "No permissions provided for action 'read'"
             }
           }
         },
@@ -24936,10 +24560,7 @@
                                   "$permissions": [
                                     "read(\"any\")"
                                   ],
-                                  "related": {
-                                    "$id": "stored",
-                                    "name": "Changed"
-                                  }
+                                  "related": "stored"
                                 }
                               }
                             ]
@@ -24955,7 +24576,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "message": "No permissions provided for action 'read'"
             }
           }
         },
@@ -25141,10 +24762,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": false,
+                        "documentSecurity": true,
                         "$permissions": [
-                          "read(\"users\")",
-                          "update(\"users\")"
+                          "create(\"users\")"
                         ]
                       },
                       "$class": "Collection"
@@ -25251,10 +24871,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": false,
+                        "documentSecurity": true,
                         "$permissions": [
-                          "read(\"users\")",
-                          "update(\"users\")"
+                          "create(\"users\")"
                         ],
                         "$collection": "_metadata",
                         "$createdAt": "<now>",
@@ -25316,7 +24935,10 @@
                         "$permissions": [
                           "read(\"any\")"
                         ],
-                        "related": "stored"
+                        "related": {
+                          "$id": "stored",
+                          "name": "Changed"
+                        }
                       }
                     }
                   }
@@ -25325,16 +24947,9 @@
             }
           },
           "expect": {
-            "result": null,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    null
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -25364,44 +24979,26 @@
                                   "$permissions": [
                                     "read(\"any\")"
                                   ],
-                                  "related": "stored"
+                                  "related": {
+                                    "$id": "stored",
+                                    "name": "Changed"
+                                  }
                                 }
                               }
                             ]
-                          },
-                          "return": true
+                          }
                         }
                       ]
                     }
-                  },
-                  "return": true
+                  }
                 }
               ]
             }
           },
           "expect": {
-            "result": 1,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "result": 1,
-                      "calls": {
-                        "callback": [
-                          {
-                            "args": [],
-                            "steps": [
-                              1
-                            ]
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -25431,21 +25028,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "stored",
-                "back": [
-                  {
-                    "$document": {
-                      "$permissions": [
-                        "read(\"any\")"
-                      ],
-                      "$collection": "link_rule_parents_u000000000134",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$sequence": "<uuid7>",
-                      "$id": "parent",
-                      "name": null
-                    }
-                  }
-                ]
+                "back": []
               }
             },
             "calls": {
@@ -25462,22 +25045,42 @@
                         "$updatedAt": "<now>",
                         "$sequence": "<uuid7>",
                         "$id": "stored",
-                        "back": [
-                          {
-                            "$document": {
-                              "$permissions": [
-                                "read(\"any\")"
-                              ],
-                              "$collection": "link_rule_parents_u000000000134",
-                              "$createdAt": "<now>",
-                              "$updatedAt": "<now>",
-                              "$sequence": "<uuid7>",
-                              "$id": "parent",
-                              "name": null
-                            }
-                          }
-                        ]
+                        "back": []
                       }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "link_rule_parents_u000000000134",
+                    "id": "parent"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {}
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {}
                     }
                   ]
                 }
@@ -25583,7 +25186,8 @@
                         "indexes": [],
                         "documentSecurity": false,
                         "$permissions": [
-                          "read(\"users\")"
+                          "read(\"users\")",
+                          "update(\"users\")"
                         ]
                       },
                       "$class": "Collection"
@@ -25599,7 +25203,7 @@
                       "fields": {
                         "relatedCollection": "link_rule_related_u000000000137",
                         "type": {
-                          "$enum": "RelationshipType::ManyToMany"
+                          "$enum": "RelationshipType::ManyToOne"
                         },
                         "twoWay": true,
                         "key": "related",
@@ -25692,7 +25296,8 @@
                         "indexes": [],
                         "documentSecurity": false,
                         "$permissions": [
-                          "read(\"users\")"
+                          "read(\"users\")",
+                          "update(\"users\")"
                         ],
                         "$collection": "_metadata",
                         "$createdAt": "<now>",
@@ -25706,7 +25311,7 @@
                       "fields": {
                         "relatedCollection": "link_rule_related_u000000000137",
                         "type": {
-                          "$enum": "RelationshipType::ManyToMany"
+                          "$enum": "RelationshipType::ManyToOne"
                         },
                         "twoWay": true,
                         "key": "related",
@@ -25754,9 +25359,7 @@
                         "$permissions": [
                           "read(\"any\")"
                         ],
-                        "related": [
-                          "stored"
-                        ]
+                        "related": "stored"
                       }
                     }
                   }
@@ -25765,9 +25368,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
             }
           }
         },
@@ -25797,25 +25407,44 @@
                                   "$permissions": [
                                     "read(\"any\")"
                                   ],
-                                  "related": [
-                                    "stored"
-                                  ]
+                                  "related": "stored"
                                 }
                               }
                             ]
-                          }
+                          },
+                          "return": true
                         }
                       ]
                     }
-                  }
+                  },
+                  "return": true
                 }
               ]
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": 1,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              1
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -25845,7 +25474,21 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "stored",
-                "back": []
+                "back": [
+                  {
+                    "$document": {
+                      "$permissions": [
+                        "read(\"any\")"
+                      ],
+                      "$collection": "link_rule_parents_u000000000136",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$sequence": "<uuid7>",
+                      "$id": "parent",
+                      "name": null
+                    }
+                  }
+                ]
               }
             },
             "calls": {
@@ -25862,42 +25505,22 @@
                         "$updatedAt": "<now>",
                         "$sequence": "<uuid7>",
                         "$id": "stored",
-                        "back": []
+                        "back": [
+                          {
+                            "$document": {
+                              "$permissions": [
+                                "read(\"any\")"
+                              ],
+                              "$collection": "link_rule_parents_u000000000136",
+                              "$createdAt": "<now>",
+                              "$updatedAt": "<now>",
+                              "$sequence": "<uuid7>",
+                              "$id": "parent",
+                              "name": null
+                            }
+                          }
+                        ]
                       }
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "op": "db.authorization.skip",
-          "args": {
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.get_document",
-                  "args": {
-                    "collection": "link_rule_parents_u000000000136",
-                    "id": "parent"
-                  },
-                  "return": true
-                }
-              ]
-            }
-          },
-          "expect": {
-            "result": {
-              "$document": {}
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {}
                     }
                   ]
                 }
@@ -26001,9 +25624,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": true,
+                        "documentSecurity": false,
                         "$permissions": [
-                          "create(\"users\")"
+                          "read(\"users\")"
                         ]
                       },
                       "$class": "Collection"
@@ -26110,9 +25733,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": true,
+                        "documentSecurity": false,
                         "$permissions": [
-                          "create(\"users\")"
+                          "read(\"users\")"
                         ],
                         "$collection": "_metadata",
                         "$createdAt": "<now>",
@@ -26187,7 +25810,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'read'"
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -26235,7 +25858,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'read'"
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -26595,10 +26218,7 @@
                           "read(\"any\")"
                         ],
                         "related": [
-                          {
-                            "$id": "stored",
-                            "name": "Changed"
-                          }
+                          "stored"
                         ]
                       }
                     }
@@ -26610,7 +26230,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "message": "No permissions provided for action 'read'"
             }
           }
         },
@@ -26641,10 +26261,7 @@
                                     "read(\"any\")"
                                   ],
                                   "related": [
-                                    {
-                                      "$id": "stored",
-                                      "name": "Changed"
-                                    }
+                                    "stored"
                                   ]
                                 }
                               }
@@ -26661,7 +26278,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "message": "No permissions provided for action 'read'"
             }
           }
         },
@@ -26847,10 +26464,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": false,
+                        "documentSecurity": true,
                         "$permissions": [
-                          "read(\"users\")",
-                          "update(\"users\")"
+                          "create(\"users\")"
                         ]
                       },
                       "$class": "Collection"
@@ -26957,10 +26573,9 @@
                           }
                         ],
                         "indexes": [],
-                        "documentSecurity": false,
+                        "documentSecurity": true,
                         "$permissions": [
-                          "read(\"users\")",
-                          "update(\"users\")"
+                          "create(\"users\")"
                         ],
                         "$collection": "_metadata",
                         "$createdAt": "<now>",
@@ -27023,6 +26638,434 @@
                           "read(\"any\")"
                         ],
                         "related": [
+                          {
+                            "$id": "stored",
+                            "name": "Changed"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.with_roles",
+          "args": {
+            "roles": [
+              "any",
+              "users",
+              "user:linker"
+            ],
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.with_transaction",
+                  "args": {
+                    "callback": {
+                      "steps": [
+                        {
+                          "op": "database.create_documents",
+                          "args": {
+                            "collection": "link_rule_parents_u000000000142",
+                            "documents": [
+                              {
+                                "$document": {
+                                  "$id": "parent",
+                                  "$permissions": [
+                                    "read(\"any\")"
+                                  ],
+                                  "related": [
+                                    {
+                                      "$id": "stored",
+                                      "name": "Changed"
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "link_rule_related_u000000000143",
+                    "id": "stored"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "Stored",
+                "$permissions": [],
+                "$collection": "link_rule_related_u000000000143",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "stored",
+                "back": []
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "Stored",
+                        "$permissions": [],
+                        "$collection": "link_rule_related_u000000000143",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "<uuid7>",
+                        "$id": "stored",
+                        "back": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "link_rule_parents_u000000000142",
+                    "id": "parent"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {}
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {}
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.delete_collection",
+                  "args": {
+                    "collection": "link_rule_parents_u000000000142"
+                  }
+                },
+                {
+                  "op": "database.delete_collection",
+                  "args": {
+                    "collection": "link_rule_related_u000000000143"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null,
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "link_rule_parents_u000000000144",
+                        "name": "link_rule_parents_u000000000144",
+                        "attributes": [
+                          {
+                            "$id": "name",
+                            "key": "name",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "link_rule_related_u000000000145",
+                        "name": "link_rule_related_u000000000145",
+                        "attributes": [
+                          {
+                            "$id": "name",
+                            "key": "name",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"users\")",
+                          "update(\"users\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_relationship",
+                  "args": {
+                    "collection": "link_rule_parents_u000000000144",
+                    "relationship": {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "link_rule_related_u000000000145",
+                        "type": {
+                          "$enum": "RelationshipType::ManyToMany"
+                        },
+                        "twoWay": true,
+                        "key": "related",
+                        "twoWayKey": "back",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "link_rule_related_u000000000145",
+                    "document": {
+                      "$document": {
+                        "$id": "stored",
+                        "name": "Stored",
+                        "$permissions": []
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "link_rule_parents_u000000000144",
+                        "name": "link_rule_parents_u000000000144",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "<uuid7>"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "link_rule_related_u000000000145",
+                        "name": "link_rule_related_u000000000145",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"users\")",
+                          "update(\"users\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "<uuid7>"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "link_rule_related_u000000000145",
+                        "type": {
+                          "$enum": "RelationshipType::ManyToMany"
+                        },
+                        "twoWay": true,
+                        "key": "related",
+                        "twoWayKey": "back",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "stored",
+                        "name": "Stored",
+                        "$permissions": [],
+                        "$collection": "link_rule_related_u000000000145",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "<uuid7>",
+                        "back": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.with_roles",
+          "args": {
+            "roles": [
+              "any",
+              "users",
+              "user:linker"
+            ],
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.authorize_create",
+                  "args": {
+                    "collection": "link_rule_parents_u000000000144",
+                    "document": {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": [
                           "stored"
                         ]
                       }
@@ -27064,7 +27107,7 @@
                         {
                           "op": "database.create_documents",
                           "args": {
-                            "collection": "link_rule_parents_u000000000142",
+                            "collection": "link_rule_parents_u000000000144",
                             "documents": [
                               {
                                 "$document": {
@@ -27123,7 +27166,7 @@
                 {
                   "op": "database.get_document",
                   "args": {
-                    "collection": "link_rule_related_u000000000143",
+                    "collection": "link_rule_related_u000000000145",
                     "id": "stored"
                   },
                   "return": true
@@ -27136,7 +27179,7 @@
               "$document": {
                 "name": "Stored",
                 "$permissions": [],
-                "$collection": "link_rule_related_u000000000143",
+                "$collection": "link_rule_related_u000000000145",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -27147,7 +27190,7 @@
                       "$permissions": [
                         "read(\"any\")"
                       ],
-                      "$collection": "link_rule_parents_u000000000142",
+                      "$collection": "link_rule_parents_u000000000144",
                       "$createdAt": "<now>",
                       "$updatedAt": "<now>",
                       "$sequence": "<uuid7>",
@@ -27167,7 +27210,7 @@
                       "$document": {
                         "name": "Stored",
                         "$permissions": [],
-                        "$collection": "link_rule_related_u000000000143",
+                        "$collection": "link_rule_related_u000000000145",
                         "$createdAt": "<now>",
                         "$updatedAt": "<now>",
                         "$sequence": "<uuid7>",
@@ -27178,7 +27221,7 @@
                               "$permissions": [
                                 "read(\"any\")"
                               ],
-                              "$collection": "link_rule_parents_u000000000142",
+                              "$collection": "link_rule_parents_u000000000144",
                               "$createdAt": "<now>",
                               "$updatedAt": "<now>",
                               "$sequence": "<uuid7>",
@@ -27203,13 +27246,13 @@
                 {
                   "op": "database.delete_collection",
                   "args": {
-                    "collection": "link_rule_parents_u000000000142"
+                    "collection": "link_rule_parents_u000000000144"
                   }
                 },
                 {
                   "op": "database.delete_collection",
                   "args": {
-                    "collection": "link_rule_related_u000000000143"
+                    "collection": "link_rule_related_u000000000145"
                   }
                 }
               ]

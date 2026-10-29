@@ -132,6 +132,9 @@ pub(crate) struct EngineState {
     /// The metadata the statement comments were last written for, and the
     /// comments (`$commentedMetadata`, `$comments`).
     pub comments: Option<(Vec<(String, Value)>, String)>,
+    /// `$joinLabels`: the `alias.column` label each digest label stands
+    /// for, oldest first.
+    pub join_labels: row::JoinLabels,
 }
 
 /// A SQL adapter: PostgreSQL, MariaDB, MySQL or SQLite (see the [module

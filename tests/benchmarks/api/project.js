@@ -29,6 +29,7 @@ const POLICIES = [
     { name: 'project.policies.denyCorporateEmail.update', route: 'PATCH /v1/project/policies/deny-corporate-email', path: 'deny-corporate-email', body: { enabled: false } },
     { name: 'project.policies.denyDisposableEmail.update', route: 'PATCH /v1/project/policies/deny-disposable-email', path: 'deny-disposable-email', body: { enabled: false } },
     { name: 'project.policies.denyFreeEmail.update', route: 'PATCH /v1/project/policies/deny-free-email', path: 'deny-free-email', body: { enabled: false } },
+    { name: 'project.policies.denyRealtimeGuests.update', route: 'PATCH /v1/project/policies/deny-realtime-guests', path: 'deny-realtime-guests', body: { enabled: false } },
     {
         name: 'project.policies.membershipPrivacy.update', route: 'PATCH /v1/project/policies/membership-privacy', path: 'membership-privacy',
         body: { userId: false, userEmail: false, userPhone: false, userName: false, userMFA: false, userAccessedAt: false },
@@ -293,6 +294,9 @@ const bench = define({
             run: (api, d) => api.call('PUT', `/project/variables/${pick(d.variables)}`, { value: `bench-${Math.floor(random() * 1000)}` }),
         },
         { name: 'project.variables.delete', route: 'DELETE /v1/project/variables/:variableId', run: (api) => api.call('DELETE', `/project/variables/${variable(api)}`, null, [204]) },
+    ],
+    skipped: [
+        { skipped: 'DELETE /v1/project/sessions', reason: 'signs out every user of the run\'s project, whose sessions the other scenarios use' },
     ],
 });
 

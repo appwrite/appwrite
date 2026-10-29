@@ -43,7 +43,7 @@ pub mod validators;
 pub use error::{Error, ErrorType};
 
 /// Stable API version reported in error responses (`APP_VERSION_STABLE`).
-pub const VERSION: &str = "2.5.0";
+pub const VERSION: &str = "2.6.2";
 
 /// Result alias used across Appwrite crates.
 pub type Result<T, E = Error> = std::result::Result<T, E>;

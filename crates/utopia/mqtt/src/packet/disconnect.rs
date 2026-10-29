@@ -34,8 +34,14 @@ pub struct Disconnect {
 impl Disconnect {
     /// Normal disconnection.
     pub const NORMAL: u8 = 0x00;
+    /// Protocol error.
+    pub const PROTOCOL_ERROR: u8 = 0x82;
     /// Not authorized.
     pub const NOT_AUTHORIZED: u8 = 0x87;
+    /// Message rate too high.
+    pub const MESSAGE_RATE_TOO_HIGH: u8 = 0x96;
+    /// Quota exceeded.
+    pub const QUOTA_EXCEEDED: u8 = 0x97;
 
     /// Decodes a DISCONNECT body: its reason code (normal when empty). The
     /// properties are not read.

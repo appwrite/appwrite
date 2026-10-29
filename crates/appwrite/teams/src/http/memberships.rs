@@ -12,7 +12,7 @@ use utopia_emails::{Email, EmailValidator};
 use utopia_http::Response;
 use utopia_validators::Text;
 
-use appwrite_core::database::documents::{self, Membership, User, text};
+use appwrite_core::database::documents::{self, Attributes, Membership, User, text};
 use appwrite_core::database::{LIMIT_COUNT, collections, unique_id};
 use appwrite_core::datetime;
 use appwrite_core::platform::Context;
@@ -279,6 +279,41 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     if server {
         db.purge_cached_document("users", &invitee.id).await?;
     } else {
+        // Rechecked under the lock an address change takes, so the invite is
+        // never sent to an address the user just left.
+        let moved = (!email.is_empty() || !phone.is_empty())
+            && Box::pin(db.with_transaction(|| {
+                let db = db.clone();
+                let invitee_id = invitee.id.clone();
+                let membership_id = membership.id.clone();
+                let destination = if !email.is_empty() { invitee.email.clone() } else { Some(phone.clone()) };
+                let attribute = if !email.is_empty() { "email" } else { "phone" };
+                let secret_hash = secret_hash.clone();
+                Box::pin(async move {
+                    let authorization = db.authorization();
+                    let current = authorization.skip(db.get_document("users", &invitee_id, Vec::new(), true)).await?;
+                    if current.string(attribute) == destination {
+                        return Ok(false);
+                    }
+                    // Void only the secret this request wrote, never one a newer
+                    // resend replaced it with.
+                    let stored =
+                        authorization.skip(db.get_document("memberships", &membership_id, Vec::new(), true)).await?;
+                    if stored.string_or_empty("secret") == secret_hash {
+                        let mut voided = Document::default();
+                        voided.put("secret", Value::from(""));
+                        authorization.skip(db.update_document("memberships", &membership_id, voided)).await?;
+                    }
+                    Ok(true)
+                })
+            }))
+            .await?;
+        if moved {
+            return Err(Error::with_message(
+                ErrorType::GeneralBadRequest,
+                "The invitee address changed while the invitation was being sent. Send it again.",
+            ));
+        }
         let link = template::with_query(
             &url,
             &[
@@ -299,8 +334,12 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     ctx.event_param("userId", invitee.id.clone());
     ctx.event_param("teamId", team.id.clone());
     ctx.event_param("membershipId", membership.id.clone());
-    let user_name = invitee.name.clone().unwrap_or_default();
-    let user_email = invitee.email.clone().unwrap_or_default();
+    // The privacy policy only hides other members: a member always sees
+    // their own details.
+    let own = ctx.user.as_ref().is_some_and(|u| u.sequence == invitee.sequence);
+    let privacy = if own { Privacy::ALL } else { Privacy::of(ctx) };
+    let user_name = if privacy.user_name { invitee.name.clone().unwrap_or_default() } else { String::new() };
+    let user_email = if privacy.user_email { invitee.email.clone().unwrap_or_default() } else { String::new() };
     Ok(ctx.created(&MembershipModel::new(&membership, &user_name, &user_email, &team_name, ctx.render())))
 }
 
@@ -710,8 +749,11 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     ctx.event_param("teamId", team.id.clone());
     ctx.event_param("membershipId", membership.id.clone());
     let team_name = team.name.clone().unwrap_or_default();
-    let user_name = profile.name.clone().unwrap_or_default();
-    let user_email = profile.email.clone().unwrap_or_default();
+    // The privacy policy only hides other members: a member always sees
+    // their own details.
+    let privacy = if base::is_self(ctx, &membership) { Privacy::ALL } else { Privacy::of(ctx) };
+    let user_name = if privacy.user_name { profile.name.clone().unwrap_or_default() } else { String::new() };
+    let user_email = if privacy.user_email { profile.email.clone().unwrap_or_default() } else { String::new() };
     Ok(ctx.ok(&MembershipModel::new(&membership, &user_name, &user_email, &team_name, ctx.render())))
 }
 

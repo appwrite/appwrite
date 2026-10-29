@@ -6,9 +6,9 @@ use std::collections::HashMap;
 use serde_json::Value as Json;
 use utopia_query::ast::{
     Aliased, Between, Binary, CaseWhen, Cast, Column, ColumnValidator, Conditional, Cte, Exists, Expression,
-    FilterInjector, Func, In, InList, JoinClause, Literal, OrderByItem, Parser, Placeholder, Raw, Select, Serializer,
-    Star, Subquery, SubquerySource, Table, TableRenamer, TableSource, Unary, Visitor, Walker, Window, WindowDefinition,
-    WindowSpecification,
+    FilterInjector, Func, Grammar, In, InList, JoinClause, Literal, OrderByItem, Parser, Placeholder, Raw, Select,
+    Serializer, Star, Subquery, SubquerySource, Table, TableRenamer, TableSource, Unary, Visitor, Walker, Window,
+    WindowDefinition, WindowSpecification,
 };
 use utopia_query::tokenizer::Token;
 use utopia_query::{Error, NullsPosition, OrderDirection};
@@ -93,12 +93,12 @@ pub(crate) fn construct(class: &str, a: &mut Args) -> Option<Outcome> {
                 alias: a.opt_str(1, "alias")?,
                 schema: a.opt_str(2, "schema")?,
             }),
-            "AST\\Call\\Func" => Ret::obj(Expression::from(Func {
-                name: a.str(0, "name")?,
-                arguments: expressions(a, 1, "arguments")?,
-                distinct: a.bool_or(2, "distinct", false)?,
-                filter: opt_expression(a, 3, "filter")?.map(Box::new),
-            })),
+            "AST\\Call\\Func" => Ret::obj(Expression::from(Func::new(
+                a.str(0, "name")?,
+                expressions(a, 1, "arguments")?,
+                a.bool_or(2, "distinct", false)?,
+                opt_expression(a, 3, "filter")?,
+            )?)),
             "AST\\Expression\\Aliased" => {
                 Ret::obj(Expression::from(Aliased::new(expression(a, 0, "expression")?, a.str(1, "alias")?)))
             }
@@ -117,7 +117,7 @@ pub(crate) fn construct(class: &str, a: &mut Args) -> Option<Outcome> {
                 Ret::obj(Expression::from(CaseWhen::new(expression(a, 0, "condition")?, expression(a, 1, "result")?)))
             }
             "AST\\Expression\\Cast" => {
-                Ret::obj(Expression::from(Cast::new(expression(a, 0, "expression")?, a.str(1, "type")?)))
+                Ret::obj(Expression::from(Cast::new(expression(a, 0, "expression")?, a.str(1, "type")?)?))
             }
             "AST\\Expression\\Conditional" => {
                 let whens = a
@@ -235,8 +235,17 @@ pub(crate) fn construct(class: &str, a: &mut Args) -> Option<Outcome> {
 }
 
 /// `Class::method(...)` for the area's classes.
-pub(crate) fn call_static(_class: &str, _method: &str, _args: &mut Args) -> Option<Outcome> {
-    None
+pub(crate) fn call_static(class: &str, method: &str, a: &mut Args) -> Option<Outcome> {
+    if class != "AST\\Grammar" {
+        return None;
+    }
+    Some((|| -> Outcome {
+        Ok(match method {
+            "isIdentifier" => Ret::bool(Grammar::is_identifier(&a.str(0, "value")?)),
+            "isType" => Ret::bool(Grammar::is_type(&a.str(0, "value")?)),
+            _ => return Err(fault(format!("no static method Grammar::{method}"))),
+        })
+    })())
 }
 
 /// `Class::CONSTANT` for the area's classes.

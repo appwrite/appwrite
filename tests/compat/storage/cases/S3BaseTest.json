@@ -106,25 +106,29 @@
                 "path": "${ns}/testing/kitten-1.jpg",
                 "size": 599639,
                 "modified": "<masked>",
-                "etag": "7551f343143d2e24ab4aaf4624996b6a"
+                "etag": "7551f343143d2e24ab4aaf4624996b6a",
+                "mime_type": null
               },
               {
                 "path": "${ns}/testing/kitten-1.png",
                 "size": 3038056,
                 "modified": "<masked>",
-                "etag": "03010f4f02980521a8fd6213b52ec313"
+                "etag": "03010f4f02980521a8fd6213b52ec313",
+                "mime_type": null
               },
               {
                 "path": "${ns}/testing/kitten-2.jpg",
                 "size": 131958,
                 "modified": "<masked>",
-                "etag": "81702fdeef2e55b1a22617bce4951cb5"
+                "etag": "81702fdeef2e55b1a22617bce4951cb5",
+                "mime_type": null
               },
               {
                 "path": "${ns}/testing/kitten-2.png",
                 "size": 690494,
                 "modified": "<masked>",
-                "etag": "8a9ed992b77e4b62b10e3a5c8ed72062"
+                "etag": "8a9ed992b77e4b62b10e3a5c8ed72062",
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -153,19 +157,22 @@
                 "path": "${ns}/testing/kitten-1.jpg",
                 "size": 599639,
                 "modified": "<masked>",
-                "etag": "7551f343143d2e24ab4aaf4624996b6a"
+                "etag": "7551f343143d2e24ab4aaf4624996b6a",
+                "mime_type": null
               },
               {
                 "path": "${ns}/testing/kitten-1.png",
                 "size": 3038056,
                 "modified": "<masked>",
-                "etag": "03010f4f02980521a8fd6213b52ec313"
+                "etag": "03010f4f02980521a8fd6213b52ec313",
+                "mime_type": null
               },
               {
                 "path": "${ns}/testing/kitten-2.jpg",
                 "size": 131958,
                 "modified": "<masked>",
-                "etag": "81702fdeef2e55b1a22617bce4951cb5"
+                "etag": "81702fdeef2e55b1a22617bce4951cb5",
+                "mime_type": null
               }
             ],
             "cursor": "<masked>"
@@ -196,7 +203,8 @@
                 "path": "${ns}/testing/kitten-2.png",
                 "size": 690494,
                 "modified": "<masked>",
-                "etag": "8a9ed992b77e4b62b10e3a5c8ed72062"
+                "etag": "8a9ed992b77e4b62b10e3a5c8ed72062",
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -250,7 +258,8 @@
                 "path": "${ns}/single/only.txt",
                 "size": 3,
                 "modified": "<masked>",
-                "etag": "f97c5d29941bfb1b2fdab0874906ab82"
+                "etag": "f97c5d29941bfb1b2fdab0874906ab82",
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -692,7 +701,8 @@
             "path": "${ns}/testing/kitten-1.png",
             "size": 3038056,
             "modified": "<masked>",
-            "etag": "03010f4f02980521a8fd6213b52ec313"
+            "etag": "03010f4f02980521a8fd6213b52ec313",
+            "mime_type": "image/jpeg"
           }
         }
       ]

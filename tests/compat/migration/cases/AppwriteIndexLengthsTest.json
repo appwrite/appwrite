@@ -36,6 +36,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -101,6 +111,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -287,6 +307,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -582,6 +612,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -800,6 +840,7 @@
               "channel"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "idx_reference_channel",
             "getKey": "idx_reference_channel",
@@ -818,7 +859,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -858,6 +901,7 @@
           "expect": [
             {
               "key": "idx_reference_channel",
+              "description": "",
               "status": "available",
               "databaseInternalId": "1",
               "databaseId": "shop",
@@ -904,6 +948,7 @@
           "expect": [
             {
               "key": "reference",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -929,6 +974,7 @@
             },
             {
               "key": "channel",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -980,7 +1026,8 @@
             "documentSecurity": false,
             "enabled": true,
             "name": "Orders",
-            "search": "orders Orders",
+            "description": "",
+            "search": "orders Orders ",
             "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
@@ -990,6 +1037,7 @@
             "attributes": [
               {
                 "key": "reference",
+                "description": "",
                 "databaseInternalId": "1",
                 "databaseId": "shop",
                 "collectionInternalId": "1",
@@ -1015,6 +1063,7 @@
               },
               {
                 "key": "channel",
+                "description": "",
                 "databaseInternalId": "1",
                 "databaseId": "shop",
                 "collectionInternalId": "1",
@@ -1042,6 +1091,7 @@
             "indexes": [
               {
                 "key": "idx_reference_channel",
+                "description": "",
                 "status": "available",
                 "databaseInternalId": "1",
                 "databaseId": "shop",
@@ -1102,6 +1152,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -1173,6 +1233,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1359,6 +1429,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1654,6 +1734,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -1886,6 +1976,7 @@
               "channel"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "idx_reference_channel",
             "getKey": "idx_reference_channel",
@@ -1901,7 +1992,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -1958,6 +2051,7 @@
           "expect": [
             {
               "key": "reference",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -1983,6 +2077,7 @@
             },
             {
               "key": "channel",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -2034,7 +2129,8 @@
             "documentSecurity": false,
             "enabled": true,
             "name": "Orders",
-            "search": "orders Orders",
+            "description": "",
+            "search": "orders Orders ",
             "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
@@ -2044,6 +2140,7 @@
             "attributes": [
               {
                 "key": "reference",
+                "description": "",
                 "databaseInternalId": "1",
                 "databaseId": "shop",
                 "collectionInternalId": "1",
@@ -2069,6 +2166,7 @@
               },
               {
                 "key": "channel",
+                "description": "",
                 "databaseInternalId": "1",
                 "databaseId": "shop",
                 "collectionInternalId": "1",
@@ -2127,6 +2225,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -2198,6 +2306,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -2384,6 +2502,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -2686,6 +2814,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2897,6 +3035,7 @@
               "channel"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "idx_reference_channel",
             "getKey": "idx_reference_channel",
@@ -2915,7 +3054,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -2955,6 +3096,7 @@
           "expect": [
             {
               "key": "idx_reference_channel",
+              "description": "",
               "status": "available",
               "databaseInternalId": "1",
               "databaseId": "shop",
@@ -3001,6 +3143,7 @@
           "expect": [
             {
               "key": "reference",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -3026,6 +3169,7 @@
             },
             {
               "key": "channel",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -3077,7 +3221,8 @@
             "documentSecurity": false,
             "enabled": true,
             "name": "Orders",
-            "search": "orders Orders",
+            "description": "",
+            "search": "orders Orders ",
             "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
@@ -3087,6 +3232,7 @@
             "attributes": [
               {
                 "key": "reference",
+                "description": "",
                 "databaseInternalId": "1",
                 "databaseId": "shop",
                 "collectionInternalId": "1",
@@ -3112,6 +3258,7 @@
               },
               {
                 "key": "channel",
+                "description": "",
                 "databaseInternalId": "1",
                 "databaseId": "shop",
                 "collectionInternalId": "1",
@@ -3139,6 +3286,7 @@
             "indexes": [
               {
                 "key": "idx_reference_channel",
+                "description": "",
                 "status": "available",
                 "databaseInternalId": "1",
                 "databaseId": "shop",
@@ -3199,6 +3347,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -3270,6 +3428,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -3456,6 +3624,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -3751,6 +3929,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -4054,6 +4242,7 @@
               "channel"
             ],
             "getCreatedAt": "2026-06-01 00:00:00",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "idx_reference_channel",
             "getKey": "idx_reference_channel",
@@ -4072,7 +4261,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -4112,6 +4303,7 @@
           "expect": [
             {
               "key": "idx_reference_channel",
+              "description": "",
               "status": "available",
               "databaseInternalId": "1",
               "databaseId": "shop",
@@ -4183,7 +4375,8 @@
             "documentSecurity": false,
             "enabled": true,
             "name": "Orders",
-            "search": "orders Orders",
+            "description": "",
+            "search": "orders Orders ",
             "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
@@ -4194,6 +4387,7 @@
             "indexes": [
               {
                 "key": "idx_reference_channel",
+                "description": "",
                 "status": "available",
                 "databaseInternalId": "1",
                 "databaseId": "shop",

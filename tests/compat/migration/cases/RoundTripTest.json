@@ -31,6 +31,7 @@
             }
           },
           "expect": {
+            "description": "",
             "id": "news",
             "name": "News",
             "subscribe": [
@@ -73,6 +74,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Messaging\\Topic",
             "getCreatedAt": "",
+            "getDescription": "",
             "getExpiry": 3600,
             "getGroup": "messaging",
             "getId": "news",
@@ -119,6 +121,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Messaging\\Topic",
             "getCreatedAt": "",
+            "getDescription": "",
             "getExpiry": null,
             "getGroup": "messaging",
             "getId": "news",
@@ -186,7 +189,8 @@
                 "enabled": true,
                 "maxAge": 86400
               },
-              "passkeyRpId": "example.com"
+              "passkeyRpId": "example.com",
+              "denyRealtimeGuests": true
             }
           },
           "bind": "p",
@@ -233,6 +237,7 @@
               "maxAge": 86400
             },
             "passkeyRpId": "example.com",
+            "denyRealtimeGuests": true,
             "createdAt": "",
             "updatedAt": ""
           }
@@ -274,6 +279,8 @@
             "getDenyCorporateEmail": null,
             "getDenyDisposableEmail": null,
             "getDenyFreeEmail": null,
+            "getDenyRealtimeGuests": null,
+            "getDescription": "",
             "getGroup": "auth",
             "getId": "project",
             "getMembershipsUserAccessedAt": null,
@@ -343,6 +350,8 @@
             "getDenyCorporateEmail": null,
             "getDenyDisposableEmail": null,
             "getDenyFreeEmail": null,
+            "getDenyRealtimeGuests": null,
+            "getDescription": "",
             "getGroup": "auth",
             "getId": "project",
             "getMembershipsUserAccessedAt": null,
@@ -483,6 +492,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Settings\\Environment",
             "getCreatedAt": "",
+            "getDescription": "",
             "getEnvironmentName": "Staging",
             "getGroup": "projects",
             "getId": "staging",
@@ -518,6 +528,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Settings\\Environment",
             "getCreatedAt": "",
+            "getDescription": "",
             "getEnvironmentName": "",
             "getGroup": "projects",
             "getId": "dev",

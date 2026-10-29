@@ -309,6 +309,9 @@ final class Adapter implements Base, Benchmarks
             },
             'fs.get' => fn (array $a, Session $s) => \is_file($a['path']) ? \file_get_contents($a['path']) : null,
             'fs.exists' => fn (array $a, Session $s) => \file_exists($a['path']),
+            'fs.mkdir' => fn (array $a, Session $s) => @\mkdir($a['path'], 0777, true),
+            'fs.symlink' => fn (array $a, Session $s) => @\symlink($a['target'], $a['link']),
+            'fs.is_dir' => fn (array $a, Session $s) => \is_dir($a['path']),
 
             // Sources and destinations of files.
             'json_source.new' => fn (array $a, Session $s) => $s->handle(isset($a['child'])
@@ -618,6 +621,26 @@ final class Adapter implements Base, Benchmarks
                     'postgres',
                     $a['port'] ?? $port,
                 ));
+            },
+            'nhost.database' => function (array $a, Session $s) {
+                $source = new NHost($a['subdomain'], $a['region'], $a['adminSecret'] ?? 'secret', $a['database'], $a['username'] ?? 'postgres', $a['password'] ?? 'password', ...(isset($a['port']) ? [$a['port']] : []));
+                if (isset($a['address'])) {
+                    $source->setDatabaseAddress($a['address']);
+                }
+
+                return ['host' => $source->getDatabaseHost(), 'dsn' => $source->getDatabaseDsn()];
+            },
+            'supabase.database' => function (array $a, Session $s) {
+                [$host, $port] = \explode(':', $s->service('migration-supabase-db'));
+                $source = new Supabase($s->service('migration-api') . '/p/supabase', 'test-key', $host, 'postgres', 'postgres', 'postgres', $port);
+                if (isset($a['address'])) {
+                    $source->setDatabaseAddress($a['address']);
+                }
+
+                // The fixture's address differs per runtime.
+                $fixture = fn (string $v) => \str_replace([$host, 'port=' . $port], ['{host}', 'port={port}'], $v);
+
+                return ['host' => $fixture($source->getDatabaseHost()), 'dsn' => $fixture($source->getDatabaseDsn())];
             },
             'nhost.status_code' => fn (array $a, Session $s) => (new \ReflectionMethod(NHost::class, 'statusCodeFromSqlState'))->invoke(null, $a['sqlstate']),
             'appwrite_destination.new' => function (array $a, Session $s) {

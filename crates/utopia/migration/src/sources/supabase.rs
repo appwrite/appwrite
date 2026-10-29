@@ -70,6 +70,28 @@ impl Supabase {
         Ok(Self { inner, key: key.to_owned() })
     }
 
+    /// The Postgres host the source connects to.
+    ///
+    /// PHP: `getDatabaseHost()` (the configured host).
+    pub fn database_host(&self) -> String {
+        self.inner.connection.host.clone()
+    }
+
+    /// Connects to the database host on `address` (libpq `hostaddr`).
+    ///
+    /// PHP: `setDatabaseAddress()` (inherited; the constructor has already connected).
+    pub fn set_database_address(&mut self, address: &str) -> &mut Self {
+        self.inner.set_database_address(address);
+        self
+    }
+
+    /// The DSN of the configured host.
+    ///
+    /// PHP: `getDatabaseDsn()` (inherited).
+    pub fn database_dsn(&self) -> String {
+        self.inner.dsn_for(&self.database_host())
+    }
+
     /// The API key.
     pub fn key(&self) -> &str {
         &self.key

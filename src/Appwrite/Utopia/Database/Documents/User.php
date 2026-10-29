@@ -2,6 +2,10 @@
 
 namespace Appwrite\Utopia\Database\Documents;
 
+use Appwrite\Auth\MFA\Type\TOTP;
+use Appwrite\Deletes\Targets;
+use Appwrite\Hooks\Hooks;
+use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -136,11 +140,15 @@ class User extends Document
      *
      * @return bool|string
      */
-    public function sessionVerify(string $secret, Token $proofForToken)
+    public function sessionVerify(string $secret, Token $proofForToken, ?string $invalidatedAt)
     {
         $sessions = $this->getAttribute('sessions', []);
 
         foreach ($sessions as $session) {
+            if ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt) {
+                continue;
+            }
+
             if (
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
@@ -161,11 +169,15 @@ class User extends Document
      * Used by JWT authentication, which binds to a session ID rather than a
      * session secret.
      */
-    public function sessionActive(string $sessionId): bool
+    public function sessionActive(string $sessionId, ?string $invalidatedAt): bool
     {
         $session = $this->getSession($sessionId);
 
         if ($session === null) {
+            return false;
+        }
+
+        if ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt) {
             return false;
         }
 
@@ -189,6 +201,61 @@ class User extends Document
         }
 
         return (new \DateTime($session->getAttribute('expire')))->getTimestamp();
+    }
+
+    /**
+     * Number of factors a session of the user must hold: two once MFA is enabled and the
+     * user has a verified second factor, otherwise one.
+     */
+    public function getMinimumFactors(): int
+    {
+        $hasMoreFactors = $this->getAttribute('emailVerification', false)
+            || $this->getAttribute('phoneVerification', false)
+            || (TOTP::getAuthenticatorFromUser($this)?->getAttribute('verified') ?? false);
+
+        return ($this->getAttribute('mfa', false) && $hasMoreFactors) ? 2 : 1;
+    }
+
+    /**
+     * Check that a session of the user holds every factor its MFA settings require.
+     */
+    public function sessionFactorsMet(string $sessionId): bool
+    {
+        $session = $this->getSession($sessionId);
+
+        return $session !== null && \count($session->getAttribute('factors', [])) >= $this->getMinimumFactors();
+    }
+
+    /**
+     * Check that a session of the user completed an MFA challenge within the recent window.
+     */
+    public function sessionChallengeRecent(string $sessionId): bool
+    {
+        $verifiedAt = $this->getSession($sessionId)?->getAttribute('mfaUpdatedAt');
+
+        if (empty($verifiedAt)) {
+            return false;
+        }
+
+        $maxAllowedDate = DateTime::addSeconds(new \DateTime($verifiedAt), MFA_RECENT_DURATION);
+
+        return DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz(DateTime::now());
+    }
+
+    /**
+     * Roles of the user's confirmed membership of a team, or none when it is not a member.
+     *
+     * @return array<string>
+     */
+    public function getMembershipRoles(string $teamId): array
+    {
+        foreach ($this->getAttribute('memberships', []) as $membership) {
+            if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
+                return $membership->getAttribute('roles', []);
+            }
+        }
+
+        return [];
     }
 
     private function getSession(string $sessionId): ?Document
@@ -216,5 +283,84 @@ class User extends Document
         $dbForProject->deleteDocuments('challenges', [
             Query::equal('userInternalId', [$sequence]),
         ]);
+    }
+
+    /**
+     * Revoke every way into the account other than the address just proven: password,
+     * sessions, tokens, MFA factors, passkeys, identities, account keys, the other
+     * address and every target not on the proven channel.
+     *
+     * Used when the owner of an email or phone claims an account that was
+     * registered with it but never verified, so nobody else keeps access.
+     * `$proven` is the channel of the proven address, MESSAGE_TYPE_EMAIL or MESSAGE_TYPE_SMS.
+     * Persists the revocation in one transaction and mirrors it on `$user`.
+     */
+    public static function revokeCredentials(Database $dbForProject, Document $user, Document $project, string $proven = MESSAGE_TYPE_EMAIL): void
+    {
+        $sequence = $user->getSequence();
+        if ($sequence === '' || $sequence === null || $user->getAttribute('status') === false) {
+            return;
+        }
+
+        $hash = new Argon2();
+        $attributes = [
+            'password' => null,
+            'hash' => $hash->getName(),
+            'hashOptions' => $hash->getOptions(),
+            'passwordHistory' => [],
+            'passwordUpdate' => null,
+            'passwordPwned' => null,
+            'mfa' => false,
+            'mfaRecoveryCodes' => [],
+        ];
+
+        // The address that was not proven belongs to whoever registered the account
+        $attributes += $proven === MESSAGE_TYPE_SMS
+            ? [
+                'email' => null,
+                'emailVerification' => false,
+                'emailCanonical' => null,
+                'emailIsCanonical' => null,
+                'emailIsCorporate' => null,
+                'emailIsDisposable' => null,
+                'emailIsFree' => null,
+            ]
+            : [
+                'phone' => null,
+                'phoneVerification' => false,
+            ];
+
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes, $proven) {
+            foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
+                $dbForProject->deleteDocuments($collection, [
+                    Query::equal('userInternalId', [$sequence]),
+                ]);
+            }
+
+            if ($project->getId() === 'console') {
+                $dbForProject->deleteDocuments('keys', [
+                    Query::equal('resourceType', ['users']),
+                    Query::equal('resourceInternalId', [$sequence]),
+                ]);
+            }
+
+            Targets::delete($dbForProject, Query::and([
+                Query::equal('userInternalId', [$sequence]),
+                Query::notEqual('providerType', $proven),
+            ]));
+
+            // Editions revoke the credentials they keep in their own collections
+            (new Hooks())->trigger('credentialsRevoked', [$dbForProject, $user, $project]);
+
+            $dbForProject->updateDocument('users', $user->getId(), new Document($attributes));
+        });
+
+        $user
+            ->setAttributes($attributes)
+            ->setAttribute('sessions', [])
+            ->setAttribute('tokens', [])
+            ->setAttribute('challenges', [])
+            ->setAttribute('authenticators', [])
+            ->setAttribute('targets', []);
     }
 }

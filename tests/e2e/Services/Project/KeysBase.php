@@ -171,4 +171,82 @@ trait KeysBase
 
         $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $keyId, $projectHeaders);
     }
+
+    /**
+     * The project-scoped routes hold keys to their caller's grant like the
+     * organization routes do; see the organization suite for the full matrix.
+     */
+    public function testKeysStayWithinTheirCallersGrant(): void
+    {
+        $projectHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $consoleHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-mode' => 'admin',
+        ];
+
+        $writer = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
+            'keyId' => Id::unique(),
+            'name' => 'Narrow Writer',
+            'scopes' => ['keys.read', 'keys.write', 'users.read'],
+        ]);
+        $this->assertSame(201, $writer['headers']['status-code']);
+
+        $asWriter = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $writer['body']['secret'],
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $ephemeral = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $asWriter, [
+            'scopes' => ['users.read'],
+            'duration' => 60,
+        ]);
+        $this->assertSame(201, $ephemeral['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $ephemeral = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $asWriter, [
+            'scopes' => ['users.read', 'users.write'],
+            'duration' => 60,
+        ]);
+        $this->assertSame(403, $ephemeral['headers']['status-code']);
+        $this->assertSame('key_creation_denied', $ephemeral['body']['type']);
+
+        // The writer cannot widen itself
+        $widened = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $writer['body']['$id'], $asWriter, [
+            'name' => 'Narrow Writer',
+            'scopes' => ['keys.read', 'keys.write', 'users.read', 'users.write'],
+        ]);
+        $this->assertSame(403, $widened['headers']['status-code']);
+        $this->assertSame('key_creation_denied', $widened['body']['type']);
+
+        // A JWT cannot create keys at all
+        $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', $consoleHeaders);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+
+        $asJWT = $consoleHeaders;
+        unset($asJWT['cookie']);
+        $asJWT['x-appwrite-jwt'] = $jwt['body']['jwt'];
+
+        $fromJWT = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $asJWT, [
+            'scopes' => ['users.read'],
+            'duration' => 60,
+        ]);
+        $this->assertSame(403, $fromJWT['headers']['status-code']);
+        $this->assertSame('key_creation_denied', $fromJWT['body']['type']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $writer['body']['$id'], $projectHeaders);
+    }
 }

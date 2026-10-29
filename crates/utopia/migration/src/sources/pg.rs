@@ -80,14 +80,40 @@ impl Pg {
     ///
     /// PHP: `new \PDO('pgsql:host=...;port=...;dbname=...', $user, $password)`.
     pub async fn connect(host: &str, port: &str, database: &str, user: &str, password: &str) -> Result<Pg> {
+        Self::connect_at(host, None, port, database, user, password).await
+    }
+
+    /// Connects to `host` on `address` when given (libpq `hostaddr`: the
+    /// address is not resolved from the host).
+    ///
+    /// PHP: `new \PDO('pgsql:host=...;hostaddr=...;port=...;dbname=...', $user, $password)`.
+    pub async fn connect_at(
+        host: &str,
+        address: Option<&str>,
+        port: &str,
+        database: &str,
+        user: &str,
+        password: &str,
+    ) -> Result<Pg> {
         let mut config = tokio_postgres::Config::new();
         config.host(host).dbname(database).user(user).password(password);
+        if let Some(address) = address {
+            let ip = address.parse::<std::net::IpAddr>().map_err(|_| Error::Pdo {
+                message: format!("SQLSTATE[08006] [7] could not parse network address \"{address}\""),
+                sqlstate: "08006".to_owned(),
+            })?;
+            config.hostaddr(ip);
+        }
         if let Ok(p) = port.parse::<u16>() {
             config.port(p);
         }
+        let server = match address {
+            Some(address) if address != host => format!("\"{host}\" ({address})"),
+            _ => format!("\"{host}\""),
+        };
         let (client, connection) = config.connect(NoTls).await.map_err(|e| Error::Pdo {
             message: format!(
-                "SQLSTATE[08006] [7] connection to server at \"{host}\", port {port} failed: {}",
+                "SQLSTATE[08006] [7] connection to server at {server}, port {port} failed: {}",
                 libpq_reason(&e)
             ),
             sqlstate: "08006".to_owned(),

@@ -10,6 +10,9 @@ use crate::error::{Error, ErrorType};
 use crate::platform::context::Context;
 use crate::{Result, datetime};
 
+/// `APP_LIMIT_UPLOAD_CHUNK_SIZE`.
+const UPLOAD_CHUNK_SIZE: i64 = 5 * 1024 * 1024;
+
 /// The `api` group's abuse hook: counts the request against each of the
 /// route's `abuse-key`s, reports the closest limit in `X-RateLimit-*`, and
 /// refuses it when a limit is exceeded. Keys and privileged users, and every
@@ -59,26 +62,29 @@ pub(in crate::platform) async fn abuse(ctx: &mut Context) -> Result<()> {
 }
 
 /// The abuse key parameters: the project, the user, the client and the
-/// request's non-empty parameters (`{param-<name>}`).
+/// request's and the route's non-empty parameters (`{param-<name>}`).
 fn abuse_params(ctx: &Context) -> Vec<(String, String)> {
+    // `getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE)`: the chunk the
+    // range starts in, keyed on the server's chunk size (a size bound that
+    // saturates is no valid range).
     let chunk = match ctx.request.content_range() {
-        Some(r) => {
-            let end = r.end.unwrap_or(0);
-            let span = end + 1 - r.start;
-            if span == 0 { 0 } else { r.start / span }
-        }
-        None => 0,
+        Some(r) if r.size.is_none_or(|size| size < i64::MAX) => r.start / UPLOAD_CHUNK_SIZE,
+        _ => 0,
     };
     let mut params = vec![
         ("{projectId}".to_owned(), ctx.project.id.clone()),
         ("{userId}".to_owned(), ctx.user.as_ref().map(|u| u.id.clone()).unwrap_or_default()),
         ("{userAgent}".to_owned(), ctx.request.header_or_empty("user-agent").to_owned()),
         ("{ip}".to_owned(), ctx.ip.clone()),
-        ("{url}".to_owned(), format!("{}{}", ctx.hostname, ctx.route.path)),
+        ("{url}".to_owned(), ctx.route.path.to_owned()),
         ("{method}".to_owned(), ctx.request.method().to_string()),
         ("{chunkId}".to_owned(), chunk.to_string()),
     ];
-    for (name, value) in ctx.request.params() {
+    // `array_merge($request->getParams(), $pathParams)`: path params are not
+    // part of the request input, and the query must not override them.
+    let request = ctx.request.params().iter().filter(|(name, _)| !ctx.path_params.iter().any(|(k, _)| k == *name));
+    let path = ctx.path_params.iter().map(|(k, v)| (k, v));
+    for (name, value) in request.chain(path) {
         if php_std::value::empty(value) {
             continue;
         }
@@ -88,6 +94,8 @@ fn abuse_params(ctx: &Context) -> Vec<(String, String)> {
             Value::Number(n) => n.to_string(),
             other => crate::json::to_string(other),
         };
+        // Sign in matches emails case-insensitively, so the limit must too.
+        let text = if name == "email" { text.to_ascii_lowercase() } else { text };
         params.push((format!("{{param-{name}}}"), text));
     }
     params

@@ -25,6 +25,10 @@ pub enum Error {
     /// the centre or with a focal point. PHP: `DivisionByZeroError`.
     #[error("Division by zero")]
     DivisionByZero,
+    /// Data whose signature is not one of the [`Format`](crate::Format)s.
+    /// PHP: `Utopia\Image\Exception\UnsupportedFormatException`.
+    #[error("Unsupported image format")]
+    UnsupportedFormat,
 }
 
 impl Error {
@@ -45,6 +49,7 @@ impl Error {
             Error::InvalidArgument(_) => "InvalidArgumentException",
             Error::Imagick(_) => "ImagickException",
             Error::DivisionByZero => "DivisionByZeroError",
+            Error::UnsupportedFormat => "Utopia\\Image\\Exception\\UnsupportedFormatException",
         }
     }
 

@@ -92,6 +92,21 @@
       }
     },
     {
+      "name": "every runtime failure is one category: unconfirmed",
+      "op": "exception.new",
+      "args": {
+        "class": "unconfirmed",
+        "message": "because"
+      },
+      "expect": {
+        "class": "Utopia\\SMTP\\Exception\\UnconfirmedException",
+        "message": "because",
+        "code": 0,
+        "smtp": true,
+        "connection": false
+      }
+    },
+    {
       "name": "a transaction failure is one too",
       "op": "exception.new",
       "args": {

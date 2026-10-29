@@ -893,6 +893,33 @@
     "fake.tls_options": {
       "doc": "the connection's TLS options (Connection::tlsOptions(), private, by reflection), keys sorted"
     },
+    "fake.connect_passes": {
+      "doc": "Connection::connect(options) over a new fake transport per attempt, the i-th from transports[i] (the last repeated; refuse makes connect() throw): {connected, error {class, message, previous}, then connects_between, or hosts, open (each transport's isConnected) and connects; published?, gaps_at_least?, starts_within?, returned_within?}",
+      "covers": [
+        "Utopia\\NATS\\Connection::connect",
+        "Utopia\\NATS\\ConnectionOptions::__construct"
+      ]
+    },
+    "fake.discovered": {
+      "doc": "Connection::connect() over fake transports advertising connect_urls [peer:4222] and refusing host 'other'; the first server then announces lame duck mode: {first, peer, scheme} (the host and scheme the discovered peer is dialled with)"
+    },
+    "conn.connect_counted": {
+      "doc": "Connection::connect(options) to the service with a factory counting the TlsTransport(tls) it builds: {error {class, message, previous {class, contains}}, connects}",
+      "covers": [
+        "Utopia\\NATS\\Connection::connect",
+        "Utopia\\NATS\\Transport\\TlsTransport::connect"
+      ]
+    },
+    "conn.connect_failure": {
+      "doc": "Connection::connect(options) over the default transports, expected to fail: {error: connectError(e, contains)}"
+    },
+    "transport.tls_failure": {
+      "doc": "TlsFailureTest against a loopback listener: upgrade (TcpTransport, the peer answers the ClientHello with HTTP, closed first when close_peer) or refused (TlsTransport to a port nothing listens on): {error {class, message (upgrade only: the refusal carries the OS errno)}, connected, peer_eof?}",
+      "covers": [
+        "Utopia\\NATS\\Transport\\TcpTransport::upgradeTls",
+        "Utopia\\NATS\\Transport\\TlsTransport::connect"
+      ]
+    },
     "conn.connect": {
       "doc": "Connection::connect(options) to the service (or url) given",
       "covers": [
@@ -4427,11 +4454,6 @@
       "symbol": "Utopia\\NATS\\Connection::requestBatch",
       "php": "Requests that are not Request objects, or not a list, and an infinite or NaN timeout raise InvalidArgumentException; a callback that reads the connection (request, processMessage, requestMany, wait, flush, tick, drain, requestBatch) while the batch collects raises LogicException.",
       "reason": "request_batch takes &[Request] and an Option<Duration>, so the first are unrepresentable (a zero timeout still raises InvalidArgument, as in PHP), and the reply callback borrows nothing of the connection: the borrow checker rejects a nested read at compile time rather than at run time."
-    },
-    {
-      "symbol": "Utopia\\NATS\\Transport\\TcpTransport::upgradeTls",
-      "php": "After a failed STARTTLS handshake the stream stays open in plain text, holding whatever the TLS attempt left unread.",
-      "reason": "tokio-rustls consumes the TCP stream for the handshake and drops it when the handshake fails, so the Rust transport is closed afterwards (writes and reads fail with \"Not connected\"). Both raise \"Failed to upgrade connection to TLS\"; the case stops there."
     },
     {
       "symbol": "Utopia\\NATS\\ConnectionOptions::__construct",

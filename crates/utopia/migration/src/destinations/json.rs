@@ -99,6 +99,9 @@ pub struct Json {
     allowed_columns: Vec<String>,
     json_started: bool,
     json_has_items: bool,
+    /// Set once `shutdown()` starts writing to the device, cleared once the
+    /// caller takes the file over (PHP: `$uploaded`).
+    uploaded: bool,
 }
 
 impl std::fmt::Debug for Json {
@@ -146,6 +149,7 @@ impl Json {
             allowed_columns,
             json_started: false,
             json_has_items: false,
+            uploaded: false,
         })
     }
 
@@ -263,6 +267,27 @@ impl Destination for Json {
         callback(resources)
     }
 
+    /// The caller has taken the file over, so a later failure must leave it in place.
+    async fn success(&mut self) -> Result<()> {
+        self.uploaded = false;
+        Ok(())
+    }
+
+    /// `shutdown()` uploads the file before the caller learns whether the
+    /// export failed, so a failed export removes the file it uploaded along
+    /// with the local working copy. A file this run did not upload, or
+    /// already handed over, belongs to someone else.
+    async fn error(&mut self) -> Result<()> {
+        let path = self.device.path(&format!("{}/{}.json", self.directory, self.output_file));
+        if self.uploaded && self.device.exists(&path).await? {
+            self.device.delete(&path, false).await?;
+            self.uploaded = false;
+        }
+        let root = utopia_storage::Device::root(&self.local).to_owned();
+        utopia_storage::Device::delete(&self.local, &root, true).await?;
+        Ok(())
+    }
+
     async fn shutdown(&mut self) -> Result<()> {
         let filename = format!("{}.json", self.output_file);
         let source_path = utopia_storage::Device::path(&self.local, &filename);
@@ -275,6 +300,7 @@ impl Destination for Json {
             self.json_started = true;
         }
         append(&source_path, b"]").await?;
+        self.uploaded = true;
         let result = async {
             let copied = utopia_storage::Device::copy(
                 &self.local,

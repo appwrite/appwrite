@@ -10,11 +10,12 @@ use indexmap::IndexMap;
 use php_std::encoding::{QueryEncoding, http_build_query};
 use php_std::json::{Flags, encode};
 use php_std::{Array, Value};
-use utopia_client::{Anywhere, Client, Http, Request};
+use utopia_async::sync::Notify;
+use utopia_client::{Adapter, Anywhere, Client, Http, Request};
 
 use crate::error::{Error, Result};
 use crate::exception::Exception;
-use crate::target::{Body, Destinations, Shared, Target};
+use crate::target::{Body, Destinations, MAX_RESPONSE_SIZE, Shared, Target};
 
 /// One part of a multipart body: a field, or a file with its MIME type and
 /// file name (PHP: a `CURLFile`).
@@ -147,17 +148,6 @@ pub async fn send(
     let started = Instant::now();
     // Milliseconds after `started` when the last byte arrived.
     let progress = Arc::new(AtomicU64::new(0));
-    let mut received = Vec::new();
-    let mut sink = {
-        let progress = progress.clone();
-        let received = &mut received;
-        move |chunk: &[u8]| {
-            if !chunk.is_empty() {
-                progress.store(started.elapsed().as_millis() as u64, Ordering::Relaxed);
-            }
-            received.extend_from_slice(chunk);
-        }
-    };
     let window = Duration::from_secs(stall.max(0) as u64);
     let stalled = async {
         loop {
@@ -168,8 +158,12 @@ pub async fn send(
             utopia_async::sleep(window - idle).await;
         }
     };
-    let response = utopia_async::select! {
-        response = client.stream(request, &mut sink) => response.map_err(transport)?,
+    let fetched = capped(&client, request, |_| progress.store(started.elapsed().as_millis() as u64, Ordering::Relaxed));
+    let (response, received) = utopia_async::select! {
+        fetched = fetched => match fetched.map_err(transport)? {
+            Some(fetched) => fetched,
+            None => return Err(Error::exception(MAX_RESPONSE_SIZE_EXCEEDED, Exception::CODE_INTERNAL)),
+        },
         () = stalled, if stall > 0 => {
             return Err(Error::exception(
                 format!("Operation too slow. Less than 1 bytes/sec transferred the last {stall} seconds"),
@@ -182,7 +176,48 @@ pub async fn send(
         let values: Vec<&str> = values.iter().map(|v| v.trim()).collect();
         out.insert(name.trim().to_ascii_lowercase(), values.join(", "));
     }
-    Ok((response.status(), out, Bytes::from(received)))
+    Ok((response.status(), out, received))
+}
+
+/// cURL's error for a body past `CURLOPT_MAXFILESIZE_LARGE`
+/// ([`MAX_RESPONSE_SIZE`]); its code is `CURLE_FILESIZE_EXCEEDED`.
+pub const MAX_RESPONSE_SIZE_EXCEEDED: &str = "Would have exceeded max file size";
+
+/// cURL's `CURLE_FILESIZE_EXCEEDED`.
+pub const CURLE_FILESIZE_EXCEEDED: i64 = 63;
+
+/// Streams a response, its body decoded, and abandons it once the body
+/// decodes past [`MAX_RESPONSE_SIZE`] (`None`), as cURL does with
+/// `CURLOPT_MAXFILESIZE_LARGE`. `on_chunk` sees the size of every chunk.
+pub(crate) async fn capped<A: Adapter>(
+    client: &Client<A>,
+    request: Request,
+    mut on_chunk: impl FnMut(usize) + Send,
+) -> std::result::Result<Option<(utopia_client::Response, Bytes)>, utopia_client::Error> {
+    let exceeded = Notify::new();
+    let mut received = Vec::new();
+    let mut over = false;
+    let mut sink = |chunk: &[u8]| {
+        if chunk.is_empty() || over {
+            return;
+        }
+        on_chunk(chunk.len());
+        if received.len() + chunk.len() > MAX_RESPONSE_SIZE {
+            over = true;
+            received = Vec::new();
+            exceeded.notify_one();
+            return;
+        }
+        received.extend_from_slice(chunk);
+    };
+    let response = utopia_async::select! {
+        response = client.stream(request, &mut sink) => response?,
+        () = exceeded.notified() => return Ok(None),
+    };
+    if over {
+        return Ok(None);
+    }
+    Ok(Some((response, Bytes::from(received))))
 }
 
 fn transport(e: utopia_client::Error) -> Error {

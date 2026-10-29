@@ -57,9 +57,11 @@ fn serve() {
     let runtime = utopia_async::Builder::multi_thread()
         .threads(workers)
         .blocking_threads((workers * 4).max(8))
-        // A database write nests deeply (a transaction, its bulk deletes,
-        // their callbacks' writes, each through the hooks): 2 MiB overflows
-        // in debug builds on `DELETE /v1/account`.
+        // Headroom for unoptimized builds, whose futures keep every
+        // temporary on the stack. Transactions box their callbacks' futures
+        // (`Database::with_transaction`), so the deepest routes
+        // (`DELETE /v1/account`, an invite accepted with an account claim)
+        // fit in the default 2 MiB even there.
         .stack_size(8 * 1024 * 1024)
         .build()
         .expect("async runtime");

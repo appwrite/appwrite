@@ -136,13 +136,16 @@ pub fn protocol(ctx: &Context) -> String {
     "http".to_owned()
 }
 
-/// `$request->getPort()`: `X-Forwarded-Port`, else the port of the host
-/// (`''` when it names none).
+/// `$request->getPort()`: a trusted proxy's `X-Forwarded-Port` when it is a
+/// number, else the port of the host it forwarded or of `Host` (`''` when it
+/// names none).
 pub fn port(ctx: &Context) -> String {
-    if let Some(port) = ctx.request.header("x-forwarded-port") {
-        return port.to_owned();
+    if let Some(port) = ctx.forwarded("x-forwarded-port")
+        && port.bytes().all(|b| b.is_ascii_digit())
+    {
+        return port;
     }
-    let host = ctx.request.header("x-forwarded-host").unwrap_or_else(|| ctx.request.header_or_empty("host"));
+    let host = ctx.forwarded("x-forwarded-host").unwrap_or_else(|| ctx.request.header_line_or("host", ""));
     let url = format!("{}://{host}", protocol(ctx));
     php_std::url::parse_url(url.as_bytes()).and_then(|u| u.port()).map(|p| p.to_string()).unwrap_or_default()
 }
@@ -398,6 +401,12 @@ pub fn set_default_hash(user: &mut Document) {
 /// duplicate is `user_already_exists`.
 pub async fn create_user(ctx: &mut Context, user: Document) -> Result<User> {
     let user = over_signed_in(ctx, user).await?;
+    insert_user(ctx, user).await
+}
+
+/// `createDocument('users', $user)` of a new document, with authorization
+/// skipped; a duplicate is `user_already_exists`.
+pub async fn insert_user(ctx: &mut Context, user: Document) -> Result<User> {
     let db = ctx.db()?;
     let skipped = skipped(&[]);
     let created =
@@ -864,6 +873,8 @@ pub struct Mail {
     pub smtp: Json,
     pub variables: Map<String, Json>,
     pub custom_mail_options: Json,
+    /// Extra mail headers (the `OTP-Token` of a code sent by email).
+    pub headers: Map<String, Json>,
 }
 
 impl Mail {
@@ -885,7 +896,7 @@ impl Mail {
             "customMailOptions": self.custom_mail_options,
             "events": [],
             "platform": ctx.state.config.platform,
-            "headers": [],
+            "headers": if self.headers.is_empty() { Json::Array(Vec::new()) } else { Json::Object(self.headers) },
         });
         let queue = ctx.state.config.queue_mails.clone();
         ctx.events.queued.push((queue, message));
@@ -1019,6 +1030,7 @@ pub async fn session_alert(ctx: &mut Context, user: &User, session: &Session) ->
     };
     Mail {
         recipient: email,
+        headers: Map::new(),
         subject,
         template: "session-alert",
         body_template: format!(

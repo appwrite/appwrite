@@ -39,6 +39,7 @@
 //! |---|---|
 //! | `Image` | [`Image`] |
 //! | `new Image($data)` | [`Image::new`] |
+//! | `Format` (`detect()`, `->value`) | [`Format`] ([`Format::detect`], [`Format::value`]) |
 //! | `Image::GRAVITY_*`, `getGravityTypes()` | [`Gravity`], [`Gravity::ALL`] |
 //! | `crop($width, $height, $gravity, $x, $y)` | [`Image::crop`] with [`FocalPoint`] |
 //! | `setBorder($width, $color)` | [`Image::set_border`] |
@@ -51,7 +52,7 @@
 //! | `getSizeByFixedHeight()`, `getSizeByFixedWidth()` | [`Image::size_by_fixed_height`], [`Image::size_by_fixed_width`] |
 //! | `Image::setResourceLimit($type, $value)` | [`set_resource_limit`] with [`Resource`] |
 //! | colour strings (`ImagickPixel`) | [`Color`] |
-//! | `ImagickException`, `InvalidArgumentException`, `Exception`, `DivisionByZeroError` | [`Error`] |
+//! | `ImagickException`, `InvalidArgumentException`, `Exception`, `DivisionByZeroError`, `Exception\UnsupportedFormatException` | [`Error`] ([`Error::UnsupportedFormat`]) |
 
 #![warn(missing_docs)]
 
@@ -59,6 +60,7 @@ mod color;
 mod decode;
 mod encode;
 mod error;
+mod format;
 mod frame;
 mod image;
 mod options;
@@ -66,6 +68,7 @@ mod transform;
 
 pub use crate::color::Color;
 pub use crate::error::{Error, Result};
+pub use crate::format::Format;
 pub use crate::image::Image;
 pub use crate::options::{FocalPoint, Gravity, MAX_DIMENSION, OutputFormat, Resource, set_resource_limit};
 

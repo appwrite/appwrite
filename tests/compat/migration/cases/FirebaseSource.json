@@ -767,6 +767,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\User",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDisabled": false,
             "getEmail": "one@example.test",
             "getEmailVerified": true,
@@ -824,6 +825,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\User",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDisabled": true,
             "getEmail": null,
             "getEmailVerified": false,
@@ -874,6 +876,7 @@
             "getDatabase": "",
             "getDatabaseName": "default",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "default",
@@ -913,6 +916,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "default",
               "name": "default",
               "createdAt": "",
@@ -922,6 +926,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "people",
@@ -981,6 +986,7 @@
                 2
               ]
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "annsmith",
             "getMessage": "",
@@ -990,7 +996,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "default",
                 "name": "default",
                 "createdAt": "",
@@ -1040,6 +1048,7 @@
               "name": "Bob",
               "extra": "x"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "bob",
             "getMessage": "",
@@ -1049,7 +1058,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "default",
                 "name": "default",
                 "createdAt": "",
@@ -1099,6 +1110,7 @@
             "getBucketName": "my-app.appspot.com",
             "getCompression": "none",
             "getCreatedAt": "",
+            "getDescription": "",
             "getEnabled": false,
             "getEncryption": false,
             "getFileSecurity": false,
@@ -1111,6 +1123,7 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getStatus": "success",
+            "getStripMetadata": false,
             "getTransformations": false,
             "getUpdatedAt": ""
           }
@@ -1144,6 +1157,7 @@
             "getBucketName": "_x",
             "getCompression": "none",
             "getCreatedAt": "",
+            "getDescription": "",
             "getEnabled": false,
             "getEncryption": false,
             "getFileSecurity": false,
@@ -1156,6 +1170,7 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getStatus": "success",
+            "getStripMetadata": false,
             "getTransformations": false,
             "getUpdatedAt": ""
           }
@@ -1185,6 +1200,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Storage\\File",
             "getBucket": {
+              "description": "",
               "id": "my-app",
               "name": "my-app.appspot.com",
               "fileSecurity": false,
@@ -1195,11 +1211,13 @@
               "encryption": false,
               "antiVirus": false,
               "updateLimits": false,
-              "transformations": false
+              "transformations": false,
+              "stripMetadata": false
             },
             "getChunkSize": 5242879,
             "getCreatedAt": "",
             "getData": "",
+            "getDescription": "",
             "getEnd": 5242879,
             "getFileName": "a.txt",
             "getFolder": "",

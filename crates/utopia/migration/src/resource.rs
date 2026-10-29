@@ -288,6 +288,8 @@ pub struct Base {
     pub message: String,
     /// Permission strings.
     pub permissions: Vec<String>,
+    /// The description.
+    pub description: String,
 }
 
 impl Default for Base {
@@ -301,6 +303,7 @@ impl Default for Base {
             status: status::PENDING.to_owned(),
             message: String::new(),
             permissions: Vec::new(),
+            description: String::new(),
         }
     }
 }
@@ -515,6 +518,20 @@ impl Resource {
     /// Sets when the resource was last updated.
     pub fn set_updated_at(&self, date: impl Into<String>) {
         self.base().updated_at = date.into();
+    }
+
+    /// The description.
+    ///
+    /// PHP: `getDescription()`.
+    pub fn description(&self) -> String {
+        self.base().description.clone()
+    }
+
+    /// Sets the description.
+    ///
+    /// PHP: `setDescription()`.
+    pub fn set_description(&self, description: impl Into<String>) {
+        self.base().description = description.into();
     }
 
     /// The resource type ([`types`]).
@@ -745,6 +762,7 @@ impl Resource {
                 put("passwordPwned", p.password_pwned.clone().map_or(Value::Null, Value::Array));
                 put("passwordRotation", p.password_rotation.clone().map_or(Value::Null, Value::Array));
                 put("passkeyRpId", opt_str(&p.passkey_rp_id));
+                put("denyRealtimeGuests", p.deny_realtime_guests.map_or(Value::Null, Value::Bool));
                 put("createdAt", s!(base.created_at));
                 put("updatedAt", s!(base.updated_at));
             }
@@ -779,6 +797,7 @@ impl Resource {
                 put("resourceType", s!(p.resource_type));
             }
             Kind::Database(d) => {
+                put("description", s!(base.description));
                 put("id", s!(base.id));
                 put("name", s!(d.name));
                 put("createdAt", s!(base.created_at));
@@ -789,6 +808,7 @@ impl Resource {
                 put("status", opt_str(&d.status));
             }
             Kind::Table(t) => {
+                put("description", s!(base.description));
                 put("database", t.database.json());
                 put("id", s!(base.id));
                 put("name", s!(t.name));
@@ -804,6 +824,7 @@ impl Resource {
                 }
             }
             Kind::Field(f) => {
+                put("description", s!(base.description));
                 put("key", s!(f.key));
                 put("table", f.table.json());
                 put("type", Value::from(f.field_type()));
@@ -820,6 +841,7 @@ impl Resource {
                 put("updatedAt", s!(base.updated_at));
             }
             Kind::Index(i) => {
+                put("description", s!(base.description));
                 put("id", s!(base.id));
                 put("key", s!(i.key));
                 put("table", i.table.json());
@@ -861,6 +883,7 @@ impl Resource {
                 put("activated", Value::Bool(d.activated));
             }
             Kind::EnvVar(v) => {
+                put("description", s!(base.description));
                 put("id", s!(base.id));
                 put("func", v.func.json());
                 put("key", s!(v.key));
@@ -868,6 +891,7 @@ impl Resource {
                 put("secret", Value::Bool(v.secret));
             }
             Kind::Function(f) => {
+                put("description", s!(base.description));
                 put("id", s!(base.id));
                 put("name", s!(f.name));
                 put("execute", Value::Array(f.execute.clone()));
@@ -888,6 +912,7 @@ impl Resource {
                 put("deploymentRetention", Value::Int(f.deployment_retention));
             }
             Kind::ApiKey(k) => {
+                put("description", s!(base.description));
                 put("id", s!(base.id));
                 put("name", s!(k.name));
                 put("scopes", Value::Array(k.scopes.clone()));
@@ -944,6 +969,7 @@ impl Resource {
                 put("updatedAt", s!(base.updated_at));
             }
             Kind::Topic(t) => {
+                put("description", s!(base.description));
                 put("id", s!(base.id));
                 put("name", s!(t.name));
                 put("subscribe", Value::Array(t.subscribe.clone()));
@@ -965,6 +991,7 @@ impl Resource {
                 put("updatedAt", s!(base.updated_at));
             }
             Kind::ProjectVariable(v) => {
+                put("description", s!(base.description));
                 put("id", s!(base.id));
                 put("key", s!(v.key));
                 put("value", s!(v.value));
@@ -1001,6 +1028,7 @@ impl Resource {
                 put("updatedAt", s!(base.updated_at));
             }
             Kind::Webhook(w) => {
+                put("description", s!(base.description));
                 put("id", s!(base.id));
                 put("name", s!(w.name));
                 put("url", s!(w.url));
@@ -1023,6 +1051,7 @@ impl Resource {
                 put("activated", Value::Bool(d.activated));
             }
             Kind::SiteEnvVar(v) => {
+                put("description", s!(base.description));
                 put("id", s!(base.id));
                 put("site", v.site.json());
                 put("key", s!(v.key));
@@ -1030,6 +1059,7 @@ impl Resource {
                 put("secret", Value::Bool(v.secret));
             }
             Kind::Site(st) => {
+                put("description", s!(base.description));
                 put("id", s!(base.id));
                 put("name", s!(st.name));
                 put("framework", s!(st.framework));
@@ -1051,6 +1081,7 @@ impl Resource {
                 put("scopes", Value::Array(st.scopes.clone()));
             }
             Kind::Bucket(b) => {
+                put("description", s!(base.description));
                 put("id", s!(base.id));
                 put("name", s!(b.name));
                 put("fileSecurity", Value::Bool(b.file_security));
@@ -1062,6 +1093,7 @@ impl Resource {
                 put("antiVirus", Value::Bool(b.anti_virus));
                 put("updateLimits", Value::Bool(b.update_limits));
                 put("transformations", Value::Bool(b.transformations));
+                put("stripMetadata", Value::Bool(b.strip_metadata));
             }
             Kind::File(f) => {
                 let c = f.chunk();

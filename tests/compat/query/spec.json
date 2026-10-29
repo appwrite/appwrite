@@ -19,6 +19,16 @@
     "query": {
       "doc": "replays a program recorded from a PHP test (see tests/compat/query/Replay.php): Query, Method and the other value types",
       "covers": [
+        "Utopia\\Query\\AST\\Call\\Func::__construct",
+        "Utopia\\Query\\AST\\Expression\\Binary::__construct",
+        "Utopia\\Query\\AST\\Expression\\Cast::__construct",
+        "Utopia\\Query\\AST\\Literal::__construct",
+        "Utopia\\Query\\AST\\Parser::parse",
+        "Utopia\\Query\\AST\\Reference\\Column::__construct",
+        "Utopia\\Query\\AST\\Serializer::serialize",
+        "Utopia\\Query\\AST\\Serializer::serializeExpression",
+        "Utopia\\Query\\AST\\Visitor\\FilterInjector::__construct",
+        "Utopia\\Query\\AST\\Visitor\\FilterInjector::visitSelect",
         "Utopia\\Query\\Builder::addHook",
         "Utopia\\Query\\Builder::build",
         "Utopia\\Query\\Builder::filter",
@@ -27,6 +37,7 @@
         "Utopia\\Query\\Builder::queries",
         "Utopia\\Query\\Builder::select",
         "Utopia\\Query\\Builder::selectWindow",
+        "Utopia\\Query\\Builder::toAst",
         "Utopia\\Query\\Builder::union",
         "Utopia\\Query\\Builder\\ClickHouse::orderWithFill",
         "Utopia\\Query\\Builder\\Condition::__construct",
@@ -207,7 +218,9 @@
         "Utopia\\Query\\Schema\\Table::alter",
         "Utopia\\Query\\Schema\\Table::enum",
         "Utopia\\Query\\Schema\\Table::string",
-        "Utopia\\Query\\Tokenizer\\MySQL::tokenize"
+        "Utopia\\Query\\Tokenizer\\MySQL::tokenize",
+        "Utopia\\Query\\Tokenizer\\Tokenizer::filter",
+        "Utopia\\Query\\Tokenizer\\Tokenizer::tokenize"
       ]
     },
     "builder": {
@@ -1428,6 +1441,8 @@
         "Utopia\\Query\\AST\\Expression\\Subquery::__construct",
         "Utopia\\Query\\AST\\Expression\\Unary::__construct",
         "Utopia\\Query\\AST\\Expression\\Window::__construct",
+        "Utopia\\Query\\AST\\Grammar::isIdentifier",
+        "Utopia\\Query\\AST\\Grammar::isType",
         "Utopia\\Query\\AST\\JoinClause::__construct",
         "Utopia\\Query\\AST\\Literal::__construct",
         "Utopia\\Query\\AST\\OrderByItem::__construct",
@@ -2647,5 +2662,5 @@
       "reason": "Rust does not print them; the values PHP continues with are reproduced, so results are the same."
     }
   ],
-  "bench": {}
+  "bench": []
 }

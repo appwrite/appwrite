@@ -9,6 +9,10 @@ pub const MAX_LABEL_LEN: usize = 63;
 pub const MAX_LABELS: usize = 127;
 /// The longest encoded name, length octets and the root included.
 pub const MAX_DOMAIN_NAME_LEN: usize = 255;
+/// The most compression pointers a name may follow.
+///
+/// PHP: `Domain::MAX_POINTERS`.
+pub const MAX_POINTERS: usize = 126;
 
 /// Encodes a name as length-prefixed labels ending with the root. An empty
 /// name, `.` or a name ending in one `.` is absolute; `@` and empty labels
@@ -68,7 +72,8 @@ pub fn encode_into(name: &[u8], out: &mut Vec<u8>) -> Result<(), Error> {
 }
 
 /// Decodes the name at `offset` in a whole packet, following compression
-/// pointers (which must point backwards, and never to the same place twice).
+/// pointers (which must point backwards, never to the same place twice, and
+/// at most [`MAX_POINTERS`] times), up to [`MAX_DOMAIN_NAME_LEN`] bytes.
 /// Returns the dotted name and the offset after it in the packet.
 ///
 /// PHP: `Domain::decode()`.
@@ -79,6 +84,9 @@ pub fn decode(data: &[u8], offset: usize) -> Result<(Vec<u8>, usize), Error> {
     let mut pos = offset;
     let mut visited: Vec<usize> = Vec::new();
     let mut labels = 0usize;
+    let mut pointers = 0usize;
+    // The trailing zero-length octet.
+    let mut length = 1usize;
     loop {
         let Some(&len) = data.get(pos) else {
             return Err(Error::decoding("Unexpected end of data while decoding domain name"));
@@ -101,6 +109,10 @@ pub fn decode(data: &[u8], offset: usize) -> Result<(Vec<u8>, usize), Error> {
                 return Err(Error::decoding("Compression pointer loop detected in domain name"));
             }
             visited.push(pointer);
+            pointers += 1;
+            if pointers > MAX_POINTERS {
+                return Err(Error::decoding("Domain name exceeds maximum compression pointer count"));
+            }
             if !jumped {
                 next = pos + 2;
             }
@@ -120,9 +132,13 @@ pub fn decode(data: &[u8], offset: usize) -> Result<(Vec<u8>, usize), Error> {
         }
         name.extend_from_slice(&data[pos + 1..pos + 1 + len]);
         labels += 1;
+        length += len + 1;
         pos += len + 1;
         if labels > MAX_LABELS {
             return Err(Error::decoding("Domain name exceeds maximum label count"));
+        }
+        if length > MAX_DOMAIN_NAME_LEN {
+            return Err(Error::decoding(format!("Domain name exceeds maximum length of {MAX_DOMAIN_NAME_LEN} bytes")));
         }
         if !jumped {
             next = pos;

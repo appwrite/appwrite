@@ -495,11 +495,6 @@
               [
                 "clear",
                 1
-              ],
-              [
-                "schedule",
-                1,
-                30
               ]
             ],
             "log": [
@@ -1987,11 +1982,6 @@
               [
                 "clear",
                 1
-              ],
-              [
-                "schedule",
-                1,
-                20
               ]
             ],
             "log": [
@@ -2286,11 +2276,6 @@
               [
                 "clear",
                 1
-              ],
-              [
-                "schedule",
-                1,
-                20
               ]
             ],
             "log": [
@@ -3309,7 +3294,7 @@
       ]
     },
     {
-      "name": "DISCONNECT cleans up, closes, and re-arms the keep-alive of the closed connection",
+      "name": "DISCONNECT cleans up and closes, and does not re-arm the keep-alive of the closed connection",
       "steps": [
         {
           "op": "memory.new",
@@ -3474,11 +3459,6 @@
               [
                 "clear",
                 1
-              ],
-              [
-                "schedule",
-                1,
-                15
               ]
             ],
             "log": [

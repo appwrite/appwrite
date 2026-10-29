@@ -35,6 +35,19 @@ pub enum Error {
     /// `getPrevious()`.
     #[error("Failed mid-frame, parser desynced from the stream: {0}")]
     Desynced(Box<Error>),
+    /// Every pass over the server pool failed. Carries the last attempt's
+    /// failure.
+    ///
+    /// PHP: `Utopia\NATS\Exception\ConnectionException` (`Failed to connect
+    /// to any NATS server`) with that failure as `getPrevious()`.
+    #[error("Failed to connect to any NATS server")]
+    NoServer(Option<Box<Error>>),
+    /// The TLS handshake failed: retrying with the same configuration fails
+    /// the same way. The message carries the reason, as OpenSSL words it.
+    ///
+    /// PHP: `Utopia\NATS\Exception\TlsException`.
+    #[error("{0}")]
+    Tls(String),
     /// Nothing arrived (or could be written) in time.
     ///
     /// PHP: `Utopia\NATS\Exception\TimeoutException`.
@@ -149,7 +162,10 @@ impl Error {
     pub fn php_class(&self) -> &'static str {
         match self {
             Error::Nats(_) => "Utopia\\NATS\\Exception\\NatsException",
-            Error::Connection(_) | Error::Desynced(_) => "Utopia\\NATS\\Exception\\ConnectionException",
+            Error::Connection(_) | Error::Desynced(_) | Error::NoServer(_) => {
+                "Utopia\\NATS\\Exception\\ConnectionException"
+            }
+            Error::Tls(_) => "Utopia\\NATS\\Exception\\TlsException",
             Error::Timeout(_) => "Utopia\\NATS\\Exception\\TimeoutException",
             Error::Authentication(_) => "Utopia\\NATS\\Exception\\AuthenticationException",
             Error::MaxPayload(_) => "Utopia\\NATS\\Exception\\MaxPayloadException",
@@ -173,11 +189,15 @@ impl Error {
     }
 
     /// Whether this is a connection failure: a [`Error::Connection`],
-    /// [`Error::Desynced`] or [`Error::Timeout`].
+    /// [`Error::Desynced`], [`Error::NoServer`], [`Error::Tls`] or
+    /// [`Error::Timeout`].
     ///
     /// PHP: `$e instanceof ConnectionException`.
     pub fn is_connection(&self) -> bool {
-        matches!(self, Error::Connection(_) | Error::Desynced(_) | Error::Timeout(_))
+        matches!(
+            self,
+            Error::Connection(_) | Error::Desynced(_) | Error::NoServer(_) | Error::Tls(_) | Error::Timeout(_)
+        )
     }
 
     /// Whether the client raised this error itself, as opposed to
@@ -191,6 +211,8 @@ impl Error {
             Error::Nats(_)
                 | Error::Connection(_)
                 | Error::Desynced(_)
+                | Error::NoServer(_)
+                | Error::Tls(_)
                 | Error::Timeout(_)
                 | Error::Authentication(_)
                 | Error::MaxPayload(_)
@@ -203,12 +225,13 @@ impl Error {
         )
     }
 
-    /// The error this one wraps: the cause of a [`Error::Desynced`].
+    /// The error this one wraps: the cause of a [`Error::Desynced`], the
+    /// last failed attempt behind a [`Error::NoServer`].
     ///
     /// PHP: `getPrevious()`.
     pub fn previous(&self) -> Option<&Error> {
         match self {
-            Error::Desynced(cause) => Some(cause),
+            Error::Desynced(cause) | Error::NoServer(Some(cause)) => Some(cause),
             _ => None,
         }
     }
