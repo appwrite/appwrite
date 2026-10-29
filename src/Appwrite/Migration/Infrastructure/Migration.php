@@ -2,7 +2,7 @@
 
 namespace Appwrite\Migration\Infrastructure;
 
-use Utopia\Console;
+use Utopia\Console\Console;
 
 /**
  * A change to an installation's infrastructure, rather than to the data inside it.

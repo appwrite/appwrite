@@ -62,14 +62,31 @@ final class Consumer
 
         $messageBatch = new MessageBatch($this->conn);
 
+        // Capture a throw from the pull itself so a failure tearing down the
+        // inbox (dead socket → reconnect → ConnectionException) cannot replace
+        // it: PHP replaces an in-flight exception with one raised from finally.
+        $pending = null;
         try {
             $this->conn->publish($requestSubject, $payload, $inbox);
             $this->collectBatch($sub, $messageBatch, $batch, $timeout);
-        } finally {
+        } catch (\Throwable $error) {
+            $pending = $error;
+        }
+
+        try {
             // Outside a finally this leaked the inbox subscription on any throw,
             // and attemptReconnect() re-subscribes every leaked sid on each
             // reconnect -- so the leak compounds across a reconnect storm.
             $sub->unsubscribe();
+        } catch (\Throwable $unsubscribeError) {
+            // The connection is already dying; keep the pull's diagnosis when
+            // both fail. A bare finally that re-raises would swap MaxPayload /
+            // JetStream / -ERR for a generic reconnect failure.
+            $pending ??= $unsubscribeError;
+        }
+
+        if ($pending instanceof \Throwable) {
+            throw $pending;
         }
 
         return $messageBatch;

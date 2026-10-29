@@ -1,0 +1,168 @@
+---
+layout: article
+title: EF Core
+description: Use Entity Framework Core with an Appwrite native PostgreSQL database. Configure the Npgsql connection string, run migrations against the direct PostgreSQL host, and rely on the driver's built-in connection pool from an ASP.NET server.
+---
+
+A native PostgreSQL database is a standard PostgreSQL engine, so [Entity Framework Core](https://learn.microsoft.com/ef/core/) works against it with no Appwrite-specific configuration. Point the Npgsql EF Core provider at the connection string from the [Connections](/docs/products/databases/postgresql/connections) page and use `DbContext`, migrations, and the rest of the toolchain exactly as you would against any self-hosted PostgreSQL server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [native PostgreSQL databases](/docs/products/databases/postgresql) to create one and [Connections](/docs/products/databases/postgresql/connections) to retrieve the connection details. Appwrite provides the generated database name, primary username `admin`, and password in the Console.
+{% /info %}
+
+# Install the provider {% #install %}
+
+Add the EF Core provider for PostgreSQL:
+
+```bash
+dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
+```
+
+Then add the EF Core design-time package (used by the `dotnet ef` tools) and install the CLI tool:
+
+```bash
+dotnet add package Microsoft.EntityFrameworkCore.Design
+
+dotnet tool install --global dotnet-ef
+```
+
+If your app targets an older framework than the current .NET release, pin the packages to the matching major version instead, for example `--version 8.*` for a .NET 8 app.
+
+# Set the connection string {% #connection-string %}
+
+ADO.NET providers use key/value connection strings rather than a URL. Store it in `appsettings.json` under `ConnectionStrings`, and keep the password out of source control (use [user secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets) or an environment variable in deployments):
+
+```json
+{
+  "ConnectionStrings": {
+    "Default": "Host=db-<hash>.<region>.appwrite.center;Port=5432;Database=<database>;Username=admin;Password=<password>;SSL Mode=Require"
+  }
+}
+```
+
+The edge proxy terminates TLS for every native PostgreSQL database, so `SSL Mode=Require` is all you need. `Require` encrypts the connection without validating the server certificate hostname. For full certificate verification, set `SSL Mode=VerifyFull`: Npgsql validates the chain and hostname against the operating system's trusted roots, and the proxy's certificate is signed by a public CA those roots already include, so no `Root Certificate` parameter is needed:
+
+```text
+Host=...;Port=5432;Database=<database>;Username=admin;Password=<password>;SSL Mode=VerifyFull
+```
+
+# Configure the DbContext {% #dbcontext %}
+
+Define your model and a `DbContext`. The model is ordinary EF Core code, and the provider-specific call comes when you register the context in `Program.cs`:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+
+public class User
+{
+    public int Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class AppDbContext : DbContext
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options)
+        : base(options) { }
+
+    public DbSet<User> Users => Set<User>();
+}
+```
+
+# Run migrations {% #migrate %}
+
+Migrations need a session connection and full DDL privileges, so always run them against the direct PostgreSQL host on port `5432`, not the [pooler](/docs/products/databases/postgresql/connection-pooling). The primary `admin` user owns the database; narrower [connection users](/docs/products/databases/postgresql/connections) (`readonly` / `readwrite`) intentionally cannot run DDL.
+
+Create the first migration, then apply it:
+
+```bash
+dotnet ef migrations add InitialCreate
+
+dotnet ef database update
+```
+
+`dotnet ef database update` reads the same `Default` connection string and applies any pending migrations, recording each in the `__EFMigrationsHistory` table so it only applies new ones next time. In CI or production, prefer generating an idempotent SQL script with `dotnet ef migrations script --idempotent` and applying it as a deploy step.
+
+# Wire up an ASP.NET server {% #aspnet %}
+
+Register the `DbContext` in `Program.cs`, reading the connection string with `GetConnectionString`. A long-running ASP.NET server should connect to the direct PostgreSQL host and let the provider manage its own pool:
+
+Call `UseNpgsql(...)` with the connection string. This is the single entry point for all Npgsql options:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+```
+
+The route handlers use ordinary EF Core queries:
+
+```csharp
+var app = builder.Build();
+
+app.MapGet("/users", async (AppDbContext db) =>
+    await db.Users.OrderByDescending(u => u.CreatedAt).Take(10).ToListAsync());
+
+app.MapPost("/users", async (AppDbContext db, string email) =>
+{
+    var user = new User { Email = email };
+    db.Users.Add(user);
+    await db.SaveChangesAsync();
+    return Results.Created($"/users/{user.Id}", user);
+});
+
+app.Run();
+```
+
+# Connection pooling {% #pooling %}
+
+Npgsql has a built-in connection pool, enabled by default. Each process keeps its own pool keyed on the connection string, so a long-running ASP.NET server usually connects directly to PostgreSQL and tunes the driver pool with the connection string:
+
+```text
+Host=...;Port=5432;Database=<database>;Username=admin;Password=<password>;SSL Mode=Require;Maximum Pool Size=50
+```
+
+Set `Maximum Pool Size` to cap concurrent backend connections per process (Npgsql defaults to `100`).
+
+Keep the sum across all your processes under the engine's connection limit for the database's specification.
+
+If you instead run many short-lived instances (serverless functions, per-request containers) that each open their own pool, route them through the Appwrite [connection pooler](/docs/products/databases/postgresql/connection-pooling) on port `6432` to fan many clients onto a small backend pool. The pooler defaults to **transaction mode**, which doesn't hold a backend connection across statements, so server-side prepared statements aren't available:
+
+Disable Npgsql's automatic prepared statements with `Max Auto Prepare=0` when connecting to the transaction-mode pooler:
+
+```text
+Host=...;Port=6432;Database=<database>;Username=admin;Password=<password>;SSL Mode=Require;Max Auto Prepare=0
+```
+
+If your application relies on prepared statements, advisory locks, or `LISTEN`/`NOTIFY`, switch the pooler to **session mode** instead, see the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+Database [branches](/docs/products/databases/postgresql/branches) are instant, isolated copies of a database with their own hostname and credentials. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its connection details.
+2. Build the connection string for the branch host and pass it as the `Default` connection string.
+3. Run `dotnet ef database update` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against representative data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connect" %}
+Retrieve credentials, rotate the password, and create scoped connection users.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

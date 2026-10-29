@@ -1,0 +1,157 @@
+---
+layout: article
+title: Backups
+description: Learn how to set up and manage backups for your self-hosted Appwrite instance to ensure data safety and disaster recovery.
+---
+
+{% info title="Looking for automated backups?" %}
+Appwrite Cloud offers automated [Backups as a Service](/docs/products/databases/backups) with scheduling and one-click restore.
+
+For self-hosted instances, you'll need to implement manual backup procedures as outlined on this page.
+{% /info %}
+
+Self-hosted Appwrite requires manual backup procedures to protect your data.
+
+# What to back up {% #what-to-backup %}
+
+Your Appwrite installation has several components that need backing up:
+
+1. **Database** - User data, rows, and configuration
+2. **Storage volumes** - Uploaded files and function code
+3. **Environment variables** - Configuration in `.env`
+4. **System snapshots** - Complete server state (alternative approach)
+
+# Database backups {% #database-backup %}
+
+Appwrite supports MariaDB and MongoDB as database backends. Use the backup method that matches your installation.
+
+## MariaDB backups {% #mariadb-backup %}
+
+Use `mysqldump` for MariaDB installations:
+
+```bash
+# Create database backup (all databases)
+docker compose exec mariadb sh -c 'exec mysqldump --all-databases --add-drop-database --single-transaction --routines --triggers -uroot -p"$MYSQL_ROOT_PASSWORD"' > ./dump.sql
+
+# Restore (fresh installation only)
+docker compose exec -T mariadb sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < dump.sql
+```
+
+For large databases, consider `mariabackup` for physical backups.
+
+## MongoDB backups {% #mongodb-backup %}
+
+Use `mongodump` for MongoDB installations:
+
+```bash
+# Create database backup
+docker compose exec mongodb sh -c 'exec mongodump --username=root --password="$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase=admin --archive' > ./dump.archive
+
+# Restore (fresh installation only)
+docker compose exec -T mongodb sh -c 'exec mongorestore --username=root --password="$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase=admin --archive' < dump.archive
+```
+
+{% info title="Fresh installation only" %}
+Only restore to fresh Appwrite installations to avoid data corruption.
+{% /info %}
+
+# Storage volume backups {% #storage-backup %}
+
+Shut down Appwrite before backing up volumes to avoid data inconsistency.
+
+Appwrite uses these Docker volumes:
+
+- `appwrite-uploads` - User files
+- `appwrite-functions` - Function code
+- `appwrite-builds` - Build artifacts
+- `appwrite-sites` - Static sites
+- `appwrite-certificates` - SSL certificates
+- `appwrite-config` - Configuration
+- `appwrite-cache` and `appwrite-redis` - Cache data
+- `appwrite-mariadb` - Database files (MariaDB installations)
+- `appwrite-mongodb` - Database files (MongoDB installations)
+
+## Backup methods
+
+**Docker volume backup:**
+```bash
+# Backup volume
+docker run --rm -v volume_name:/data -v $(pwd)/backup:/backup ubuntu tar czf "/backup/volume_name.tar.gz" -C /data .
+
+# Restore volume
+docker run --rm -v volume_name:/data -v $(pwd)/backup:/backup ubuntu tar xzf "/backup/volume_name.tar.gz" -C /data
+```
+
+**Direct copy:**
+```bash
+docker volume inspect volume_name
+sudo cp -a /var/lib/docker/volumes/volume_name/_data /backup/volume_name_backup
+```
+
+
+
+{% info title="External storage" %}
+For S3/GCS/Azure storage, use your provider's native backup tools.
+{% /info %}
+
+# Environment variables {% #env-backup %}
+
+Back up your `.env` file containing configuration and secrets:
+
+```bash
+cp .env .env.backup.$(date +"%Y%m%d")
+```
+
+{% info title="Critical variable" %}
+The `_APP_OPENSSL_KEY_V1` encrypts your data. Copy this exact value when restoring, or encrypted data becomes inaccessible.
+{% /info %}
+
+Store `.env` backups securely due to sensitive data.
+
+# System snapshots {% #system-snapshots %}
+
+As an alternative to individual backups, snapshot your entire server:
+
+- **AWS EC2:** Actions > Image > Create Image
+- **GCP/Azure/DigitalOcean:** Use provider snapshot features
+
+System snapshots capture complete server state and enable fast recovery, but use more storage than selective backups.
+
+# Best practices {% #best-practices %}
+
+## Automation
+
+**Schedule backups** with cron jobs or cloud automation:
+```bash
+# Daily database backup at 2 AM
+0 2 * * * /path/to/backup-script.sh
+```
+
+**Follow 3-2-1 rule:** 3 copies, 2 different media, 1 offsite.
+
+**Monitor backup jobs** and set alerts for failures.
+
+## Third-party tools
+
+For production environments:
+- **Restic** - Cross-platform backup with encryption
+- **Borg** - Deduplicating backup program
+- **Cloud provider tools** - AWS/Azure/GCP backup services
+- **Third-party backup services** - Automated backup solutions
+
+## Disaster recovery
+
+Define your requirements:
+- **RPO (Recovery Point Objective)** - Acceptable data loss window
+- **RTO (Recovery Time Objective)** - Acceptable downtime window
+
+**Test restores quarterly** to verify backup integrity.
+
+Keep backups **offsite** and **encrypted**. Document recovery procedures and update contact information.
+
+## Security
+
+- Encrypt backup files
+- Restrict backup storage access
+- Audit backup systems regularly
+- Meet compliance requirements for your industry

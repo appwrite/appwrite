@@ -2,7 +2,7 @@
 
 namespace Appwrite\Advisor\Validator;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class CTAs extends Validator
 {

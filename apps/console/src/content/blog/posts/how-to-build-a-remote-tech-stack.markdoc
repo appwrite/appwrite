@@ -1,0 +1,207 @@
+---
+layout: post
+title: "How to build a tech stack for a remote startup"
+description: 10 tools you need in your remote tech stack.
+date: 2024-07-16
+lastUpdated: 2026-06-29
+cover: /images/blog/how-to-build-remote-tech-stack/cover.avif
+timeToRead: 5
+author: snezhanna
+category: products
+faqs:
+  - question: "What tools does Appwrite use for remote team communication?"
+    answer: "Appwrite uses Discord for real-time team chat, including a lobby channel that mimics a virtual water cooler. Each team has its own channels for focused work and there are cross-team channels for shared topics. Discord doubles as both internal communication and the home of the public Appwrite community server."
+  - question: "Why use Linear instead of Jira or GitHub Issues for project management?"
+    answer: "Linear is built around 2-week cycles and a developer-friendly UX. It enforces clear ownership, due dates, and progress states without the configuration overhead Jira tends to grow. The constrained cycle model helps remote teams ship instead of letting work expand to fill unlimited time."
+  - question: "How do you handle async work across time zones?"
+    answer: "Default to written updates, decisions, and documentation. Use Loom for walkthroughs instead of meetings. Reserve synchronous calls for high-bandwidth discussions and use written tools (Notion, Linear, Slack/Discord) for everything else. Distinct working hours and clear expectations on response times also matter."
+  - question: "What is a privacy-friendly remote tech stack?"
+    answer: "It's a stack of tools that minimize tracking and respect user data, often favoring open-source options. Appwrite uses Plausible instead of Google Analytics, Notion or open-source alternatives for docs, and avoids marketing pixels and trackers on its sites. The goal is to treat your team and users the way you'd want a vendor to treat you."
+  - question: "Do I need expensive enterprise tools to run a remote startup?"
+    answer: "No. Many of the tools in this stack have generous free tiers. Discord, Figma (free for small teams), Linear, Notion, and Loom all let small teams get started without a budget. Pay for the ones that become load-bearing and skip the rest until you actually need them."
+  - question: "How do you build culture in a fully remote company?"
+    answer: "Culture emerges from rituals, not org charts. Regular all-hands, lightweight social channels, in-person offsites when possible, and consistent recognition of good work all help. Hiring people who already thrive async (and writing down decisions so they're discoverable) is more important than any specific tool."
+---
+Building a remote company? Awesome! You've probably read many great stories about the benefits of work-life balance, working from anywhere, and hiring global talent. Or you might come from a 9 to 5 office job and think: never again! Either way, you're here because you now might be wondering, how do I actually communicate, organize, hire, and work fully remotely? 
+
+Since day one, Appwrite has been working entirely remotely and across the globe. We've learned a thing or two about what tools work best for us, and we would like to help you get started with your own remote-empowering tech stack. 
+
+# How to choose the right tech stack
+
+Before you start looking into your stack, ask yourself what you value most in using tools.
+
+At Appwrite, we appreciate tools that help us work remotely more effectively. We also prefer open-source and privacy-friendly software, though not exclusively. 
+
+This list highlights the tech we use to organize our work as an open-source, fully remote, and privacy-focused company.
+
+# 10 tools you need in your remote startup tech stack
+
+## 1. Discord for team communication
+
+![Discord](/images/blog/how-to-build-remote-tech-stack/1.avif)
+
+Initially created for gamers, [Discord](https://discord.com/) is designed for real-time communication, which is really important to help remote teams stay connected. We love grouping conversations per team and topic, with additional channels for cross-team collaboration. The “lobby” chat acts as an office space where team members say hi when they log on, have informal conversations, or share gifs, the water cooler talk of remote companies! This helps us feel connected even if our coworkers are online in a different timezone.
+
+Discord is also a favorite of the open source community, with many OSS projects being developed in Discord servers. Appwrite has an active [public server on Discord](https://appwrite.io/discord), and you're welcome to join! 
+
+Some Discord pros:
+
+- Ease of use
+- Robust features for free
+- Serious security features, including 2FA, IP location lock and more
+- Versatile communication channels, including audio and video
+- Customizable server structure
+
+## 2. Linear for task tracking
+
+![Linear](/images/blog/how-to-build-remote-tech-stack/2.avif)
+
+As your remote team and their workloads grow, it becomes crucial to ensure tasks are completed on time, nothing gets overlooked, and no team member feels overwhelmed. At Appwrite, we use [Linear](https://linear.app/) for its straightforward, developer-friendly approach.
+
+Linear began as an issue-tracking software and has evolved into a comprehensive project management platform. It maintains its original concept: each task is an "issue" assigned to a team in 2-week cycles. Issues have an owner, due date, completion stages, and comments. This system makes it easy to track who is responsible for what and distribute workloads evenly among team members. If you've ever managed a project, you know that work expands to fill the time available. By framing issues within 2-week cycles, Linear helps focus efforts and accelerate task completion.
+
+Linear enables us to collaborate effectively across teams. Its intuitive approach is accessible to both developers and non-developers. As a fully remote company, Linear understands the challenges of remote work and offers solutions that truly work.
+
+Some Linear pros:
+
+- Developer-friendly approach
+- User-friendly
+- 2-week cycles
+- Easy task tracking
+
+## 3. Figma for design & collaboration
+
+![Figma](/images/blog/how-to-build-remote-tech-stack/3.avif)
+
+You've probably heard of [Figma](http://figma.com) as a design tool. But did you know you can also use it for brainstorming, retrospectives, and collaboration? We love this versatility.
+
+At Appwrite, our design teams use Figma for everything, from product designs and web pages to blog covers and social assets. Meanwhile, the rest of the team can leave comments and collaborate seamlessly. 
+
+Figma's whiteboard feature, FigJam, is perfect for brainstorming and real-time collaboration. You can set the topic, start a timer, and let ideas flow freely on a shared whiteboard. This makes brainstorming sessions more cohesive and focused.
+
+Some Figma pros:
+
+- Versatility
+- Real-time collaboration
+- Easy-to-use
+
+## 4. Notion for databases & collaboration
+
+![Notion](/images/blog/how-to-build-remote-tech-stack/4.avif)
+
+Your remote company's documents need a reliable home, and Notion databases are the perfect solution.
+
+Appwrite uses [Notion databases](http://notion.so) as its single source of truth for all crucial information, including the company handbook, team documents, campaign briefs, content databases, and social media calendars. 
+
+Notion's collaborative features allow team members to work together in sync and async, making it an excellent choice for a remote setup. This centralization fosters a transparent and cohesive work environment, keeping information easily accessible and up-to-date. 
+
+Due to its versatility, Notion might be a bit daunting to get started with, but you can download plenty of free templates to customize your databases to your preference. 
+
+Some Notion pros:
+
+- Comprehensive databases
+- Async collaboration
+- Customizable
+- Easy-to-use
+
+## 5. Loom for sharing information remotely
+
+![Loom](/images/blog/how-to-build-remote-tech-stack/5.avif)
+
+Organizing a meeting every time you need to demo a tool, explain a new process, or train a new team member can be a real hassle, especially if you're coordinating schedules across different time zones for remote teams. These meetings often turn into a waste of time, especially for repeatable and straightforward tasks.
+
+That's why we're big fans of [Loom](https://www.loom.com/). With Loom, you can record your screen and provide a detailed walkthrough of any process. No more frantic calendar shuffling or missed meetings. Just hit record, explain your thing, and share the video with your team. They can watch it whenever suits them best, whether they're in Tokyo, New York, or anywhere in between. It's handy for maintaining productivity and ensuring everyone stays in the loop, no matter their work hours.
+
+Some Loom pros:
+
+- Async communication
+- Easy recording and sharing
+- AI tools for a video summary
+
+## 6. Attio for customer relationship management
+
+![Attio](/images/blog/how-to-build-remote-tech-stack/6.avif)
+
+As your client base skyrockets through the roof (hopefully!), you’ll need a way to build relationships with your customers. At Appwrite, we use Attio for CRM. 
+
+With [Attio](http://attio.com), we manage our [OSS](https://appwrite.io/blog/post/announcing-the-appwrite-oss-program) and [Startups programs](https://appwrite.io/startups), and keep all partnerships in one place, like creators, events and integrations. Its user-friendly design helps our team track and organize contacts effectively, as well as collaborate on campaigns with ease.
+
+Some Attio pros:
+
+- User-friendly
+- Customizable workflows
+- Real-time updates
+
+## 7. GitHub team for open source contributions
+
+![GitHub teams](/images/blog/how-to-build-remote-tech-stack/7.avif)
+
+GitHub simplifies managing remote teams and permissions. With [GitHub Teams](https://github.com/team), you can organize team members, assign roles, and set specific access levels for repositories.
+
+This approach allows Appwrite to receive open-source contributions from developers around the world in a secure and efficient manner. Developers can suggest changes following our [contributing guidelines](https://github.com/appwrite/appwrite/blob/main/CONTRIBUTING.md), and our teams can quickly review and approve them. This process ensures that every issue undergoes a review before merging, helping to eliminate human error and maintain high-quality standards.
+
+Some Github Team pros:
+
+- Simple role and permission management
+- Scalability
+- Centralized control
+- Activity tracking
+
+## 8. Appwrite for backend
+
+![Appwrite](/images/blog/how-to-build-remote-tech-stack/8.avif)
+
+We couldn't end this list without mentioning [Appwrite](https://appwrite.io/). When asked, "Do you use Appwrite to build Appwrite?" the answer is a yes. The team is building Appwrite with the exact same API we let developers use to develop their apps. Our entire backend, including user authentication, databases, and tables, is powered by Appwrite's easy-to-implement APIs.
+
+Appwrite enables you to build a robust backend in half the time and with fewer human resources. By handling complex and time-consuming tasks like authentication and database management, Appwrite lets you focus on the unique features that set your product apart. This also applies to the Appwrite team as we work to improve our products. 
+
+Some Appwrite pros:
+
+- Versatile APIs
+- Robust and quality features
+- Self-hosted or cloud, your choice
+- Easy-to-use and understand
+
+# Bonus tools
+
+Now, these tools are not strictly related to remote work. However, they have great privacy features and are integral to our workflows.
+
+## Plausible for analytics
+
+![Plausible](/images/blog/how-to-build-remote-tech-stack/9.avif)
+
+[Plausible](http://plausible.io) is a privacy-friendly alternative to Google Analytics, which we opted for as part of our commitment to data privacy. It is an open-source analytics platform with some of the highest [privacy standards](https://plausible.io/privacy). It helps us get demographic and user behavior data from the website and Appwrite Cloud in a privacy-friendly manner.
+
+Some Plausible pros:
+
+- privacy-friendly
+- user data is hosted on European servers
+- open source
+- user-friendly
+
+## Dub.co for link-building
+
+![Dub.co](/images/blog/how-to-build-remote-tech-stack/10.avif)
+
+As a privacy-conscious company, we have stopped using marketing classified pixels such as webpage tags and cookies. As soon as you leave this website, we will lose all information about you.
+
+However, we still like to track the effectiveness of our campaigns. Dub.co, an open-source alternative to Bitly, allows us to create UTM links that track attributions from different campaigns, mediums, sources, and specific content. We can tell whether a visitor is coming from a specific link or not, which helps the growth team see if sponsoring a YouTube video or an event was effective.
+
+Some [dub.co](http://dub.co) pros:
+
+- Open-source
+- Straightforward pricing
+- Advanced analytics
+- Easy-to-use
+
+# Moving forward
+
+Building a remote startup offers many perks, like tapping into the global talent pool, the ability to move fast, and achieve more. But it also comes with its own set of challenges.
+
+Starting with remote-friendly tools in your tech stack will help mitigate some of those challenges, resulting in an agile and smart startup and enabling faster scaling with fewer growing pains.
+
+If you’re a startup founder, you might be interested in the [Appwrite Startups Program](https://appwrite.io/startups), which provides free cloud credits and dedicated support to help you build your backend faster. Apply now and create the next big thing with Appwrite.
+
+More resources:
+
+- [How to attract users and contributors to your open-source project](https://appwrite.io/blog/post/how-to-attract-users-to-open-source-project)

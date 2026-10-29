@@ -9,9 +9,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
 final class DatabasesPermissionsGuestTest extends Scope
@@ -40,7 +40,7 @@ final class DatabasesPermissionsGuestTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'VectorGuestDB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -48,7 +48,7 @@ final class DatabasesPermissionsGuestTest extends Scope
 
         $databaseId = $database['body']['$id'];
         $publicMovies = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Movies',
             'dimension' => 3,
             'permissions' => [
@@ -59,7 +59,7 @@ final class DatabasesPermissionsGuestTest extends Scope
             ],
         ]);
         $privateMovies = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Movies',
             'dimension' => 3,
             'permissions' => [],
@@ -95,7 +95,7 @@ final class DatabasesPermissionsGuestTest extends Scope
         $databaseId = $data['databaseId'];
 
         $publicResponse = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $publicCollectionId . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [1.0, 0.0, 0.0],
                 'metadata' => ['title' => 'Lorem'],
@@ -103,7 +103,7 @@ final class DatabasesPermissionsGuestTest extends Scope
             'permissions' => $permissions,
         ]);
         $privateResponse = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $privateCollectionId . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [0.0, 1.0, 0.0],
                 'metadata' => ['title' => 'Lorem'],
@@ -155,7 +155,7 @@ final class DatabasesPermissionsGuestTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [1.0, 0.0, 0.0],
                 'metadata' => ['title' => 'Lorem'],
@@ -169,7 +169,7 @@ final class DatabasesPermissionsGuestTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [0.0, 1.0, 0.0],
                 'metadata' => ['title' => 'Lorem'],
@@ -180,7 +180,7 @@ final class DatabasesPermissionsGuestTest extends Scope
 
         // Create a document in private collection with API key so we can test that update and delete are also not allowed
         $privateResponse = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $privateCollectionId . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [0.0, 0.0, 1.0],
                 'metadata' => ['title' => 'Lorem'],
@@ -241,7 +241,7 @@ final class DatabasesPermissionsGuestTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'VectorGuestPermsWrite',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -249,7 +249,7 @@ final class DatabasesPermissionsGuestTest extends Scope
 
         $databaseId = $database['body']['$id'];
         $movies = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Movies',
             'dimension' => 3,
             'permissions' => [
@@ -264,7 +264,7 @@ final class DatabasesPermissionsGuestTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [1.0, 0.0, 0.0],
                 'metadata' => ['title' => 'Thor: Ragnarok'],

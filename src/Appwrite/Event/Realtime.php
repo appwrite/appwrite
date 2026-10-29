@@ -4,13 +4,14 @@ namespace Appwrite\Event;
 
 use Appwrite\Messaging\Adapter;
 use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
+use Utopia\Database\PermissionType;
 
 class Realtime extends Event
 {
-    public const CONSOLE_ALLOWLIST = ['presences'];
+    public const CONSOLE_ALLOWLIST = ['presences', 'teams'];
 
     protected array $subscribers = [];
 
@@ -118,14 +119,29 @@ class Realtime extends Event
             ? $this->getSubscribers()
             : [$target['projectId'] ?? $this->getProject()->getId()];
 
+        $project = $this->getProject();
+        $targetProjectId = $target['projectId'] ?? null;
+
         foreach ($projectIds as $projectId) {
+            // A console-scoped event (rules, deployments) is published to
+            // ['console', projectId] but carries the project's console read roles;
+            // in the project tree those could match a colliding project-local team.
+            if ($projectId !== 'console' && $targetProjectId === 'console') {
+                continue;
+            }
+
+            // A project's roles mean nothing in the console, where they could match an unrelated account with the same ID
+            $roles = $projectId === 'console' && $project?->getId() !== 'console' && $targetProjectId !== 'console'
+                ? ($project?->getPermissionsByType(PermissionType::Read) ?? [])
+                : $target['roles'];
+
             try {
                 $this->realtime->send(
                     projectId: $projectId,
                     payload: $this->getRealtimePayload(),
                     events: $allEvents,
                     channels: $target['channels'],
-                    roles: $target['roles'],
+                    roles: $roles,
                     options: [
                         'permissionsChanged' => $target['permissionsChanged'],
                         'userId' => $this->getParam('userId')

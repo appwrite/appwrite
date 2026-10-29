@@ -9,9 +9,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Command;
-use Utopia\Console;
-use Utopia\Database\Helpers\ID;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
+use Utopia\Database\Id;
+use Utopia\Database\Query;
 
 final class SitesConsoleClientTest extends Scope
 {
@@ -23,7 +24,7 @@ final class SitesConsoleClientTest extends Scope
     public function testSiteScreenshot(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Themed site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -152,10 +153,113 @@ final class SitesConsoleClientTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Group('screenshots')]
+    public function testDeleteDeploymentScreenshots(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Screenshots cleanup site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+
+        $deploymentId = $this->createDeploymentAccepted($siteId, [
+            'code' => $this->packageSite('static-themed'),
+            'activate' => 'false'
+        ]);
+        $this->waitDeploymentReady($siteId, $deploymentId);
+
+        $screenshotIds = [];
+        $this->assertEventually(function () use ($siteId, $deploymentId, &$screenshotIds) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertSame(200, $deployment['headers']['status-code']);
+            $this->assertNotEmpty($deployment['body']['screenshotLight']);
+            $this->assertNotEmpty($deployment['body']['screenshotDark']);
+
+            $screenshotIds = [$deployment['body']['screenshotLight'], $deployment['body']['screenshotDark']];
+        });
+
+        foreach ($screenshotIds as $screenshotId) {
+            $this->assertSame(200, $this->getScreenshot($screenshotId)['headers']['status-code']);
+        }
+
+        $deployment = $this->deleteDeployment($siteId, $deploymentId);
+        $this->assertSame(204, $deployment['headers']['status-code']);
+
+        $this->assertEventually(function () use ($screenshotIds) {
+            foreach ($screenshotIds as $screenshotId) {
+                $this->assertSame(404, $this->getScreenshot($screenshotId)['headers']['status-code'], 'Screenshot row outlived its deployment: ' . $screenshotId);
+            }
+        });
+
+        $this->cleanupSite($siteId);
+    }
+
+    #[Group('screenshots')]
+    public function testDeleteDeploymentDuringScreenshotCapture(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Screenshots race site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-themed'),
+            'activate' => 'false'
+        ]);
+        $this->assertSame(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'];
+        $createdAt = $deployment['body']['$createdAt'];
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertStringContainsString('Screenshot capturing started.', (string) $deployment['body']['buildLogs']);
+        }, 120000, 100);
+
+        $deployment = $this->deleteDeployment($siteId, $deploymentId);
+        $this->assertSame(204, $deployment['headers']['status-code']);
+
+        // Two captures take a few seconds each; anything the worker keeps lands well within this window.
+        $deadline = \microtime(true) + 45;
+        do {
+            $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files', array_merge($this->getHeaders(), [
+                'x-appwrite-project' => 'console',
+                'x-appwrite-mode' => 'default',
+            ]), [
+                'queries' => [Query::createdAfter($createdAt)->toString()],
+            ]);
+            $this->assertSame(200, $files['headers']['status-code']);
+            $this->assertSame(0, $files['body']['total'], 'Screenshots of a deleted deployment were kept: ' . \json_encode($files['body']['files']));
+
+            \usleep(500000);
+        } while (\microtime(true) < $deadline);
+
+        $this->cleanupSite($siteId);
+    }
+
+    private function getScreenshot(string $screenshotId): array
+    {
+        return $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId?project=console", array_merge($this->getHeaders(), [
+            'x-appwrite-mode' => 'default',
+        ]));
+    }
+
     public function testSiteDeploymentRetentionWithMaintenance(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'deploymentRetention' => 180,
@@ -199,12 +303,22 @@ final class SitesConsoleClientTest extends Scope
         $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        $this->assertEventually(function () use ($siteId) {
+        $this->assertEventually(function () use ($siteId, $deploymentIdInactive, $deploymentIdActive) {
             $response = $this->listDeployments($siteId);
             $this->assertSame(200, $response['headers']['status-code']);
             $this->assertSame(2, $response['body']['total']);
+            $ids = \array_column($response['body']['deployments'], '$id');
+            \sort($ids);
+            $expected = [$deploymentIdInactive, $deploymentIdActive];
+            \sort($expected);
+            $this->assertSame($expected, $ids, 'only the deployment past the requested retention is retired');
         });
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testTemplateDeploymentIsManagedFromTheConsole(): void
+    {
+        $this->assertTemplateDeploymentIsManageable();
     }
 }

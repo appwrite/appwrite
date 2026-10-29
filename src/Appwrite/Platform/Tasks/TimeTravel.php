@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -33,7 +33,7 @@ class TimeTravel extends Action
 
     public function action(string $projectId, string $resourceType, string $resourceId, string $createdAt, callable $getProjectDB, Database $dbForPlatform): void
     {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             Console::error('This task is only available in development mode.');
@@ -65,7 +65,7 @@ class TimeTravel extends Action
             '$createdAt' => $createdAt,
         ]);
 
-        $dbForProject->withPreserveDates(fn () => $dbForProject->updateDocument($collection, $resourceId, $update));
+        $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument($collection, $resourceId, $update));
 
         Console::success('Time-travel successful. Updated $createdAt for ' . $resourceType . ' ' . $resourceId . ' to ' . $createdAt);
     }

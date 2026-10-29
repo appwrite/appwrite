@@ -27,6 +27,9 @@ on:
         description: "Commit message for the specs PR"
         default: "chore: update API specs and SDK examples"
 
+permissions:
+  contents: read
+
 jobs:
   generate:
     name: Generate Specs
@@ -36,6 +39,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
 
       - name: Build and start Appwrite
         run: |
@@ -43,28 +47,31 @@ jobs:
           docker compose up -d
 
       - name: Generate specs
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          docker compose exec appwrite specs --version=${{ inputs.version }} --mode=normal --git=no
+          docker compose exec appwrite specs --version="$VERSION" --mode=normal --git=no
 
       - name: Generate SDK examples
         if: inputs.push
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          docker compose exec appwrite sdks --platform=* --sdk=* --version=${{ inputs.version }} --git=no --mode=examples
-          sudo chown -R $USER:$USER ./docs/examples/
+          docker compose exec appwrite sdks --platform='*' --sdk='*' --version="$VERSION" --git=no --mode=examples
+          sudo chown -R "$USER:$USER" ./docs/examples/
 
       - name: Push to appwrite/specs and create PR
         if: inputs.push
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          MESSAGE: ${{ inputs.message }}
         run: |
-          VERSION="${{ inputs.version }}"
-          MESSAGE="${{ inputs.message }}"
           GIT_BRANCH="feat-${VERSION}-specs"
           SPECS_DIR="./app/config/specs"
-          EXAMPLES_DIR="./docs/examples/${VERSION}"
           TARGET="/tmp/specs-repo"
 
-          sudo chown -R $USER:$USER "${SPECS_DIR}"
+          sudo chown -R "$USER:$USER" "${SPECS_DIR}"
 
           # Clone the specs repo
           git clone "https://x-access-token:${GH_TOKEN}@github.com/appwrite/specs.git" "${TARGET}"
@@ -77,11 +84,11 @@ jobs:
 
           # Copy spec files
           mkdir -p "specs/${VERSION}"
-          cp ${GITHUB_WORKSPACE}/${SPECS_DIR}/*${VERSION}*.json "specs/${VERSION}/" 2>/dev/null || true
+          cp "${GITHUB_WORKSPACE}/${SPECS_DIR}"/*"${VERSION}"*.json "specs/${VERSION}/" 2>/dev/null || true
 
           # Copy latest specs if version is latest
           if [ "${VERSION}" = "latest" ]; then
-            cp ${GITHUB_WORKSPACE}/${SPECS_DIR}/*latest*.json "specs/latest/" 2>/dev/null || true
+            cp "${GITHUB_WORKSPACE}/${SPECS_DIR}"/*latest*.json "specs/latest/" 2>/dev/null || true
           fi
 
           # Copy SDK examples

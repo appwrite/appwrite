@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\Key;
-use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
@@ -12,11 +11,11 @@ use Appwrite\Event\Publisher\Audit;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Locking\Lock;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Reference\Renderer;
@@ -25,17 +24,18 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
@@ -50,6 +50,7 @@ Http::init()
     ->groups(['api'])
     ->inject('route')
     ->inject('request')
+    ->inject('response')
     ->inject('dbForPlatform')
     ->inject('dbForProject')
     ->inject('auditContext')
@@ -65,7 +66,7 @@ Http::init()
     ->inject('lock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Response $response, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -142,6 +143,10 @@ Http::init()
         $scopes = $roles[$role]['scopes'];
 
         // Step 5: API Key Authentication
+        if ($request->getHeaderLine('x-appwrite-key') !== '' && $apiKey === null) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
         if (! empty($apiKey)) {
             // Check if key is expired
             if ($apiKey->isExpired()) {
@@ -157,7 +162,7 @@ Http::init()
                 // Disable authorization checks for project API keys
                 // Dynamic supported for backwards compatibility
                 if (($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_EPHEMERAL || $apiKey->getType() === 'dynamic') && $apiKey->getProjectId() === $project->getId()) {
-                    $authorization->setDefaultStatus(false);
+                    $authorization->setStatus(false);
                 }
 
                 $user = new User([
@@ -176,26 +181,15 @@ Http::init()
             if (\in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_ORGANIZATION, API_KEY_ACCOUNT])) {
                 $dbKey = null;
                 $keyOwnerInternalId = '';
+                $secret = $request->getHeaderLine('x-appwrite-key', '');
                 if (! empty($apiKey->getProjectId())) {
-                    $dbKey = $project->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = Key::find($project->getAttribute('keys', []), $secret);
                     $keyOwnerInternalId = (string) ($project->getSequence() ?: $project->getId());
                 } elseif (! empty($apiKey->getUserId())) {
-                    $dbKey = $user->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = Key::find($user->getAttribute('keys', []), $secret);
                     $keyOwnerInternalId = (string) ($user->getSequence() ?: $user->getId());
                 } elseif (! empty($apiKey->getTeamId())) {
-                    $dbKey = $team->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = Key::find($team->getAttribute('keys', []), $secret);
                     $keyOwnerInternalId = (string) ($team->getSequence() ?: $team->getId());
                 }
 
@@ -271,6 +265,14 @@ Http::init()
                 $authorization->addRole(Role::team($team->getId())->toString());
                 $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
             } elseif ($apiKey->getType() === API_KEY_ACCOUNT) {
+                // Account keys act as the console user on the Console API only. On any other
+                // project they would inject the console user's roles (user:{id}, users,
+                // team:{orgId}) into that project's data plane, where caller-chosen console
+                // user and organization IDs can collide with the project's own users and teams.
+                if ($project->getId() !== 'console') {
+                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Account API keys can only be used with the console project.');
+                }
+
                 $authorization->addRole(Role::user($user->getId())->toString());
                 $authorization->addRole(Role::users()->toString());
 
@@ -315,7 +317,10 @@ Http::init()
             }
 
             $projectId = $project->getId();
-            if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
+            if (str_starts_with($route->getPath(), '/v1/organization/projects')) {
+                // Organization routes act on the project in the path; without one they act on the whole organization.
+                $projectId = $projectIdFromPath !== '' ? $projectIdFromPath : 'console';
+            } elseif ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
                 $projectId = $projectIdFromPath;
             }
 
@@ -324,7 +329,11 @@ Http::init()
             $scopes = ['teams.read', 'projects.read'];
             foreach ($adminRoles as $adminRole) {
                 $isTeamWideRole = ! str_starts_with($adminRole, 'project-');
-                $isProjectSpecificRole = $projectId !== 'console' && str_starts_with($adminRole, 'project-' . $projectId);
+                // Role names carry no '-', so everything before the last '-' must be exactly
+                // 'project-{projectId}': a prefix match would leak a grant on project 'app2' to project 'app'.
+                $isProjectSpecificRole = $projectId !== 'console'
+                    && ! $isTeamWideRole
+                    && \substr($adminRole, 0, (int) \strrpos($adminRole, '-')) === 'project-' . $projectId;
 
                 if ($isTeamWideRole || $isProjectSpecificRole) {
                     $role = match (str_starts_with($adminRole, 'project-')) {
@@ -341,11 +350,13 @@ Http::init()
              * For console projects resource, we use platform DB.
              * Enabling authorization restricts admin user to the projects they have access to.
              */
-            if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId')) {
-                $authorization->setDefaultStatus(true);
+            $isProjectsRead = $project->getId() === 'console' && \in_array($route->getPath(), ['/v1/projects', '/v1/projects/:projectId'], true);
+            $isOrganizationProjectsRead = $request->getMethod() === Request::METHOD_GET && \in_array($route->getPath(), ['/v1/organization/projects', '/v1/organization/projects/:projectId'], true);
+            if ($isProjectsRead || $isOrganizationProjectsRead) {
+                $authorization->setStatus(true);
             } else {
                 // Otherwise, disable authorization checks.
-                $authorization->setDefaultStatus(false);
+                $authorization->setStatus(false);
             }
         }
 
@@ -364,13 +375,21 @@ Http::init()
         if (
             $isUserDiscovery
             && !$user->isEmpty()
+            && !\in_array('users.read', $scopes, true)
             && (
                 $user->getAttribute('impersonator', false)
                 || !$impersonatorUser->isEmpty()
             )
         ) {
             $scopes[] = 'users.read';
-            $scopes = \array_unique($scopes);
+            $response->setHideCredentials(true);
+        }
+
+        // Reading users is not authority over their credentials. Minted keys are exempt, as their minter could grant users.write
+        // and user migrations read hashes with users.read; OAuth2 tokens only delegate their holder's role
+        $isMintedKey = ! empty($apiKey) && $apiKey->getType() !== API_KEY_OAUTH2;
+        if (\in_array('users.read', $scopes, true) && ! \in_array('users.write', $scopes, true) && ! $isMintedKey) {
+            $response->setHideCredentials(true);
         }
 
         $authorization->addRole($role);
@@ -387,7 +406,7 @@ Http::init()
             && $apiKey->getRole() === User::ROLE_OWNER;
 
         if ($isAdminProjectRequest && $isOAuthAdminKey) {
-            $authorization->setDefaultStatus(false);
+            $authorization->setStatus(false);
         }
 
         if (!$impersonatorUser->isEmpty() && !$targetUser->isEmpty()) {
@@ -400,8 +419,8 @@ Http::init()
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
          * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
-        if ($isAdminProjectRequest && empty($apiKey)) {
-            $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
+        if (empty($apiKey) && ! $user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+            $input = new Input(PermissionType::Read, $project->getPermissionsByType(PermissionType::Read));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
             if (! $authorization->isValid($input)) {
@@ -539,6 +558,7 @@ Http::init()
         if (empty(\array_intersect($allowed, $scopes))) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
+        $request->setScopes($scopes);
 
         // Step 10: Check if user is blocked
         if ($rolesSource->getAttribute('status') === false) { // Account is blocked
@@ -553,12 +573,7 @@ Http::init()
         // Step 12: Validate MFA requirements
         // $session belongs to $user, who stays the impersonator while impersonating, so the
         // impersonator's MFA applies and the target's is never asked of them.
-        $mfaEnabled = $user->getAttribute('mfa', false);
-        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
-        $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
-        $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
+        $minimumFactors = $user->getMinimumFactors();
 
         // Step 13: Handle Multi-Factor Authentication
         if (! in_array('mfa', $route->getGroups())) {
@@ -602,42 +617,46 @@ Http::init()
 
         foreach ($abuseKeyLabel as $abuseKey) {
             $isRateLimited = false;
+            $checking = false;
 
             try {
-                $start = $request->getContentRangeStart();
-                $end = $request->getContentRangeEnd();
-                $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($route, $request, $response, $project, $user, $start, $end, $shouldCheckAbuse, &$closestLimit): bool {
-                    $timeLimit
-                        ->setParam('{projectId}', $project->getId())
-                        ->setParam('{userId}', $user->getId())
-                        ->setParam('{userAgent}', $request->getUserAgent(''))
-                        ->setParam('{ip}', $request->getIP())
-                        ->setParam('{url}', $request->getHostname() . $route->getPath())
-                        ->setParam('{method}', $request->getMethod())
-                        ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
+                $params = [
+                    '{projectId}' => (string) $project->getId(),
+                    '{userId}' => (string) $user->getId(),
+                    '{userAgent}' => (string) $request->getUserAgent(''),
+                    '{ip}' => (string) $request->getIP(),
+                    '{url}' => $route->getPath(),
+                    '{method}' => (string) $request->getMethod(),
+                    '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
+                ];
 
-                    foreach ($request->getParams() as $key => $value) {
-                        if (! empty($value)) {
-                            $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
-                        }
+                foreach ($request->getParams() as $key => $value) {
+                    if (! empty($value)) {
+                        $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                        // Sign in matches emails case-insensitively, so the limit must too
+                        $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
+                    }
+                }
+
+                $checking = true;
+                $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
+                    $timeLimit = $timeLimit->withParams($params);
+                    $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
+                    if ($result->limit && ($result->remaining < $closestLimit || is_null($closestLimit))) {
+                        $closestLimit = $result->remaining;
+                        $response->addHeader('X-RateLimit-Limit', (string) $result->limit)
+                            ->addHeader('X-RateLimit-Remaining', (string) $result->remaining)
+                            ->addHeader('X-RateLimit-Reset', (string) $result->reset);
                     }
 
-                    $abuse = new Abuse($timeLimit);
-                    $remaining = $timeLimit->remaining();
-                    $limit = $timeLimit->limit();
-                    $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
-
-                    if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
-                        $closestLimit = $remaining;
-                        $response
-                            ->addHeader('X-RateLimit-Limit', $limit)
-                            ->addHeader('X-RateLimit-Remaining', $remaining)
-                            ->addHeader('X-RateLimit-Reset', $time);
-                    }
-
-                    return $shouldCheckAbuse && $abuse->check();
+                    return $shouldCheckAbuse && $result->limited;
                 });
             } catch (\Throwable $th) {
+                // Only a limiter outage fails open; a request that breaks the key is refused.
+                if (! $checking) {
+                    throw $th;
+                }
+
                 \error_log((string) $th);
 
                 continue;
@@ -758,7 +777,7 @@ Http::init()
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-                    $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
+                    $valid = $authorization->isValid(new Input(PermissionType::Read, $bucket->getPermissionsByType(PermissionType::Read)));
                     if (! $fileSecurity && ! $valid && ! $isToken) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
@@ -866,7 +885,8 @@ Http::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->inject('mqtt')
+    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject, Mqtt $mqtt) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
 
         if ($sessionLimit === 0) {
@@ -896,6 +916,12 @@ Http::shutdown()
         }
 
         $dbForProject->purgeCachedDocument('users', $userId);
+
+        try {
+            $mqtt->revoke($project->getId(), $userId);
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
     });
 
 Http::shutdown()
@@ -989,25 +1015,26 @@ Http::shutdown()
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
         foreach ($abuseKeyLabel as $abuseKey) {
-            $start = $request->getContentRangeStart();
-            $end = $request->getContentRangeEnd();
-            $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($route, $request, $project, $user, $start, $end): void {
-                $timeLimit
-                    ->setParam('{projectId}', $project->getId())
-                    ->setParam('{userId}', $user->getId())
-                    ->setParam('{userAgent}', $request->getUserAgent(''))
-                    ->setParam('{ip}', $request->getIP())
-                    ->setParam('{url}', $request->getHostname() . $route->getPath())
-                    ->setParam('{method}', $request->getMethod())
-                    ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
+            $params = [
+                '{projectId}' => (string) $project->getId(),
+                '{userId}' => (string) $user->getId(),
+                '{userAgent}' => (string) $request->getUserAgent(''),
+                '{ip}' => (string) $request->getIP(),
+                '{url}' => $route->getPath(),
+                '{method}' => (string) $request->getMethod(),
+                '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
+            ];
 
-                foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                    if (! empty($value)) {
-                        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value) || \is_object($value)) ? \json_encode($value) : $value);
-                    }
+            foreach ($request->getParams() as $key => $value) {
+                if (! empty($value)) {
+                    $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                    // Sign in matches emails case-insensitively, so the limit must too
+                    $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
                 }
+            }
 
-                (new Abuse($timeLimit))->reset();
+            $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params): void {
+                $timeLimit->withParams($params)->reset();
             });
         }
     });
@@ -1073,15 +1100,6 @@ Http::shutdown()
 
         $auditUser = $auditContext->user;
         if (! empty($auditContext->resource) && ! $auditUser->isEmpty()) {
-            /**
-             * audits.payload is switched to default true
-             * in order to auto audit payload for all endpoints
-             */
-            $pattern = $route->getLabel('audits.payload', true);
-            if (! empty($pattern)) {
-                $auditContext->payload = $responsePayload;
-            }
-
             $publisherForAudits->enqueue(AuditMessage::fromContext($auditContext));
         }
     });
@@ -1220,6 +1238,7 @@ Http::shutdown()
 Http::shutdown()
     ->groups(['api'])
     ->inject('route')
+    ->inject('params')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -1229,7 +1248,7 @@ Http::shutdown()
     ->inject('apiKey')
     ->inject('mode')
     ->inject('lock')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode, Lock $lock) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode, Lock $lock) {
         /**
          * Persist completed onboarding stage after usage shutdown so a schema/write failure here
          * cannot suppress RequestCompleted or usage metrics on the same request.
@@ -1289,7 +1308,7 @@ Http::shutdown()
 
         // Organization routes act on the project named in the path, not on the console project.
         if ($project->getId() === 'console') {
-            $projectId = (string) ($route->getParamsValues()['projectId'] ?? '');
+            $projectId = (string) ($params['projectId'] ?? '');
             if ($projectId === '') {
                 return;
             }
