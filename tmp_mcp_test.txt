@@ -1,1 +1,0 @@
-READFILE:/workspace/tmp_mcp_test.txt
