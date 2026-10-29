@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Alerts\Http\Rules;
 
 use Appwrite\Alert\Channel;
 use Appwrite\Alert\Comparator;
+use Appwrite\Alert\Schedules;
 use Appwrite\Platform\Modules\Alerts\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -158,7 +159,7 @@ class Update extends Base
             ));
 
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('alertRules', $rule->getId(), $changes));
-            $this->schedule($dbForPlatform, $rule);
+            (new Schedules($dbForPlatform))->write($rule);
         }
 
         $rule->removeAttribute('webhookSecret');

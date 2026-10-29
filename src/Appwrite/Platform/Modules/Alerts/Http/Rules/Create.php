@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Alerts\Http\Rules;
 
 use Appwrite\Alert\Channel;
 use Appwrite\Alert\Comparator;
+use Appwrite\Alert\Schedules;
 use Appwrite\Alert\Status;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Alerts\Base;
@@ -149,7 +150,7 @@ class Create extends Base
             throw new Exception(Exception::ALERT_RULE_ALREADY_EXISTS);
         }
 
-        $this->schedule($dbForPlatform, $rule);
+        (new Schedules($dbForPlatform))->write($rule);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

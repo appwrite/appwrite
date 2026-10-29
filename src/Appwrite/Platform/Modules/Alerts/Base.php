@@ -7,15 +7,13 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 /**
  * What creating and updating an alert rule share: the rule lookup, the checks
  * against the metric registry in `app/config/alerts.php`, resolving the
- * watched resource in the project, and the rule's row in `schedules`.
+ * watched resource in the project.
  */
 class Base extends Action
 {
@@ -85,62 +83,6 @@ class Base extends Action
         }
 
         return [$resource->getId(), (string) $resource->getSequence()];
-    }
-
-    /**
-     * Writes the rule's evaluation schedule: active while the rule is enabled.
-     * Moving `resourceUpdatedAt` is what the scheduler syncs on, so every write
-     * of the rule touches it.
-     */
-    protected function schedule(Database $dbForPlatform, Document $rule): void
-    {
-        $schedule = $this->findSchedule($dbForPlatform, $rule);
-        $changes = [
-            'active' => (bool) $rule->getAttribute('enabled', false),
-            'resourceUpdatedAt' => DateTime::now(),
-        ];
-
-        $dbForPlatform->getAuthorization()->skip(fn () => $schedule->isEmpty()
-            ? $dbForPlatform->createDocument('schedules', new Document([
-                'region' => (string) $rule->getAttribute('region'),
-                'resourceType' => SCHEDULE_RESOURCE_TYPE_ALERT,
-                'resourceId' => $rule->getId(),
-                'resourceInternalId' => (string) $rule->getSequence(),
-                'projectId' => (string) $rule->getAttribute('projectId', ''),
-                // An ID column, which takes no empty string for a rule without a project.
-                'projectInternalId' => $rule->getAttribute('projectInternalId') ?: null,
-                'schedule' => '',
-                'data' => ['teamInternalId' => (string) $rule->getAttribute('teamInternalId')],
-                ...$changes,
-            ]))
-            : $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document($changes)));
-    }
-
-    /**
-     * Stops a deleted rule's schedule; the schedules sweep removes the row
-     * once the rule is gone.
-     */
-    protected function unschedule(Database $dbForPlatform, Document $rule): void
-    {
-        $schedule = $this->findSchedule($dbForPlatform, $rule);
-        if ($schedule->isEmpty()) {
-            return;
-        }
-
-        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
-            'active' => false,
-            'resourceUpdatedAt' => DateTime::now(),
-        ])));
-    }
-
-    private function findSchedule(Database $dbForPlatform, Document $rule): Document
-    {
-        return $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->findOne('schedules', [
-            Query::equal('region', [(string) $rule->getAttribute('region')]),
-            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_ALERT]),
-            Query::equal('projectId', [(string) $rule->getAttribute('projectId', '')]),
-            Query::equal('resourceId', [$rule->getId()]),
-        ]));
     }
 
     protected function search(string $ruleId, string $name, string $metric, string $resourceType, string $resourceId): string

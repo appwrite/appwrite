@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Http\Rules;
 
+use Appwrite\Alert\Schedules;
 use Appwrite\Platform\Modules\Alerts\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -67,7 +68,7 @@ class Delete extends Base
         $rule = $this->getRule($dbForPlatform, $authorization, $project, $ruleId);
 
         $authorization->skip(fn () => $dbForPlatform->deleteDocument('alertRules', $rule->getId()));
-        $this->unschedule($dbForPlatform, $rule);
+        (new Schedules($dbForPlatform))->stop($rule);
 
         $response->noContent();
     }
