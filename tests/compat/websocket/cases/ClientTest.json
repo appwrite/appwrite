@@ -467,7 +467,7 @@
           "$handle": "*"
         },
         "host": "h",
-        "port": 80,
+        "port": 443,
         "path": "/",
         "headers": [],
         "timeout": 30.0
@@ -497,14 +497,10 @@
         "url": "//h/p"
       },
       "expect": {
-        "client": {
-          "$handle": "*"
-        },
-        "host": "h",
-        "port": 80,
-        "path": "/p",
-        "headers": [],
-        "timeout": 30.0
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "WebSocket URL scheme must be ws or wss"
+        }
       }
     },
     {
@@ -1648,6 +1644,92 @@
           ]
         ],
         "connected": false
+      }
+    },
+    {
+      "name": "testConstructorRejectsUnsupportedScheme (http)",
+      "op": "client.new",
+      "args": {
+        "url": "http://localhost:8080"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "WebSocket URL scheme must be ws or wss"
+        }
+      }
+    },
+    {
+      "name": "testConstructorRejectsUnsupportedScheme (https)",
+      "op": "client.new",
+      "args": {
+        "url": "https://localhost:8443"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "WebSocket URL scheme must be ws or wss"
+        }
+      }
+    },
+    {
+      "name": "testConstructorRejectsUnsupportedScheme (tcp)",
+      "op": "client.new",
+      "args": {
+        "url": "tcp://localhost:8080"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "WebSocket URL scheme must be ws or wss"
+        }
+      }
+    },
+    {
+      "name": "testConstructorRejectsUnsupportedScheme (missing)",
+      "op": "client.new",
+      "args": {
+        "url": "//localhost:8080"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "WebSocket URL scheme must be ws or wss"
+        }
+      }
+    },
+    {
+      "name": "testConstructorAcceptsSchemeInAnyCase",
+      "op": "client.new",
+      "args": {
+        "url": "WSS://localhost:8443"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "localhost",
+        "port": 8443,
+        "path": "/",
+        "headers": [],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "mixed-case ws scheme defaults to port 80",
+      "op": "client.new",
+      "args": {
+        "url": "Ws://localhost/x"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "localhost",
+        "port": 80,
+        "path": "/x",
+        "headers": [],
+        "timeout": 30.0
       }
     }
   ]
