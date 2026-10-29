@@ -74,7 +74,7 @@ export function GitSilentModeCard({
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           {t(
-            'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.', // pragma: allowlist secret
+            "When on, Appwrite doesn't comment on pull requests or report checks and deployments to your Git provider. Builds and deployments run as usual.",
           )}
         </p>
       </div>
@@ -82,7 +82,7 @@ export function GitSilentModeCard({
       <div className="px-6 py-4">
         <div className="flex items-center justify-between gap-4">
           <Label htmlFor="site-git-silent-mode" className="text-[13px]">
-            {t('Disable automated commit comments')}
+            {t('Skip pull request comments, checks and deployment reports')}
           </Label>
           <Switch
             id="site-git-silent-mode"

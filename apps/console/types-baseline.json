@@ -718,9 +718,6 @@
     "TS18046: 'error' is of type 'unknown'.": 1,
     "TS2322: Type 'Function | undefined' is not assignable to type 'Function | null'.": 1
   },
-  "src/components/pages/projects/$projectId/functions/Domains.tsx": {
-    "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 2
-  },
   "src/components/pages/projects/$projectId/functions/ExecutionDetailsDrawer.tsx": {
     "TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.": 2
   },
@@ -858,9 +855,6 @@
   "src/components/pages/projects/$projectId/settings/domains/DeleteDomain.tsx": {
     "TS18046: 'error' is of type 'unknown'.": 1
   },
-  "src/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu.tsx": {
-    "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 1
-  },
   "src/components/pages/projects/$projectId/settings/domains/RetryDomain.tsx": {
     "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 1
   },
@@ -889,9 +883,6 @@
   "src/components/pages/projects/$projectId/sites/Deployments.tsx": {
     "TS18046: 'deployment' is of type 'unknown'.": 6,
     "TS2571: Object is of type 'unknown'.": 8
-  },
-  "src/components/pages/projects/$projectId/sites/Domains.tsx": {
-    "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 2
   },
   "src/components/pages/projects/$projectId/sites/Overview.tsx": {
     "TS2339: Property 'data' does not exist on type '{ deployments: Deployment[]; total: number; isLoading: boolean; isFetching: boolean; error: Error | null; refetch: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<{ deployments: Deployment[]; total: number; }, Error>>; }'.": 2,

@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Database\Documents;
 
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Deletes\Targets;
+use Appwrite\Hooks\Hooks;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
@@ -225,6 +226,38 @@ class User extends Document
         return $session !== null && \count($session->getAttribute('factors', [])) >= $this->getMinimumFactors();
     }
 
+    /**
+     * Check that a session of the user completed an MFA challenge within the recent window.
+     */
+    public function sessionChallengeRecent(string $sessionId): bool
+    {
+        $verifiedAt = $this->getSession($sessionId)?->getAttribute('mfaUpdatedAt');
+
+        if (empty($verifiedAt)) {
+            return false;
+        }
+
+        $maxAllowedDate = DateTime::addSeconds(new \DateTime($verifiedAt), MFA_RECENT_DURATION);
+
+        return DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz(DateTime::now());
+    }
+
+    /**
+     * Roles of the user's confirmed membership of a team, or none when it is not a member.
+     *
+     * @return array<string>
+     */
+    public function getMembershipRoles(string $teamId): array
+    {
+        foreach ($this->getAttribute('memberships', []) as $membership) {
+            if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
+                return $membership->getAttribute('roles', []);
+            }
+        }
+
+        return [];
+    }
+
     private function getSession(string $sessionId): ?Document
     {
         return \array_find($this->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $sessionId);
@@ -253,14 +286,16 @@ class User extends Document
     }
 
     /**
-     * Revoke every way into the account other than its email address: password,
-     * sessions, tokens, MFA factors, passkeys, identities, phone and push targets.
+     * Revoke every way into the account other than the address just proven: password,
+     * sessions, tokens, MFA factors, passkeys, identities, account keys, the other
+     * address and every target not on the proven channel.
      *
-     * Used when the verified owner of the email claims an account that was
+     * Used when the owner of an email or phone claims an account that was
      * registered with it but never verified, so nobody else keeps access.
+     * `$proven` is the channel of the proven address, MESSAGE_TYPE_EMAIL or MESSAGE_TYPE_SMS.
      * Persists the revocation in one transaction and mirrors it on `$user`.
      */
-    public static function revokeCredentials(Database $dbForProject, Document $user): void
+    public static function revokeCredentials(Database $dbForProject, Document $user, Document $project, string $proven = MESSAGE_TYPE_EMAIL): void
     {
         $sequence = $user->getSequence();
         if ($sequence === '' || $sequence === null || $user->getAttribute('status') === false) {
@@ -275,23 +310,47 @@ class User extends Document
             'passwordHistory' => [],
             'passwordUpdate' => null,
             'passwordPwned' => null,
-            'phone' => null,
-            'phoneVerification' => false,
             'mfa' => false,
             'mfaRecoveryCodes' => [],
         ];
 
-        $dbForProject->withTransaction(function () use ($dbForProject, $user, $sequence, $attributes) {
+        // The address that was not proven belongs to whoever registered the account
+        $attributes += $proven === MESSAGE_TYPE_SMS
+            ? [
+                'email' => null,
+                'emailVerification' => false,
+                'emailCanonical' => null,
+                'emailIsCanonical' => null,
+                'emailIsCorporate' => null,
+                'emailIsDisposable' => null,
+                'emailIsFree' => null,
+            ]
+            : [
+                'phone' => null,
+                'phoneVerification' => false,
+            ];
+
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes, $proven) {
             foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
                 $dbForProject->deleteDocuments($collection, [
                     Query::equal('userInternalId', [$sequence]),
                 ]);
             }
 
+            if ($project->getId() === 'console') {
+                $dbForProject->deleteDocuments('keys', [
+                    Query::equal('resourceType', ['users']),
+                    Query::equal('resourceInternalId', [$sequence]),
+                ]);
+            }
+
             Targets::delete($dbForProject, Query::and([
                 Query::equal('userInternalId', [$sequence]),
-                Query::notEqual('providerType', MESSAGE_TYPE_EMAIL),
+                Query::notEqual('providerType', $proven),
             ]));
+
+            // Editions revoke the credentials they keep in their own collections
+            (new Hooks())->trigger('credentialsRevoked', [$dbForProject, $user, $project]);
 
             $dbForProject->updateDocument('users', $user->getId(), new Document($attributes));
         });

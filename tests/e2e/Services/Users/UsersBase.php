@@ -3097,6 +3097,71 @@ trait UsersBase
         $this->assertNull($withoutHeader['body']['impersonatorUserId']);
     }
 
+    public function testImpersonationRequiresUnblockedImpersonator(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => Id::unique(),
+            'email' => 'blocked-impersonator-' . \uniqid() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $impersonator['headers']['status-code']);
+        $impersonatorId = $impersonator['body']['$id'];
+
+        $target = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => Id::unique(),
+            'email' => 'blocked-impersonator-target-' . \uniqid() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $targetId = $target['body']['$id'];
+
+        $patch = $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/impersonator', $headers, ['impersonator' => true]);
+        $this->assertEquals(200, $patch['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/sessions', $headers);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $accountHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+            'x-appwrite-impersonate-user-id' => $targetId,
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', $accountHeaders);
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($targetId, $account['body']['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        $status = $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/status', $headers, ['status' => false]);
+        $this->assertEquals(200, $status['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $accountHeaders);
+        $this->assertEquals(403, $account['headers']['status-code']);
+        $this->assertEquals('user_blocked', $account['body']['type']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ], [
+            'impersonateUserId' => $targetId,
+        ]);
+        $this->assertEquals(403, $account['headers']['status-code']);
+        $this->assertEquals('user_blocked', $account['body']['type']);
+    }
+
     /**
      * Test impersonation by email header
      */

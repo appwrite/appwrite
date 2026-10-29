@@ -98,19 +98,23 @@ $container->set('executor', fn () => new Executor(), []);
 // container's _APP_ALLOWED_INTERNAL_ADDRESSES lists (empty by default; the dev stack lists its
 // own network). A malformed range throws rather than being skipped. Shared per process: without
 // connection reuse every request opens its own handle, and each with*() returns a copy.
-$container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(), new PublicInternet(
-    ...\array_map(
-        fn (string $range) => new IPRange($range),
-        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
-    )
-)), []);
-$container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(), new PublicInternet(
-    ...\array_map(
-        fn (string $range) => new IPRange($range),
-        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
-    )
-)), []);
 // cURL counts decoded bytes against the size cap and aborts the transfer once it is passed.
+$container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
+$container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
 $container->set('clientForAvatars', fn () => (new Client(new CurlAdapter(options: [
     \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
 ]), new PublicInternet(

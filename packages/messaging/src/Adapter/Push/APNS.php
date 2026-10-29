@@ -119,9 +119,11 @@ class APNS extends PushAdapter
             $endpoint = 'https://api.development.push.apple.com';
         }
 
+        // Results map back by request index, not by what the URL path appears to name
+        $tokens = \array_values($message->getTo());
         $urls = [];
-        foreach ($message->getTo() as $token) {
-            $urls[] = $endpoint . '/3/device/' . $token;
+        foreach ($tokens as $token) {
+            $urls[] = $endpoint . '/3/device/' . \rawurlencode($token);
         }
 
         $headers = [
@@ -141,8 +143,8 @@ class APNS extends PushAdapter
             urls: $urls,
             headers: $headers,
             bodies: [$payload],
-            onResult: function (array $result) use ($response): void {
-                $device = basename($result['url']);
+            onResult: function (array $result) use ($response, $tokens): void {
+                $device = $tokens[$result['index']];
 
                 if ($result['statusCode'] === 200) {
                     $response->incrementDeliveredTo();
