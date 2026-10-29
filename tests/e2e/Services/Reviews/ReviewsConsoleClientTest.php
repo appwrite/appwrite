@@ -474,9 +474,16 @@ final class ReviewsConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
-        // A redelivered mention queues nothing more
+        // A redelivered mention queues nothing more, and leaves a review queued after it alone
+        $this->sendPullRequestEvent('synchronize', $pullRequest, \str_repeat('d', 40));
+        $newer = $this->listReviews($pullRequest, [Query::equal('status', ['queued'])->toString()]);
+        $this->assertSame(1, $newer['body']['total']);
+
         $this->sendCommentEvent('issue_comment', $pullRequest, $comment, '@' . $handle . ' full review, please');
         $this->assertSame('completed', $this->client->call(Client::METHOD_GET, '/reviews/' . $reviewId, $this->projectHeaders())['body']['status']);
+        $queued = $this->listReviews($pullRequest, [Query::equal('status', ['queued'])->toString()]);
+        $this->assertSame(1, $queued['body']['total']);
+        $this->assertSame($newer['body']['reviews'][0]['$id'], $queued['body']['reviews'][0]['$id']);
 
         // Another project cannot read the repository's learnings
         $learnings = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/learnings', [
