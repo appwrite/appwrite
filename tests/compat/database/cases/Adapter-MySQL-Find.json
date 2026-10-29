@@ -4765,7 +4765,7 @@
             },
             {
               "transform": "document_find",
-              "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE MATCH(`body`) AGAINST(? IN BOOLEAN MODE) LIMIT ?"
+              "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE (MATCH(`body`) AGAINST(? IN BOOLEAN MODE) AND `body` REGEXP ?) LIMIT ?"
             },
             {
               "transform": "document_find",

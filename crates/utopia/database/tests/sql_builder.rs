@@ -247,7 +247,7 @@ mod search_term_test {
         ("\"foo/bar", "foo or bar"),
     ];
 
-    const MYSQL_TERMS: [(&str, &str); 9] = [
+    const MYSQL_TERMS: [(&str, &str); 8] = [
         ("foo/bar", "foo bar*"),
         ("foo,bar", "foo bar*"),
         ("foo.bar", "foo bar*"),
@@ -256,8 +256,14 @@ mod search_term_test {
         ("foo_bar", "foo_bar*"),
         ("baz, foo/bar;  qux", "baz foo bar qux*"),
         ("!!!foo...###", "foo*"),
-        ("\"foo/bar baz\"", "\"foo bar baz\""),
     ];
+
+    /// An exact phrase requires each of its words, then checks their order:
+    /// PHP's SearchTermTest "exact phrase keeps its quotes" on MySQL and MariaDB.
+    const MYSQL_PHRASE: (&str, [&str; 2]) = (
+        "\"foo/bar baz\"",
+        ["+foo +bar +baz", "(^|[^[:alnum:]_])foo[^[:alnum:]_]+bar[^[:alnum:]_]+baz([^[:alnum:]_]|$)"],
+    );
 
     const WITHOUT_WORDS: [&str; 5] = ["/,;%=?#", "+-*@<>~()", "!!!...###", "\"/\"", "  \t "];
 
@@ -289,6 +295,10 @@ mod search_term_test {
             assert_eq!(bindings(&mut b, Query::search("title", term)), vec![string(bound)], "{term}");
             assert_eq!(bindings(&mut b, Query::not_search("title", term)), vec![string(bound)], "{term}");
         }
+        let (term, bound) = MYSQL_PHRASE;
+        let mut b = SqlBuilder::MySql(builder::mysql());
+        assert_eq!(bindings(&mut b, Query::search("title", term)), bound.map(string).to_vec());
+        assert_eq!(bindings(&mut b, Query::not_search("title", term)), bound.map(string).to_vec());
     }
 
     #[test]
@@ -298,6 +308,10 @@ mod search_term_test {
             assert_eq!(bindings(&mut b, Query::search("title", term)), vec![string(bound)], "{term}");
             assert_eq!(bindings(&mut b, Query::not_search("title", term)), vec![string(bound)], "{term}");
         }
+        let (term, bound) = MYSQL_PHRASE;
+        let mut b = SqlBuilder::MariaDb(builder::mariadb());
+        assert_eq!(bindings(&mut b, Query::search("title", term)), bound.map(string).to_vec());
+        assert_eq!(bindings(&mut b, Query::not_search("title", term)), bound.map(string).to_vec());
     }
 
     #[test]
