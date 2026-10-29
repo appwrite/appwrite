@@ -15,7 +15,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Locking\Lock;
-use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Messaging\Connections;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Reference\Renderer;
@@ -29,7 +29,6 @@ use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -877,8 +876,8 @@ Http::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('mqtt')
-    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject, Mqtt $mqtt) {
+    ->inject('connections')
+    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject, Connections $connections) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
 
         if ($sessionLimit === 0) {
@@ -909,11 +908,7 @@ Http::shutdown()
 
         $dbForProject->purgeCachedDocument('users', $userId);
 
-        try {
-            $mqtt->revoke($project->getId(), $userId);
-        } catch (\Throwable $error) {
-            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-        }
+        $connections->revoke($project, $userId);
     });
 
 Http::shutdown()

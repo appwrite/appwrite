@@ -9,7 +9,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
-use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Messaging\Connections;
 use Appwrite\Platform\Action;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\SDK\AuthType;
@@ -18,7 +18,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
-use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -65,13 +64,13 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('publisherForDeletes')
-            ->inject('mqtt')
+            ->inject('connections')
             ->inject('queueForRealtime')
             ->inject('usage')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Mqtt $mqtt, Realtime $queueForRealtime, Context $usage): void
+    public function action(string $userId, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Connections $connections, Realtime $queueForRealtime, Context $usage): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -81,11 +80,7 @@ class Delete extends Action
 
         $dbForProject->deleteDocument('users', $userId);
 
-        try {
-            $mqtt->revoke($project->getId(), $user->getId());
-        } catch (\Throwable $error) {
-            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-        }
+        $connections->revoke($project, $user->getId());
 
         DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
         DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));

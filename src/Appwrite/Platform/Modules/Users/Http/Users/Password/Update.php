@@ -10,7 +10,7 @@ use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
-use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Messaging\Connections;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -19,7 +19,6 @@ use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
-use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -71,11 +70,11 @@ class Update extends Action
             ->inject('hooks')
             ->inject('pwnedPasswords')
             ->inject('proofForPassword')
-            ->inject('mqtt')
+            ->inject('connections')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, PasswordPwned $pwnedPasswords, ProofsPassword $proofForPassword, Mqtt $mqtt): void
+    public function action(string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, PasswordPwned $pwnedPasswords, ProofsPassword $proofForPassword, Connections $connections): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -164,11 +163,7 @@ class Update extends Action
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        try {
-            $mqtt->revoke($project->getId(), $user->getId());
-        } catch (\Throwable $error) {
-            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-        }
+        $connections->revoke($project, $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 

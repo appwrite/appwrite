@@ -6,14 +6,13 @@ use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Messaging\Connections;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
-use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -63,7 +62,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('project')
-            ->inject('mqtt')
+            ->inject('connections')
             ->callback($this->action(...));
     }
 
@@ -76,7 +75,7 @@ class Update extends Action
         Database $dbForProject,
         Event $queueForEvents,
         Document $project,
-        Mqtt $mqtt
+        Connections $connections
     ): void {
         // Turning off MFA that is in force needs the same recent challenge as deleting an authenticator
         if (!$mfa && $user->getMinimumFactors() > 1 && !$user->sessionChallengeRecent($session->getId())) {
@@ -106,11 +105,7 @@ class Update extends Action
         }
 
         // A session left short of factors no longer authorizes its MQTT connections.
-        try {
-            $mqtt->revoke($project->getId(), $user->getId());
-        } catch (\Throwable $error) {
-            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-        }
+        $connections->revoke($project, $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 

@@ -7,7 +7,7 @@ use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Messaging\Connections;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -15,7 +15,6 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Enum;
@@ -87,7 +86,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('project')
-            ->inject('mqtt')
+            ->inject('connections')
             ->callback($this->action(...));
     }
 
@@ -100,7 +99,7 @@ class Update extends Action
         Database $dbForProject,
         Event $queueForEvents,
         Document $project,
-        Mqtt $mqtt
+        Connections $connections
     ): void {
         $authenticator = (match ($type) {
             Type::TOTP => TOTP::getAuthenticatorFromUser($user),
@@ -134,11 +133,7 @@ class Update extends Action
         $dbForProject->updateDocument('sessions', $session->getId(), new Document(['factors' => $factors]));
 
         // A session left short of factors no longer authorizes its MQTT connections.
-        try {
-            $mqtt->revoke($project->getId(), $user->getId());
-        } catch (\Throwable $error) {
-            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-        }
+        $connections->revoke($project, $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 

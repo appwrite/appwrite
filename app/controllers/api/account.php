@@ -28,7 +28,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Hooks\Hooks;
-use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Messaging\Connections;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Presences\State as PresenceState;
@@ -56,7 +56,6 @@ use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -588,10 +587,10 @@ Http::delete('/v1/account')
     ->inject('queueForEvents')
     ->inject('publisherForDeletes')
     ->inject('authorization')
-    ->inject('mqtt')
+    ->inject('connections')
     ->inject('queueForRealtime')
     ->inject('usage')
-    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime, Context $usage) {
+    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization, Connections $connections, Realtime $queueForRealtime, Context $usage) {
         if ($targetUser->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
@@ -624,11 +623,7 @@ Http::delete('/v1/account')
         // The delete's own purge ran inside this transaction, so a read before the commit may have re-cached the user.
         $dbForProject->purgeCachedDocument('users', $targetUser->getId());
 
-        try {
-            $mqtt->revoke($project->getId(), $targetUser->getId());
-        } catch (\Throwable $error) {
-            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-        }
+        $connections->revoke($project, $targetUser->getId());
 
         (new PresenceState())->deleteForUser($dbForProject, $project, $targetUser, $queueForRealtime, $usage);
 
@@ -729,8 +724,8 @@ Http::delete('/v1/account/sessions')
     ->inject('cookieDomain')
     ->inject('session')
     ->inject('project')
-    ->inject('mqtt')
-    ->action(function (bool $current, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $callingSession, Document $project, Mqtt $mqtt) {
+    ->inject('connections')
+    ->action(function (bool $current, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $callingSession, Document $project, Connections $connections) {
 
         // Nothing to keep (e.g. account API key), so refuse rather than delete every session.
         if (!$current && $callingSession === null) {
@@ -781,11 +776,7 @@ Http::delete('/v1/account/sessions')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        try {
-            $mqtt->revoke($project->getId(), $user->getId());
-        } catch (\Throwable $error) {
-            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-        }
+        $connections->revoke($project, $user->getId());
 
         if ($currentSession instanceof Document) {
             $queueForEvents
@@ -888,8 +879,8 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('cookieDomain')
     ->inject('session')
     ->inject('project')
-    ->inject('mqtt')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $current, Document $project, Mqtt $mqtt) {
+    ->inject('connections')
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $current, Document $project, Connections $connections) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -926,11 +917,7 @@ Http::delete('/v1/account/sessions/:sessionId')
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
 
-            try {
-                $mqtt->revoke($project->getId(), $user->getId());
-            } catch (\Throwable $error) {
-                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-            }
+            $connections->revoke($project, $user->getId());
 
             $queueForEvents
                 ->setParam('userId', $user->getId())
@@ -1690,9 +1677,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('authorization')
     ->inject('platform')
     ->inject('clientForOAuth2')
-    ->inject('mqtt')
+    ->inject('connections')
     ->inject('bus')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2, Mqtt $mqtt, Bus $bus) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2, Connections $connections, Bus $bus) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1920,11 +1907,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $dbForProject->deleteDocument('sessions', $currentDocument->getId());
                     $dbForProject->purgeCachedDocument('users', $user->getId());
 
-                    try {
-                        $mqtt->revoke($project->getId(), $user->getId());
-                    } catch (\Throwable $error) {
-                        Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-                    }
+                    $connections->revoke($project, $user->getId());
                 }
             }
         }
@@ -3791,8 +3774,8 @@ Http::patch('/v1/account/password')
     ->inject('proofForPassword')
     ->inject('pwnedPasswords')
     ->inject('session')
-    ->inject('mqtt')
-    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, PasswordPwned $pwnedPasswords, ?Document $current, Mqtt $mqtt) {
+    ->inject('connections')
+    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, PasswordPwned $pwnedPasswords, ?Document $current, Connections $connections) {
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !$userProofForPassword->verify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -3847,11 +3830,7 @@ Http::patch('/v1/account/password')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        try {
-            $mqtt->revoke($project->getId(), $user->getId());
-        } catch (\Throwable $error) {
-            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-        }
+        $connections->revoke($project, $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -4287,17 +4266,13 @@ Http::patch('/v1/account/status')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('project')
-    ->inject('mqtt')
+    ->inject('connections')
     ->inject('queueForRealtime')
     ->inject('usage')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain, Document $project, Mqtt $mqtt, Realtime $queueForRealtime, Context $usage) {
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain, Document $project, Connections $connections, Realtime $queueForRealtime, Context $usage) {
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => false]));
 
-        try {
-            $mqtt->revoke($project->getId(), $user->getId());
-        } catch (\Throwable $error) {
-            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-        }
+        $connections->revoke($project, $user->getId());
 
         (new PresenceState())->deleteForUser($dbForProject, $project, $user, $queueForRealtime, $usage);
 
@@ -4622,9 +4597,9 @@ Http::put('/v1/account/recovery')
     ->inject('proofForToken')
 ->inject('authorization')
     ->inject('pwnedPasswords')
-    ->inject('mqtt')
+    ->inject('connections')
     ->inject('bus')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords, Mqtt $mqtt, Bus $bus) {
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords, Connections $connections, Bus $bus) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -4728,11 +4703,7 @@ Http::put('/v1/account/recovery')
             ));
         }
 
-        try {
-            $mqtt->revoke($project->getId(), $profile->getId());
-        } catch (\Throwable $error) {
-            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-        }
+        $connections->revoke($project, $profile->getId());
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
@@ -5060,9 +5031,9 @@ Http::put('/v1/account/recovery/otp')
     ->inject('proofForCode')
     ->inject('authorization')
     ->inject('pwnedPasswords')
-    ->inject('mqtt')
+    ->inject('connections')
     ->inject('bus')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords, Mqtt $mqtt, Bus $bus) {
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords, Connections $connections, Bus $bus) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -5166,11 +5137,7 @@ Http::put('/v1/account/recovery/otp')
             ));
         }
 
-        try {
-            $mqtt->revoke($project->getId(), $profile->getId());
-        } catch (\Throwable $error) {
-            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-        }
+        $connections->revoke($project, $profile->getId());
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
