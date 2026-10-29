@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Area,
@@ -42,8 +42,36 @@ export type ChartedRule = {
   threshold: number
 }
 
-export function useRuleSeries(projectId: string, rule: ChartedRule) {
-  return useQuery(alertSeriesQueryOptions(projectId, rule))
+export function useRuleSeries(
+  projectId: string,
+  rule: ChartedRule,
+  enabled = true,
+) {
+  return useQuery({ ...alertSeriesQueryOptions(projectId, rule), enabled })
+}
+
+/** Whether the element has come into view, so a long list only loads what is seen. */
+function useSeen<T extends HTMLElement>() {
+  const ref = useRef<T>(null)
+  const [seen, setSeen] = useState(false)
+
+  useEffect(() => {
+    const element = ref.current
+    if (!element || seen) return
+    if (typeof IntersectionObserver === 'undefined') {
+      setSeen(true)
+      return
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting) return
+      setSeen(true)
+      observer.disconnect()
+    })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [seen])
+
+  return { ref, seen }
 }
 
 function rangeLabel(rule: ChartedRule, t: (text: string) => string): string {
@@ -64,9 +92,10 @@ export function RuleSparkline({
   rule: ChartedRule
   className?: string
 }) {
-  const { data } = useRuleSeries(projectId, rule)
+  const { ref, seen } = useSeen<HTMLDivElement>()
+  const { data } = useRuleSeries(projectId, rule, seen)
   if (!data || data.length === 0) {
-    return <div className={cn('h-8 w-28', className)} />
+    return <div ref={ref} className={cn('h-8 w-28', className)} />
   }
   const max = Math.max(rule.threshold, ...data.map((point) => point.value))
   const breaching = breaches(
