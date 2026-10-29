@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Reviews\Http\Repositories\Learnings;
 
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Reviews\Base;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -12,7 +13,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
-use Utopia\Validator\URL;
 
 /**
  * A team preference someone asked the reviewer to remember in a conversation. Later reviews and
@@ -45,7 +45,7 @@ class Create extends Base
             ->param('projectId', '', new UID(), 'Project ID.')
             ->param('body', '', new Text(65535), 'What to remember, in one imperative sentence.')
             ->param('author', '', new Text(255), 'GitHub login of who asked for it.')
-            ->param('sourceUrl', '', new URL(), 'The comment it was asked in.', true)
+            ->param('sourceUrl', '', new PublicURL(), 'The comment it was asked in.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
