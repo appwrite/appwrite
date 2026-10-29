@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class BatchTest extends Scope
 {
@@ -73,7 +73,7 @@ final class BatchTest extends Scope
                 }
             }',
             'variables' => [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $email,
                 'password' => 'password',
                 'name' => 'Tester 1',
@@ -86,7 +86,7 @@ final class BatchTest extends Scope
                 }
             }',
                 'variables' => [
-                    'teamId' => ID::unique(),
+                    'teamId' => Id::unique(),
                     'name' => 'Team 1',
                 ],
             ]];
@@ -121,7 +121,7 @@ final class BatchTest extends Scope
             [
                 'query' => $query,
                 'variables' => [
-                    'userId' => ID::unique(),
+                    'userId' => Id::unique(),
                     'email' => $email1,
                     'password' => 'password',
                     'name' => 'Tester 1',
@@ -130,7 +130,7 @@ final class BatchTest extends Scope
             [
                 'query' => $query,
                 'variables' => [
-                    'userId' => ID::unique(),
+                    'userId' => Id::unique(),
                     'email' => $email2,
                     'password' => 'password',
                     'name' => 'Tester 2',
@@ -165,7 +165,7 @@ final class BatchTest extends Scope
                     }
                 }',
                 'variables' => [
-                    'userId' => ID::unique(),
+                    'userId' => Id::unique(),
                     'email' => $email,
                     'password' => 'password',
                     'name' => 'Tester 1',
@@ -206,7 +206,7 @@ final class BatchTest extends Scope
                     }
                 }',
                 'variables' => [
-                    'userId' => ID::unique(),
+                    'userId' => Id::unique(),
                     'email' => $email,
                     'password' => 'password',
                     'name' => 'Tester 1',
@@ -295,8 +295,8 @@ final class BatchTest extends Scope
                 }
             }',
             'variables' => [
-                'user1Id' => ID::unique(),
-                'user2Id' => ID::unique(),
+                'user1Id' => Id::unique(),
+                'user2Id' => Id::unique(),
                 'email1' => $email1,
                 'email2' => $email2,
                 'password' => 'password',
@@ -332,7 +332,7 @@ final class BatchTest extends Scope
                 }
             }',
             'variables' => [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email1' => $email1,
                 'email2' => $email2,
                 'name1' => 'Tester 1',
@@ -364,7 +364,7 @@ final class BatchTest extends Scope
                 }
             }',
             'variables' => [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email1' => $email1,
                 'email2' => $email2,
                 'name1' => 'Tester 1',

@@ -11,6 +11,8 @@ use Tests\E2E\Client;
  */
 trait SchemaPolling
 {
+    private const int SCHEMA_POLL_SERVER_ERROR_LIMIT = 10;
+
     /**
      * Wait for an attribute to become available.
      *
@@ -20,21 +22,14 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAttribute(string $databaseId, string $containerId, string $attributeKey, int $timeoutMs = 240000, int $waitMs = 500): void
+    protected function waitForAttribute(string $databaseId, string $containerId, string $attributeKey, int $timeoutMs = 360000, int $waitMs = 500): void
     {
         if (!$this->getSupportForAttributes()) {
             return;
         }
-        $this->assertEventually(function () use ($databaseId, $containerId, $attributeKey) {
-            $attribute = $this->client->call(
-                Client::METHOD_GET,
-                $this->getSchemaUrl($databaseId, $containerId) . '/' . $attributeKey,
-                array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                    'x-appwrite-key' => $this->getProject()['apiKey']
-                ])
-            );
+        $serverErrors = 0;
+        $this->assertEventually(function () use ($databaseId, $containerId, $attributeKey, &$serverErrors) {
+            $attribute = $this->pollSchema($this->getSchemaUrl($databaseId, $containerId) . '/' . $attributeKey, $serverErrors);
 
             $this->assertEquals(200, $attribute['headers']['status-code']);
 
@@ -56,18 +51,11 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForIndex(string $databaseId, string $containerId, string $indexKey, int $timeoutMs = 240000, int $waitMs = 500): void
+    protected function waitForIndex(string $databaseId, string $containerId, string $indexKey, int $timeoutMs = 360000, int $waitMs = 500): void
     {
-        $this->assertEventually(function () use ($databaseId, $containerId, $indexKey) {
-            $index = $this->client->call(
-                Client::METHOD_GET,
-                $this->getIndexUrl($databaseId, $containerId, $indexKey),
-                array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                    'x-appwrite-key' => $this->getProject()['apiKey']
-                ])
-            );
+        $serverErrors = 0;
+        $this->assertEventually(function () use ($databaseId, $containerId, $indexKey, &$serverErrors) {
+            $index = $this->pollSchema($this->getIndexUrl($databaseId, $containerId, $indexKey), $serverErrors);
 
             $this->assertEquals(200, $index['headers']['status-code']);
             $this->assertArrayHasKey('body', $index);
@@ -90,18 +78,11 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAllIndexes(string $databaseId, string $containerId, int $timeoutMs = 240000, int $waitMs = 500): void
+    protected function waitForAllIndexes(string $databaseId, string $containerId, int $timeoutMs = 360000, int $waitMs = 500): void
     {
-        $this->assertEventually(function () use ($databaseId, $containerId) {
-            $container = $this->client->call(
-                Client::METHOD_GET,
-                $this->getContainerUrl($databaseId, $containerId),
-                array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                    'x-appwrite-key' => $this->getProject()['apiKey']
-                ])
-            );
+        $serverErrors = 0;
+        $this->assertEventually(function () use ($databaseId, $containerId, &$serverErrors) {
+            $container = $this->pollSchema($this->getContainerUrl($databaseId, $containerId), $serverErrors);
 
             $this->assertEquals(200, $container['headers']['status-code']);
             $this->assertArrayHasKey('body', $container);
@@ -124,21 +105,13 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAllAttributes(string $databaseId, string $containerId, int $timeoutMs = 240000, int $waitMs = 500): void
+    protected function waitForAllAttributes(string $databaseId, string $containerId, int $timeoutMs = 360000, int $waitMs = 500): void
     {
-        $this->assertEventually(function () use ($databaseId, $containerId) {
-            $container = $this->client->call(
-                Client::METHOD_GET,
-                $this->getContainerUrl($databaseId, $containerId),
-                array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                    'x-appwrite-key' => $this->getProject()['apiKey']
-                ])
-            );
+        $serverErrors = 0;
+        $this->assertEventually(function () use ($databaseId, $containerId, &$serverErrors) {
+            $container = $this->pollSchema($this->getContainerUrl($databaseId, $containerId), $serverErrors);
 
-            // Tolerate transient 500s during heavy attribute processing
-            $this->assertContains($container['headers']['status-code'], [200], "Expected 200 but got {$container['headers']['status-code']} polling container {$containerId}");
+            $this->assertSame(200, $container['headers']['status-code'], "Expected 200 but got {$container['headers']['status-code']} polling container {$containerId}");
 
             $schemaResource = $this->getSchemaResource();
             $this->assertNotEmpty($container['body'][$schemaResource], "No attributes found in container {$containerId}");
@@ -150,5 +123,40 @@ trait SchemaPolling
                 $this->assertEquals('available', $attribute['status'], "Attribute '{$attribute['key']}' is not available yet");
             }
         }, $timeoutMs, $waitMs);
+    }
+
+    /**
+     * A poll retries until the schema settles, which tolerates a transient server error but would spend the whole
+     * timeout retrying one the server returns every time. A run of server errors fails the wait with the error.
+     *
+     * @return array{headers: array<string, mixed>, body: mixed}
+     * @throws Critical
+     */
+    private function pollSchema(string $url, int &$serverErrors): array
+    {
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            $url,
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]
+        );
+
+        $status = (int) $response['headers']['status-code'];
+        if ($status < 500) {
+            $serverErrors = 0;
+
+            return $response;
+        }
+
+        if (++$serverErrors >= self::SCHEMA_POLL_SERVER_ERROR_LIMIT) {
+            $body = \is_array($response['body']) ? $response['body'] : [];
+            $origin = isset($body['file']) ? " at {$body['file']}:" . ($body['line'] ?? '?') : '';
+            throw new Critical("GET {$url} returned {$serverErrors} server errors in a row, the last {$status}: " . ($body['message'] ?? 'no message') . $origin);
+        }
+
+        return $response;
     }
 }

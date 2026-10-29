@@ -3,7 +3,7 @@
 namespace Appwrite\Event\Validator;
 
 use Utopia\Config\Config;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Event extends Validator
 {
@@ -93,7 +93,8 @@ class Event extends Validator
         }
 
         if ($subType) {
-            if ($action && !\array_key_exists($action, $events[$type][$subType])) {
+            $actions = $subSubType ? $events[$type][$subType][$subSubType] : $events[$type][$subType];
+            if ($action && !\array_key_exists($action, $actions)) {
                 return false;
             }
             if (!($subResource) || !\array_key_exists($subType, $events[$type])) {

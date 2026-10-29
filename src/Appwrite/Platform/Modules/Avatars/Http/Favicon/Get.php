@@ -45,6 +45,9 @@ class Get extends Action
             ->desc('Get favicon')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
+            ->label('abuse-key', 'url:{url},ip:{ip}')
+            ->label('abuse-limit', 60)
+            ->label('abuse-time', 60)
             ->label('cache', true)
             ->label('cache.resource', 'avatar/favicon')
             ->label('sdk', new Method(
@@ -87,10 +90,8 @@ class Get extends Action
             System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
         );
 
-        $client = $clientForAvatars->withTimeout(15);
-
         try {
-            $pageResponse = $this->safeFetch($url, $userAgent, $publicURL, $client);
+            $pageResponse = $this->safeFetch($url, $userAgent, $publicURL, $clientForAvatars, $pageUrl);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -112,7 +113,7 @@ class Get extends Action
             $href = $link->getAttribute('href');
             $rel = $link->getAttribute('rel');
             $sizes = $link->getAttribute('sizes');
-            $absolute = URLParse::resolveLocation($url, $href);
+            $absolute = URLParse::resolveLocation($pageUrl, $href);
 
             switch (\strtolower($rel)) {
                 case 'icon':
@@ -149,14 +150,12 @@ class Get extends Action
         }
 
         if (empty($outputHref) || empty($outputExt)) {
-            $default = \parse_url($url);
-
-            $outputHref = $default['scheme'] . '://' . $default['host'] . '/favicon.ico';
+            $outputHref = URLParse::resolveLocation($pageUrl, '/favicon.ico');
             $outputExt = 'ico';
         }
 
         try {
-            $iconResponse = $this->safeFetch($outputHref, $userAgent, $publicURL, $client);
+            $iconResponse = $this->safeFetch($outputHref, $userAgent, $publicURL, $clientForAvatars);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -210,11 +209,12 @@ class Get extends Action
     /**
      * Follows redirects one hop at a time so every target passes the validator (scheme,
      * known public domain, allowed addresses) before it is requested; the client then
-     * checks the address it actually connects to.
+     * checks the address it actually connects to. The last requested URL is written to
+     * $finalUrl.
      *
      * @throws Exception
      */
-    protected function safeFetch(string $url, string $userAgent, PublicURL $validator, ClientInterface $client): ResponseInterface
+    protected function safeFetch(string $url, string $userAgent, PublicURL $validator, ClientInterface $client, ?string &$finalUrl = null): ResponseInterface
     {
         $requestFactory = new RequestFactory();
 
@@ -222,6 +222,8 @@ class Get extends Action
             if (!$validator->isValid($url)) {
                 throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $validator->getDescription());
             }
+
+            $finalUrl = $url;
 
             $response = $client->sendRequest(
                 $requestFactory

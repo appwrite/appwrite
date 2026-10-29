@@ -43,12 +43,15 @@ class Image
 
     /**
      * @throws \ImagickException
+     * @throws Exception
      */
     public function __construct(string $data)
     {
         $this->image = new Imagick();
 
+        $this->image->setFormat(Format::detect($data)->value);
         $this->image->readImageBlob($data);
+        $this->image->setFormat('');
 
         // Solve formats such as GIF. Otherwise width&height would be from last frame (wrong)
         $this->image->setFirstIterator();
@@ -121,17 +124,14 @@ class Image
 
         $originalAspect = $this->width / $this->height;
 
-        if ($width === 0) {
-            $width = \intval($height * $originalAspect);
-        }
-
-        if ($height === 0) {
-            $height = \intval($width / $originalAspect);
-        }
-
-        if ($height === 0 && $width === 0) {
+        // A derived side rounds down, so a 1px side on a skewed source must not collapse to 0.
+        if ($width === 0 && $height === 0) {
             $height = $this->height;
             $width = $this->width;
+        } elseif ($width === 0) {
+            $width = max(1, \intval($height * $originalAspect));
+        } elseif ($height === 0) {
+            $height = max(1, \intval($width / $originalAspect));
         }
 
         $resizeWidth = $this->width;

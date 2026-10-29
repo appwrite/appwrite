@@ -5,8 +5,8 @@ namespace Appwrite\Certificates;
 use Appwrite\Certificates\Exception\CertificateStatus as CertificateStatusException;
 use Exception;
 use Utopia\Cdn\Certificates\Provider;
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\DateTime;
 use Utopia\Http\Http;
 

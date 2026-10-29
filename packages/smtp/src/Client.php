@@ -11,6 +11,7 @@ use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Exception\SmtpException;
 use Utopia\SMTP\Exception\TransactionException;
+use Utopia\SMTP\Exception\UnconfirmedException;
 use Utopia\SMTP\Mime\Encoding;
 use Utopia\SMTP\Transport\Transport;
 
@@ -97,10 +98,16 @@ final class Client
 
         if ($refusal instanceof \Utopia\SMTP\Reply && $accepted === []) {
             if ($this->ready) {
-                $this->reset();
+                try {
+                    $this->reset();
+                } catch (SmtpException) {
+                    // A session that will not reset is not one to reuse, and
+                    // its refusal of RSET says nothing about the recipients.
+                    $this->discard();
+                }
             }
 
-            throw new TransactionException($refusal, 'Every recipient was refused');
+            throw new TransactionException($refusal, 'Every recipient was refused', $rejected);
         }
 
         $this->command('DATA', [354]);
@@ -121,7 +128,22 @@ final class Client
         // A refusal here is clean -- the server read the dot and is back in
         // command state -- so only a transaction failure keeps the connection.
         // exchange() decides that; a dead or desynchronised stream does not.
-        $result = new Result($this->messageId($this->exchange([250])), $accepted, $rejected);
+        // The dot is already written, so a missing reply is not a refusal:
+        // the server may have queued the message. Nor is a 421, which closes
+        // the channel whether or not the message was taken.
+        try {
+            $reply = $this->exchange([250]);
+        } catch (TransactionException $exception) {
+            if ($exception->reply->code !== 421) {
+                throw $exception;
+            }
+
+            throw new UnconfirmedException($exception->getMessage(), $exception->getCode(), $exception);
+        } catch (ConnectionException|ProtocolException $exception) {
+            throw new UnconfirmedException($exception->getMessage(), $exception->getCode(), $exception);
+        }
+
+        $result = new Result($this->messageId($reply), $accepted, $rejected);
 
         ++$this->transactions;
 
@@ -265,8 +287,15 @@ final class Client
     {
         try {
             $this->capabilities = Capabilities::fromReply($this->command("EHLO {$this->domain}", [250]));
-        } catch (TransactionException) {
-            // A server too old for ESMTP still has to answer HELO.
+        } catch (TransactionException $exception) {
+            // A server too old for ESMTP refuses EHLO outright, and still has to
+            // answer HELO (RFC 5321 section 4.1.4). A 4xx is something else: the
+            // server is busy or closing, and a 421 has already ended the session,
+            // so there is nothing left to send HELO on.
+            if (!$exception->isPermanent()) {
+                throw $exception;
+            }
+
             $this->command("HELO {$this->domain}", [250]);
             $this->capabilities = Capabilities::none();
         }

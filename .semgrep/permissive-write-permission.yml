@@ -1,0 +1,30 @@
+rules:
+  - id: php.appwrite.permissive-write-permission
+    message: >
+      Write / update / delete permission granted to Role::any() or
+      Role::guests(). Anyone, including unauthenticated callers, can modify
+      or remove the document. Scope the role to a user, team, or label, or
+      keep the document behind a server-side route.
+    languages: [php]
+    severity: WARNING
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+      exclude:
+        # Frozen upgrade history and test-only mock routes.
+        - "**/src/Appwrite/Migration/Version/**"
+        - "**/app/controllers/mock.php"
+    pattern-either:
+      - pattern: Permission::write(Role::any())
+      - pattern: Permission::update(Role::any())
+      - pattern: Permission::delete(Role::any())
+      - pattern: Permission::create(Role::any())
+      - pattern: Permission::write(Role::guests())
+      - pattern: Permission::update(Role::guests())
+      - pattern: Permission::delete(Role::guests())
+      - pattern: Permission::create(Role::guests())

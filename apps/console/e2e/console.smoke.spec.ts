@@ -1,0 +1,151 @@
+import { test, expect } from './fixtures'
+import { E2E_VIEWPORT } from './config/viewport'
+import { acceptCookieBannerIfPresent, newE2ePage } from './helpers/cookie-banner'
+import { discoverConsoleTargets } from './helpers/discovery'
+import { ensureProjectActive } from './helpers/ensure-project-active'
+import { expectPageRenders } from './helpers/smoke'
+
+/**
+ * Authenticated console pages. Read-only: navigate and assert render only.
+ * Uses E2E_TEST_EMAIL / E2E_TEST_PASSWORD (or session secret) via auth.setup.
+ * Paused free-plan projects are restored only before project-scoped checks.
+ */
+
+test.describe('console smoke (read-only)', () => {
+  let orgId: string
+  let projectId: string | null
+
+  test.beforeAll(async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: 'e2e/.auth/auth.json',
+      viewport: E2E_VIEWPORT,
+      screen: E2E_VIEWPORT,
+    })
+    const page = await newE2ePage(context)
+    try {
+      const targets = await discoverConsoleTargets(page)
+      orgId = targets.orgId
+      projectId = targets.projectId
+    } finally {
+      await context.close()
+    }
+  })
+
+  test('session stays signed in', async ({ page }) => {
+    // Do not use `/` here: production `/` 301s to `/home`. Use a console route.
+    await page.goto('/account', { waitUntil: 'domcontentloaded' })
+    await acceptCookieBannerIfPresent(page)
+    await expect(page).not.toHaveURL(/\/sign-in/)
+    await expect(page).toHaveURL(/\/account(?:\/|$|\?)/, { timeout: 45_000 })
+    // Prefer either the settings nav or a heading; `.first()` avoids strict-mode
+    // failures when both are present.
+    await expect(
+      page
+        .locator('[data-testid="settings-navigation"]:visible')
+        .or(page.getByRole('heading').first())
+        .first(),
+    ).toBeVisible({ timeout: 45_000 })
+  })
+
+  test('account overview renders', async ({ page }) => {
+    await expectPageRenders(page, '/account', {
+      url: /\/account(?:\/|$|\?)/,
+      ready: () =>
+        page
+          .locator('[data-testid="settings-navigation"]:visible')
+          .or(page.getByRole('heading').first())
+          .first(),
+    })
+  })
+
+  test('account security renders', async ({ page }) => {
+    await expectPageRenders(page, '/account/security', {
+      url: /\/account\/security/,
+      ready: () =>
+        page.locator('[data-testid="settings-navigation"]:visible').first(),
+    })
+  })
+
+  test('organization overview renders', async ({ page }) => {
+    await expectPageRenders(page, `/organizations/${orgId}`, {
+      url: new RegExp(`/organizations/${orgId}(?:/|$|\\?)`),
+      ready: () => page.locator('#main-content'),
+    })
+  })
+
+  test('organization members renders', async ({ page }) => {
+    await expectPageRenders(page, `/organizations/${orgId}/settings/members`, {
+      url: new RegExp(`/organizations/${orgId}/settings/members`),
+      ready: () => page.locator('#main-content'),
+    })
+  })
+
+  test('organization domains renders', async ({ page }) => {
+    await expectPageRenders(page, `/organizations/${orgId}/domains`, {
+      url: new RegExp(`/organizations/${orgId}/domains`),
+      ready: () => page.locator('#main-content'),
+    })
+  })
+
+  test('organization billing renders', async ({ page }) => {
+    await expectPageRenders(
+      page,
+      `/organizations/${orgId}/settings/billing`,
+      {
+        url: new RegExp(`/organizations/${orgId}/settings/billing`),
+        ready: () => page.locator('#main-content'),
+      },
+    )
+  })
+
+  test.describe('project services', () => {
+    test.beforeEach(() => {
+      test.skip(
+        !projectId,
+        'No live project found for this account. Set E2E_PROJECT_ID or create a project.',
+      )
+    })
+
+    test.beforeAll(async ({ browser }) => {
+      test.skip(
+        !projectId,
+        'No live project found for this account. Set E2E_PROJECT_ID or create a project.',
+      )
+
+      const context = await browser.newContext({
+        storageState: 'e2e/.auth/auth.json',
+        viewport: E2E_VIEWPORT,
+        screen: E2E_VIEWPORT,
+      })
+      const page = await newE2ePage(context)
+      try {
+        await ensureProjectActive(page, projectId!)
+      } finally {
+        await context.close()
+      }
+    })
+
+    const servicePaths = [
+      { name: 'overview', suffix: '/overview' },
+      { name: 'auth', suffix: '/auth' },
+      { name: 'databases', suffix: '/databases' },
+      { name: 'storage', suffix: '/storage' },
+      { name: 'functions', suffix: '/functions' },
+      { name: 'messaging', suffix: '/messaging' },
+      { name: 'sites', suffix: '/sites' },
+      { name: 'settings', suffix: '/settings' },
+    ] as const
+
+    for (const service of servicePaths) {
+      test(`${service.name} renders`, async ({ page }) => {
+        const path = `/projects/${projectId}${service.suffix}`
+        await expectPageRenders(page, path, {
+          url: new RegExp(
+            `/projects/${projectId}${service.suffix.replace(/\//g, '\\/')}(?:/|$|\\?)`,
+          ),
+          ready: () => page.locator('#main-content'),
+        })
+      })
+    }
+  })
+})

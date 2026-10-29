@@ -551,7 +551,7 @@ final class GlobstarTest extends TestCase
     {
         $validator = new Globstar([]);
         $this->assertFalse($validator->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_STRING, $validator->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_STRING, $validator->getType());
         $this->assertNotEmpty($validator->getDescription());
     }
 

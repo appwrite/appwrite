@@ -189,16 +189,22 @@ trait Selects
         return $this;
     }
 
+    /**
+     * @param  array<mixed>|object  $value
+     */
     #[\Override]
-    public function cursorAfter(mixed $value): static
+    public function cursorAfter(array|object $value): static
     {
         $this->pendingQueries[] = Query::cursorAfter($value);
 
         return $this;
     }
 
+    /**
+     * @param  array<mixed>|object  $value
+     */
     #[\Override]
-    public function cursorBefore(mixed $value): static
+    public function cursorBefore(array|object $value): static
     {
         $this->pendingQueries[] = Query::cursorBefore($value);
 

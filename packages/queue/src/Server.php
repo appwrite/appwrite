@@ -12,7 +12,7 @@ use Utopia\Servers\Hook;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Telemetry\Histogram;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Server
 {
@@ -52,6 +52,8 @@ class Server
         3600,
         7200,
     ];
+
+    private const array SIZE_BUCKETS = [1024, 4096, 16384, 65536, 262144, 1048576, 4194304, 16777216, 67108864, 268435456];
 
     /**
      * Job
@@ -121,6 +123,7 @@ class Server
 
     private Histogram $jobWaitTime;
     private Histogram $processDuration;
+    private Histogram $messageSize;
 
     /**
      * Creates an instance of a Queue server.
@@ -238,6 +241,13 @@ class Server
             ['ExplicitBucketBoundaries' => self::DURATION_BUCKETS],
         );
 
+        $this->messageSize = $telemetry->createHistogram(
+            'messaging.process.message.size',
+            'By',
+            null,
+            ['ExplicitBucketBoundaries' => self::SIZE_BUCKETS],
+        );
+
         $this->createDepthGauge(
             $telemetry,
             'messaging.queue.depth',
@@ -339,6 +349,10 @@ class Server
                 $messageCallback = function (Message $message) {
                     $receivedAtTimestamp = microtime(true);
                     $job = $this->jobFor($message);
+                    $attributes = [
+                        'messaging.destination.name' => $message->getQueue(),
+                        'messaging.destination.namespace' => $this->adapter->namespace,
+                    ];
                     try {
                         // The enqueue timestamp comes from the publisher's
                         // clock and this from the consumer's, so on an idle
@@ -353,7 +367,12 @@ class Server
                             0.0,
                             microtime(true) - $message->getTimestamp(),
                         );
-                        $this->jobWaitTime->record($waitDuration);
+                        $this->jobWaitTime->record($waitDuration, $attributes);
+
+                        $size = $message->getSize();
+                        if ($size !== null) {
+                            $this->messageSize->record($size, $attributes);
+                        }
 
                         $this->context()->set('message', fn (): \Utopia\Queue\Message => $message);
 
@@ -392,7 +411,7 @@ class Server
                             ),
                         );
                     } finally {
-                        $this->processDuration->record(microtime(true) - $receivedAtTimestamp);
+                        $this->processDuration->record(microtime(true) - $receivedAtTimestamp, $attributes);
                     }
                 };
 
