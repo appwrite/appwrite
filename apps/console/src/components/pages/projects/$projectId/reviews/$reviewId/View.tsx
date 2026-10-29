@@ -136,14 +136,18 @@ export function View({ initialReview }: ViewProps = {}) {
                 </span>
               </Detail>
               <Detail label={t('Commit')}>
-                <a
-                  href={`${repositoryUrl}/commit/${review.providerCommitHash}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-mono text-[13px] text-foreground hover:underline"
-                >
-                  {review.providerCommitHash.slice(0, 7)}
-                </a>
+                {review.providerCommitHash ? (
+                  <a
+                    href={`${repositoryUrl}/commit/${review.providerCommitHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-mono text-[13px] text-foreground hover:underline"
+                  >
+                    {review.providerCommitHash.slice(0, 7)}
+                  </a>
+                ) : (
+                  <span className="text-[13px] text-muted-foreground">-</span>
+                )}
               </Detail>
               <Detail label={t('Created')}>
                 <DateTooltip

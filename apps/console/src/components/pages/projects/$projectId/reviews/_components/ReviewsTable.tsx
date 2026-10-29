@@ -74,9 +74,11 @@ export function ReviewsTable({
                   <span className="shrink-0 text-[13px] text-muted-foreground">
                     #{review.providerPullRequestId}
                   </span>
-                  <span className="shrink-0 font-mono text-[12px] text-muted-foreground">
-                    {review.providerCommitHash.slice(0, 7)}
-                  </span>
+                  {review.providerCommitHash && (
+                    <span className="shrink-0 font-mono text-[12px] text-muted-foreground">
+                      {review.providerCommitHash.slice(0, 7)}
+                    </span>
+                  )}
                 </Link>
               </TableCell>
               <TableCell className="px-4 py-3">
