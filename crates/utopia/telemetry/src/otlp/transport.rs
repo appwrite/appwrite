@@ -271,7 +271,8 @@ impl HttpTransport {
 
     /// A HEAD request for the root, carrying none of the endpoint's path,
     /// query, headers or payload, before the connection carries an export
-    /// (the handshake has checked the certificate names the address).
+    /// (`connect()` then refuses a certificate that does not name the
+    /// address).
     ///
     /// PHP: `Swoole::verifyAddress()`.
     async fn probe(&self, sender: &mut Sender) -> Result<(), Error> {
