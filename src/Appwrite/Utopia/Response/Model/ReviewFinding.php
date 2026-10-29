@@ -64,6 +64,24 @@ class ReviewFinding extends Model
                 'default' => '',
                 'example' => '`user` can be null here.',
             ])
+            ->addRule('suggestion', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Replacement for the lines, offered as a suggestion.',
+                'default' => '',
+                'example' => '',
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Finding status. Possible values: posted (open on the pull request), dropped (not posted), resolved (fixed by a later commit), dismissed (settled in its thread).',
+                'default' => 'posted',
+                'example' => 'posted',
+            ])
+            ->addRule('dropReason', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Why the finding was dropped, resolved or dismissed.',
+                'default' => '',
+                'example' => '',
+            ])
             ->addRule('providerCommentId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'VCS (Version Control System) comment the finding was posted as.',

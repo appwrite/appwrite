@@ -515,6 +515,7 @@ class V25 extends Migration
                 case 'reviewFindings':
                 case 'reviewEvents':
                 case 'reviewChats':
+                case 'reviewLearnings':
                 case 'reviewUsage':
                     // New in 2.7.0. Created even with reviews disabled, so turning them on later needs no migration.
                     // On shared tables the collection is global: created with a project's tenant, its

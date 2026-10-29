@@ -84,15 +84,28 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame('opened', $review['trigger']);
         $this->assertSame($repositoryId, $review['repositoryId']);
         $this->assertSame($firstHead, $review['providerCommitHash']);
-        $reviewId = $review['$id'];
+        $firstReviewId = $review['$id'];
 
-        // A push while it is still queued moves the queued review to the new head
+        // A push while it is still queued supersedes it with a review of the new head
         $this->sendPullRequestEvent('synchronize', $pullRequest, $secondHead);
 
-        $reviews = $this->listReviews($pullRequest);
-        $this->assertSame(1, $reviews['body']['total']);
-        $this->assertSame($reviewId, $reviews['body']['reviews'][0]['$id']);
-        $this->assertSame($secondHead, $reviews['body']['reviews'][0]['providerCommitHash']);
+        $queued = $this->listReviews($pullRequest, [Query::equal('status', ['queued'])->toString()]);
+        $this->assertSame(1, $queued['body']['total']);
+        $this->assertSame($secondHead, $queued['body']['reviews'][0]['providerCommitHash']);
+        $this->assertSame('synchronize', $queued['body']['reviews'][0]['trigger']);
+        $reviewId = $queued['body']['reviews'][0]['$id'];
+        $this->assertNotSame($firstReviewId, $reviewId);
+
+        $superseded = $this->client->call(Client::METHOD_GET, '/reviews/' . $firstReviewId, $this->projectHeaders());
+        $this->assertSame('superseded', $superseded['body']['status']);
+
+        // The service reads the pull request's reviews back, newest first
+        $pullReviews = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/pulls/' . $pullRequest . '/reviews', [
+            'projectId' => $projectId,
+        ]);
+        $this->assertSame(200, $pullReviews['headers']['status-code']);
+        $this->assertSame([$reviewId, $firstReviewId], \array_column($pullReviews['body']['reviews'], 'id'));
+        $this->assertSame('superseded', $pullReviews['body']['reviews'][1]['status']);
 
         // The review service starts, reports trace and usage, and completes it
         $started = $this->callService(Client::METHOD_PATCH, '/reviews/' . $reviewId . '/status', [
@@ -119,28 +132,51 @@ final class ReviewsConsoleClientTest extends Scope
         ]);
         $this->assertSame(204, $usage['headers']['status-code']);
 
-        // A push while it runs queues a second review instead of moving the running one
+        // A push while it runs queues a second review and leaves the running one alone
         $this->sendPullRequestEvent('synchronize', $pullRequest, \str_repeat('d', 40));
         $queued = $this->listReviews($pullRequest, [Query::equal('status', ['queued'])->toString()]);
         $this->assertSame(1, $queued['body']['total']);
         $this->assertNotSame($reviewId, $queued['body']['reviews'][0]['$id']);
+        $review = $this->client->call(Client::METHOD_GET, '/reviews/' . $reviewId, $this->projectHeaders());
+        $this->assertSame('processing', $review['body']['status']);
 
         $completed = $this->callService(Client::METHOD_PATCH, '/reviews/' . $reviewId . '/status', [
             'projectId' => $projectId,
             'status' => 'completed',
             'verdict' => 'comment',
             'tier' => 'B',
+            'tierReason' => 'One major finding is open.',
             'summary' => 'One missing null check.',
+            'walkthrough' => [['path' => 'src/index.ts', 'change' => 'Reads the user.']],
             'providerReviewId' => 1834620151,
-            'findings' => [[
-                'path' => 'src/index.ts',
-                'startLine' => 12,
-                'endLine' => 14,
-                'severity' => 'major',
-                'category' => 'bug',
-                'title' => 'Missing null check',
-                'body' => '`user` can be null here.',
-            ]],
+            'findings' => [
+                [
+                    'path' => 'src/index.ts',
+                    'startLine' => 12,
+                    'endLine' => 14,
+                    'severity' => 'major',
+                    'category' => 'bug',
+                    'title' => 'Missing null check',
+                    'body' => '`user` can be null here.',
+                    'suggestion' => 'if (!user) return;',
+                    'status' => 'posted',
+                    'dropReason' => null,
+                    'providerCommentId' => 2468013579,
+                ],
+                [
+                    'path' => 'src/index.ts',
+                    'startLine' => 20,
+                    'endLine' => 20,
+                    'severity' => 'minor',
+                    'category' => 'style',
+                    'title' => 'Unused import',
+                    'body' => '`fs` is not used.',
+                    'suggestion' => null,
+                    'status' => 'dropped',
+                    'dropReason' => 'Not confirmed by verification.',
+                    'providerCommentId' => null,
+                ],
+            ],
         ]);
         $this->assertSame(204, $completed['headers']['status-code']);
 
@@ -154,9 +190,58 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame('1834620151', $review['body']['providerReviewId']);
         $this->assertNotEmpty($review['body']['startedAt']);
         $this->assertNotEmpty($review['body']['completedAt']);
-        $this->assertCount(1, $review['body']['findings']);
+        $this->assertSame('One major finding is open.', $review['body']['tierReason']);
+        $this->assertSame([['path' => 'src/index.ts', 'change' => 'Reads the user.']], $review['body']['walkthrough']);
+        $this->assertCount(2, $review['body']['findings']);
         $this->assertSame('src/index.ts', $review['body']['findings'][0]['path']);
         $this->assertSame(12, $review['body']['findings'][0]['startLine']);
+
+        // The service reads the findings back, settles one and regrades the review
+        $findings = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/pulls/' . $pullRequest . '/findings', [
+            'projectId' => $projectId,
+        ]);
+        $this->assertSame(200, $findings['headers']['status-code']);
+        $this->assertCount(2, $findings['body']['findings']);
+        $posted = $findings['body']['findings'][0];
+        $this->assertSame('Missing null check', $posted['title']);
+        $this->assertSame('posted', $posted['status']);
+        $this->assertSame(2468013579, $posted['providerCommentId']);
+        $this->assertSame('if (!user) return;', $posted['suggestion']);
+        $this->assertSame($reviewId, $posted['reviewId']);
+        $this->assertSame('dropped', $findings['body']['findings'][1]['status']);
+        $this->assertNull($findings['body']['findings'][1]['providerCommentId']);
+        $this->assertNull($findings['body']['findings'][1]['suggestion']);
+
+        $settled = $this->callService(Client::METHOD_PATCH, '/reviews/repositories/' . $repositoryId . '/pulls/' . $pullRequest . '/findings/status', [
+            'projectId' => $projectId,
+            'findingIds' => [$posted['id'], $findings['body']['findings'][1]['id']],
+            'status' => 'dismissed',
+            'reason' => 'Thread resolved on GitHub by @appwrite-test',
+            'from' => 'posted',
+        ]);
+        $this->assertSame(204, $settled['headers']['status-code']);
+
+        $regraded = $this->callService(Client::METHOD_PATCH, '/reviews/' . $reviewId . '/tier', [
+            'projectId' => $projectId,
+            'tier' => 'S',
+            'tierReason' => 'Nothing is open.',
+        ]);
+        $this->assertSame(204, $regraded['headers']['status-code']);
+
+        $findings = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/pulls/' . $pullRequest . '/findings', [
+            'projectId' => $projectId,
+            'limit' => 1,
+        ]);
+        $this->assertCount(1, $findings['body']['findings']);
+        $this->assertSame('dismissed', $findings['body']['findings'][0]['status']);
+        $this->assertSame('Thread resolved on GitHub by @appwrite-test', $findings['body']['findings'][0]['dropReason']);
+
+        $review = $this->client->call(Client::METHOD_GET, '/reviews/' . $reviewId, $this->projectHeaders());
+        $this->assertSame('S', $review['body']['tier']);
+        $this->assertSame('Nothing is open.', $review['body']['tierReason']);
+        // Only findings still posted moved: the dropped one keeps its status
+        $statuses = \array_column($review['body']['findings'], 'status', 'title');
+        $this->assertSame('dropped', $statuses['Unused import']);
 
         /**
          * Test for FAILURE
@@ -174,7 +259,30 @@ final class ReviewsConsoleClientTest extends Scope
 
         $review = $this->client->call(Client::METHOD_GET, '/reviews/' . $reviewId, $this->projectHeaders());
         $this->assertSame('completed', $review['body']['status']);
-        $this->assertCount(1, $review['body']['findings']);
+        $this->assertCount(2, $review['body']['findings']);
+
+        // A superseded review never starts
+        $started = $this->callService(Client::METHOD_PATCH, '/reviews/' . $firstReviewId . '/status', [
+            'projectId' => $projectId,
+            'status' => 'processing',
+            'headSha' => $firstHead,
+            'baseSha' => \str_repeat('c', 40),
+        ]);
+        $this->assertSame(409, $started['headers']['status-code']);
+
+        // Only a completed review has a tier to change
+        $regraded = $this->callService(Client::METHOD_PATCH, '/reviews/' . $firstReviewId . '/tier', [
+            'projectId' => $projectId,
+            'tier' => 'S',
+        ]);
+        $this->assertSame(409, $regraded['headers']['status-code']);
+        $this->assertSame('review_status_invalid', $regraded['body']['type']);
+
+        // Another project cannot read the pull request's reviews
+        $pullReviews = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/pulls/' . $pullRequest . '/reviews', [
+            'projectId' => 'another-project',
+        ]);
+        $this->assertSame(404, $pullReviews['headers']['status-code']);
 
         // Code review is on for the repository already
         $duplicate = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [
@@ -231,23 +339,39 @@ final class ReviewsConsoleClientTest extends Scope
             $this->assertSame(204, $this->createChatUsage($repositoryId, $pullRequest, $question)['headers']['status-code']);
         }
 
+        // Another app may ask, e.g. an agent answering a finding
+        $agent = $reply + 6;
+        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $agent, 'Fixed in the latest commit.', replyTo: $reply - 1, authorType: 'Bot', author: 'cursor[bot]', association: 'NONE');
+        $this->assertSame(204, $this->createChatUsage($repositoryId, $pullRequest, $agent)['headers']['status-code']);
+
         /**
          * Test for FAILURE
          */
 
-        // A conversation comment without a mention is not for the reviewer
+        // A conversation comment without a mention is not for the reviewer while no finding is listed in a review body
         $plain = $reply + 2;
         $this->sendCommentEvent('issue_comment', $pullRequest, $plain, 'Looks good to me.');
         $this->assertChatNotQueued($repositoryId, $pullRequest, $plain);
 
-        // Edits, other apps and the first comment of a thread without a mention queue nothing
+        // Edits, the reviewer itself, people without write association and the first comment
+        // of a thread without a mention queue nothing
         $edited = $reply + 3;
         $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $edited, 'Why?', replyTo: $reply - 1, action: 'edited');
         $this->assertChatNotQueued($repositoryId, $pullRequest, $edited);
 
-        $bot = $reply + 4;
-        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $bot, 'Why?', replyTo: $reply - 1, authorType: 'Bot');
-        $this->assertChatNotQueued($repositoryId, $pullRequest, $bot);
+        if ($handle !== '') {
+            $itself = $reply + 4;
+            $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $itself, 'Why?', replyTo: $reply - 1, authorType: 'Bot', author: $handle . '[bot]');
+            $this->assertChatNotQueued($repositoryId, $pullRequest, $itself);
+
+            $quoted = $reply + 7;
+            $this->sendCommentEvent('issue_comment', $pullRequest, $quoted, "> @{$handle} what does this change?\n\nSee `@{$handle} review`.");
+            $this->assertChatNotQueued($repositoryId, $pullRequest, $quoted);
+        }
+
+        $outsider = $reply + 8;
+        $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $outsider, 'Why?', replyTo: $reply - 1, association: 'CONTRIBUTOR');
+        $this->assertChatNotQueued($repositoryId, $pullRequest, $outsider);
 
         $threadStart = $reply + 5;
         $this->sendCommentEvent('pull_request_review_comment', $pullRequest, $threadStart, 'Why?');
@@ -258,6 +382,107 @@ final class ReviewsConsoleClientTest extends Scope
 
         $usage = $this->createChatUsage($repositoryId, $pullRequest, $reply, [['role' => 'chat']]);
         $this->assertSame(400, $usage['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
+    }
+
+    public function testMentionReviewAndBodyFindings(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->setupInstallation();
+        $handle = System::getEnv('_APP_VCS_GITHUB_APP_NAME', '');
+        if ($handle === '') {
+            $this->markTestSkipped('No GitHub App name to mention.');
+        }
+        $pullRequest = \random_int(1000, 9_999_999);
+        $comment = \random_int(1_000_000, 9_999_999_999);
+
+        $repository = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+        ]);
+        $this->assertSame(201, $repository['headers']['status-code']);
+        $repositoryId = $repository['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+
+        // "@app full review" queues a review of whatever the head is when it runs, superseding a queued one
+        $this->sendPullRequestEvent('opened', $pullRequest, \str_repeat('a', 40));
+        $this->sendCommentEvent('issue_comment', $pullRequest, $comment, '@' . \strtoupper($handle) . ' full review, please');
+
+        $mention = $this->client->call(Client::METHOD_GET, '/reviews/mention-' . $comment, $this->projectHeaders());
+        $this->assertSame(200, $mention['headers']['status-code']);
+        $this->assertSame('queued', $mention['body']['status']);
+        $this->assertSame('mention', $mention['body']['trigger']);
+        $this->assertSame('', $mention['body']['providerCommitHash']);
+        $this->assertSame((string) $comment, $mention['body']['providerCommentId']);
+
+        $queued = $this->listReviews($pullRequest, [Query::equal('status', ['queued'])->toString()]);
+        $this->assertSame(1, $queued['body']['total']);
+        $this->assertSame('mention-' . $comment, $queued['body']['reviews'][0]['$id']);
+
+        // It completes with a finding GitHub took only in the review body
+        $reviewId = 'mention-' . $comment;
+        $this->callService(Client::METHOD_PATCH, '/reviews/' . $reviewId . '/status', [
+            'projectId' => $projectId,
+            'status' => 'processing',
+            'headSha' => \str_repeat('b', 40),
+            'baseSha' => \str_repeat('c', 40),
+        ]);
+        $completed = $this->callService(Client::METHOD_PATCH, '/reviews/' . $reviewId . '/status', [
+            'projectId' => $projectId,
+            'status' => 'completed',
+            'verdict' => 'comment',
+            'tier' => 'A',
+            'findings' => [[
+                'path' => 'assets/logo.png',
+                'startLine' => 1,
+                'endLine' => 1,
+                'severity' => 'minor',
+                'category' => 'docs',
+                'title' => 'Logo is not optimized',
+                'body' => 'It is 2 MB.',
+                'status' => 'posted',
+                'providerCommentId' => null,
+            ]],
+        ]);
+        $this->assertSame(204, $completed['headers']['status-code']);
+
+        // Now a conversation comment without a mention may be answering that finding
+        $answer = $comment + 1;
+        $this->sendCommentEvent('issue_comment', $pullRequest, $answer, 'The logo is fine as it is.');
+        $this->assertSame(204, $this->createChatUsage($repositoryId, $pullRequest, $answer)['headers']['status-code']);
+
+        // A learning from the conversation is kept for the repository's later reviews
+        $learning = $this->callService(Client::METHOD_POST, '/reviews/repositories/' . $repositoryId . '/learnings', [
+            'projectId' => $projectId,
+            'body' => 'Do not flag image sizes in assets/.',
+            'author' => 'appwrite-test',
+            'sourceUrl' => 'https://github.com/appwrite-test/svelte-starter/pull/' . $pullRequest . '#issuecomment-' . $answer,
+        ]);
+        $this->assertSame(204, $learning['headers']['status-code']);
+
+        $learnings = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/learnings', [
+            'projectId' => $projectId,
+        ]);
+        $this->assertSame(200, $learnings['headers']['status-code']);
+        $this->assertSame(['Do not flag image sizes in assets/.'], $learnings['body']['learnings']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // A redelivered mention queues nothing more
+        $this->sendCommentEvent('issue_comment', $pullRequest, $comment, '@' . $handle . ' full review, please');
+        $this->assertSame('completed', $this->client->call(Client::METHOD_GET, '/reviews/' . $reviewId, $this->projectHeaders())['body']['status']);
+
+        // Another project cannot read the repository's learnings
+        $learnings = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/learnings', [
+            'projectId' => 'another-project',
+        ]);
+        $this->assertSame(404, $learnings['headers']['status-code']);
 
         $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
     }
@@ -325,6 +550,8 @@ final class ReviewsConsoleClientTest extends Scope
         ]);
         $this->assertSame(201, $token['headers']['status-code']);
         $this->assertNotEmpty($token['body']['token']);
+        $this->assertSame(System::getEnv('_APP_VCS_GITHUB_APP_ID', ''), $token['body']['appId']);
+        $this->assertSame(System::getEnv('_APP_VCS_GITHUB_APP_NAME', ''), $token['body']['appSlug']);
         $this->assertGreaterThan(\time(), \strtotime($token['body']['expiresAt']));
 
         /**
@@ -391,14 +618,14 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame('review_chat_not_found', $usage['body']['type']);
     }
 
-    private function sendCommentEvent(string $event, int $pullRequest, int $commentId, string $body, ?int $replyTo = null, string $action = 'created', string $authorType = 'User'): array
+    private function sendCommentEvent(string $event, int $pullRequest, int $commentId, string $body, ?int $replyTo = null, string $action = 'created', string $authorType = 'User', string $author = 'appwrite-test', string $association = 'MEMBER'): array
     {
         $comment = [
             'id' => $commentId,
             'body' => $body,
             'html_url' => 'https://github.com/appwrite-test/svelte-starter/pull/' . $pullRequest . '#comment-' . $commentId,
-            'author_association' => 'MEMBER',
-            'user' => ['login' => 'appwrite-test', 'type' => $authorType],
+            'author_association' => $association,
+            'user' => ['login' => $author, 'type' => $authorType],
         ];
         if ($replyTo !== null) {
             $comment['in_reply_to_id'] = $replyTo;

@@ -11,6 +11,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 /**
@@ -61,17 +62,7 @@ class Create extends Base
     ): void {
         $this->authenticate($request);
 
-        $repository = $authorization->skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId));
-
-        // Only a repository the project has code review on, so the secret cannot reach the
-        // rest of the GitHub App's installations.
-        if (
-            $repository->isEmpty()
-            || $repository->getAttribute('resourceType') !== RESOURCE_TYPE_REVIEWS
-            || $repository->getAttribute('projectId') !== $projectId
-        ) {
-            throw new Exception(Exception::REPOSITORY_NOT_FOUND);
-        }
+        $repository = $this->getRepository($repositoryId, $projectId, $dbForPlatform, $authorization);
 
         $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
 
@@ -86,8 +77,14 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to create repository token: ' . $error->getMessage());
         }
 
+        // The app the token acts as: the service mentions it as @<appSlug>, and knows its own
+        // comments, reviews and check runs by it.
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($token);
+            ->json([
+                ...$token,
+                'appId' => System::getEnv('_APP_VCS_GITHUB_APP_ID', ''),
+                'appSlug' => System::getEnv('_APP_VCS_GITHUB_APP_NAME', ''),
+            ]);
     }
 }
