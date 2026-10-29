@@ -4669,7 +4669,7 @@
           },
           "expect": {
             "error": {
-              "class": "Utopia\\SMTP\\Exception\\ConnectionException",
+              "class": "Utopia\\SMTP\\Exception\\UnconfirmedException",
               "message": "The server closed the connection",
               "code": 0
             }
@@ -5028,7 +5028,7 @@
           },
           "expect": {
             "error": {
-              "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+              "class": "Utopia\\SMTP\\Exception\\UnconfirmedException",
               "message": "Expected 250, the server said: 354 again",
               "code": 0
             }
@@ -8546,7 +8546,7 @@
           },
           "expect": {
             "error": {
-              "class": "Utopia\\SMTP\\Exception\\ConnectionException",
+              "class": "Utopia\\SMTP\\Exception\\UnconfirmedException",
               "message": "The server closed the connection",
               "code": 0
             }
