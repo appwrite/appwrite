@@ -1397,6 +1397,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Appwrite Analytics': 'Appwrite Analytics',
   'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
     'הציגו את אנליטיקה בקונסולה ועקבו אחרי מבקרים, עמודים, מקורות, קמפיינים ואירועים מותאמים בפרויקט.',
+  'Project environments': 'סביבות פרויקט',
+  'Switch between environments of a project, such as staging and production, and create one as a copy of the project.':
+    'עברו בין הסביבות של פרויקט, כמו staging ו-production, וצרו סביבה כעותק של הפרויקט.',
   'Project transfers': 'העברות פרויקטים',
   'Transfer a project with a link that another organization claims, in place of moving it to one of your organizations.':
     'העבירו פרויקט באמצעות קישור שארגון אחר מממש, במקום להעביר אותו לאחד מהארגונים שלכם.',

@@ -18,6 +18,7 @@ import {
 import { useMemo } from 'react'
 import { ID, Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { createProjectEnvironment } from '@/lib/appwrite/project-environments'
 import { DEFAULT_STALE_TIME } from './constants'
 
 /** One page covers the per-plan environment cap many times over. */
@@ -103,7 +104,7 @@ export function useProjectEnvironments(
 }
 
 /**
- * Hook to create an environment for a project
+ * Hook to create an environment for a project, empty or as a copy of the project
  *
  * @param projectId - The project ID
  * @param region - The project region
@@ -118,18 +119,32 @@ export function useCreateProjectEnvironment(
     mutationFn: async ({
       environmentId,
       name,
+      resources = [],
     }: {
       environmentId?: string
       name: string
+      /** Resource types to copy from the project; none for an empty environment */
+      resources?: string[]
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forProject(projectId, region).project.createEnvironment({
+      const projectSdk = sdk.forProject(projectId, region)
+      const params = {
         environmentId: environmentId?.trim() || ID.unique(),
         name: name.trim(),
-      })
+      }
+
+      // The pinned SDK's createEnvironment drops `resources`; see createProjectEnvironment
+      if (resources.length > 0) {
+        return await createProjectEnvironment(projectSdk.client, {
+          ...params,
+          resources,
+        })
+      }
+
+      return await projectSdk.project.createEnvironment(params)
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
