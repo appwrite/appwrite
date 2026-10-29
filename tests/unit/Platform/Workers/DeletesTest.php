@@ -26,6 +26,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Lock\Distributed;
 use Utopia\Queue\Message;
 use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Scheduler;
@@ -42,6 +43,8 @@ final class DeletesTest extends TestCase
     private Database $database;
 
     private string|false $key;
+
+    private string $idle;
 
     protected function setUp(): void
     {
@@ -288,6 +291,54 @@ final class DeletesTest extends TestCase
 
     public function testIdleUploadKeepsItsRowUntilTheAbortRetriesRunOut(): void
     {
+        $collection = $this->createIdleUploads(['failing' => [], 'missing' => []]);
+
+        $device = $this->createMock(Device::class);
+        $device->method('abort')->willReturnCallback(fn (string $path, string $uploadId): bool => $uploadId === 'missing'
+            ? throw new \Utopia\Storage\Exception\NotFoundException()
+            : throw new \Exception('Abort failed'));
+        $device->expects($this->once())->method('delete')->with('/uploads/failing', true);
+
+        $this->runMaintenance($device);
+        $this->assertTrue($this->database->getDocument($collection, 'missing')->isEmpty(), 'an upload the device no longer has is removed at once');
+
+        $this->runMaintenance($device);
+        $failing = $this->database->getDocument($collection, 'failing');
+        $this->assertSame(2, $failing->getAttribute('metadata')['abortAttempts']);
+        $this->assertSame('failing', $failing->getAttribute('metadata')['uploadId'], 'the upload ID is kept for the next attempt');
+        $this->assertSame(\strtotime($this->idle), \strtotime($failing->getUpdatedAt()), 'a failed attempt leaves the row idle');
+
+        $this->runMaintenance($device);
+        $this->assertTrue($this->database->getDocument($collection, 'failing')->isEmpty(), 'the last attempt removes the row');
+    }
+
+    public function testUploadCleanupStopsOnceItsLeaseIsLost(): void
+    {
+        if (!\class_exists(\Redis::class)) {
+            $this->markTestSkipped('The redis extension is required');
+        }
+
+        $collection = $this->createIdleUploads(['failing' => ['abortAttempts' => 2]]);
+
+        $device = $this->createMock(Device::class);
+        $device->expects($this->once())->method('abort')->willThrowException(new \Exception('Abort failed'));
+        $device->expects($this->never())->method('delete');
+
+        // The lease is held for the abort and lapses before the fallback delete.
+        $redis = $this->createStub(\Redis::class);
+        $redis->method('eval')->willReturnOnConsecutiveCalls(1, 0);
+        $lock = (new Distributed($redis, 'upload'))->adopt('token');
+
+        $this->runMaintenance($device, fn (string $key, int $ttl, callable $callback) => $callback($lock));
+
+        $this->assertFalse($this->database->getDocument($collection, 'failing')->isEmpty(), 'a resumed upload keeps its row and bytes');
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $uploads file ID => extra metadata
+     */
+    private function createIdleUploads(array $uploads): string
+    {
         $collections = Config::getParam('collections', []);
         foreach (['targets', 'sessions', 'tokens', 'challenges', 'transactions', 'transactionLogs', 'presenceLogs', 'pushLedger', 'sites', 'deployments', 'migrations', 'rules'] as $id) {
             $schema = $collections['console'][$id] ?? $collections['projects'][$id];
@@ -309,11 +360,11 @@ final class DeletesTest extends TestCase
         $collection = 'bucket_' . $bucket->getSequence();
         $this->database->createCollection(Collection::create(id: $collection, attributes: $files['attributes'], indexes: $files['indexes']));
 
-        $idle = DateTime::format(new \DateTime('-8 days'));
-        foreach (['failing', 'missing'] as $fileId) {
+        $this->idle = DateTime::format(new \DateTime('-8 days'));
+        foreach ($uploads as $fileId => $metadata) {
             $this->database->withPreserveDates(true, fn () => $this->database->createDocument($collection, new Document([
                 '$id' => $fileId,
-                '$updatedAt' => $idle,
+                '$updatedAt' => $this->idle,
                 'bucketId' => 'uploads',
                 'bucketInternalId' => $bucket->getSequence(),
                 'name' => $fileId,
@@ -321,28 +372,26 @@ final class DeletesTest extends TestCase
                 'signature' => '',
                 'chunksTotal' => 2,
                 'chunksUploaded' => 1,
-                'metadata' => ['uploadId' => $fileId],
+                'metadata' => ['uploadId' => $fileId, ...$metadata],
             ])));
         }
 
-        $device = $this->createMock(Device::class);
-        $device->method('abort')->willReturnCallback(fn (string $path, string $uploadId): bool => $uploadId === 'missing'
-            ? throw new \Utopia\Storage\Exception\NotFoundException()
-            : throw new \Exception('Abort failed'));
-        $device->expects($this->once())->method('delete')->with('/uploads/failing', true);
+        return $collection;
+    }
 
+    private function runMaintenance(Device $deviceForFiles, ?callable $locks = null): void
+    {
         $project = new Document(['$id' => 'project', '$sequence' => '1']);
-        $message = (new Message())->setPayload([
-            'type' => DELETE_TYPE_MAINTENANCE,
-            'project' => ['$id' => $project->getId(), '$sequence' => $project->getSequence()],
-        ]);
-        $run = fn () => (new Deletes())->action(
-            message: $message,
+        (new Deletes())->action(
+            message: (new Message())->setPayload([
+                'type' => DELETE_TYPE_MAINTENANCE,
+                'project' => ['$id' => $project->getId(), '$sequence' => $project->getSequence()],
+            ]),
             project: $project,
             dbForPlatform: $this->database,
             getProjectDB: fn () => $this->database,
             getDatabasesDB: fn () => $this->database,
-            deviceForFiles: $device,
+            deviceForFiles: $deviceForFiles,
             deviceForFunctions: $this->createStub(Device::class),
             deviceForSites: $this->createStub(Device::class),
             deviceForBuilds: $this->createStub(Device::class),
@@ -357,19 +406,8 @@ final class DeletesTest extends TestCase
             bus: new Bus(),
             executionStore: $this->createStub(ExecutionStore::class),
             queueForRealtime: $this->createStub(Realtime::class),
+            locks: $locks,
         );
-
-        $run();
-        $this->assertTrue($this->database->getDocument($collection, 'missing')->isEmpty(), 'an upload the device no longer has is removed at once');
-
-        $run();
-        $failing = $this->database->getDocument($collection, 'failing');
-        $this->assertSame(2, $failing->getAttribute('metadata')['abortAttempts']);
-        $this->assertSame('failing', $failing->getAttribute('metadata')['uploadId'], 'the upload ID is kept for the next attempt');
-        $this->assertSame(\strtotime($idle), \strtotime($failing->getUpdatedAt()), 'a failed attempt leaves the row idle');
-
-        $run();
-        $this->assertTrue($this->database->getDocument($collection, 'failing')->isEmpty(), 'the last attempt removes the row');
     }
 
     private function addSchedule(string $projectId, string $functionId): void

@@ -2174,6 +2174,11 @@ class Deletes extends Action
                             return;
                         }
 
+                        // Renewing before each step fences it: a lapsed lease stops here, and each step gets a full TTL.
+                        if ($lock !== null && !$lock->refresh()) {
+                            return;
+                        }
+
                         $path = $file->getAttribute('path');
                         $metadata = $file->getAttribute('metadata', []);
                         try {
@@ -2185,8 +2190,7 @@ class Deletes extends Action
                             $aborted = false;
                         }
 
-                        // A resumed chunk may own the key once the lease lapses, so check it before every write.
-                        if ($lock !== null && !$lock->isHeld()) {
+                        if ($lock !== null && !$lock->refresh()) {
                             return;
                         }
 
@@ -2209,7 +2213,7 @@ class Deletes extends Action
                                 Console::warning('Failed to delete upload ' . $file->getId() . ': ' . $th->getMessage());
                             }
 
-                            if ($lock !== null && !$lock->isHeld()) {
+                            if ($lock !== null && !$lock->refresh()) {
                                 return;
                             }
                         }
