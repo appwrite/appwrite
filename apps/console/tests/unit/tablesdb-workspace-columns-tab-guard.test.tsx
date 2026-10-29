@@ -18,7 +18,6 @@ import * as actualOperationsLock from '../../src/components/pages/projects/$proj
 import * as actualConsoleProfile from '../../src/hooks/use-console-profile.ts'
 import * as actualMediaMinWidth from '../../src/hooks/use-media-min-width.ts'
 import * as actualMonitorFilters from '../../src/hooks/use-database-monitor-chart-filters.ts'
-import * as actualTranslate from '../../src/lib/i18n/translate.ts'
 import * as actualHooks from '../../src/lib/react-query/hooks/index.ts'
 import * as actualStripe from '@stripe/stripe-js'
 
@@ -47,7 +46,6 @@ const monitorFiltersPath = join(
   consoleRoot,
   'src/hooks/use-database-monitor-chart-filters.ts',
 )
-const translatePath = join(consoleRoot, 'src/lib/i18n/translate.ts')
 const workspacePath = join(
   consoleRoot,
   'src/components/pages/projects/$projectId/databases/tablesdb/Workspace.tsx',
@@ -185,16 +183,6 @@ function installMocks() {
       reset: () => {},
     }),
   }))
-
-  mock.module(translatePath, () => {
-    const identity = (text: string) => text
-    return {
-      ...actualTranslate,
-      useT: () => identity,
-      translate: identity,
-      translateText: identity,
-    }
-  })
 
   mock.module('@stripe/stripe-js', () => ({
     ...actualStripe,
