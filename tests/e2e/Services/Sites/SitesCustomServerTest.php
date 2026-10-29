@@ -3487,6 +3487,7 @@ final class SitesCustomServerTest extends Scope
 
         $apiKey = $this->createPreviewKey($deploymentDomain, $deploymentId);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -3495,6 +3496,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/non-existing-path', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -3541,6 +3543,7 @@ final class SitesCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
@@ -3550,6 +3553,7 @@ final class SitesCustomServerTest extends Scope
          * Test for FAILURE
          */
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
             'x-appwrite-hostname' => $otherDomain,
         ]);
@@ -3558,6 +3562,7 @@ final class SitesCustomServerTest extends Scope
 
         $proxyClient->setEndpoint('http://' . $otherDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertSame(301, $response['headers']['status-code']);
@@ -3583,9 +3588,9 @@ final class SitesCustomServerTest extends Scope
         return API_KEY_EPHEMERAL . '_' . $jwt->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
             'hostname' => $hostname,
+            'projectId' => $this->getProject()['$id'],
             'deploymentId' => $deploymentId,
             'hostnameOverride' => true,
-            'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
         ]);
     }
@@ -4495,6 +4500,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->createPreviewKey($deploymentDomain, $deploymentId),
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -4538,6 +4544,7 @@ final class SitesCustomServerTest extends Scope
         // deployment is still building error page
         $apiKey = $this->createPreviewKey($deploymentDomain, $deploymentId);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -4553,6 +4560,7 @@ final class SitesCustomServerTest extends Scope
 
         // deployment failed error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
