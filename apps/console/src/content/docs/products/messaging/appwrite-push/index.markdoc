@@ -36,8 +36,8 @@ Navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **C
 
 Give the provider a name and click **Create provider**. Appwrite Push doesn't take any credentials. The provider has two optional settings:
 
-- **Quality of service**: the delivery guarantee messages are sent with. **At most once (QoS 0)** delivers only to devices connected when the message is sent. **At least once (QoS 1)** stores each message and replays it to devices that reconnect. **Let the subscriber choose** sends at least once, and each subscription can lower it with `retry`.
-- **Message expiry**: how long, in seconds, messages are kept for offline devices, up to 7 days (`604800`). Topics without their own expiry use the lowest expiry across your enabled Appwrite providers, or 7 days if none sets one. `0` keeps nothing for replay.
+- **Quality of service**: the delivery guarantee for devices that are connected when you send. **At most once (QoS 0)** sends each message once, and the device doesn't confirm it. **At least once (QoS 1)** waits for the device to confirm each message, so a message can arrive twice but isn't lost on the way. **Let the subscriber choose** sends at least once, and an app's subscription can switch to at most once with `retry: false`. Messages a device missed while offline are replayed according to the topic's and the subscription's setting, see [Offline replay](#offline-replay).
+- **Message expiry (seconds)**: how long, in seconds, messages are kept for offline devices, up to 7 days (`604800`). Topics without their own expiry use the lowest expiry across your enabled Appwrite providers, or 7 days if none sets one. `0` keeps nothing for replay.
 
 You can also create the provider with a [Server SDK](/docs/sdks#server).
 
@@ -104,7 +104,7 @@ $provider = $messaging->createAppwriteProvider(
 
 {% section #install-sdk step=2 title="Install the SDK" %}
 
-Push is in the Web SDK 29.0.0, Flutter SDK 28.0.0, React Native SDK 2.0.0, Android SDK 30.0.0, and Apple SDK 21.0.0, and in later versions.
+Push is in the Web SDK 29.0.0, Flutter SDK 28.0.0, React Native SDK 2.0.0, Android SDK 30.0.0, and Apple SDK 21.0.0, and in later versions. Use Web SDK 29.2.0 and React Native SDK 3.1.0 or later, which keep reconnecting after the broker refuses a connection.
 
 Some platforms need extra setup for background notifications:
 
@@ -145,7 +145,7 @@ Import the URL polyfill once, before the SDK:
 import 'react-native-url-polyfill/auto';
 ```
 
-On Expo SDK 52 and older, set `config.resolver.unstable_enablePackageExports = true` in `metro.config.js`. The SDK doesn't use a config plugin. If you added `react-native-appwrite` to `plugins` in `app.json` while trying a release candidate, remove it and rebuild.
+On Expo SDK 52, set `config.resolver.unstable_enablePackageExports = true` in `metro.config.js`. The SDK doesn't use a config plugin. If you added `react-native-appwrite` to `plugins` in `app.json` while trying a release candidate, remove it and rebuild.
 {% /tabsitem %}
 
 {% tabsitem #setup-android title="Android" %}
@@ -264,6 +264,8 @@ let subscription = try await push.subscribe { message in
 
 `Push` connects with the session the app signed in with through this client, or a JWT or session you set on the client. Background delivery reconnects with the same credential, so prefer a session over a short-lived JWT.
 
+On the web, the SDK can read the session only when your app and your Appwrite API are on different domains, such as your site and `<REGION>.cloud.appwrite.io`. If they share a domain, for example through a custom API domain, set a JWT on the client before you subscribe: `client.setJWT((await account.createJWT()).jwt)`.
+
 To follow the connection, register callbacks. Each holds one callback, and a later call replaces it.
 
 ```ts
@@ -278,7 +280,7 @@ To change a subscription's options later, call `subscription.update(...)`. To st
 
 {% section #send-message step=4 title="Send a message" %}
 
-Send a push notification to the user from the Console or a Server SDK, exactly as you would with FCM or APNs. Navigate to **Messaging** > **Messages** > {% icon icon="plus" size="m" /%} **Create message** > **Push notification**, add a title and body, and pick the user as the target.
+Send a push notification to the user from the Console or a Server SDK, exactly as you would with FCM or APNs. Navigate to **Messaging** > **Messages** > {% icon icon="plus" size="m" /%} **Create message** > **Push**. Add a title and a body, and select the user as the recipient.
 
 {% multicode %}
 ```server-nodejs
@@ -323,7 +325,7 @@ A push target on the Appwrite provider tells Appwrite that a device listens over
 - Show messages while an iOS app is suspended, see [Background delivery on iOS](#background-ios).
 - Receive messages over Appwrite Push when the user also has FCM or APNs targets. FCM still gets the full notification, so an Android app that registers both can show a message twice. Skip duplicates by `messageId`, or register only one of them.
 
-Create it once after the user signs in. The identifier is a placeholder, so pass a unique value, and always pass the ID of your Appwrite provider. A target without a provider ID follows the project's default push provider.
+Create it once after the user signs in. The identifier is a placeholder, so pass a unique value, and always pass the ID of your Appwrite provider. Without `providerId`, Appwrite assigns the target to one of your enabled push providers, which may not be the Appwrite provider.
 
 {% multicode %}
 ```client-web
@@ -371,7 +373,7 @@ Targets belong to the session that created them. When the user signs out with `d
 
 # Message format {% #message-format %}
 
-Your callback receives the message as JSON in `message.data`. It contains only the fields you set when you sent it:
+Your callback receives the message as JSON in `message.data`. It contains `messageId`, `priority`, which defaults to `high`, and the fields you set when you sent it:
 
 ```json
 {
@@ -388,7 +390,7 @@ Your callback receives the message as JSON in `message.data`. It contains only t
 }
 ```
 
-`notification` can also carry `icon`, `color`, `sound`, `tag`, `channelId`, `badge`, `action`, `contentAvailable`, and `critical`, mirroring the fields of [`createPush`](/docs/references/cloud/server-nodejs/messaging#createPush). With the default delivery guarantee a message can arrive twice, for example when it is replayed after a reconnect, so use `messageId` to skip duplicates.
+`notification` can also carry `icon`, `color`, `sound`, `tag`, `channelId`, `badge`, `action`, `contentAvailable`, and `critical`, mirroring the fields of [`createPush`](/docs/references/cloud/server-nodejs/messaging#createPush). `createPush` takes `image` as a Storage file, `<BUCKET_ID>:<FILE_ID>`, and the message carries a URL to that file. With the default delivery guarantee a message can arrive twice, for example when it is replayed after a reconnect, so use `messageId` to skip duplicates.
 
 # Topics {% #topics %}
 
@@ -428,7 +430,7 @@ Topics take quality of service and message expiry settings too, as the `qos` and
 ---
 * `background`
 * Show a notification for each message while the app isn't on screen, and keep delivering in the background where the platform allows.
-* `true` for the user's topic, `false` for other topics
+* `true` when you call `subscribe` without a topic, `false` when you pass topics
 ---
 * `title`
 * Notification title to use when a message has none.
@@ -449,7 +451,7 @@ A subscription with `background` posts a notification for each message while the
 
 - **Android 13 and later**: the first background subscription asks for the notification permission. If the user declines, messages still reach your callback.
 - **Android icon**: add a `meta-data` entry to your `<application>` with your icon. The key is `io.appwrite.push.notification_icon` for the Android SDK, `io.appwrite.flutter.push.notification_icon` for Flutter, and `io.appwrite.reactnative.push.notification_icon` for React Native.
-- **Web**: notifications show while the tab is open, once the user allows them.
+- **Web**: the Web SDK shows a notification for each message on a background subscription while the tab is open, also while the tab is visible. Subscribe from a click handler, because some browsers only show the notification permission prompt after a user action. Mobile browsers don't show these notifications.
 
 To open the right screen when the user taps a notification, read the tap that launched the app at startup and listen for later taps. `data` is the `data` you sent with the message.
 
@@ -462,6 +464,8 @@ if (opened) openOrder(opened.data.orderId);
 const stop = push.onNotificationOpened(({ topic, data }) => openOrder(data.orderId));
 ```
 
+On the web, `getInitialNotification()` always returns `null`, because a page only receives taps while it is open.
+
 # Delivery while the app is closed {% #background %}
 
 How long a device keeps receiving messages after the user leaves your app depends on the platform.
@@ -472,13 +476,16 @@ On Android, Flutter, and React Native apps, the SDK saves background subscriptio
 
 {% table %}
 * Device state
-* When a message arrives
+* How often the app reconnects
 ---
-* Awake, exact alarms allowed
-* Within about 60 seconds
+* Android 11 and older, or exact alarms allowed
+* About every 60 seconds, on time
 ---
-* Awake, no exact alarms
-* About every 15 seconds, but inexact, so battery saver can defer it
+* Exempt from battery optimization, no exact alarms
+* About every 60 seconds, but Android can defer it
+---
+* Android 12 and later, neither of the above
+* About every 15 seconds, but Android can defer it, for example in battery saver
 ---
 * Doze (screen off, idle)
 * About every 9 minutes
@@ -490,7 +497,9 @@ On Android, Flutter, and React Native apps, the SDK saves background subscriptio
 * When the app is opened again
 {% /table %}
 
-For punctual wake-ups, declare these permissions in your manifest. On Android 13 and later, the user allows exact alarms under **Settings** > **Apps** > **Special app access** > **Alarms & reminders**. Google Play asks you to declare `SCHEDULE_EXACT_ALARM`.
+A message arrives at the next reconnect, so a deferred reconnect delays it.
+
+For punctual wake-ups, declare these permissions in your manifest. On Android 14 and later, the user allows exact alarms under **Settings** > **Apps** > **Special app access** > **Alarms & reminders**. Google Play asks you to declare `SCHEDULE_EXACT_ALARM`.
 
 ```xml
 <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
@@ -529,7 +538,8 @@ iOS suspends a backgrounded app within seconds, so the connection can't stay ope
 
 To set it up:
 
-1. Add an [APNs provider](/docs/products/messaging/apns) and the Push Notifications capability. The quickest way is [one-click APNs setup](/docs/products/messaging/apns#one-click-setup): run `appwrite init apns` in your iOS project and the CLI creates the providers, configures Xcode, and adds the Apple platform.
+1. In Xcode, add the **Push Notifications** capability and the **Background Modes** capability with **Remote notifications** to your app target.
+1. Add an [APNs provider](/docs/products/messaging/apns). The quickest way is [one-click APNs setup](/docs/products/messaging/apns#one-click-setup): run `appwrite init apns` in your iOS project. The CLI creates the sandbox and production APNs providers and adds the Apple platform.
 1. Add a **Notification Service Extension** target to your app, with this class:
 
     ```swift
@@ -538,7 +548,8 @@ To set it up:
     class NotificationService: AppwriteNotificationService {}
     ```
 
-1. Give the app and the extension the **App Groups** and **Keychain Sharing** capabilities with the same group ID, and set that group ID as `AppwritePushAppGroup` in the `Info.plist` of both targets.
+1. Give the app and the extension the **App Groups** capability with the same group ID, and set that group ID as `AppwritePushAppGroup` in the `Info.plist` of both targets. The extension reads the app's session from this group.
+1. Set a client ID that you save per install with `client.setPushClientId(...)`. The default ID is shared by all of the user's iOS devices, so without your own ID, one device's extension can fetch the messages another device was woken for.
 1. Register an [Appwrite push target](#push-target) after sign-in. Without it, Appwrite sends the full APNs notification instead of the wake-up.
 1. Subscribe with `background: true`. The SDK registers the device with APNs and creates its APNs push target for you.
 
@@ -585,7 +596,7 @@ await account.deleteSession({ sessionId: 'current' });
 
 A self-hosted Appwrite runs the broker in the `appwrite-mqtt` container. Traefik serves MQTT over TLS on port `8883` and MQTT over secure WebSocket on port `8084`. See the [MQTT environment variables](/docs/advanced/self-hosting/configuration/environment-variables#mqtt) to change the ports, the replay depth, and the maximum packet size.
 
-The SDKs connect to `push.<YOUR_API_HOST>` by default. Either point a `push.` DNS record at your server, or set the broker address on the client:
+By default, the Android, Apple, React Native, and Flutter mobile SDKs connect to `push.<YOUR_API_HOST>` on port `8883`, so a `push.` DNS record that points at your server is enough for them. The Web SDK and Flutter on the web connect to `wss://push.<YOUR_API_HOST>` on port `443`, which Traefik doesn't serve, so set the broker address on web clients. You can also set it on any client instead of adding the DNS record:
 
 ```ts
 client.setPushEndpoint('mqtts://appwrite.example.com:8883'); // Android, Apple, React Native, Flutter on mobile
@@ -606,8 +617,8 @@ A Flutter app that runs on both picks the endpoint with `kIsWeb`.
 * Replay per topic
 * Newest 5 missed messages
 ---
-* Message size
-* 64,000 bytes per MQTT packet, including the topic and headers
+* Title and body
+* 256 characters for the title and 64,230 for the body, the limits of `createPush`
 ---
 * Connections
 * 128 new connections per user per minute. On self-hosted Appwrite, this applies when `_APP_OPTIONS_ABUSE` is enabled.
@@ -632,7 +643,7 @@ A Flutter app that runs on both picks the endpoint with `kIsWeb`.
 * Register an Appwrite push target for the device.
 ---
 * Messages sent while offline never arrive
-* A client ID that changes between launches, such as the default on iOS and the web, `retry` set to `false`, or the message expired. See [Offline replay](#offline-replay).
+* A client ID shared by several devices, which is the default on iOS, or tied to one tab, which is the default with the Web SDK. Also check that `retry` isn't `false` and that the message hasn't expired. See [Offline replay](#offline-replay).
 ---
 * No notification while the app is open
 * Expected. Set `notifyInForeground` to `true` on Android, Flutter, or React Native.
@@ -644,7 +655,7 @@ A Flutter app that runs on both picks the endpoint with `kIsWeb`.
 * No enabled APNs provider matches the app's bundle ID and build: sandbox for debug and Simulator builds, production for TestFlight and App Store builds. Rerun `appwrite init apns` to create both, or set the bundle ID on the provider in the Console. Devices pick up the change the next time the app launches.
 ---
 * iOS shows "New message" instead of the real message
-* The Notification Service Extension is missing, or `AppwritePushAppGroup` isn't set in both `Info.plist` files.
+* The Notification Service Extension is missing, the extension target doesn't include the `Appwrite` library, or `AppwritePushAppGroup` isn't set to a group both targets share in both `Info.plist` files.
 ---
 * The UI freezes or the app stops responding on Android
 * Call `subscribe` off the main thread.
