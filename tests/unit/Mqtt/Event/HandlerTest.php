@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Mqtt;
+namespace Tests\Unit\Mqtt\Event;
 
 use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Mqtt\Event\Handler as EventHandler;
 use Appwrite\Mqtt\Handler;
-use Appwrite\Mqtt\Subscriber;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
@@ -40,14 +40,14 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use function Swoole\Coroutine\run;
 
 /**
- * The broker's Subscriber to the 'mqtt' pub/sub channel processes every event of a worker
+ * The broker's event handler for the 'mqtt' pub/sub channel processes every event of a worker
  * in one subscriber coroutine. A revoke verification stuck on a half-open database read (a read
  * that never returns and never errors) must not park that coroutine: the wait is bounded, the
  * broker fails closed, and the subscriber keeps delivering.
  *
  * run() leaves every runtime hook enabled and a reactor behind, so each test gets its own process.
  */
-final class SubscriberTest extends TestCase
+final class HandlerTest extends TestCase
 {
     private const PROJECT = 'project1';
 
@@ -75,7 +75,7 @@ final class SubscriberTest extends TestCase
 
     private bool $blocking = false;
 
-    private Subscriber $subscriber;
+    private EventHandler $eventHandler;
 
     private string|false $previousAbuseOption = false;
 
@@ -92,7 +92,7 @@ final class SubscriberTest extends TestCase
     }
 
     /**
-     * Build the broker and its subscriber. While $blocking is set, the authorizer and the first
+     * Build the broker and its event handler. While $blocking is set, the authorizer and the first
      * database touch park on the gate, as a read on a half-open connection would.
      */
     private function boot(): void
@@ -151,9 +151,9 @@ final class SubscriberTest extends TestCase
         $this->handler = new Handler(
             $container,
             $mqtt,
-            fn () => throw new \LogicException('the subscriber must not touch the cache'),
+            fn () => throw new \LogicException('the event handler must not touch the cache'),
             fn () => 5,
-            fn () => throw new \LogicException('the subscriber must not read the clock'),
+            fn () => throw new \LogicException('the event handler must not read the clock'),
         );
 
         $this->network = new RecordingAdapter();
@@ -161,7 +161,7 @@ final class SubscriberTest extends TestCase
         $this->server = new Server($this->network, $this->handler, $this->store);
         $this->server->start();
 
-        $this->subscriber = new Subscriber($this->server, $this->handler, $mqtt, self::TIMEOUT);
+        $this->eventHandler = new EventHandler($this->server, $this->handler, $mqtt, self::TIMEOUT);
     }
 
     /** Open and index a connection as $userId, then seed its store subscriptions to $topics. */
@@ -218,9 +218,9 @@ final class SubscriberTest extends TestCase
             // The subscriber coroutine: events arrive in order, so a parked revoke starves delivery.
             $processed = [];
             go(function () use (&$processed): void {
-                $this->subscriber->receive(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'victim']));
+                $this->eventHandler->handle(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'victim']));
                 $processed[] = 'revoke';
-                $this->subscriber->receive(null, 'mqtt', $this->deliverEvent('news', 'hello'));
+                $this->eventHandler->handle(null, 'mqtt', $this->deliverEvent('news', 'hello'));
                 $processed[] = 'deliver';
             });
 
@@ -269,7 +269,7 @@ final class SubscriberTest extends TestCase
             $this->blocking = true; // an inline check would park here forever
 
             $this->saturated(function (): void {
-                $this->subscriber->receive(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'active']));
+                $this->eventHandler->handle(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'active']));
             });
 
             // Test for SUCCESS: no inline check; the user is closed unverified and re-authenticates.
@@ -288,7 +288,7 @@ final class SubscriberTest extends TestCase
             $this->blocking = true;
 
             $this->saturated(function (): void {
-                $this->subscriber->receive(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_UNSUBSCRIBE, 'userId' => 'member', 'topic' => 'scores']));
+                $this->eventHandler->handle(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_UNSUBSCRIBE, 'userId' => 'member', 'topic' => 'scores']));
             });
 
             // Test for SUCCESS: the subscription is dropped unverified; the connection stays.
@@ -307,9 +307,9 @@ final class SubscriberTest extends TestCase
             $this->connect(2, 'active', 'news');
             $this->accounts->blocked['blocked'] = true;
 
-            $this->subscriber->receive(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'blocked']));
-            $this->subscriber->receive(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'active']));
-            $this->subscriber->receive(null, 'mqtt', $this->deliverEvent('news', 'hello'));
+            $this->eventHandler->handle(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'blocked']));
+            $this->eventHandler->handle(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'active']));
+            $this->eventHandler->handle(null, 'mqtt', $this->deliverEvent('news', 'hello'));
 
             // Test for SUCCESS: the normal path is unchanged — verified revoke, no fail-closed cut.
             $this->assertSame(Disconnect::NOT_AUTHORIZED, $this->network->disconnects(1)[0]->reasonCode);
@@ -339,9 +339,9 @@ final class SubscriberTest extends TestCase
 
             $processed = [];
             go(function () use (&$processed): void {
-                $this->subscriber->receive(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_UNSUBSCRIBE, 'userId' => 'member', 'topic' => 'scores']));
+                $this->eventHandler->handle(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_UNSUBSCRIBE, 'userId' => 'member', 'topic' => 'scores']));
                 $processed[] = 'unsubscribe';
-                $this->subscriber->receive(null, 'mqtt', $this->deliverEvent('news', 'hello'));
+                $this->eventHandler->handle(null, 'mqtt', $this->deliverEvent('news', 'hello'));
                 $processed[] = 'deliver';
             });
 

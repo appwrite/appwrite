@@ -6,8 +6,8 @@ use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Mqtt\Event\Handler as EventHandler;
 use Appwrite\Mqtt\Handler;
-use Appwrite\Mqtt\Subscriber;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Usage\Context as UsageContext;
 use Swoole\Coroutine;
@@ -254,11 +254,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
         });
     });
 
-    // Revoke and unsubscribe verification is bounded: a check stuck on a dead database read must not
-    // park the subscriber, so past the timeout the broker fails closed and moves on.
-    $subscriber = new Subscriber($server, $handler, $mqtt, \max(0.1, (float) System::getEnv('_APP_MQTT_PERMISSION_TIMEOUT', '5')));
+    $eventHandler = new EventHandler($server, $handler, $mqtt, \max(0.1, (float) System::getEnv('_APP_MQTT_PERMISSION_TIMEOUT', '5')));
 
-    go(function () use ($register, $subscriber): void {
+    go(function () use ($register, $eventHandler): void {
         $attempts = 0;
         while ($attempts < 60) {
             try {
@@ -268,7 +266,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                     $attempts = 0;
                 }
 
-                $pubsub->subscribe(['mqtt'], $subscriber->receive(...));
+                $pubsub->subscribe(['mqtt'], $eventHandler->handle(...));
             } catch (\Throwable $error) {
                 $attempts++;
                 Console::error('MQTT pub/sub connection error: ' . $error->getMessage());
