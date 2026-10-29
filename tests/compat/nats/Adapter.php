@@ -328,6 +328,38 @@ final class Adapter implements Base, Benchmarks
             },
             'fake.tls_options' => fn (array $a, Session $s) => self::sorted((new \ReflectionMethod(Connection::class, 'tlsOptions'))->invoke(self::conn($a, $s)->connection)),
             'fake.connect_passes' => fn (array $a, Session $s) => self::connectPasses($a),
+            'fake.discovered' => function (array $a, Session $s): array {
+                // A server advertising "peer:4222" in its INFO, then entering
+                // lame duck mode: the scheme the peer is dialled with.
+                $schemes = [];
+                $fakes = [];
+                $conn = new Conn();
+                $factory = function (string $scheme) use (&$schemes, &$fakes): Fake {
+                    $schemes[] = $scheme;
+                    $fakes[] = $fake = new Fake(['connect_urls' => ['peer:4222']]);
+                    $fake->refuseHosts = ['other'];
+
+                    return $fake;
+                };
+                $conn->connection = Connection::connect(self::options($a['options'] ?? [], $conn, ['transportFactory' => $factory]));
+                $first = $fakes[0]->host;
+                $fakes[0]->push('INFO {"server_id":"FAKE","ldm":true}' . "\r\n");
+                $conn->connection->processMessage(1.0);
+                $conn->connection->close();
+
+                return ['first' => $first, 'peer' => end($fakes)->host, 'scheme' => end($schemes)];
+            },
+            'conn.connect_failure' => function (array $a, Session $s): array {
+                $conn = new Conn();
+                try {
+                    $conn->connection = Connection::connect(self::options($a['options'] ?? [], $conn));
+                    $conn->connection->close();
+
+                    return ['error' => null];
+                } catch (\Throwable $e) {
+                    return ['error' => self::connectError($e, $a['contains'] ?? null)];
+                }
+            },
             'transport.tls_failure' => fn (array $a, Session $s) => self::tlsFailure($a),
             'conn.connect_counted' => function (array $a, Session $s) {
                 $connects = 0;

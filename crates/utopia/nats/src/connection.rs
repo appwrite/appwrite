@@ -949,6 +949,13 @@ impl Connection {
         error.is_connection() && !matches!(error, Error::Tls(_)) && Self::reconnects_after(&error.to_string())
     }
 
+    /// Whether a server reached under `scheme` speaks TLS.
+    ///
+    /// PHP: `Connection::isSecure()` (private).
+    fn is_secure(&self, scheme: &str) -> bool {
+        scheme == "tls" || scheme == "wss" || self.options.tls
+    }
+
     async fn connect_to_server(&mut self, url: &str) -> Result<()> {
         let (scheme, host, port) = parse_server_url(url)?;
         let tls = self.options.tls_options();
@@ -974,12 +981,15 @@ impl Connection {
             return Err(Error::protocol("Expected INFO to be an object"));
         }
         let info = ServerInfo::from_value(&data);
+        let secure = self.is_secure(&scheme);
         for connect_url in &info.connect_urls {
             if !self.server_pool.contains(connect_url) {
-                self.server_pool.push(normalize_url(connect_url));
+                self.server_pool.push(normalize_url(connect_url, secure));
             }
         }
-        let wants_upgrade = info.tls_required || (self.options.tls && info.tls_available);
+        // When the server requires TLS, or when the caller opted in, whatever
+        // the server advertises.
+        let wants_upgrade = info.tls_required || self.options.tls;
         let nonce = info.nonce.clone();
         let headers_supported = info.headers_supported;
         self.server_info = Some(info);
@@ -1197,8 +1207,9 @@ impl Connection {
             return Ok(());
         }
         let info = ServerInfo::from_value(&data);
+        let secure = self.is_secure(&parse_server_url(&self.current_server)?.0);
         for connect_url in &info.connect_urls {
-            let normalized = normalize_url(connect_url);
+            let normalized = normalize_url(connect_url, secure);
             if !self.server_pool.contains(&normalized) {
                 self.server_pool.push(normalized);
             }
@@ -1443,7 +1454,7 @@ async fn resolve_authenticator(options: &ConnectionOptions) -> Result<Box<dyn Au
 }
 
 fn build_server_pool(options: &ConnectionOptions) -> Vec<String> {
-    let mut servers: Vec<String> = options.servers.iter().map(|s| normalize_url(s)).collect();
+    let mut servers: Vec<String> = options.servers.iter().map(|s| normalize_url(s, false)).collect();
     if !options.no_randomize && servers.len() > 1 {
         let mut rng = rand::rng();
         for i in (1..servers.len()).rev() {
@@ -1454,10 +1465,14 @@ fn build_server_pool(options: &ConnectionOptions) -> Vec<String> {
     servers
 }
 
-/// Adds `nats://` to a URL without a known scheme.
-fn normalize_url(url: &str) -> String {
+/// Adds a scheme to a URL without a known one. Scheme-less URLs come from
+/// INFO `connect_urls`; `secure` carries the TLS of the server that advertised
+/// them, so a TLS connection never fails over to a plaintext one.
+fn normalize_url(url: &str, secure: bool) -> String {
     if ["nats://", "tls://", "ws://", "wss://"].iter().any(|scheme| url.starts_with(scheme)) {
         url.to_owned()
+    } else if secure {
+        format!("tls://{url}")
     } else {
         format!("nats://{url}")
     }
