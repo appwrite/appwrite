@@ -276,11 +276,11 @@ class Alerts extends Action
     }
 
     /**
-     * Console path the notification links to, appended to the console URL.
+     * Console path of the project's usage pages; the notification links to its alerts and monitors pages.
      */
     protected function path(Document $project): string
     {
-        return '/projects/' . $project->getId() . '/usage/alerts';
+        return '/projects/' . $project->getId() . '/usage';
     }
 
     /**
@@ -323,9 +323,9 @@ class Alerts extends Action
         $team = $dbForPlatform->getDocument('teams', (string) $monitor->getAttribute('teamId'));
         $region = (string) $project->getAttribute('region', '');
         $regionName = (string) (Config::getParam('regions', [])[$region]['name'] ?? '');
-        $url = ($platform['consoleUrl'] ?? '') . $this->path($project) . '?alert=' . $alert->getId();
+        $url = ($platform['consoleUrl'] ?? '') . $this->path($project) . '/alerts?alert=' . $alert->getId();
         // The monitor's drawer, which pauses it from its header.
-        $pauseUrl = ($platform['consoleUrl'] ?? '') . $this->path($project) . '?monitor=' . $monitor->getId();
+        $pauseUrl = ($platform['consoleUrl'] ?? '') . $this->path($project) . '/monitors?monitor=' . $monitor->getId();
         $notice = new Email(
             status: $status,
             rule: (string) $monitor->getAttribute('name'),

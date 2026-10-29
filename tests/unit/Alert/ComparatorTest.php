@@ -69,7 +69,7 @@ final class ComparatorTest extends TestCase
             window: $window,
             changedAt: new \DateTimeImmutable('2026-10-29T11:54:00+00:00'),
             details: [],
-            url: 'https://console.example/projects/storefront/usage/alerts?rule=egress',
+            url: 'https://console.example/projects/storefront/usage/alerts?alert=egress',
             reason: '',
         );
 
@@ -147,12 +147,12 @@ final class ComparatorTest extends TestCase
             window: 3600,
             changedAt: new \DateTimeImmutable('2026-10-29T11:59:00+00:00'),
             details: [],
-            url: 'https://console.example/projects/storefront/usage/alerts?rule=egress',
+            url: 'https://console.example/projects/storefront/usage/alerts?alert=egress',
             reason: '',
             location: 'Storefront · Acme · Frankfurt',
             since: new \DateTimeImmutable('2026-10-29T09:45:00+00:00'),
             cooldown: 3600,
-            pauseUrl: 'https://console.example/projects/storefront/usage/alerts?rule=egress',
+            pauseUrl: 'https://console.example/projects/storefront/usage/monitors?monitor=egress',
         );
 
         $resolved = $email(Status::Ok, 1200)->render($template);

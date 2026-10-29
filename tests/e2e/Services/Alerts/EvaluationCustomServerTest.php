@@ -97,6 +97,8 @@ final class EvaluationCustomServerTest extends Scope
         // Values read in the metric's unit, and the button opens the alert itself.
         $this->assertStringContainsString('Outbound bandwidth is above 0 B', (string) $email['html']);
         $this->assertStringContainsString('/projects/' . $this->getProject()['$id'] . '/usage/alerts?alert=' . $firing['alertId'], (string) $email['html']);
+        // "Pause this rule" opens the monitor, whose drawer pauses it.
+        $this->assertStringContainsString('/projects/' . $this->getProject()['$id'] . '/usage/monitors?monitor=' . $monitorId, (string) $email['html']);
 
         $bell = $this->client->call(Client::METHOD_GET, '/notifications', [
             'origin' => 'http://localhost',
