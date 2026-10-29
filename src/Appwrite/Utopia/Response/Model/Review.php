@@ -111,6 +111,7 @@ class Review extends Model
                 'description' => 'What each changed file does, as a list of path and change.',
                 'default' => [],
                 'example' => [['path' => 'src/index.ts', 'change' => 'Adds a null check.']],
+                'array' => true,
             ])
             ->addRule('reason', [
                 'type' => self::TYPE_STRING,
