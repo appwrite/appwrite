@@ -77,6 +77,9 @@ final class EvaluationCustomServerTest extends Scope
         });
         $this->assertSame(System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', 'team@localhost.test'), $email['from'][0]['address']);
         $this->assertStringContainsString($name, (string) $email['html']);
+        // Values read in the metric's unit, and the button opens the rule itself.
+        $this->assertStringContainsString('Outbound bandwidth is above 0 B', (string) $email['html']);
+        $this->assertStringContainsString('/projects/' . $this->getProject()['$id'] . '/usage/alerts?rule=' . $ruleId, (string) $email['html']);
 
         $bell = $this->client->call(Client::METHOD_GET, '/notifications', [
             'origin' => 'http://localhost',

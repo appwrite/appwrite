@@ -30,6 +30,19 @@ enum Comparator: string
     }
 
     /**
+     * How the comparison reads in a sentence, as in "is above 5 GB".
+     */
+    public function phrase(): string
+    {
+        return match ($this) {
+            self::GreaterThan => 'above',
+            self::GreaterThanEqual => 'at or above',
+            self::LessThan => 'below',
+            self::LessThanEqual => 'at or below',
+        };
+    }
+
+    /**
      * @return list<string>
      */
     public static function values(): array

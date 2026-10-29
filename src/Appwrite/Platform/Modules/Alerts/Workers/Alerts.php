@@ -4,14 +4,16 @@ namespace Appwrite\Platform\Modules\Alerts\Workers;
 
 use Appwrite\Alert\Channel;
 use Appwrite\Alert\Comparator;
+use Appwrite\Alert\Email;
 use Appwrite\Alert\Meter;
+use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Status;
 use Appwrite\Event\Message\Alert as AlertMessage;
 use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Platform\Action;
-use Appwrite\Template\Template;
 use Appwrite\Usage\Connection;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -171,7 +173,7 @@ class Alerts extends Action
      */
     protected function path(Document $project): string
     {
-        return '/projects/' . $project->getId() . '/settings/alerts';
+        return '/projects/' . $project->getId() . '/usage/alerts';
     }
 
     /**
@@ -198,7 +200,6 @@ class Alerts extends Action
         // Named after the evaluation the decision was made against, so a retried
         // evaluation of the same state reuses the key instead of sending twice.
         $deduplicationKey = 'alert:' . $rule->getId() . ':' . $status->value . ':' . ($rule->getAttribute('evaluatedAt') ?? $rule->getCreatedAt());
-        $firing = $status === Status::Firing;
         $metric = (string) $rule->getAttribute('metric');
         $parent = [
             'parentResourceType' => RESOURCE_TYPE_PROJECTS,
@@ -206,12 +207,32 @@ class Alerts extends Action
             'parentResourceInternalId' => (string) $project->getSequence(),
         ];
 
-        $shown = $this->number($value);
-        $condition = Comparator::from((string) $rule->getAttribute('comparator'))->symbol() . ' ' . $this->number((float) $rule->getAttribute('threshold'));
-        $subject = ($firing ? 'Alert firing: ' : 'Alert resolved: ') . $rule->getAttribute('name');
-        $summary = $firing
-            ? "{$metric} is {$shown}, which is {$condition}, in project {$project->getAttribute('name')}."
-            : "{$metric} is back to {$shown} in project {$project->getAttribute('name')}.";
+        $definition = Config::getParam('alerts', [])['metrics'][$metric] ?? [];
+        $unit = (string) ($definition['unit'] ?? '');
+        $resourceType = (string) $rule->getAttribute('resourceType');
+        $projectName = (string) $project->getAttribute('name');
+        $team = $dbForPlatform->getDocument('teams', (string) $rule->getAttribute('teamId'));
+        $notice = new Email(
+            status: $status,
+            rule: (string) $rule->getAttribute('name'),
+            metric: (string) ($definition['label'] ?? $metric),
+            place: $resourceType === 'project' ? $projectName : "{$resourceType} {$rule->getAttribute('resourceId')} in {$projectName}",
+            value: new Quantity($value, $unit),
+            comparator: Comparator::from((string) $rule->getAttribute('comparator')),
+            threshold: new Quantity((float) $rule->getAttribute('threshold'), $unit),
+            window: ($definition['kind'] ?? '') === 'counter' ? (int) $rule->getAttribute('window') : null,
+            changedAt: new \DateTimeImmutable($changedAt),
+            details: [
+                'Rule' => (string) $rule->getAttribute('name'),
+                'Project' => $projectName,
+                'Resource' => $resourceType === 'project' ? 'Whole project' : \ucfirst($resourceType) . ' ' . $rule->getAttribute('resourceId'),
+                'Notifies' => \implode(', ', \array_map(\ucfirst(...), $channels)),
+            ],
+            url: ($platform['consoleUrl'] ?? '') . $this->path($project) . '?rule=' . $rule->getId(),
+            reason: 'You are receiving this because you own the ' . $team->getAttribute('name', '') . ' organization. To change who is notified, update the rule\'s channels.',
+        );
+        $subject = $notice->subject();
+        $summary = $notice->summary();
 
         if (\in_array(Channel::Webhook->value, $channels, true) && $rule->getAttribute('webhookUrl', '') !== '') {
             $this->publish($publisherForNotifications, new NotificationMessage(
@@ -252,6 +273,7 @@ class Alerts extends Action
             return;
         }
 
+        $body = $notice->render(APP_CE_CONFIG_DIR . '/locale/templates/email-alert.tpl');
         foreach ($this->owners($dbForPlatform, (string) $rule->getAttribute('teamInternalId')) as $user) {
             $resource = [
                 'resourceType' => RESOURCE_TYPE_USERS,
@@ -271,17 +293,6 @@ class Alerts extends Action
                 continue;
             }
 
-            $template = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/email-alert.tpl')
-                ->setParam('{{user}}', (string) ($user->getAttribute('name', '') ?: 'there'))
-                ->setParam('{{summary}}', $summary)
-                ->setParam('{{rule}}', (string) $rule->getAttribute('name'))
-                ->setParam('{{project}}', (string) $project->getAttribute('name'))
-                ->setParam('{{metric}}', $metric)
-                ->setParam('{{value}}', $shown)
-                ->setParam('{{condition}}', $condition)
-                ->setParam('{{host}}', (string) ($platform['consoleUrl'] ?? ''))
-                ->setParam('{{path}}', $this->path($project));
-
             $this->publish($publisherForNotifications, new NotificationMessage(
                 project: $project,
                 recipients: $recipients,
@@ -289,9 +300,10 @@ class Alerts extends Action
                 deduplicationKey: $deduplicationKey,
                 subject: $subject,
                 bodyTemplate: APP_CE_CONFIG_DIR . '/locale/templates/email-base-styled.tpl',
-                body: $template->render(),
+                body: $body,
                 preview: $summary,
                 variables: [
+                    'heading' => $notice->heading(),
                     'logoUrl' => $platform['logoUrl'] ?? APP_EMAIL_LOGO_URL,
                     'accentColor' => $platform['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
                     'twitter' => $platform['twitterUrl'] ?? APP_SOCIAL_TWITTER,
@@ -344,11 +356,6 @@ class Alerts extends Action
             Query::equal('$id', $userIds),
             Query::limit(\count($userIds)),
         ]);
-    }
-
-    private function number(float $value): string
-    {
-        return \rtrim(\rtrim(\number_format($value, 2, '.', ','), '0'), '.');
     }
 
     /**

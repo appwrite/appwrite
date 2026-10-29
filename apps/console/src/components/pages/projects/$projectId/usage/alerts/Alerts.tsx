@@ -128,6 +128,9 @@ interface AlertsProps {
   /** Opens the create form filled with these fields, e.g. from a usage page. */
   prefill?: Partial<RuleForm>
   onPrefillConsumed?: () => void
+  /** Opens this rule's drawer once the rules have loaded, e.g. from an alert email. */
+  openRuleId?: string
+  onOpenRuleConsumed?: () => void
 }
 
 export function Alerts({
@@ -136,6 +139,8 @@ export function Alerts({
   createDisabledTooltip,
   prefill,
   onPrefillConsumed,
+  openRuleId,
+  onOpenRuleConsumed,
 }: AlertsProps) {
   const t = useT()
   const { rules, isLoading } = useAlertRules(projectId)
@@ -163,6 +168,16 @@ export function Alerts({
     setCreateOpen(true)
     onPrefillConsumed?.()
   }, [prefill, createDisabled, onPrefillConsumed])
+
+  useEffect(() => {
+    if (!openRuleId || isLoading) return
+    const rule = rules.find((candidate) => candidate.$id === openRuleId)
+    if (rule) {
+      setSelected(rule)
+      setDrawerOpen(true)
+    }
+    onOpenRuleConsumed?.()
+  }, [openRuleId, isLoading, rules, onOpenRuleConsumed])
 
   const counts = useMemo(() => {
     const result: Record<Filter, number> = {

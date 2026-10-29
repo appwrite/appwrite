@@ -16,8 +16,12 @@ import type { AlertMetric, AlertResourceType } from '@/lib/appwrite/alerts'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 
-/** `?metric=` (and optionally the resource and a threshold) opens the create form filled in. */
+/**
+ * `?metric=` (and optionally the resource and a threshold) opens the create form
+ * filled in; `?rule=` opens that rule, as alert emails link to it.
+ */
 const searchSchema = z.object({
+  rule: z.string().optional().catch(undefined),
   metric: z.string().optional().catch(undefined),
   resourceType: z.string().optional().catch(undefined),
   resourceId: z.string().optional().catch(undefined),
@@ -78,8 +82,8 @@ function UsageAlertsPage() {
     return fields
   }, [search])
 
-  // Drop the query once the form has opened, so a refresh does not reopen it.
-  const clearPrefill = useCallback(() => {
+  // Drop the query once it has been acted on, so a refresh does not reopen it.
+  const clearSearch = useCallback(() => {
     void navigate({
       to: '/projects/$projectId/usage/alerts',
       params: { projectId },
@@ -92,7 +96,9 @@ function UsageAlertsPage() {
     <Alerts
       projectId={projectId}
       prefill={prefill}
-      onPrefillConsumed={clearPrefill}
+      onPrefillConsumed={clearSearch}
+      openRuleId={search.rule}
+      onOpenRuleConsumed={clearSearch}
       createDisabled={!canWrite}
       createDisabledTooltip={
         canWrite

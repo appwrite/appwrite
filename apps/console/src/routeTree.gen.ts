@@ -248,7 +248,6 @@ import { Route as PublicProjectsProjectIdRealtimeChannelsRouteImport } from './r
 import { Route as PublicProjectsProjectIdRealtimeDebuggerRouteImport } from './routes/_public/projects.$projectId.realtime.debugger'
 import { Route as PublicProjectsProjectIdRealtimeMessagesRouteImport } from './routes/_public/projects.$projectId.realtime.messages'
 import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
-import { Route as PublicProjectsProjectIdSettingsAlertsRouteImport } from './routes/_public/projects.$projectId.settings.alerts'
 import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
 import { Route as PublicProjectsProjectIdSettingsMigrationsRouteImport } from './routes/_public/projects.$projectId.settings.migrations'
 import { Route as PublicProjectsProjectIdSettingsSmtpRouteImport } from './routes/_public/projects.$projectId.settings.smtp'
@@ -1788,12 +1787,6 @@ const PublicProjectsProjectIdSettingsIndexRoute =
   PublicProjectsProjectIdSettingsIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
-  } as any)
-const PublicProjectsProjectIdSettingsAlertsRoute =
-  PublicProjectsProjectIdSettingsAlertsRouteImport.update({
-    id: '/alerts',
-    path: '/alerts',
     getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
   } as any)
 const PublicProjectsProjectIdSettingsDomainsRoute =
@@ -3613,7 +3606,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
-  '/projects/$projectId/settings/alerts': typeof PublicProjectsProjectIdSettingsAlertsRoute
   '/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
@@ -4047,7 +4039,6 @@ export interface FileRoutesByTo {
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
-  '/projects/$projectId/settings/alerts': typeof PublicProjectsProjectIdSettingsAlertsRoute
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
@@ -4495,7 +4486,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/_public/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/_public/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
-  '/_public/projects/$projectId/settings/alerts': typeof PublicProjectsProjectIdSettingsAlertsRoute
   '/_public/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/_public/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/_public/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
@@ -4962,7 +4952,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/realtime/channels'
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
-    | '/projects/$projectId/settings/alerts'
     | '/projects/$projectId/settings/domains'
     | '/projects/$projectId/settings/migrations'
     | '/projects/$projectId/settings/smtp'
@@ -5396,7 +5385,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/realtime/channels'
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
-    | '/projects/$projectId/settings/alerts'
     | '/projects/$projectId/settings/smtp'
     | '/projects/$projectId/settings/variables'
     | '/projects/$projectId/settings/webhooks'
@@ -5843,7 +5831,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/realtime/channels'
     | '/_public/projects/$projectId/realtime/debugger'
     | '/_public/projects/$projectId/realtime/messages'
-    | '/_public/projects/$projectId/settings/alerts'
     | '/_public/projects/$projectId/settings/domains'
     | '/_public/projects/$projectId/settings/migrations'
     | '/_public/projects/$projectId/settings/smtp'
@@ -7803,13 +7790,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/projects/$projectId/settings/'
       preLoaderRoute: typeof PublicProjectsProjectIdSettingsIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
-    }
-    '/_public/projects/$projectId/settings/alerts': {
-      id: '/_public/projects/$projectId/settings/alerts'
-      path: '/alerts'
-      fullPath: '/projects/$projectId/settings/alerts'
-      preLoaderRoute: typeof PublicProjectsProjectIdSettingsAlertsRouteImport
       parentRoute: typeof PublicProjectsProjectIdSettingsRoute
     }
     '/_public/projects/$projectId/settings/domains': {
@@ -10832,7 +10812,6 @@ const PublicProjectsProjectIdSettingsMigrationsRouteWithChildren =
   )
 
 interface PublicProjectsProjectIdSettingsRouteChildren {
-  PublicProjectsProjectIdSettingsAlertsRoute: typeof PublicProjectsProjectIdSettingsAlertsRoute
   PublicProjectsProjectIdSettingsDomainsRoute: typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   PublicProjectsProjectIdSettingsMigrationsRoute: typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   PublicProjectsProjectIdSettingsSmtpRoute: typeof PublicProjectsProjectIdSettingsSmtpRoute
@@ -10843,8 +10822,6 @@ interface PublicProjectsProjectIdSettingsRouteChildren {
 
 const PublicProjectsProjectIdSettingsRouteChildren: PublicProjectsProjectIdSettingsRouteChildren =
   {
-    PublicProjectsProjectIdSettingsAlertsRoute:
-      PublicProjectsProjectIdSettingsAlertsRoute,
     PublicProjectsProjectIdSettingsDomainsRoute:
       PublicProjectsProjectIdSettingsDomainsRouteWithChildren,
     PublicProjectsProjectIdSettingsMigrationsRoute:
@@ -11427,13 +11404,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

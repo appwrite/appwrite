@@ -8,7 +8,8 @@
  * project itself. A resource with `'project' => false` is not offered on the
  * project's alert rule routes, for rules managed somewhere else. `metrics` lists the resource types each metric is recorded
  * for, whether it is a counter summed over the rule's window or a gauge read at
- * its latest sample, and the unit its threshold is written in.
+ * its latest sample, the unit its threshold is written in, and the name
+ * notifications show for it.
  *
  * `Appwrite\Alert\Meter` reads each metric listed here.
  */
@@ -26,31 +27,37 @@ return [
     ],
     'metrics' => [
         'bandwidth.inbound' => [
+            'label' => 'Inbound bandwidth',
             'resources' => ['project'],
             'kind' => 'counter',
             'unit' => 'bytes',
         ],
         'bandwidth.outbound' => [
+            'label' => 'Outbound bandwidth',
             'resources' => ['project'],
             'kind' => 'counter',
             'unit' => 'bytes',
         ],
         'databases.reads' => [
+            'label' => 'Database reads',
             'resources' => ['project', 'database'],
             'kind' => 'counter',
             'unit' => 'operations',
         ],
         'databases.writes' => [
+            'label' => 'Database writes',
             'resources' => ['project', 'database'],
             'kind' => 'counter',
             'unit' => 'operations',
         ],
         'databases.storage' => [
+            'label' => 'Database storage',
             'resources' => ['project', 'database'],
             'kind' => 'gauge',
             'unit' => 'bytes',
         ],
         'files.storage' => [
+            'label' => 'File storage',
             'resources' => ['project', 'bucket'],
             'kind' => 'gauge',
             'unit' => 'bytes',
