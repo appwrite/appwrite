@@ -5,17 +5,21 @@ namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -79,10 +83,12 @@ class Update extends Action
             ->inject('proofForToken')
             ->inject('domainVerification')
             ->inject('cookieDomain')
+            ->inject('mqtt')
+            ->inject('queueForRealtime')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain, Mqtt $mqtt, Realtime $queueForRealtime)
     {
         $protocol = $request->getProtocol();
 
@@ -157,7 +163,9 @@ class Update extends Action
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
         }
 
-        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team, $targetUser, $secret, $proofForToken, &$session) {
+        $claimed = null;
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, &$session, &$claimed) {
+            $claimed = null; // A retried attempt starts over
             // Lock the user first, as an address change does, so a voided invite cannot slip through
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
 
@@ -184,6 +192,13 @@ class Update extends Action
                 $hasPhone && !$hasEmail => 'phoneVerification',
                 default => null,
             };
+
+            // Accepting while signed out proves an unverified email or phone, so whoever registered it keeps no other way in
+            if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false)) {
+                $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
+                $claimed = $user;
+            }
 
             if ($verification !== null) {
                 $targetUser->setAttribute($verification, true);
@@ -248,6 +263,22 @@ class Update extends Action
         }
 
         $dbForProject->purgeCachedDocument('users', $targetUser->getId());
+
+        if ($claimed !== null) {
+            try {
+                $mqtt->revoke($project->getId(), $claimed->getId());
+            } catch (\Throwable $error) {
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+            }
+
+            // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
+            (clone $queueForRealtime)
+                ->reset()
+                ->setProject($project)
+                ->setEvent('users.[userId].sessions.delete')
+                ->setParam('userId', $claimed->getId())
+                ->trigger();
+        }
 
         $queueForEvents
             ->setParam('userId', $targetUser->getId())

@@ -12,8 +12,10 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Realtime;
 use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
@@ -80,7 +82,8 @@ class Deletes extends Action
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
             ->inject('bus')
-            ->inject('executionStore');
+            ->inject('executionStore')
+            ->inject('queueForRealtime');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -112,6 +115,7 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        Realtime $queueForRealtime,
         UsageConnection $usageConnection,
     ): void {
         $payload = $message->getPayload();
@@ -146,6 +150,7 @@ class Deletes extends Action
             $publisherForUsage,
             $bus,
             $executionStore,
+            $queueForRealtime,
         );
 
         // Sweep rows that landed between the purge and the delete. The
@@ -240,6 +245,7 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        Realtime $queueForRealtime,
     ): void {
         $payload = $message->getPayload();
 
@@ -280,7 +286,7 @@ class Deletes extends Action
                         $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor, $bus);
                         break;
                     case DELETE_TYPE_USERS:
-                        $this->deleteUser($getProjectDB, $document, $project);
+                        $this->deleteUser($getProjectDB, $document, $project, $queueForRealtime, $publisherForUsage);
                         break;
                     case DELETE_TYPE_TEAMS:
                         $this->deleteTeam($getProjectDB, $document, $project);
@@ -641,41 +647,40 @@ class Deletes extends Action
 
             $now = new \DateTime();
 
-            $kept = [];
-            $activeDeploymentId = $resource->getAttribute('deploymentId', '');
-            if (!empty($activeDeploymentId)) {
-                $kept[] = $activeDeploymentId;
-            }
-
-            // A custom domain pinned to a branch serves that branch's latest build, which is
-            // rarely the active deployment; deleting the deployment would delete the domain too.
-            $this->listByGroup(
-                'rules',
-                [
-                    Query::equal('projectInternalId', [$project->getSequence()]),
-                    Query::equal('type', ['deployment']),
-                    Query::equal('trigger', ['manual']),
-                    Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
-                    Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
-                    Query::notEqual('deploymentId', ''),
-                ],
-                $dbForPlatform,
-                function (Document $rule) use (&$kept) {
-                    $kept[] = $rule->getAttribute('deploymentId');
-                }
-            );
-
-            $queries = [
+            $resourceQueries = [
                 Query::equal('resourceInternalId', [$resource->getSequence()]),
                 Query::equal('resourceType', [$resource->getCollection()]),
             ];
 
-            foreach (\array_unique($kept) as $deploymentId) {
-                $queries[] = Query::notEqual('$id', $deploymentId);
-            }
-
             try {
-                foreach ($retention->passes($dbForProject, $queries, $requested, $now) as $pass) {
+                $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+
+                foreach ($retention->passes(
+                    $dbForProject,
+                    $resourceQueries,
+                    $requested,
+                    $now,
+                    function () use ($dbForPlatform, $dbForProject, $project, &$resource, $resourceQueries): array {
+                        $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+
+                        return $this->deploymentRetentionQueries(
+                            $dbForPlatform,
+                            $dbForProject,
+                            $project,
+                            $resource,
+                            $resourceQueries,
+                        );
+                    },
+                ) as $pass) {
+                    $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
+                    $queries = $this->deploymentRetentionQueries(
+                        $dbForPlatform,
+                        $dbForProject,
+                        $project,
+                        $resource,
+                        $resourceQueries,
+                    );
+
                     $this->retireDeployments($pass->reason, [...$queries, ...$pass->queries], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
                 }
             } catch (Throwable $th) {
@@ -696,6 +701,83 @@ class Deletes extends Action
             $dbForProject,
             $removalCallback
         );
+    }
+
+    /**
+     * Deployments retention must never delete while a manual rule still serves them.
+     * Branch-pinned rules follow that branch's newest ready VCS build, which may not
+     * match deploymentId until the build worker repoints the rule.
+     *
+     * @return list<string>
+     */
+    private function deploymentIdsProtectedFromRetention(Database $dbForPlatform, Database $dbForProject, Document $project, Document $resource): array
+    {
+        $kept = [];
+        $activeDeploymentId = $resource->getAttribute('deploymentId', '');
+        if ($activeDeploymentId !== '') {
+            $kept[] = $activeDeploymentId;
+        }
+
+        $this->listByGroup(
+            'rules',
+            [
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('type', ['deployment']),
+                Query::equal('trigger', ['manual']),
+                Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
+                Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+            ],
+            $dbForPlatform,
+            function (Document $rule) use (&$kept, $dbForProject, $resource): void {
+                $deploymentId = $rule->getAttribute('deploymentId', '');
+                if ($deploymentId !== '') {
+                    $kept[] = $deploymentId;
+                }
+
+                $branch = $rule->getAttribute('deploymentVcsProviderBranch', '');
+                if ($branch === '') {
+                    return;
+                }
+
+                $branchDeployment = $dbForProject->findOne('deployments', [
+                    Query::equal('resourceType', [$resource->getCollection()]),
+                    Query::equal('resourceInternalId', [$resource->getSequence()]),
+                    Query::equal('providerBranch', [$branch]),
+                    Query::equal('status', ['ready']),
+                    Query::isNotNull('installationId'),
+                    Query::notEqual('installationId', ''),
+                    Query::orderDesc('$createdAt'),
+                    Query::orderDesc('$sequence'),
+                ]);
+
+                if (! $branchDeployment->isEmpty()) {
+                    $kept[] = $branchDeployment->getId();
+                }
+            }
+        );
+
+        return \array_values(\array_unique($kept));
+    }
+
+    /**
+     * Resource-scoped deployment queries with protected builds excluded from retention passes.
+     *
+     * @param list<Query> $resourceQueries
+     * @return list<Query>
+     */
+    private function deploymentRetentionQueries(
+        Database $dbForPlatform,
+        Database $dbForProject,
+        Document $project,
+        Document $resource,
+        array $resourceQueries,
+    ): array {
+        $queries = $resourceQueries;
+        foreach ($this->deploymentIdsProtectedFromRetention($dbForPlatform, $dbForProject, $project, $resource) as $deploymentId) {
+            $queries[] = Query::notEqual('$id', $deploymentId);
+        }
+
+        return $queries;
     }
 
     /**
@@ -1171,7 +1253,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteUser(callable $getProjectDB, Document $document, Document $project): void
+    private function deleteUser(callable $getProjectDB, Document $document, Document $project, Realtime $queueForRealtime, UsagePublisher $publisherForUsage): void
     {
         $userId = $document->getId();
         $userInternalId = $document->getSequence();
@@ -1230,6 +1312,16 @@ class Deletes extends Action
 
         // Delete targets
         Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
+
+        // Delete presences, in case removing them while deleting the user failed
+        $usage = new UsageContext();
+        (new PresenceState())->deleteForUser($dbForProject, $project, $document, $queueForRealtime, $usage);
+        if (!empty($usage->getMetrics())) {
+            $publisherForUsage->enqueue(new Usage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+            ));
+        }
 
         // Delete photos, including files a racing upload or delete left behind.
         // The trailing slash keeps the prefix match from reaching a user whose ID starts the same.
