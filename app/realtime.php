@@ -54,6 +54,7 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
+use Utopia\Span\Level;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -590,30 +591,54 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     });
 
     // A child coroutine gets fresh database objects, so a dead cached one cannot park the subscriber.
-    $verifyPermissions = function (callable $verify, callable $onFailure) use ($permissionTimeout): array {
-        $done = new Channel(1);
-        $started = go(function () use ($verify, $done): void {
-            try {
-                $done->push(['closing' => $verify()]);
-            } catch (\Throwable $th) {
-                $done->push(['error' => $th]);
+    $verifyPermissions = function (array $attributes, callable $verify, callable $onFailure) use ($permissionTimeout): array {
+        $span = Span::init('realtime.permissions');
+        foreach ($attributes as $key => $value) {
+            $span->set($key, $value);
+        }
+
+        $level = null;
+        $closing = [];
+
+        try {
+            $done = new Channel(1);
+            $started = go(function () use ($verify, $done): void {
+                try {
+                    $done->push(['closing' => $verify()]);
+                } catch (\Throwable $th) {
+                    $done->push(['error' => $th]);
+                }
+            });
+
+            // Never inline: that brings back the unbounded wait.
+            if ($started === false) {
+                $span->set('realtime.verification', 'coroutine_limit');
+                $level = Level::Error;
+
+                return $closing = $onFailure();
             }
-        });
 
-        // Never inline: that brings back the unbounded wait.
-        if ($started === false) {
-            return $onFailure('skipped: coroutine limit reached');
-        }
+            $result = $done->pop($permissionTimeout);
+            if ($result === false) {
+                $span->set('realtime.verification', 'timed_out');
+                $level = Level::Error;
 
-        $result = $done->pop($permissionTimeout);
-        if ($result === false) {
-            return $onFailure('timed out');
-        }
-        if (isset($result['error'])) {
-            return $onFailure('failed: ' . $result['error']->getMessage());
-        }
+                return $closing = $onFailure();
+            }
+            if (isset($result['error'])) {
+                $span->set('realtime.verification', 'failed');
+                $span->setError($result['error']);
 
-        return $result['closing'];
+                return $closing = $onFailure();
+            }
+
+            $span->set('realtime.verification', 'verified');
+
+            return $closing = $result['closing'];
+        } finally {
+            $span->set('realtime.closed', \count($closing));
+            $span->finish(level: $level);
+        }
     };
 
     while ($attempts < 300) {
@@ -674,10 +699,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             // Set on timeout or failure so a late check leaves state alone.
                             $abandoned = false;
 
-                            $onFailure = function (string $reason) use ($event, $projectId, $userId, $connections, $impersonating, $administering, &$abandoned): array {
+                            $onFailure = function () use ($connections, $impersonating, $administering, &$abandoned): array {
                                 // Fails closed: a reconnect re-authenticates with fresh roles.
                                 $abandoned = true;
-                                Console::error('Realtime permission verification ' . $reason . ' (project: ' . $projectId . ', user: ' . $userId . ', event: ' . ($event['data']['events'][0] ?? 'unknown') . '); closing the user\'s connections unverified');
 
                                 $closing = [];
                                 foreach ([...$connections, ...$impersonating, ...$administering] as $connection) {
@@ -858,7 +882,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 return $closing;
                             };
 
-                            $closing += $verifyPermissions($verify, $onFailure);
+                            $closing += $verifyPermissions([
+                                'project.id' => $projectId,
+                                'user.id' => $userId,
+                                'realtime.event' => $event['data']['events'][0] ?? '',
+                            ], $verify, $onFailure);
                         }
                     } elseif ($event['permissionsChanged']) {
                         // `projects.{projectId}.sessions.delete`: every connection of the named
@@ -879,10 +907,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             // Set on timeout or failure so a late check leaves state alone.
                             $abandoned = false;
 
-                            $onFailure = function (string $reason) use ($realtime, $event, $targetProjectId, &$abandoned): array {
+                            $onFailure = function () use ($realtime, $targetProjectId, &$abandoned): array {
                                 // Fails closed: a reconnect re-authenticates with fresh roles.
                                 $abandoned = true;
-                                Console::error('Realtime permission verification ' . $reason . ' (project: ' . $targetProjectId . ', event: ' . ($event['data']['events'][0] ?? 'unknown') . '); closing its session connections unverified');
 
                                 $closing = [];
                                 foreach ($realtime->getProjectConnections($targetProjectId) as $connection) {
@@ -956,7 +983,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 return $closing;
                             };
 
-                            $closing += $verifyPermissions($verify, $onFailure);
+                            $closing += $verifyPermissions([
+                                'project.id' => $targetProjectId,
+                                'realtime.event' => $event['data']['events'][0] ?? '',
+                            ], $verify, $onFailure);
                         }
                     }
 
@@ -1086,7 +1116,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $eventTailRegistry->ingest($tailProjectId, Realtime::toTailMetadata($event), \microtime(true));
                     }
                 } catch (\Throwable $th) {
-                    Console::error('Realtime event handling failed: ' . $th->getMessage());
+                    // Only a failed event gets a span, so the firehose stays out of the logs.
+                    $eventSpan = Span::init('realtime.event');
+                    $eventSpan->set('project.id', $event['project'] ?? '');
+                    $eventSpan->finish(error: $th);
                 }
             });
         } catch (Throwable $th) {

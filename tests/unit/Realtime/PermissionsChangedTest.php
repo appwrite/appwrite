@@ -78,12 +78,17 @@ final class PermissionsChangedTest extends TestCase
             '_APP_REALTIME_PERMISSION_TIMEOUT' => (string) self::PERMISSION_TIMEOUT,
             '_APP_OPTIONS_ABUSE' => 'disabled',
             '_APP_WORKERS_NUM' => '1',
+            // One JSON line per span, exported unfiltered, so the test can read the outcomes.
+            '_APP_EDITION' => 'self-hosted',
+            '_APP_LOGGING_FORMAT' => 'json',
+            '_APP_TRACE_PROJECT_ID' => '',
+            '_APP_TRACE_FUNCTION_ID' => '',
             'TEST_FROZEN_BLOCKS' => $frozenBlocks ? 'true' : 'false',
         ]);
 
         $this->process = \proc_open(
             [PHP_BINARY, __DIR__ . '/Harness/server.php'],
-            [1 => ['file', $this->log, 'w'], 2 => ['file', $this->log, 'a']],
+            [1 => ['file', $this->log, 'a'], 2 => ['file', $this->log, 'a']],
             $pipes,
             null,
             $env
@@ -216,6 +221,27 @@ final class PermissionsChangedTest extends TestCase
         $this->fail('Realtime subscriber never came up: ' . $this->tailLog());
     }
 
+    /**
+     * Waits for the `realtime.permissions` span the server prints for one verification,
+     * and returns its attributes.
+     */
+    private function awaitVerificationSpan(string $userId, int $seconds): array
+    {
+        $deadline = \microtime(true) + $seconds;
+
+        while (\microtime(true) < $deadline) {
+            foreach (\explode("\n", (string) @\file_get_contents($this->log)) as $line) {
+                $span = \json_decode($line, true);
+                if (\is_array($span) && ($span['action'] ?? '') === 'realtime.permissions' && ($span['user.id'] ?? '') === $userId) {
+                    return $span;
+                }
+            }
+            \usleep(200_000);
+        }
+
+        $this->fail('No realtime.permissions span for ' . $userId . ': ' . $this->tailLog());
+    }
+
     private function isEvent(string $payloadId): callable
     {
         return fn (array $frame): bool => ($frame['type'] ?? '') === 'event'
@@ -279,6 +305,11 @@ final class PermissionsChangedTest extends TestCase
         );
         $this->assertUnauthorizedClose($revoked, 10);
 
+        $span = $this->awaitVerificationSpan('revoked', 10);
+        $this->assertSame('verified', $span['realtime.verification'] ?? null);
+        $this->assertSame('info', $span['level'] ?? null);
+        $this->assertSame(1, $span['realtime.closed'] ?? null);
+
         // A permissionsChanged event for a user who is still active rebuilds and keeps the connection.
         $this->publish($this->event(
             events: ['users.active.update.email'],
@@ -341,6 +372,13 @@ final class PermissionsChangedTest extends TestCase
         );
         $this->assertUnauthorizedClose($frozen, 10);
 
+        $span = $this->awaitVerificationSpan('frozen', 10);
+        $this->assertSame('timed_out', $span['realtime.verification'] ?? null);
+        $this->assertSame('error', $span['level'] ?? null);
+        $this->assertSame(1, $span['realtime.closed'] ?? null);
+        $this->assertSame(self::PROJECT, $span['project.id'] ?? null);
+        $this->assertSame('users.frozen.update.status', $span['realtime.event'] ?? null);
+
         // And the subscriber is still alive for the next event.
         $this->publish($this->event(['documents.y.create'], ['documents'], ['users'], ['$id' => 'after']));
         $this->assertNotNull(
@@ -381,6 +419,12 @@ final class PermissionsChangedTest extends TestCase
             'Broken connection must receive the triggering event before the close: ' . $this->tailLog()
         );
         $this->assertUnauthorizedClose($broken, 10);
+
+        $span = $this->awaitVerificationSpan('broken', 10);
+        $this->assertSame('failed', $span['realtime.verification'] ?? null);
+        $this->assertSame('error', $span['level'] ?? null);
+        $this->assertSame(1, $span['realtime.closed'] ?? null);
+        $this->assertSame('Connection reset by peer', $span['error.message'] ?? null);
 
         $this->publish($this->event(['documents.x.create'], ['documents'], ['users'], ['$id' => 'follow-up']));
         $this->assertNotNull(
