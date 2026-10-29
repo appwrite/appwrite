@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OIDC\IdTokenVerifier;
 use Appwrite\Auth\OIDC\Jwks;
-use Appwrite\Bus\Events\CredentialsRevoked;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -231,7 +230,7 @@ class Create extends Action
         $newUser = null;
         $newTarget = null;
         if ($user->isEmpty()) {
-            [$newUser, $newTarget] = $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization, $bus);
+            [$newUser, $newTarget] = $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization, $connections);
         }
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -393,7 +392,7 @@ class Create extends Action
      * @return array{?Document, ?Document} the user and email target created by
      *     this request, if any, so they can be rolled back later
      */
-    private function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Bus $bus): array
+    private function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Connections $connections): array
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('provider', [$provider]),
@@ -431,10 +430,7 @@ class Create extends Action
                 if (!$user->getAttribute('emailVerification', false)) {
                     $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
                     $dbForProject->purgeCachedDocument('users', $user->getId());
-                    $bus->dispatch(new CredentialsRevoked(
-                        user: $user->getArrayCopy(),
-                        project: $project->getArrayCopy(),
-                    ));
+                    $connections->close($project, $user->getId());
                 }
                 // The provider verified this address, or its canonical form on the same domain
                 if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {

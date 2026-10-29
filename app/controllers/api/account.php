@@ -12,7 +12,6 @@ use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
-use Appwrite\Bus\Events\CredentialsRevoked;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Deletes\Identities as DeleteIdentities;
 use Appwrite\Deletes\Targets as DeleteTargets;
@@ -91,7 +90,7 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, Connections $connections) {
 
     // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
     $oauthProvider = null;
@@ -278,10 +277,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
     if ($claimed) {
-        $bus->dispatch(new CredentialsRevoked(
-            user: $user->getArrayCopy(),
-            project: $project->getArrayCopy(),
-        ));
+        $connections->close($project, $user->getId());
     }
 
     $bus->dispatch(new SessionCreated(
@@ -1457,6 +1453,7 @@ Http::post('/v1/account/sessions/token')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
+    ->inject('connections')
     ->action($createSession);
 
 Http::get('/v1/account/sessions/oauth2/:provider')
@@ -1678,8 +1675,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('platform')
     ->inject('clientForOAuth2')
     ->inject('connections')
-    ->inject('bus')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2, Connections $connections, Bus $bus) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2, Connections $connections) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1993,10 +1989,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     if (!$user->getAttribute('emailVerification', false)) {
                         $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
                         $dbForProject->purgeCachedDocument('users', $user->getId());
-                        $bus->dispatch(new CredentialsRevoked(
-                            user: $user->getArrayCopy(),
-                            project: $project->getArrayCopy(),
-                        ));
+                        $connections->close($project, $user->getId());
                     }
                     // The provider verified this address, or its canonical form on the same domain
                     if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
@@ -3329,10 +3322,11 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
+    ->inject('connections')
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization, $connections) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization, $connections);
     });
 
 Http::put('/v1/account/sessions/phone')
@@ -3381,6 +3375,7 @@ Http::put('/v1/account/sessions/phone')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
+    ->inject('connections')
     ->action($createSession);
 
 Http::post('/v1/account/tokens/phone')
@@ -4598,8 +4593,7 @@ Http::put('/v1/account/recovery')
 ->inject('authorization')
     ->inject('pwnedPasswords')
     ->inject('connections')
-    ->inject('bus')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords, Connections $connections, Bus $bus) {
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords, Connections $connections) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -4697,13 +4691,10 @@ Http::put('/v1/account/recovery')
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         if ($claimed) {
-            $bus->dispatch(new CredentialsRevoked(
-                user: $profile->getArrayCopy(),
-                project: $project->getArrayCopy(),
-            ));
+            $connections->close($project, $profile->getId());
+        } else {
+            $connections->revoke($project, $profile->getId());
         }
-
-        $connections->revoke($project, $profile->getId());
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
@@ -5032,8 +5023,7 @@ Http::put('/v1/account/recovery/otp')
     ->inject('authorization')
     ->inject('pwnedPasswords')
     ->inject('connections')
-    ->inject('bus')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords, Connections $connections, Bus $bus) {
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords, Connections $connections) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -5131,13 +5121,10 @@ Http::put('/v1/account/recovery/otp')
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         if ($claimed) {
-            $bus->dispatch(new CredentialsRevoked(
-                user: $profile->getArrayCopy(),
-                project: $project->getArrayCopy(),
-            ));
+            $connections->close($project, $profile->getId());
+        } else {
+            $connections->revoke($project, $profile->getId());
         }
-
-        $connections->revoke($project, $profile->getId());
 
         $queueForEvents
             ->setParam('userId', $profile->getId())

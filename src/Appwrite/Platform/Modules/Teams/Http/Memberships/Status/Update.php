@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 
 use Appwrite\Auth\MFA\Type;
-use Appwrite\Bus\Events\CredentialsRevoked;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
+use Appwrite\Messaging\Connections;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -17,7 +17,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
-use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -82,11 +81,11 @@ class Update extends Action
             ->inject('proofForToken')
             ->inject('domainVerification')
             ->inject('cookieDomain')
-            ->inject('bus')
+            ->inject('connections')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain, Bus $bus)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain, Connections $connections)
     {
         $protocol = $request->getProtocol();
 
@@ -263,10 +262,7 @@ class Update extends Action
         $dbForProject->purgeCachedDocument('users', $targetUser->getId());
 
         if ($claimed !== null) {
-            $bus->dispatch(new CredentialsRevoked(
-                user: $claimed->getArrayCopy(),
-                project: $project->getArrayCopy(),
-            ));
+            $connections->close($project, $claimed->getId());
         }
 
         $queueForEvents
