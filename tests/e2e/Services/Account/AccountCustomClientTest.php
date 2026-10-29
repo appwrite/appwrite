@@ -4851,6 +4851,65 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($linkerId, $response['body']['userId']);
     }
 
+    public function testIdTokenLinkedEmailDroppedWhenAddressChanges(): void
+    {
+        $this->updateMockProvider(true);
+
+        $projectId = $this->getProject()['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $email = 'linker.' . \bin2hex(\random_bytes(8)) . '@localhost.test';
+        $providerEmail = 'previous.' . \bin2hex(\random_bytes(8)) . '@localhost.test';
+        $sub = 'changed-' . \bin2hex(\random_bytes(8));
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $linkerId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $cookie = $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey];
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => $sub, 'email' => $providerEmail, 'email_verified' => true]),
+        ], ['cookie' => $cookie]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($linkerId, $response['body']['userId']);
+
+        // The provider now reports another, unverified address for the same identity
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => $sub, 'email' => 'next.' . $providerEmail, 'email_verified' => false]),
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($linkerId, $response['body']['userId']);
+
+        /**
+         * Test for SUCCESS - the previous address no longer matches the identity's owner
+         */
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => 'verified-' . \bin2hex(\random_bytes(8)), 'email' => $providerEmail, 'email_verified' => true]),
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEquals($linkerId, $response['body']['userId']);
+    }
+
     public function testCreateAccountAfterOAuth2AccountDelete(): void
     {
         // A fresh project keeps the fixed mock OAuth email away from parallel tests.

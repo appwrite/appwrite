@@ -672,7 +672,7 @@ class Create extends Action
         $changes = ['providerIdToken' => $idToken];
 
         // Store an email only once the provider attests it, and never one another user's identity holds.
-        // An unverified or missing email leaves the stored value as it is.
+        // A different address drops the stored one; a missing email or an unverified repeat keeps it.
         if ($isVerified && !empty($providerEmail)) {
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$providerEmail]),
@@ -681,6 +681,9 @@ class Create extends Action
             if ($identityWithMatchingEmail->isEmpty()) {
                 $changes['providerEmail'] = $providerEmail;
             }
+        }
+        if (!isset($changes['providerEmail']) && !empty($providerEmail) && $providerEmail !== $identity->getAttribute('providerEmail', '')) {
+            $changes['providerEmail'] = '';
         }
 
         // Native sign-in often carries no access token at all, so only overwrite
