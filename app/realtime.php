@@ -607,14 +607,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
         });
 
+        // Verifying inline would bring back the unbounded hang, and saturation is
+        // likely when stuck children pile up, so this fails closed too.
         if ($started === false) {
-            Console::warning('Coroutine limit reached, verifying realtime permissions inline');
-
-            try {
-                return $verify();
-            } catch (\Throwable $th) {
-                return $onFailure('failed: ' . $th->getMessage());
-            }
+            return $onFailure('skipped: coroutine limit reached');
         }
 
         $result = $done->pop($permissionTimeout);
