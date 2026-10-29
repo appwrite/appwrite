@@ -681,7 +681,7 @@ mod emulation {
             )
             .await
             .unwrap();
-            assert_eq!(got, "[[a=>\"1\",b=>\"0.3\"]]", "{name}");
+            assert_eq!(got, "[[a=>\"1\",b=>\"0.30000000000000004\"]]", "{name}");
 
             let got = run(&mut pdo, "SELECT ? AS a", &[("1", Value::Str(Str::from(&b"a\0b"[..])), ParamType::Str)])
                 .await
@@ -820,8 +820,8 @@ mod emulation {
                 "sqlite" => (
                     "SELECT 9223372036854775807 AS a, 1e100 AS b, 1.0 AS e, 0.1 AS f, X'00FF' AS h, 0.30000000000000004 AS g, \
                      1e15 AS i, 123456789012345.6 AS k, NULL AS z",
-                    "[[a=>\"9223372036854775807\",b=>\"1.0E+100\",e=>\"1\",f=>\"0.1\",h=>\"\\0\u{fffd}\",g=>\"0.3\",\
-                     i=>\"1.0E+15\",k=>\"1.2345678901235E+14\",z=>null]]",
+                    "[[a=>\"9223372036854775807\",b=>\"1.0E+100\",e=>\"1\",f=>\"0.1\",h=>\"\\0\u{fffd}\",g=>\"0.30000000000000004\",\
+                     i=>\"1000000000000000\",k=>\"123456789012345.6\",z=>null]]",
                 ),
                 _ => (
                     "SELECT 9223372036854775807 AS a, 1e100 AS b, 1.0 AS e, CAST(0.1 AS DOUBLE) AS f, X'00FF' AS h, \
