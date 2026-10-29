@@ -21,6 +21,7 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Validator\FileExt;
 use Utopia\Validator\Nullable;
 
 class Update extends Action
@@ -141,6 +142,11 @@ class Update extends Action
         $file->setAttribute('$permissions', $permissions);
 
         if (!is_null($name)) {
+            $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
+            if (!empty($allowedFileExtensions) && $name !== $file->getAttribute('name') && !(new FileExt($allowedFileExtensions))->isValid($name)) {
+                throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'File extension not allowed');
+            }
+
             $file->setAttribute('name', $name);
         }
 

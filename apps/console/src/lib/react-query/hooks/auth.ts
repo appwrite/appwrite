@@ -996,9 +996,7 @@ export function useUpdateSessionInvalidation(
  *
  * @param projectId - The project ID
  */
-export function useDeleteProjectSessions(
-  projectId: string | null | undefined,
-) {
+export function useDeleteProjectSessions(projectId: string | null | undefined) {
   return useMutation({
     mutationFn: async () => {
       if (!projectId) {
@@ -1236,6 +1234,29 @@ export function useUpdateDenyCorporateEmailPolicy(
       return await projectEmailPolicyService(
         projectId,
       ).updateDenyCorporateEmailPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the deny realtime guests policy.
+ */
+export function useUpdateDenyRealtimeGuestsPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk
+        .forProject(projectId)
+        .project.updateDenyRealtimeGuestsPolicy({ enabled })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
