@@ -436,7 +436,8 @@ class V25 extends Migration
 
                     // Identity email lookups match users, so keep only addresses the owner has verified.
                     // Other identities regain their email on the next verified sign-in.
-                    try {
+                    // Failures propagate so the migration can be re-run; the step is idempotent.
+                    if ($this->dbForProject->findCollection($id) !== null) {
                         $identities = [];
                         foreach ($this->dbForProject->cursor($id, [Query::notEqual('providerEmail', '')], batchSize: 100) as $identity) {
                             $identities[] = $identity;
@@ -446,8 +447,6 @@ class V25 extends Migration
                             }
                         }
                         $this->clearUnverifiedIdentityEmails($identities);
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to clear unverified \"providerEmail\" values in collection {$id}: {$th->getMessage()}");
                     }
                     break;
 
@@ -655,13 +654,9 @@ class V25 extends Migration
                 continue;
             }
 
-            try {
-                $this->dbForProject->updateDocument('identities', $identity->getId(), new Document([
-                    'providerEmail' => '',
-                ]));
-            } catch (Throwable $th) {
-                Console::warning("Failed to clear \"providerEmail\" for identity {$identity->getId()}: {$th->getMessage()}");
-            }
+            $this->dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                'providerEmail' => '',
+            ]));
         }
     }
 

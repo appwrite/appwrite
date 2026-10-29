@@ -629,4 +629,50 @@ final class V25Test extends TestCase
             $this->assertSame($expected, (string) $database->getDocument('identities', $identityId)->getAttribute('providerEmail', ''), $identityId);
         }
     }
+
+    public function testIdentityEmailCleanupFailurePropagates(): void
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // Without a users collection the owner lookup fails, and the cleanup must not report success
+        $collections = Config::getParam('collections', [])['projects'];
+        $database->createCollection(Collection::create(
+            id: 'identities',
+            attributes: \array_values($collections['identities']['attributes']),
+            indexes: \array_values($collections['identities']['indexes']),
+        ));
+        $database->createDocument('identities', new Document([
+            '$id' => 'identity',
+            'userInternalId' => '1',
+            'userId' => 'user',
+            'provider' => 'mock',
+            'providerUid' => 'identity',
+            'providerEmail' => 'owner@example.com',
+        ]));
+
+        $migration = new class ($database, $collections['identities']) extends V25 {
+            public function __construct(Database $database, array $identities)
+            {
+                $this->dbForProject = $database;
+                $this->project = new Document(['$id' => 'project', '$sequence' => '1']);
+                $this->collections = ['projects' => ['identities' => $identities]];
+            }
+        };
+
+        $this->expectException(\Throwable::class);
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+    }
 }
