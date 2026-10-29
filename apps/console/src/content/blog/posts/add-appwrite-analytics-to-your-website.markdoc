@@ -11,7 +11,7 @@ featured: false
 draft: true
 faqs:
   - question: "How do I add Appwrite Analytics to a website?"
-    answer: "Register the site's hostname as a web app in your Appwrite project, create an analytics property, and install the appwrite package. Then create a Tracking instance with your property ID and call start() once when the site loads."
+    answer: "Register the site's hostname as a web app in your Appwrite project, create an analytics property, and install the appwrite package. Then create a Tracking instance with your property ID and call start() once when the site loads. On a site without a build step, one script tag that loads tracker.js does the same."
   - question: "Does Appwrite Analytics use cookies?"
     answer: "No. Appwrite Analytics stores nothing on the visitor's device. Each visitor ID is a one-way hash of the IP address, the user agent, and the hostname of the page, so a returning visitor on the same network and browser keeps the same ID."
   - question: "Does Appwrite Analytics track single-page apps?"
@@ -120,22 +120,16 @@ Save the component as `app/analytics-tracker.tsx`. Then render `<AnalyticsTracke
 
 ## Sites without a build step
 
-A site without a bundler can load the SDK from a CDN. The SDK is then available on the global `Appwrite` object:
+A site without a bundler, such as a static site or a CMS theme, can use the tracker script instead of the npm package. It loads the SDK, creates the `Tracking` instance, and calls `start()`, with your settings in `data-` attributes. Add it to the `<head>` of every page:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/appwrite"></script>
-<script>
-    const { Client, Analytics, Tracking } = Appwrite;
-
-    const client = new Client()
-        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-        .setProject('<PROJECT_ID>');
-
-    const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
-
-    tracking.start();
-</script>
+<script defer src="https://sdk.appwrite.io/web/29.2.0/tracker.js"
+        data-endpoint="https://<REGION>.cloud.appwrite.io/v1"
+        data-project="<PROJECT_ID>"
+        data-property="<PROPERTY_ID>"></script>
 ```
+
+The script sends the same four automatic events. It stores its `Tracking` instance on `window.__appwriteTracker`, so the code in the rest of this tutorial also works with the script tag: use `window.__appwriteTracker` where the examples use `tracking`. A deferred script runs after the inline scripts of the page, so wait for `DOMContentLoaded` before you call the tracker while the page loads.
 
 # Confirm the first visit
 
@@ -181,6 +175,8 @@ tracking.enableAutoDownloadTracking({
 });
 ```
 
+With the script tag, add `data-track-downloads="true"` to track the default file types.
+
 # Send events through your own domain
 
 By default, `Tracking` sends events to your project's Appwrite endpoint. Some ad blockers block requests to hosts that their filter lists name as trackers. When your events go to a domain that you own, those rules do not apply to them.
@@ -192,6 +188,8 @@ const client = new Client()
     .setEndpoint('https://appwrite.example.com/v1')
     .setProject('<PROJECT_ID>');
 ```
+
+With the script tag, put the same URL in `data-endpoint`.
 
 You can also forward events through a route on your own site. The [proxy guide](/docs/products/analytics/own-domain#proxy) has ready-made routes for Next.js, Express, and Cloudflare Workers.
 
@@ -215,7 +213,7 @@ Select any row to filter the dashboard to it, and save filters that you use ofte
 
 `Tracking` stores nothing in the browser, neither cookies nor local storage. Appwrite gives each event a visitor ID, which is a one-way hash of the IP address, the user agent, and the hostname of the page. Appwrite groups the events of one visitor into visits, and a visit ends after 30 minutes without events.
 
-`Tracking` respects the Do Not Track setting of the browser by default. To count these visitors too, pass `respectDoNotTrack: false`:
+`Tracking` respects the Do Not Track setting of the browser by default. To count these visitors too, pass `respectDoNotTrack: false`, or add `data-respect-dnt="false"` to the script tag:
 
 ```client-web
 const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>', {

@@ -18,7 +18,7 @@ faqs:
   - question: "How does Appwrite Analytics detect AI agents and bots?"
     answer: "Appwrite checks the user agent of every event against known bots and records the bot's name and category, such as AI crawler, AI assistant, search crawler, or social preview. People who follow a link from an AI assistant to your site are not bots: they count as visitors in the ai channel."
   - question: "Which platforms does Appwrite Analytics support?"
-    answer: "The Web and Flutter SDKs include a Tracking helper that sends pageviews, screen views, and engagement events automatically. The Android, Apple, and React Native SDKs send events with createEvent(). Every server SDK can send events with an API key, and any other client can use the REST API."
+    answer: "On a website, one script tag that loads tracker.js starts tracking with no other code. The Web and Flutter SDKs include a Tracking helper that sends pageviews, screen views, and engagement events automatically. The Android, Apple, and React Native SDKs send events with createEvent(). Every server SDK can send events with an API key, and any other client can use the REST API."
   - question: "Can I block a bot that I see in Appwrite Analytics?"
     answer: "Yes, for sites hosted on Appwrite Sites. Right-click the bot on the dashboard and select Create firewall rule. The Firewall rule opens with the site, a user agent condition, and the Deny action filled in, and it shows the estimated impact before you create it."
   - question: "How much does Appwrite Analytics cost?"
@@ -45,7 +45,16 @@ The Console then shows the install steps, with your endpoint, project ID, and pr
 
 # Add tracking to your site or app
 
-Install the Appwrite SDK for your platform and start sending events:
+On a website, one script tag is enough. Add it to the `<head>` of every page:
+
+```html
+<script defer src="https://sdk.appwrite.io/web/29.2.0/tracker.js"
+        data-endpoint="https://<REGION>.cloud.appwrite.io/v1"
+        data-project="<PROJECT_ID>"
+        data-property="<PROPERTY_ID>"></script>
+```
+
+In an app with a build step, and in mobile apps, install the Appwrite SDK for your platform and start sending events:
 
 {% multicode %}
 ```client-web
@@ -143,7 +152,7 @@ analytics.createEvent({
 ```
 {% /multicode %}
 
-The Web and Flutter SDKs include a `Tracking` helper. On a website, `start()` sends a pageview on every route change, and it also records outbound links, scroll depth, and engagement time. In Flutter, the `TrackingObserver` sends a screen view for each route, and `start()` records when the app goes to the background and comes back. Android, Apple, and React Native apps send events with `createEvent()`, and any other client can send them over REST.
+The Web and Flutter SDKs include a `Tracking` helper, and the script tag sets it up for you. On a website, `start()` sends a pageview on every route change, and it also records outbound links, scroll depth, and engagement time. In Flutter, the `TrackingObserver` sends a screen view for each route, and `start()` records when the app goes to the background and comes back. Android, Apple, and React Native apps send events with `createEvent()`, and any other client can send them over REST.
 
 For step-by-step setups, read [how to add Appwrite Analytics to your website](/blog/post/add-appwrite-analytics-to-your-website) and [how to add Appwrite Analytics to your mobile app](/blog/post/add-appwrite-analytics-to-your-mobile-app).
 
