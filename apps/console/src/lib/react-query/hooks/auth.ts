@@ -992,6 +992,23 @@ export function useUpdateSessionInvalidation(
 }
 
 /**
+ * Hook to sign out every user in the project
+ *
+ * @param projectId - The project ID
+ */
+export function useDeleteProjectSessions(projectId: string | null | undefined) {
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.deleteSessions()
+    },
+  })
+}
+
+/**
  * Hook to update project mock phone numbers
  *
  * @param projectId - The project ID
@@ -1217,6 +1234,29 @@ export function useUpdateDenyCorporateEmailPolicy(
       return await projectEmailPolicyService(
         projectId,
       ).updateDenyCorporateEmailPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the deny realtime guests policy.
+ */
+export function useUpdateDenyRealtimeGuestsPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk
+        .forProject(projectId)
+        .project.updateDenyRealtimeGuestsPolicy({ enabled })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)

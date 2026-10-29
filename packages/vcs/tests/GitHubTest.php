@@ -121,6 +121,32 @@ final class GitHubTest extends Base
         $this->assertSame('1234', $result['installationId']);
     }
 
+    public function testUpdateCheckNamesTheStatusAfterItsSuite(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var list<array{path: string, params: array<mixed>}> */
+            public array $captured = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->captured[] = ['path' => $path, 'params' => $params];
+
+                return [
+                    'body' => [],
+                    'headers' => ['status-code' => 201],
+                ];
+            }
+        };
+
+        $adapter->updateCheck('owner', 'repo', 'abc123', 'queued', 'Billing', 'Starting...', '- Function Billing', 'https://cloud.appwrite.io', 'Atlas Production');
+        $adapter->updateCheck('owner', 'repo', 'abc123', 'success', 'Billing', 'Build succeeded.');
+
+        // A commit status has no suite, so the project stays in its context
+        $this->assertSame('/repos/owner/repo/statuses/abc123', $adapter->captured[0]['path']);
+        $this->assertSame(['state' => 'pending', 'target_url' => 'https://cloud.appwrite.io', 'description' => 'Starting...', 'context' => 'Billing (Atlas Production)'], $adapter->captured[0]['params']);
+        $this->assertSame('Billing', $adapter->captured[1]['params']['context']);
+    }
+
     public function testInitializeVariablesSignsJwtWithPemString(): void
     {
         $keyPair = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);

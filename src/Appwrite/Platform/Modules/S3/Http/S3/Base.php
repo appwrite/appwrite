@@ -821,11 +821,6 @@ abstract class Base extends Action
             }
         }
 
-        $sse = $request->getHeaderLine('x-amz-server-side-encryption');
-        if ($sse !== '') {
-            $metadata['serverSideEncryption'] = $sse;
-        }
-
         foreach ([
             'cache-control' => 'cacheControl',
             'content-disposition' => 'contentDisposition',

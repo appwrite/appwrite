@@ -9,6 +9,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -72,6 +73,7 @@ class Update extends Action
             ->inject('authorization')
             ->inject('apiKey')
             ->inject('auditContext')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -89,7 +91,18 @@ class Update extends Action
         Authorization $authorization,
         ?Key $apiKey,
         AuditContext $auditContext,
+        Request $request,
     ) {
+        // A JWT stands in for its session for a few minutes; a key it left behind would outlive it
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
+        // A key hands out no more than it holds: no broader scopes and no later expiry
+        if ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $scopes, $expire)) {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
         // The request may run through the console project; events and audits belong to the resolved project
