@@ -378,7 +378,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 9
   },
   {
     "slug": "advanced/self-hosting/mcp",
@@ -497,7 +497,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "apis",
@@ -1232,7 +1232,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Privacy",
     "description": "What Appwrite Analytics collects and stores for each event, how visitor IDs work without cookies, and the controls you have over tracking and data.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/analytics/properties",
@@ -1279,9 +1279,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/analytics/web",
     "title": "Track a website",
-    "description": "Add Appwrite Analytics to a website or web app with the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
+    "description": "Add Appwrite Analytics to a website or web app with one script tag or the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/auth",

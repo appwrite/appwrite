@@ -41,7 +41,7 @@ User IDs are only accepted from requests with an API key, so a browser can't att
 
 # Do Not Track {% #do-not-track %}
 
-The Web helper sends no events for visitors who have Do Not Track turned on in their browser. It checks the Do Not Track setting only, not Global Privacy Control. You can turn this off with the `respectDoNotTrack` option. See [Track a website](/docs/products/analytics/web#do-not-track).
+The Web helper sends no events for visitors who have Do Not Track turned on in their browser. It checks the Do Not Track setting only, not Global Privacy Control. You can turn this off with the `respectDoNotTrack` option, or with the `data-respect-dnt` attribute of the script tag. See [Track a website](/docs/products/analytics/web#do-not-track).
 
 When you send events over REST or from your server, it's up to your code to honor the visitor's choices.
 

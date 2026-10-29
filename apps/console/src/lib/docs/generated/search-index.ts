@@ -1794,7 +1794,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics",
     "title": "Analytics",
     "description": "See who visits your websites and apps with Appwrite Analytics. Track pageviews and custom events without cookies, and see where visitors come from, what they view, and how much of your traffic comes from bots and AI.",
-    "excerpt": "Appwrite **Analytics** shows how people find and use your websites and apps. Add tracking with the Web or Flutter SDK, or send events over REST. Each property's dashboard then shows your visitors, where they came from, the pages they viewed, where they are, and the devices they use, next to the events you define, such as signups and purchases. Analytics works without cookies or identifiers stored on the visitor's device, and labels traffic from search crawlers, AI crawlers, AI assistants,…",
+    "excerpt": "Appwrite **Analytics** shows how people find and use your websites and apps. Add tracking with one script tag, the Web or Flutter SDK, or send events over REST. Each property's dashboard then shows your visitors, where they came from, the pages they viewed, where they are, and the devices they use, next to the events you define, such as signups and purchases. Analytics works without cookies or identifiers stored on the visitor's device, and labels traffic from search crawlers, AI…",
     "breadcrumbs": [
       "products",
       "Analytics"
@@ -2001,8 +2001,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/analytics/web",
     "title": "Track a website",
-    "description": "Add Appwrite Analytics to a website or web app with the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
-    "excerpt": "The Appwrite Web SDK includes a helper that records visits from the browser. A call to tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line. Before you start You need an analytics property and its property ID, which the Console shows next to the property name. Your site also needs a Web app in the same project. Browsers send an header with every event, and Appwrite accepts events…",
+    "description": "Add Appwrite Analytics to a website or web app with one script tag or the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
+    "excerpt": "The Appwrite Web SDK includes a helper that records visits from the browser. A call to tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line. On a site without a build step, such as a static site or a CMS theme, the tracker script sets up from one script tag. In an app with a build step, install the SDK from npm instead. Before you start You need…",
     "breadcrumbs": [
       "products",
       "Analytics",
