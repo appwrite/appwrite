@@ -901,6 +901,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                     $userId = $realtime->connections[$connection]['userId'] ?? '';
                                     $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
 
+                                    // Admin-mode connections are re-checked by the verifier too, so they close.
+                                    if (($realtime->connections[$connection]['admin'] ?? null) !== null) {
+                                        $closing[$connection] = true;
+                                        continue;
+                                    }
+
                                     if ($userId === '' || $sessionId === null) {
                                         continue; // Guests and keys hold no project session to invalidate.
                                     }
