@@ -1,6 +1,7 @@
 //! Authentication: API keys, sessions, JWTs, roles and scopes.
 
 pub mod jwt;
+pub mod otp_token;
 pub mod roles;
 
 use crate::datetime;
@@ -9,6 +10,12 @@ use serde_json::Value;
 
 use crate::database::documents::{Session, User};
 use crate::database::project::{Key, Project};
+
+/// The claim every minted ephemeral key carries (`Key::PURPOSE_CLAIM`).
+pub const PURPOSE_CLAIM: &str = "purpose";
+
+/// Its value (`Key::PURPOSE`).
+pub const PURPOSE: &str = "key";
 
 /// API key types (`API_KEY_*`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -91,6 +98,11 @@ impl ApiKey {
         match kind {
             KeyType::Ephemeral | KeyType::Dynamic => {
                 let claims = jwt::decode(jwt_key, secret, 86_400).ok()?;
+                // Every minted key carries the purpose claim, so another JWT
+                // signed with the same secret is not a key.
+                if claims.get(PURPOSE_CLAIM).and_then(Value::as_str) != Some(PURPOSE) {
+                    return None;
+                }
                 let claim_str = |k: &str| claims.get(k).and_then(Value::as_str).unwrap_or("").to_owned();
                 let project_check_disabled = matches!(claims.get("projectCheckDisabled"), Some(Value::Bool(true)));
                 let project_id = claim_str("projectId");
@@ -206,7 +218,7 @@ mod tests {
     use serde_json::{Map, Value, json};
     use utopia_database::Document;
 
-    use super::{ApiKey, KeyType, Owners, jwt};
+    use super::{ApiKey, KeyType, Owners, PURPOSE, PURPOSE_CLAIM, jwt};
     use crate::database::Project;
 
     const SECRET: &str = "test-openssl-key";
@@ -219,7 +231,8 @@ mod tests {
     }
 
     fn ephemeral(claims: Value) -> String {
-        let Value::Object(claims) = claims else { unreachable!() };
+        let Value::Object(mut claims) = claims else { unreachable!() };
+        claims.entry(PURPOSE_CLAIM).or_insert_with(|| PURPOSE.into());
         format!("ephemeral_{}", jwt::encode(SECRET, claims, 3600))
     }
 
@@ -241,6 +254,17 @@ mod tests {
         assert!(decode("ephemeral_not.a.jwt").is_none());
         let other = format!("ephemeral_{}", jwt::encode("other-key", Map::new(), 3600));
         assert!(decode(&other).is_none());
+    }
+
+    #[test]
+    fn refuses_an_ephemeral_key_without_the_purpose_claim() {
+        let mut claims = Map::new();
+        claims.insert("projectId".into(), "p1".into());
+        assert!(decode(&format!("ephemeral_{}", jwt::encode(SECRET, claims.clone(), 3600))).is_none());
+        assert!(decode(&format!("dynamic_{}", jwt::encode(SECRET, claims, 3600))).is_none());
+        assert!(decode(&ephemeral(json!({"projectId": "p1", "purpose": "session"}))).is_none());
+        assert!(decode(&ephemeral(json!({"projectId": "p1", "purpose": true}))).is_none());
+        assert!(decode(&ephemeral(json!({"projectId": "p1"}))).is_some());
     }
 
     #[test]

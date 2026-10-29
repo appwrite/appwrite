@@ -325,6 +325,47 @@ impl Context {
         }
     }
 
+    /// `$mqtt->revoke($projectId, $userId)`: asks the MQTT brokers to drop
+    /// the user's connections. Failures are logged, as in PHP.
+    pub async fn mqtt_revoke(&self, user_id: &str) {
+        let message = crate::json::to_string(&serde_json::json!({
+            "action": "revoke",
+            "project": self.project.id,
+            "userId": user_id,
+        }));
+        let mut pubsub = self.state.pubsub.clone();
+        let sent: std::result::Result<i64, _> =
+            utopia_cache::redis::cmd("PUBLISH").arg("mqtt").arg(message).query_async(&mut pubsub).await;
+        if let Err(e) = sent {
+            tracing::error!(error = %e, "Failed to revoke MQTT connections");
+        }
+    }
+
+    /// `(clone $queueForRealtime)->reset()->setProject($project)
+    /// ->setEvent('users.[userId].sessions.delete')->setParam('userId', $id)
+    /// ->trigger()`: tells the user's realtime connections, now and with no
+    /// payload, that their sessions are gone (an account just claimed).
+    pub async fn realtime_sessions_deleted(&self, user_id: &str) {
+        let params = [("userId".to_owned(), user_id.to_owned())];
+        let Ok(events) = crate::event::generate_events("users.[userId].sessions.delete", &params) else { return };
+        let Some(target) = events.first().and_then(|e| crate::event::realtime_target(e, None)) else { return };
+        let Ok(payload) = serde_json::value::RawValue::from_string("[]".to_owned()) else { return };
+        let message = crate::event::realtime_message(&self.project.id, &target, Some(user_id), &events, &payload);
+        let mut pubsub = self.state.pubsub.clone();
+        let sent: std::result::Result<i64, _> =
+            utopia_cache::redis::cmd("PUBLISH").arg("realtime").arg(&message[..]).query_async(&mut pubsub).await;
+        if let Err(e) = sent {
+            tracing::warn!(error = %e, "realtime publish failed");
+        }
+    }
+
+    /// `setPayload($response->output(...), sensitive: $keys)`: the payload,
+    /// with the keys realtime leaves out.
+    pub fn event_payload_sensitive<T: Serialize>(&mut self, payload: &T, sensitive: &[&'static str]) {
+        self.event_payload(payload);
+        self.events.sensitive = sensitive.to_vec();
+    }
+
     /// `$queueForEvents->setPayload(...)`.
     /// `setPayload($response->output(...))`: rendered before the response
     /// format's filters, as PHP's `output()` renders it.

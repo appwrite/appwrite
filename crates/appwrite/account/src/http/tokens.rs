@@ -6,6 +6,7 @@ use utopia_database::{Document, Query, Value};
 use utopia_http::Response;
 use utopia_validators::Boolean;
 
+use appwrite_core::auth::otp_token::OtpToken;
 use appwrite_core::database::documents::{self, Token, User};
 use appwrite_core::datetime;
 use appwrite_core::platform::{Audit, Context, Labels, Route};
@@ -304,6 +305,7 @@ pub async fn magic_url(ctx: &mut Context) -> Result<Response> {
     variables.insert("team".into(), Json::String(String::new()));
     let mail = Mail {
         recipient: email,
+        headers: Map::new(),
         subject,
         template: "magic-url",
         body_template: String::new(),
@@ -385,6 +387,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     }
     let mail = Mail {
         recipient: email,
+        headers: OtpToken::headers(&secret, ctx.request.header("origin").unwrap_or_default()),
         subject,
         template: "otp",
         body_template: format!("{PHP_ROOT}/app/controllers/api/../../config/locale/templates/{template}.tpl"),

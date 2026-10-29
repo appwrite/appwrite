@@ -4,12 +4,12 @@
 use utopia_auth::Hash;
 use utopia_auth::hashes::Sha;
 use utopia_database::Role;
-use utopia_database::{Document, Value};
+use utopia_database::{Document, Kind, Value};
 use utopia_http::Response;
 use utopia_http::{Cookie, same_site};
 use utopia_validators::Text;
 
-use appwrite_core::database::documents::{self, Membership, User, text};
+use appwrite_core::database::documents::{self, Attributes, Membership, User, text};
 use appwrite_core::database::unique_id;
 use appwrite_core::datetime;
 use appwrite_core::platform::Context;
@@ -33,6 +33,19 @@ fn mismatch(user: &User) -> Error {
         ErrorType::TeamInviteMismatch,
         format!("Invite does not belong to current user ({})", user.email.as_deref().unwrap_or("")),
     )
+}
+
+/// What accepting an invite came to, inside its transaction.
+enum Accept {
+    AlreadyConfirmed,
+    InvalidSecret,
+    /// The confirmed membership, whether a session was created and the user
+    /// whose account the acceptance claimed.
+    Confirmed {
+        membership: Document,
+        created: bool,
+        claimed: Option<String>,
+    },
 }
 
 /// `PATCH /v1/teams/:teamId/memberships/:membershipId/status`.
@@ -74,25 +87,23 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::MembershipAlreadyConfirmed));
     }
     let joined = datetime::value(&datetime::now());
+    ctx.authorization.add_role(&format!("user:{}", target.id));
 
-    let mut verified = Document::default();
-    verified.put("emailVerification", Value::Bool(true));
-    authorization.skip(db.update_document("users", &target.id, verified)).await?;
-
-    // A session for the invitee when they are not signed in.
-    let mut cookies: Vec<Cookie> = Vec::new();
-    let mut fallback: Option<String> = None;
+    // Built up front and stored with the confirmation, so a failure cannot
+    // consume the invite without a session.
+    let mut session: Option<Document> = None;
+    let mut session_secret = String::new();
+    let mut expire = datetime::now();
     if !has_session {
-        ctx.authorization.add_role(&format!("user:{}", target.id));
         let user_agent = ctx.user_agent("UNKNOWN");
         let detected = appwrite_core::detector::detect(&user_agent);
         let duration = ctx.project.auth_int("duration", SESSION_DURATION);
-        let expire = datetime::add_seconds(datetime::now(), duration);
-        let session_secret = utopia_auth::proofs::Token::default().token();
+        expire = datetime::add_seconds(datetime::now(), duration);
+        session_secret = utopia_auth::proofs::Token::default().token();
         let country = ctx.state.geo.country_code(&ctx.ip).await.to_lowercase();
-        let mut session = Document::default();
-        session.put("$id", Value::from(unique_id().as_str()));
-        session.put(
+        let mut document = Document::default();
+        document.put("$id", Value::from(unique_id().as_str()));
+        document.put(
             "$permissions",
             base::permissions(&[
                 ("read", Role::user(&target.id, "")),
@@ -100,31 +111,123 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
                 ("delete", Role::user(&target.id, "")),
             ]),
         );
-        session.put("userId", Value::from(target.id.as_str()));
-        session.put("userInternalId", documents::internal_id(target.sequence));
-        session.put("provider", Value::from("email"));
-        session.put("providerUid", text(target.email.as_deref()));
-        session.put("secret", Value::from(token_hash(&session_secret)?.as_str()));
-        session.put("userAgent", Value::from(user_agent.as_str()));
-        session.put("ip", Value::from(ctx.ip.as_str()));
-        session.put("factors", documents::strings(&["email".to_owned()]));
-        session.put("countryCode", Value::from(country.as_str()));
-        session.put("expire", datetime::value(&expire));
-        session.put("osCode", Value::from(detected.os_code.as_str()));
-        session.put("osName", Value::from(detected.os_name.as_str()));
-        session.put("osVersion", Value::from(detected.os_version.as_str()));
-        session.put("clientType", Value::from(detected.client_type.as_str()));
-        session.put("clientCode", Value::from(detected.client_code.as_str()));
-        session.put("clientName", Value::from(detected.client_name.as_str()));
-        session.put("clientVersion", Value::from(detected.client_version.as_str()));
-        session.put("clientEngine", Value::from(detected.client_engine.as_str()));
-        session.put("clientEngineVersion", Value::from(detected.client_engine_version.as_str()));
-        session.put("deviceName", text(detected.device_name.as_deref()));
-        session.put("deviceBrand", text(detected.device_brand.as_deref()));
-        session.put("deviceModel", text(detected.device_model.as_deref()));
-        db.create_document("sessions", session).await?;
-        ctx.authorization.add_role(&format!("user:{user_id}"));
+        document.put("userId", Value::from(target.id.as_str()));
+        document.put("userInternalId", documents::internal_id(target.sequence));
+        document.put("provider", Value::from("email"));
+        document.put("providerUid", text(target.email.as_deref()));
+        document.put("secret", Value::from(token_hash(&session_secret)?.as_str()));
+        document.put("userAgent", Value::from(user_agent.as_str()));
+        document.put("ip", Value::from(ctx.ip.as_str()));
+        document.put("countryCode", Value::from(country.as_str()));
+        document.put("expire", datetime::value(&expire));
+        document.put("osCode", Value::from(detected.os_code.as_str()));
+        document.put("osName", Value::from(detected.os_name.as_str()));
+        document.put("osVersion", Value::from(detected.os_version.as_str()));
+        document.put("clientType", Value::from(detected.client_type.as_str()));
+        document.put("clientCode", Value::from(detected.client_code.as_str()));
+        document.put("clientName", Value::from(detected.client_name.as_str()));
+        document.put("clientVersion", Value::from(detected.client_version.as_str()));
+        document.put("clientEngine", Value::from(detected.client_engine.as_str()));
+        document.put("clientEngineVersion", Value::from(detected.client_engine_version.as_str()));
+        document.put("deviceName", text(detected.device_name.as_deref()));
+        document.put("deviceBrand", text(detected.device_brand.as_deref()));
+        document.put("deviceModel", text(detected.device_model.as_deref()));
+        session = Some(document);
+    }
 
+    let secret_hash = token_hash(&secret)?;
+    let console = ctx.project.is_console();
+    let outcome = db
+        .with_transaction(|| {
+            let db = db.clone();
+            let session = session.clone();
+            let secret_hash = secret_hash.clone();
+            let joined = joined.clone();
+            let target_id = target.id.clone();
+            let membership_id = membership.id.clone();
+            let team_id = team.id.clone();
+            async move {
+                let authorization = db.authorization();
+                // Lock the user first, as an address change does, so a voided
+                // invite cannot slip through.
+                let locked = authorization.skip(db.get_document("users", &target_id, Vec::new(), true)).await?;
+                // Re-read under a lock: a concurrent accept of the same invite
+                // must not be counted twice.
+                let current =
+                    authorization.skip(db.get_document("memberships", &membership_id, Vec::new(), true)).await?;
+                if current.get("confirm") == Some(&Value::Bool(true)) {
+                    return Ok(Accept::AlreadyConfirmed);
+                }
+                if current.string_or_empty("secret") != secret_hash {
+                    return Ok(Accept::InvalidSecret);
+                }
+                let mut updates = Document::default();
+                updates.put("joined", joined);
+                updates.put("confirm", Value::Bool(true));
+                let confirmed = db.update_document("memberships", &membership_id, updates).await?;
+                authorization
+                    .skip(db.increase_document_attribute("teams", &team_id, "total", Value::Int(1), None))
+                    .await?;
+
+                // The invite proves the address it was sent to, and only one
+                // address on file tells which that was.
+                let mut user = User::from(&locked);
+                let has_email = user.email.as_deref().is_some_and(|e| !e.is_empty());
+                let has_phone = user.phone.as_deref().is_some_and(|p| !p.is_empty());
+                let verification = match (has_email, has_phone) {
+                    (true, false) => Some("emailVerification"),
+                    (false, true) => Some("phoneVerification"),
+                    _ => None,
+                };
+                let phone_proof = verification == Some("phoneVerification");
+                // Accepting while signed out proves an unverified email or
+                // phone, so whoever registered it keeps no other way in.
+                let mut claimed = None;
+                if let Some(attribute) = verification
+                    && !has_session
+                    && !matches!(locked.get(attribute), Some(Value::Bool(true)))
+                {
+                    let proven = if phone_proof { "sms" } else { "email" };
+                    authorization
+                        .skip(user.revoke_credentials(&db, console, proven))
+                        .await
+                        .map_err(|e| utopia_database::Error::new(Kind::Exception, e.message.into_owned()))?;
+                    claimed = Some(user.id.clone());
+                }
+                if let Some(attribute) = verification {
+                    let mut verified = Document::default();
+                    verified.put(attribute, Value::Bool(true));
+                    authorization.skip(db.update_document("users", &target_id, verified)).await?;
+                }
+                // The session counts only the channel the invite proved; when
+                // that is unknown the user signs in instead.
+                let mut created = false;
+                if let (Some(mut session), Some(_)) = (session, verification) {
+                    session.put("provider", Value::from(if phone_proof { "phone" } else { "email" }));
+                    let uid = if phone_proof { user.phone.as_deref() } else { user.email.as_deref() };
+                    session.put("providerUid", text(uid));
+                    session.put(
+                        "factors",
+                        documents::strings(&[(if phone_proof { "phone" } else { "email" }).to_owned()]),
+                    );
+                    db.create_document("sessions", session).await?;
+                    created = true;
+                }
+                Ok(Accept::Confirmed { membership: confirmed, created, claimed })
+            }
+        })
+        .await?;
+    let (confirmed, created, claimed) = match outcome {
+        Accept::AlreadyConfirmed => return Err(Error::new(ErrorType::MembershipAlreadyConfirmed)),
+        Accept::InvalidSecret => return Err(Error::new(ErrorType::TeamInvalidSecret)),
+        Accept::Confirmed { membership, created, claimed } => (membership, created, claimed),
+    };
+
+    // Hand the new session to a user who was not signed in.
+    let mut cookies: Vec<Cookie> = Vec::new();
+    let mut fallback: Option<String> = None;
+    if created {
+        ctx.authorization.add_role(&format!("user:{user_id}"));
         let encoded = session_store(&target.id, &session_secret)?;
         let key = format!("a_session_{}", ctx.project.id);
         if !domain_verification(ctx) {
@@ -155,27 +258,14 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         });
     }
 
-    let confirmed = db
-        .with_transaction(|| async {
-            // Re-read under a lock: a concurrent accept of the same invite
-            // must not be counted twice.
-            let current = authorization.skip(db.get_document("memberships", &membership.id, Vec::new(), true)).await?;
-            if current.get("confirm") == Some(&Value::Bool(true)) {
-                return Ok(Document::default());
-            }
-            let mut updates = Document::default();
-            updates.put("joined", joined.clone());
-            updates.put("confirm", Value::Bool(true));
-            let confirmed = db.update_document("memberships", &membership.id, updates).await?;
-            authorization.skip(db.increase_document_attribute("teams", &team.id, "total", Value::Int(1), None)).await?;
-            Ok(confirmed)
-        })
-        .await?;
-    if confirmed.is_empty() {
-        return Err(Error::new(ErrorType::MembershipAlreadyConfirmed));
-    }
     let membership = Membership::from(&confirmed);
     db.purge_cached_document("users", &target.id).await?;
+    if let Some(claimed) = claimed {
+        ctx.mqtt_revoke(&claimed).await;
+        // Sent before the request's own event, which would otherwise reach
+        // the registrant with the claimant's data.
+        ctx.realtime_sessions_deleted(&claimed).await;
+    }
 
     ctx.event_param("userId", target.id.clone());
     ctx.event_param("teamId", team.id.clone());

@@ -18,7 +18,7 @@ use utopia_validators::{ArrayList, Range, Text, WhiteList};
 use appwrite_core::database::documents::{self, Attributes, Session, User};
 use appwrite_core::datetime;
 use appwrite_core::platform::Context;
-use appwrite_core::response::SessionModel;
+use appwrite_core::response::{SESSION_SENSITIVE, SessionModel};
 use appwrite_core::{Error, ErrorType, Result};
 
 use crate::base::{self, Metadata, UrlParts, token_type};
@@ -1154,6 +1154,18 @@ fn credentials(ctx: &Context, provider: &str) -> (String, String) {
     (app_id, secret)
 }
 
+/// The state's `binding`: the flow's nonce bound to the user who started it
+/// (`hash_hmac('sha256', "$nonce:$userId", _APP_OPENSSL_KEY_V1)`), since a
+/// sibling site can plant the nonce cookie.
+fn binding(ctx: &Context, nonce: &str, user_id: &str) -> String {
+    use hmac::{Hmac, Mac};
+    let Ok(mut mac) = Hmac::<sha2::Sha256>::new_from_slice(ctx.state.config.openssl_key_v1.as_bytes()) else {
+        return String::new();
+    };
+    mac.update(format!("{nonce}:{user_id}").as_bytes());
+    hex::encode(mac.finalize().into_bytes())
+}
+
 /// The OAuth2 nonce cookie (`a_oauth2_<project>`), with the newest nonce
 /// first and at most five kept.
 fn nonce_cookie(ctx: &Context, nonce: &str, response: &mut Response) {
@@ -1241,6 +1253,8 @@ async fn start(ctx: &mut Context, token: bool) -> Result<Response> {
     state.insert("failure".into(), Json::String(failure));
     state.insert("token".into(), Json::Bool(token));
     state.insert("nonce".into(), Json::String(nonce.clone()));
+    let user_id = ctx.user.as_ref().map(|u| u.id.clone()).unwrap_or_default();
+    state.insert("binding".into(), Json::String(binding(ctx, &nonce, &user_id)));
     state.insert("state".into(), Json::String(state_param));
     let mut adapter = Provider::new(&provider, &app_id, &app_secret, &callback, state, &scopes);
     let url = adapter.login_url()?;
@@ -1461,10 +1475,22 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
         Some(Json::String(s)) => s.clone(),
         _ => String::new(),
     };
+    // A sibling site can plant the nonce cookie, so the flow is also bound
+    // to the user who started it. A guest callback accepts a state without
+    // a binding: flows started before it existed still finish.
+    let state_binding = match state_map.get("binding") {
+        Some(Json::String(s)) => s.clone(),
+        _ => String::new(),
+    };
+    let user_id = ctx.user.as_ref().map(|u| u.id.clone()).unwrap_or_default();
+    let expected = binding(ctx, &state_nonce, &user_id);
+    let user_bound = utopia_auth::hash_equals(expected.as_bytes(), state_binding.as_bytes())
+        || (state_binding.is_empty() && ctx.user.is_none());
     let bound = held
         .split(',')
         .filter(|n| !n.is_empty())
-        .any(|n| utopia_auth::hash_equals(n.as_bytes(), state_nonce.as_bytes()));
+        .any(|n| utopia_auth::hash_equals(n.as_bytes(), state_nonce.as_bytes()))
+        && user_bound;
     let mut user = ctx.user.clone();
     if !bound {
         if !token {
@@ -1686,7 +1712,7 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
         ctx.event_param("sessionId", session.id.clone());
         let model =
             SessionModel { session: &session, country_name: "", current: false, secret: None, render: ctx.render() };
-        ctx.event_payload(&model);
+        ctx.event_payload_sensitive(&model, SESSION_SENSITIVE);
         if success_url.host.as_deref() == Some(console_host.as_str())
             && success_url.path.as_deref() == Some(DEFAULT_SUCCESS)
         {
@@ -1880,7 +1906,11 @@ async fn resolve_user(
                 let mut found = User::from(&found);
                 // The verified owner of the address claims an unverified account: nobody else keeps access.
                 if found.email_verification != Some(true) {
-                    db.authorization().skip(base::profile::revoke_credentials(&db, &mut found)).await?;
+                    db.authorization().skip(found.revoke_credentials(&db, ctx.project.is_console(), "email")).await?;
+                    db.purge_cached_document("users", &found.id).await?;
+                    ctx.mqtt_revoke(&found.id).await;
+                    // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data.
+                    ctx.realtime_sessions_deleted(&found.id).await;
                 }
                 let domain = |e: &str| utopia_emails::Email::new(e).map(|p| p.domain().to_owned()).unwrap_or_default();
                 if domain(found.email.as_deref().unwrap_or("")) == domain(provider_email) {
@@ -2394,7 +2424,11 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
                 let mut found = User::from(&found);
                 // The verified owner of the address claims an unverified account: nobody else keeps access.
                 if found.email_verification != Some(true) {
-                    db.authorization().skip(base::profile::revoke_credentials(&db, &mut found)).await?;
+                    db.authorization().skip(found.revoke_credentials(&db, ctx.project.is_console(), "email")).await?;
+                    db.purge_cached_document("users", &found.id).await?;
+                    ctx.mqtt_revoke(&found.id).await;
+                    // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data.
+                    ctx.realtime_sessions_deleted(&found.id).await;
                 }
                 let domain = |e: &str| utopia_emails::Email::new(e).map(|p| p.domain().to_owned()).unwrap_or_default();
                 if domain(found.email.as_deref().unwrap_or("")) == domain(&provider_email) {
@@ -2618,7 +2652,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
     base::add_session_cookies(ctx, &mut response, &encoded, &cookie_expire);
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
-    ctx.event_payload(&model);
+    ctx.event_payload_sensitive(&model, SESSION_SENSITIVE);
     if let Err(e) = base::session_alert(ctx, &user, &session).await {
         tracing::warn!(error = %e, "session alert failed");
     }

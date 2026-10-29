@@ -95,7 +95,9 @@ pub async fn create_recovery_codes(ctx: &mut Context) -> Result<Response> {
     }
     let codes = backup_codes()?;
     store_codes(ctx, &user, &codes).await?;
-    Ok(ctx.created(&MfaRecoveryCodesModel { recovery_codes: &codes }))
+    let model = MfaRecoveryCodesModel { recovery_codes: &codes };
+    ctx.event_payload_sensitive(&model, &["recoveryCodes"]);
+    Ok(ctx.created(&model))
 }
 
 /// `PUT /v1/users/:userId/mfa/recovery-codes` (regenerates).
@@ -107,7 +109,9 @@ pub async fn update_recovery_codes(ctx: &mut Context) -> Result<Response> {
     }
     let codes = backup_codes()?;
     store_codes(ctx, &user, &codes).await?;
-    Ok(ctx.ok(&MfaRecoveryCodesModel { recovery_codes: &codes }))
+    let model = MfaRecoveryCodesModel { recovery_codes: &codes };
+    ctx.event_payload_sensitive(&model, &["recoveryCodes"]);
+    Ok(ctx.ok(&model))
 }
 
 /// `DELETE /v1/users/:userId/mfa/authenticators/:type`.

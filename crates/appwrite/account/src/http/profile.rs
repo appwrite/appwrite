@@ -142,7 +142,7 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     // The delete's own purge ran inside the transaction.
     db.purge_cached_document("users", &user.id).await?;
 
-    base::mqtt_revoke(ctx, &user.id).await;
+    ctx.mqtt_revoke(&user.id).await;
 
     let payload = Value::Array(document.array_copy()).to_json();
     let message = appwrite_core::event::delete_message(&ctx.project.message_payload(), "document", payload);
@@ -171,7 +171,7 @@ pub async fn status(ctx: &mut Context) -> Result<Response> {
     updates.put("status", Value::Bool(false));
     let user = base::update_user(&db, &user.id, updates, &[base::TARGETS]).await?;
 
-    base::mqtt_revoke(ctx, &user.id).await;
+    ctx.mqtt_revoke(&user.id).await;
 
     ctx.event_param("userId", user.id.clone());
     let payload = base::account_payload(ctx, &user);

@@ -3,7 +3,6 @@
 //! routes queue, and the request resources they read (`redirectValidator`,
 //! `domainVerification`, `cookieDomain`).
 
-use async_trait::async_trait;
 use bytes::Bytes;
 use serde_json::{Map, Value as Json, json};
 use utopia_auth::Hash;
@@ -11,9 +10,8 @@ use utopia_auth::hashes::{Argon2, Sha};
 use utopia_auth::proofs::Password;
 use utopia_database::Permission;
 use utopia_database::Role;
-use utopia_database::database::Callback;
 use utopia_database::value::{from_plain, list, to_long};
-use utopia_database::{Database, Document, Kind, Query, Value};
+use utopia_database::{Database, Document, Query, Value};
 use utopia_emails::Email;
 use utopia_http::Response;
 use utopia_validators::Validator;
@@ -423,24 +421,6 @@ pub fn token_payload(token: &Token) -> Bytes {
     }))
 }
 
-// ---- queues -----------------------------------------------------------------
-
-/// `$mqtt->revoke($projectId, $userId)`: asks the MQTT brokers to drop the
-/// user's connections. Failures are logged, as in PHP.
-pub async fn mqtt_revoke(ctx: &Context, user_id: &str) {
-    let message = appwrite_core::json::to_string(&json!({
-        "action": "revoke",
-        "project": ctx.project.id,
-        "userId": user_id,
-    }));
-    let mut pubsub = ctx.state.pubsub.clone();
-    let sent: std::result::Result<i64, _> =
-        utopia_cache::redis::cmd("PUBLISH").arg("mqtt").arg(message).query_async(&mut pubsub).await;
-    if let Err(e) = sent {
-        tracing::error!(error = %e, "Failed to revoke MQTT connections");
-    }
-}
-
 // ---- templates ----------------------------------------------------------------
 
 /// `Template::fromFile(<templates>/<name>)`.
@@ -478,6 +458,8 @@ pub struct Mail {
     pub preview: String,
     pub body: String,
     pub variables: Map<String, Json>,
+    /// Extra mail headers (the `OTP-Token` of a code sent by email).
+    pub headers: Map<String, Json>,
 }
 
 /// The project's SMTP base template (`smtpBaseTemplate`): the console's
@@ -603,7 +585,7 @@ pub fn queue_mail(ctx: &mut Context, mail: Mail) {
         "customMailOptions": custom_options,
         "events": [],
         "platform": platform,
-        "headers": [],
+        "headers": if mail.headers.is_empty() { Json::Array(Vec::new()) } else { Json::Object(mail.headers) },
     });
     let queue = ctx.state.config.queue_mails.clone();
     ctx.events.queued.push((queue, message));
@@ -684,160 +666,8 @@ pub fn cookie_name(ctx: &Context) -> String {
 /// `Deletes\Targets::delete`: the user's targets, each with its subscribers
 /// (decrementing their topics' totals).
 pub async fn delete_user_targets(db: &Database, user_sequence: i64) -> Result<()> {
-    db.delete_documents(
-        "targets",
-        vec![Query::equal("userInternalId", [user_sequence.to_string()]), Query::order_asc("", None)],
-        utopia_database::database::BATCH_SIZE,
-        Some(&mut DeleteSubscribers { db }),
-    )
-    .await?;
-    Ok(())
-}
-
-/// `User::revokeCredentials()`: every way into the account but its email
-/// address revoked (password, sessions, tokens, MFA factors, passkeys,
-/// identities, phone and push targets) in one transaction, and mirrored on
-/// `user`. For the verified owner of an address claiming an account that
-/// was registered with it and never verified, so nobody else keeps access.
-pub async fn revoke_credentials(db: &Database, user: &mut User) -> Result<()> {
-    if user.sequence == 0 || user.status == Some(false) {
-        return Ok(());
-    }
-    let hash = Argon2::new();
-    let mut attributes = Document::default();
-    attributes.put("password", Value::Null);
-    attributes.put("hash", Value::from(hash.name()));
-    attributes.put("hashOptions", hash_options(&hash));
-    attributes.put("passwordHistory", Value::Array(Default::default()));
-    attributes.put("passwordUpdate", Value::Null);
-    attributes.put("passwordPwned", Value::Null);
-    attributes.put("phone", Value::Null);
-    attributes.put("phoneVerification", Value::Bool(false));
-    attributes.put("mfa", Value::Bool(false));
-    attributes.put("mfaRecoveryCodes", Value::Array(Default::default()));
-
-    let sequence = user.sequence.to_string();
-    db.with_transaction(|| {
-        let db = db.clone();
-        let id = user.id.clone();
-        let sequence = sequence.clone();
-        let attributes = attributes.clone();
-        async move {
-            for collection in ["sessions", "tokens", "challenges", "authenticators", "identities"] {
-                db.delete_documents(
-                    collection,
-                    vec![Query::equal("userInternalId", [sequence.as_str()])],
-                    utopia_database::database::BATCH_SIZE,
-                    None,
-                )
-                .await?;
-            }
-            delete_targets(
-                &db,
-                vec![Query::equal("userInternalId", [sequence.as_str()]), Query::not_equal("providerType", "email")],
-            )
-            .await
-            .map_err(|e| utopia_database::Error::new(Kind::Exception, e.message.into_owned()))?;
-            db.update_document("users", &id, attributes).await?;
-            Ok(())
-        }
-    })
-    .await?;
-
-    user.password = None;
-    user.hash = attributes.string("hash");
-    user.hash_options = attributes.json("hashOptions");
-    user.password_history.clear();
-    user.password_update = None;
-    user.password_pwned = None;
-    user.phone = None;
-    user.phone_verification = Some(false);
-    user.mfa = Some(false);
-    user.mfa_recovery_codes.clear();
-    user.sessions.clear();
-    user.authenticators.clear();
-    user.targets.clear();
-    Ok(())
-}
-
-/// `Deletes\Targets::delete()`: the targets `queries` match, each with its
-/// subscribers (and their topics' totals).
-async fn delete_targets(db: &Database, mut queries: Vec<Query>) -> Result<()> {
-    queries.push(Query::order_asc("", None));
-    db.delete_documents("targets", queries, utopia_database::database::BATCH_SIZE, Some(&mut DeleteSubscribers { db }))
-        .await?;
-    Ok(())
-}
-
-/// `Deletes\Targets::deleteSubscribers`, for each deleted target.
-struct DeleteSubscribers<'a> {
-    db: &'a Database,
-}
-
-#[async_trait]
-impl Callback<Document> for DeleteSubscribers<'_> {
-    async fn call(&mut self, target: Document) -> utopia_database::Result<()> {
-        let mut topics = DecreaseTopic { db: self.db, provider_type: target.string_or_empty("providerType") };
-        self.db
-            .delete_documents(
-                "subscribers",
-                vec![
-                    Query::equal("targetInternalId", [documents::query_value(target.sequence())]),
-                    Query::order_asc("", None),
-                ],
-                utopia_database::database::BATCH_SIZE,
-                Some(&mut topics),
-            )
-            .await?;
-        Ok(())
-    }
-}
-
-/// Decrements the subscriber total of a deleted subscriber's topic.
-struct DecreaseTopic<'a> {
-    db: &'a Database,
-    provider_type: String,
-}
-
-#[async_trait]
-impl Callback<Document> for DecreaseTopic<'_> {
-    async fn call(&mut self, subscriber: Document) -> utopia_database::Result<()> {
-        let db = self.db;
-        let topic_id = subscriber.string_or_empty("topicId");
-        let topic_internal_id = documents::query_value(subscriber.get("topicInternalId"));
-        let skipped = filters::names(filters::TOPICS_SUBQUERIES);
-        let topic = db
-            .skip_filters(
-                Some(skipped.as_slice()),
-                db.find_one(
-                    "topics",
-                    vec![Query::select(["$id", "$sequence"]), Query::equal("$sequence", [topic_internal_id])],
-                ),
-            )
-            .await?;
-        if topic.is_empty() {
-            return Ok(());
-        }
-        let total = match self.provider_type.as_str() {
-            "email" => "emailTotal",
-            "sms" => "smsTotal",
-            "push" => "pushTotal",
-            _ => return Err(utopia_database::Error::new(Kind::Exception, "Invalid target provider type")),
-        };
-        let decreased = db
-            .skip_filters(
-                Some(skipped.as_slice()),
-                db.decrease_document_attribute("topics", &topic_id, total, Value::Int(1), Some(Value::Int(0))),
-            )
-            .await;
-        match decreased {
-            Err(e) if e.is_a(Kind::Limit) => {
-                tracing::error!(topic = topic_id, error = %e, "Delete subscribers decreaseDocumentAttribute");
-                Ok(())
-            }
-            other => other.map(|_| ()),
-        }
-    }
+    appwrite_core::database::targets::delete(db, vec![Query::equal("userInternalId", [user_sequence.to_string()])])
+        .await
 }
 
 /// `Deletes\Identities::delete`: the user's identities.

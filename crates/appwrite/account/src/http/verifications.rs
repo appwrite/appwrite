@@ -7,6 +7,7 @@ use utopia_database::{Document, Value};
 use utopia_http::Response;
 use utopia_validators::{Boolean, Text, php};
 
+use appwrite_core::auth::otp_token::OtpToken;
 use appwrite_core::database::documents::{self, Attributes, Token, User};
 use appwrite_core::datetime;
 use appwrite_core::platform::{Context, Labels, Route};
@@ -199,6 +200,7 @@ pub async fn create_email(ctx: &mut Context) -> Result<Response> {
             key: "verification",
             template: "verification",
             recipient: user.email.clone().unwrap_or_default(),
+            headers: Map::new(),
             name: user.name.clone().unwrap_or_default(),
             subject: ctx.text("emails.verification.subject", None),
             preview: ctx.text("emails.verification.preview", None),
@@ -251,6 +253,7 @@ pub async fn create_email_otp(ctx: &mut Context) -> Result<Response> {
             key: "otpVerification",
             template: "otp-verification",
             recipient: user.email.clone().unwrap_or_default(),
+            headers: OtpToken::headers(&secret, ctx.request.header("origin").unwrap_or_default()),
             name: user.name.clone().unwrap_or_default(),
             subject: ctx.text("emails.otpVerification.subject", None),
             preview: ctx.text("emails.otpVerification.preview", None),

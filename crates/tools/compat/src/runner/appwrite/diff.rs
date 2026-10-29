@@ -80,8 +80,9 @@ fn postgres_credentials() -> Result<(String, String, String), String> {
 }
 
 /// An ephemeral API key for `project`, signed as the API signs them (HS256
-/// with the stack's `_APP_OPENSSL_KEY_V1`), leaving two usage metrics out.
-fn ephemeral_key(project: &str) -> Result<String, String> {
+/// with the stack's `_APP_OPENSSL_KEY_V1`, with the `purpose` claim and bound
+/// to the project's sequence), leaving two usage metrics out.
+fn ephemeral_key(project: &str, sequence: &str) -> Result<String, String> {
     use base64::Engine as _;
     use base64::engine::general_purpose::URL_SAFE_NO_PAD;
     use hmac::{Hmac, Mac};
@@ -94,7 +95,9 @@ fn ephemeral_key(project: &str) -> Result<String, String> {
     let now = chrono::Utc::now().timestamp();
     let header = URL_SAFE_NO_PAD.encode(br#"{"typ":"JWT","alg":"HS256"}"#);
     let claims = json!({
+        "purpose": "key",
         "projectId": project,
+        "projectSequence": sequence,
         "scopes": SCOPES,
         "disabledMetrics": ["requests", "outbound"],
         "iat": now,
@@ -565,7 +568,7 @@ async fn twin(
         .map_err(|e| format!("organization sequence: {e}"))?
         .get::<_, String>(0);
     let keys = seed_owned_keys(console, &project, user, user_sequence, team_sequence)?;
-    let ephemeral = ephemeral_key(&project)?;
+    let ephemeral = ephemeral_key(&project, &sequence)?;
     fixtures(&json!({"rules": [{"projectId": project, "domain": rule_domain(&project)}]}))?;
     let (endpoint, container) =
         if runtime == "php" { (stack.php.clone(), "appwrite") } else { (stack.rust.clone(), "appwrite-rust") };
