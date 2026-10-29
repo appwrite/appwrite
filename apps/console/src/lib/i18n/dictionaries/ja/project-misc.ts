@@ -3529,6 +3529,51 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Ship your apps to every store': 'アプリをすべてのストアに配信',
   'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
     'Android、iOS、Windows のリリースを 1 か所でビルドし、Google Play、App Store、Microsoft Store に提出できます。',
+  'Create a link that lets another organization claim this project. Each link can be claimed once.':
+    '別の組織がこのプロジェクトを受け取れるリンクを作成します。各リンクは 1 回だけ使用できます。',
+  'Failed to load transfer links': '転送リンクの読み込みに失敗しました',
+  'No active transfer links': '有効な転送リンクはありません',
+  Recipient: '受取先',
+  'Any organization': '任意の組織',
+  'Transfer link actions': '転送リンクの操作',
+  'transfer links': '件の転送リンク',
+  'Create transfer link': '転送リンクを作成',
+  'Share this link with the recipient organization. You can copy it again from the list.':
+    '受取先の組織にこのリンクを共有してください。一覧からもう一度コピーできます。',
+  'Choose how long the link is valid and which organization can claim the project.':
+    'リンクの有効期間と、プロジェクトを受け取れる組織を選択します。',
+  'Transfer link': '転送リンク',
+  'Expires in': '有効期間',
+  'Recipient organization ID (optional)': '受取先の組織 ID (任意)',
+  'Leave empty to let any organization claim the project.':
+    '空欄にすると、どの組織でもプロジェクトを受け取れます。',
+  'Failed to create transfer link': '転送リンクの作成に失敗しました',
+  'Delete transfer link': '転送リンクを削除',
+  'The link will stop working and the project can no longer be claimed with it.':
+    'リンクは無効になり、このリンクでプロジェクトを受け取ることはできなくなります。',
+  'Transfer link has been deleted': '転送リンクを削除しました',
+  'Failed to delete transfer link': '転送リンクの削除に失敗しました',
+  'Claim project': 'プロジェクトを受け取る',
+  'Choose the organization that should receive this project.':
+    'このプロジェクトを受け取る組織を選択してください。',
+  'Target organization': '受取先の組織',
+  'has been claimed': 'を受け取りました',
+  'Failed to claim project': 'プロジェクトの受け取りに失敗しました',
+  'This transfer link is incomplete. Ask the sender to share it again.':
+    'この転送リンクは不完全です。送信者にもう一度共有するよう依頼してください。',
+  'You need an organization to claim this project. Create one, then open the link again.':
+    'このプロジェクトを受け取るには組織が必要です。組織を作成してから、もう一度リンクを開いてください。',
+  'Link expires': 'リンクの有効期限',
+  'This transfer link is no longer valid.':
+    'この転送リンクは無効になりました。',
+  'The project already belongs to this organization. Select a different one.':
+    'プロジェクトはすでにこの組織に属しています。別の組織を選択してください。',
+  'will move from': 'は次の組織から移動します:',
+  'to the organization you choose.': '移動先は選択した組織です。',
+  'Only this organization can claim this link.':
+    'このリンクを受け取れるのはこの組織だけです。',
+  'This transfer is reserved for an organization you are not part of:':
+    'この転送は、あなたが所属していない組織専用です:',
   'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
     '非アクティブなデプロイの保持期間を選択します。アクティブなデプロイとカスタムドメインに紐づくデプロイは常に保持されます。',
   'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':
@@ -3544,6 +3589,47 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Your saved retention exceeds your plan limit. Save a supported period to update it.':
     '保存済みの保持期間がプランの上限を超えています。対応する期間を選択して保存してください。',
   '3 Years': '3 年',
+
+  // Environment copy at creation, its progress card, and backups in environments
+  'Start from': '開始方法',
+  'Empty environment': '空の環境',
+  'Nothing is copied from the project.':
+    'プロジェクトからは何もコピーしません。',
+  'Copy of the project': 'プロジェクトのコピー',
+  'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
+    '構造と設定をコピーし、データは指定した場合のみコピーします。コピーは環境の作成後に実行され、コピーしたものの ID はそのまま保持されます。',
+  'What to copy': 'コピーする内容',
+  'Pick what to copy, or start from an empty environment.':
+    'コピーする内容を選択するか、空の環境から開始してください。',
+  'Environment created. The copy from the project is under way.':
+    '環境を作成しました。プロジェクトからのコピーを実行中です。',
+  'Databases, tables, columns and indexes':
+    'データベース、テーブル、カラム、インデックス',
+  'Rows and documents': '行とドキュメント',
+  'Buckets and their settings': 'バケットとその設定',
+  'Teams, auth settings, security policies and OAuth2 providers':
+    'チーム、認証設定、セキュリティポリシー、OAuth2 プロバイダー',
+  'Users and memberships': 'ユーザーとメンバーシップ',
+  'The newest 90 users, with their passwords. An environment holds 100 users at most, so 10 places stay free for test accounts.':
+    '最新のユーザー 90 件を、パスワードごとコピーします。環境のユーザー数は最大 100 件のため、テストアカウント用に 10 件分の空きが残ります。',
+  'Functions, their variables and their active deployment':
+    '関数、その変数、アクティブなデプロイメント',
+  'Every deployment': 'すべてのデプロイメント',
+  'Sites, their variables and their active deployment':
+    'サイト、その変数、アクティブなデプロイメント',
+  'Providers and topics': 'プロバイダーとトピック',
+  'Platforms, SMTP, enabled services, project variables and email templates':
+    'プラットフォーム、SMTP、有効なサービス、プロジェクト変数、メールテンプレート',
+  'Copying from the project': 'プロジェクトからコピー中',
+  'Copied from the project': 'プロジェクトからコピーしました',
+  'Could not copy from the project': 'プロジェクトからコピーできませんでした',
+  Dismiss: '閉じる',
+  'Backups are not available in environments. Back up the project the environment belongs to.':
+    'バックアップは環境では利用できません。環境が属するプロジェクトをバックアップしてください。',
+  'Backed up with the project': 'プロジェクトと一緒にバックアップされます',
+  'Backup policies and archives are managed on the project this environment belongs to.':
+    'バックアップポリシーとアーカイブは、この環境が属するプロジェクトで管理します。',
+  'Open the project': 'プロジェクトを開く',
   // Alert rules
   '5 minutes': '5 分',
   '6 hours': '6 時間',

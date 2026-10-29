@@ -25,7 +25,7 @@ rules:
           - pattern: Authorization::skip($CB)
       - metavariable-regex:
           metavariable: $CB
-          regex: (?s).*(?:getDocument|find|findOne)\(\s*['\"](?!(?:databases|collections|attributes|indexes|tables|columns|projects|platforms|keys|webhooks|alertRules|rules|buckets|functions|deployments|sites|builds|installations|repositories|vcsComments|schedules|variables|migrations|executions|topics|messages|providers|logs|cache|certificates|transactionLogs|notifications|users|teams|memberships|identities|targets|subscribers|sessions|tokens|challenges|authenticators|insights|resourceTokens|pushLedger|bucket_|database_)['\"_])[^'\"]+['\"]
+          regex: (?s).*(?:getDocument|find|findOne)\(\s*['\"](?!(?:databases|collections|attributes|indexes|tables|columns|projects|platforms|keys|webhooks|alertRules|rules|buckets|functions|deployments|sites|builds|installations|repositories|vcsComments|schedules|variables|migrations|executions|topics|messages|providers|logs|cache|certificates|transactionLogs|notifications|transfers|users|teams|memberships|identities|targets|subscribers|sessions|tokens|challenges|authenticators|insights|resourceTokens|pushLedger|bucket_|database_)['\"_])[^'\"]+['\"]
       - pattern-not-inside: |
           ($IS_KEY || $IS_PRIVILEGED) ? $AUTH->skip(...) : $OTHER
       - pattern-not-inside: |

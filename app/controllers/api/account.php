@@ -4,6 +4,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
+use Appwrite\Auth\OTPToken;
 use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
@@ -3307,6 +3308,7 @@ Http::post('/v1/account/tokens/email')
                 variables: $emailVariables,
                 customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
                 platform: $platform,
+                headers: OTPToken::from($tokenSecret, $request->getOrigin())?->toHeaders() ?? [],
             ));
         }
 
@@ -5034,6 +5036,7 @@ Http::post('/v1/account/recovery/otp')
                 variables: $emailVariables,
                 customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
                 platform: $platform,
+                headers: OTPToken::from($secret, $request->getOrigin())?->toHeaders() ?? [],
             ));
         }
 
@@ -6474,6 +6477,7 @@ Http::post('/v1/account/verifications/email/otp')
             variables: $emailVariables,
             customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
             platform: $platform,
+            headers: OTPToken::from($secret, $request->getOrigin())?->toHeaders() ?? [],
         ));
 
         $verification->setAttribute('secret', $secret);
