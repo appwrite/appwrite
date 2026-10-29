@@ -177,7 +177,9 @@ final class ConsumerNoWaitTest extends TestCase
             filterSubject: $subject,
         ));
 
-        $late->delayNextRead(0.3);
+        // Far past the timeout: however long the reader is held off, the answer
+        // is already on the socket.
+        $late->delayNextRead(1.2);
         $batch = $consumer->fetch(5, 0.05, true);
 
         $this->assertCount(5, $batch, 'The whole answer reaches the caller');
@@ -188,5 +190,27 @@ final class ConsumerNoWaitTest extends TestCase
         );
 
         $conn->close();
+    }
+
+    public function testPartialNoWaitFetchReturnsWithoutWaitingOutTheTimeout(): void
+    {
+        [$stream, $subject] = $this->createStream();
+        $consumer = $this->js->createConsumer($stream, new ConsumerConfig(
+            durableName: 'partial',
+            ackPolicy: AckPolicy::Explicit,
+            filterSubject: $subject,
+        ));
+        $this->js->publish($subject, 'm0');
+        $this->js->publish($subject, 'm1');
+
+        // Fewer messages than asked for: the server sends them and then 404s,
+        // which is what has to end the fetch.
+        $timeout = 2.0;
+        $started = microtime(true);
+        $batch = $consumer->fetch(5, $timeout, true);
+        $elapsed = microtime(true) - $started;
+
+        $this->assertCount(2, $batch);
+        $this->assertLessThan($timeout / 4, $elapsed, 'A partial no_wait reply must not wait out the timeout');
     }
 }

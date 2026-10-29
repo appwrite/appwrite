@@ -18,10 +18,10 @@ final class Consumer
     private const FETCH_EXPIRY_MARGIN = 0.1;
 
     /**
-     * Seconds a fetch keeps reading past its timeout for the end of a pull
-     * request. The server always ends one, so this only bounds a lost reply.
+     * Seconds a fetch waits for each further frame once its timeout has passed:
+     * enough to read a reply already on the socket, too short to wait for work.
      */
-    private const FETCH_DRAIN_GRACE = 1.0;
+    private const FETCH_DRAIN_WAIT = 0.05;
 
     public function __construct(
         private readonly Connection $conn,
@@ -96,8 +96,8 @@ final class Consumer
     }
 
     /**
-     * Gather up to $batch messages for a pull request, until the batch is full
-     * or the server's terminal status arrives.
+     * Gather up to $batch messages for a pull request, stopping on the server's
+     * terminal status, or once the timeout has passed and nothing more is waiting.
      */
     private function collectBatch(
         Subscription $sub,
@@ -105,19 +105,21 @@ final class Consumer
         int $batch,
         float $timeout,
     ): void {
-        // The server counts each message as delivered when it sends it, so one
-        // left unread at the timeout is held unacknowledged until ackWait and
-        // charged an attempt. Read on until the request ends.
-        $deadline = microtime(true) + $timeout + self::FETCH_DRAIN_GRACE;
+        $deadline = microtime(true) + $timeout;
+        $drained = false;
 
         while (\count($messageBatch) < $batch) {
+            // Past the timeout, still read what the server already sent: it counted
+            // each as delivered, and one left unread is held until ackWait and
+            // charged an attempt, however long this reader was kept off the socket.
             $remaining = $deadline - microtime(true);
-            if ($remaining <= 0) {
-                break;
-            }
-
-            $msg = $sub->nextMessage($remaining);
+            $msg = $sub->nextMessage($remaining > 0 ? $remaining : self::FETCH_DRAIN_WAIT);
             if (!$msg instanceof \Utopia\NATS\Message) {
+                // A wait that ran into the timeout looks once more before giving up.
+                if ($remaining > 0 && !$drained) {
+                    $drained = true;
+                    continue;
+                }
                 break;
             }
 

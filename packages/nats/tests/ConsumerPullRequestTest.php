@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\NATS\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
 use Utopia\NATS\ConnectionOptions;
@@ -207,9 +208,10 @@ final class ConsumerPullRequestTest extends TestCase
      * The server counts a batch as delivered when it sends it, so a caller that
      * reads the reply after its timeout still has to get all of it. Whatever it
      * leaves on the socket stays unacknowledged until ackWait and is then charged
-     * an attempt it never had.
+     * an attempt it never had. How late the read is must not matter.
      */
-    public function testABatchReadAfterTheTimeoutIsReturnedWhole(): void
+    #[DataProvider('lateness')]
+    public function testABatchReadAfterTheTimeoutIsReturnedWhole(float $delay): void
     {
         $fake = new FakeTransport();
         $late = new LateReadTransport($fake);
@@ -224,11 +226,56 @@ final class ConsumerPullRequestTest extends TestCase
         for ($i = 0; $i < 3; $i++) {
             $fake->pushInbound("MSG _INBOX.scripted {$sid} 2\r\nm{$i}\r\n");
         }
-        $late->delayNextRead(0.05);
+        $late->delayNextRead($delay);
 
         $batch = $consumer->fetch(3, 0.02, true);
 
         $this->assertCount(3, $batch, 'Every message the server sent for this pull request');
+    }
+
+    /** @return array<string, array{float}> */
+    public static function lateness(): array
+    {
+        return [
+            'just past the timeout' => [0.05],
+            'long past the timeout' => [1.2],
+        ];
+    }
+
+    /**
+     * Reading past the timeout is for a reply already sent, not a reason to wait:
+     * a partial no_wait reply still ends at its 404.
+     */
+    public function testAPartialNoWaitReplyEndsAtItsStatus(): void
+    {
+        $fake = new FakeTransport();
+        $conn = $this->connect($fake);
+        $consumer = $this->consumer($conn);
+
+        $sid = $this->pendingSid($conn);
+        $fake->pushInbound("MSG _INBOX.scripted {$sid} 2\r\nm0\r\n");
+        $fake->pushInbound("MSG _INBOX.scripted {$sid} 2\r\nm1\r\n");
+        $this->pushStatus($fake, $sid, '404 No Messages');
+
+        $started = microtime(true);
+        $batch = $consumer->fetch(5, 2.0, true);
+        $elapsed = microtime(true) - $started;
+
+        $this->assertCount(2, $batch);
+        $this->assertLessThan(0.5, $elapsed, 'The 404 ends the fetch, not the timeout');
+    }
+
+    public function testAFetchTheServerNeverAnswersStillReturnsNearItsTimeout(): void
+    {
+        $fake = new FakeTransport();
+        $consumer = $this->consumer($this->connect($fake));
+
+        $started = microtime(true);
+        $batch = $consumer->fetch(1, 0.05, true);
+        $elapsed = microtime(true) - $started;
+
+        $this->assertCount(0, $batch);
+        $this->assertLessThan(0.3, $elapsed, 'Nothing was sent, so there is nothing to wait for past the timeout');
     }
 
     public function testAMessageWithoutAStatusIsStillDelivered(): void
