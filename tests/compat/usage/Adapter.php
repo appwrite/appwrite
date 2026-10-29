@@ -196,6 +196,9 @@ final class Adapter implements Base, Benchmarks
             'database.collection' => function (array $a, Session $s) {
                 $adapter = self::adapter($a['adapter'], $s);
                 $database = self::$databases[$adapter] ?? throw new Fault('not a database adapter');
+                if (!$adapter instanceof DatabaseAdapter) {
+                    throw new Fault('not a database adapter');
+                }
                 $without = $a['without'];
                 $database->createCollection(Collection::create(
                     id: DatabaseAdapter::COLLECTION,
