@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use Tests\Unit\Mqtt\Fakes\Accounts;
 use Tests\Unit\Mqtt\Fakes\NullPubSub;
 use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
+use Tests\Unit\Mqtt\Fakes\RecordingRedis;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Packet;
@@ -44,6 +45,8 @@ final class RevokeTest extends TestCase
 
     private Accounts $accounts;
 
+    private RecordingRedis $redis;
+
     private Handler $handler;
 
     private Mqtt $mqtt;
@@ -56,10 +59,13 @@ final class RevokeTest extends TestCase
         \putenv(self::ABUSE_OPTION . '=disabled');
 
         $this->accounts = new Accounts();
+        $this->redis = new RecordingRedis();
 
         $container = new Container();
+        $container->set('getRedis', fn (): \Closure => fn (): \Redis => $this->redis);
         $container->set('authenticator', fn (): \Closure => $this->accounts->authenticate(...));
         $container->set('authorizer', fn (): \Closure => $this->accounts->authorize(...));
+        $container->set('getPlan', fn (): \Closure => fn (string $projectId): array => []);
 
         $this->mqtt = new Mqtt(new NoTelemetry(), new NullPubSub());
         $this->handler = new Handler(
@@ -109,7 +115,7 @@ final class RevokeTest extends TestCase
             $disconnects = $this->network->disconnects($fd);
             $this->assertCount(1, $disconnects, "fd {$fd} was not sent a DISCONNECT");
             $this->assertSame(Disconnect::NOT_AUTHORIZED, $disconnects[0]->reasonCode);
-            $this->assertSame((new Exception(Exception::USER_BLOCKED))->getMessage(), $disconnects[0]->properties?->get(Property::REASON_STRING));
+            $this->assertSame((new Exception(Exception::USER_UNAUTHORIZED))->getMessage(), $disconnects[0]->properties?->get(Property::REASON_STRING));
         }
         $this->assertSame([1, 2], $this->network->closed);
         $this->assertSame(0, $this->handler->revoke(self::PROJECT, 'blocked'), 'a revoked connection stayed in the index');
@@ -128,6 +134,41 @@ final class RevokeTest extends TestCase
 
         $this->accounts->blocked['active'] = true;
         $this->assertSame(1, $this->handler->revoke(self::PROJECT, 'active'), 'a kept connection left the index');
+    }
+
+    public function testRevokeDisconnectsOnlyEndedSession(): void
+    {
+        $this->connect(1, 'user/ended');
+        $this->connect(2, 'user/active');
+        $this->accounts->ended['ended'] = true;
+
+        // Test for SUCCESS: only the connection opened with the ended session is closed.
+        $this->assertSame(1, $this->handler->revoke(self::PROJECT, 'user'));
+        $this->assertSame(Disconnect::NOT_AUTHORIZED, $this->network->disconnects(1)[0]->reasonCode);
+        $this->assertSame([], $this->network->disconnects(2), 'a connection on a session still active was disconnected');
+        $this->assertSame([1], $this->network->closed);
+    }
+
+    public function testRevokeChecksEachCredentialOnce(): void
+    {
+        $this->connect(1, 'user/shared');
+        $this->connect(2, 'user/shared');
+        $this->connect(3, 'user/other');
+
+        $this->assertSame(0, $this->handler->revoke(self::PROJECT, 'user'));
+        $this->assertSame(2, $this->accounts->authorizations, 'connections on the same session were each checked against the database');
+    }
+
+    public function testConnectLimitIsKeptPerProject(): void
+    {
+        \putenv(self::ABUSE_OPTION . '=enabled');
+
+        $this->assertSame(Connack::SUCCESS, $this->connect(1, 'shared'));
+        $this->assertSame(Connack::SUCCESS, $this->connect(2, 'shared', self::OTHER_PROJECT));
+
+        // Test for SUCCESS: the same user id in two projects counts against two limits.
+        $this->assertCount(2, $this->redis->keys);
+        $this->assertNotSame($this->redis->keys[0], $this->redis->keys[1]);
     }
 
     public function testRevokeDisconnectsWhenAuthorizerFails(): void

@@ -211,6 +211,45 @@ final class MqttServerTest extends Scope
         $subscriber->disconnect();
     }
 
+    public function testSessionMissingFactorConnectRejected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $server, ['emailVerification' => true]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/mfa', $server, ['mfa' => true]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        // A password session still owes its second factor.
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => 'mqtt-' . $userId . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $credential = $session['cookies']['a_session_' . $projectId];
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server, ['sessionId' => $session['body']['$id']]);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+
+        // Test for FAILURE: neither the session nor a token bound to it connects.
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0x87, $subscriber->connect($projectId, $credential, 'e2e-factors-session-' . $userId, cleanStart: true, authMethod: 'appwrite-session'));
+        $subscriber->disconnect();
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0x87, $subscriber->connect($projectId, $jwt['body']['jwt'], 'e2e-factors-jwt-' . $userId, cleanStart: true));
+        $subscriber->disconnect();
+    }
+
     public function testBlockedUserReconnectRejected(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -441,11 +480,195 @@ final class MqttServerTest extends Scope
         }
     }
 
+    public function testDeletedSessionOpenConnectionIsDisconnected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $ended = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
+        $this->assertSame(201, $ended['headers']['status-code']);
+        $kept = $this->createSession($userId);
+
+        $endedSubscriber = $this->subscribeToUserTopic($projectId, $userId, $ended['body']['secret'], 'e2e-revoke-session-ended-', 'appwrite-session');
+        $keptSubscriber = $this->subscribeToUserTopic($projectId, $userId, $kept, 'e2e-revoke-session-kept-', 'appwrite-session');
+
+        try {
+            $delete = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/sessions/' . $ended['body']['$id'], $headers);
+            $this->assertSame(204, $delete['headers']['status-code']);
+
+            // Test for SUCCESS: the connection opened with the deleted session is ended.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $endedSubscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a connection whose session was deleted');
+
+            // Test for SUCCESS: a connection on another session of the user stays open.
+            $this->assertTrue($keptSubscriber->ping(), 'a connection on a session still active was disconnected');
+        } finally {
+            $endedSubscriber->disconnect();
+            $keptSubscriber->disconnect();
+        }
+    }
+
+    public function testEnablingMfaDisconnectsSessionMissingFactor(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $server, ['emailVerification' => true]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $session = $this->createSession($userId);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $session, 'e2e-revoke-mfa-', 'appwrite-session');
+
+        try {
+            $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/mfa', $server, ['mfa' => true]);
+            $this->assertSame(200, $mfa['headers']['status-code']);
+
+            // Test for SUCCESS: the single-factor session no longer authorizes, so its connection is ended.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $subscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a session left short of factors');
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
+    public function testIdTokenSignInReplacingSessionDisconnects(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $session = $this->createSession($userId);
+        $console = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', $console, [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertSame(200, $provider['headers']['status-code']);
+        $native = $this->client->call(Client::METHOD_PATCH, '/mock/tests/general/oauth2/native', $console, [
+            'projectId' => $projectId,
+            'provider' => 'mock',
+            'enabled' => true,
+            'clientIds' => [],
+        ]);
+        $this->assertSame(204, $native['headers']['status-code']);
+
+        $token = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'claims' => \json_encode([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+                'sub' => 'mqtt-' . $userId,
+                'email' => 'mqtt-idtoken-' . $userId . '@appwrite.io',
+                'email_verified' => true,
+            ]),
+            'header' => '',
+        ]);
+        $this->assertSame(200, $token['headers']['status-code']);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $session, 'e2e-revoke-id-token-', 'appwrite-session');
+
+        try {
+            // Signing in while logged in links the provider and replaces the current session.
+            $signIn = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+            ], [
+                'provider' => 'mock',
+                'idToken' => $token['body']['token'],
+            ]);
+            $this->assertSame(201, $signIn['headers']['status-code']);
+            $this->assertSame($userId, $signIn['body']['userId']);
+
+            // Test for SUCCESS: the connection on the replaced session is ended.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $subscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a session replaced by sign-in');
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
+    public function testAccountLogoutOpenConnectionIsDisconnected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $session = $this->createSession($userId);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $session, 'e2e-revoke-logout-', 'appwrite-session');
+
+        try {
+            $delete = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+            ]);
+            $this->assertSame(204, $delete['headers']['status-code']);
+
+            // Test for SUCCESS: signing out ends the connection opened with that session.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $subscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a signed out session');
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
+    public function testSessionJwtOpenConnectionIsDisconnectedWithSessions(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $this->createSession($userId);
+
+        // Minted after the session exists, so the token runs on it.
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $headers);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $jwt['body']['jwt'], 'e2e-revoke-session-jwt-');
+
+        try {
+            $delete = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/sessions', $headers);
+            $this->assertSame(204, $delete['headers']['status-code']);
+
+            // Test for SUCCESS: deleting the session ends the connection opened with a token bound to it.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $subscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a token whose session was deleted');
+
+            // Test for FAILURE: the token no longer connects.
+            $reconnect = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+            try {
+                $this->assertSame(Connack::NOT_AUTHORIZED, $reconnect->connect($projectId, $jwt['body']['jwt'], 'e2e-revoke-session-jwt-reconnect-' . $userId, cleanStart: true));
+            } finally {
+                $reconnect->disconnect();
+            }
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
     /** Connect as the user and subscribe to their reserved users/<userId> topic. */
-    private function subscribeToUserTopic(string $projectId, string $userId, string $jwt, string $clientPrefix): MqttSubscriber
+    private function subscribeToUserTopic(string $projectId, string $userId, string $credential, string $clientPrefix, string $authMethod = 'appwrite-jwt'): MqttSubscriber
     {
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
-        $this->assertSame(Connack::SUCCESS, $subscriber->connect($projectId, $jwt, $clientPrefix . $userId, cleanStart: true));
+        $this->assertSame(Connack::SUCCESS, $subscriber->connect($projectId, $credential, $clientPrefix . $userId, cleanStart: true, authMethod: $authMethod));
         $this->assertSame([Packet::QOS_1], $subscriber->subscribe(['users/' . $userId]));
 
         return $subscriber;

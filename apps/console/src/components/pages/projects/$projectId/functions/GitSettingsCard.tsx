@@ -329,9 +329,13 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                 onRetry={() => refetchRepository()}
                 isRetrying={repositoryFetching}
               >
-                {t(
-                  'This function is still connected to its repository, but the repository details could not be loaded.',
-                )}
+                {repositoryErrorKind === 'missing'
+                  ? t(
+                      "This function's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.",
+                    )
+                  : t(
+                      'This function is still connected to its repository, but the repository details could not be loaded.',
+                    )}
               </VcsInstallationErrorAlert>
             )}
 

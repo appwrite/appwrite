@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Auth\Key;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -125,6 +126,7 @@ class Update extends Base
             ->inject('buildTimeout')
             ->inject('bus')
             ->inject('platform')
+            ->inject('apiKey')
             ->inject('deviceForBuilds')
             ->callback($this->action(...));
     }
@@ -170,6 +172,7 @@ class Update extends Base
         int $buildTimeout,
         Bus $bus,
         array $platform,
+        ?Key $apiKey,
         ?Device $deviceForBuilds = null,
     ) {
         if (!empty($adapter)) {
@@ -192,6 +195,11 @@ class Update extends Base
 
         if ($site->isEmpty()) {
             throw new Exception(Exception::SITE_NOT_FOUND);
+        }
+
+        // Scopes the site already has stay; only new ones need the key to hold them
+        if ($apiKey !== null && !$apiKey->mayGrant(\array_diff($scopes ?? [], $site->getAttribute('scopes', [])))) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
         }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);

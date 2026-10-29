@@ -139,6 +139,17 @@ class Create extends Action
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
+
+        $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
+
+        // Same console rule as membership role updates: organization developer
+        // must not count as privileged enough to invite with arbitrary roles.
+        // Checked before the invitee is looked up or created below, so a
+        // caller who fails this check never causes a user account to exist.
+        if (! $isOwner && ! $isAppUser && ($project->getId() === 'console' || ! $isPrivilegedUser)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
+        }
+
         if (! empty($userId)) {
             $invitee = $dbForProject->getDocument('users', $userId);
             if ($invitee->isEmpty()) {
@@ -280,14 +291,6 @@ class Create extends Action
             }
         }
 
-        $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
-
-        // Same console rule as membership role updates: organization developer
-        // must not count as privileged enough to invite with arbitrary roles.
-        if (! $isOwner && ! $isAppUser && ($project->getId() === 'console' || ! $isPrivilegedUser)) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
-        }
-
         $membership = $dbForProject->findOne('memberships', [
             Query::equal('userInternalId', [$invitee->getSequence()]),
             Query::equal('teamInternalId', [$team->getSequence()]),
@@ -381,6 +384,29 @@ class Create extends Action
         if ($isPrivilegedUser || $isAppUser) {
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
+            // Recheck under the lock an address change takes, so the invite is never sent to an address the user just left
+            $moved = (! empty($email) || ! empty($phone)) && $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $invitee, $membership, $email, $phone, $secret, $proofForToken): bool {
+                $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $invitee->getId(), forUpdate: true));
+                $address = ! empty($email) ? $current->getAttribute('email') : $current->getAttribute('phone');
+                $destination = ! empty($email) ? $invitee->getAttribute('email') : $phone;
+
+                if ($address === $destination) {
+                    return false;
+                }
+
+                // Void only the secret this request wrote, never one a newer resend replaced it with
+                $stored = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+                if ($proofForToken->verify($secret, (string) $stored->getAttribute('secret'))) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['secret' => ''])));
+                }
+
+                return true;
+            });
+
+            if ($moved) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'The invitee address changed while the invitation was being sent. Send it again.');
+            }
+
             $url = Template::parseURL($url);
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId, 'teamName' => $team->getAttribute('name')]);
             $url = Template::unParseURL($url);
@@ -551,13 +577,18 @@ class Create extends Action
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
+        // The privacy policy only hides other members, a member always sees their own details
+        $auths = $project->getAttribute('auths', []);
+        $isVisible = $isPrivilegedUser || $isAppUser
+            || ($user->getSequence() !== null && $invitee->getSequence() === $user->getSequence());
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(
                 $membership
                     ->setAttribute('teamName', $team->getAttribute('name'))
-                    ->setAttribute('userName', $invitee->getAttribute('name'))
-                    ->setAttribute('userEmail', $invitee->getAttribute('email')),
+                    ->setAttribute('userName', $isVisible || ($auths['membershipsUserName'] ?? true) ? $invitee->getAttribute('name') : '')
+                    ->setAttribute('userEmail', $isVisible || ($auths['membershipsUserEmail'] ?? true) ? $invitee->getAttribute('email') : ''),
                 Response::MODEL_MEMBERSHIP
             );
     }

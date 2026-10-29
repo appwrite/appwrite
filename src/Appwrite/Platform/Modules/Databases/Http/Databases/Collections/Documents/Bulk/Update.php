@@ -186,14 +186,7 @@ class Update extends Action
                 ],
             ]);
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                );
-            });
+            $this->stage($dbForProject, $transactionId, [$staged], $maxBatch);
 
             $queueForEvents->reset();
 
@@ -216,7 +209,13 @@ class Update extends Action
                     $documents[] = $document;
                 }
             };
-            $modified = $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocuments($collectionTableId, new Document($data), $queries, onNext: $onNext));
+            $modified = $this->withPermissionPurge(
+                $dbForProject,
+                $database,
+                $collection,
+                isset($data['$permissions']),
+                fn () => $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocuments($collectionTableId, new Document($data), $queries, onNext: $onNext)),
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (UniqueException $e) {
