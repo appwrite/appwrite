@@ -18,6 +18,7 @@ use Utopia\Abuse\Adapter\TokenBucket;
 use Utopia\Abuse\ReCaptcha;
 use Utopia\Abuse\Result;
 use Utopia\Abuse\Tests\TimeLimit\Memory;
+use Utopia\Abuse\Tests\TimeLimit\RacingDatabase;
 use Utopia\Abuse\Tests\TimeLimit\Store;
 use Utopia\Abuse\Tests\TokenBucket\Fixed;
 use Utopia\Cache\Adapter\None as NoCache;
@@ -35,6 +36,7 @@ use Utopia\Psr7\Stream;
 
 require_once __DIR__ . '/../../../packages/abuse/tests/TimeLimit/Store.php';
 require_once __DIR__ . '/../../../packages/abuse/tests/TimeLimit/Memory.php';
+require_once __DIR__ . '/../../../packages/abuse/tests/TimeLimit/RacingDatabase.php';
 require_once __DIR__ . '/../../../packages/abuse/tests/TokenBucket/Fixed.php';
 
 /**
@@ -116,6 +118,9 @@ final class FakeTables extends Client
 
     /** the status `createTable` answers with, 0 to accept */
     public int $rejectTable = 0;
+
+    /** a competing request run once, just before the next increment */
+    public ?\Closure $race = null;
 
     public function __construct(string $state)
     {
@@ -247,10 +252,19 @@ final class FakeTables extends Client
                 return $this->row($db, $table, $row, $meta);
             case 'PATCH tablesdb/*/tables/*/rows/{row}':
                 $increment = str_ends_with($path, '/increment');
+                if ($increment && $this->race instanceof \Closure) {
+                    $race = $this->race;
+                    $this->race = null;
+                    $race();
+                }
                 $this->calls[] = $increment ? 'incrementRowColumn' : 'updateRow';
                 $id = $parts[5];
                 foreach ($this->rows as $i => $row) {
                     if ($row['id'] === $id) {
+                        $max = $params['max'] ?? null;
+                        if ($increment && \is_numeric($max) && $row['count'] + (int) ($params['value'] ?? 1) > $max) {
+                            throw new AppwriteException('Column "count" has reached the maximum value of ' . $max, 400, 'column_limit_exceeded');
+                        }
                         $this->rows[$i]['count'] = $increment ? $row['count'] + (int) ($params['value'] ?? 1) : $params['data']['count'];
 
                         return $this->row($db, $table, $this->rows[$i], $meta);
@@ -369,9 +383,26 @@ final class Adapter implements Base, Benchmarks
             'limit.logs' => fn (array $a, Session $s) => self::logs(self::limit($a, $s), $a),
             'limit.cleanup' => fn (array $a, Session $s) => self::limit($a, $s)->cleanup($a['timestamp']),
             'limit.run' => fn (array $a, Session $s) => self::run($a, $s),
+            'limit.race' => function (array $a, Session $s) {
+                $competing = null;
+                $rival = $s->get($a['competing']);
+                if (!$rival instanceof Limit) {
+                    throw new Fault('not a limit');
+                }
+                $store = $s->get($a['store']);
+                if (!$store instanceof RacingDatabase && !$store instanceof FakeTables) {
+                    throw new Fault('not a racing store');
+                }
+                $store->race = function () use (&$competing, $rival): void {
+                    $competing = self::result($rival->check());
+                };
+                $result = self::result(self::limit($a, $s)->check());
+
+                return ['result' => $result, 'competing' => $competing];
+            },
 
             'database.new' => function (array $a, Session $s) {
-                $db = new Database(new MemoryDatabase(), new Cache(new NoCache()));
+                $db = new RacingDatabase(new MemoryDatabase(), new Cache(new NoCache()));
                 $db->setDatabase('abuse');
                 if ($a['exists'] ?? true) {
                     $db->create();

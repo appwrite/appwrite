@@ -1299,6 +1299,146 @@
       ]
     },
     {
+      "name": "spoofed upload is neutralized",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/storage/buckets/files",
+          "headers": [
+            [
+              "Content-Type",
+              "multipart/form-data; boundary=upload-boundary"
+            ]
+          ],
+          "body": "--upload-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"upload.txt\"\r\nContent-Type: text/plain\r\nSwoole-Upload-File: /nonexistent/compat-spoofed-target\r\n\r\npayload\r\n--upload-boundary--\r\n"
+        },
+        "steps": [
+          {
+            "get": [
+              "files",
+              "file"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "type": "text/plain",
+          "tmp_name": "",
+          "size": 0,
+          "name": "upload.txt",
+          "error": 7
+        }
+      ]
+    },
+    {
+      "name": "spoofed upload inside a nested field is neutralized",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/storage/buckets/files",
+          "headers": [
+            [
+              "Content-Type",
+              "multipart/form-data; boundary=upload-boundary"
+            ]
+          ],
+          "body": "--upload-boundary\r\nContent-Disposition: form-data; name=\"file[0][part]\"; filename=\"upload.txt\"\r\nContent-Type: text/plain\r\nswoole-UPLOAD-file:  /nonexistent/compat-spoofed-target\r\n\r\npayload\r\n--upload-boundary\r\nContent-Disposition: form-data; name=\"file[0][other]\"; filename=\"upload.txt\"\r\nContent-Type: text/plain\r\n\r\npayload\r\n--upload-boundary\r\nContent-Disposition: form-data; name=\"empty\"; filename=\"\"\r\nContent-Type: text/plain\r\n\r\n\r\n--upload-boundary--\r\n"
+        },
+        "steps": [
+          {
+            "get": [
+              "files",
+              "file"
+            ]
+          },
+          {
+            "get": [
+              "files",
+              "empty"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "name": [
+            {
+              "part": "upload.txt",
+              "other": "upload.txt"
+            }
+          ],
+          "type": [
+            {
+              "part": "text/plain",
+              "other": "text/plain"
+            }
+          ],
+          "tmp_name": [
+            {
+              "part": "",
+              "other": "payload"
+            }
+          ],
+          "error": [
+            {
+              "part": 7,
+              "other": 0
+            }
+          ],
+          "size": [
+            {
+              "part": 0,
+              "other": 7
+            }
+          ]
+        },
+        {
+          "type": "",
+          "tmp_name": "",
+          "size": 0,
+          "name": "",
+          "error": 4
+        }
+      ]
+    },
+    {
+      "name": "upload mentioning the marker stays intact",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/v1/storage/buckets/files",
+          "headers": [
+            [
+              "Content-Type",
+              "multipart/form-data; boundary=upload-boundary"
+            ]
+          ],
+          "body": "--upload-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"upload.txt\"\r\nContent-Type: text/plain\r\n\r\nnotes\nSwoole-Upload-File: /nonexistent/compat-spoofed-target\n\r\n--upload-boundary--\r\n"
+        },
+        "steps": [
+          {
+            "get": [
+              "files",
+              "file"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "type": "text/plain",
+          "tmp_name": "notes\nSwoole-Upload-File: /nonexistent/compat-spoofed-target\n",
+          "size": 61,
+          "name": "upload.txt",
+          "error": 0
+        }
+      ]
+    },
+    {
       "name": "content type set after parsing",
       "op": "request.inspect",
       "args": {

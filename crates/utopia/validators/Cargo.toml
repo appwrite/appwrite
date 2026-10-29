@@ -14,7 +14,7 @@ serde_json.workspace = true
 thiserror.workspace = true
 
 [package.metadata.utopia]
-php-sync = "d4b51b00c114d49c7d039ef9d25954975f53171a"
+php-sync = "771d14ca4f46b8530fe3f3635cb6460775501568"
 # The Utopia site's category, here rather than in packages/validators/composer.json:
 # a change there re-checks its dependents linked, and migration cannot resolve.
 category = "utilities"

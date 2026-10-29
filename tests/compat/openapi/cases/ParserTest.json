@@ -3615,6 +3615,431 @@
       }
     },
     {
+      "name": "a header reaching itself through an encoding is circular",
+      "op": "openapi.parse",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "Headers",
+            "version": "1"
+          },
+          "paths": {
+            "/upload": {
+              "post": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "headers": {
+                      "X-Fan": {
+                        "$array": [
+                          [
+                            "$ref",
+                            "#/components/headers/Loop"
+                          ]
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "headers": {
+              "Loop": {
+                "schema": {
+                  "type": "string"
+                },
+                "content": {
+                  "multipart/form-data": {
+                    "encoding": {
+                      "file": {
+                        "headers": {
+                          "X-Loop": {
+                            "$array": [
+                              [
+                                "$ref",
+                                "#/components/headers/Loop"
+                              ]
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\CircularReference",
+          "message": "Circular reference: #/components/headers/Loop -> #/components/headers/Loop"
+        }
+      }
+    },
+    {
+      "name": "a header cycle through another header is circular",
+      "op": "openapi.parse",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "Headers",
+            "version": "1"
+          },
+          "paths": {
+            "/upload": {
+              "post": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "headers": {
+                      "X-Fan": {
+                        "$array": [
+                          [
+                            "$ref",
+                            "#/components/headers/A"
+                          ]
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "headers": {
+              "A": {
+                "schema": {
+                  "type": "string"
+                },
+                "content": {
+                  "multipart/form-data": {
+                    "encoding": {
+                      "file": {
+                        "headers": {
+                          "X-B": {
+                            "$array": [
+                              [
+                                "$ref",
+                                "#/components/headers/B"
+                              ]
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "B": {
+                "schema": {
+                  "type": "string"
+                },
+                "content": {
+                  "multipart/form-data": {
+                    "encoding": {
+                      "file": {
+                        "headers": {
+                          "X-A": {
+                            "$array": [
+                              [
+                                "$ref",
+                                "#/components/headers/A"
+                              ]
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\CircularReference",
+          "message": "Circular reference: #/components/headers/A -> #/components/headers/B -> #/components/headers/A"
+        }
+      }
+    },
+    {
+      "name": "a referenced header is expanded once",
+      "op": "openapi.parse",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "Headers",
+            "version": "1"
+          },
+          "paths": {
+            "/upload": {
+              "post": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "headers": {
+                      "X-Fan": {
+                        "$array": [
+                          [
+                            "$ref",
+                            "#/components/headers/Fan"
+                          ]
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "headers": {
+              "Fan": {
+                "schema": {
+                  "type": "string"
+                },
+                "content": {
+                  "multipart/form-data": {
+                    "encoding": {
+                      "file": {
+                        "headers": {
+                          "X-One": {
+                            "$array": [
+                              [
+                                "$ref",
+                                "#/components/headers/Leaf"
+                              ]
+                            ]
+                          },
+                          "X-Two": {
+                            "$array": [
+                              [
+                                "$ref",
+                                "#/components/headers/Leaf"
+                              ]
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "Leaf": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "version": "3.1",
+        "sourceVersion": "3.1.0",
+        "jsonSchemaDialect": null,
+        "info": {
+          "title": "Headers",
+          "description": "",
+          "version": "1",
+          "termsOfService": null,
+          "contact": null,
+          "license": null,
+          "extensions": []
+        },
+        "servers": [],
+        "tags": [],
+        "paths": [
+          [
+            "/upload",
+            {
+              "path": "/upload",
+              "operations": [
+                [
+                  "post",
+                  {
+                    "id": "",
+                    "method": "post",
+                    "path": "/upload",
+                    "tags": [],
+                    "summary": "",
+                    "description": "",
+                    "deprecated": false,
+                    "parameters": [],
+                    "requestBody": null,
+                    "responses": [
+                      [
+                        "200",
+                        {
+                          "description": "OK",
+                          "headers": [
+                            [
+                              "X-Fan",
+                              {
+                                "description": "",
+                                "required": false,
+                                "deprecated": false,
+                                "schema": {
+                                  "kind": "string",
+                                  "minLength": null,
+                                  "maxLength": null,
+                                  "pattern": null,
+                                  "enumName": null,
+                                  "enumKeys": [],
+                                  "open": false,
+                                  "title": null,
+                                  "description": "",
+                                  "nullable": false,
+                                  "default": null,
+                                  "enum": [],
+                                  "format": null,
+                                  "readOnly": false,
+                                  "writeOnly": false,
+                                  "deprecated": false,
+                                  "example": null,
+                                  "extensions": []
+                                },
+                                "content": [
+                                  [
+                                    "multipart/form-data",
+                                    {
+                                      "schema": null,
+                                      "example": null,
+                                      "examples": [],
+                                      "encoding": [
+                                        [
+                                          "file",
+                                          {
+                                            "contentType": null,
+                                            "headers": [
+                                              [
+                                                "X-One",
+                                                {
+                                                  "description": "",
+                                                  "required": false,
+                                                  "deprecated": false,
+                                                  "schema": {
+                                                    "kind": "string",
+                                                    "minLength": null,
+                                                    "maxLength": null,
+                                                    "pattern": null,
+                                                    "enumName": null,
+                                                    "enumKeys": [],
+                                                    "open": false,
+                                                    "title": null,
+                                                    "description": "",
+                                                    "nullable": false,
+                                                    "default": null,
+                                                    "enum": [],
+                                                    "format": null,
+                                                    "readOnly": false,
+                                                    "writeOnly": false,
+                                                    "deprecated": false,
+                                                    "example": null,
+                                                    "extensions": []
+                                                  },
+                                                  "content": [],
+                                                  "style": null,
+                                                  "explode": null,
+                                                  "extensions": []
+                                                }
+                                              ],
+                                              [
+                                                "X-Two",
+                                                {
+                                                  "description": "",
+                                                  "required": false,
+                                                  "deprecated": false,
+                                                  "schema": {
+                                                    "kind": "string",
+                                                    "minLength": null,
+                                                    "maxLength": null,
+                                                    "pattern": null,
+                                                    "enumName": null,
+                                                    "enumKeys": [],
+                                                    "open": false,
+                                                    "title": null,
+                                                    "description": "",
+                                                    "nullable": false,
+                                                    "default": null,
+                                                    "enum": [],
+                                                    "format": null,
+                                                    "readOnly": false,
+                                                    "writeOnly": false,
+                                                    "deprecated": false,
+                                                    "example": null,
+                                                    "extensions": []
+                                                  },
+                                                  "content": [],
+                                                  "style": null,
+                                                  "explode": null,
+                                                  "extensions": []
+                                                }
+                                              ]
+                                            ],
+                                            "style": null,
+                                            "explode": null,
+                                            "allowReserved": false,
+                                            "extensions": []
+                                          }
+                                        ]
+                                      ],
+                                      "extensions": []
+                                    }
+                                  ]
+                                ],
+                                "style": null,
+                                "explode": null,
+                                "extensions": []
+                              }
+                            ]
+                          ],
+                          "content": [],
+                          "extensions": []
+                        }
+                      ]
+                    ],
+                    "security": [],
+                    "servers": [],
+                    "externalDocumentation": null,
+                    "extensions": [],
+                    "accepted": [],
+                    "required": []
+                  }
+                ]
+              ],
+              "parameters": [],
+              "summary": "",
+              "description": "",
+              "servers": [],
+              "extensions": []
+            }
+          ]
+        ],
+        "schemas": [],
+        "securitySchemes": [],
+        "security": [],
+        "extensions": [],
+        "externalDocumentation": null,
+        "operations": [
+          [
+            "/upload",
+            "post"
+          ]
+        ]
+      }
+    },
+    {
       "name": "controlled errors: invalid JSON",
       "op": "openapi.parse",
       "args": {

@@ -59,6 +59,18 @@
         "Utopia\\Usage\\Adapter\\Database::__construct"
       ]
     },
+    "database.collection": {
+      "doc": "creates the usage collection on a database.new adapter's database with the event attribute and index documents, less the attribute `without` and every index covering it: a collection created by an earlier schema",
+      "services": [
+        "database-mariadb"
+      ]
+    },
+    "database.schema": {
+      "doc": "the usage collection of a database.new adapter's database: {attributes: its attribute keys, sorted; indexes: index key => attribute keys, sorted by key}",
+      "services": [
+        "database-mariadb"
+      ]
+    },
     "recording.new": {
       "doc": "a fixture adapter recording every call (addBatch() returns `succeed`; with `throw_after: n`, the call after the next n throws `Insert failed` once), as a handle: the tests' RecordingAdapter and TenantRecordingAdapter, an adapter implemented outside the library"
     },

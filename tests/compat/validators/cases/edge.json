@@ -2268,7 +2268,7 @@
             "value": "http://a.b/ÿ"
           },
           "expect": {
-            "valid": false,
+            "valid": true,
             "description": "Value must be a valid URL"
           }
         }
