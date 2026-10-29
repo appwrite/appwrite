@@ -506,6 +506,129 @@
           }
         }
       ]
+    },
+    {
+      "name": "results map to the token sent",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "keyId",
+              "teamId": "teamId",
+              "bundleId": "com.example.app"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "abc#/victim-token",
+                "valid-token",
+                "a b?c"
+              ],
+              "title": "Title"
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "reason": "BadDeviceToken"
+                }
+              },
+              {
+                "statusCode": 200
+              },
+              {
+                "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "abc#/victim-token",
+                  "status": "failure",
+                  "error": "Expired device token",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "valid-token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "a b?c",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "urls": [
+                  "https://api.push.apple.com/3/device/abc%23%2Fvictim-token",
+                  "https://api.push.apple.com/3/device/valid-token",
+                  "https://api.push.apple.com/3/device/a%20b%3Fc"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer <jwt>",
+                  "apns-topic: com.example.app",
+                  "apns-push-type: alert"
+                ],
+                "bodies": [
+                  {
+                    "aps": {
+                      "alert": {
+                        "title": "Title"
+                      }
+                    }
+                  }
+                ],
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "keyId"
+                    },
+                    "payload": {
+                      "iss": "teamId",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }
