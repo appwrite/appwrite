@@ -247,6 +247,58 @@ final class SubscriberTest extends TestCase
         });
     }
 
+    /** Run $dispatch with the coroutine table full, so go() cannot start a child. */
+    private function saturated(\Closure $dispatch): void
+    {
+        Coroutine::set(['max_coroutine' => Coroutine::stats()['coroutine_num']]);
+        try {
+            // go() warns when refused; the refusal itself is what is under test.
+            \set_error_handler(fn (): bool => true, E_WARNING);
+            $dispatch();
+        } finally {
+            \restore_error_handler();
+            Coroutine::set(['max_coroutine' => 100000]);
+        }
+    }
+
+    #[RunInSeparateProcess]
+    public function testRevokeAtCoroutineLimitFailsClosed(): void
+    {
+        run(function (): void {
+            $this->boot();
+            $this->connect(1, 'active'); // authorized: only a check could keep it connected
+            $this->blocking = true; // an inline check would park here forever
+
+            $this->saturated(function (): void {
+                ($this->dispatch)(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'active']));
+            });
+
+            // Test for SUCCESS: no inline check; the user is closed unverified and re-authenticates.
+            $this->assertSame(0, $this->accounts->authorizations, 'the revoke was checked inline at the coroutine limit');
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $this->network->disconnects(1)[0]->reasonCode);
+            $this->assertSame([1], $this->network->closed);
+        });
+    }
+
+    #[RunInSeparateProcess]
+    public function testUnsubscribeAtCoroutineLimitFailsClosed(): void
+    {
+        run(function (): void {
+            $this->boot();
+            $this->connect(1, 'member', 'scores', 'news');
+            $this->blocking = true;
+
+            $this->saturated(function (): void {
+                ($this->dispatch)(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_UNSUBSCRIBE, 'userId' => 'member', 'topic' => 'scores']));
+            });
+
+            // Test for SUCCESS: the subscription is dropped unverified; the connection stays.
+            $this->assertSame([], $this->store->getSubscribers(self::PROJECT, 'scores'));
+            $this->assertArrayHasKey(1, $this->store->getSubscribers(self::PROJECT, 'news'));
+            $this->assertSame([], $this->network->closed);
+        });
+    }
+
     #[RunInSeparateProcess]
     public function testFastRevokeDisconnectsExactlyTheUnauthorized(): void
     {

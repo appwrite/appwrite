@@ -16,8 +16,9 @@ use Utopia\Span\Span;
  * the connections it opens leave with its context instead of piling up in this subscriber, and the
  * subscriber waits on it at most $permissionTimeout seconds: a verification stuck on a dead
  * database read must not park the subscriber, which would stop every delivery and revoke on this
- * worker. On timeout the broker fails closed — the access is withdrawn unverified — and the late
- * child finds its connections already handled (Handler skips untracked connections).
+ * worker. On timeout, or when no child coroutine can start, the broker fails closed — the access
+ * is withdrawn unverified — and a late child finds its connections already handled (Handler skips
+ * untracked connections).
  */
 return function (Server $server, Handler $handler, Mqtt $mqtt, float $permissionTimeout): Closure {
     // Revoke a user's connections after they were blocked or deleted. On timeout every connection
@@ -52,9 +53,10 @@ return function (Server $server, Handler $handler, Mqtt $mqtt, float $permission
             }
         });
 
+        // An inline check could block on the same dead read, so a full coroutine table fails closed too.
         if ($started === false) {
-            Console::warning('Coroutine limit reached, revoking MQTT connections inline');
-            $revoke();
+            $disconnected = $handler->expel($projectId, $userId);
+            Console::error("MQTT coroutine limit reached for revoke of user {$userId} in project {$projectId}; closed {$disconnected} connections unverified");
 
             return;
         }
@@ -99,8 +101,8 @@ return function (Server $server, Handler $handler, Mqtt $mqtt, float $permission
         });
 
         if ($started === false) {
-            Console::warning('Coroutine limit reached, unsubscribing MQTT connections inline');
-            $unsubscribe();
+            $dropped = $handler->drop($server, $projectId, $userId, $topic);
+            Console::error("MQTT coroutine limit reached for unsubscribe of user {$userId} in project {$projectId}; dropped the subscription from {$dropped} connections unverified");
 
             return;
         }
