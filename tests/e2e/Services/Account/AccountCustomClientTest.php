@@ -4761,6 +4761,15 @@ final class AccountCustomClientTest extends Scope
         \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $params);
         $this->assertEquals($linkerId, $params['userId']);
         $this->assertSame($providerEmail, $identity()['providerEmail']);
+
+        /**
+         * Test for SUCCESS - a later unverified sign-in keeps the stored email
+         */
+        $configure('canonical-' . $providerEmail . '#unverified');
+
+        $response = $this->followMockOAuth2Flow('/account/tokens/oauth2/mock', ['x-appwrite-project' => $projectId]);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
+        $this->assertSame($providerEmail, $identity()['providerEmail']);
     }
 
     public function testIdTokenLinkedEmailMatchedOnceVerified(): void
@@ -4810,6 +4819,16 @@ final class AccountCustomClientTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($linkerId, $response['body']['userId']);
+
+        // Later sign-ins without an attested email keep the stored one
+        foreach ([['email' => $providerEmail, 'email_verified' => false], []] as $claims) {
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken(['sub' => $sub, ...$claims]),
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertEquals($linkerId, $response['body']['userId']);
+        }
 
         /**
          * Test for SUCCESS - the attested email now matches the owner

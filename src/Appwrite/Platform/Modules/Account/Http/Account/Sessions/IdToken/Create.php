@@ -663,8 +663,8 @@ class Create extends Action
         // one: its claims would otherwise go stale, and it expires within the hour.
         $changes = ['providerIdToken' => $idToken];
 
-        // Follow the provider's attestation, unless another user's identity already holds the address
-        $changes['providerEmail'] = '';
+        // Store an email only once the provider attests it, and never one another user's identity holds.
+        // An unverified or missing email leaves the stored value as it is.
         if ($isVerified && !empty($providerEmail)) {
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$providerEmail]),

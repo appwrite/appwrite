@@ -2299,26 +2299,27 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         } else {
-            // Follow the provider's attestation, unless another user's identity already holds the address
-            $identityEmail = '';
+            $changes = [
+                'providerAccessToken' => $accessToken,
+                'providerRefreshToken' => $refreshToken,
+                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
+                // Refresh the photo URL on every login so expired CDN links self-heal.
+                'photo' => $oauth2->getUserPhoto($accessToken),
+            ];
+
+            // Store an email only once the provider attests it, and never one another user's identity holds.
+            // An unverified or missing email leaves the stored value as it is.
             if ($isVerified && !empty($providerEmail)) {
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
                 if ($identityWithMatchingEmail->isEmpty()) {
-                    $identityEmail = $providerEmail;
+                    $changes['providerEmail'] = $providerEmail;
                 }
             }
 
-            $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
-                'providerEmail' => $identityEmail,
-                'providerAccessToken' => $accessToken,
-                'providerRefreshToken' => $refreshToken,
-                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-                // Refresh the photo URL on every login so expired CDN links self-heal.
-                'photo' => $oauth2->getUserPhoto($accessToken),
-            ]));
+            $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
         }
 
         if (empty($user->getAttribute('name'))) {
