@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Alerts;
 
+use Swoole\Coroutine;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
+
+use function Swoole\Coroutine\run;
 
 /**
  * Drives monitors through the real scheduler, usage pipeline, evaluator and
@@ -184,6 +192,25 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame(2, $kept['total']);
         $this->assertSame(['resolved', 'resolved'], \array_column($kept['alerts'], 'status'));
         $this->assertNotNull($this->getAlert($second)['resolvedAt']);
+
+        // Maintenance removes resolved alerts once they are older than the retention.
+        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ALERTS', '7776000');
+        $this->withFactory(function (object $factory) use ($first, $retention): void {
+            $factory->platform()->updateDocument('alerts', $first, new Document([
+                'resolvedAt' => DateTime::addSeconds(new \DateTime(), -$retention - 3600),
+            ]));
+        });
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Maintenance command failed with code {$code}: {$stderr} ({$stdout})");
+
+        $this->assertEventually(function () use ($first) {
+            $gone = $this->client->call(Client::METHOD_GET, '/alerts/' . $first, $this->headers());
+            $this->assertSame(404, $gone['headers']['status-code']);
+        }, 30_000, 1_000);
+        $this->assertSame($second, $this->getAlert($second)['$id']);
 
         /**
          * Test for FAILURE
@@ -374,6 +401,26 @@ final class EvaluationCustomServerTest extends Scope
     /**
      * @return array<string, string>
      */
+    /**
+     * @param callable(object): void $callback receives the registered `databaseFactory`, whose class an edition may replace
+     */
+    private function withFactory(callable $callback): void
+    {
+        $run = function () use ($callback): void {
+            global $register;
+            $authorization = new Authorization();
+            $factory = $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), $authorization);
+
+            $authorization->skip(fn () => $callback($factory));
+        };
+
+        if (Coroutine::getCid() >= 0) {
+            $run();
+        } else {
+            run($run);
+        }
+    }
+
     private function headers(): array
     {
         return \array_merge([

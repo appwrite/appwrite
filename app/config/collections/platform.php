@@ -236,6 +236,7 @@ $platformCollections = [
             Index::key(key: '_key_project_status', attributes: ['projectInternalId', 'status']),
             Index::key(key: '_key_monitor_status', attributes: ['monitorInternalId', 'status']),
             Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceId']),
+            Index::key(key: '_key_region_status_resolvedAt', attributes: ['region', 'status', 'resolvedAt']),
             Index::fulltext(key: '_fulltext_search', attributes: ['search']),
         ],
     ],

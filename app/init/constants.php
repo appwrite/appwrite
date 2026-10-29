@@ -318,6 +318,7 @@ const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
 const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
+const DELETE_TYPE_ALERTS = 'alerts';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
 const DELETE_TYPE_REPORT = 'report';
 

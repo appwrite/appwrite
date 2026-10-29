@@ -1972,6 +1972,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_ALERTS',
+                'description' => 'How long a resolved alert is kept, in seconds. A firing alert is always kept. The default value is 7776000 seconds (90 days).',
+                'introduction' => '2.7.0',
+                'default' => '7776000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
