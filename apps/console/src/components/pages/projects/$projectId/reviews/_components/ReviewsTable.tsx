@@ -96,10 +96,12 @@ export function ReviewsTable({
                 </span>
               </TableCell>
               <TableCell className="px-4 py-3 text-end">
-                <DateTooltip
-                  date={review.$createdAt}
-                  className="text-[12px] text-muted-foreground font-mono"
-                />
+                {review.$createdAt && (
+                  <DateTooltip
+                    date={review.$createdAt}
+                    className="text-[12px] text-muted-foreground font-mono"
+                  />
+                )}
               </TableCell>
             </TableRow>
           ))}

@@ -150,10 +150,14 @@ export function View({ initialReview }: ViewProps = {}) {
                 )}
               </Detail>
               <Detail label={t('Created')}>
-                <DateTooltip
-                  date={review.$createdAt}
-                  className="text-[13px] text-foreground"
-                />
+                {review.$createdAt ? (
+                  <DateTooltip
+                    date={review.$createdAt}
+                    className="text-[13px] text-foreground"
+                  />
+                ) : (
+                  <span className="text-[13px] text-muted-foreground">-</span>
+                )}
               </Detail>
               <Detail label={t('Started')}>
                 {review.startedAt ? (
