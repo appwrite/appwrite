@@ -1366,6 +1366,223 @@ final class RealtimeConsoleClientTest extends Scope
         $this->receiveUntilClosed($client);
     }
 
+    public function testAdminModeEndsWithConsoleAccess(): void
+    {
+        $rootHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+
+        $team = $this->createTeamFixture($rootHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Admin Revocation',
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+        $projectId = $this->createOrganizationProject($rootHeaders, $teamId);
+
+        $adminHeaders = \array_merge($rootHeaders, [
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $adminHeaders, [
+            'databaseId' => Id::unique(),
+            'name' => 'Revocation',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $database['body']['$id'] . '/collections', $adminHeaders, [
+            'collectionId' => Id::unique(),
+            'name' => 'Revocation',
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionPath = '/databases/' . $database['body']['$id'] . '/collections/' . $collection['body']['$id'];
+        $attribute = $this->client->call(Client::METHOD_POST, $collectionPath . '/attributes/string', $adminHeaders, [
+            'key' => 'name',
+            'size' => 32,
+            'required' => false,
+        ]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+        $this->assertEventually(function () use ($collectionPath, $adminHeaders): void {
+            $attribute = $this->client->call(Client::METHOD_GET, $collectionPath . '/attributes/name', $adminHeaders);
+            $this->assertSame('available', $attribute['body']['status']);
+        }, 30000, 250);
+
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($rootHeaders, $teamId, $member, ['developer']);
+        $otherSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $member['email'],
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $otherSession['headers']['status-code']);
+
+        $client = $this->getAdminWebsocket($projectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Ending another of the member's sessions leaves this connection open.
+        $logout = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $otherSession['cookies']['a_session_console'],
+        ]);
+        $this->assertSame(204, $logout['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_POST, $collectionPath . '/documents', $adminHeaders, [
+            'documentId' => Id::unique(),
+            'data' => ['name' => 'Revocation'],
+        ]);
+        $this->assertSame(201, $document['headers']['status-code']);
+        $this->receiveUntilEvent($client, fn (array $frame): bool => ($frame['type'] ?? '') === 'event'
+            && \in_array('databases.*.collections.*.documents.*.create', $frame['data']['events'] ?? [], true), 10000);
+
+        /**
+         * Test for FAILURE
+         */
+        // Signing out of the console session the connection was opened with ends it.
+        $logout = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $member['session'],
+        ]);
+        $this->assertSame(204, $logout['headers']['status-code']);
+
+        $frames = $this->receiveUntilClosed($client);
+        $this->assertSame('error', \end($frames)['type'] ?? null);
+
+        // Leaving the organization ends the connection too.
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($rootHeaders, $teamId, $member, ['owner']);
+
+        $client = $this->getAdminWebsocket($projectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships', $rootHeaders);
+        $this->assertSame(200, $memberships['headers']['status-code']);
+        $membership = \array_find($memberships['body']['memberships'], fn (array $membership): bool => $membership['userEmail'] === $member['email']);
+        $this->assertNotNull($membership);
+
+        $removal = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId . '/memberships/' . $membership['$id'], $rootHeaders);
+        $this->assertSame(204, $removal['headers']['status-code']);
+
+        $frames = $this->receiveUntilClosed($client);
+        $this->assertSame('error', \end($frames)['type'] ?? null);
+
+        // A project session cannot take over the connection, which would keep its admin roles.
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($rootHeaders, $teamId, $member, ['owner']);
+
+        $email = \uniqid('realtime-project-', true) . '@localhost.test';
+        $user = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $client = $this->getAdminWebsocket($projectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => ['session' => $session['cookies']['a_session_' . $projectId]],
+        ]));
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertStringContainsString('admin-mode', (string) $response['data']['message']);
+
+        // Moving the project to another organization ends the connection.
+        $otherTeam = $this->createTeamFixture($rootHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Admin Transfer',
+        ]);
+        $this->assertSame(200, $otherTeam['headers']['status-code']);
+
+        $transfer = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $rootHeaders, [
+            'teamId' => $otherTeam['body']['$id'],
+        ]);
+        $this->assertSame(200, $transfer['headers']['status-code']);
+
+        $frames = $this->receiveUntilClosed($client);
+        $this->assertSame('error', \end($frames)['type'] ?? null);
+
+        // A blocked console user keeps their sessions, but not the connection.
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($rootHeaders, $otherTeam['body']['$id'], $member, ['owner']);
+
+        $client = $this->getAdminWebsocket($projectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        $block = $this->client->call(Client::METHOD_PATCH, '/account/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $member['session'],
+        ]);
+        $this->assertSame(200, $block['headers']['status-code']);
+
+        $frames = $this->receiveUntilClosed($client);
+        $this->assertSame('error', \end($frames)['type'] ?? null);
+    }
+
+    public function testAdminModeEndsWithOrganizationDeletion(): void
+    {
+        $rootHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+
+        $team = $this->createTeamFixture($rootHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Admin Deletion',
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+        $projectId = $this->createOrganizationProject($rootHeaders, $teamId);
+
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($rootHeaders, $teamId, $member, ['owner']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getAdminWebsocket($projectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        /**
+         * Test for FAILURE
+         */
+        // Deleting the organization ends its members' admin-mode connections.
+        $deletion = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId, $rootHeaders);
+        $this->assertSame(204, $deletion['headers']['status-code']);
+
+        $frames = $this->receiveUntilClosed($client);
+        $this->assertSame('error', \end($frames)['type'] ?? null);
+    }
+
     public function testAdminModeReauthenticationDropsAdminRoles(): void
     {
         $user = $this->getUser();
