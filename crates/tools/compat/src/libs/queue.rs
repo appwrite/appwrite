@@ -6,7 +6,9 @@
 
 use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
+use futures_util::StreamExt;
 use php_std::types::{Array, Value};
 use serde_json::{Value as Json, json};
 use utopia_dsn::Dsn;
@@ -73,6 +75,11 @@ pub const OPS: &[&str] = &[
     "nats.stream",
     "nats.consumer",
     "nats.message",
+    "sleep",
+    "nats.lapse",
+    "nats.ack_next",
+    "nats.reconfigure",
+    "nats.recreate_consumer",
     "nats.delete",
     "adapter.consume",
     "adapter.maintain",
@@ -717,7 +724,7 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
                 Broker::Redis(b) => val(b.reap(&q, older, limit, max, newer, a.opt_i64("scan")?).await),
                 Broker::Pool(b) => val(b.reap(&q, older, limit, max, newer).await),
                 Broker::Memory(_) => return Err(Fault::new("a memory consumer cannot reap")),
-                Broker::Nats(b) => Outcome::ok(b.reap()),
+                Broker::Nats(b) => val(b.reap(&q, older, limit, max, newer).await),
             }
         }
         "broker.queue_size" => {
@@ -869,6 +876,80 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         "nats.stream" => nats_stream(&a, session).await?,
         "nats.consumer" => nats_consumer(&a, session).await?,
         "nats.message" => nats_message(&a, session).await?,
+        "sleep" => {
+            utopia_async::sleep(Duration::from_millis(a.i64("ms")?.max(0) as u64)).await;
+            Outcome::Ok(Json::Null)
+        }
+        "nats.lapse" => {
+            // Deliveries taken straight off the work consumer and left to
+            // lapse past ack_wait, as a worker dying holding them would.
+            let consumer = nats_worker(&a, session).await?;
+            let wait = Duration::from_millis(a.opt_i64("wait_ms")?.unwrap_or(1500).max(0) as u64);
+            let mut fetched = Vec::new();
+            for _ in 0..a.opt_i64("deliveries")?.unwrap_or(2) {
+                let mut batch =
+                    consumer.fetch().max_messages(1).expires(Duration::from_secs(3)).messages().await.map_err(fault)?;
+                let mut count = 0;
+                while let Some(m) = batch.next().await {
+                    if m.is_ok() {
+                        count += 1;
+                    }
+                }
+                fetched.push(count);
+                utopia_async::sleep(wait).await;
+            }
+            Outcome::ok(fetched)
+        }
+        "nats.ack_next" => {
+            // The next delivery off the work consumer, acknowledged, and the ack
+            // floor once it has moved there.
+            let mut consumer = nats_worker(&a, session).await?;
+            let mut batch =
+                consumer.fetch().max_messages(1).expires(Duration::from_secs(3)).messages().await.map_err(fault)?;
+            let mut seq = None;
+            while let Some(Ok(m)) = batch.next().await {
+                seq = Some(m.info().map_err(fault)?.stream_sequence);
+                m.double_ack().await.map_err(fault)?;
+            }
+            let mut floor = 0;
+            let deadline = std::time::Instant::now() + Duration::from_secs(5);
+            while floor < seq.unwrap_or(0) && std::time::Instant::now() < deadline {
+                utopia_async::sleep(Duration::from_millis(50)).await;
+                floor = consumer.info().await.map_err(fault)?.ack_floor.stream_sequence;
+            }
+            let js = async_nats::jetstream::new(nats_client(session).await?);
+            let mut stream = js.get_stream(stream_of(a.str("queue")?, false)).await.map_err(fault)?;
+            let first = stream.info().await.map_err(fault)?.state.first_sequence;
+            Outcome::ok(json!({"seq": seq, "floor": floor, "first": first}))
+        }
+        "nats.reconfigure" => {
+            let js = async_nats::jetstream::new(nats_client(session).await?);
+            let mut stream = js.get_stream(stream_name(&a)?).await.map_err(fault)?;
+            let mut config = stream.info().await.map_err(fault)?.config.clone();
+            let changes = a.value("changes")?.as_object().ok_or_else(|| Fault::new("changes must be an object"))?;
+            for (key, value) in changes {
+                match (key.as_str(), value) {
+                    ("deny_delete", Json::Bool(deny)) => config.deny_delete = *deny,
+                    ("duplicate_window", Json::Number(n)) => {
+                        config.duplicate_window = Duration::from_nanos(n.as_u64().unwrap_or(0));
+                    }
+                    _ => return Err(Fault::new(format!("unsupported stream change {key}"))),
+                }
+            }
+            js.update_stream(config).await.map_err(fault)?;
+            Outcome::Ok(Json::Null)
+        }
+        "nats.recreate_consumer" => {
+            let js = async_nats::jetstream::new(nats_client(session).await?);
+            let stream = js.get_stream(stream_of(a.str("queue")?, false)).await.map_err(fault)?;
+            let mut worker: async_nats::jetstream::consumer::PullConsumer =
+                stream.get_consumer("worker").await.map_err(fault)?;
+            let config = worker.info().await.map_err(fault)?.config.clone();
+            stream.delete_consumer("worker").await.map_err(fault)?;
+            let _: async_nats::jetstream::consumer::Consumer<async_nats::jetstream::consumer::Config> =
+                stream.create_consumer(config).await.map_err(fault)?;
+            Outcome::Ok(Json::Null)
+        }
         "nats.delete" => {
             let js = async_nats::jetstream::new(nats_client(session).await?);
             for s in a.array("queues")? {
@@ -1470,6 +1551,13 @@ fn stream_name(a: &Args) -> Result<String, Fault> {
     Ok(stream_of(a.str("queue")?, a.opt_bool("dead")?.unwrap_or(false)))
 }
 
+/// The queue's durable work consumer, read straight off the server.
+async fn nats_worker(a: &Args<'_>, session: &Session) -> Result<async_nats::jetstream::consumer::PullConsumer, Fault> {
+    let js = async_nats::jetstream::new(nats_client(session).await?);
+    let stream = js.get_stream(stream_of(a.str("queue")?, false)).await.map_err(fault)?;
+    stream.get_consumer("worker").await.map_err(fault)
+}
+
 async fn nats_client(session: &Session) -> Result<async_nats::Client, Fault> {
     async_nats::connect(session.service("queue-nats")?).await.map_err(fault)
 }
@@ -1517,6 +1605,7 @@ async fn nats_broker(a: &Args<'_>, session: &mut Session) -> Result<Outcome, Fau
         },
         codec: codec(a.opt_str("codec")?.unwrap_or("json"))?,
         release_delay: a.opt_f64("release_delay")?.unwrap_or(5.0),
+        stranded_after: a.opt_f64("stranded_after")?.unwrap_or(60.0),
     };
     let built = if a.opt_bool("live")?.unwrap_or(false) {
         Nats::with_client(nats_client(session).await?, config)

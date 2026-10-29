@@ -17,6 +17,7 @@ use Utopia\DSN\DSN;
 use Utopia\NATS\Connection as NatsConnection;
 use Utopia\NATS\JetStream\DiscardPolicy;
 use Utopia\NATS\JetStream\StorageType;
+use Utopia\NATS\JetStream\StreamConfig;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool as UtopiaPool;
 use Utopia\Queue\Adapter\KubernetesJob;
@@ -348,6 +349,7 @@ final class Adapter implements Base, Benchmarks
                     provisioning: ($a['require'] ?? false) ? Provisioning::Require : Provisioning::Ensure,
                     codec: self::codec($a['codec'] ?? 'json'),
                     releaseDelay: $a['release_delay'] ?? 5.0,
+                    strandedAfter: $a['stranded_after'] ?? 60.0,
                 );
                 self::$reports[spl_object_id($broker)] = $reports;
 
@@ -397,6 +399,65 @@ final class Adapter implements Base, Benchmarks
                 }
 
                 return ['subject' => $m->subject, 'data' => $m->data, 'content_type' => $m->headers?->get('Content-Type'), 'id' => $m->headers?->get('Nats-Msg-Id')];
+            },
+            'sleep' => function (array $a, Session $s): null {
+                usleep((int) ($a['ms'] * 1000));
+
+                return null;
+            },
+            'nats.lapse' => function (array $a, Session $s): array {
+                // Deliveries taken straight off the work consumer and left to
+                // lapse past ackWait, as a worker dying holding them would.
+                $worker = NatsConnection::connect($s->service('queue-nats'))->jetStream()->getConsumer(self::stream($a['queue'], false), 'worker');
+                $fetched = [];
+                for ($delivery = 0; $delivery < ($a['deliveries'] ?? 2); $delivery++) {
+                    $count = 0;
+                    foreach ($worker->fetch(1, 3.0, false) as $ignored) {
+                        $count++;
+                    }
+                    $fetched[] = $count;
+                    usleep((int) (($a['wait_ms'] ?? 1500) * 1000));
+                }
+
+                return $fetched;
+            },
+            'nats.ack_next' => function (array $a, Session $s): array {
+                // The next delivery off the work consumer, acknowledged, and the
+                // ack floor once it has moved there.
+                $js = NatsConnection::connect($s->service('queue-nats'))->jetStream();
+                $stream = self::stream($a['queue'], false);
+                $worker = $js->getConsumer($stream, 'worker');
+                $seq = null;
+                foreach ($worker->fetch(1, 3.0, false) as $delivery) {
+                    $seq = $delivery->metadata()->streamSequence;
+                    $delivery->ackSync();
+                }
+                $floor = 0;
+                $deadline = microtime(true) + 5.0;
+                while ($floor < ($seq ?? 0) && microtime(true) < $deadline) {
+                    usleep(50_000);
+                    $floor = $worker->info(true)->ackFloor->streamSeq;
+                }
+
+                return ['seq' => $seq, 'floor' => $floor, 'first' => $js->getStreamInfo($stream)->state->firstSeq];
+            },
+            'nats.reconfigure' => function (array $a, Session $s): null {
+                $js = NatsConnection::connect($s->service('queue-nats'))->jetStream();
+                $name = self::stream($a['queue'], $a['dead'] ?? false);
+                // Empty sections are dropped: they round-trip as a JSON list the server refuses.
+                $config = array_filter($js->getStreamInfo($name)->config->toArray(), static fn (mixed $value): bool => $value !== []);
+                $js->updateStream(StreamConfig::fromArray([...$config, ...$a['changes']]));
+
+                return null;
+            },
+            'nats.recreate_consumer' => function (array $a, Session $s): null {
+                $js = NatsConnection::connect($s->service('queue-nats'))->jetStream();
+                $stream = self::stream($a['queue'], false);
+                $config = $js->getConsumer($stream, 'worker')->info(true)->config;
+                $js->deleteConsumer($stream, 'worker');
+                $js->createConsumer($stream, $config);
+
+                return null;
             },
             'nats.delete' => function (array $a, Session $s): null {
                 $js = NatsConnection::connect($s->service('queue-nats'))->jetStream();

@@ -31,6 +31,11 @@ const CONSUMER_WORK: &str = "worker";
 const CONSUMER_RETRY: &str = "retry";
 const CONTENT_TYPE: &str = "Content-Type";
 const MESSAGE_ID: &str = "Nats-Msg-Id";
+const EXPECTED_LAST_SUBJECT_SEQUENCE: &str = "Nats-Expected-Last-Subject-Sequence";
+/// On a dead letter, the work-stream sequence of the message it is a copy of.
+const WORK_SEQUENCE: &str = "Utopia-Queue-Work-Sequence";
+/// On a dead letter, when the work stream stored that message, in nanoseconds.
+const WORK_TIME: &str = "Utopia-Queue-Work-Time";
 const ADVISORY_MAX_DELIVERIES: &str = "$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES";
 const ADVISORY_GROUP: &str = "utopia_queue_dead_letter";
 const MAX_STREAM_NAME: usize = 255;
@@ -40,6 +45,10 @@ const PROVISION_ATTEMPTS: u32 = 5;
 const PROVISION_BACKOFF_MS: u64 = 500;
 const PUBLISH_RETRY_DELAYS: [f64; 4] = [0.0, 0.25, 1.0, 2.0];
 const PUBLISH_RETRY_BUDGET: f64 = 10.0;
+/// Most stranded messages one maintain() moves per queue, so a backlog of them
+/// is worked off over several intervals rather than holding the connection
+/// for one long sweep.
+const REAP_LIMIT: i64 = 100;
 
 /// Work streams this process has seen owned by the queue publishing to them,
 /// as account => stream => identity. Process-wide, not per broker: a pool
@@ -103,6 +112,12 @@ pub struct NatsConfig {
     pub codec: Arc<dyn Codec>,
     /// Seconds before a released message that could not be requeued is redelivered.
     pub release_delay: f64,
+    /// Seconds a message must have been behind the work consumer's ack floor
+    /// before [`Nats::reap`] moves it to the dead stream (default 60). The
+    /// floor passes a message the moment it is acknowledged, and the stream
+    /// deletes it just after, so a message seen behind the floor once may
+    /// simply be on its way out; one still there this much later is not.
+    pub stranded_after: f64,
 }
 
 impl Default for NatsConfig {
@@ -128,6 +143,7 @@ impl Default for NatsConfig {
             provisioning: Provisioning::Ensure,
             codec: Arc::new(Json),
             release_delay: 5.0,
+            stranded_after: 60.0,
         }
     }
 }
@@ -166,6 +182,9 @@ impl NatsConfig {
         }
         if self.release_delay < 0.0 {
             return invalid("releaseDelay must be zero or a positive number of seconds");
+        }
+        if self.stranded_after < 0.0 {
+            return invalid("strandedAfter must be zero or a positive number of seconds");
         }
         if self.max_age.is_some_and(|a| a <= 0.0) {
             return invalid(
@@ -218,6 +237,19 @@ struct State {
     advisories: HashMap<String, Arc<Mutex<Subscriber>>>,
     spare: HashMap<String, Option<i64>>,
     deferred: Vec<Error>,
+    /// Queues this broker has received from, swept by maintain(), in order.
+    served: indexmap::IndexMap<String, Queue>,
+    /// Per queue, the work consumer's ack floor as reap() last read it.
+    floors: HashMap<String, Floor>,
+}
+
+/// The work consumer's ack floor stream sequence as [`Nats::reap`] last read
+/// it, when, and the creation time of the consumer it was read from.
+#[derive(Clone)]
+struct Floor {
+    floor: u64,
+    at: f64,
+    created: async_nats::datetime::DateTime,
 }
 
 /// The NATS JetStream broker (`Broker\Nats`): each queue is a work-queue
@@ -227,8 +259,11 @@ struct State {
 /// Redelivery and dead-lettering are the server's: a rejected message is
 /// NAK'd with the tier backoff and redelivered until `max_deliver`, then
 /// terminated and copied to the dead stream; a terminal message goes there at
-/// once. A worker that dies is reclaimed by `ack_wait` redelivery, so
-/// [`Nats::reap`] does nothing. Every publish carries its pid as
+/// once. A worker that dies is reclaimed by `ack_wait` redelivery;
+/// [`Nats::reap`], which `maintain()` runs for every queue the broker
+/// receives from, moves what that misses to the dead stream: a message past
+/// its last delivery whose max-deliveries advisory nobody caught, left behind
+/// the consumer's ack floor. Every publish carries its pid as
 /// `Nats-Msg-Id`, so a retried publish inside the duplicate window is stored
 /// once, and the codec's `Content-Type` header.
 ///
@@ -306,6 +341,17 @@ fn ack_error(error: async_nats::Error) -> Error {
 fn lost_connection(error: &Error) -> bool {
     matches!(error, Error::Nats { class, message }
         if *class == "Utopia\\NATS\\Exception\\ConnectionException" || message.to_ascii_lowercase().contains("stale connection"))
+}
+
+/// A JetStream API error with status 404: a stream, consumer or message
+/// that is not there.
+fn api_not_found(e: &Error) -> bool {
+    matches!(e, Error::Nats { message, .. } if message.contains("code 404") || message.contains("no message found") || not_found(message))
+}
+
+/// `microtime(true)`.
+fn microtime() -> f64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0.0, |d| d.as_secs_f64())
 }
 
 fn not_found(e: &impl std::fmt::Display) -> bool {
@@ -587,6 +633,7 @@ impl Nats {
     async fn pull(&self, queue: &Queue, timeout: i64, max: usize) -> Result<Vec<Message>> {
         self.ensure(queue).await?;
         let key = identity(queue);
+        self.state().served.entry(key.clone()).or_insert_with(|| queue.clone());
 
         // The fallback for the spare delivery dying too: JetStream then stops
         // delivering and emits this advisory, which drain_dead_letters() reads
@@ -881,7 +928,9 @@ impl Nats {
                 durable_name: Some(CONSUMER_RETRY.into()),
                 ack_policy: AckPolicy::Explicit,
                 ack_wait: Duration::from_secs_f64(self.config.ack_wait),
-                filter_subject: dead_subject(queue),
+                // Unfiltered: the stream holds only dead letters, under the shared
+                // subject older releases wrote and the per-message ones
+                // dead_letter() writes.
                 ..Default::default()
             })
             .await
@@ -890,22 +939,225 @@ impl Nats {
             Some(l) => l,
             None => consumer.info().await.map_err(jetstream_error)?.num_pending as i64,
         };
+        let mut failure = None;
         while remaining > 0 {
             let Some(delivery) = self.fetch(&consumer, 1, 1.0, false).await?.into_iter().next() else { break };
+            remaining -= 1;
+            if let Err(e) = self.delete_original(&js, queue, &delivery).await {
+                // Left unacknowledged on the dead stream, for a later retry once
+                // the work stream lets go of the original.
+                failure.get_or_insert(e);
+                continue;
+            }
+            // Re-drive onto the work queue, then remove it from the dead stream.
             js.publish(work_subject(queue), delivery.payload.clone())
                 .await
                 .map_err(jetstream_error)?
                 .await
                 .map_err(jetstream_error)?;
             delivery.double_ack().await.map_err(jetstream_error)?;
-            remaining -= 1;
         }
-        Ok(())
+        match failure {
+            Some(e) => Err(e),
+            None => Ok(()),
+        }
     }
 
-    /// Always 0: the server's `ack_wait` redelivery reclaims stranded work.
-    pub fn reap(&self) -> i64 {
-        0
+    /// Deletes the work-stream message a dead letter was copied from, if it
+    /// is still there.
+    ///
+    /// Only a copy whose delete from the work stream failed leaves the
+    /// original behind. Re-driving it then, and removing the dead copy, would
+    /// free its dead-letter subject for the next reap to copy the original
+    /// again, and the job would run twice. So the original goes first, and a
+    /// dead letter whose original cannot be deleted stays. Matched on when it
+    /// was stored as well as its sequence, because a recreated work stream
+    /// reuses sequences, and a message stored there since is not the original.
+    ///
+    /// PHP: `deleteOriginal()` (private).
+    async fn delete_original(&self, js: &Context, queue: &Queue, dead: &jetstream::Message) -> Result<()> {
+        let header = |name: &str| dead.headers.as_ref().and_then(|h| h.get(name)).map(|v| v.as_str().to_owned());
+        let (Some(sequence), Some(time)) = (header(WORK_SEQUENCE), header(WORK_TIME)) else {
+            return Ok(()); // stored by a release before the headers, or parked: no original kept
+        };
+        let sequence = php_std::format::str_to_int(sequence.as_bytes());
+        let result = async {
+            let stream = js.get_stream(work_stream(queue)).await.map_err(jetstream_error)?;
+            let stored = stream.get_raw_message(sequence as u64).await.map_err(jetstream_error)?;
+            if stored.time.unix_timestamp_nanos().to_string() == time {
+                stream.delete_message(stored.sequence).await.map_err(jetstream_error)?;
+            }
+            Ok::<_, Error>(())
+        };
+        match result.await {
+            Err(e) if api_not_found(&e) => Ok(()),
+            other => other,
+        }
+    }
+
+    /// Moves messages the work consumer has given up on, but nothing
+    /// dead-lettered, to the dead stream. Returns how many it moved.
+    ///
+    /// `ack_wait` redelivery reclaims a message whose worker died, so
+    /// in-flight work needs no reaping. What it misses is a message past its
+    /// last delivery: the server stops delivering it, the next
+    /// acknowledgement moves the consumer's ack floor past it, and only the
+    /// max-deliveries advisory says so. Core NATS keeps no advisory nobody is
+    /// subscribed to, so the message stays on the work stream, behind the
+    /// floor, for good.
+    ///
+    /// On a work-queue stream an acknowledged message is deleted, so anything
+    /// still stored at or below the consumer's ack floor was neither
+    /// acknowledged nor is it pending. Only a floor read at least
+    /// `stranded_after` ago is swept, and a broker's first call only takes
+    /// that reading: it moves nothing. A consumer recreated in between has a
+    /// floor of its own, so its first reading is taken afresh, the same way.
+    ///
+    /// Safe to run from every replica at once: each copy goes to the subject
+    /// reject() gives a dead letter, which the dead stream fills only once,
+    /// and a delete that finds the message gone means another broker finished
+    /// it first.
+    ///
+    /// `older_than`, `max_attempts` and `newer_than` exist only for signature
+    /// compatibility with [`Redis::reap`](super::Redis::reap); the floor
+    /// already says a message is out of attempts.
+    pub async fn reap(
+        &self,
+        queue: &Queue,
+        older_than: i64,
+        limit: Option<i64>,
+        max_attempts: Option<i64>,
+        newer_than: Option<i64>,
+    ) -> Result<i64> {
+        let _ = (older_than, max_attempts, newer_than);
+        let key = identity(queue);
+        let stream_name = work_stream(queue);
+        let now = microtime();
+
+        let previous = self.state().floors.get(&key).cloned();
+        if previous.as_ref().is_some_and(|p| now - p.at < self.config.stranded_after) {
+            return Ok(0);
+        }
+
+        self.command()?;
+        let js = self.js().await?;
+        let info = async {
+            let stream = js.get_stream(&stream_name).await.map_err(jetstream_error)?;
+            let mut consumer: PullConsumer = stream.get_consumer(CONSUMER_WORK).await.map_err(jetstream_error)?;
+            let info = consumer.info().await.map_err(jetstream_error)?;
+            Ok::<_, Error>((info.ack_floor.stream_sequence, info.created))
+        };
+        let (floor, created) = match info.await {
+            // Not provisioned yet, or the consumer was removed: nothing it gave up on.
+            Err(e) if api_not_found(&e) => {
+                self.state().floors.remove(&key);
+                return Ok(0);
+            }
+            other => other?,
+        };
+        self.state().floors.insert(key, Floor { floor, at: now, created });
+        let Some(previous) = previous.filter(|p| p.created == created) else { return Ok(0) };
+
+        let settled = previous.floor;
+        let mut moved = 0;
+        let mut last = 0;
+        while limit.is_none_or(|l| moved < l) {
+            self.command()?;
+            let mut stream = js.get_stream(&stream_name).await.map_err(jetstream_error)?;
+            let state = stream.info().await.map_err(jetstream_error)?.state.clone();
+            // A sequence already handled means the delete has not landed in the
+            // stream's state yet; the next sweep picks up from there.
+            if state.messages == 0 || state.first_sequence > settled || state.first_sequence <= last {
+                break;
+            }
+            last = state.first_sequence;
+            self.command()?;
+            let stored = match stream.get_raw_message(state.first_sequence).await.map_err(jetstream_error) {
+                Ok(stored) => stored,
+                Err(e) if api_not_found(&e) => continue, // removed since the state was read
+                Err(e) => return Err(e),
+            };
+            self.command()?;
+            self.bury(&js, queue, &stored).await?;
+            moved += 1;
+        }
+        Ok(moved)
+    }
+
+    /// Copies a message stored on the work stream to the dead stream, then
+    /// deletes it there.
+    ///
+    /// Under the id reject() gives a dead letter, so the advisory and reap(),
+    /// or two replicas reaping, store one copy between them. Copied first, so
+    /// a failure leaves the message where it was rather than losing it; a
+    /// delete that finds it gone means another broker finished it first.
+    ///
+    /// PHP: `bury()` (private).
+    async fn bury(&self, js: &Context, queue: &Queue, stored: &jetstream::message::StreamMessage) -> Result<()> {
+        // The message's own Content-Type, as in park(): the bytes go over unread.
+        let mut headers = HeaderMap::new();
+        if let Some(content_type) = stored.headers.get(CONTENT_TYPE) {
+            headers.insert(CONTENT_TYPE, content_type.as_str());
+        }
+        let pid = match self.config.codec.decode(&stored.payload) {
+            Ok(Value::Array(a)) => match a.get_str("pid") {
+                Some(Value::Str(pid)) => String::from_utf8_lossy(pid).into_owned(),
+                _ => work_stream(queue),
+            },
+            _ => work_stream(queue),
+        };
+        let time = stored.time.unix_timestamp_nanos().to_string();
+        let id = format!("{pid}.dead.{}", stored.sequence);
+        self.dead_letter(js, queue, &id, stored.sequence, Some(&time), &stored.payload, headers).await?;
+        let stream = js.get_stream(work_stream(queue)).await.map_err(jetstream_error)?;
+        match stream.delete_message(stored.sequence).await.map_err(jetstream_error) {
+            Err(e) if !api_not_found(&e) => Err(e),
+            _ => Ok(()),
+        }
+    }
+
+    /// Stores one dead copy of a message, however often and from wherever it
+    /// is asked.
+    ///
+    /// A message id is recognised only for the dead stream's duplicate
+    /// window, and a delete from the work stream can keep failing for longer.
+    /// So each dead letter gets a subject of its own and is published only
+    /// onto an empty one: the stream refuses a second message there for as
+    /// long as the first is stored, and that refusal means the copy is
+    /// already made. The data is in the subject as well as the id, so a work
+    /// stream recreated under a reused id and sequence is not taken for the
+    /// old one. Each copy names the message it was copied from, by sequence
+    /// and stored time, for delete_original().
+    ///
+    /// PHP: `deadLetter()` (private).
+    #[allow(clippy::too_many_arguments)]
+    async fn dead_letter(
+        &self,
+        js: &Context,
+        queue: &Queue,
+        id: &str,
+        sequence: u64,
+        time: Option<&str>,
+        data: &[u8],
+        mut headers: HeaderMap,
+    ) -> Result<()> {
+        headers.insert(WORK_SEQUENCE, sequence.to_string().as_str());
+        if let Some(time) = time {
+            headers.insert(WORK_TIME, time);
+        }
+        headers.insert(MESSAGE_ID, id);
+        headers.insert(EXPECTED_LAST_SUBJECT_SEQUENCE, "0");
+        let mut keyed = Vec::with_capacity(id.len() + 1 + data.len());
+        keyed.extend_from_slice(id.as_bytes());
+        keyed.push(b'\n');
+        keyed.extend_from_slice(data);
+        let subject = format!("{}.{:032x}", dead_subject(queue), xxhash_rust::xxh3::xxh3_128(&keyed));
+        let published = async { js.publish_with_headers(subject, headers, data.to_vec().into()).await?.await };
+        match published.await {
+            Ok(_) => Ok(()),
+            Err(e) if e.kind() == async_nats::jetstream::context::PublishErrorKind::WrongLastSequence => Ok(()),
+            Err(e) => Err(publish_error(e)),
+        }
     }
 
     /// Creates the queue's streams and work consumer now (under
@@ -948,7 +1200,9 @@ impl Nats {
         if dead {
             return StreamConfig {
                 name: dead_stream(queue),
-                subjects: vec![dead_subject(queue)],
+                // The shared subject still holds dead letters from releases
+                // before dead_letter() gave each its own, and park() writes there.
+                subjects: vec![dead_subject(queue), format!("{}.>", dead_subject(queue))],
                 description: Some(key.to_owned()),
                 retention: RetentionPolicy::WorkQueue,
                 max_message_size: size,
@@ -1115,13 +1369,7 @@ impl Nats {
                 let js = self.js().await?;
                 let stream = js.get_stream(work_stream(queue)).await.map_err(jetstream_error)?;
                 let stored = stream.get_raw_message(seq).await.map_err(jetstream_error)?;
-                js.publish(dead_subject(queue), stored.payload)
-                    .await
-                    .map_err(jetstream_error)?
-                    .await
-                    .map_err(jetstream_error)?;
-                stream.delete_message(seq).await.map_err(jetstream_error)?;
-                Ok::<_, Error>(())
+                self.bury(&js, queue, &stored).await
             };
             if let Err(e) = result.await {
                 self.report(e);
@@ -1333,20 +1581,14 @@ impl Consumer for Nats {
             // One budget for the dead-letter copy and the term together.
             let deadline = Some(Instant::now() + Duration::from_secs_f64(PUBLISH_RETRY_BUDGET));
             if terminal || delivered >= self.config.max_deliver {
-                // Its own id, so a retry dedupes against a copy that already landed.
+                // Exhausted or terminal: park on the dead stream and term it.
                 let sequence = info.as_ref().map(|i| i.stream_sequence).unwrap_or(0);
+                let time = info.as_ref().map(|i| i.published.unix_timestamp_nanos().to_string());
                 let id = format!("{}.dead.{sequence}", String::from_utf8_lossy(message.pid().as_bytes()));
                 self.retrying_command(deadline, || async {
                     let js = self.js().await?;
-                    js.publish_with_headers(
-                        dead_subject(queue),
-                        self.headers(None, Some(&id)),
-                        delivery.payload.clone(),
-                    )
-                    .await
-                    .map_err(publish_error)?
-                    .await
-                    .map_err(publish_error)
+                    self.dead_letter(&js, queue, &id, sequence, time.as_deref(), &delivery.payload, HeaderMap::new())
+                        .await
                 })
                 .await?;
                 return self
@@ -1387,9 +1629,25 @@ impl Consumer for Nats {
         Box::pin(async move { Some(interval) })
     }
 
-    /// Nothing to do: the client answers the server's pings itself.
+    /// Reaps every queue this broker has received from (the client answers
+    /// the server's pings itself), which is what moves a message the
+    /// consumer gave up on while no advisory was caught. One queue failing
+    /// does not leave the others' stranded messages where they are; the
+    /// first failure is raised once they are swept.
     fn maintain(&self) -> Option<BoxFuture<'_, Result<()>>> {
-        Some(Box::pin(async { Ok(()) }))
+        Some(Box::pin(async {
+            let served: Vec<Queue> = self.state().served.values().cloned().collect();
+            let mut failure = None;
+            for queue in &served {
+                if let Err(e) = self.reap(queue, 90_000, Some(REAP_LIMIT), None, None).await {
+                    failure.get_or_insert(e);
+                }
+            }
+            match failure {
+                Some(e) => Err(e),
+                None => Ok(()),
+            }
+        }))
     }
 
     fn in_flight_ceiling(&self) -> BoxFuture<'_, Option<i64>> {

@@ -17,7 +17,6 @@ use crate::error::{Error, Result};
 use crate::message::{Message, envelope};
 use crate::queue::Queue;
 
-const POP_TIMEOUT: i64 = 2;
 const RECONNECT_BACKOFF_MS: u64 = 100;
 const RECONNECT_MAX_BACKOFF_MS: u64 = 5_000;
 /// Heartbeat lifetime; handlers refresh it every third of this interval.
@@ -35,6 +34,7 @@ const EXPIRED: &str = include_str!("redis/expired.lua");
 const RECOVER: &str = include_str!("redis/recover.lua");
 const RECLAIM: &str = include_str!("redis/reclaim.lua");
 const ABANDON: &str = include_str!("redis/abandon.lua");
+const RETRY: &str = include_str!("redis/retry.lua");
 
 /// Called when a receive fails on the transport: the queue, the error, the
 /// attempt number and the milliseconds the broker sleeps before returning.
@@ -456,27 +456,49 @@ impl Redis {
         let failed = Self::key(queue, "failed");
         let mut processed = 0;
         while limit.is_none_or(|l| processed < l) {
-            let Some(pid) = self.commands.right_pop(&failed, POP_TIMEOUT).await? else {
+            // No more jobs to retry
+            let Some(pid) = self.commands.list_range(&failed, 1, -1).await?.into_iter().next() else {
                 break;
             };
+            // An expired payload leaves nothing to requeue. One the codec
+            // cannot read is parked, so it stays inspectable and something
+            // references it.
             let Some(job) = self.job(queue, &pid).await? else {
+                let keys = if self.commands.get(&Self::pid_key(queue, "jobs", &pid)).await?.is_some() {
+                    vec![failed.clone(), Self::key(queue, "dead")]
+                } else {
+                    vec![failed.clone()]
+                };
+                self.commands.execute(RETRY, &keys, &[pid.clone(), pid]).await?;
                 continue;
             };
+            // Wrapped around to a job this sweep already requeued: stop.
             if job.timestamp() >= start {
-                self.commands.right_push(&failed, &pid).await?;
                 break;
             }
             if max_attempts.is_some_and(|m| job.attempts() >= m)
                 || newer_than.is_some_and(|n| job.timestamp() < start - n)
             {
-                self.commands.left_push(&Self::key(queue, "dead"), &pid).await?;
+                let keys = [failed.clone(), Self::key(queue, "dead")];
+                self.commands.execute(RETRY, &keys, &[pid.clone(), pid]).await?;
                 continue;
             }
-            let payload = self.retry_payload(queue, &job)?;
-            self.commands.left_push(&Self::key(queue, "queue"), &payload).await?;
-            processed += 1;
+            if self.requeue(queue, pid, &job).await? {
+                processed += 1;
+            }
         }
         Ok(())
+    }
+
+    /// Requeues with a fresh pid and timestamp, carrying the attempt count
+    /// forward so retry and reap can park messages that never succeed. The
+    /// failed entry and the payload under the old pid go in the same step, so
+    /// a sweep that stops part way leaves the job failed rather than nowhere,
+    /// and no payload is left behind that nothing references.
+    async fn requeue(&self, queue: &Queue, pid: Vec<u8>, job: &Message) -> Result<bool> {
+        let keys = [Self::key(queue, "failed"), Self::key(queue, "queue"), Self::pid_key(queue, "jobs", &pid)];
+        let args = [pid, self.retry_payload(queue, job)?];
+        Ok(matches!(self.commands.execute(RETRY, &keys, &args).await?, Reply::Int(1)))
     }
 
     /// Recovers claims left between receive and settlement: claims without a
