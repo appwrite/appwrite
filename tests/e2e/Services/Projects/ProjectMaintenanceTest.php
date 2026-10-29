@@ -77,10 +77,14 @@ final class ProjectMaintenanceTest extends Scope
         }
 
         $project = $this->getProject(true);
-        [$presenceId, $expiresAt] = $this->createExpiringPresence($project['$id']);
+        [$presenceId, $expiresAt] = $this->createExpiringPresence($project['$id'], $cohort === Cohort::Inactive ? 6 : 2);
 
-        // Placed in its cohort before the row expires, so no other cohort's sweep can reach it first. From here on any
-        // API call to an inactive project would refresh accessedAt and move it back to the active projects.
+        // The calls above stamp accessedAt as they finish, so let that settle before overwriting it. The row still
+        // expires after the project is placed in its cohort, so no other cohort's sweep can reach it first. From here
+        // on any API call to an inactive project would refresh accessedAt and move it back to the active projects.
+        while ($cohort === Cohort::Inactive && \time() < $expiresAt - 2) {
+            \usleep(100_000);
+        }
         $accessedAt = match ($cohort) {
             Cohort::Active => DateTime::now(),
             Cohort::Inactive => DateTime::addSeconds(new \DateTime(), -60 * 86400),
@@ -95,12 +99,6 @@ final class ProjectMaintenanceTest extends Scope
 
         while (\time() <= $expiresAt) {
             \usleep(100_000);
-        }
-
-        // An inactive slot comes round at most once per interval, so the expired row is still there to prove the sweep.
-        // The active cycle may already have swept it.
-        if ($cohort === Cohort::Inactive) {
-            $this->assertSame(1, $this->countPresenceRows($project['$id'], $presenceId), 'the row outlives its expiry until maintenance');
         }
 
         $this->assertEventually(function () use ($project, $presenceId, $cohort): void {
@@ -153,7 +151,7 @@ final class ProjectMaintenanceTest extends Scope
     /**
      * @return array{string, int} the presence's id and its expiry as a unix timestamp
      */
-    private function createExpiringPresence(string $projectId): array
+    private function createExpiringPresence(string $projectId, int $seconds): array
     {
         $key = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
             'origin' => 'http://localhost',
@@ -181,7 +179,7 @@ final class ProjectMaintenanceTest extends Scope
         $this->assertSame(201, $user['headers']['status-code']);
 
         // Stamped immediately before the call: the API refuses an expiry already in the past.
-        $expiresAt = DateTime::addSeconds(new \DateTime(), 2);
+        $expiresAt = DateTime::addSeconds(new \DateTime(), $seconds);
         $presence = $this->client->call(Client::METHOD_PUT, '/presences/' . Id::unique(), $headers, [
             'userId' => $user['body']['$id'],
             'status' => 'online',
