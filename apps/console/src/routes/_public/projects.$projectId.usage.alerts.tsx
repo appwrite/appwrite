@@ -28,19 +28,12 @@ export const Route = createFileRoute(
   beforeLoad: ({ params, search }) => {
     if (search.rule || search.metric) {
       const { rule, metric, resourceType, resourceId, threshold } = search
-      const query = new URLSearchParams(
-        Object.entries(
-          rule
-            ? { monitor: rule }
-            : { metric, resourceType, resourceId, threshold },
-        ).flatMap(([key, value]) =>
-          value === undefined ? [] : [[key, String(value)]],
-        ),
-      )
-      // A plain href: a typed redirect here makes this route's type depend on
-      // the route tree that contains it, which collapses the router's types.
       throw redirect({
-        href: `/projects/${params.projectId}/usage/monitors?${query}`,
+        to: '/projects/$projectId/usage/monitors',
+        params,
+        search: rule
+          ? { monitor: rule }
+          : { metric, resourceType, resourceId, threshold },
         replace: true,
       })
     }
