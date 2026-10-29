@@ -18,20 +18,26 @@ Appwrite Push works with the Web, Flutter, React Native, Android, and Apple SDKs
 
 {% section #add-provider step=1 title="Add provider" %}
 
-Appwrite Push needs no credentials. To add it, navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Create provider** > **Push notification**, choose **Appwrite**, give the provider a name, and click **Create**.
+{% only_dark %}
+![The Add provider page, with Appwrite listed under Push](/images/docs/messaging/providers/appwrite/dark/provider-picker.avif)
+{% /only_dark %}
+{% only_light %}
+![The Add provider page, with Appwrite listed under Push](/images/docs/messaging/providers/appwrite/provider-picker.avif)
+{% /only_light %}
 
-The provider has two optional settings:
+Navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Create provider** and choose **Appwrite** under **Push**.
 
-{% table %}
-* Setting
-* Description
----
-* **Quality of service**
-* The delivery guarantee messages are sent with. **At most once (QoS 0)** delivers only to devices connected when the message is sent. **At least once (QoS 1)** stores each message and replays it to devices that reconnect. **Let the subscriber choose** sends at least once, and each subscription can lower it with `retry`.
----
-* **Message expiry**
-* How long, in seconds, messages are kept for offline devices, up to 7 days (`604800`). Topics without their own expiry use the lowest expiry across your enabled Appwrite providers, or 7 days if none sets one. `0` keeps nothing for replay.
-{% /table %}
+{% only_dark %}
+![The Configure Appwrite form with the provider name filled in](/images/docs/messaging/providers/appwrite/dark/provider-form.avif)
+{% /only_dark %}
+{% only_light %}
+![The Configure Appwrite form with the provider name filled in](/images/docs/messaging/providers/appwrite/provider-form.avif)
+{% /only_light %}
+
+Give the provider a name and click **Create provider**. Appwrite Push doesn't take any credentials. The provider has two optional settings:
+
+- **Quality of service**: the delivery guarantee messages are sent with. **At most once (QoS 0)** delivers only to devices connected when the message is sent. **At least once (QoS 1)** stores each message and replays it to devices that reconnect. **Let the subscriber choose** sends at least once, and each subscription can lower it with `retry`.
+- **Message expiry**: how long, in seconds, messages are kept for offline devices, up to 7 days (`604800`). Topics without their own expiry use the lowest expiry across your enabled Appwrite providers, or 7 days if none sets one. `0` keeps nothing for replay.
 
 You can also create the provider with a [Server SDK](/docs/sdks#server).
 
