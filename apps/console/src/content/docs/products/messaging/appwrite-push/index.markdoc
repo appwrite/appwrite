@@ -134,7 +134,7 @@ The `appwrite` 28.0.0 package needs Dart 3.10 and Flutter 3.38.1 or later.
 Install the SDK with its peer dependencies. Push needs native modules, so use a development or standalone build. It does not run in Expo Go.
 
 ```bash
-npx expo install react-native-appwrite react-native-url-polyfill react-native-tcp-socket
+npx expo install react-native-appwrite expo-file-system react-native-url-polyfill react-native-tcp-socket
 # For background delivery and notification taps on iOS
 npx expo install expo-notifications react-native-background-actions
 ```
