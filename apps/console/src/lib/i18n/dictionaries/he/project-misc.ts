@@ -3491,6 +3491,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Failed to create alert rule': 'יצירת כלל ההתראה נכשלה',
   'Failed to delete alert rule': 'מחיקת כלל ההתראה נכשלה',
   'Failed to update alert rule': 'עדכון כלל ההתראה נכשל',
+  'Alert rule not found': 'כלל ההתראה לא נמצא',
   Firing: 'פעילה',
   'Greater than': 'גדול מ-',
   'Greater than or equal': 'גדול או שווה ל-',

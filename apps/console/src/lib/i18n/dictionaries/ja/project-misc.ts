@@ -3559,6 +3559,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to create alert rule': 'アラートルールの作成に失敗しました',
   'Failed to delete alert rule': 'アラートルールの削除に失敗しました',
   'Failed to update alert rule': 'アラートルールの更新に失敗しました',
+  'Alert rule not found': 'アラートルールが見つかりません',
   Firing: '発生中',
   'Greater than': 'より大きい',
   'Greater than or equal': '以上',

@@ -171,13 +171,21 @@ export function Alerts({
 
   useEffect(() => {
     if (!openRuleId || isLoading) return
-    const rule = rules.find((candidate) => candidate.$id === openRuleId)
-    if (rule) {
+    onOpenRuleConsumed?.()
+    const open = (rule: AlertRule) => {
       setSelected(rule)
       setDrawerOpen(true)
     }
-    onOpenRuleConsumed?.()
-  }, [openRuleId, isLoading, rules, onOpenRuleConsumed])
+    const listed = rules.find((candidate) => candidate.$id === openRuleId)
+    if (listed) {
+      open(listed)
+      return
+    }
+    // The list holds the first page only; a linked rule can be beyond it.
+    fetchAlertRule(projectId, openRuleId).then(open, (err: Error) =>
+      toast.error(getErrorMessage(err, t('Alert rule not found'))),
+    )
+  }, [openRuleId, isLoading, rules, onOpenRuleConsumed, projectId, t])
 
   const counts = useMemo(() => {
     const result: Record<Filter, number> = {
