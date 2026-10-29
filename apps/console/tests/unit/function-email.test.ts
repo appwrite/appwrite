@@ -34,28 +34,26 @@ describe('buildFunctionEmailAddress', () => {
     ).toBe('contact@sendmail-my-app.appwrite.email')
   })
 
-  test('uses the earlier form for a hyphenated function ID', () => {
-    // `foo-bar` in `baz` and `foo` in `bar-baz` would otherwise share a host.
-    expect(buildFunctionEmailAddress('baz', 'foo-bar', 'appwrite.email')).toBe(
-      'foo-bar@baz.appwrite.email',
-    )
-    expect(buildFunctionEmailAddress('bar-baz', 'foo', 'appwrite.email')).toBe(
-      'contact@foo-bar-baz.appwrite.email',
-    )
+  test('keeps hyphens in the function ID', () => {
+    expect(
+      buildFunctionEmailAddress('my-app', 'send-mail', 'appwrite.email'),
+    ).toBe('contact@send-mail-my-app.appwrite.email')
   })
 
-  test('falls back to the function ID local part when the host cannot hold it', () => {
-    expect(buildFunctionEmailAddress('proj', 'Fn.Abc', 'appwrite.email')).toBe(
-      'Fn.Abc@proj.appwrite.email',
-    )
-    expect(buildFunctionEmailAddress('proj', 'fn_abc', 'appwrite.email')).toBe(
-      'fn_abc@proj.appwrite.email',
-    )
-    const longFn = 'f'.repeat(36)
-    const longProject = 'p'.repeat(36)
+  test('returns null when the IDs do not fit one DNS label', () => {
     expect(
-      buildFunctionEmailAddress(longProject, longFn, 'appwrite.email'),
-    ).toBe(`${longFn}@${longProject}.appwrite.email`)
+      buildFunctionEmailAddress('proj', 'Fn.Abc', 'appwrite.email'),
+    ).toBeNull()
+    expect(
+      buildFunctionEmailAddress('proj', 'fn_abc', 'appwrite.email'),
+    ).toBeNull()
+    expect(
+      buildFunctionEmailAddress(
+        'p'.repeat(36),
+        'f'.repeat(36),
+        'appwrite.email',
+      ),
+    ).toBeNull()
   })
 
   test('returns null when any part is missing', () => {
