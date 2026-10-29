@@ -642,7 +642,7 @@ export function RepositoryConfigView({
             className="h-8 text-[12px]"
           >
             <Link
-              to="/projects/$projectId/sites/create/repositories"
+              to="/projects/$projectId/sites/create"
               params={{ projectId: projectId! }}
             >
               {t('Change')}
@@ -825,7 +825,9 @@ export function RepositoryConfigView({
                     {t('Silent mode')}
                   </Label>
                   <p className="text-[11px] text-muted-foreground">
-                    {t('Disable automated comments on repository commits')}
+                    {t(
+                      'Skip pull request comments, checks and deployment reports',
+                    )}
                   </p>
                 </div>
                 <Switch

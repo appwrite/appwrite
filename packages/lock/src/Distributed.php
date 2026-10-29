@@ -202,7 +202,17 @@ final class Distributed implements Lock
     {
         $method = 'eval';
 
-        return $this->redis->$method($script, $arguments, 1);
+        try {
+            return $this->redis->$method($script, $arguments, 1);
+        } catch (\RedisException $e) {
+            // phpredis leaves the socket open when a script reply times out, and the
+            // next command on this connection would read that reply as its own
+            if ($this->redis->isConnected()) {
+                $this->redis->close();
+            }
+
+            throw $e;
+        }
     }
 
     /**

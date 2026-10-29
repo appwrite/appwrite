@@ -305,6 +305,9 @@ export function consoleAccountQueryOptions(options?: { revision?: number }) {
     staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
     gcTime: CONSOLE_ACCOUNT_GC_TIME_MS,
     retry: false,
+    // A guest 401 has no data, so each newly mounted `useAuth()` would refetch
+    // it and flip `isLoading`, unmounting and remounting itself in a loop.
+    retryOnMount: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -884,6 +887,38 @@ export function useUpdatePasswordPwnedPolicy(
 }
 
 /**
+ * Hook to update the password rotation policy.
+ *
+ * `enabled` refuses an email/password sign-in once the password is older than
+ * `maxAge` seconds. Leaving `maxAge` out keeps the stored one.
+ *
+ * @param projectId - The project ID
+ */
+export function useUpdatePasswordRotationPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (policy: { enabled: boolean; maxAge?: number }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk
+        .forProject(projectId)
+        .project.updatePasswordRotationPolicy({
+          enabled: policy.enabled,
+          maxAge: policy.maxAge,
+        })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
  * Hook to update project session alerts
  *
  * @param projectId - The project ID
@@ -952,6 +987,23 @@ export function useUpdateSessionInvalidation(
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to sign out every user in the project
+ *
+ * @param projectId - The project ID
+ */
+export function useDeleteProjectSessions(projectId: string | null | undefined) {
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.deleteSessions()
     },
   })
 }
@@ -1182,6 +1234,29 @@ export function useUpdateDenyCorporateEmailPolicy(
       return await projectEmailPolicyService(
         projectId,
       ).updateDenyCorporateEmailPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the deny realtime guests policy.
+ */
+export function useUpdateDenyRealtimeGuestsPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk
+        .forProject(projectId)
+        .project.updateDenyRealtimeGuestsPolicy({ enabled })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)

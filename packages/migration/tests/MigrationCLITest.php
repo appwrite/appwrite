@@ -213,6 +213,7 @@ final class MigrationCLITest extends TestCase
             id: 'databases',
             attributes: [
                 Attribute::string(key: 'name', size: 256, required: true),
+                Attribute::string(key: 'description', size: 1024),
                 Attribute::boolean(key: 'enabled', default: true),
                 Attribute::string(key: 'search', size: 16384),
                 Attribute::string(key: 'originalId', size: Database::LENGTH_KEY),

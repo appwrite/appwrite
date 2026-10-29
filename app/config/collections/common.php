@@ -309,6 +309,7 @@ return [
             Attribute::boolean(key: 'encryption', required: true),
             Attribute::boolean(key: 'antivirus', required: true),
             Attribute::boolean(key: 'transformations', default: true),
+            Attribute::boolean(key: 'stripMetadata', default: false),
             Attribute::string(key: 'search', size: 16384),
         ],
         'indexes' => [
@@ -373,6 +374,8 @@ return [
         'name' => 'MQTT Messages',
         'attributes' => [
             Attribute::string(key: 'topic', required: true),
+            // Replay keys on the topic instance, so a topic recreated under a deleted one's id never replays its messages.
+            Attribute::string(key: 'topicInternalId', required: true),
             Attribute::string(key: 'data', size: 65535, required: true, filters: [Filter::Json]),
             Attribute::string(key: 'messageId'),
             Attribute::string(key: 'messageInternalId'),
@@ -381,9 +384,9 @@ return [
             Attribute::integer(key: 'sequence', required: true),
         ],
         'indexes' => [
-            Index::key(key: '_key_topic_sequence', attributes: ['topic', 'sequence'], orders: [OrderDirection::Asc, OrderDirection::Asc]),
+            Index::key(key: '_key_topicInternalId_sequence', attributes: ['topicInternalId', 'sequence'], orders: [OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_messageInternalId', attributes: ['messageInternalId'], orders: [OrderDirection::Asc]),
-            Index::unique(key: '_key_message_topic', attributes: ['messageId', 'topic'], orders: [OrderDirection::Asc, OrderDirection::Asc]),
+            Index::unique(key: '_key_message_topicInternalId', attributes: ['messageId', 'topicInternalId'], orders: [OrderDirection::Asc, OrderDirection::Asc]),
         ],
     ],
 
@@ -521,6 +524,7 @@ return [
         'attributes' => [
             Attribute::id(key: 'userInternalId', required: true),
             Attribute::string(key: 'userId'),
+            Attribute::integer(key: 'connections', default: 0, signed: false),
             Attribute::datetime(key: 'expiresAt'),
             Attribute::string(key: 'status'),
             Attribute::string(key: 'source', required: true),

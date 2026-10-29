@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\ExecutionScheduled;
 use Appwrite\Deployment\Deployments;
@@ -169,6 +170,8 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
         }
 
+        $headers = Headers::stripReserved($headers);
+
         /* @var Document $function */
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -240,7 +243,9 @@ class Create extends Base
         $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'scopes' => Deployments::scopes($function)
         ]);
 

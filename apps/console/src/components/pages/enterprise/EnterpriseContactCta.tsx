@@ -1,78 +1,47 @@
-import { Check } from 'lucide-react'
-import { useAuth } from '@/components/global/auth/RequireAuth'
+import { Link } from '@tanstack/react-router'
 import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
-import {
-  AppwriteMark,
-  ComparisonHeading,
-  ComparisonSection,
-} from '@/components/pages/alternative-to/$competitor/_components/ComparisonParts'
-import { riseStyle } from '@/components/pages/products/_components/ArtParts'
+import { AppwriteMark } from '@/components/pages/alternative-to/$competitor/_components/ComparisonParts'
 import { ProductToneBackdrop } from '@/components/pages/products/_components/ProductTone'
 import { Button } from '@/components/ui/button'
 import { analyticsAttrs } from '@/lib/analytics-actions'
-import { ENTERPRISE_FORM_ID, enterpriseFormBullets } from '@/lib/enterprise/content'
+import { ENTERPRISE_FORM_ID } from '@/lib/enterprise/content'
 import { useT } from '@/lib/i18n/translate'
 
 export function EnterpriseContactCta() {
   const t = useT()
-  const { isAuthenticated } = useAuth()
 
   return (
-    <ComparisonSection
-      id={ENTERPRISE_FORM_ID}
-      className="scroll-mt-28"
-      backdrop={<ProductToneBackdrop variant="hero" />}
-    >
-      <div className="grid min-w-0 gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-20">
-        <div>
-          <ComparisonHeading
-            eyebrow="Enterprise"
-            title="Talk to our enterprise team"
-            description="Ready to explore a custom plan? Share your requirements and one of our experts will follow up with a tailored proposal."
-          />
-          <ul className="mt-8 space-y-3.5">
-            {enterpriseFormBullets.map((item, index) => (
-              <li
-                key={item}
-                className="product-hero-rise flex items-start gap-3 text-[14px] leading-6 text-foreground/90"
-                style={riseStyle(120 + index * 80)}
-              >
-                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--tone-rgb)/0.16)] text-[var(--tone-ink)]">
-                  <Check className="size-3" strokeWidth={3} aria-hidden />
-                </span>
-                {t(item)}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="product-hero-rise relative isolate" style={riseStyle(260)}>
-          <span
-            className="pointer-events-none absolute -inset-10 -z-10 bg-[radial-gradient(ellipse_at_center,rgb(var(--tone-rgb)/0.2),transparent_70%)]"
-            aria-hidden
-          />
-          <div className="relative border-t border-[var(--tone-ink)] pt-8">
-            <span className="flex size-12 items-center justify-center rounded-2xl border border-[rgb(var(--tone-rgb)/0.45)] bg-background shadow-[0_12px_30px_-14px_rgb(var(--tone-rgb)/0.8)] dark:bg-card">
+    <section id={ENTERPRISE_FORM_ID} className="relative scroll-mt-28 border-t border-border px-4 py-16 sm:px-6 sm:py-24">
+      <div className="relative isolate mx-auto max-w-5xl overflow-hidden rounded-3xl border border-border bg-card/40 px-6 py-14 text-center sm:px-12 sm:py-20">
+        <ProductToneBackdrop variant="cta" />
+        <div className="product-tone-hairline absolute inset-x-12 top-0 h-px" aria-hidden />
+        <div className="relative z-[1]">
+          <div className="flex justify-center">
+            <span className="relative flex size-14 shrink-0 items-center justify-center rounded-2xl border border-border bg-gradient-to-b from-card to-muted/40 shadow-sm dark:from-muted/30 dark:to-background">
               <AppwriteMark className="size-6" />
             </span>
-            <h3 className="mt-6 font-aeonik-pro text-[26px] leading-tight tracking-tight text-foreground">
-              {isAuthenticated ? t('Contact sales') : t('Sign in to contact sales')}
-            </h3>
-            <p className="mt-3 text-[14px] leading-7 text-muted-foreground">
-              {isAuthenticated
-                ? t('You are signed in. Open the sales inquiry form to share your requirements with our enterprise team.')
-                : t(
-                    'Create a free account or sign in to submit an enterprise inquiry. This helps us reduce spam and connect your request to your Appwrite account.',
-                  )}
-            </p>
-            <Button variant="brandCta" size="lg" className="mt-7 h-10 text-[14px]" asChild>
-              <ContactSalesLink {...analyticsAttrs('enterprise-contact-sales')}>
-                {isAuthenticated ? t('Open sales form') : t('Sign in to contact sales')}
-              </ContactSalesLink>
+          </div>
+          <h2 className="mx-auto mt-7 max-w-2xl text-balance font-aeonik-pro text-[32px] leading-none font-normal tracking-tight text-foreground sm:text-[44px]">
+            {t('Talk to our enterprise team')}
+            <span className="text-[var(--brand-cta)]">_</span>
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-muted-foreground">
+            {t(
+              'Ready to explore a custom plan? Share your requirements and one of our experts will follow up with a tailored proposal.',
+            )}
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+            <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
+              <ContactSalesLink {...analyticsAttrs('enterprise-contact-sales')}>{t('Contact sales')}</ContactSalesLink>
+            </Button>
+            <Button variant="outline" size="lg" className="h-10 bg-background/60 text-[14px]" asChild>
+              <Link to="/pricing" {...analyticsAttrs('enterprise-compare-plans')}>
+                {t('Compare plans')}
+              </Link>
             </Button>
           </div>
         </div>
       </div>
-    </ComparisonSection>
+    </section>
   )
 }

@@ -211,6 +211,45 @@ final class MqttServerTest extends Scope
         $subscriber->disconnect();
     }
 
+    public function testSessionMissingFactorConnectRejected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $server, ['emailVerification' => true]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/mfa', $server, ['mfa' => true]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        // A password session still owes its second factor.
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => 'mqtt-' . $userId . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $credential = $session['cookies']['a_session_' . $projectId];
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server, ['sessionId' => $session['body']['$id']]);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+
+        // Test for FAILURE: neither the session nor a token bound to it connects.
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0x87, $subscriber->connect($projectId, $credential, 'e2e-factors-session-' . $userId, cleanStart: true, authMethod: 'appwrite-session'));
+        $subscriber->disconnect();
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0x87, $subscriber->connect($projectId, $jwt['body']['jwt'], 'e2e-factors-jwt-' . $userId, cleanStart: true));
+        $subscriber->disconnect();
+    }
+
     public function testBlockedUserReconnectRejected(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -441,11 +480,195 @@ final class MqttServerTest extends Scope
         }
     }
 
+    public function testDeletedSessionOpenConnectionIsDisconnected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $ended = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
+        $this->assertSame(201, $ended['headers']['status-code']);
+        $kept = $this->createSession($userId);
+
+        $endedSubscriber = $this->subscribeToUserTopic($projectId, $userId, $ended['body']['secret'], 'e2e-revoke-session-ended-', 'appwrite-session');
+        $keptSubscriber = $this->subscribeToUserTopic($projectId, $userId, $kept, 'e2e-revoke-session-kept-', 'appwrite-session');
+
+        try {
+            $delete = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/sessions/' . $ended['body']['$id'], $headers);
+            $this->assertSame(204, $delete['headers']['status-code']);
+
+            // Test for SUCCESS: the connection opened with the deleted session is ended.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $endedSubscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a connection whose session was deleted');
+
+            // Test for SUCCESS: a connection on another session of the user stays open.
+            $this->assertTrue($keptSubscriber->ping(), 'a connection on a session still active was disconnected');
+        } finally {
+            $endedSubscriber->disconnect();
+            $keptSubscriber->disconnect();
+        }
+    }
+
+    public function testEnablingMfaDisconnectsSessionMissingFactor(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $server, ['emailVerification' => true]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $session = $this->createSession($userId);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $session, 'e2e-revoke-mfa-', 'appwrite-session');
+
+        try {
+            $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/mfa', $server, ['mfa' => true]);
+            $this->assertSame(200, $mfa['headers']['status-code']);
+
+            // Test for SUCCESS: the single-factor session no longer authorizes, so its connection is ended.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $subscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a session left short of factors');
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
+    public function testIdTokenSignInReplacingSessionDisconnects(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $session = $this->createSession($userId);
+        $console = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', $console, [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertSame(200, $provider['headers']['status-code']);
+        $native = $this->client->call(Client::METHOD_PATCH, '/mock/tests/general/oauth2/native', $console, [
+            'projectId' => $projectId,
+            'provider' => 'mock',
+            'enabled' => true,
+            'clientIds' => [],
+        ]);
+        $this->assertSame(204, $native['headers']['status-code']);
+
+        $token = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'claims' => \json_encode([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+                'sub' => 'mqtt-' . $userId,
+                'email' => 'mqtt-idtoken-' . $userId . '@appwrite.io',
+                'email_verified' => true,
+            ]),
+            'header' => '',
+        ]);
+        $this->assertSame(200, $token['headers']['status-code']);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $session, 'e2e-revoke-id-token-', 'appwrite-session');
+
+        try {
+            // Signing in while logged in links the provider and replaces the current session.
+            $signIn = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+            ], [
+                'provider' => 'mock',
+                'idToken' => $token['body']['token'],
+            ]);
+            $this->assertSame(201, $signIn['headers']['status-code']);
+            $this->assertSame($userId, $signIn['body']['userId']);
+
+            // Test for SUCCESS: the connection on the replaced session is ended.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $subscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a session replaced by sign-in');
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
+    public function testAccountLogoutOpenConnectionIsDisconnected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $session = $this->createSession($userId);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $session, 'e2e-revoke-logout-', 'appwrite-session');
+
+        try {
+            $delete = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+            ]);
+            $this->assertSame(204, $delete['headers']['status-code']);
+
+            // Test for SUCCESS: signing out ends the connection opened with that session.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $subscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a signed out session');
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
+    public function testSessionJwtOpenConnectionIsDisconnectedWithSessions(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $this->createSession($userId);
+
+        // Minted after the session exists, so the token runs on it.
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $headers);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $jwt['body']['jwt'], 'e2e-revoke-session-jwt-');
+
+        try {
+            $delete = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/sessions', $headers);
+            $this->assertSame(204, $delete['headers']['status-code']);
+
+            // Test for SUCCESS: deleting the session ends the connection opened with a token bound to it.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $subscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a token whose session was deleted');
+
+            // Test for FAILURE: the token no longer connects.
+            $reconnect = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+            try {
+                $this->assertSame(Connack::NOT_AUTHORIZED, $reconnect->connect($projectId, $jwt['body']['jwt'], 'e2e-revoke-session-jwt-reconnect-' . $userId, cleanStart: true));
+            } finally {
+                $reconnect->disconnect();
+            }
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
     /** Connect as the user and subscribe to their reserved users/<userId> topic. */
-    private function subscribeToUserTopic(string $projectId, string $userId, string $jwt, string $clientPrefix): MqttSubscriber
+    private function subscribeToUserTopic(string $projectId, string $userId, string $credential, string $clientPrefix, string $authMethod = 'appwrite-jwt'): MqttSubscriber
     {
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
-        $this->assertSame(Connack::SUCCESS, $subscriber->connect($projectId, $jwt, $clientPrefix . $userId, cleanStart: true));
+        $this->assertSame(Connack::SUCCESS, $subscriber->connect($projectId, $credential, $clientPrefix . $userId, cleanStart: true, authMethod: $authMethod));
         $this->assertSame([Packet::QOS_1], $subscriber->subscribe(['users/' . $userId]));
 
         return $subscriber;
@@ -530,6 +753,67 @@ final class MqttServerTest extends Scope
         $this->assertSame('users/' . $userId, $received[0]['topic']);
         $payload = \json_decode($received[0]['payload'], true);
         $this->assertSame('you have mail', $payload['notification']['body']);
+    }
+
+    /**
+     * A user with no push target is reached on users/<userId> through the enabled Appwrite provider
+     * even when another push provider is the default. A fresh project makes FCM the first enabled
+     * push provider; the user holds no FCM token, so FCM is never called.
+     */
+    public function testUserTopicReceivesPushWhenAnotherProviderIsDefault(): void
+    {
+        $project = $this->getProject(true);
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser($project);
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+        $this->createFcmProvider($server);
+        $this->setupAppwriteProvider($server);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($project['$id'], $jwt, 'e2e-usertopic-default-' . $userId, cleanStart: true));
+        $this->assertSame([1], $subscriber->subscribe(['users/' . $userId]));
+
+        try {
+            $status = $this->publishToUser($server, $userId, 'Ping', 'not the default');
+            $received = $subscriber->consume(limit: 1, timeout: 20.0);
+        } finally {
+            $subscriber->disconnect();
+        }
+
+        // Test for SUCCESS: the message is SENT and delivered on the user's reserved topic.
+        $this->assertSame(MessageStatus::SENT, $status);
+        $this->assertCount(1, $received, 'the targetless user did not receive the push');
+        $this->assertSame('users/' . $userId, $received[0]['topic']);
+    }
+
+    /**
+     * The targetless fallback needs an enabled Appwrite provider: with it disabled and FCM enabled, a
+     * user holding no push target is not reachable and the message fails.
+     */
+    public function testUserPushWithoutEnabledAppwriteProviderFails(): void
+    {
+        $project = $this->getProject(true);
+        ['userId' => $userId] = $this->createUser($project);
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+        $this->createFcmProvider($server);
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $server, [
+            'providerId' => Id::unique(),
+            'name' => 'appwrite-disabled',
+            'enabled' => false,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // Test for FAILURE: no recipient resolves, so nothing is sent.
+        $this->assertSame(MessageStatus::FAILED, $this->publishToUser($server, $userId, 'Ping', 'nobody home'));
     }
 
     /**
@@ -646,7 +930,7 @@ final class MqttServerTest extends Scope
     /**
      * The messaging graph for the built-in Appwrite push provider: a provider, a topic, a user with a
      * push target, and a subscription. Returns the topic id and name; the wire topic both publishers
-     * and subscribers address is the id (the name is a display label).
+     * and subscribers address is the id (the name is a display label), whatever the target's identifier.
      *
      * @param  array<string, string>  $server server-key headers
      * @return array{id: string, name: string}
@@ -668,21 +952,53 @@ final class MqttServerTest extends Scope
         $this->assertEquals(201, $topic['headers']['status-code']);
         $topicId = $topic['body']['$id'];
 
+        $targetId = $this->createAppwriteTarget($server, $userId, $provider['body']['$id']);
+        $this->createSubscriber($server, $topicId, $targetId);
+
+        return ['id' => $topicId, 'name' => $name];
+    }
+
+    /**
+     * A push target on an Appwrite provider. The identifier is a placeholder device handle: a topic
+     * campaign is delivered on the topic id, so the identifier is never a wire topic.
+     *
+     * @param  array<string, string>  $server
+     * @return string the target id
+     */
+    private function createAppwriteTarget(array $server, string $userId, string $providerId): string
+    {
         $target = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', $server, [
             'targetId' => Id::unique(),
             'providerType' => 'push',
-            'providerId' => $provider['body']['$id'],
-            'identifier' => $topicId,
+            'providerId' => $providerId,
+            'identifier' => Id::unique(),
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
+        return $target['body']['$id'];
+    }
+
+    /** @param  array<string, string>  $server */
+    private function createTopic(array $server, string $name): string
+    {
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
+            'topicId' => Id::unique(),
+            'name' => $name,
+            'qos' => 1,
+        ]);
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        return $topic['body']['$id'];
+    }
+
+    /** @param  array<string, string>  $server */
+    private function createSubscriber(array $server, string $topicId, string $targetId): void
+    {
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', $server, [
             'subscriberId' => Id::unique(),
-            'targetId' => $target['body']['$id'],
+            'targetId' => $targetId,
         ]);
         $this->assertEquals(201, $subscriber['headers']['status-code']);
-
-        return ['id' => $topicId, 'name' => $name];
     }
 
     /**
@@ -732,6 +1048,31 @@ final class MqttServerTest extends Scope
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         return $provider['body']['$id'];
+    }
+
+    /**
+     * An enabled FCM provider with placeholder credentials. Only valid for sends that reach no FCM
+     * target, so the worker never calls Google.
+     *
+     * @param  array<string, string>  $server
+     */
+    private function createFcmProvider(array $server): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', $server, [
+            'providerId' => Id::unique(),
+            'name' => 'fcm-default',
+            'serviceAccountJSON' => [
+                'type' => 'service_account',
+                'project_id' => 'test-project',
+                'private_key_id' => 'test-private-key-id',
+                'private_key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+                'client_email' => 'test@appwrite.iam.gserviceaccount.com',
+                'token_uri' => 'https://oauth2.googleapis.com/token',
+            ],
+            'enabled' => true,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $this->assertTrue($provider['body']['enabled']);
     }
 
     /**
@@ -805,6 +1146,128 @@ final class MqttServerTest extends Scope
         $this->assertEquals('India needs 12 off 6', $payload['notification']['body']);
         $this->assertEquals(['matchId' => '42'], $payload['data']);
         $this->assertSame($messageId, $payload['messageId']);
+    }
+
+    /**
+     * One Appwrite target subscribed to several topics reaches all of them: the campaign is delivered
+     * on each topic's id, so a single target (with any identifier) covers every topic it is entered in.
+     */
+    public function testCampaignReachesEveryTopicOfOneTarget(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $targetId = $this->createAppwriteTarget($server, $userId, $this->setupAppwriteProvider($server));
+        $news = $this->createTopic($server, 'appwrite-mqtt-news');
+        $sports = $this->createTopic($server, 'appwrite-mqtt-sports');
+        $this->createSubscriber($server, $news, $targetId);
+        $this->createSubscriber($server, $sports, $targetId);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-topics-' . $userId, cleanStart: true));
+        $this->assertSame([1, 1], $subscriber->subscribe([$news, $sports]));
+
+        try {
+            $messageId = $this->publishCampaign($server, $news, 'Headlines', 'Both topics', extra: ['topics' => [$news, $sports]]);
+            // Ask for one more than expected so a duplicate delivery would show up.
+            $received = $subscriber->consume(limit: 3, timeout: 10.0);
+        } finally {
+            $subscriber->disconnect();
+        }
+
+        // Test for SUCCESS: the message is SENT and arrives once on each topic id.
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $server);
+        $this->assertSame(MessageStatus::SENT, $message['body']['status']);
+
+        $topics = \array_column($received, 'topic');
+        \sort($topics);
+        $expected = [$news, $sports];
+        \sort($expected);
+        $this->assertSame($expected, $topics);
+    }
+
+    /**
+     * A topic is published once per campaign, however many Appwrite targets and providers its
+     * subscribers hold: two users on different Appwrite providers each receive the message exactly once.
+     */
+    public function testCampaignPublishesTopicOncePerMessage(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $firstId, 'jwt' => $firstJwt] = $this->createUser();
+        ['userId' => $secondId, 'jwt' => $secondJwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $topicId = $this->createTopic($server, 'appwrite-mqtt-once');
+        $this->createSubscriber($server, $topicId, $this->createAppwriteTarget($server, $firstId, $this->setupAppwriteProvider($server)));
+        $this->createSubscriber($server, $topicId, $this->createAppwriteTarget($server, $secondId, $this->setupAppwriteProvider($server)));
+
+        $first = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $second = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $first->connect($projectId, $firstJwt, 'e2e-once-' . $firstId, cleanStart: true));
+        $this->assertSame(0, $second->connect($projectId, $secondJwt, 'e2e-once-' . $secondId, cleanStart: true));
+        $this->assertSame([1], $first->subscribe([$topicId]));
+        $this->assertSame([1], $second->subscribe([$topicId]));
+
+        try {
+            $this->publishCampaign($server, $topicId, 'Once', 'Not twice');
+            $firstReceived = $first->consume(limit: 2, timeout: 10.0);
+            $secondReceived = $second->consume(limit: 2, timeout: 5.0);
+        } finally {
+            $first->disconnect();
+            $second->disconnect();
+        }
+
+        // Test for SUCCESS: each subscriber gets the campaign once, on the topic id.
+        $this->assertCount(1, $firstReceived);
+        $this->assertCount(1, $secondReceived);
+        $this->assertSame($topicId, $firstReceived[0]['topic']);
+        $this->assertSame($topicId, $secondReceived[0]['topic']);
+    }
+
+    /**
+     * A target's identifier is never a wire topic: a client subscribed to the identifier of its own
+     * Appwrite target receives nothing, while the topic id receives the campaign.
+     */
+    public function testCampaignIsNotDeliveredOnTargetIdentifier(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $targetId = $this->createAppwriteTarget($server, $userId, $this->setupAppwriteProvider($server));
+        $identifier = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/targets/' . $targetId, $server)['body']['identifier'];
+        $topicId = $this->createTopic($server, 'appwrite-mqtt-identifier');
+        $this->createSubscriber($server, $topicId, $targetId);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-identifier-' . $userId, cleanStart: true));
+
+        try {
+            // Test for FAILURE: the identifier names no topic the user is a subscriber of, so it is refused.
+            $this->assertSame([0x80], $subscriber->subscribe([$identifier]));
+            $this->assertSame([1], $subscriber->subscribe([$topicId]));
+
+            $this->publishCampaign($server, $topicId, 'Routed', 'By topic id');
+            $received = $subscriber->consume(limit: 2, timeout: 10.0);
+        } finally {
+            $subscriber->disconnect();
+        }
+
+        // Test for SUCCESS: the only delivery is on the topic id.
+        $this->assertSame([$topicId], \array_column($received, 'topic'));
     }
 
     public function testCampaignCarriesChannelIdToSubscriber(): void
@@ -1084,6 +1547,71 @@ final class MqttServerTest extends Scope
             $leftover,
         );
         $this->assertNotContains($bodies[0], $leftoverBodies, 'an already-acked message was re-delivered');
+    }
+
+    public function testRecreatedTopicDoesNotReplayDeletedTopicMessages(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $previousUserId] = $this->createUser();
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $providerId = $this->setupAppwriteProvider($server);
+        $topicId = Id::unique();
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
+            'topicId' => $topicId,
+            'name' => 'appwrite-mqtt-deleted',
+            'qos' => 1,
+        ]);
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $this->createSubscriber($server, $topicId, $this->createAppwriteTarget($server, $previousUserId, $providerId));
+        $this->publishCampaign($server, $topicId, 'Deleted', 'deleted topic message');
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, $server);
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $recreated = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
+            'topicId' => $topicId,
+            'name' => 'appwrite-mqtt-recreated',
+            'qos' => 1,
+        ]);
+        $this->assertEquals(201, $recreated['headers']['status-code']);
+        $this->createSubscriber($server, $topicId, $this->createAppwriteTarget($server, $userId, $providerId));
+
+        $clientId = 'e2e-recreated-' . $userId;
+        $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $this->assertSame([1], $seed->subscribe([$topicId]));
+        $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
+        $seed->disconnect();
+
+        $this->publishCampaign($server, $topicId, 'Recreated', 'recreated topic message');
+
+        $resume = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        try {
+            $this->assertSame(0, $resume->connect($projectId, $jwt, $clientId, cleanStart: false));
+            $this->assertSame([1], $resume->subscribe([$topicId]));
+            $received = $resume->consume(limit: 3, timeout: 5.0);
+        } finally {
+            $resume->disconnect();
+        }
+
+        $bodies = \array_map(
+            fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
+            $received,
+        );
+
+        // Test for SUCCESS: the recreated topic's own message is replayed.
+        $this->assertContains('recreated topic message', $bodies);
+
+        // Test for FAILURE: nothing published to the deleted topic reaches the new subscriber.
+        $this->assertNotContains('deleted topic message', $bodies, 'a recreated topic replayed a message of the deleted topic');
+        $this->assertSame(['recreated topic message'], $bodies);
     }
 
     /**

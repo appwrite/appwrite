@@ -8,6 +8,7 @@ use Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Audit\Adapter\ClickHouse;
 use Utopia\Audit\Audit;
+use Utopia\Audit\Log;
 use Utopia\Audit\Query;
 use Utopia\Audit\Tests\E2E\AuditBase;
 use Utopia\Database\Attribute;
@@ -933,6 +934,134 @@ final class ClickHouseTest extends TestCase
 
         $this->assertCount(\count($all) - 1, $page);
         $this->assertEquals($all[1]->getId(), $page[0]->getId());
+    }
+
+    public function testCursorAfterWithoutOrderVisitsEveryLogOnce(): void
+    {
+        $ids = $this->seedTiedLogs('cursor/unordered');
+
+        $visited = $this->walkAfter([Query::equal('resource', 'cursor/unordered')]);
+
+        $this->assertSame([], array_values(array_diff_assoc($visited, array_unique($visited))), 'no log may appear on two pages');
+        $this->assertEqualsCanonicalizing($ids, $visited, 'every log must appear on exactly one page');
+    }
+
+    public function testCursorAfterOnTiedOrderVisitsEveryLogOnce(): void
+    {
+        $ids = $this->seedTiedLogs('cursor/tied');
+
+        $visited = $this->walkAfter([Query::equal('resource', 'cursor/tied'), Query::orderDesc('time')]);
+
+        $this->assertSame([], array_values(array_diff_assoc($visited, array_unique($visited))), 'no log may appear on two pages');
+        $this->assertEqualsCanonicalizing($ids, $visited, 'every log must appear on exactly one page');
+    }
+
+    public function testCursorBeforeWithoutOrderReturnsThePreviousPage(): void
+    {
+        $this->seedTiedLogs('cursor/before');
+        $filter = Query::equal('resource', 'cursor/before');
+
+        $first = $this->audit->find([$filter, Query::limit(3)]);
+        $second = $this->audit->find([$filter, Query::limit(3), Query::cursorAfter($first[2])]);
+        $back = $this->audit->find([$filter, Query::limit(3), Query::cursorBefore($second[0])]);
+
+        $this->assertSame(
+            array_map(static fn (Log $log): string => $log->getId(), $first),
+            array_map(static fn (Log $log): string => $log->getId(), $back),
+        );
+    }
+
+    public function testCursorFromASlimProjectionPagesWithoutAnOrder(): void
+    {
+        $ids = $this->seedTiedLogs('cursor/slim');
+
+        $visited = $this->walkAfter([Query::equal('resource', 'cursor/slim'), Query::select(['event'])]);
+
+        $this->assertEqualsCanonicalizing($ids, $visited);
+    }
+
+    public function testFindWithoutOrderReturnsNewestFirst(): void
+    {
+        $this->audit->logBatch($this->applyRequiredAttributesToBatch([
+            $this->tiedLog('order/newest', 'older', '2026-01-01 00:00:00.000'),
+            $this->tiedLog('order/newest', 'newer', '2026-01-02 00:00:00.000'),
+        ]));
+
+        $logs = $this->audit->find([Query::equal('resource', 'order/newest')]);
+
+        $this->assertSame(['newer', 'older'], array_map(static fn (Log $log): string => $log->getId(), $logs));
+    }
+
+    /**
+     * Seeds logs that share one timestamp, split over two inserts so they land
+     * in different parts and ClickHouse is free to read them in any order.
+     *
+     * @return list<string>
+     */
+    private function seedTiedLogs(string $resource, int $count = 12): array
+    {
+        $time = new \DateTime()->format('Y-m-d H:i:s.v');
+        $ids = [];
+        $batches = [[], []];
+        for ($i = 0; $i < $count; $i++) {
+            $id = \sprintf('%s-%02d', str_replace('/', '-', $resource), $i);
+            $ids[] = $id;
+            $batches[$i % 2][] = $this->tiedLog($resource, $id, $time);
+        }
+
+        foreach ($batches as $batch) {
+            $this->assertTrue($this->audit->logBatch($this->applyRequiredAttributesToBatch($batch)));
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function tiedLog(string $resource, string $id, string $time): array
+    {
+        return [
+            'id' => $id,
+            'userId' => 'cursor-user',
+            'event' => 'update',
+            'resource' => $resource,
+            'userAgent' => 'phpunit',
+            'ip' => '127.0.0.1',
+            'data' => [],
+            'time' => $time,
+        ];
+    }
+
+    /**
+     * Pages through `$queries` with `cursorAfter`, the way an API client does,
+     * and returns every id it was handed, in order.
+     *
+     * @param  list<Query>  $queries
+     * @return list<string>
+     */
+    private function walkAfter(array $queries, int $limit = 3): array
+    {
+        $visited = [];
+        $cursor = null;
+        for ($page = 0; $page < 20; $page++) {
+            $pageQueries = [...$queries, Query::limit($limit)];
+            if ($cursor !== null) {
+                $pageQueries[] = Query::cursorAfter($cursor);
+            }
+
+            $logs = $this->audit->find($pageQueries);
+            if ($logs === []) {
+                return $visited;
+            }
+
+            foreach ($logs as $log) {
+                $visited[] = $log->getId();
+            }
+            $cursor = $logs[\count($logs) - 1];
+        }
+
+        $this->fail('cursor paging did not terminate: ' . implode(', ', $visited));
     }
 
     public function testCountWithMaxBound(): void

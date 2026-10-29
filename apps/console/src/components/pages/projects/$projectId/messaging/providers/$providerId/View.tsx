@@ -19,13 +19,26 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { formatDateTime } from '@/lib/date-utils'
 import { MessagingProviderIcon } from '@/components/global/shared/MessagingProviderIcon'
 
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { sdk } from '@/lib/appwrite/sdk'
 import { patchMessagingProvider } from '@/lib/messaging/patch-messaging-provider'
+import {
+  parseAppwritePushExpiry,
+  parseAppwritePushQos,
+  type AppwritePushOptions,
+} from '@/lib/messaging/appwrite-push'
 import { AwsSesRegionSelect } from '../../_components/AwsSesRegionSelect'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
@@ -55,6 +68,7 @@ export function View({
   initialProvider?: Models.Provider
 } = {}) {
   const t = useT()
+  const { features } = useConsoleProfile()
   const { projectId, providerId } = useParams({
     strict: false,
   })
@@ -132,6 +146,8 @@ export function View({
   const [apnsAuthKeyId, setApnsAuthKeyId] = useState('')
   const [apnsTeamId, setApnsTeamId] = useState('')
   const [apnsBundleId, setApnsBundleId] = useState('')
+  const [appwriteQos, setAppwriteQos] = useState('')
+  const [appwriteExpiry, setAppwriteExpiry] = useState('')
 
   // Sync local form state when provider loads or refetches
   useEffect(() => {
@@ -186,6 +202,10 @@ export function View({
             ? provider.credentials.bundleId
             : '',
         )
+      } else if (provider.provider === 'appwrite') {
+        const { qos, expiry } = (provider.options ?? {}) as AppwritePushOptions
+        setAppwriteQos(qos == null ? 'default' : String(qos))
+        setAppwriteExpiry(expiry == null ? '' : String(expiry))
       }
     }
   }, [provider])
@@ -232,6 +252,14 @@ export function View({
         apnsBundleId !== (typeof c?.bundleId === 'string' ? c.bundleId : '')
       )
     }
+    if (provider.type === 'push' && provider.provider === 'appwrite') {
+      const o = provider.options as AppwritePushOptions | undefined
+      const qosBaseline = o?.qos == null ? 'default' : String(o.qos)
+      const expiryBaseline = o?.expiry == null ? '' : String(o.expiry)
+      return (
+        appwriteQos !== qosBaseline || appwriteExpiry.trim() !== expiryBaseline
+      )
+    }
     return false
   }, [
     provider,
@@ -249,6 +277,8 @@ export function View({
     apnsAuthKeyId,
     apnsTeamId,
     apnsBundleId,
+    appwriteQos,
+    appwriteExpiry,
   ])
 
   const handleSaveConfiguration = () => {
@@ -310,6 +340,23 @@ export function View({
         authKeyId: apnsAuthKeyId.trim(),
         teamId: apnsTeamId.trim(),
         bundleId: apnsBundleId.trim(),
+      })
+      return
+    }
+
+    if (provider.type === 'push' && provider.provider === 'appwrite') {
+      const expiry = parseAppwritePushExpiry(appwriteExpiry)
+      if (!expiry.ok) {
+        toast.error(
+          t('Message expiry must be a whole number of seconds, up to 604800.'),
+        )
+        return
+      }
+      // `null` from either control sends the API's explicit reset so clearing a
+      // saved value sticks instead of reappearing on refetch.
+      updateSettingsMutation.mutate({
+        qos: parseAppwritePushQos(appwriteQos),
+        expiry: expiry.value,
       })
     }
   }
@@ -383,6 +430,8 @@ export function View({
         authKeyId?: string
         teamId?: string
         bundleId?: string
+        qos?: number | null
+        expiry?: number | null
       },
     ) => {
       if (!projectId || !providerId) {
@@ -420,6 +469,11 @@ export function View({
             authKeyId: settings.authKeyId,
             teamId: settings.teamId,
             bundleId: settings.bundleId,
+          }
+        } else if (provider.provider === 'appwrite') {
+          options = {
+            qos: settings.qos,
+            expiry: settings.expiry,
           }
         } else {
           throw new Error(`Unsupported push provider: ${provider.provider}`)
@@ -866,6 +920,67 @@ export function View({
                     </div>
                   </>
                 )}
+                {features.appwritePush &&
+                  provider.type === 'push' &&
+                  provider.provider === 'appwrite' && (
+                    <>
+                      <div>
+                        <Label
+                          htmlFor="appwrite-qos"
+                          className="text-[13px] font-medium text-foreground"
+                        >
+                          {t('Quality of service')}
+                        </Label>
+                        <Select
+                          value={appwriteQos}
+                          onValueChange={setAppwriteQos}
+                        >
+                          <SelectTrigger
+                            id="appwrite-qos"
+                            className="mt-1.5 w-full border-border bg-background text-[13px] text-foreground"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="default">
+                              {t('Let the subscriber choose')}
+                            </SelectItem>
+                            <SelectItem value="0">
+                              {t('At most once (QoS 0)')}
+                            </SelectItem>
+                            <SelectItem value="1">
+                              {t('At least once (QoS 1)')}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[12px] text-muted-foreground mt-1">
+                          {t(
+                            'Default delivery guarantee for topics on this provider.',
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor="appwrite-expiry"
+                          className="text-[13px] font-medium text-foreground"
+                        >
+                          {t('Message expiry (seconds)')}
+                        </Label>
+                        <Input
+                          id="appwrite-expiry"
+                          type="number"
+                          value={appwriteExpiry}
+                          onChange={(e) => setAppwriteExpiry(e.target.value)}
+                          className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        />
+                        <p className="text-[12px] text-muted-foreground mt-1">
+                          {t(
+                            'How long undelivered messages are kept for offline devices. Max 7 days (604800).',
+                          )}
+                        </p>
+                      </div>
+                    </>
+                  )}
               </div>
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
