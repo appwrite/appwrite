@@ -23,6 +23,9 @@ use Utopia\WebSocket\Server;
 /** Handles the realtime pub/sub firehose: permission changes, fan-out, closes and the console tail. */
 class Handler
 {
+    // Permission checks running on this worker, stuck ones included.
+    private int $checks = 0;
+
     /**
      * @param array<string, string> $workerAttributes
      */
@@ -42,6 +45,7 @@ class Handler
         private readonly string $unauthorizedPayload,
         private readonly float $timeout,
         private readonly int $workerId,
+        private readonly int $checkLimit,
     ) {
     }
 
@@ -461,17 +465,29 @@ class Handler
         $closing = [];
 
         try {
+            // A stuck check keeps its slot and its database connection, so the cap bounds how many it can hold.
+            if ($this->checks >= $this->checkLimit) {
+                $span->set('realtime.verification', 'check_limit');
+                $span->setError(new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Permission verification skipped: check limit reached'));
+
+                return $closing = $onFailure();
+            }
+
+            $this->checks++;
             $done = new Channel(1);
             $started = \go(function () use ($check, $done): void {
                 try {
                     $done->push(['closing' => $check()]);
                 } catch (\Throwable $th) {
                     $done->push(['error' => $th]);
+                } finally {
+                    $this->checks--;
                 }
             });
 
             // Never inline: that brings back the unbounded wait.
             if ($started === false) {
+                $this->checks--;
                 $span->set('realtime.verification', 'coroutine_limit');
                 $span->setError(new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Permission verification skipped: coroutine limit reached'));
 

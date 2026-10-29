@@ -605,6 +605,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         unauthorizedPayload: $unauthorizedPayloadJson,
         timeout: $permissionTimeout,
         workerId: $workerId,
+        // Half the database pool, so stuck checks always leave connections for everything else.
+        checkLimit: \max(1, \intdiv($register->get('pools')->get('console')->size, 2)),
     );
 
     while ($attempts < 300) {
