@@ -199,6 +199,40 @@ final class EvaluationCustomServerTest extends Scope
         }, 60_000, 1_000);
     }
 
+    public function testPausedRuleIsNotEvaluatedUntilResumed(): void
+    {
+        $created = $this->client->call(Client::METHOD_POST, '/alerts/rules', $this->headers(), [
+            'ruleId' => 'unique()',
+            'name' => 'Paused ' . \uniqid(),
+            'metric' => 'bandwidth.outbound',
+            'comparator' => 'greaterThan',
+            'threshold' => 1e15,
+            'channels' => ['console'],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $ruleId = $created['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $evaluated = $this->waitForEvaluation($ruleId, null);
+
+        $paused = $this->client->call(Client::METHOD_PUT, '/alerts/rules/' . $ruleId, $this->headers(), ['enabled' => false]);
+        $this->assertSame(200, $paused['headers']['status-code']);
+        // Let an evaluation already queued before the pause finish first.
+        \sleep(2);
+        $before = $this->client->call(Client::METHOD_GET, '/alerts/rules/' . $ruleId, $this->headers())['body']['evaluatedAt'];
+
+        // Several evaluation intervals pass without the paused rule being checked.
+        \sleep(20);
+        $rule = $this->client->call(Client::METHOD_GET, '/alerts/rules/' . $ruleId, $this->headers())['body'];
+        $this->assertSame($before, $rule['evaluatedAt']);
+
+        $resumed = $this->client->call(Client::METHOD_PUT, '/alerts/rules/' . $ruleId, $this->headers(), ['enabled' => true]);
+        $this->assertSame(200, $resumed['headers']['status-code']);
+        $this->assertNotSame($evaluated, $this->waitForEvaluation($ruleId, $rule['evaluatedAt']));
+    }
+
     public function testDocumentsDBReadsReachTheirDatabaseRule(): void
     {
         // DocumentsDB reports reads as documentsdb.databases.operations.reads, so
@@ -279,6 +313,22 @@ final class EvaluationCustomServerTest extends Scope
         }, self::TIMEOUT_MS, 2_000);
 
         return $rule;
+    }
+
+    /**
+     * Waits for the rule to be evaluated after `$after` (any evaluation when null).
+     */
+    private function waitForEvaluation(string $ruleId, ?string $after): string
+    {
+        $evaluatedAt = '';
+        $this->assertEventually(function () use ($ruleId, $after, &$evaluatedAt) {
+            $rule = $this->client->call(Client::METHOD_GET, '/alerts/rules/' . $ruleId, $this->headers())['body'];
+            $this->assertNotNull($rule['evaluatedAt']);
+            $this->assertNotSame($after, $rule['evaluatedAt']);
+            $evaluatedAt = $rule['evaluatedAt'];
+        }, self::TIMEOUT_MS, 1_000);
+
+        return $evaluatedAt;
     }
 
     /**

@@ -16,7 +16,8 @@ use Utopia\Telemetry\Adapter as Telemetry;
 
 /**
  * Enqueues every enabled alert rule in the region for evaluation on its
- * interval. The rule is measured and compared in the `alerts` worker.
+ * interval, from the rules' rows in `schedules`. The rule is measured and
+ * compared in the `alerts` worker.
  */
 class ScheduleAlerts extends Action
 {
@@ -39,8 +40,7 @@ class ScheduleAlerts extends Action
     {
         $source = new Source\Alerts(
             $dbForPlatform,
-            System::getEnv('_APP_REGION', 'default'),
-            fn (array $rules): array => $this->intervals($rules, $dbForPlatform),
+            fn (array $schedules): array => $this->intervals($schedules, $dbForPlatform),
         );
 
         $scheduler = new Scheduler(
@@ -60,21 +60,21 @@ class ScheduleAlerts extends Action
     }
 
     /**
-     * Seconds between two evaluations of each rule in one page of the
-     * snapshot, keyed by rule ID. Every rule shares `_APP_ALERTS_INTERVAL`;
+     * Seconds between two evaluations of each rule in one page of its
+     * schedules, keyed by schedule ID. Every rule shares `_APP_ALERTS_INTERVAL`;
      * an edition that sets the interval per organization overrides this and
-     * reads the page's `teamInternalId`s in one query.
+     * reads the page's `teamInternalId`s (in each schedule's `data`) in one query.
      *
-     * @param list<Document> $rules
+     * @param list<Document> $schedules
      * @return array<string, int>
      */
-    protected function intervals(array $rules, Database $dbForPlatform): array
+    protected function intervals(array $schedules, Database $dbForPlatform): array
     {
         $interval = $this->interval();
 
         $intervals = [];
-        foreach ($rules as $rule) {
-            $intervals[$rule->getId()] = $interval;
+        foreach ($schedules as $schedule) {
+            $intervals[$schedule->getId()] = $interval;
         }
 
         return $intervals;

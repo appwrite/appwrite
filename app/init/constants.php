@@ -601,6 +601,7 @@ const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
 const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
+const SCHEDULE_RESOURCE_TYPE_ALERT = 'alert';
 
 /** Preview cookie */
 const COOKIE_NAME_PREVIEW = 'a_jwt_console';

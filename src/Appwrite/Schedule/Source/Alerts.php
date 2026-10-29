@@ -2,95 +2,140 @@
 
 namespace Appwrite\Schedule\Source;
 
-use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
-use Utopia\Schedule\Source;
 use Utopia\Schedule\Source\Entry;
 use Utopia\Schedule\Source\Row;
+use Utopia\Schedule\Trigger;
 use Utopia\Schedule\Trigger\Interval;
 use Utopia\Schedule\Trigger\Shifted;
 
 /**
- * One evaluation schedule per enabled alert rule in the region. A rule keeps
- * its slot across restarts: it is shifted by `crc32(id) mod interval` seconds.
+ * One evaluation schedule per alert rule, read from the rule's row in
+ * `schedules`. A rule keeps its slot across restarts: it is shifted by
+ * `crc32(ruleId) mod interval` seconds.
  *
- * The interval is the row version: the worker reads the rule itself, so an
- * edit or an evaluation leaves the schedule alone, while a rule whose interval
- * changes moves onto it at the next snapshot.
+ * The interval is not stored on the row: an edition may derive it from
+ * something the rule does not own, such as its organization's plan. It is
+ * worked out per page of rows and added to each row's version, so a rule whose
+ * interval changes moves onto it at the next full snapshot.
  */
-final class Alerts implements Source
+final class Alerts extends Database
 {
     private const int PAGE = 1000;
 
     /**
-     * @param \Closure(list<Document>): array<string, int> $intervals seconds between evaluations, by rule ID, for one page of rules; a rule left out is not scheduled
+     * @param \Closure(list<Document>): array<string, int> $intervals seconds between evaluations, by schedule ID, for one page of schedules; a schedule left out is not run
      */
     public function __construct(
-        private readonly Database $dbForPlatform,
-        private readonly string $region,
+        \Utopia\Database\Database $dbForPlatform,
         private readonly \Closure $intervals,
     ) {
+        // The worker loads the rule and its project, so make() reads neither.
+        parent::__construct($dbForPlatform, null, null);
     }
 
-    /**
-     * @return iterable<Row>
-     */
     #[\Override]
     public function snapshot(): iterable
     {
-        $cursor = null;
-
-        do {
-            $queries = [
-                Query::equal('region', [$this->region]),
-                Query::equal('enabled', [true]),
-                Query::orderAsc('$sequence'),
-                Query::limit(self::PAGE),
-            ];
-            if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
-            }
-
-            $rules = $this->dbForPlatform->find('alertRules', $queries);
-            $intervals = ($this->intervals)($rules);
-
-            foreach ($rules as $rule) {
-                if (!isset($intervals[$rule->getId()])) {
-                    continue;
-                }
-
-                $interval = \max(1, $intervals[$rule->getId()]);
-
-                yield new Row(
-                    id: $rule->getId(),
-                    version: (string) $interval,
-                    data: [
-                        'interval' => $interval,
-                        'projectId' => (string) $rule->getAttribute('projectId'),
-                        'projectInternalId' => (string) $rule->getAttribute('projectInternalId'),
-                    ],
-                );
-            }
-
-            $cursor = \end($rules) ?: null;
-        } while (\count($rules) === self::PAGE);
+        yield from $this->paged(parent::snapshot());
     }
 
     #[\Override]
+    public function since(\DateTimeImmutable $moment): iterable
+    {
+        yield from $this->paged(parent::since($moment));
+    }
+
+    /**
+     * Nothing is looked up: the worker loads the rule and its project. An
+     * organization rule belongs to no project and is sent with an empty one.
+     */
+    #[\Override]
     public function make(Row $row): Entry
     {
-        $interval = (int) $row->data['interval'];
+        $schedule = $row->data;
+        if (!$schedule instanceof Document) {
+            throw new \InvalidArgumentException('Schedule row carries no document');
+        }
+
+        $projectId = (string) $schedule->getAttribute('projectId');
 
         return new Entry(
-            new Shifted(new Interval($interval), \abs(\crc32($row->id)) % $interval),
+            $this->trigger([
+                'resourceId' => (string) $schedule->getAttribute('resourceId'),
+                'interval' => (int) $schedule->getAttribute('interval'),
+            ]),
             [
-                'ruleId' => $row->id,
-                'project' => new Document([
-                    '$id' => $row->data['projectId'],
-                    '$sequence' => $row->data['projectInternalId'],
+                'ruleId' => (string) $schedule->getAttribute('resourceId'),
+                'project' => $projectId === '' ? new Document() : new Document([
+                    '$id' => $projectId,
+                    '$sequence' => (string) $schedule->getAttribute('projectInternalId'),
                 ]),
             ],
         );
+    }
+
+    #[\Override]
+    protected function type(): string
+    {
+        return SCHEDULE_RESOURCE_TYPE_ALERT;
+    }
+
+    #[\Override]
+    protected function collection(): string
+    {
+        return 'alertRules';
+    }
+
+    #[\Override]
+    protected function trigger(array $schedule): Trigger
+    {
+        $interval = \max(1, (int) $schedule['interval']);
+
+        return new Shifted(new Interval($interval), \abs(\crc32((string) $schedule['resourceId'])) % $interval);
+    }
+
+    /**
+     * @param iterable<Row> $rows
+     * @return iterable<Row>
+     */
+    private function paged(iterable $rows): iterable
+    {
+        $page = [];
+        foreach ($rows as $row) {
+            $page[] = $row;
+            if (\count($page) === self::PAGE) {
+                yield from $this->withIntervals($page);
+                $page = [];
+            }
+        }
+
+        yield from $this->withIntervals($page);
+    }
+
+    /**
+     * @param list<Row> $page
+     * @return iterable<Row>
+     */
+    private function withIntervals(array $page): iterable
+    {
+        if ($page === []) {
+            return;
+        }
+
+        $intervals = ($this->intervals)(\array_map(fn (Row $row): Document => $row->data, $page));
+
+        foreach ($page as $row) {
+            $interval = $intervals[$row->data->getId()] ?? null;
+            $row->data->setAttribute('interval', $interval ?? 0);
+
+            yield new Row(
+                id: $row->id,
+                version: $row->version . ':' . ($interval ?? ''),
+                data: $row->data,
+                active: $row->active && $interval !== null,
+                activeFrom: $row->activeFrom,
+            );
+        }
     }
 }

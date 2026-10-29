@@ -67,6 +67,7 @@ class Delete extends Base
         $rule = $this->getRule($dbForPlatform, $authorization, $project, $ruleId);
 
         $authorization->skip(fn () => $dbForPlatform->deleteDocument('alertRules', $rule->getId()));
+        $this->unschedule($dbForPlatform, $rule);
 
         $response->noContent();
     }

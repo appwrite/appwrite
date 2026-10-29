@@ -158,6 +158,7 @@ class Update extends Base
             ));
 
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('alertRules', $rule->getId(), $changes));
+            $this->schedule($dbForPlatform, $rule);
         }
 
         $rule->removeAttribute('webhookSecret');

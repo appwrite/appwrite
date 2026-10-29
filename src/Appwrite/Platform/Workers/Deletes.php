@@ -498,6 +498,19 @@ class Deletes extends Action
             ],
             $dbForPlatform,
             function (Document $document) use ($dbForPlatform, $getProjectDB) {
+                $resourceType = $document->getAttribute('resourceType');
+                $resourceId = $document->getAttribute('resourceId');
+
+                // Alert rules live in the platform database, and an organization's
+                // rules have no project, so their rows go once the rule is gone.
+                if ($resourceType === SCHEDULE_RESOURCE_TYPE_ALERT) {
+                    if ($dbForPlatform->getDocument('alertRules', $resourceId)->isEmpty()) {
+                        $dbForPlatform->deleteDocument('schedules', $document->getId());
+                        Console::success('Deleting schedule for alert ' . $resourceId);
+                    }
+                    return;
+                }
+
                 $project = $dbForPlatform->getDocument('projects', $document->getAttribute('projectId'));
 
                 if ($project->isEmpty()) {
@@ -505,9 +518,6 @@ class Deletes extends Action
                     Console::success('Deleted schedule for deleted project ' . $document->getAttribute('projectId'));
                     return;
                 }
-
-                $resourceType = $document->getAttribute('resourceType');
-                $resourceId = $document->getAttribute('resourceId');
 
                 // One-shot execution schedules are claimed then deleted by the
                 // functions worker; this sweeper does not reap them.

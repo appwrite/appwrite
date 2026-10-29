@@ -149,6 +149,8 @@ class Create extends Base
             throw new Exception(Exception::ALERT_RULE_ALREADY_EXISTS);
         }
 
+        $this->schedule($dbForPlatform, $rule);
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($rule, Response::MODEL_ALERT_RULE);
