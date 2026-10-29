@@ -2984,7 +2984,7 @@ trait MigrationsBase
             'outputDirectory' => './',
             'startCommand' => 'npm run start',
             'deploymentRetention' => 14,
-            'scopes' => ['users.read', 'files.read'],
+            'scopes' => ['users.read', 'files.read', 'databases.read'],
         ]);
 
         $this->assertEquals(201, $site['headers']['status-code'], 'Create site failed: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
@@ -3074,7 +3074,7 @@ trait MigrationsBase
         $this->assertEquals('static', $response['body']['adapter']);
         $this->assertSame('npm run start', $response['body']['startCommand']);
         $this->assertSame(14, $response['body']['deploymentRetention']);
-        $this->assertSame(['users.read', 'files.read'], $response['body']['scopes']);
+        $this->assertSame(['users.read', 'files.read', 'databases.read'], $response['body']['scopes']);
 
         // Verify deployment in destination
         $this->assertEventually(function () use ($siteId) {

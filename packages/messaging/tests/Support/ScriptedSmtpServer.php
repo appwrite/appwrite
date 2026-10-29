@@ -23,11 +23,12 @@ final class ScriptedSmtpServer
 
     /**
      * @param  list<string>  $replies  The greeting, then the reply to each command in order.
+     * @param  list<string>  ...$more  The script for each connection after the first.
      */
-    public function __construct(array $replies)
+    public function __construct(array $replies, array ...$more)
     {
         $process = proc_open(
-            [PHP_BINARY, __DIR__ . '/smtp-server.php', base64_encode((string) json_encode($replies))],
+            [PHP_BINARY, __DIR__ . '/smtp-server.php', base64_encode((string) json_encode([$replies, ...$more]))],
             [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes,
         );
@@ -58,7 +59,7 @@ final class ScriptedSmtpServer
     }
 
     /**
-     * Every command the client sent, once the session is over.
+     * Every command the client sent, across every session, once they are over.
      *
      * @return list<string>
      */
