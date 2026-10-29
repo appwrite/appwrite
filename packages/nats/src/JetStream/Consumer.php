@@ -17,6 +17,12 @@ final class Consumer
      */
     private const FETCH_EXPIRY_MARGIN = 0.1;
 
+    /**
+     * Seconds a fetch keeps reading past its timeout for the end of a pull
+     * request. The server always ends one, so this only bounds a lost reply.
+     */
+    private const FETCH_DRAIN_GRACE = 1.0;
+
     public function __construct(
         private readonly Connection $conn,
         private readonly string $stream,
@@ -43,11 +49,8 @@ final class Consumer
             // per call -- 0.25s of poll is a ceiling of four calls a second.
             $request['no_wait'] = true;
         } else {
-            // Expire the server's pull request just before the client stops
-            // waiting. On an identical deadline a message the server dispatches
-            // at the boundary is dropped here while the server has already
-            // counted the delivery, burning an attempt against maxDeliver for
-            // nothing.
+            // Expire the server's pull request just before the timeout, so its
+            // 408 ends a waiting fetch on time.
             $serverExpiry = $timeout - min(self::FETCH_EXPIRY_MARGIN, $timeout * 0.1);
             $request['expires'] = StreamConfig::secondsToNanos($serverExpiry);
         }
@@ -93,8 +96,8 @@ final class Consumer
     }
 
     /**
-     * Gather up to $batch messages for a pull request, stopping on the server's
-     * terminal status messages or when the client deadline passes.
+     * Gather up to $batch messages for a pull request, until the batch is full
+     * or the server's terminal status arrives.
      */
     private function collectBatch(
         Subscription $sub,
@@ -102,7 +105,10 @@ final class Consumer
         int $batch,
         float $timeout,
     ): void {
-        $deadline = microtime(true) + $timeout;
+        // The server counts each message as delivered when it sends it, so one
+        // left unread at the timeout is held unacknowledged until ackWait and
+        // charged an attempt. Read on until the request ends.
+        $deadline = microtime(true) + $timeout + self::FETCH_DRAIN_GRACE;
 
         while (\count($messageBatch) < $batch) {
             $remaining = $deadline - microtime(true);

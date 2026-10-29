@@ -10,6 +10,7 @@ use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\JetStream\Consumer;
 use Utopia\NATS\JetStream\ConsumerInfo;
 use Utopia\NATS\Tests\Support\FakeTransport;
+use Utopia\NATS\Tests\Support\LateReadTransport;
 
 /**
  * What Consumer::fetch() puts on the wire, and what it accepts back.
@@ -101,9 +102,8 @@ final class ConsumerPullRequestTest extends TestCase
     {
         // The other half of the same decision: without no_wait the server needs
         // the expiry, or it holds the request for its own default. It lands
-        // just inside the client deadline -- see
-        // ConsumerFetchLifecycleTest::testServerPullExpiryLandsBeforeTheClientDeadline
-        // for why the two must not share a boundary.
+        // just inside the client timeout -- see
+        // ConsumerFetchLifecycleTest::testServerPullExpiryLandsBeforeTheClientDeadline.
         $fake = new FakeTransport();
         $consumer = $this->consumer($this->connect($fake));
 
@@ -201,6 +201,34 @@ final class ConsumerPullRequestTest extends TestCase
             $this->assertSame('hello', $message->getData());
         }
         $this->assertStringContainsString('PUB _FC.reply', $fake->written, 'The keep-alive is answered');
+    }
+
+    /**
+     * The server counts a batch as delivered when it sends it, so a caller that
+     * reads the reply after its timeout still has to get all of it. Whatever it
+     * leaves on the socket stays unacknowledged until ackWait and is then charged
+     * an attempt it never had.
+     */
+    public function testABatchReadAfterTheTimeoutIsReturnedWhole(): void
+    {
+        $fake = new FakeTransport();
+        $late = new LateReadTransport($fake);
+        $conn = Connection::connect(new ConnectionOptions(
+            servers: 'nats://127.0.0.1:4222',
+            allowReconnect: false,
+            transportFactory: fn (string $scheme): LateReadTransport => $late,
+        ));
+        $consumer = $this->consumer($conn);
+
+        $sid = $this->pendingSid($conn);
+        for ($i = 0; $i < 3; $i++) {
+            $fake->pushInbound("MSG _INBOX.scripted {$sid} 2\r\nm{$i}\r\n");
+        }
+        $late->delayNextRead(0.05);
+
+        $batch = $consumer->fetch(3, 0.02, true);
+
+        $this->assertCount(3, $batch, 'Every message the server sent for this pull request');
     }
 
     public function testAMessageWithoutAStatusIsStillDelivered(): void
