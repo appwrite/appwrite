@@ -104,33 +104,7 @@ $provider = $messaging->createAppwriteProvider(
 
 {% section #install-sdk step=2 title="Install the SDK" %}
 
-Push ships in these versions of the client SDKs and later:
-
-{% table %}
-* SDK
-* Version
-* Platforms
----
-* [Web](https://github.com/appwrite/sdk-for-web/releases/tag/29.0.0) `appwrite`
-* `29.0.0`
-* Browsers
----
-* [Flutter](https://github.com/appwrite/sdk-for-flutter/releases/tag/28.0.0) `appwrite`
-* `28.0.0`
-* Android, iOS, web
----
-* [React Native](https://github.com/appwrite/sdk-for-react-native/releases/tag/2.0.0) `react-native-appwrite`
-* `2.0.0`
-* Android, iOS
----
-* [Android](https://github.com/appwrite/sdk-for-android/releases/tag/30.0.0) `io.appwrite:sdk-for-android`
-* `30.0.0`
-* Android 7.0 (API 24) and later
----
-* [Apple](https://github.com/appwrite/sdk-for-apple/releases/tag/21.0.0) `sdk-for-apple`
-* `21.0.0`
-* iOS 15, macOS 12, tvOS 15, watchOS 8 and later
-{% /table %}
+Push is in the Web SDK 29.0.0, Flutter SDK 28.0.0, React Native SDK 2.0.0, Android SDK 30.0.0, and Apple SDK 21.0.0, and in later versions.
 
 Some platforms need extra setup for background notifications:
 
@@ -181,7 +155,7 @@ dependencies {
 }
 ```
 
-The SDK's manifest declares the services, receivers, and permissions background delivery needs. The two permissions for punctual delivery are optional and yours to declare, see [Delivery while the app is closed](#background-android).
+Push needs Android 7.0 (API 24) or later. The SDK's manifest declares the services, receivers, and permissions background delivery needs. The two permissions for punctual delivery are optional and yours to declare, see [Delivery while the app is closed](#background-android).
 {% /tabsitem %}
 
 {% tabsitem #setup-apple title="Apple" %}
@@ -191,7 +165,7 @@ Add the package in Xcode under **File** > **Add Package Dependencies**, or in `P
 .package(url: "https://github.com/appwrite/sdk-for-apple", from: "21.0.0")
 ```
 
-The `Appwrite` module has its own `App` type, so write `SwiftUI.App` for your app struct. For delivery while the app is suspended, also follow [Background delivery on iOS](#background-ios).
+Push needs iOS 15, macOS 12, tvOS 15, or watchOS 8 or later. The `Appwrite` module has its own `App` type, so write `SwiftUI.App` for your app struct. For delivery while the app is suspended, also follow [Background delivery on iOS](#background-ios).
 {% /tabsitem %}
 {% /tabs %}
 {% /section %}
