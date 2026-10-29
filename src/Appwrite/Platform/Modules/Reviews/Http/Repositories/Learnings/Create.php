@@ -72,6 +72,12 @@ class Create extends Base
         $repository = $this->getRepository($repositoryId, $projectId, $dbForPlatform, $authorization);
         $dbForProject = $getProjectDB($project);
 
+        // hansi.codes keeps a learning whatever its link; one longer than the column is dropped
+        // instead of failing the learning.
+        if (\strlen($sourceUrl) > 2048) {
+            $sourceUrl = '';
+        }
+
         $authorization->skip(fn () => $dbForProject->createDocument('reviewLearnings', new Document([
             '$id' => Id::unique(),
             'repositoryId' => $repository->getId(),
