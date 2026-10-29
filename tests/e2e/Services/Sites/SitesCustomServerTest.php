@@ -1928,6 +1928,56 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testSiteStreaming(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Streaming site',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm ci',
+            'fallbackFile' => '',
+        ]);
+
+        $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true',
+        ]);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        // Note when each piece of the page reaches the visitor.
+        $body = '';
+        $arrivals = [];
+        $request = \curl_init('http://' . $domain . '/stream');
+        \curl_setopt_array($request, [
+            CURLOPT_HTTPHEADER => ['Accept-Encoding: identity'],
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_WRITEFUNCTION => function ($handle, string $chunk) use (&$body, &$arrivals): int {
+                $body .= $chunk;
+                foreach (['first', 'second', 'third'] as $text) {
+                    if (!isset($arrivals[$text]) && \str_contains($body, $text)) {
+                        $arrivals[$text] = \microtime(true);
+                    }
+                }
+                return \strlen($chunk);
+            },
+        ]);
+        \curl_exec($request);
+        $status = \curl_getinfo($request, CURLINFO_RESPONSE_CODE);
+
+        $this->assertEquals(200, $status);
+
+        // The page renders over 4s; buffered, every piece would arrive together at the end.
+        $this->assertCount(3, $arrivals);
+        $this->assertGreaterThan(1.5, $arrivals['second'] - $arrivals['first']);
+        $this->assertGreaterThan(1.5, $arrivals['third'] - $arrivals['second']);
+
+        $this->cleanupSite($siteId);
+    }
+
     #[Retry(count: 3)]
     public function testAdapterDetectionSSR(): void
     {

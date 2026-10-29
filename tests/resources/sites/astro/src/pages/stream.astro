@@ -1,0 +1,7 @@
+---
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+---
+
+<p>first</p>
+{wait(2000).then(() => 'second')}
+{wait(4000).then(() => 'third')}
