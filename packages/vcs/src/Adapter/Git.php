@@ -349,8 +349,9 @@ abstract class Git extends Adapter
 
         return Command::and(
             new Command('mkdir')->flag('-p')->argument($directory),
-            new Command('git')->argument('config')->flag('--global')->argument('init.defaultBranch')->argument('main'),
-            $this->git($directory)->argument('init'),
+            // Set for this repository only: concurrent builds writing the
+            // global config fail on each other's lock
+            $this->git($directory)->option('-c', 'init.defaultBranch=main')->argument('init'),
             $this->git($directory)->argument('remote')->argument('add')->argument('origin')->argument($cloneUrl),
             $this->git($directory)->argument('config')->argument('core.sparseCheckout')->argument('true'),
             Command::appendStdout(
@@ -413,6 +414,74 @@ SCRIPT;
         return str_contains($version, '*')
             || str_contains($version, '?')
             || str_contains($version, '[');
+    }
+
+    /**
+     * The repository path a caller-supplied file path names, normalized
+     * lexically. Rejects a path that climbs out of the checkout through `..`
+     * segments, or that reaches into `.git`, whose config and hooks the
+     * following git commands would run.
+     */
+    protected function confinedPath(string $filepath): string
+    {
+        $segments = [];
+        foreach (explode('/', str_replace('\\', '/', $filepath)) as $segment) {
+            if ($segment === '') {
+                continue;
+            }
+            if ($segment === '.') {
+                continue;
+            }
+            if ($segment === '..') {
+                if (array_pop($segments) === null) {
+                    throw new Exception("File path escapes the repository: {$filepath}");
+                }
+                continue;
+            }
+            if (strtolower($segment) === '.git') {
+                throw new Exception("File path names repository metadata: {$filepath}");
+            }
+            $segments[] = $segment;
+        }
+
+        if ($segments === []) {
+            throw new Exception("File path names no file: {$filepath}");
+        }
+
+        return implode('/', $segments);
+    }
+
+    /**
+     * Write a file at a confined path inside a checkout. Lexical confinement
+     * is not enough once the checkout itself carries symlinks: a linked
+     * directory or file would carry the write outside. So each missing
+     * directory is created one at a time and every component is refused if it
+     * is a link, before anything is created beneath it.
+     */
+    protected function writeCheckoutFile(string $directory, string $relative, string $content): void
+    {
+        $segments = explode('/', $relative);
+        $file = array_pop($segments);
+
+        $path = $directory;
+        foreach ($segments as $segment) {
+            $path .= '/' . $segment;
+            if (is_link($path)) {
+                throw new Exception("File path escapes the repository: {$relative}");
+            }
+            if (!is_dir($path) && (file_exists($path) || !mkdir($path, 0777))) {
+                throw new Exception("Failed to create directory for {$relative}");
+            }
+        }
+
+        $path .= '/' . $file;
+        if (is_link($path)) {
+            throw new Exception("File path escapes the repository: {$relative}");
+        }
+
+        if (file_put_contents($path, $content) === false) {
+            throw new Exception("Failed to write {$relative}");
+        }
     }
 
     /**

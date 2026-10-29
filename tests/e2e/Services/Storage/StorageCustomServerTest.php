@@ -4,21 +4,30 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Storage;
 
+use Ahc\Jwt\JWT;
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Extend\Exception;
 use CURLFile;
 use PHPUnit\Framework\Attributes\Group;
+use Swoole\Coroutine;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Compression\Compression;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
+
+use function Swoole\Coroutine\run;
 
 final class StorageCustomServerTest extends Scope
 {
@@ -1026,5 +1035,238 @@ final class StorageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(404, $file['headers']['status-code']);
+    }
+
+    public function testChunkedUploadRejectsRangePastLastChunk(): void
+    {
+        $bucketId = $this->setupBucket()['bucketId'];
+        $fileId = Id::unique();
+        $totalSize = 2 * 5 * 1024 * 1024;
+
+        /**
+         * Test for FAILURE
+         * A range starting at the declared size names a third chunk of a two-chunk file.
+         */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes ' . $totalSize . '-' . $totalSize . '/' . $totalSize,
+        ], $this->getHeaders()), [
+            'fileId' => $fileId,
+            'file' => new CURLFile('data://text/plain;base64,' . base64_encode('a'), 'text/plain', 'chunk.txt'),
+        ]);
+        $this->assertEquals(400, $file['headers']['status-code']);
+        $this->assertEquals('storage_invalid_content_range', $file['body']['type']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(404, $file['headers']['status-code']);
+
+        // With a partial last chunk, the declared size still maps onto that chunk's index.
+        $fileId = Id::unique();
+        $totalSize = 5 * 1024 * 1024 + 1024;
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes ' . $totalSize . '-' . $totalSize . '/' . $totalSize,
+        ], $this->getHeaders()), [
+            'fileId' => $fileId,
+            'file' => new CURLFile('data://text/plain;base64,' . base64_encode('a'), 'text/plain', 'chunk.txt'),
+        ]);
+        $this->assertEquals(400, $file['headers']['status-code']);
+        $this->assertEquals('storage_invalid_content_range', $file['body']['type']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(404, $file['headers']['status-code']);
+    }
+
+    public function testUpdateFileRejectsDisallowedExtension(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => Id::unique(),
+            'name' => 'Extension Bucket',
+            'allowedFileExtensions' => ['png'],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'renamed.png',
+        ]);
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertEquals('renamed.png', $file['body']['name']);
+
+        /**
+         * Test for FAILURE
+         */
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'renamed.exe',
+        ]);
+        $this->assertEquals(400, $file['headers']['status-code']);
+        $this->assertEquals('storage_file_type_unsupported', $file['body']['type']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals('renamed.png', $file['body']['name']);
+    }
+
+    public function testIdleChunkedUploadDeletedByMaintenance(): void
+    {
+        $bucketId = $this->setupBucket()['bucketId'];
+        $chunkSize = 5 * 1024 * 1024;
+        $totalSize = $chunkSize + 1024;
+
+        $upload = function (string $fileId) use ($bucketId, $chunkSize, $totalSize): array {
+            return $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => 'bytes 0-' . ($chunkSize - 1) . '/' . $totalSize,
+            ], $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => new CURLFile('data://text/plain;base64,' . base64_encode(str_repeat('a', $chunkSize)), 'text/plain', 'chunk.txt'),
+            ]);
+        };
+
+        $idleId = Id::unique();
+        $activeId = Id::unique();
+        foreach ([$idleId, $activeId] as $fileId) {
+            $file = $upload($fileId);
+            $this->assertEquals(201, $file['headers']['status-code']);
+            $this->assertEquals(1, $file['body']['chunksUploaded']);
+        }
+
+        $this->withFactory(function (DatabaseFactory $factory) use ($bucketId, $idleId): void {
+            $dbForProject = $factory->project($factory->platform()->getDocument('projects', $this->getProject()['$id']));
+            $bucket = $dbForProject->getDocument('buckets', $bucketId);
+
+            $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $idleId, new Document([
+                '$updatedAt' => DateTime::addSeconds(new \DateTime(), -APP_STORAGE_UPLOAD_RETENTION - 3600),
+            ])));
+        });
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
+        $this->assertEventually(function () use ($bucketId, $idleId) {
+            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $idleId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(404, $file['headers']['status-code']);
+        }, 30000, 1000);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $activeId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertEquals(1, $file['body']['chunksUploaded']);
+
+        // The aborted upload starts over from its first chunk under the same ID.
+        $file = $upload($idleId);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertEquals(1, $file['body']['chunksUploaded']);
+    }
+
+    /**
+     * @param callable(DatabaseFactory): void $callback receives the server's database factory
+     */
+    private function withFactory(callable $callback): void
+    {
+        $run = function () use ($callback): void {
+            global $register;
+            $authorization = new Authorization();
+            $factory = $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), $authorization);
+
+            $authorization->skip(fn () => $callback($factory));
+        };
+
+        if (Coroutine::getCid() >= 0) {
+            $run();
+        } else {
+            run($run);
+        }
+    }
+
+    public function testFilePushContentDisposition(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => Id::unique(),
+            'name' => 'Push Filename',
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', 'café logo.svg'),
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+
+        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $push = fn (array $claims): array => $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/push', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'project' => $this->getProject()['$id'],
+            'jwt' => $encoder->encode(\array_merge([
+                'bucketId' => $bucketId,
+                'fileId' => $fileId,
+                'projectId' => $this->getProject()['$id'],
+            ], $claims)),
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        foreach ([[], ['disposition' => 'inline'], ['disposition' => 'other']] as $claims) {
+            $response = $push($claims);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame('attachment; filename="caf_ logo.svg"; filename*=UTF-8\'\'' . \rawurlencode('café logo.svg'), $response['headers']['content-disposition']);
+            $this->assertSame("script-src 'none';", $response['headers']['content-security-policy']);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $push(['fileId' => 'other']);
+        $this->assertSame(401, $response['headers']['status-code']);
     }
 }

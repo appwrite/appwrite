@@ -295,6 +295,7 @@ import { Route as PublicProjectsProjectIdAuthPoliciesEmailsRouteImport } from '.
 import { Route as PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport } from './routes/_public/projects.$projectId.auth.policies.memberships'
 import { Route as PublicProjectsProjectIdAuthPoliciesPasskeysRouteImport } from './routes/_public/projects.$projectId.auth.policies.passkeys'
 import { Route as PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport } from './routes/_public/projects.$projectId.auth.policies.passwords'
+import { Route as PublicProjectsProjectIdAuthPoliciesRealtimeRouteImport } from './routes/_public/projects.$projectId.auth.policies.realtime'
 import { Route as PublicProjectsProjectIdAuthPoliciesSessionsRouteImport } from './routes/_public/projects.$projectId.auth.policies.sessions'
 import { Route as PublicProjectsProjectIdAuthPoliciesUsersRouteImport } from './routes/_public/projects.$projectId.auth.policies.users'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId'
@@ -2069,6 +2070,12 @@ const PublicProjectsProjectIdAuthPoliciesPasswordsRoute =
     path: '/passwords',
     getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
   } as any)
+const PublicProjectsProjectIdAuthPoliciesRealtimeRoute =
+  PublicProjectsProjectIdAuthPoliciesRealtimeRouteImport.update({
+    id: '/realtime',
+    path: '/realtime',
+    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
+  } as any)
 const PublicProjectsProjectIdAuthPoliciesSessionsRoute =
   PublicProjectsProjectIdAuthPoliciesSessionsRouteImport.update({
     id: '/sessions',
@@ -3650,6 +3657,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   '/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  '/projects/$projectId/auth/policies/realtime': typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   '/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
   '/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
@@ -4076,6 +4084,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   '/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  '/projects/$projectId/auth/policies/realtime': typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   '/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
   '/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
@@ -4528,6 +4537,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   '/_public/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/_public/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  '/_public/projects/$projectId/auth/policies/realtime': typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   '/_public/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/_public/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
   '/_public/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
@@ -4993,6 +5003,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/policies/memberships'
     | '/projects/$projectId/auth/policies/passkeys'
     | '/projects/$projectId/auth/policies/passwords'
+    | '/projects/$projectId/auth/policies/realtime'
     | '/projects/$projectId/auth/policies/sessions'
     | '/projects/$projectId/auth/policies/users'
     | '/projects/$projectId/auth/teams/$teamId'
@@ -5419,6 +5430,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/policies/memberships'
     | '/projects/$projectId/auth/policies/passkeys'
     | '/projects/$projectId/auth/policies/passwords'
+    | '/projects/$projectId/auth/policies/realtime'
     | '/projects/$projectId/auth/policies/sessions'
     | '/projects/$projectId/auth/policies/users'
     | '/projects/$projectId/auth/teams/$teamId'
@@ -5870,6 +5882,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/auth/policies/memberships'
     | '/_public/projects/$projectId/auth/policies/passkeys'
     | '/_public/projects/$projectId/auth/policies/passwords'
+    | '/_public/projects/$projectId/auth/policies/realtime'
     | '/_public/projects/$projectId/auth/policies/sessions'
     | '/_public/projects/$projectId/auth/policies/users'
     | '/_public/projects/$projectId/auth/teams/$teamId'
@@ -8107,6 +8120,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
     }
+    '/_public/projects/$projectId/auth/policies/realtime': {
+      id: '/_public/projects/$projectId/auth/policies/realtime'
+      path: '/realtime'
+      fullPath: '/projects/$projectId/auth/policies/realtime'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesRealtimeRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
+    }
     '/_public/projects/$projectId/auth/policies/sessions': {
       id: '/_public/projects/$projectId/auth/policies/sessions'
       path: '/sessions'
@@ -9906,6 +9926,7 @@ interface PublicProjectsProjectIdAuthPoliciesRouteChildren {
   PublicProjectsProjectIdAuthPoliciesMembershipsRoute: typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   PublicProjectsProjectIdAuthPoliciesPasskeysRoute: typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   PublicProjectsProjectIdAuthPoliciesPasswordsRoute: typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  PublicProjectsProjectIdAuthPoliciesRealtimeRoute: typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   PublicProjectsProjectIdAuthPoliciesSessionsRoute: typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   PublicProjectsProjectIdAuthPoliciesUsersRoute: typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
 }
@@ -9920,6 +9941,8 @@ const PublicProjectsProjectIdAuthPoliciesRouteChildren: PublicProjectsProjectIdA
       PublicProjectsProjectIdAuthPoliciesPasskeysRoute,
     PublicProjectsProjectIdAuthPoliciesPasswordsRoute:
       PublicProjectsProjectIdAuthPoliciesPasswordsRoute,
+    PublicProjectsProjectIdAuthPoliciesRealtimeRoute:
+      PublicProjectsProjectIdAuthPoliciesRealtimeRoute,
     PublicProjectsProjectIdAuthPoliciesSessionsRoute:
       PublicProjectsProjectIdAuthPoliciesSessionsRoute,
     PublicProjectsProjectIdAuthPoliciesUsersRoute:

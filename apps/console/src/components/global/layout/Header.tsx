@@ -95,7 +95,9 @@ import { useKeyboardShortcutsContext } from '@/components/global/providers/keybo
 import { ThemeToggle } from '@/components/global/shared/ThemeToggle'
 import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
+import { ExperimentsPopover } from '@/components/global/shared/ExperimentsPopover'
 import { NotificationCenterPopover } from '@/components/global/shared/NotificationCenterPopover'
+import { hasQualityLabel } from '@/lib/experiments'
 import { useAgentChat } from '@/components/global/providers/AgentChat'
 import { isAgentPagePath } from '@/lib/assistant/agent-paths'
 import { Button } from '@/components/ui/button'
@@ -668,6 +670,7 @@ export function ConsoleHeader({
     pathname: location.pathname,
     showMarketingNav,
   })
+  const showExperiments = hasQualityLabel(headerAccount?.labels)
   const showCenterSearch = centerSearch && !hideSearch && !preLaunch
   const showRightSearch = !hideSearch && !centerSearch && !preLaunch
   const { modKey: searchModKey, isMac } = usePlatform()
@@ -1618,6 +1621,12 @@ export function ConsoleHeader({
                     <SupportPopover orgId={orgId} />
                   </div>
                 </>
+              ) : null}
+
+              {showExperiments ? (
+                <div className="flex shrink-0">
+                  <ExperimentsPopover />
+                </div>
               ) : null}
 
               {/* Notifications - gated by the notifications profile feature */}

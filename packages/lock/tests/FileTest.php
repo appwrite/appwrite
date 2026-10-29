@@ -141,4 +141,48 @@ final class FileTest extends TestCase
             @unlink($done);
         }
     }
+
+    public function testNegativeTimeoutWaitsUntilRelease(): void
+    {
+        if (! \function_exists('pcntl_fork')) {
+            $this->markTestSkipped('pcntl_fork required');
+        }
+
+        $ready = tempnam(sys_get_temp_dir(), 'utopia-lock-ready-');
+        $started = tempnam(sys_get_temp_dir(), 'utopia-lock-started-');
+
+        $pid = pcntl_fork();
+        $this->assertNotSame(-1, $pid, 'Failed to fork');
+
+        if ($pid === 0) {
+            $child = new File($this->path);
+            file_put_contents($ready, $child->tryAcquire() ? '1' : '0');
+            while (file_get_contents($started) !== '1') {
+                usleep(10_000);
+            }
+            usleep(300_000);
+            $child->release();
+            exit(0);
+        }
+
+        try {
+            $deadline = microtime(true) + 5.0;
+            while (microtime(true) < $deadline && file_get_contents($ready) === '') {
+                usleep(10_000);
+            }
+
+            $this->assertSame('1', file_get_contents($ready), 'Child failed to acquire');
+
+            $parent = new File($this->path);
+            $start = microtime(true);
+            file_put_contents($started, '1');
+            $this->assertTrue($parent->acquire(-1.0));
+            $this->assertGreaterThanOrEqual(0.25, microtime(true) - $start);
+        } finally {
+            file_put_contents($started, '1');
+            pcntl_waitpid($pid, $status);
+            @unlink($ready);
+            @unlink($started);
+        }
+    }
 }

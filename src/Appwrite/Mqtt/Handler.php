@@ -76,16 +76,28 @@ class Handler implements MqttHandler
 
         Span::add('user.id', $identity['userId'] ?? '');
 
-        // Rate-limit CONNECT per user (keyed on userId until the infra surfaces client IP).
+        // Rate-limit CONNECT per user (keyed on project and user until the infra surfaces client IP).
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             $getRedis = $this->container->get('getRedis');
-            $timeLimit = new TimeLimitRedis('mqtt:connect:{userId}', 128, 60, $getRedis())->withParams(['{userId}' => (string) ($identity['userId'] ?? '')]);
+            $timeLimit = new TimeLimitRedis('mqtt:connect:{projectId}:{userId}', 128, 60, $getRedis())->withParams([
+                '{projectId}' => (string) ($identity['projectId'] ?? ''),
+                '{userId}' => (string) ($identity['userId'] ?? ''),
+            ]);
 
             if ($timeLimit->check()->limited) {
                 Span::add('mqtt.result', 'abuse');
                 $this->mqtt->connectRefused->add(1, ['reason' => 'rate_limited']);
                 return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod);
             }
+        }
+
+        // As realtime caps a user's open connections, so idle sockets cannot pile up toward the broker's limit.
+        $limit = (int) ($this->getPlan($connection)['mqttConnections'] ?? APP_LIMIT_MQTT_CONNECTIONS);
+        if (\count($this->connectionsOf((string) ($identity['projectId'] ?? ''), (string) ($identity['userId'] ?? ''))) > $limit) {
+            $this->untrack($connection);
+            Span::add('mqtt.result', 'quota');
+            $this->mqtt->connectRefused->add(1, ['reason' => 'connection_limit']);
+            return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod, 'Too many open connections. Close an existing connection and try again.');
         }
 
         // The per-device session anchor: the client id, or an account-level fallback so reconnects
@@ -148,9 +160,9 @@ class Handler implements MqttHandler
      * Refuse a CONNECT with an MQTT reason code, echoing the enhanced-auth method (see
      * connackProperties) and carrying the matching Appwrite error message as the Reason String.
      */
-    private function refuseConnect(int $reasonCode, string $error, string $authMethod): Connack
+    private function refuseConnect(int $reasonCode, string $error, string $authMethod, ?string $message = null): Connack
     {
-        return Connack::refuse($reasonCode, $this->connackProperties($authMethod, $error));
+        return Connack::refuse($reasonCode, $this->connackProperties($authMethod, $error, $message));
     }
 
     /**
@@ -159,7 +171,7 @@ class Handler implements MqttHandler
      * HiveMQ) reject it with "Auth method in CONNACK must be present". A refusal also carries the
      * Appwrite error message as the Reason String (0x1F). Returns null when there is nothing to add.
      */
-    private function connackProperties(string $authMethod, ?string $error = null): ?Properties
+    private function connackProperties(string $authMethod, ?string $error = null, ?string $message = null): ?Properties
     {
         $properties = new Properties();
 
@@ -168,7 +180,7 @@ class Handler implements MqttHandler
         }
 
         if ($error !== null) {
-            $properties->add(new Property(Property::REASON_STRING, (new Exception($error))->getMessage()));
+            $properties->add(new Property(Property::REASON_STRING, (new Exception($error, $message))->getMessage()));
         }
 
         return $properties->all() === [] ? null : $properties;
@@ -204,6 +216,37 @@ class Handler implements MqttHandler
     public function onSubscribe(Subscribe $subscribe, Connection $connection): Suback
     {
         $suback = new Suback();
+
+        // A connection that never completed CONNECT has no user to authorize or count against.
+        if (($connection->identity['userId'] ?? '') === '') {
+            foreach ($subscribe->filters() as $filter) {
+                $suback->deny();
+            }
+
+            return $suback;
+        }
+
+        if ($this->isSubscribeLimited($connection)) {
+            Span::add('mqtt.result', 'abuse');
+            $connection->disconnect(Disconnect::MESSAGE_RATE_TOO_HIGH, (new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED))->getMessage());
+            foreach ($subscribe->filters() as $filter) {
+                $suback->deny();
+            }
+
+            return $suback;
+        }
+
+        // Every filter costs authorization work, so a packet may carry only as many as the plan allows.
+        $limit = (int) ($this->getPlan($connection)['mqttFilters'] ?? APP_LIMIT_MQTT_FILTERS);
+        if (\count($subscribe->filters()) > $limit) {
+            Span::add('mqtt.result', 'quota');
+            $connection->disconnect(Disconnect::QUOTA_EXCEEDED, 'SUBSCRIBE must contain at most ' . $limit . ' topic filters.');
+            foreach ($subscribe->filters() as $filter) {
+                $suback->deny();
+            }
+
+            return $suback;
+        }
 
         // The connection's user must still be valid: re-check that it was not blocked or removed
         // since CONNECT. If it is no longer permitted, refuse every filter before any topic gating.
@@ -332,6 +375,26 @@ class Handler implements MqttHandler
         return $suback;
     }
 
+    /**
+     * Each SUBSCRIBE costs several database reads, so a user may send 32 a minute, as a realtime
+     * connection may send 32 messages. Keyed on the authenticated user, so reconnecting or opening
+     * more connections does not add to the budget.
+     */
+    private function isSubscribeLimited(Connection $connection): bool
+    {
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'enabled') {
+            return false;
+        }
+
+        $getRedis = $this->container->get('getRedis');
+        $timeLimit = new TimeLimitRedis('mqtt:subscribe:{projectId}:{userId}', 32, 60, $getRedis())->withParams([
+            '{projectId}' => (string) ($connection->identity['projectId'] ?? ''),
+            '{userId}' => (string) ($connection->identity['userId'] ?? ''),
+        ]);
+
+        return $timeLimit->check()->limited;
+    }
+
     public function onUnsubscribe(Unsubscribe $unsubscribe, Connection $connection): Unsuback
     {
         // The broker has already dropped the filters from its subscription index.
@@ -374,6 +437,13 @@ class Handler implements MqttHandler
 
         foreach ($server->subscribers($projectId, $topic) as [$connection, $grantedQos]) {
             if ($owner !== null && ($connection->identity['userId'] ?? '') !== $owner) {
+                continue;
+            }
+
+            // The credential the connection was opened with has expired, as an HTTP request with it would fail.
+            if (!$this->current($connection)) {
+                $this->untrack($connection);
+                $connection->disconnect(Disconnect::NOT_AUTHORIZED, (new Exception(Exception::USER_UNAUTHORIZED))->getMessage());
                 continue;
             }
 
@@ -425,28 +495,41 @@ class Handler implements MqttHandler
         }
     }
 
-    /** Disconnect the user's connections if they lost access; returns how many were disconnected. */
+    /**
+     * Disconnect the user's connections that lost access, each checked against the session and
+     * expiry it was opened with; returns how many were disconnected.
+     */
     public function revoke(string $projectId, string $userId): int
     {
         $this->accessClock->set($projectId, $userId);
 
-        if ($this->connectionsOf($projectId, $userId) === []) {
-            return 0;
-        }
-
-        if ($this->authorized(['projectId' => $projectId, 'userId' => $userId])) {
-            return 0;
-        }
-
         $connections = $this->connectionsOf($projectId, $userId);
-        $reason = (new Exception(Exception::USER_BLOCKED))->getMessage();
+        if ($connections === []) {
+            return 0;
+        }
 
-        foreach ($connections as $connection) {
+        // Connections opened with the same credential share one check.
+        $decisions = [];
+        $revoked = [];
+        foreach ($connections as $fd => $connection) {
+            // The credential only: when a connection is next due for a check does not change the answer.
+            $credential = $connection->identity;
+            unset($credential['recheckAt']);
+            $key = (string) \json_encode($credential);
+            $decisions[$key] ??= $this->authorized($connection->identity);
+            if (!$decisions[$key]) {
+                $revoked[$fd] = $connection;
+            }
+        }
+
+        $reason = (new Exception(Exception::USER_UNAUTHORIZED))->getMessage();
+
+        foreach ($revoked as $connection) {
             $this->untrack($connection);
             $connection->disconnect(Disconnect::NOT_AUTHORIZED, $reason);
         }
 
-        return \count($connections);
+        return \count($revoked);
     }
 
     /**
@@ -499,6 +582,42 @@ class Handler implements MqttHandler
 
             return false;
         }
+    }
+
+    /**
+     * Whether the credential the connection was opened with is still valid. A token's expiry is
+     * final; a session is checked again whenever it falls due, as it may since have been extended,
+     * ended or left short of factors.
+     */
+    private function current(Connection $connection): bool
+    {
+        $now = \time();
+
+        $expire = $connection->identity['expire'] ?? null;
+        // Expired from its exp second on, as the JWT library reads it.
+        if (\is_int($expire) && $expire <= $now) {
+            return false;
+        }
+
+        $recheckAt = $connection->identity['recheckAt'] ?? null;
+        // Due only once past, so a check falling on the expiry second never sees the session still active.
+        if (!\is_int($recheckAt) || $recheckAt >= $now) {
+            return true;
+        }
+
+        if (!$this->authorized($connection->identity)) {
+            return false;
+        }
+
+        // Never past the expiry the session had at connect, which is checked on its own.
+        $recheckAt = $now + APP_MQTT_SESSION_RECHECK;
+        $sessionExpire = $connection->identity['sessionExpire'] ?? null;
+        if (\is_int($sessionExpire) && $sessionExpire >= $now) {
+            $recheckAt = \min($recheckAt, $sessionExpire);
+        }
+        $connection->identity['recheckAt'] = $recheckAt;
+
+        return true;
     }
 
     /** @return array<int, Connection> fd => connection */
@@ -740,7 +859,7 @@ class Handler implements MqttHandler
     }
 
     /**
-     * The newest ledger messages of a topic above $after, at most $maxDepth, oldest first, cut below
+     * The newest ledger messages of a topic instance above $after, at most $maxDepth, oldest first, cut below
      * the newest one written more than $expiry seconds ago. The cut is a prefix, not a per-message
      * filter: $createdAt is stamped by each writer's clock, so an expired message can sit between
      * fresh ones, and skipping only it would leave a gap that pins the cursor. A null expiry keeps
@@ -755,7 +874,7 @@ class Handler implements MqttHandler
         }
 
         $newestFirst = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
-            Query::equal('topic', [$topic->getId()]),
+            Query::equal('topicInternalId', [(string) $topic->getSequence()]),
             Query::greaterThan('sequence', $after),
             Query::orderDesc('sequence'),
             Query::orderDesc('$sequence'),
@@ -816,6 +935,19 @@ class Handler implements MqttHandler
         return 'push:cursor:' . $connection->prefix
             . ':' . ($connection->identity['userId'] ?? '')
             . ':' . $connection->getClientId();
+    }
+
+    /**
+     * The plan of the connection's project, from the `getPlan` resource; a limit it leaves out
+     * falls back to the APP_LIMIT_MQTT_* default.
+     *
+     * @return array<string, mixed>
+     */
+    private function getPlan(Connection $connection): array
+    {
+        $getPlan = $this->container->get('getPlan');
+
+        return $getPlan($connection->prefix);
     }
 
     private function getProjectDB(string $projectId): Database

@@ -296,28 +296,6 @@
     "TS2551: Property 'osName' does not exist on type 'ActivityEvent'. Did you mean 'hostname'?": 1,
     "TS2551: Property 'osVersion' does not exist on type 'ActivityEvent'. Did you mean 'sdkVersion'?": 2
   },
-  "src/components/pages/projects/$projectId/analytics/View.tsx": {
-    "TS2741: Property 'snippetId' is missing in type 'AnalyticsProperty' but required in type 'Pick<AnalyticsProperty, \"name\" | \"$id\" | \"domain\" | \"snippetId\">'.": 2
-  },
-  "src/components/pages/projects/$projectId/analytics/_components/CustomEventsGuideDialog.tsx": {
-    "TS2339: Property 'snippetId' does not exist on type 'AnalyticsProperty'.": 1
-  },
-  "src/components/pages/projects/$projectId/analytics/_components/InstallTrackingDialog.tsx": {
-    "TS2339: Property 'snippetId' does not exist on type 'AnalyticsProperty'.": 3
-  },
-  "src/components/pages/projects/$projectId/analytics/_components/IntegrationSnippets.tsx": {
-    "TS2339: Property 'snippetId' does not exist on type 'AnalyticsProperty'.": 1
-  },
-  "src/components/pages/projects/$projectId/analytics/_components/PropertyContextMenu.tsx": {
-    "TS2344: Type '\"$id\" | \"domain\" | \"name\" | \"snippetId\"' does not satisfy the constraint 'keyof AnalyticsProperty'.": 1,
-    "TS2345: Argument of type 'unknown' is not assignable to parameter of type 'null | string | undefined'.": 1
-  },
-  "src/components/pages/projects/$projectId/analytics/_components/PropertySettings.tsx": {
-    "TS2339: Property 'snippetId' does not exist on type 'AnalyticsProperty'.": 2
-  },
-  "src/components/pages/projects/$projectId/analytics/add/View.tsx": {
-    "TS2339: Property 'snippetId' does not exist on type 'AnalyticsProperty'.": 3
-  },
   "src/components/pages/projects/$projectId/api-keys/View.tsx": {
     "TS2322: Type 'null | undefined | { keys?: unknown[] | undefined; }' is not assignable to type 'KeyList | null | undefined'.": 1
   },
@@ -653,7 +631,6 @@
     "TS2322: Type '{ to: string; params: { collectionId: string; tableId?: undefined; projectId: string; dbKind: DatabaseRouteKind; databaseId: string; } | { tableId: string; collectionId?: undefined; projectId: string; dbKind: DatabaseRouteKind; databaseId: string; }; id: \"columns\"; label: string; }' is not assignable to type 'Tab'.": 1,
     "TS2322: Type '{ to: string; params: { collectionId: string; tableId?: undefined; projectId: string; dbKind: DatabaseRouteKind; databaseId: string; } | { tableId: string; collectionId?: undefined; projectId: string; dbKind: DatabaseRouteKind; databaseId: string; }; id: \"security\"; label: string; } | { to: string; params: { collectionId: string; tableId?: undefined; projectId: string; dbKind: DatabaseRouteKind; databaseId: string; } | { tableId: string; collectionId?: undefined; projectId: string; dbKind: DatabaseRouteKind; databaseId: string; }; id: \"settings\"; label: string; }' is not assignable to type 'Tab'.": 1,
     "TS2322: Type '{ to: string; params: { collectionId: string; tableId?: undefined; projectId: string; dbKind: DatabaseRouteKind; databaseId: string; } | { tableId: string; collectionId?: undefined; projectId: string; dbKind: DatabaseRouteKind; databaseId: string; }; id: string; label: string; }' is not assignable to type 'Tab'.": 1,
-    "TS2322: Type 'Collection | undefined' is not assignable to type 'Collection'.": 2,
     "TS2345: Argument of type 'unknown[]' is not assignable to parameter of type 'TableAttribute[]'.": 1,
     "TS2352: Conversion of type 'Database & { enabled: boolean; createdAt: string; updatedAt: string; hasBackupPolicy: boolean; backupPolicy: Record<string, unknown> | null; backupPolicyCount: number; databaseType: DatabaseType; }' to type 'Database' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.": 1,
     "TS2353: Object literal may only specify known properties, and 'projectId' does not exist in type 'ParamsReducerFn<RouterCore<Route<Register, any, \"/\", \"/\", string, \"__root__\", undefined, {}, MyRouterContext, AnyContext, ({ location }: BeforeLoadContextOptions<Register, any, undefined, {}, MyRouterContext, AnyContext, \"__root__\", unknown, undefined>) => void, {}, () => Promise<{ currentUser: null; }>, RootRouteChildren, FileRouteTypes, unknown, unknown, undefined>, \"never\", false, RouterHistory, Record<string, any>>, \"PATH\", string, \"/projects/$projectId/databases/$dbKind/$databaseId/\">'.": 1,
@@ -738,9 +715,6 @@
     "TS18046: 'deployment' is of type 'unknown'.": 8,
     "TS18046: 'error' is of type 'unknown'.": 1,
     "TS2322: Type 'Function | undefined' is not assignable to type 'Function | null'.": 1
-  },
-  "src/components/pages/projects/$projectId/functions/Domains.tsx": {
-    "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 2
   },
   "src/components/pages/projects/$projectId/functions/ExecutionDetailsDrawer.tsx": {
     "TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.": 2
@@ -879,9 +853,6 @@
   "src/components/pages/projects/$projectId/settings/domains/DeleteDomain.tsx": {
     "TS18046: 'error' is of type 'unknown'.": 1
   },
-  "src/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu.tsx": {
-    "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 1
-  },
   "src/components/pages/projects/$projectId/settings/domains/RetryDomain.tsx": {
     "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 1
   },
@@ -910,9 +881,6 @@
   "src/components/pages/projects/$projectId/sites/Deployments.tsx": {
     "TS18046: 'deployment' is of type 'unknown'.": 6,
     "TS2571: Object is of type 'unknown'.": 8
-  },
-  "src/components/pages/projects/$projectId/sites/Domains.tsx": {
-    "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 2
   },
   "src/components/pages/projects/$projectId/sites/Overview.tsx": {
     "TS2339: Property 'data' does not exist on type '{ deployments: Deployment[]; total: number; isLoading: boolean; isFetching: boolean; error: Error | null; refetch: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<{ deployments: Deployment[]; total: number; }, Error>>; }'.": 2,
@@ -1703,8 +1671,7 @@
   "src/server/functions/api-reference.ts": {
     "TS2345: Argument of type '({ data }: ServerFnCtx<Register, \"GET\", undefined, ZodObject<{ version: ZodString; mode: ZodEnum<{ server: \"server\"; client: \"client\"; }>; }, $strip>>) => Promise<OpenApiSpec>' is not assignable to parameter of type 'ServerFn<Register, \"GET\", undefined, ZodObject<{ version: ZodString; mode: ZodEnum<{ server: \"server\"; client: \"client\"; }>; }, $strip>, Promise<OpenApiSpec>, true>'.": 1,
     "TS2345: Argument of type '({ data }: ServerFnCtx<Register, \"GET\", undefined, ZodObject<{ version: ZodString; model: ZodString; }, $strip>>) => Promise<ApiReferenceModelData>' is not assignable to parameter of type 'ServerFn<Register, \"GET\", undefined, ZodObject<{ version: ZodString; model: ZodString; }, $strip>, Promise<ApiReferenceModelData>, true>'.": 1,
-    "TS2345: Argument of type '({ data }: ServerFnCtx<Register, \"GET\", undefined, ZodObject<{ version: ZodString; platform: ZodString; service: ZodString; }, $strip>>) => Promise<ApiReferenceServiceData>' is not assignable to parameter of type 'ServerFn<Register, \"GET\", undefined, ZodObject<{ version: ZodString; platform: ZodString; service: ZodString; }, $strip>, Promise<ApiReferenceServiceData>, true>'.": 1,
-    "TS2345: Argument of type 'string' is not assignable to parameter of type '\"0.10.x\" | \"0.11.x\" | \"0.12.x\" | \"0.13.x\" | \"0.14.x\" | \"0.15.x\" | \"0.6.x\" | \"0.7.x\" | \"0.8.x\" | \"0.9.x\" | \"1.0.x\" | \"1.1.x\" | \"1.2.x\" | \"1.3.x\" | \"1.4.x\" | \"1.5.x\" | \"1.6.x\" | \"1.7.x\" | \"1.8.x\" | \"1.9.x\" | \"2.0.x\" | \"2.1.x\" | \"2.2.x\" | \"2.3.x\" | \"2.4.x\" | \"2.5.x\" | \"cloud\"'.": 1
+    "TS2345: Argument of type '({ data }: ServerFnCtx<Register, \"GET\", undefined, ZodObject<{ version: ZodString; platform: ZodString; service: ZodString; }, $strip>>) => Promise<ApiReferenceServiceData>' is not assignable to parameter of type 'ServerFn<Register, \"GET\", undefined, ZodObject<{ version: ZodString; platform: ZodString; service: ZodString; }, $strip>, Promise<ApiReferenceServiceData>, true>'.": 1
   },
   "src/server/middleware/agent-discovery.ts": {
     "TS2304: Cannot find name 'DISCOVERY_CORS_HEADERS'.": 1

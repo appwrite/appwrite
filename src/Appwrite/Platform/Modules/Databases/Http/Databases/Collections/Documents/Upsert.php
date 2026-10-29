@@ -150,6 +150,11 @@ class Upsert extends Action
 
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
 
+        // Whether the caller supplied permissions. Inherited permissions (from an existing
+        // document) may legitimately name roles the caller does not hold, so the grant
+        // role-check below must run only on supplied permissions — matching Update.
+        $callerProvidedPermissions = !\is_null($permissions);
+
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         // If no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
@@ -175,7 +180,7 @@ class Upsert extends Action
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
-        if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
+        if (!$isAPIKey && !$isPrivilegedUser && $callerProvidedPermissions) {
             foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
@@ -214,7 +219,7 @@ class Upsert extends Action
             $transaction = ($isAPIKey || $isPrivilegedUser)
                 ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
-            if ($transaction->isEmpty()) {
+            if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
                 throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
             }
             if ($transaction->getAttribute('status', '') !== 'pending') {
@@ -256,15 +261,7 @@ class Upsert extends Action
                 'data' => $data,
             ]);
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                    1
-                );
-            });
+            $this->stage($dbForProject, $transactionId, [$staged], $maxBatch);
 
             $queueForEvents->reset();
 
@@ -286,24 +283,32 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForDatabases->withPreserveDates(true, function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
-                return $this->withRelationshipTransaction(
-                    $dbForDatabases,
-                    $collection,
-                    [$newDocument],
-                    function (array $documents) use (&$upserted, $dbForDatabases, $collectionTableId) {
-                        $upserted = [];
+            $this->withPermissionPurge(
+                $dbForProject,
+                $database,
+                $collection,
+                $callerProvidedPermissions,
+                function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
+                    return $dbForDatabases->withPreserveDates(true, function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
+                        return $this->withRelationshipTransaction(
+                            $dbForDatabases,
+                            $collection,
+                            [$newDocument],
+                            function (array $documents) use (&$upserted, $dbForDatabases, $collectionTableId) {
+                                $upserted = [];
 
-                        return $dbForDatabases->upsertDocuments(
-                            $collectionTableId,
-                            $documents,
-                            onNext: function (Document $document) use (&$upserted) {
-                                $upserted[] = $document;
-                            },
+                                return $dbForDatabases->upsertDocuments(
+                                    $collectionTableId,
+                                    $documents,
+                                    onNext: function (Document $document) use (&$upserted) {
+                                        $upserted[] = $document;
+                                    },
+                                );
+                            }
                         );
-                    }
-                );
-            });
+                    });
+                },
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (UniqueException $e) {

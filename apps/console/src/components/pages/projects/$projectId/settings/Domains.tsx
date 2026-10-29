@@ -34,7 +34,11 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DomainsEmptyState } from './_components/DomainsEmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import {
+  canRetryRule,
+  canViewRuleLogs,
+  getApexDomain,
+} from '@/lib/utils/proxy-domains'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { VerifyDomainDialog } from './domains/VerifyDomain'
@@ -130,10 +134,6 @@ export function Domains({
       setSelectedRule(rule)
       setDeleteDomainOpen(true)
     })
-  }
-
-  const canRetry = (status: string) => {
-    return status === 'created' || status === 'unverified'
   }
 
   const getOrganizationDomainId = (rule: Models.ProxyRule) => {
@@ -241,7 +241,7 @@ export function Domains({
                               {t('View logs')}
                             </Button>
                           )}
-                          {canRetry(rule.status) && (
+                          {canRetryRule(rule.status) && (
                             <Button
                               variant="link"
                               size="sm"
@@ -266,14 +266,14 @@ export function Domains({
                               <RowActionsMenuTrigger />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {rule.status !== 'verified' && (
+                              {canViewRuleLogs(rule) && (
                                 <DropdownMenuItem
                                   onClick={() => handleViewLogs(rule)}
                                 >
                                   <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
                                 </DropdownMenuItem>
                               )}
-                              {canRetry(rule.status) && (
+                              {canRetryRule(rule.status) && (
                                 <DropdownMenuItem
                                   onClick={() => handleRetry(rule)}
                                 >
@@ -381,7 +381,7 @@ export function Domains({
           <ViewLogsDialog
             open={viewLogsOpen}
             onOpenChange={setViewLogsOpen}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
           />
 
           <DeleteDomainDialog

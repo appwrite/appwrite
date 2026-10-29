@@ -34,7 +34,7 @@ class Get extends Action
                 group: null,
                 name: 'get',
                 description: '/docs/references/migrations/get-migration.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

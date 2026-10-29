@@ -28,7 +28,11 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import {
+  canRetryRule,
+  canViewRuleLogs,
+  getApexDomain,
+} from '@/lib/utils/proxy-domains'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
@@ -65,7 +69,6 @@ export function ProxyRuleContextMenu({
     ? apexToOrgDomainId.get(apex.toLowerCase())
     : undefined
   const canOpenDnsRecords = !!projectTeamId && !!orgDomainId
-  const canRetry = rule.status === 'created' || rule.status === 'unverified'
 
   const handleOpenDnsRecords = () => {
     if (!projectTeamId || !orgDomainId) return
@@ -79,7 +82,7 @@ export function ProxyRuleContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        {rule.status !== 'verified' && (
+        {canViewRuleLogs(rule) && (
           <ContextMenuItem
             onSelect={() =>
               openDialogAfterOverlayCloses(() => onViewLogs(rule))
@@ -89,7 +92,7 @@ export function ProxyRuleContextMenu({
             {t('View logs')}
           </ContextMenuItem>
         )}
-        {canRetry && (
+        {canRetryRule(rule.status) && (
           <ContextMenuItem
             onSelect={() => openDialogAfterOverlayCloses(() => onRetry(rule))}
           >

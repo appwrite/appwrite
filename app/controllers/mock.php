@@ -129,6 +129,78 @@ Http::get('/v1/mock/tests/general/oauth2/photo')
             ->file(\base64_decode($photo));
     });
 
+Http::get('/v1/mock/tests/avatars/favicon-page')
+    ->desc('HTML page with a PNG favicon link for avatar favicon tests')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->inject('response')
+    ->action(function (Response $response) {
+        $html = <<<HTML
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <link rel="icon" href="/v1/mock/tests/avatars/bad-icon.png" sizes="64x64">
+            </head>
+            <body>favicon test page</body>
+            </html>
+            HTML;
+
+        $response
+            ->setContentType('text/html')
+            ->send($html);
+    });
+
+Http::get('/v1/mock/tests/avatars/bad-icon.png')
+    ->desc('Non-image bytes served from a PNG favicon URL for avatar favicon tests')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->inject('response')
+    ->action(function (Response $response) {
+        $response
+            ->setContentType('text/html')
+            ->send('<html><body>error page</body></html>');
+    });
+
+Http::get('/v1/mock/tests/avatars/favicon-page-truncated')
+    ->desc('HTML page with a PNG favicon link to truncated bytes for avatar favicon tests')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->inject('response')
+    ->action(function (Response $response) {
+        $html = <<<HTML
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <link rel="icon" href="/v1/mock/tests/avatars/truncated-icon.png" sizes="64x64">
+            </head>
+            <body>truncated favicon test page</body>
+            </html>
+            HTML;
+
+        $response
+            ->setContentType('text/html')
+            ->send($html);
+    });
+
+Http::get('/v1/mock/tests/avatars/truncated-icon.png')
+    ->desc('Truncated PNG bytes for avatar favicon decode failure tests')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->inject('response')
+    ->action(function (Response $response) {
+        $response
+            ->setContentType('image/png')
+            ->file("\x89PNG\r\n\x1A\n\x00\x00\x00\rIHDR");
+    });
+
 Http::get('/v1/mock/tests/general/oauth2/photo-refreshed')
     ->desc('OAuth2 Refreshed User Photo')
     ->groups(['mock'])
@@ -175,7 +247,8 @@ Http::get('/v1/mock/tests/general/oauth2/user')
             $user = [
                 'id' => $id,
                 'name' => 'Canonical Email User',
-                'email' => 'oauth.' . $id . '@gmail.com',
+                // Any address only in development, where the e2e suite runs
+                'email' => \str_contains($id, '@') && System::getEnv('_APP_ENV', 'development') === 'development' ? $id : 'oauth.' . $id . '@gmail.com',
                 'verified' => true,
                 'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
             ];
@@ -240,7 +313,7 @@ Http::patch('/v1/mock/tests/general/oauth2/native')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, bool $enabled, string $provider, ?string $appId, array $clientIds, Response $response, Database $dbForPlatform) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -368,7 +441,7 @@ Http::post('/v1/mock/api-key-unprefixed')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -421,7 +494,7 @@ Http::get('/v1/mock/github/callback')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $providerInstallationId, string $projectId, VcsFactory $vcsFactory, Document $project, Response $response, Database $dbForPlatform) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);

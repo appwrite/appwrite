@@ -2,6 +2,7 @@
 
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\Retention;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -59,7 +60,7 @@ return function (Container $container): void {
         return ProjectContext::fromArray(\is_array($project) ? $project : []);
     }, ['message']);
 
-    $container->set('project', function (Message $message, Document $console, Database $dbForPlatform) {
+    $container->set('project', function (Message $message, ProjectContext $projectContext, Document $console, Database $dbForPlatform) {
         $payload = $message->getPayload();
         $project = new Document($payload['project'] ?? []);
 
@@ -75,8 +76,12 @@ return function (Container $container): void {
 
         Span::add('project.id', $project->getId());
 
+        if ($projectContext->sequence !== '' && (string) $project->getSequence() !== $projectContext->sequence) {
+            return new Document();
+        }
+
         return $project;
-    }, ['message', 'console', 'dbForPlatform']);
+    }, ['message', 'projectContext', 'console', 'dbForPlatform']);
 
     $container->set('dbForProject', fn (DatabaseFactory $databaseFactory, Document $project, Database $dbForPlatform) => $project->isEmpty() || $project->getId() === 'console'
         ? $dbForPlatform
@@ -87,8 +92,13 @@ return function (Container $container): void {
 
     $container->set('getProjectDB', function (DatabaseFactory $databaseFactory, Database $dbForPlatform) {
         return function (Document $project) use ($databaseFactory, $dbForPlatform): Database {
-            if ($project->isEmpty() || $project->getId() === 'console') {
+            if ($project->getId() === 'console') {
                 return $dbForPlatform;
+            }
+
+            // An empty project is one deleted after the job was queued, never the platform.
+            if ($project->isEmpty()) {
+                throw new \Exception('Project not found');
             }
 
             return $databaseFactory->project(
@@ -206,4 +216,6 @@ return function (Container $container): void {
 
         return (int) ($plan['executionsRetentionCount'] ?? 100);
     }, ['project', 'plan']);
+
+    $container->set('deploymentRetention', fn (): Retention => new Retention(), []);
 };

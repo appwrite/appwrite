@@ -1353,4 +1353,16 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Load more': 'さらに読み込む',
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
+  Experiments: '実験',
+  'Features the quality team can try before they launch. Choices stay in this browser.':
+    '公開前に品質チームが試せる機能です。選択内容はこのブラウザに保存されます。',
+  'Appwrite Analytics': 'Appwrite Analytics',
+  'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
+    'コンソールにアナリティクスを表示し、プロジェクト内の訪問者、ページ、参照元、キャンペーン、カスタムイベントを計測します。',
+  'Project environments': 'プロジェクト環境',
+  'Switch between environments of a project, such as staging and production, and create one as a copy of the project.':
+    'ステージングや本番など、プロジェクトの環境を切り替え、プロジェクトのコピーとして環境を作成します。',
+  'Repository not available': 'リポジトリを利用できません',
+  'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
+    'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',
 }

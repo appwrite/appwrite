@@ -28,7 +28,8 @@ class Collection extends Table
      *     createdAt: string,
      *     updatedAt: string,
      *     enabled: bool,
-     *     dimension?: ?int
+     *     dimension?: ?int,
+     *     description?: string,
      * } $array
     */
     public static function fromArray(array $array): self
@@ -50,6 +51,7 @@ class Collection extends Table
             enabled: $array['enabled'] ?? true,
         );
 
+        $collection->setDescription($array['description'] ?? '');
         $collection->setDimension($array['dimension'] ?? null);
 
         return $collection;

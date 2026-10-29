@@ -644,7 +644,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Property: 'プロパティ',
   properties: 'プロパティ',
   'Property ID': 'プロパティ ID',
-  'Snippet ID': 'スニペット ID',
   'No properties yet': 'プロパティがまだありません',
   'Create your first property to start tracking analytics for a website or app':
     '最初のプロパティを作成して、ウェブサイトやアプリのアナリティクス計測を開始しましょう',
@@ -746,7 +745,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Identifiers and timestamps for this property.':
     'このプロパティの識別子とタイムスタンプ。',
   'Property ID:': 'プロパティ ID:',
-  'Snippet ID:': 'スニペット ID:',
   'Events are reaching Appwrite.': 'イベントが Appwrite に届いています。',
   'Install the code and load a page. Checks every few seconds.':
     'コードを導入してページを読み込んでください。数秒ごとに確認します。',
@@ -2003,8 +2001,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'It will stop receiving events immediately. This action cannot be undone.':
     'イベントの受信はすぐに停止します。この操作は元に戻せません。',
   'Last deployed:': '最終デプロイ:',
-  'Leave blank to keep current password unchanged.':
-    '空欄のままにすると、現在のパスワードは変更されません。',
+  'Leave blank to keep the current password. Re-enter it when changing the host, port, or secure protocol.':
+    '空欄のままにすると、現在のパスワードが保持されます。ホスト、ポート、またはセキュアプロトコルを変更する場合は、パスワードを再入力してください。',
   'Leave blank to keep existing': '空欄のままにすると既存の値を保持',
   'Leave empty to auto-generate': '空欄の場合は自動生成',
   'Leave empty to clear the whole project':
@@ -2093,8 +2091,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   SMTP: 'SMTP',
   'SMTP server has been disabled.': 'SMTP サーバーを無効にしました。',
   'SMTP server has been enabled.': 'SMTP サーバーを有効にしました。',
-  'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.':
-    'SSL 証明書を発行中です。通常数分かかります。操作は不要です。',
+  "SSL certificate is being issued. This usually takes a few minutes. If the logs ask for a DNS record, add it where your domain's DNS is managed.":
+    'SSL 証明書を発行中です。通常数分かかります。ログで DNS レコードの追加を求められた場合は、ドメインの DNS を管理しているサービスで追加してください。',
   'Search domains...': 'ドメインを検索...',
   'Search migrations...': 'マイグレーションを検索...',
   'Search webhooks...': 'Webhook を検索...',
@@ -3531,4 +3529,60 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Ship your apps to every store': 'アプリをすべてのストアに配信',
   'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
     'Android、iOS、Windows のリリースを 1 か所でビルドし、Google Play、App Store、Microsoft Store に提出できます。',
+  'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
+    '非アクティブなデプロイの保持期間を選択します。アクティブなデプロイとカスタムドメインに紐づくデプロイは常に保持されます。',
+  'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':
+    '2026年11月5日から、Appwrite Cloud では非アクティブなデプロイがデフォルトで30日後に削除されます。履歴をより長く残すには、それまでに保持期間を延長して「更新」をクリックしてください。',
+  'Retention limits are unavailable. Try reloading this page.':
+    '保持期間の上限を取得できません。ページを再読み込みしてください。',
+  'Your plan keeps up to 100 inactive deployments for up to 90 days.':
+    'ご利用のプランでは、非アクティブなデプロイを最大100件、最長90日間保持できます。',
+  'Your plan allows retention for up to 3 years.':
+    'ご利用のプランでは最長3年間保持できます。',
+  'Your organization has a custom retention policy.':
+    '組織にはカスタムの保持ポリシーが適用されています。',
+  'Your saved retention exceeds your plan limit. Save a supported period to update it.':
+    '保存済みの保持期間がプランの上限を超えています。対応する期間を選択して保存してください。',
+  '3 Years': '3 年',
+
+  // Environment copy at creation, its progress card, and backups in environments
+  'Start from': '開始方法',
+  'Empty environment': '空の環境',
+  'Nothing is copied from the project.':
+    'プロジェクトからは何もコピーしません。',
+  'Copy of the project': 'プロジェクトのコピー',
+  'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
+    '構造と設定をコピーし、データは指定した場合のみコピーします。コピーは環境の作成後に実行され、コピーしたものの ID はそのまま保持されます。',
+  'What to copy': 'コピーする内容',
+  'Pick what to copy, or start from an empty environment.':
+    'コピーする内容を選択するか、空の環境から開始してください。',
+  'Environment created. The copy from the project is under way.':
+    '環境を作成しました。プロジェクトからのコピーを実行中です。',
+  'Databases, tables, columns and indexes':
+    'データベース、テーブル、カラム、インデックス',
+  'Rows and documents': '行とドキュメント',
+  'Buckets and their settings': 'バケットとその設定',
+  'Teams, auth settings, security policies and OAuth2 providers':
+    'チーム、認証設定、セキュリティポリシー、OAuth2 プロバイダー',
+  'Users and memberships': 'ユーザーとメンバーシップ',
+  'The newest 90 users, with their passwords. An environment holds 100 users at most, so 10 places stay free for test accounts.':
+    '最新のユーザー 90 件を、パスワードごとコピーします。環境のユーザー数は最大 100 件のため、テストアカウント用に 10 件分の空きが残ります。',
+  'Functions, their variables and their active deployment':
+    '関数、その変数、アクティブなデプロイメント',
+  'Every deployment': 'すべてのデプロイメント',
+  'Sites, their variables and their active deployment':
+    'サイト、その変数、アクティブなデプロイメント',
+  'Providers and topics': 'プロバイダーとトピック',
+  'Platforms, SMTP, enabled services, project variables and email templates':
+    'プラットフォーム、SMTP、有効なサービス、プロジェクト変数、メールテンプレート',
+  'Copying from the project': 'プロジェクトからコピー中',
+  'Copied from the project': 'プロジェクトからコピーしました',
+  'Could not copy from the project': 'プロジェクトからコピーできませんでした',
+  Dismiss: '閉じる',
+  'Backups are not available in environments. Back up the project the environment belongs to.':
+    'バックアップは環境では利用できません。環境が属するプロジェクトをバックアップしてください。',
+  'Backed up with the project': 'プロジェクトと一緒にバックアップされます',
+  'Backup policies and archives are managed on the project this environment belongs to.':
+    'バックアップポリシーとアーカイブは、この環境が属するプロジェクトで管理します。',
+  'Open the project': 'プロジェクトを開く',
 }

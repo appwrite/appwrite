@@ -23,6 +23,7 @@ use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -69,6 +70,56 @@ class Base extends Action
 
         // Otherwise, use the lowest specification available in the plan
         return $allowedSpecifications[0];
+    }
+
+    /**
+     * Builds key their cache by runtime image, so a runtime change leaves the
+     * previous image's cache where no later build or delete looks for it.
+     */
+    protected function deleteStaleBuildCache(?Device $deviceForBuilds, string $projectId, Document $previous, Document $resource): void
+    {
+        if ($deviceForBuilds === null) {
+            return;
+        }
+
+        try {
+            $stale = Deployments::resourceCachePath($projectId, $previous);
+            if ($stale === Deployments::resourceCachePath($projectId, $resource)) {
+                return;
+            }
+            $deviceForBuilds->delete($stale);
+        } catch (\Throwable $th) {
+            // The update is already saved; a cache left behind costs storage, not correctness
+            Console::warning('Failed to delete stale build cache for ' . $resource->getId() . ': ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Owner and name of a repository linked through the installation.
+     *
+     * @return array{0: string, 1: string}
+     */
+    protected function resolveInstallationRepository(Git $adapter, Document $installation, string $providerRepositoryId): array
+    {
+        try {
+            $owner = $adapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int) $providerRepositoryId);
+            $repositoryName = $adapter->getRepositoryName($providerRepositoryId);
+
+            // Installation-wide webhooks are matched by repository id, so the repository must belong to this installation
+            if (\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $adapter->getSupportedWebhookScopes(), true)) {
+                $repository = $adapter->getRepository($owner, $repositoryName);
+                if (\strval($repository['id'] ?? '') !== $providerRepositoryId) {
+                    throw new RepositoryNotFound('Repository not found.');
+                }
+                if (!$adapter->hasAccessToAllRepositories()) {
+                    $adapter->getInstallationRepository($repositoryName);
+                }
+            }
+        } catch (RepositoryNotFound) {
+            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+        }
+
+        return [$owner, $repositoryName];
     }
 
     /**
@@ -355,12 +406,7 @@ class Base extends Action
         $branchDomain = null;
         if (!empty($providerBranch)) {
             try {
-                $branchDomain = (new BranchDomainFilter())->apply([
-                    'branch' => $providerBranch,
-                    'resourceId' => $site->getId(),
-                    'projectId' => $project->getId(),
-                    'sitesDomain' => $sitesDomain,
-                ]);
+                $branchDomain = $authorization->skip(fn () => self::branchDomain($project, $site, $providerBranch, $sitesDomain, $dbForPlatform));
             } catch (\InvalidArgumentException $error) {
                 // Deploy without a branch preview rather than store an unreachable rule
                 Console::warning('Skipping branch preview rule: ' . $error->getMessage());
@@ -429,6 +475,42 @@ class Base extends Action
     }
 
     /**
+     * The site's preview domain for a branch. A branch previewed before the
+     * domain hash was widened keeps the domain its rule already serves.
+     *
+     * @throws \InvalidArgumentException When the result is not a valid hostname
+     */
+    public static function branchDomain(Document $project, Document $site, string $branch, string $sitesDomain, Database $dbForPlatform): string
+    {
+        $input = [
+            'branch' => $branch,
+            'resourceId' => $site->getId(),
+            'projectId' => $project->getId(),
+            'sitesDomain' => $sitesDomain,
+        ];
+        $filter = new BranchDomainFilter();
+
+        $legacy = $filter->apply([...$input, 'legacy' => true]);
+        if (self::ownsBranchRule($dbForPlatform->getDocument('rules', md5($legacy)), $project, $site, $branch)) {
+            return $legacy;
+        }
+
+        return $filter->apply($input);
+    }
+
+    /**
+     * Whether a rule is the preview rule of this site's branch.
+     */
+    public static function ownsBranchRule(Document $rule, Document $project, Document $site, string $branch): bool
+    {
+        return !$rule->isEmpty()
+            && (string) $rule->getAttribute('projectInternalId') === (string) $project->getSequence()
+            && $rule->getAttribute('deploymentResourceType') === 'site'
+            && (string) $rule->getAttribute('deploymentResourceInternalId') === (string) $site->getSequence()
+            && $rule->getAttribute('deploymentVcsProviderBranch') === $branch;
+    }
+
+    /**
      * Create or repoint the site's branch-preview rule — and any manual rules
      * pinned to the branch — at a successfully built deployment.
      */
@@ -442,12 +524,7 @@ class Base extends Action
         }
 
         try {
-            $domain = (new BranchDomainFilter())->apply([
-                'branch' => $branchName,
-                'resourceId' => $site->getId(),
-                'projectId' => $project->getId(),
-                'sitesDomain' => $sitesDomain,
-            ]);
+            $domain = self::branchDomain($project, $site, $branchName, $sitesDomain, $dbForPlatform);
         } catch (\InvalidArgumentException $error) {
             // Skip only the preview rule: manual rules pinned to the branch
             // below still follow the deployment.
@@ -480,11 +557,15 @@ class Base extends Action
                 ]));
                 $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
             } catch (Duplicate) {
-                $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
-                    'deploymentId' => $deployment->getId(),
-                    'deploymentInternalId' => $deployment->getSequence(),
-                ]));
-                $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+                if (self::ownsBranchRule($dbForPlatform->getDocument('rules', $ruleId), $project, $site, $branchName)) {
+                    $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getSequence(),
+                    ]));
+                    $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+                } else {
+                    Console::warning("Skipping branch preview rule: {$domain} is held by another resource.");
+                }
             }
         }
 

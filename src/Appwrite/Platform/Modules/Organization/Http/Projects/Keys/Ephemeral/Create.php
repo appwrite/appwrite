@@ -6,10 +6,12 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Organization\Http\Projects\Keys\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -70,6 +72,7 @@ class Create extends Action
             ->inject('team')
             ->inject('apiKey')
             ->inject('auditContext')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -83,7 +86,21 @@ class Create extends Action
         Document $team,
         ?Key $apiKey,
         AuditContext $auditContext,
+        Request $request,
     ) {
+        $now = new \DateTime();
+        $expire = $now->add(new \DateInterval('PT' . $duration . 'S'))->format('Y-m-d\TH:i:s.u\Z');
+
+        // A JWT stands in for its session for a few minutes; a key it left behind would outlive it
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
+        // A key hands out no more than it holds: no broader scopes and no later expiry
+        if ($apiKey !== null && !$apiKey->mayCreate(API_KEY_EPHEMERAL, $scopes, $expire)) {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
         // The request may run through the console project; events and audits belong to the resolved project
@@ -94,12 +111,11 @@ class Create extends Action
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
 
         $secret = $jwt->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'scopes' => $scopes
         ]);
-
-        $now = new \DateTime();
-        $expire = $now->add(new \DateInterval('PT' . $duration . 'S'))->format('Y-m-d\TH:i:s.u\Z');
 
         $key = new Document([
             '$id' => $keyId,
