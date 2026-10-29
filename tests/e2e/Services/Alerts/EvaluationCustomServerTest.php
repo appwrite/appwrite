@@ -144,11 +144,56 @@ final class EvaluationCustomServerTest extends Scope
 
         // Give the notifications worker time to deliver anything that was queued.
         \sleep(10);
-        $statuses = \array_map(
-            fn (array $request) => \json_decode($request['data'] ?? '{}', true)['params']['status'] ?? null,
-            \json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($path)), true) ?: [],
-        );
-        $this->assertSame(['firing', 'ok'], $statuses);
+        $this->assertSame(['firing', 'ok'], $this->webhookStatuses($path));
+    }
+
+    public function testFiringThatOutlastsItsCooldownIsAnnounced(): void
+    {
+        $path = '/alerts/' . \uniqid();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/alerts/rules', $this->headers())['headers']['status-code']);
+        }
+
+        $created = $this->client->call(Client::METHOD_POST, '/alerts/rules', $this->headers(), [
+            'ruleId' => 'unique()',
+            'name' => 'Sustained ' . \uniqid(),
+            'metric' => 'bandwidth.outbound',
+            'comparator' => 'greaterThan',
+            'threshold' => 0,
+            'window' => 3600,
+            'cooldown' => 60,
+            'channels' => ['webhook'],
+            'webhookUrl' => 'http://request-catcher-webhook:5000' . $path,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $ruleId = $created['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $first = $this->waitForStatus($ruleId, 'firing');
+        $this->waitForWebhook($path, 'firing');
+        $this->setThreshold($ruleId, 1e15);
+        $this->waitForStatus($ruleId, 'ok');
+        $this->waitForWebhook($path, 'ok');
+
+        // Firing again inside the cooldown is held back...
+        $this->setThreshold($ruleId, 0);
+        $held = $this->waitForStatus($ruleId, 'firing');
+        $this->assertSame($first['triggeredAt'], $held['triggeredAt']);
+        $this->assertSame(['firing', 'ok'], $this->webhookStatuses($path));
+
+        // ...and announced by the first evaluation after the cooldown, while it still fires.
+        $this->assertEventually(function () use ($ruleId, $first) {
+            $rule = $this->client->call(Client::METHOD_GET, '/alerts/rules/' . $ruleId, $this->headers())['body'];
+            $this->assertSame('firing', $rule['status']);
+            $this->assertNotSame($first['triggeredAt'], $rule['triggeredAt']);
+            $this->assertGreaterThanOrEqual(60, \strtotime($rule['triggeredAt']) - \strtotime($first['triggeredAt']));
+        }, self::TIMEOUT_MS, 2_000);
+        $this->assertEventually(function () use ($path) {
+            $this->assertSame(['firing', 'ok', 'firing'], $this->webhookStatuses($path));
+        }, 60_000, 1_000);
     }
 
     public function testDocumentsDBReadsReachTheirDatabaseRule(): void
@@ -231,6 +276,19 @@ final class EvaluationCustomServerTest extends Scope
         }, self::TIMEOUT_MS, 2_000);
 
         return $rule;
+    }
+
+    /**
+     * Statuses of every webhook delivered to `$path`, oldest first.
+     *
+     * @return list<string|null>
+     */
+    private function webhookStatuses(string $path): array
+    {
+        return \array_map(
+            fn (array $request) => \json_decode($request['data'] ?? '{}', true)['params']['status'] ?? null,
+            \json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($path)), true) ?: [],
+        );
     }
 
     /**
