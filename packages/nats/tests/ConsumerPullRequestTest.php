@@ -265,7 +265,61 @@ final class ConsumerPullRequestTest extends TestCase
         $this->assertLessThan(0.5, $elapsed, 'The 404 ends the fetch, not the timeout');
     }
 
-    public function testAFetchTheServerNeverAnswersStillReturnsNearItsTimeout(): void
+    /**
+     * The other way a reply is late: still in transit when the timeout passes.
+     * A no_wait request is always answered, so whatever arrives after the timeout
+     * is that answer, already counted as delivered.
+     */
+    public function testANoWaitReplyStillArrivingAtTheTimeoutIsReadToItsEnd(): void
+    {
+        $fake = new FakeTransport();
+        $late = new LateReadTransport($fake);
+        $conn = Connection::connect(new ConnectionOptions(
+            servers: 'nats://127.0.0.1:4222',
+            allowReconnect: false,
+            transportFactory: fn (string $scheme): LateReadTransport => $late,
+        ));
+        $consumer = $this->consumer($conn);
+
+        $sid = $this->pendingSid($conn);
+        for ($i = 0; $i < 3; $i++) {
+            $fake->pushInbound("MSG _INBOX.scripted {$sid} 2\r\nm{$i}\r\n");
+        }
+        $late->arriveAfter(0.3);
+
+        $batch = $consumer->fetch(3, 0.02, true);
+
+        $this->assertCount(3, $batch, 'Every message the server sent for this pull request');
+    }
+
+    /**
+     * A pull without an expiry may be held open by the server, so past the
+     * timeout only frames already here are read: anything later is new work
+     * the caller did not wait for.
+     */
+    public function testAPullWithoutAnExpiryDoesNotWaitForWorkPastItsTimeout(): void
+    {
+        $fake = new FakeTransport();
+        $late = new LateReadTransport($fake);
+        $conn = Connection::connect(new ConnectionOptions(
+            servers: 'nats://127.0.0.1:4222',
+            allowReconnect: false,
+            transportFactory: fn (string $scheme): LateReadTransport => $late,
+        ));
+        $consumer = $this->consumer($conn);
+
+        $fake->pushInbound("MSG _INBOX.scripted {$this->pendingSid($conn)} 2\r\nm0\r\n");
+        $late->arriveAfter(0.5);
+
+        $started = microtime(true);
+        $batch = $consumer->fetch(1, 0.0);
+        $elapsed = microtime(true) - $started;
+
+        $this->assertCount(0, $batch);
+        $this->assertLessThan(0.3, $elapsed, 'A zero timeout must not wait for work');
+    }
+
+    public function testAFetchTheServerNeverAnswersGivesUpOneWaitPastItsTimeout(): void
     {
         $fake = new FakeTransport();
         $consumer = $this->consumer($this->connect($fake));
@@ -275,7 +329,7 @@ final class ConsumerPullRequestTest extends TestCase
         $elapsed = microtime(true) - $started;
 
         $this->assertCount(0, $batch);
-        $this->assertLessThan(0.3, $elapsed, 'Nothing was sent, so there is nothing to wait for past the timeout');
+        $this->assertLessThan(0.05 + 1.0 + 0.3, $elapsed, 'A lost reply costs the timeout plus one reply wait');
     }
 
     public function testAMessageWithoutAStatusIsStillDelivered(): void

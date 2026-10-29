@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\NATS\Tests\E2E;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
 use Utopia\NATS\ConnectionOptions;
@@ -159,7 +160,8 @@ final class ConsumerNoWaitTest extends TestCase
      * coroutine held off by busy neighbours -- must still get all of them, or
      * the rest sit unacknowledged until ackWait and are charged an attempt.
      */
-    public function testNoWaitFetchReadAfterItsTimeoutLeavesNothingDeliveredBehind(): void
+    #[DataProvider('lateness')]
+    public function testNoWaitFetchReadAfterItsTimeoutLeavesNothingDeliveredBehind(string $how): void
     {
         [$stream, $subject] = $this->createStream();
         for ($i = 0; $i < 5; $i++) {
@@ -177,9 +179,14 @@ final class ConsumerNoWaitTest extends TestCase
             filterSubject: $subject,
         ));
 
-        // Far past the timeout: however long the reader is held off, the answer
-        // is already on the socket.
-        $late->delayNextRead(1.2);
+        if ($how === 'held off') {
+            // Far past the timeout: however long the reader is held off, the
+            // answer is already on the socket.
+            $late->delayNextRead(1.2);
+        } else {
+            // Not readable until well after the timeout, as on a slow link.
+            $late->arriveAfter(0.3);
+        }
         $batch = $consumer->fetch(5, 0.05, true);
 
         $this->assertCount(5, $batch, 'The whole answer reaches the caller');
@@ -190,6 +197,15 @@ final class ConsumerNoWaitTest extends TestCase
         );
 
         $conn->close();
+    }
+
+    /** @return array<string, array{string}> */
+    public static function lateness(): array
+    {
+        return [
+            'reader held off the socket' => ['held off'],
+            'reply still in transit' => ['in transit'],
+        ];
     }
 
     public function testPartialNoWaitFetchReturnsWithoutWaitingOutTheTimeout(): void

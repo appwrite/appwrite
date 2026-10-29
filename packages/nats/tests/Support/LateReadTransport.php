@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Utopia\NATS\Tests\Support;
 
+use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Transport\Transport;
 
 /**
- * Transport decorator that holds the next read back, as a process that has not
- * scheduled its reading coroutine yet would. Whatever the server sends in the
- * meantime waits on the socket, exactly as it does in production.
+ * Transport decorator for a reply the reader gets late. delayNextRead() holds
+ * the next read back, as a process that has not scheduled its reading
+ * coroutine yet would: the reply waits on the socket. arriveAfter() makes
+ * nothing readable until then, as a reply still in transit would.
  */
 final class LateReadTransport implements Transport
 {
     private float $delay = 0.0;
+
+    private float $arrival = 0.0;
 
     public function __construct(private readonly Transport $inner)
     {
@@ -22,6 +26,11 @@ final class LateReadTransport implements Transport
     public function delayNextRead(float $seconds): void
     {
         $this->delay = $seconds;
+    }
+
+    public function arriveAfter(float $seconds): void
+    {
+        $this->arrival = microtime(true) + $seconds;
     }
 
     public function connect(string $host, int $port, float $timeout): void
@@ -69,6 +78,10 @@ final class LateReadTransport implements Transport
         if ($this->delay > 0) {
             usleep((int) ($this->delay * 1_000_000));
             $this->delay = 0.0;
+        }
+        if (microtime(true) < $this->arrival) {
+            usleep(1_000);
+            throw new TimeoutException('Nothing has arrived yet');
         }
     }
 }
