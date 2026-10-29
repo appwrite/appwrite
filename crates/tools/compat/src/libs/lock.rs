@@ -295,8 +295,23 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
         "lock.acquire_elapsed" => {
             let w = wait(&a)?;
+            let holder = match a.opt("release") {
+                Some(r) => Some(session.get::<AnyLock>(r)?.clone()),
+                None => None,
+            };
+            let delay = Duration::from_secs_f64(a.opt_f64("release_after_ms")?.unwrap_or(0.0) / 1000.0);
+            // The holder lets go release_after_ms in, while acquire() waits.
+            let release = async {
+                if let Some(holder) = &holder {
+                    utopia_async::sleep(delay).await;
+                    let _ = each!(holder, l => l.release().await);
+                }
+            };
             let start = std::time::Instant::now();
-            match each!(&lock(session)?, l => l.acquire(w).await) {
+            let waiter = lock(session)?;
+            let acquire = async { each!(&waiter, l => l.acquire(w).await) };
+            let (result, ()) = futures_util::join!(acquire, release);
+            match result {
                 Ok(acquired) => {
                     let elapsed = start.elapsed().as_secs_f64();
                     Outcome::Ok(

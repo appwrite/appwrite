@@ -51,11 +51,9 @@ pub enum Wait {
     None,
     /// Retry until this much time has passed.
     For(Duration),
-    /// Wait until acquired. [`Distributed`] and [`File`] treat this as
-    /// [`Wait::None`].
+    /// Wait until acquired.
     ///
-    /// PHP: the same as a negative timeout, which PHP's `Distributed` and
-    /// `File` also try only once.
+    /// PHP: a negative timeout.
     Forever,
 }
 

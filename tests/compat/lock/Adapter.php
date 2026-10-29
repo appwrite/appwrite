@@ -88,9 +88,21 @@ final class Adapter implements Base, Benchmarks
             },
             'distributed.retry_spread' => fn (array $a, Session $s) => self::retrySpread($s, $a),
             'lock.acquire_elapsed' => function (array $a, Session $s) {
-                $start = microtime(true);
-                $acquired = self::lock($a, $s)->acquire(...self::timeout($a));
-                $elapsed = microtime(true) - $start;
+                $holder = isset($a['release']) ? self::lock(['lock' => $a['release']], $s) : null;
+                $acquired = false;
+                $elapsed = 0.0;
+                Coroutine\run(function () use ($a, $s, $holder, &$acquired, &$elapsed): void {
+                    if ($holder !== null) {
+                        // The holder lets go release_after_ms in, while acquire() waits.
+                        go(function () use ($a, $holder): void {
+                            Coroutine::sleep($a['release_after_ms'] / 1000);
+                            $holder->release();
+                        });
+                    }
+                    $start = microtime(true);
+                    $acquired = self::lock($a, $s)->acquire(...self::timeout($a));
+                    $elapsed = microtime(true) - $start;
+                });
 
                 return ['acquired' => $acquired, 'within' => $elapsed >= $a['at_least'] && $elapsed < $a['below']];
             },
