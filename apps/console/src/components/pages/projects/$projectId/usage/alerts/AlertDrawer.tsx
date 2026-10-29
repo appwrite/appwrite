@@ -13,7 +13,8 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { StatusPill } from '../monitors/StatusPill'
-import { alertCondition, alertLength } from './AlertHistory'
+import { alertLength } from '@/lib/alerts/timeline'
+import { alertCondition } from './AlertHistory'
 
 function Stat({
   label,

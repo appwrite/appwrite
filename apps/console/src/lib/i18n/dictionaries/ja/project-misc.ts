@@ -3625,6 +3625,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'the whole project': 'プロジェクト全体',
   within: '期間',
   'Waiting for the first check': '最初のチェックを待っています',
+  peak: 'ピーク',
+  '{count} sent': '{count} 件送信',
+  ongoing: '継続中',
   'Would not have fired in the {range}': '{range}には発火しなかったはずです',
   'Would have fired {count}× in the {range}':
     '{range}に {count} 回発火したはずです',

@@ -8,6 +8,12 @@ import {
 } from '@/lib/alerts/metrics'
 import { fillBuckets, firings, rolling, seriesPlan } from '@/lib/alerts/series'
 import {
+  MIN_BAR_PERCENT,
+  alertLength,
+  barWidths,
+  groupAlertsByDay,
+} from '@/lib/alerts/timeline'
+import {
   buildRules,
   parseMonitor,
   parseRules,
@@ -231,5 +237,50 @@ describe('alert lengths', () => {
     [90_061, '1 d 1 h'],
   ])('%d seconds read as %s', (seconds, text) => {
     expect(formatLength(seconds)).toBe(text)
+  })
+})
+
+describe('alerts feed', () => {
+  // Local times, so the day boundaries hold in any time zone the tests run in.
+  const at = (day: number, hour: number, minute = 0) =>
+    new Date(2026, 9, day, hour, minute).toISOString()
+  const now = new Date(2026, 9, 29, 12, 0).getTime()
+  const alert = (start: string, end: string | null) => ({
+    $createdAt: start,
+    resolvedAt: end,
+  })
+
+  test('groups alerts by the local day they started, newest day first', () => {
+    const late = alert(at(29, 9), null)
+    const early = alert(at(29, 0, 5), at(29, 1))
+    const yesterday = alert(at(28, 23, 55), at(29, 0, 30))
+    const older = alert(at(20, 8), at(20, 9))
+
+    const days = groupAlertsByDay([late, early, yesterday, older], now)
+
+    expect(days.map((day) => day.daysAgo)).toEqual([0, 1, 9])
+    expect(days[0].alerts).toEqual([late, early])
+    // Grouped by when it started, even though it resolved today.
+    expect(days[1].alerts).toEqual([yesterday])
+    expect(days[2].key).toBe('2026-10-20')
+  })
+
+  test('scales bars to the longest alert, ongoing ones running to now', () => {
+    const ongoing = alert(at(29, 8), null)
+    const hour = alert(at(29, 6), at(29, 7))
+    const blip = alert(at(29, 5), at(29, 5))
+
+    const widths = barWidths([ongoing, hour, blip], now)
+
+    expect(alertLength(ongoing, now)).toBe(4 * 3600)
+    expect(widths.get(ongoing)).toBe(100)
+    expect(widths.get(hour)).toBe(25)
+    // A zero-length alert still draws a mark.
+    expect(widths.get(blip)).toBe(MIN_BAR_PERCENT)
+  })
+
+  test('draws only marks when every alert is instant', () => {
+    const instant = alert(at(29, 5), at(29, 5))
+    expect(barWidths([instant], now).get(instant)).toBe(MIN_BAR_PERCENT)
   })
 })

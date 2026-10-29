@@ -3555,6 +3555,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'the whole project': 'הפרויקט כולו',
   within: 'בתוך',
   'Waiting for the first check': 'ממתין לבדיקה הראשונה',
+  peak: 'שיא',
+  '{count} sent': '{count} נשלחו',
+  ongoing: 'פעיל',
   'Would not have fired in the {range}': 'לא היה מופעל ב{range}',
   'Would have fired {count}× in the {range}':
     'היה מופעל {count} פעמים ב{range}',

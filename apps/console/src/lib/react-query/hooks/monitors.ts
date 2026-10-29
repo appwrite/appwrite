@@ -183,6 +183,34 @@ export function useUpdateMonitor(projectId: string | null | undefined) {
           .monitors.updateUsageMonitor({ monitorId, ...changes }),
       )
     },
+    // Pausing and resuming flip at once in the list, and roll back if the update fails.
+    onMutate: async ({ monitorId, changes }) => {
+      if (changes.enabled === undefined) return undefined
+      const queryKey = monitorsQueryOptions(projectId).queryKey
+      await queryClient.cancelQueries({ queryKey })
+      const previous = queryClient.getQueryData(queryKey)
+      queryClient.setQueryData(queryKey, (current) =>
+        current
+          ? {
+              ...current,
+              monitors: current.monitors.map((monitor) =>
+                monitor.$id === monitorId
+                  ? { ...monitor, enabled: changes.enabled! }
+                  : monitor,
+              ),
+            }
+          : current,
+      )
+      return { previous }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          monitorsQueryOptions(projectId).queryKey,
+          context.previous,
+        )
+      }
+    },
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['monitors', 'project', projectId],

@@ -1,16 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import {
   Bell,
+  ChevronRight,
   Copy,
   FileJson,
+  Gauge,
   Loader2,
+  Mail,
   Pencil,
   Plus,
-  Power,
-  PowerOff,
   Search,
   Trash2,
+  Webhook,
+  type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -24,6 +28,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import {
   Dialog,
   DialogContent,
@@ -75,7 +80,7 @@ import { MonitorDrawer } from './MonitorDrawer'
 import { CreateMonitor } from './CreateMonitor'
 import type { RuleForm } from './RuleFields'
 import { RuleSparkline } from './RuleChart'
-import { StatusPill, ruleState, type RuleState } from './StatusPill'
+import { ruleState, type RuleState } from './StatusPill'
 
 const STATE_ORDER: Record<RuleState, number> = {
   firing: 0,
@@ -84,10 +89,36 @@ const STATE_ORDER: Record<RuleState, number> = {
   paused: 3,
 }
 
-const CHANNEL_LABELS: Record<AlertChannel, string> = {
-  email: 'Email',
-  console: 'Console',
-  webhook: 'Webhook',
+const CHANNELS: Record<AlertChannel, { label: string; icon: LucideIcon }> = {
+  email: { label: 'Email', icon: Mail },
+  console: { label: 'Console', icon: Bell },
+  webhook: { label: 'Webhook', icon: Webhook },
+}
+
+const STATE_STYLES: Record<
+  RuleState,
+  { dot: string; text: string; label: string }
+> = {
+  firing: {
+    dot: 'bg-red-500',
+    text: 'text-red-600 dark:text-red-400',
+    label: 'Firing',
+  },
+  ok: {
+    dot: 'bg-emerald-500',
+    text: 'text-foreground',
+    label: 'OK',
+  },
+  pending: {
+    dot: 'border-[1.5px] border-blue-600 dark:border-blue-400',
+    text: 'text-muted-foreground',
+    label: 'Pending',
+  },
+  paused: {
+    dot: 'bg-muted-foreground/50',
+    text: 'text-muted-foreground',
+    label: 'Paused',
+  },
 }
 
 type Filter = 'all' | RuleState
@@ -377,28 +408,39 @@ export function Monitors({
           </div>
 
           {filtered.length === 0 ? (
-            <EmptyState icon={Bell} hasFilters variant="card" />
+            <EmptyState icon={Gauge} hasFilters variant="card" />
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
               {filtered.map((monitor) => {
                 const state = ruleState(monitor)
                 const named = !sentence(monitor).startsWith(monitor.name)
-                const ratio =
-                  state === 'firing' && monitor.value !== null
-                    ? thresholdRatio(monitor)
-                    : null
                 return (
                   <li
                     key={monitor.$id}
-                    className={cn(
-                      'group relative flex cursor-pointer items-center gap-4 px-4 py-3 transition-colors hover:bg-accent/30',
-                      state === 'firing' &&
-                        'before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-red-500',
-                    )}
+                    className="group flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/30 sm:gap-4"
                     onClick={() => handleOpen(monitor)}
                   >
-                    <StatusPill status={state} className="w-[76px] shrink-0" />
-                    <div className="min-w-0 flex-1">
+                    <div
+                      className="flex shrink-0"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <Switch
+                        checked={monitor.enabled}
+                        onCheckedChange={() => handleToggle(monitor)}
+                        disabled={createDisabled}
+                        aria-label={
+                          monitor.enabled
+                            ? `${t('Pause')} ${monitor.name}`
+                            : `${t('Resume')} ${monitor.name}`
+                        }
+                      />
+                    </div>
+                    <div
+                      className={cn(
+                        'min-w-0 flex-1',
+                        state === 'paused' && 'opacity-60',
+                      )}
+                    >
                       {/* A name that only repeats the condition is shown once, as the condition. */}
                       <p className="truncate text-[13px] font-medium text-foreground">
                         {named ? monitor.name : sentence(monitor)}
@@ -411,10 +453,6 @@ export function Monitors({
                           </>
                         )}
                         {scope(monitor)}
-                        <span className="mx-1.5">·</span>
-                        {monitor.channels
-                          .map((channel) => t(CHANNEL_LABELS[channel]))
-                          .join(', ')}
                       </p>
                     </div>
                     <RuleSparkline
@@ -425,39 +463,12 @@ export function Monitors({
                         state === 'paused' && 'opacity-50',
                       )}
                     />
-                    <div className="hidden w-32 shrink-0 text-end sm:block">
-                      <p
-                        className={cn(
-                          'text-[13px] font-medium tabular-nums',
-                          state === 'firing'
-                            ? 'text-red-500'
-                            : 'text-foreground',
-                        )}
-                      >
-                        {monitor.value === null || state === 'pending'
-                          ? '–'
-                          : formatMetricValue(monitor.metric, monitor.value)}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {state === 'pending' ? (
-                          t('Waiting for the first check')
-                        ) : (
-                          <>
-                            {ratio && (
-                              <span className="text-red-500">
-                                {ratio}
-                                <span className="mx-1 text-muted-foreground">
-                                  ·
-                                </span>
-                              </span>
-                            )}
-                            {monitor.evaluatedAt && (
-                              <DateTooltip date={monitor.evaluatedAt} />
-                            )}
-                          </>
-                        )}
-                      </p>
-                    </div>
+                    <ChannelIcons channels={monitor.channels} />
+                    <MonitorState
+                      projectId={projectId}
+                      monitor={monitor}
+                      state={state}
+                    />
                     <div
                       className="flex shrink-0 justify-end"
                       onClick={(event) => event.stopPropagation()}
@@ -475,18 +486,6 @@ export function Monitors({
                           >
                             <MenuItemContent icon={Pencil}>
                               {t('Update')}
-                            </MenuItemContent>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={
-                              createDisabled || updateMutation.isPending
-                            }
-                            onClick={() => handleToggle(monitor)}
-                          >
-                            <MenuItemContent
-                              icon={monitor.enabled ? PowerOff : Power}
-                            >
-                              {monitor.enabled ? t('Pause') : t('Resume')}
                             </MenuItemContent>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -602,6 +601,104 @@ export function Monitors({
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+/** The channels a monitor notifies, as icons named in their tooltips. */
+function ChannelIcons({ channels }: { channels: AlertChannel[] }) {
+  const t = useT()
+  return (
+    <div
+      className="hidden w-[68px] shrink-0 items-center gap-1.5 text-muted-foreground lg:flex"
+      onClick={(event) => event.stopPropagation()}
+    >
+      {channels.map((channel) => {
+        const { label, icon: Icon } = CHANNELS[channel]
+        return (
+          <Tooltip key={channel}>
+            <TooltipTrigger asChild>
+              <span
+                tabIndex={0}
+                aria-label={t(label)}
+                className="flex h-6 w-6 items-center justify-center rounded-md border border-border bg-background"
+              >
+                <Icon className="h-3.5 w-3.5" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{t(label)}</TooltipContent>
+          </Tooltip>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * Where the monitor stands: a small dot and label, with the last reading under
+ * it. A firing monitor links to the alert it holds open.
+ */
+function MonitorState({
+  projectId,
+  monitor,
+  state,
+}: {
+  projectId: string
+  monitor: ParsedMonitor
+  state: RuleState
+}) {
+  const t = useT()
+  const style = STATE_STYLES[state]
+  const ratio =
+    state === 'firing' && monitor.value !== null
+      ? thresholdRatio(monitor)
+      : null
+  const label = (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 text-[12px] font-medium',
+        style.text,
+      )}
+    >
+      <span className={cn('h-2 w-2 shrink-0 rounded-full', style.dot)} />
+      {t(style.label)}
+    </span>
+  )
+  return (
+    <div className="w-[72px] shrink-0 text-end sm:w-32">
+      {state === 'firing' && monitor.alertId ? (
+        <Link
+          to="/projects/$projectId/usage/alerts"
+          params={{ projectId }}
+          search={{ alert: monitor.alertId }}
+          onClick={(event) => event.stopPropagation()}
+          className="inline-flex items-center gap-0.5 rounded-sm hover:underline hover:underline-offset-4"
+        >
+          {label}
+          <ChevronRight className="h-3.5 w-3.5 text-red-600 rtl:rotate-180 dark:text-red-400" />
+        </Link>
+      ) : (
+        label
+      )}
+      <p className="mt-0.5 hidden truncate text-[11px] tabular-nums text-muted-foreground sm:block">
+        {state === 'pending' ? (
+          t('Waiting for the first check')
+        ) : (
+          <>
+            {monitor.value !== null &&
+              formatMetricValue(monitor.metric, monitor.value)}
+            {ratio && (
+              <span className="text-red-600 dark:text-red-400"> ({ratio})</span>
+            )}
+            {monitor.evaluatedAt && (
+              <>
+                <span className="mx-1">·</span>
+                <DateTooltip date={monitor.evaluatedAt} />
+              </>
+            )}
+          </>
+        )}
+      </p>
     </div>
   )
 }
