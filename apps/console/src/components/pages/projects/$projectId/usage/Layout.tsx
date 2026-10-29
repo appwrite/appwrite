@@ -218,24 +218,6 @@ function isMonitoringPage(id: string): id is MonitoringPage {
   return id in MONITORING_PAGES
 }
 
-/** Monitors are settings and read neutral; alerts are what happened and carry the bell's tint. */
-function MonitoringPageIcon({ page }: { page: MonitoringPage }) {
-  const { icon: Icon } = MONITORING_PAGES[page]
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border',
-        page === 'alerts'
-          ? 'border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-          : 'border-border bg-muted/60 text-muted-foreground',
-      )}
-    >
-      <Icon className="h-[18px] w-[18px]" />
-    </span>
-  )
-}
-
 function MonitoringNavLink({
   projectId,
   page,
@@ -984,22 +966,19 @@ function UsageLayoutContent({
 
             {monitoringPage ? (
               <>
-                <div className="mb-6 flex items-start gap-3">
-                  <MonitoringPageIcon page={monitoringPage} />
-                  <div>
-                    <h2 className="text-[16px] font-semibold text-foreground">
-                      {t(MONITORING_PAGES[monitoringPage].label)}
-                    </h2>
-                    <p className="mt-1 text-[13px] text-muted-foreground">
-                      {monitoringPage === 'monitors'
-                        ? t(
-                            'Get notified when usage crosses a threshold, and again when it recovers.',
-                          )
-                        : t(
-                            'Every time a monitor fired: when, how far over its threshold, and when it recovered.',
-                          )}
-                    </p>
-                  </div>
+                <div className="mb-6">
+                  <h2 className="text-[16px] font-semibold text-foreground">
+                    {t(MONITORING_PAGES[monitoringPage].label)}
+                  </h2>
+                  <p className="mt-1 text-[13px] text-muted-foreground">
+                    {monitoringPage === 'monitors'
+                      ? t(
+                          'Get notified when usage crosses a threshold, and again when it recovers.',
+                        )
+                      : t(
+                          'Every time a monitor fired: when, how far over its threshold, and when it recovered.',
+                        )}
+                  </p>
                 </div>
                 <Outlet />
               </>
