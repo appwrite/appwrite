@@ -297,6 +297,23 @@ final class UserTest extends TestCase
         $this->assertTrue($user->sessionFactorsMet('pending'));
     }
 
+    public function testSessionChallengeRecent(): void
+    {
+        $user = new User([
+            '$id' => Id::custom('user1'),
+            'sessions' => [
+                new Document(['$id' => Id::custom('recent'), 'mfaUpdatedAt' => DateTime::addSeconds(new \DateTime(), -60)]),
+                new Document(['$id' => Id::custom('stale'), 'mfaUpdatedAt' => DateTime::addSeconds(new \DateTime(), -MFA_RECENT_DURATION - 60)]),
+                new Document(['$id' => Id::custom('never')]),
+            ],
+        ]);
+
+        $this->assertTrue($user->sessionChallengeRecent('recent'));
+        $this->assertFalse($user->sessionChallengeRecent('stale'));
+        $this->assertFalse($user->sessionChallengeRecent('never'));
+        $this->assertFalse($user->sessionChallengeRecent('missing'));
+    }
+
     public function testTokenVerify(): void
     {
         $proofForToken = new Token();
