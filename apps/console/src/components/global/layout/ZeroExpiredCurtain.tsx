@@ -7,6 +7,7 @@ import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { useAccountZero } from '@/lib/react-query/hooks/zero'
 import { formatRemaining, getRemainingMs } from '@/lib/zero/countdown'
+import { getZeroTransferSearch } from '@/lib/zero/session'
 
 /**
  * Shown instead of the paused curtain when a Zero project's build window has
@@ -16,6 +17,7 @@ export function ZeroExpiredCurtain() {
   const t = useT()
   const now = useNow()
   const { data: zero } = useAccountZero({ poll: true })
+  const transfer = getZeroTransferSearch(zero?.claimUrl)
 
   return (
     <FullScreenCurtain
@@ -25,12 +27,11 @@ export function ZeroExpiredCurtain() {
         'This project is paused and its data is kept until the claim deadline. Claim it to keep building.',
       )}
       actions={
-        zero?.secret ? (
+        transfer ? (
           <Button asChild variant="brandCta" className="gap-1.5">
             <Link
-              to="/zero/$zeroId"
-              params={{ zeroId: zero.$id }}
-              search={{ secret: zero.secret }}
+              to="/transfer"
+              search={transfer}
               {...analyticsAttrs('zero-claim')}
             >
               <ShieldCheck className="size-4" />

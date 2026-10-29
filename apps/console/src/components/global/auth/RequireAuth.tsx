@@ -50,8 +50,9 @@ export function isOptionalAuthPage(pathname: string): boolean {
   if (pathname === '/oauth2/consent') return true
   // Native SDK OAuth relays open in a browser with no console session.
   if (pathname.startsWith('/auth/oauth2/')) return true
-  // Zero claim links are opened by whoever an agent handed them to.
-  if (pathname.startsWith('/zero/')) return true
+  // Transfer links are opened by whoever they were shared with, signed in or
+  // not; the page asks a guest to sign in and returns to it afterwards.
+  if (pathname === '/transfer') return true
   const features = getActiveProfileFeatures()
   if (pathname === '/init' || pathname.startsWith('/init/')) {
     return isInitSurfaceEnabled()
@@ -138,6 +139,8 @@ function shouldSkipDuplicateAuthRedirect(key: string): boolean {
  */
 export function shouldRedirectToConsoleMfa(pathname: string): boolean {
   if (pathname === '/mfa') return false
+  // A guest signing in to claim a transfer finishes MFA and comes back.
+  if (pathname === '/transfer') return true
   return !isOptionalAuthPage(pathname)
 }
 

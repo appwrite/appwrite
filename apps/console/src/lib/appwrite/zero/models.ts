@@ -50,11 +50,8 @@ export type ZeroProject = {
    */
   apiKey?: string
   /**
-   * Claim secret. Only returned on create.
-   */
-  secret?: string
-  /**
-   * URL a person opens to claim the project. Only returned on create.
+   * Transfer page a person opens to claim the project, carrying the
+   * transfer ID and secret.
    */
   claimUrl?: string
   /**

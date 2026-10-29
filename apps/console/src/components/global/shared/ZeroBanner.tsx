@@ -11,7 +11,7 @@ import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { useAccountZero } from '@/lib/react-query/hooks/zero'
 import { formatRemaining, getRemainingMs } from '@/lib/zero/countdown'
-import { isZeroAccount } from '@/lib/zero/session'
+import { getZeroTransferSearch, isZeroAccount } from '@/lib/zero/session'
 
 /**
  * Counts down a Zero project's build and claim windows while the console is
@@ -31,11 +31,12 @@ function ZeroBannerContent({ className }: { className?: string }) {
   const expiresAt = zero?.expiresAt
   const claimBy = zero?.claimBy
 
-  const claimLink = zero?.secret ? (
+  const transfer = getZeroTransferSearch(zero?.claimUrl)
+
+  const claimLink = transfer ? (
     <Link
-      to="/zero/$zeroId"
-      params={{ zeroId: zero.$id }}
-      search={{ secret: zero.secret }}
+      to="/transfer"
+      search={transfer}
       className={headerAlertOutlineButtonClass(
         expiresAt && getRemainingMs(expiresAt, now) > 0 ? 'info' : 'warning',
       )}

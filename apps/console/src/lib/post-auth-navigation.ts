@@ -158,9 +158,9 @@ export async function prefetchPostAuthDestination(
 ): Promise<void> {
   // Authorizing an OAuth2 app: skip org provisioning/prefetch entirely.
   if (isOAuth2FlowRedirect(redirect)) return
-  // Claiming a Zero project can hand the account its free organization, which
-  // a provisioned personal organization would take instead.
-  if (redirect && normalizeRedirectPathname(redirect).startsWith('/zero/')) {
+  // Claiming a transfer offers its own choice of organization, so a new account
+  // does not get a starter organization and project it did not ask for.
+  if (redirect && normalizeRedirectPathname(redirect) === '/transfer') {
     return
   }
   // Education enrollment provisions its own organization after verifying GitHub.

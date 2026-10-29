@@ -8,8 +8,11 @@ import {
 } from '@tanstack/react-query'
 import { FolderInput, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { sdk } from '@/lib/appwrite/sdk'
+import { PERSONAL_ORG_NAME } from '@/lib/ensure-personal-org'
 import { useOrganizations } from '@/lib/react-query/hooks'
+import { createOrganization } from '@/lib/react-query/hooks/organizations'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
@@ -48,6 +51,7 @@ export function ClaimProjectTransfer({
   const [teamId, setTeamId] = useState('')
   const hasLink = transferId !== '' && secret !== ''
   const hasOrganizations = organizationsLoading || organizations.length > 0
+  const { features } = useConsoleProfile()
 
   useEffect(() => {
     if (teamId === '' && organizations.length > 0) {
@@ -83,6 +87,21 @@ export function ClaimProjectTransfer({
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, t('Failed to claim project')))
+    },
+  })
+
+  // Someone who signed up to claim a link has no organization to receive it yet
+  const createOrganizationMutation = useMutation({
+    mutationFn: () => createOrganization({ name: PERSONAL_ORG_NAME }),
+    onSuccess: async (organization) => {
+      if (!('$id' in organization)) return
+      await queryClient.invalidateQueries({ queryKey: ['organizations'] })
+      setTeamId(organization.$id)
+    },
+    onError: (error) => {
+      toast.error(
+        getErrorMessage(error, t('Could not create the organization')),
+      )
     },
   })
 
@@ -131,7 +150,7 @@ export function ClaimProjectTransfer({
         }
       >
         <AuthFlowNarrowCard>
-          {!hasLink || !hasOrganizations ? (
+          {!hasLink ? (
             <div className="space-y-6">
               <div className="flex flex-col items-center gap-4 text-center">
                 <AuthFlowHeaderIcon
@@ -141,13 +160,9 @@ export function ClaimProjectTransfer({
                 <div className="space-y-1">
                   <AuthFlowTitle>{t('Claim project')}</AuthFlowTitle>
                   <AuthFlowDescription>
-                    {!hasLink
-                      ? t(
-                          'This transfer link is incomplete. Ask the sender to share it again.',
-                        )
-                      : t(
-                          'You need an organization to claim this project. Create one, then open the link again.',
-                        )}
+                    {t(
+                      'This transfer link is incomplete. Ask the sender to share it again.',
+                    )}
                   </AuthFlowDescription>
                 </div>
               </div>
@@ -158,6 +173,40 @@ export function ClaimProjectTransfer({
               >
                 {t('Go to dashboard')}
               </Button>
+            </div>
+          ) : !hasOrganizations ? (
+            <div className="space-y-6">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <AuthFlowHeaderIcon icon={FolderInput} />
+                <div className="space-y-1">
+                  <AuthFlowTitle>{t('Claim project')}</AuthFlowTitle>
+                  <AuthFlowDescription>
+                    {t(
+                      'A project moves into one of your organizations. Create one to receive it.',
+                    )}
+                  </AuthFlowDescription>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="brandCta"
+                  className="w-full"
+                  disabled={createOrganizationMutation.isPending}
+                  onClick={() => createOrganizationMutation.mutate()}
+                >
+                  {features.billing
+                    ? t('Create a free organization')
+                    : t('Create organization')}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={createOrganizationMutation.isPending}
+                  onClick={goToDashboard}
+                >
+                  {t('Go to dashboard')}
+                </Button>
+              </div>
             </div>
           ) : isReserved ? (
             <div className="space-y-6">
