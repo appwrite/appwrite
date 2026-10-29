@@ -242,7 +242,7 @@ impl Local {
             return false;
         }
         for file in scan_directory(&real).await {
-            if is_dir(&file).await {
+            if is_dir(&file).await && !is_link(&file).await {
                 // PHP strips the length of `root/` from the resolved path;
                 // here the resolved root is stripped (see the spec's quirks).
                 let base = match &root_real {
@@ -454,6 +454,7 @@ impl Device for Local {
                 size: meta.as_ref().map(|m| m.len()).unwrap_or(0),
                 modified_at: meta.as_ref().and_then(|m| at(m.mtime())),
                 etag: None,
+                mime_type: None,
             });
         }
         let next = offset + page.len() as i64;
@@ -470,6 +471,7 @@ impl Device for Local {
             size: self.file_size(path).await?,
             modified_at: modified,
             etag: Some(self.file_hash(path).await?),
+            mime_type: Some(self.file_mime_type(path).await?),
         })
     }
 
@@ -729,33 +731,33 @@ fn at(timestamp: i64) -> Option<DateTime<FixedOffset>> {
 }
 
 /// The files and directories directly inside a directory, hidden ones
-/// included: the names `glob('dir/*')` matches in byte order, then those
-/// `glob('dir/.[!.]*')` matches.
+/// included, in byte order (`scandir()` without `.` and `..`). Names are
+/// taken literally, so an entry named like a glob pattern matches nothing
+/// else.
 async fn scan_directory(dir: &str) -> Vec<String> {
     let dir = String::from_utf8_lossy(php_std::string::rtrim(dir.as_bytes(), b"/")).into_owned();
-    let read = if dir.is_empty() { "/" } else { dir.as_str() };
-    let mut visible = Vec::new();
-    let mut hidden = Vec::new();
-    if let Ok(mut entries) = utopia_async::fs::read_dir(read).await {
+    let read = format!("{dir}/");
+    let mut names = Vec::new();
+    if let Ok(mut entries) = utopia_async::fs::read_dir(&read).await {
         while let Ok(Some(entry)) = entries.next_entry().await {
-            let name = entry.file_name().to_string_lossy().into_owned();
-            if !name.starts_with('.') {
-                visible.push(name);
-            } else if name.len() >= 2 && name.as_bytes()[1] != b'.' {
-                hidden.push(name);
-            }
+            names.push(entry.file_name().to_string_lossy().into_owned());
         }
     }
-    visible.sort_unstable();
-    hidden.sort_unstable();
-    visible.into_iter().chain(hidden).map(|name| format!("{dir}/{name}")).collect()
+    names.sort_unstable();
+    names.into_iter().map(|name| format!("{dir}/{name}")).collect()
+}
+
+async fn is_link(path: &str) -> bool {
+    utopia_async::fs::symlink_metadata(path).await.is_ok_and(|m| m.file_type().is_symlink())
 }
 
 /// `delete()`: a file or link, or with `recursive` a directory and all in it.
 async fn delete(path: String, recursive: bool) -> bool {
     let meta = utopia_async::fs::symlink_metadata(&path).await;
     let followed_dir = is_dir(&path).await;
-    if followed_dir && recursive {
+    // A symbolic link is unlinked, never followed into what it points at.
+    let link = meta.as_ref().is_ok_and(|m| m.file_type().is_symlink());
+    if recursive && followed_dir && !link {
         let Ok(mut entries) = utopia_async::fs::read_dir(&path).await else { return false };
         let mut names = Vec::new();
         while let Ok(Some(entry)) = entries.next_entry().await {

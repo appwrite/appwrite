@@ -782,6 +782,9 @@
     "fs.mkdir": {
       "doc": "fixture: mkdir -p"
     },
+    "fs.symlink": {
+      "doc": "fixture: symlink(target, link)"
+    },
     "fs.perms": {
       "doc": "fixture: the permission bits of a path, in octal"
     },

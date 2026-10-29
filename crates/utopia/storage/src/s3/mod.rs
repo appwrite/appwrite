@@ -807,7 +807,11 @@ impl S3 {
         set(&mut headers, "host", self.host.clone());
         set(&mut headers, "date", now.format("%a, %d %b %Y %H:%M:%S GMT").to_string());
         set(&mut headers, "content-md5", md5);
-        set(&mut headers, "content-length", length.to_string());
+        // Requests that carry a body sign an explicit Content-Length; bodyless
+        // ones must not (Cloudflare R2 rejects a GET with one, 403).
+        if matches!(method, Method::Put | Method::Post) {
+            set(&mut headers, "content-length", length.to_string());
+        }
         let mut amz: Vec<(String, String)> = amz_headers
             .iter()
             .filter(|(_, v)| !v.is_empty())
@@ -1170,6 +1174,7 @@ impl Device for S3 {
                 size,
                 modified_at: xml::text(object, "LastModified").and_then(date),
                 etag: xml::text(object, "ETag").map(|e| unquote(e).to_owned()),
+                mime_type: None,
             });
         }
         let cursor = match (data.text("IsTruncated"), data.text("NextContinuationToken")) {
@@ -1189,6 +1194,11 @@ impl Device for S3 {
             size: content_length(&headers),
             modified_at: modified.and_then(|t| DateTime::from_timestamp(t, 0)).map(|d| d.fixed_offset()),
             etag: headers.get("etag").map(|e| unquote(e).to_owned()),
+            mime_type: headers
+                .get("content-type")
+                .map(|t| t.split(';').next().unwrap_or_default().trim_matches([' ', '\t', '\n', '\r', '\0', '\x0b']))
+                .filter(|t| !t.is_empty())
+                .map(str::to_owned),
         })
     }
 

@@ -13125,6 +13125,130 @@
           ]
         }
       ]
+    },
+    {
+      "name": "file info normalizes an optional content type",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "",
+                "headers": []
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "content-type",
+                    ""
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/octet-stream; charset=utf-8"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "content-type",
+                    " text/plain ; charset=utf-8"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "Content-Type",
+                    ";x"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c"
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "d"
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/file.bin"
+          }
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/file.bin"
+          }
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/file.bin"
+          }
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/file.bin"
+          }
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/file.bin"
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          }
+        }
+      ]
     }
   ]
 }

@@ -275,6 +275,7 @@ final class Adapter implements Base, Benchmarks
             'fs.exists' => fn (array $a, Session $s) => file_exists($a['path']),
             'fs.is_dir' => fn (array $a, Session $s) => is_dir($a['path']),
             'fs.mkdir' => fn (array $a, Session $s) => is_dir($a['path']) || mkdir($a['path'], 0755, true),
+            'fs.symlink' => fn (array $a, Session $s) => symlink($a['target'], $a['link']),
             'fs.perms' => fn (array $a, Session $s) => substr(sprintf('%o', fileperms($a['path'])), -4),
             'fs.md5' => fn (array $a, Session $s) => md5_file($a['path']),
             'fs.unlink' => fn (array $a, Session $s) => @unlink($a['path']),
@@ -536,7 +537,7 @@ final class Adapter implements Base, Benchmarks
 
     private static function fileInfo(FileInfo $info): array
     {
-        return ['path' => $info->path, 'size' => $info->size, 'modified' => self::date($info->modifiedAt), 'etag' => $info->etag];
+        return ['path' => $info->path, 'size' => $info->size, 'modified' => self::date($info->modifiedAt), 'etag' => $info->etag, 'mime_type' => $info->mimeType];
     }
 
     private static function fileList(FileList $list): array

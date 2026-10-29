@@ -383,7 +383,7 @@ fn date(d: Option<chrono::DateTime<chrono::FixedOffset>>) -> Value {
 }
 
 fn file_info(info: FileInfo) -> Value {
-    json!({ "path": info.path, "size": info.size, "modified": date(info.modified_at), "etag": info.etag })
+    json!({ "path": info.path, "size": info.size, "modified": date(info.modified_at), "etag": info.etag, "mime_type": info.mime_type })
 }
 
 fn file_list(list: FileList) -> Value {
@@ -932,6 +932,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             _ => Outcome::ok(false),
         },
         "fs.exists" => Outcome::ok(std::fs::metadata(path()?).is_ok()),
+        "fs.symlink" => Outcome::ok(std::os::unix::fs::symlink(a.str("target")?, a.str("link")?).is_ok()),
         "fs.is_dir" => Outcome::ok(std::fs::metadata(path()?).is_ok_and(|m| m.is_dir())),
         "fs.mkdir" => {
             use std::os::unix::fs::DirBuilderExt;
