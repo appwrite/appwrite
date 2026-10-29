@@ -80,6 +80,13 @@ const bench = define({
             run: (api, d) => api.call('POST', `/organization/projects/${d.projectId}/keys/ephemeral`, { scopes: scopes(), duration: 600 }, [201], d.org),
         },
     ],
+    skipped: [
+        { skipped: 'GET /v1/organization/transfers', reason: 'moves a project between organizations, which needs a second organization and its owner to accept' },
+        { skipped: 'POST /v1/organization/transfers', reason: 'moves a project between organizations, which needs a second organization and its owner to accept' },
+        { skipped: 'GET /v1/organization/transfers/:transferId', reason: 'moves a project between organizations, which needs a second organization and its owner to accept' },
+        { skipped: 'DELETE /v1/organization/transfers/:transferId', reason: 'moves a project between organizations, which needs a second organization and its owner to accept' },
+        { skipped: 'PATCH /v1/organization/transfers/:transferId/status', reason: 'moves a project between organizations, which needs a second organization and its owner to accept' },
+    ],
 });
 
 export const options = bench.options;
