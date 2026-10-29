@@ -304,8 +304,13 @@ export function ColumnDrawer({
         effectiveType === 'bigint' ||
         effectiveType === 'double'
       ) {
-        data.min = column.min
-        data.max = column.max
+        // Columns created without bounds store the type's full range; show those as empty.
+        const unbounded =
+          effectiveType === 'double' ? Number.MAX_VALUE : Number(INT64_MAX)
+        data.min =
+          Math.abs(Number(column.min)) === unbounded ? undefined : column.min
+        data.max =
+          Math.abs(Number(column.max)) === unbounded ? undefined : column.max
       } else if (effectiveType === 'enum') {
         data.elements = column.elements || []
         setEnumElements(column.elements || [])
@@ -700,6 +705,11 @@ export function ColumnDrawer({
                       const size = parseInt(e.target.value) || 0
                       setFormData((prev) => ({ ...prev, size }))
                     }}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                        e.preventDefault()
+                      }
+                    }}
                     placeholder={t('Enter size')}
                     min={formData.encrypt ? 150 : 1}
                     disabled={isLoading}
@@ -741,6 +751,11 @@ export function ColumnDrawer({
                         ...prev,
                         size: size || undefined,
                       }))
+                    }}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                        e.preventDefault()
+                      }
                     }}
                     placeholder="255"
                     min={formData.encrypt ? 150 : VARCHAR_SIZE_MIN}
@@ -876,6 +891,14 @@ export function ColumnDrawer({
                                 : parseInt(e.target.value, 10)
                           setFormData((prev) => ({ ...prev, min }))
                         }}
+                        onKeyDown={(e) => {
+                          if (
+                            ['e', 'E', '+'].includes(e.key) ||
+                            (formData.type === 'integer' && e.key === '.')
+                          ) {
+                            e.preventDefault()
+                          }
+                        }}
                         placeholder={t('Enter min')}
                         step={formData.type === 'double' ? 0.1 : 1}
                         disabled={isLoading}
@@ -927,6 +950,14 @@ export function ColumnDrawer({
                                 ? parseFloat(e.target.value)
                                 : parseInt(e.target.value, 10)
                           setFormData((prev) => ({ ...prev, max }))
+                        }}
+                        onKeyDown={(e) => {
+                          if (
+                            ['e', 'E', '+'].includes(e.key) ||
+                            (formData.type === 'integer' && e.key === '.')
+                          ) {
+                            e.preventDefault()
+                          }
                         }}
                         placeholder={t('Enter max')}
                         step={formData.type === 'double' ? 0.1 : 1}
