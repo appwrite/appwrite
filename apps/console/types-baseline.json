@@ -1,1 +1,44 @@
-TEST_PLACEHOLDER
+{
+  "e2e/console.mocked.dialogs.spec.ts": {
+    "TS2741: Property 'providerIdToken' is missing in type '{ $id: string; $createdAt: string; $updatedAt: string; userId: string; provider: string; providerUid: string; providerEmail: string; providerAccessToken: string; providerAccessTokenExpiry: string; providerRefreshToken: string; }' but required in type 'Identity'.": 1
+  },
+  "e2e/console.mocked.education.spec.ts": {
+    "TS2322: Type '{ $id: string; $createdAt: string; $updatedAt: string; userId: string; provider: string; providerUid: string; providerEmail: string; providerAccessToken: string; providerAccessTokenExpiry: string; providerRefreshToken: string; }[]' is not assignable to type 'Identity[]'.": 1
+  },
+  "e2e/console.mocked.oauth-redirect.spec.ts": {
+    "TS2344: Type '\"$id\" | \"description\" | \"logo\" | \"name\" | \"privacyPolicyUrl\" | \"termsUrl\" | \"url\"' does not satisfy the constraint 'keyof App'.": 1
+  },
+  "e2e/fixtures/native.ts": {
+    "TS2345: Argument of type '{ mysqlSuite: [({ browser }: { mysqlSuite: NativeSuite; } & PlaywrightWorkerArgs & PlaywrightWorkerOptions, use: (r: NativeSuite) => Promise<void>) => Promise<void>, { scope: \"worker\"; timeout: number; }]; }' is not assignable to parameter of type 'Fixtures<Record<string, never>, { mysqlSuite: NativeSuite; }, PlaywrightTestArgs & PlaywrightTestOptions, PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.": 1,
+    "TS2345: Argument of type '{ postgresSuite: [({ browser }: { postgresSuite: NativeSuite; } & PlaywrightWorkerArgs & PlaywrightWorkerOptions, use: (r: NativeSuite) => Promise<void>) => Promise<void>, { scope: \"worker\"; timeout: number; }]; }' is not assignable to parameter of type 'Fixtures<Record<string, never>, { postgresSuite: NativeSuite; }, PlaywrightTestArgs & PlaywrightTestOptions, PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.": 1
+  },
+  "e2e/fixtures/product.ts": {
+    "TS2345: Argument of type '{ documentsdbSuite: [({ browser }: { documentsdbSuite: DatabaseSuite; } & PlaywrightWorkerArgs & PlaywrightWorkerOptions, use: (r: DatabaseSuite) => Promise<void>) => Promise<void>, { scope: \"worker\"; timeout: number; }]; }' is not assignable to parameter of type 'Fixtures<Record<string, never>, { documentsdbSuite: DatabaseSuite; }, PlaywrightTestArgs & PlaywrightTestOptions, PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.": 1,
+    "TS2345: Argument of type '{ tablesdbSuite: [({ browser }: { tablesdbSuite: DatabaseSuite; } & PlaywrightWorkerArgs & PlaywrightWorkerOptions, use: (r: DatabaseSuite) => Promise<void>) => Promise<void>, { scope: \"worker\"; timeout: number; }]; }' is not assignable to parameter of type 'Fixtures<Record<string, never>, { tablesdbSuite: DatabaseSuite; }, PlaywrightTestArgs & PlaywrightTestOptions, PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.": 1,
+    "TS2345: Argument of type '{ vectorsdbSuite: [({ browser }: { vectorsdbSuite: DatabaseSuite; } & PlaywrightWorkerArgs & PlaywrightWorkerOptions, use: (r: DatabaseSuite) => Promise<void>) => Promise<void>, { scope: \"worker\"; timeout: number; }]; }' is not assignable to parameter of type 'Fixtures<Record<string, never>, { vectorsdbSuite: DatabaseSuite; }, PlaywrightTestArgs & PlaywrightTestOptions, PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.": 1
+  },
+  "playwright.config.ts": {
+    "TS2353: Object literal may only specify known properties, and 'screen' does not exist in type 'UseOptions<PlaywrightTestOptions & CustomProperties<{}>, PlaywrightWorkerOptions & CustomProperties<{}>>'.": 1
+  },
+  "scripts/generate-content-covers.ts": {
+    "TS2503: Cannot find namespace 'sharp'.": 1
+  },
+  "scripts/ja-translations/databases.ts": {
+    "TS1117: An object literal cannot have multiple properties with the same name.": 5
+  },
+  "scripts/lib/convert-images-to-avif.ts": {
+    "TS2503: Cannot find namespace 'sharp'.": 5
+  },
+  "scripts/sync-ja-missing-keys.ts": {
+    "TS6133: 'escapeValue' is declared but its value is never read.": 1,
+    "TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'typeof import(\"src/lib/i18n/dictionaries/he/account-global\") | typeof import(\"src/lib/i18n/dictionaries/he/auth-storage\") | typeof import(\"src/lib/i18n/dictionaries/he/databases\") | typeof import(\"src/lib/i18n/dictionaries/he/functions\") | typeof import(\"src/lib/i18n/dictionaries/he/marketing\") | typeof import(\"src/lib/i18n/dictionaries/he/organizations\") | typeof import(\"src/lib/i18n/dictionaries/he/pricing\") | typeof import(\"src/lib/i18n/dictionaries/he/product-pages\") | typeof import(\"src/lib/i18n/dictionaries/he/project-misc\") | typeof import(\"src/lib/i18n/dictionaries/he/shared-ui\") | typeof import(\"src/lib/i18n/dictionaries/he/sites\")'.": 1,
+    "TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'typeof import(\"src/lib/i18n/dictionaries/ja/account-global\") | typeof import(\"src/lib/i18n/dictionaries/ja/auth-storage\") | typeof import(\"src/lib/i18n/dictionaries/ja/databases\") | typeof import(\"src/lib/i18n/dictionaries/ja/functions\") | typeof import(\"src/lib/i18n/dictionaries/ja/marketing\") | typeof import(\"src/lib/i18n/dictionaries/ja/organizations\") | typeof import(\"src/lib/i18n/dictionaries/ja/pricing\") | typeof import(\"src/lib/i18n/dictionaries/ja/product-pages\") | typeof import(\"src/lib/i18n/dictionaries/ja/project-misc\") | typeof import(\"src/lib/i18n/dictionaries/ja/shared-ui\") | typeof import(\"src/lib/i18n/dictionaries/ja/sites\")'.": 1
+  },
+  "server.ts": {
+    "TS2339: Property 'warn' does not exist on type '{ info: (message: string) => void; success: (message: string) => void; warning: (message: string) => void; error: (message: string) => void; header: (message: string) => void; }'.": 1
+  },
+  "src/components/global/api-explorer/RequestFormFieldInput.tsx": {
+    "TS6133: 'formValues' is declared but its value is never read.": 1
+  },
+  "TRUNCATED_FOR_SIZE_TEST": 1
+}
