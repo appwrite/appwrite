@@ -1,1 +1,2 @@
-@/tmp/request_php_only.txt
+<?php
+// push_files inline test
