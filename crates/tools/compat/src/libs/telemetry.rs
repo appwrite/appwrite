@@ -484,14 +484,9 @@ where
             _ => return,
         };
         buffer.extend_from_slice(&chunk[..read]);
-        loop {
-            let Some(line) = buffer
-                .windows(2)
-                .position(|w| w == b"\r\n")
-                .map(|at| String::from_utf8_lossy(&buffer[..at]).into_owned())
-            else {
-                break;
-            };
+        while let Some(line) =
+            buffer.windows(2).position(|w| w == b"\r\n").map(|at| String::from_utf8_lossy(&buffer[..at]).into_owned())
+        {
             let Some(request) = take_request(&mut buffer) else {
                 break;
             };

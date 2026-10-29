@@ -293,7 +293,7 @@ impl Destination for Local {
             match self.write(resource).await {
                 Ok(()) => resource.set_status(status::SUCCESS, ""),
                 Err(e) => {
-                    resource.set_status(status::ERROR, &e.message());
+                    resource.set_status(status::ERROR, e.message());
                     let code = e.code();
                     self.target.add_error(Exception::new(
                         resource.name(),
