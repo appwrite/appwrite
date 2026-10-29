@@ -282,7 +282,29 @@ class Update extends Action
                         }
 
                         if (\is_array($data) && !empty($data)) {
-                            $data = $this->parseOperators($data, $collection);
+                            switch ($action) {
+                                case 'update':
+                                case 'upsert':
+                                    $data = $this->parseOperators($data, $collection);
+                                    break;
+                                case 'bulkUpdate':
+                                    if (\is_array($data['data'] ?? null)) {
+                                        $data['data'] = $this->parseOperators($data['data'], $collection);
+                                    }
+                                    break;
+                                case 'bulkUpsert':
+                                    foreach ($data as $index => $row) {
+                                        if ($row instanceof Document) {
+                                            $row = $row->getArrayCopy();
+                                        }
+                                        if (\is_array($row)) {
+                                            $data[$index] = $this->parseOperators($row, $collection);
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    $this->assertNoOperators($data);
+                            }
                         }
 
                         if ($action === 'delete' && $documentId) {

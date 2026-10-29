@@ -7438,7 +7438,7 @@ trait DatabasesBase
         foreach ($rounded as $name => [$stored, $operator, $expected]) {
             $recordId = $record(['count' => $stored]);
             $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
-                'data' => ['count' => $operator->toString()],
+                'data' => ['count' => ['$operator' => $operator->toArray()]],
             ]);
 
             $this->assertSame(200, $updated['headers']['status-code'], "{$name}: " . ($updated['body']['message'] ?? ''));
@@ -7448,7 +7448,7 @@ trait DatabasesBase
 
         $recordId = $record(['count' => 11]);
         $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
-            'data' => ['count' => Operator::increment(1.5, 20)->toString()],
+            'data' => ['count' => ['$operator' => Operator::increment(1.5, 20)->toArray()]],
         ]);
         $this->assertSame(200, $upserted['headers']['status-code'], $upserted['body']['message'] ?? '');
         $this->assertSame(13, $read($recordId)['count'], 'An upsert rounds the amount as an update does');
@@ -7456,7 +7456,7 @@ trait DatabasesBase
         $even = $record(['count' => 10]);
         $odd = $record(['count' => 11]);
         $bulk = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId), $keyHeaders, [
-            'data' => ['count' => Operator::increment(1.5, 100)->toString()],
+            'data' => ['count' => ['$operator' => Operator::increment(1.5, 100)->toArray()]],
             'queries' => [Query::equal('$id', [$even, $odd])->toString()],
         ]);
         $this->assertSame(200, $bulk['headers']['status-code'], $bulk['body']['message'] ?? '');
@@ -7490,7 +7490,7 @@ trait DatabasesBase
         foreach ($refused as $name => [$stored, $operator]) {
             $recordId = $record(['count' => $stored]);
             $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
-                'data' => ['count' => $operator->toString()],
+                'data' => ['count' => ['$operator' => $operator->toArray()]],
             ]);
 
             $this->assertSame(400, $updated['headers']['status-code'], "{$name}: a fractional operand of this operator on an integer is refused");
@@ -7499,7 +7499,7 @@ trait DatabasesBase
 
         $recordId = $record(['counts' => [1]]);
         $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
-            'data' => ['counts' => Operator::arrayAppend([1.5, -2.5, 0.9999])->toString()],
+            'data' => ['counts' => ['$operator' => Operator::arrayAppend([1.5, -2.5, 0.9999])->toArray()]],
         ]);
         $this->assertSame(400, $updated['headers']['status-code'], 'A fractional item added to an integer array is refused');
         $this->assertSame([1], $read($recordId)['counts']);
@@ -7646,8 +7646,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'releaseYear' => Operator::increment(5)->toString(),
-                'duration' => Operator::increment(10)->toString(),
+                'releaseYear' => ['$operator' => Operator::increment(5)->toArray()],
+                'duration' => ['$operator' => Operator::increment(10)->toArray()],
             ],
         ]);
 
@@ -7661,7 +7661,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'releaseYear' => Operator::decrement(3)->toString(),
+                'releaseYear' => ['$operator' => Operator::decrement(3)->toArray()],
             ],
         ]);
 
@@ -7674,7 +7674,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'actors' => Operator::arrayAppend(['Actor3'])->toString(),
+                'actors' => ['$operator' => Operator::arrayAppend(['Actor3'])->toArray()],
             ],
         ]);
 
@@ -7687,7 +7687,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'actors' => Operator::arrayPrepend(['Actor0'])->toString(),
+                'actors' => ['$operator' => Operator::arrayPrepend(['Actor0'])->toArray()],
             ],
         ]);
 
@@ -7700,7 +7700,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'tagline' => Operator::stringConcat(' Appended')->toString(),
+                'tagline' => ['$operator' => Operator::stringConcat(' Appended')->toArray()],
             ],
         ]);
 
@@ -7713,8 +7713,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'releaseYear' => Operator::increment(1)->toString(),
-                'integers' => Operator::arrayAppend([30])->toString(),
+                'releaseYear' => ['$operator' => Operator::increment(1)->toArray()],
+                'integers' => ['$operator' => Operator::arrayAppend([30])->toArray()],
             ],
         ]);
 
@@ -7749,7 +7749,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'data' => [
                 'title' => 'Upsert Test Updated',
-                'releaseYear' => Operator::increment(5)->toString(),
+                'releaseYear' => ['$operator' => Operator::increment(5)->toArray()],
                 'actors' => [],
                 'birthDay' => '2020-01-01 12:00:00',
             ],
@@ -7887,7 +7887,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'data' => [
-                'releaseYear' => Operator::increment(10)->toString(),
+                'releaseYear' => ['$operator' => Operator::increment(10)->toArray()],
             ],
             'queries' => [
                 Query::startsWith('title', 'Bulk Test')->toString(),
@@ -7955,7 +7955,7 @@ trait DatabasesBase
          * Test for FAILURE
          */
         $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
-            'data' => ['secret' => Operator::stringReplace('a', 'o')->toString()],
+            'data' => ['secret' => ['$operator' => Operator::stringReplace('a', 'o')->toArray()]],
         ]);
         $this->assertEquals(400, $document['headers']['status-code']);
 
@@ -7967,6 +7967,290 @@ trait DatabasesBase
         ]);
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertSame('cherry', $document['body']['secret']);
+    }
+
+    public function testUpdateWithOperatorLikeStrings(): void
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $keyHeaders = $this->getServerHeaders();
+        $userHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Operator like strings',
+            'permissions' => [
+                Permission::create(Role::users()),
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+            ],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'varchar', ['key' => 'body', 'size' => 256, 'required' => false]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $collectionId, 'body');
+        }
+
+        $replace = '{"method":"stringReplace","values":["a",""]}';
+        $concat = ' {"values":["!"],"method":"stringConcat","extra":true} ';
+        $read = fn (string $recordId): ?string => $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $recordId), $keyHeaders)['body']['body'] ?? null;
+
+        /**
+         * Test for SUCCESS
+         */
+        $recordId = Id::unique();
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $userHeaders, [
+            $this->getRecordIdParam() => $recordId,
+            'data' => ['body' => $replace],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $this->assertSame($replace, $created['body']['body']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+            'data' => ['body' => $concat],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame($concat, $updated['body']['body']);
+        $this->assertSame($concat, $read($recordId));
+
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+            'data' => ['body' => $replace],
+        ]);
+        $this->assertSame(200, $upserted['headers']['status-code']);
+        $this->assertSame($replace, $read($recordId));
+
+        $insertedId = Id::unique();
+        $inserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $insertedId), $userHeaders, [
+            'data' => ['body' => $concat],
+        ]);
+        $this->assertSame(200, $inserted['headers']['status-code']);
+        $this->assertSame($concat, $read($insertedId));
+
+        $bulkUpdated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId), $keyHeaders, [
+            'data' => ['body' => $concat],
+            'queries' => [Query::equal('$id', [$recordId])->toString()],
+        ]);
+        $this->assertSame(200, $bulkUpdated['headers']['status-code']);
+        $this->assertSame(1, $bulkUpdated['body']['total']);
+        $this->assertSame($concat, $read($recordId));
+
+        $bulkUpserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId), $keyHeaders, [
+            $this->getRecordResource() => [
+                ['$id' => $recordId, 'body' => $replace],
+                ['$id' => $insertedId, 'body' => $replace],
+            ],
+        ]);
+        $this->assertSame(200, $bulkUpserted['headers']['status-code']);
+        $this->assertSame(2, $bulkUpserted['body']['total']);
+        $this->assertSame($replace, $read($recordId));
+        $this->assertSame($replace, $read($insertedId));
+    }
+
+    public function testUpdateWithInvalidOperators(): void
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = $this->getServerHeaders();
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Invalid operators',
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'varchar', ['key' => 'body', 'size' => 256, 'required' => false]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $collectionId, 'body');
+        }
+
+        $recordId = Id::unique();
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => $recordId,
+            'data' => ['body' => 'banana'],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+
+        $concat = ['method' => 'stringConcat', 'values' => ['!']];
+
+        /**
+         * Test for FAILURE
+         */
+        $invalid = [
+            'extra key' => ['body' => ['$operator' => $concat, 'method' => 'stringConcat']],
+            'not an object' => ['body' => ['$operator' => 'stringConcat']],
+            'unknown method' => ['body' => ['$operator' => ['method' => 'explode', 'values' => []]]],
+            'nested in an object' => ['body' => ['note' => ['$operator' => $concat]]],
+            'nested in a list' => ['body' => [['$operator' => $concat]]],
+        ];
+        foreach ($invalid as $name => $data) {
+            foreach ([Client::METHOD_PATCH, Client::METHOD_PUT] as $method) {
+                $response = $this->client->call($method, $this->getRecordUrl($databaseId, $collectionId, $recordId), $headers, [
+                    'data' => $data,
+                ]);
+                $this->assertSame(400, $response['headers']['status-code'], "{$method} {$name}");
+                $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type'], "{$method} {$name}");
+            }
+
+            $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+                'data' => $data,
+                'queries' => [Query::equal('$id', [$recordId])->toString()],
+            ]);
+            $this->assertSame(400, $response['headers']['status-code'], "bulk update {$name}");
+            $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type'], "bulk update {$name}");
+
+            $response = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+                $this->getRecordResource() => [['$id' => $recordId, ...$data]],
+            ]);
+            $this->assertSame(400, $response['headers']['status-code'], "bulk upsert {$name}");
+            $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type'], "bulk upsert {$name}");
+        }
+
+        $createdId = Id::unique();
+        $response = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => $createdId,
+            'data' => ['body' => ['$operator' => $concat]],
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordResource() => [['$id' => $createdId, 'body' => ['$operator' => $concat]]],
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $createdId), $headers);
+        $this->assertSame(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $recordId), $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('banana', $response['body']['body']);
+    }
+
+    public function testUpdateWithOperators(): void
+    {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = $this->getServerHeaders();
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Operators',
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $attribute = $this->createAttribute($databaseId, $collectionId, 'varchar', ['key' => 'body', 'size' => 256, 'required' => false]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+        $attribute = $this->createAttribute($databaseId, $collectionId, 'integer', ['key' => 'count', 'required' => false]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+        $attribute = $this->createAttribute($databaseId, $collectionId, 'integer', ['key' => 'other', 'required' => false]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($databaseId, $collectionId);
+
+        $recordId = Id::unique();
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => $recordId,
+            'data' => ['body' => 'banana', 'count' => 1, 'other' => 1],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $headers, [
+            'data' => [
+                'body' => ['$operator' => ['method' => 'stringReplace', 'values' => ['a', '']]],
+                'count' => ['$operator' => ['method' => 'increment', 'attribute' => 'other', 'values' => [5]]],
+            ],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('bnn', $updated['body']['body']);
+        $this->assertSame(6, $updated['body']['count']);
+        $this->assertSame(1, $updated['body']['other']);
+
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $recordId), $headers, [
+            'data' => ['body' => ['$operator' => ['method' => 'stringConcat', 'values' => ['!']]]],
+        ]);
+        $this->assertSame(200, $upserted['headers']['status-code']);
+        $this->assertSame('bnn!', $upserted['body']['body']);
+    }
+
+    public function testUpdateWithLegacyOperators(): void
+    {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = array_merge($this->getServerHeaders(), ['x-appwrite-response-format' => '2.6.0']);
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $this->getServerHeaders(), [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Legacy operators',
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $attribute = $this->createAttribute($databaseId, $collectionId, 'varchar', ['key' => 'body', 'size' => 256, 'required' => false]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+        $attribute = $this->createAttribute($databaseId, $collectionId, 'integer', ['key' => 'count', 'required' => false]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($databaseId, $collectionId);
+
+        $concat = Operator::stringConcat('!')->toString();
+
+        /**
+         * Test for SUCCESS
+         */
+        $recordId = Id::unique();
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => $recordId,
+            'data' => ['body' => $concat, 'count' => 1],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $this->assertSame($concat, $created['body']['body']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $headers, [
+            'data' => [
+                'body' => $concat,
+                'count' => Operator::increment(2)->toString(),
+            ],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame($concat . '!', $updated['body']['body']);
+        $this->assertSame(3, $updated['body']['count']);
+
+        $bulkUpdated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            'data' => ['count' => Operator::increment(1)->toString()],
+            'queries' => [Query::equal('$id', [$recordId])->toString()],
+        ]);
+        $this->assertSame(200, $bulkUpdated['headers']['status-code']);
+
+        $bulkUpserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordResource() => [['$id' => $recordId, 'count' => Operator::increment(1)->toString()]],
+        ]);
+        $this->assertSame(200, $bulkUpserted['headers']['status-code']);
+
+        $record = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $recordId), $headers);
+        $this->assertSame(5, $record['body']['count']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $headers, [
+            'data' => ['body' => '{"method":"explode","values":[]}'],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('{"method":"explode","values":[]}', $updated['body']['body']);
     }
 
     public function testDeleteDocument(): void

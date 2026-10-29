@@ -39,6 +39,7 @@ use Appwrite\Utopia\Request\Filters\V24 as RequestV24;
 use Appwrite\Utopia\Request\Filters\V25 as RequestV25;
 use Appwrite\Utopia\Request\Filters\V26 as RequestV26;
 use Appwrite\Utopia\Request\Filters\V27 as RequestV27;
+use Appwrite\Utopia\Request\Filters\V28 as RequestV28;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -1013,6 +1014,9 @@ Http::init()
             }
             if (version_compare($requestFormat, '2.0.0', '<')) {
                 $request->addFilter(new RequestV27());
+            }
+            if (version_compare($requestFormat, '2.7.0', '<')) {
+                $request->addFilter(new RequestV28());
             }
         }
 

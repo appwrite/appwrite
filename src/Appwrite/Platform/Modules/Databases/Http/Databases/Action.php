@@ -136,12 +136,13 @@ class Action extends AppwriteAction
     }
 
     /**
-     * Parse operator strings in data array and convert them to Operator objects.
+     * Convert `{"$operator": {...}}` values in data to Operator objects. Every other value,
+     * a string included, is literal.
      *
-     * @param array $data The data array that may contain operator JSON strings or arrays
+     * @param array $data The data of a single document that may contain operators
      * @param Document $collection The collection document to check for relationship attributes
      * @return array The data array with operators converted to Operator objects
-     * @throws Exception If an operator string is invalid
+     * @throws Exception If an operator is invalid or used where operators are not supported
      */
     protected function parseOperators(array $data, Document $collection): array
     {
@@ -153,60 +154,48 @@ class Action extends AppwriteAction
         }
 
         foreach ($data as $key => $value) {
-            if (!\is_string($key)) {
-                // Bulk rows read back from transaction logs are Documents
-                if ($value instanceof Document) {
-                    $value = $value->getArrayCopy();
-                }
-                if (\is_array($value)) {
-                    $data[$key] = $this->parseOperators($value, $collection);
-                }
+            $key = (string) $key;
+
+            if (!\is_array($value) || !\array_key_exists('$operator', $value)) {
+                $this->assertNoOperators($value);
                 continue;
             }
 
-            if (\str_starts_with($key, '$')) {
-                continue;
+            if (\str_starts_with($key, '$') || isset($relationshipKeys[$key])) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operators are not supported for attribute "' . $key . '".');
             }
 
-            if (isset($relationshipKeys[$key])) {
-                continue;
+            if (\count($value) !== 1 || !\is_array($value['$operator'])) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": "$operator" must be the only key and hold an object.');
             }
 
-            // Handle operator as JSON string (from API requests)
-            if (\is_string($value)) {
-                $decoded = \json_decode($value, true);
-
-                if (
-                    \is_array($decoded) &&
-                    isset($decoded['method']) &&
-                    \is_string($decoded['method']) &&
-                    Operator::isMethod($decoded['method'])
-                ) {
-                    try {
-                        $data[$key] = Operator::parse($value);
-                    } catch (\Exception $e) {
-                        throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
-                    }
-                }
-            }
-            // Handle operator as array (from transaction logs after serialization)
-            elseif (
-                \is_array($value) &&
-                isset($value['method']) &&
-                \is_string($value['method']) &&
-                Operator::isMethod($value['method'])
-            ) {
-                try {
-                    $data[$key] = Operator::parseOperator($value);
-                } catch (\Exception $e) {
-                    throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
-                }
-            } elseif (\is_array($value)) {
-                $data[$key] = $this->parseOperators($value, $collection);
+            try {
+                $data[$key] = Operator::parseOperator($value['$operator'])->setAttribute($key);
+            } catch (\Exception $e) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
             }
         }
 
         return $data;
+    }
+
+    protected function assertNoOperators(mixed $value): void
+    {
+        if ($value instanceof Document) {
+            $value = $value->getArrayCopy();
+        }
+
+        if (!\is_array($value)) {
+            return;
+        }
+
+        if (\array_key_exists('$operator', $value)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operators are only supported as the value of an attribute when updating or upserting.');
+        }
+
+        foreach ($value as $item) {
+            $this->assertNoOperators($item);
+        }
     }
 
     /**

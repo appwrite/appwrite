@@ -157,6 +157,10 @@ class Create extends Action
                 }
             }
 
+            if (\in_array($operation['action'], ['create', 'bulkCreate'])) {
+                $this->assertNoOperators($operation['data'] ?? []);
+            }
+
             $document = null;
             if (\in_array($operation['action'], ['update', 'delete', 'upsert', 'increment', 'decrement'])) {
                 $documentId = $operation[$this->getResourceId()] ?? null;
