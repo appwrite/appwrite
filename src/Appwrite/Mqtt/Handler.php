@@ -524,12 +524,39 @@ class Handler implements MqttHandler
 
         $reason = (new Exception(Exception::USER_UNAUTHORIZED))->getMessage();
 
+        $disconnected = 0;
         foreach ($revoked as $connection) {
+            // A check that outlived its timeout may finish after expel() already closed these
+            // connections; touch only ones still tracked so a reused fd is never torn down.
+            if (!$this->tracked($projectId, $userId, $connection)) {
+                continue;
+            }
+            $this->untrack($connection);
+            $connection->disconnect(Disconnect::NOT_AUTHORIZED, $reason);
+            $disconnected++;
+        }
+
+        return $disconnected;
+    }
+
+    /**
+     * Disconnect all of the user's connections without re-checking authorization: the fail-closed
+     * path when a revoke's verification does not complete in time. Clients reconnect and CONNECT
+     * re-authenticates them with fresh credentials. Returns how many were disconnected.
+     */
+    public function expel(string $projectId, string $userId): int
+    {
+        $this->accessClock->set($projectId, $userId);
+
+        $connections = $this->connectionsOf($projectId, $userId);
+        $reason = (new Exception(Exception::USER_UNAUTHORIZED))->getMessage();
+
+        foreach ($connections as $connection) {
             $this->untrack($connection);
             $connection->disconnect(Disconnect::NOT_AUTHORIZED, $reason);
         }
 
-        return \count($revoked);
+        return \count($connections);
     }
 
     /**
@@ -562,6 +589,29 @@ class Handler implements MqttHandler
         } catch (\Throwable $error) {
             Console::error('MQTT unsubscribe membership check failed, dropping subscription: ' . $error->getMessage());
         }
+
+        $dropped = 0;
+        foreach ($connections as $connection) {
+            // The membership check yields, so a connection may have closed meanwhile; touch only
+            // ones still tracked so a reused fd never loses another connection's subscription.
+            if (!$this->tracked($projectId, $userId, $connection)) {
+                continue;
+            }
+            $server->unsubscribe($topic, $connection->fd);
+            $dropped++;
+        }
+
+        return $dropped;
+    }
+
+    /**
+     * Drop the user's live subscription to a topic without re-checking membership: the fail-closed
+     * path when an unsubscribe's membership check does not complete in time. A user subscribed
+     * again can re-SUBSCRIBE. Returns how many connections were touched.
+     */
+    public function drop(Server $server, string $projectId, string $userId, string $topic): int
+    {
+        $connections = $this->connectionsOf($projectId, $userId);
 
         foreach ($connections as $connection) {
             $server->unsubscribe($topic, $connection->fd);
@@ -624,6 +674,12 @@ class Handler implements MqttHandler
     private function connectionsOf(string $projectId, string $userId): array
     {
         return $this->connections[$projectId][$userId] ?? [];
+    }
+
+    /** Whether this very connection is still in the index, not another one reusing its fd. */
+    private function tracked(string $projectId, string $userId, Connection $connection): bool
+    {
+        return ($this->connections[$projectId][$userId][$connection->fd] ?? null) === $connection;
     }
 
     private function track(Connection $connection): void
