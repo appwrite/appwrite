@@ -550,6 +550,14 @@ impl Csv {
                     parsed.set(key, Value::Array(mapped));
                     continue;
                 }
+                // Undo the quote CSV exports prefix to formula-like values.
+                let value = if value.first() == Some(&b'\'')
+                    && crate::destinations::csv::formula_like(&value)
+                {
+                    value[1..].to_vec()
+                } else {
+                    value
+                };
                 let v = if value == b"null" {
                     Value::Null
                 } else if value.is_empty() {

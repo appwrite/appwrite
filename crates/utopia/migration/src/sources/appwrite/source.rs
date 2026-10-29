@@ -116,7 +116,6 @@ impl Appwrite {
         queries: Vec<ReaderQuery>,
     ) -> Result<Self> {
         let mut client = Client::new();
-        client.refuse_redirects();
         client.set_endpoint(endpoint)?;
         client.set_project(project_id);
         client.set_key(key);
@@ -688,6 +687,7 @@ impl Appwrite {
         let pwned = supported("password-pwned").await?;
         let rotation = supported("password-rotation").await?;
         let passkey = supported("passkey").await?;
+        let realtime_guests = supported("deny-realtime-guests").await?;
         let fields = |model: &Option<Model>, keys: &[&str]| {
             model.as_ref().map(|m| {
                 let mut a = Array::new();
@@ -728,6 +728,7 @@ impl Appwrite {
             password_pwned: fields(&of(pwned, "PolicyPasswordPwned"), &["enabled", "sessions", "users"]),
             password_rotation: fields(&of(rotation, "PolicyPasswordRotation"), &["enabled", "maxAge"]),
             passkey_rp_id: of(passkey, "PolicyPasskey").map(|m| s(&m, "rpId")),
+            deny_realtime_guests: enabled(&of(realtime_guests, "PolicyDenyRealtimeGuests")),
         };
         let r = policies.resource(self.project_id.clone(), "", "");
         out.emit(vec![r]).await
@@ -1178,8 +1179,9 @@ impl Appwrite {
         let entities = cache.resources(entity_name);
         for table in entities {
             let mut last: Option<ResourceRef> = None;
+            let mut limit = batch;
             loop {
-                let mut queries = vec![self.reader.query_limit(batch)];
+                let mut queries = vec![self.reader.query_limit(limit)];
                 queries.extend(self.queries.iter().cloned());
                 if let Some(l) = last.clone() {
                     queries.push(self.reader.query_cursor_after(Cursor::Resource(l)).await?);
@@ -1200,7 +1202,15 @@ impl Appwrite {
                     }
                 }
                 queries.push(self.reader.query_select(selects));
-                let response = self.reader.list_rows(&table, queries).await?;
+                let response = match self.reader.list_rows(&table, queries).await {
+                    Ok(response) => response,
+                    // A page of large rows can decode past the response size cap
+                    Err(Error::Appwrite { code: crate::http::CURLE_FILESIZE_EXCEEDED, .. }) if limit != 1 => {
+                        limit /= 2;
+                        continue;
+                    }
+                    Err(e) => return Err(e),
+                };
                 let Some(t) = table.as_table() else { break };
                 let d = table.database().and_then(|d| d.as_database().cloned());
                 let mut rows = Vec::new();
@@ -1257,7 +1267,7 @@ impl Appwrite {
                     rows.push(r);
                 }
                 out.emit(rows).await?;
-                if (response.len() as i64) < batch {
+                if (response.len() as i64) < limit {
                     break;
                 }
             }
@@ -1551,7 +1561,19 @@ impl Appwrite {
             r.set_sequence(r.id());
             r
         };
-        let Some(length) = headers.get("content-length").cloned() else {
+        // Archives past the server's read buffer stream without content-length
+        let length = headers.get("content-length").cloned();
+        let mut file_size = match &length {
+            Some(length) => cast_int(&Value::from(length.as_str())),
+            None => cast_int(&deployment.value("sourceSize")),
+        };
+        // Deployments that recorded no size report it in a ranged response
+        if length.is_none() && file_size == 0 {
+            let (_, range) = self.call("GET", &path, &[("range", "bytes=0-0".to_owned())]).await?;
+            let total = range.get("content-range").and_then(|r| r.split_once('/')).map_or("0", |(_, total)| total);
+            file_size = cast_int(&Value::from(total));
+        }
+        if length.is_none() && file_size == 0 {
             let (body, _) = self.call("GET", &path, &[]).await?;
             let data = body_bytes(body)?;
             let size = data.len() as i64;
@@ -1561,7 +1583,6 @@ impl Appwrite {
             let r = make(size, start, end, data);
             return out.emit(vec![r]).await;
         };
-        let file_size = crate::resources::cast_int(&Value::from(length.as_str()));
         if end >= file_size {
             end = file_size - 1;
         }

@@ -762,6 +762,7 @@ impl Resource {
                 put("passwordPwned", p.password_pwned.clone().map_or(Value::Null, Value::Array));
                 put("passwordRotation", p.password_rotation.clone().map_or(Value::Null, Value::Array));
                 put("passkeyRpId", opt_str(&p.passkey_rp_id));
+                put("denyRealtimeGuests", p.deny_realtime_guests.map_or(Value::Null, Value::Bool));
                 put("createdAt", s!(base.created_at));
                 put("updatedAt", s!(base.updated_at));
             }

@@ -309,6 +309,9 @@ final class Adapter implements Base, Benchmarks
             },
             'fs.get' => fn (array $a, Session $s) => \is_file($a['path']) ? \file_get_contents($a['path']) : null,
             'fs.exists' => fn (array $a, Session $s) => \file_exists($a['path']),
+            'fs.mkdir' => fn (array $a, Session $s) => @\mkdir($a['path'], 0777, true),
+            'fs.symlink' => fn (array $a, Session $s) => @\symlink($a['target'], $a['link']),
+            'fs.is_dir' => fn (array $a, Session $s) => \is_dir($a['path']),
 
             // Sources and destinations of files.
             'json_source.new' => fn (array $a, Session $s) => $s->handle(isset($a['child'])

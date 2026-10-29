@@ -30,6 +30,13 @@ pub const STALL_TIMEOUT: i64 = 30;
 /// PHP: `Target::REQUEST_TIMEOUT`.
 pub const REQUEST_TIMEOUT: i64 = 30;
 
+/// Bytes a response body may decode to before the request is abandoned:
+/// far above any API page or file chunk, so a compressed body cannot
+/// expand to fill memory.
+///
+/// PHP: `Target::MAX_RESPONSE_SIZE` (cURL's `CURLOPT_MAXFILESIZE_LARGE`).
+pub const MAX_RESPONSE_SIZE: usize = 32 * 1024 * 1024;
+
 /// Pins a request to addresses: it receives the request URL and returns the
 /// entries (`host:port:address[,address]`) its connection must use, or an
 /// error to refuse the URL.
