@@ -18,6 +18,7 @@ use Utopia\Auth\Store;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -163,7 +164,8 @@ class Authentication extends Action
         $eventTailRegistry->revalidateConnection($connectionId, $roles);
 
         if ($authorization !== null) {
-            $realtime->connections[$connectionId]['authorization'] = $authorization;
+            // Fresh, as for any session connection: the previous identity's roles must not carry over.
+            $realtime->connections[$connectionId]['authorization'] = new Authorization();
             $realtime->connections[$connectionId]['impersonatedUserId'] = $impersonatedUserId;
             $realtime->connections[$connectionId]['sessionId'] = $sessionId;
             $realtime->connections[$connectionId]['expire'] = $user->getSessionExpiry($sessionId);
