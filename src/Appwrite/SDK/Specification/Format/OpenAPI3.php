@@ -2,6 +2,9 @@
 
 namespace Appwrite\SDK\Specification\Format;
 
+use Appwrite\Auth\Validator\Hash\Argon2;
+use Appwrite\Auth\Validator\Hash\Bcrypt;
+use Appwrite\Auth\Validator\Hash\PHPass;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -30,6 +33,12 @@ use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
+    private const array HASH_EXAMPLES = [
+        Argon2::class => '$argon2id$v=19$m=65536,t=4,p=1$NC8xaW1CVXlIZXFSQi9FRg$0bd4pLo1ytyqvCwl5NSijpm5OIe8J6CjZ1vFemKAg+o',
+        Bcrypt::class => '$2y$10$vBiMe4NOvlbYL1iJUNdqkO.QJy17fvslZQ5oiqKq1G4uwyRWvdrXC',
+        PHPass::class => '$P$BrOEFP1YR5W1yHpvvGuoeVUDPmw9ra/',
+    ];
+
     public function getName(): string
     {
         return 'Open API 3';
@@ -855,6 +864,13 @@ class OpenAPI3 extends Format
                             'type' => 'string',
                         ];
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '["' . Role::any()->toString() . '"]';
+                        break;
+                    case Argon2::class:
+                    case Bcrypt::class:
+                    case PHPass::class:
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'password';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : self::HASH_EXAMPLES[$validator::class];
                         break;
                     case \Appwrite\Auth\Validator\Password::class:
                     case \Appwrite\SDK\Specification\Validator\PasswordFormat::class:

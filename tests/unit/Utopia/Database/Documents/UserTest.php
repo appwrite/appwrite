@@ -6,6 +6,7 @@ namespace Tests\Unit\Utopia\Database\Documents;
 
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Utopia\Database\Documents\User;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Proofs\Code;
 use Utopia\Auth\Proofs\Token;
@@ -93,10 +94,10 @@ final class UserTest extends TestCase
             'sessions' => $tokens2,
         ]);
 
-        $this->assertEquals('token1', $user1->sessionVerify($secret, $proofForToken));
-        $this->assertEquals(false, $user1->sessionVerify('false-secret', $proofForToken));
-        $this->assertEquals(false, $user2->sessionVerify($secret, $proofForToken));
-        $this->assertEquals(false, $user2->sessionVerify('false-secret', $proofForToken));
+        $this->assertEquals('token1', $user1->sessionVerify($secret, $proofForToken, null));
+        $this->assertEquals(false, $user1->sessionVerify('false-secret', $proofForToken, null));
+        $this->assertEquals(false, $user2->sessionVerify($secret, $proofForToken, null));
+        $this->assertEquals(false, $user2->sessionVerify('false-secret', $proofForToken, null));
     }
 
     public function testSessionActive(): void
@@ -124,10 +125,113 @@ final class UserTest extends TestCase
             ],
         ]);
 
-        $this->assertTrue($user->sessionActive('active'));
-        $this->assertFalse($user->sessionActive('expired'));
-        $this->assertFalse($user->sessionActive('missing-expire'));
-        $this->assertFalse($user->sessionActive('missing'));
+        $this->assertTrue($user->sessionActive('active', null));
+        $this->assertFalse($user->sessionActive('expired', null));
+        $this->assertFalse($user->sessionActive('missing-expire', null));
+        $this->assertFalse($user->sessionActive('missing', null));
+    }
+
+    public static function sessionVerifyInvalidationProvider(): \Iterator
+    {
+        $secret = 'secret1';
+        $proofForToken = new Token();
+        $hash = $proofForToken->hash($secret);
+        yield 'session before invalidation is rejected' => [
+            $hash,
+            $secret,
+            $proofForToken,
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)), // createdAt: 2 minutes ago
+            DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
+            false,
+        ];
+        yield 'session at invalidation is rejected (<=)' => [
+            $hash,
+            $secret,
+            $proofForToken,
+            DateTime::formatTz(DateTime::now()),                              // createdAt == invalidatedAt
+            DateTime::formatTz(DateTime::now()),
+            false,
+        ];
+        yield 'session after invalidation passes' => [
+            $hash,
+            $secret,
+            $proofForToken,
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60)),    // createdAt: future
+            DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
+            'sessionId',
+        ];
+        yield 'null invalidatedAt — existing behavior unchanged' => [
+            $hash,
+            $secret,
+            $proofForToken,
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)),
+            null,
+            'sessionId',
+        ];
+    }
+
+    #[DataProvider('sessionVerifyInvalidationProvider')]
+    public function testSessionVerifyInvalidation(string $hash, string $secret, Token $proofForToken, string $createdAt, ?string $invalidatedAt, string|bool $expected): void
+    {
+        $user = new User([
+            '$id' => Id::custom('sessionId'),
+            'sessions' => [
+                new Document([
+                    '$id' => Id::custom('sessionId'),
+                    '$createdAt' => $createdAt,
+                    'secret' => $hash,
+                    'provider' => SESSION_PROVIDER_EMAIL,
+                    'providerUid' => 'test@example.com',
+                    'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60),
+                ]),
+            ],
+        ]);
+
+        $result = $user->sessionVerify($secret, $proofForToken, $invalidatedAt);
+        $this->assertSame($expected, $result);
+    }
+
+    public static function sessionActiveInvalidationProvider(): \Iterator
+    {
+        yield 'session before invalidation is rejected' => [
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)), // createdAt: 2 minutes ago
+            DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
+            false,
+        ];
+        yield 'session at invalidation is rejected (<=)' => [
+            DateTime::formatTz(DateTime::now()),
+            DateTime::formatTz(DateTime::now()),
+            false,
+        ];
+        yield 'session after invalidation passes' => [
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60)),
+            DateTime::formatTz(DateTime::now()),
+            true,
+        ];
+        yield 'null invalidatedAt — existing behavior unchanged' => [
+            DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)),
+            null,
+            true,
+        ];
+    }
+
+    #[DataProvider('sessionActiveInvalidationProvider')]
+    public function testSessionActiveInvalidation(string $createdAt, ?string $invalidatedAt, bool $expected): void
+    {
+        $user = new User([
+            '$id' => Id::custom('user1'),
+            'sessions' => [
+                new Document([
+                    '$id' => Id::custom('active'),
+                    '$createdAt' => $createdAt,
+                    'secret' => 'secret',
+                    'provider' => SESSION_PROVIDER_EMAIL,
+                    'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60),
+                ]),
+            ],
+        ]);
+
+        $this->assertSame($expected, $user->sessionActive('active', $invalidatedAt));
     }
 
     public function testGetSessionExpiry(): void
@@ -191,6 +295,23 @@ final class UserTest extends TestCase
 
         $user->setAttribute('mfa', false);
         $this->assertTrue($user->sessionFactorsMet('pending'));
+    }
+
+    public function testSessionChallengeRecent(): void
+    {
+        $user = new User([
+            '$id' => Id::custom('user1'),
+            'sessions' => [
+                new Document(['$id' => Id::custom('recent'), 'mfaUpdatedAt' => DateTime::addSeconds(new \DateTime(), -60)]),
+                new Document(['$id' => Id::custom('stale'), 'mfaUpdatedAt' => DateTime::addSeconds(new \DateTime(), -MFA_RECENT_DURATION - 60)]),
+                new Document(['$id' => Id::custom('never')]),
+            ],
+        ]);
+
+        $this->assertTrue($user->sessionChallengeRecent('recent'));
+        $this->assertFalse($user->sessionChallengeRecent('stale'));
+        $this->assertFalse($user->sessionChallengeRecent('never'));
+        $this->assertFalse($user->sessionChallengeRecent('missing'));
     }
 
     public function testTokenVerify(): void

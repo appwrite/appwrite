@@ -174,6 +174,89 @@ final class V25Test extends TestCase
         }
     }
 
+    public function testAddsSessionGeoAndFileFolderToProjectFromPreviousRelease(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created on 1.9.x stores no GeoIP record on sessions and no folder on files.
+        $geo = [
+            'continentCode',
+            'latitude',
+            'longitude',
+            'timeZone',
+            'weatherCode',
+            'postalCode',
+            'autonomousSystemNumber',
+            'autonomousSystemOrganization',
+            'connectionType',
+            'connectionUsageType',
+            'connectionOrganization',
+            'isp',
+        ];
+        $collections = Config::getParam('collections', []);
+        foreach ($collections['projects'] as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $id === 'sessions'
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => !\in_array($attribute->key, $geo, true))
+                : $collection['attributes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $bucket = $authorization->skip(fn () => $database->createDocument('buckets', new Document([
+            '$id' => 'bucket',
+            'name' => 'Bucket',
+            'enabled' => true,
+            'maximumFileSize' => 0,
+            'allowedFileExtensions' => [],
+            'compression' => 'none',
+            'encryption' => false,
+            'antivirus' => false,
+        ])));
+        $files = $collections['buckets']['files'];
+        $table = 'bucket_' . $bucket->getSequence();
+        $database->createCollection(Collection::create(
+            id: $table,
+            attributes: \array_values(\array_filter($files['attributes'], static fn (Attribute $attribute): bool => $attribute->key !== 'folder')),
+            indexes: \array_values(\array_filter($files['indexes'], static fn (Index $index): bool => $index->key !== '_key_folder')),
+        ));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $sessions = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('sessions')->getAttribute('attributes', [])
+        );
+        foreach ($geo as $attribute) {
+            $this->assertContains($attribute, $sessions);
+        }
+
+        $files = $database->getCollection($table);
+        $this->assertContains('folder', \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $files->getAttribute('attributes', [])
+        ));
+        $this->assertContains('_key_folder', \array_map(
+            fn (Document $index) => $index->getId(),
+            $files->getAttribute('indexes', [])
+        ));
+    }
+
     public function testCreatesVideoCollectionsForProjectFromPreviousRelease(): void
     {
         $authorization = new Authorization();
