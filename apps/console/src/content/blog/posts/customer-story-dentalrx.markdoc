@@ -26,11 +26,11 @@ faqs:
 
 From the outside, most medical apps look simple: a search bar, a few lists, a printable report. Nickolas Steel knows the hard part sits underneath, in the drug database.
 
-Nickolas is a clinically trained pharmacist with more than ten years of hospital experience. Their day job is in hospital informatics, managing the hospital's drug database and the backend engineering around it. [DentalRx](https://dentalrx.ca/dental-app) is what that expertise looks like with a simple front end built for dentistry.
+Nickolas is a clinically trained pharmacist with more than ten years of hospital experience. Their day job is in hospital informatics, managing the hospital's drug database and the backend engineering around it.
 
 > "The front end is easy enough. The hard part is all the database and compliance."
 
-Today, DentalRx is a free drug reference used by over 6,000 dentists, dental students, and practices, most of them in Canada. It runs on Appwrite, and its move from Firebase and Algolia to Postgres on Appwrite is what made the next generation of its features possible.
+Nickolas put that expertise behind [DentalRx](https://dentalrx.ca/dental-app), a free drug reference built for dentistry and used by over 6,000 dentists, dental students, and practices, most of them in Canada. It runs on Appwrite, and its move from Firebase and Algolia to Postgres on Appwrite is what made the next generation of its features possible.
 
 # The challenge
 
