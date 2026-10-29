@@ -24,6 +24,8 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Logs\Adapter\ClickHouse as LogsClickHouse;
+use Appwrite\Logs\Logs;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
 use Appwrite\Network\Validator\DeploymentHostname;
@@ -305,6 +307,35 @@ $container->set('executionStore', function (): ExecutionStore {
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
     );
+}, []);
+
+$container->set('logs', function () {
+    $client = new HttpClientPool(new Connections(
+        new SwoolePoolAdapter(),
+        'logs',
+        max(1, (int) System::getEnv('_APP_POOL_SIZE_EXECUTIONS', 2)),
+        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
+        timeout: 3.0,
+    ));
+
+    $defaultConnection = 'http://appwrite:'
+        . rawurlencode(System::getEnv('_APP_USAGE_PASS', 'appwrite'))
+        . '@clickhouse:8123/appwrite';
+    $connection = System::getEnv(
+        '_APP_CONNECTIONS_DB_EXECUTIONS',
+        System::getEnv('_APP_CONNECTIONS_DB_USAGE', $defaultConnection)
+    );
+    if ($connection === '') {
+        $connection = $defaultConnection;
+    }
+
+    return new Logs(new LogsClickHouse(
+        dsn: $connection,
+        client: $client,
+        // Function and site runtime logs are what Alloy collects today.
+        table: 'runtime_logs',
+        retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
+    ));
 }, []);
 
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(

@@ -1164,7 +1164,7 @@ final class StorageCustomServerTest extends Scope
             $this->assertEquals(1, $file['body']['chunksUploaded']);
         }
 
-        $this->withFactory(function (DatabaseFactory $factory) use ($bucketId, $idleId): void {
+        $this->withFactory(function ($factory) use ($bucketId, $idleId): void {
             $dbForProject = $factory->project($factory->platform()->getDocument('projects', $this->getProject()['$id']));
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -1200,6 +1200,9 @@ final class StorageCustomServerTest extends Scope
     }
 
     /**
+     * Untyped on purpose: Cloud runs this suite with its own factory, which has the same
+     * methods but is not a subclass of CE's.
+     *
      * @param callable(DatabaseFactory): void $callback receives the server's database factory
      */
     private function withFactory(callable $callback): void
