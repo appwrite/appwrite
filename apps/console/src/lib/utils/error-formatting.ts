@@ -434,11 +434,22 @@ export function formatError(
     }
 
     // Check for forbidden errors
+    // The API can explain why a request was refused (plan limit, blocked
+    // resource, disallowed origin). Show that message when it is present and
+    // user-friendly instead of hiding it behind the generic permission text.
     if (code === 403 || lowerMessage.includes('forbidden')) {
+      const isUserFriendlyMessage =
+        message.length > 0 &&
+        message.length <= 200 &&
+        !message.includes(' at ') &&
+        !message.includes('Error:') &&
+        !message.includes('TypeError')
       return {
         title: translate('Forbidden'),
         message: translate(
-          'You do not have permission to access this resource.',
+          isUserFriendlyMessage
+            ? message
+            : 'You do not have permission to access this resource.',
         ),
         isUserFriendly: true,
       }
