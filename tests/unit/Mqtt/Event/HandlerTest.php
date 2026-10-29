@@ -12,9 +12,9 @@ use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 use Tests\Unit\Mqtt\Fakes\Accounts;
-use Tests\Unit\Mqtt\Fakes\MutedStderr;
 use Tests\Unit\Mqtt\Fakes\NullPubSub;
 use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
+use Tests\Unit\Mqtt\Fakes\RecordingExporter;
 use Tests\Unit\Mqtt\Fakes\RecordingRedis;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
@@ -35,6 +35,8 @@ use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
 use Utopia\Mqtt\Server;
 use Utopia\Mqtt\Subscription\Store;
+use Utopia\Span\Level;
+use Utopia\Span\Span;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 use function Swoole\Coroutine\run;
@@ -77,13 +79,14 @@ final class HandlerTest extends TestCase
 
     private EventHandler $eventHandler;
 
+    private RecordingExporter $spans;
+
     private string|false $previousAbuseOption = false;
 
     protected function setUp(): void
     {
         $this->previousAbuseOption = \getenv(self::ABUSE_OPTION);
         \putenv(self::ABUSE_OPTION . '=disabled');
-        MutedStderr::mute(); // the fail-closed paths log to STDERR, which would fail the isolated process
     }
 
     protected function tearDown(): void
@@ -162,6 +165,19 @@ final class HandlerTest extends TestCase
         $this->server->start();
 
         $this->eventHandler = new EventHandler($this->server, $this->handler, $mqtt, self::TIMEOUT);
+
+        $this->spans = new RecordingExporter();
+        Span::setExporters($this->spans);
+    }
+
+    /** Assert the one $action span recorded $verification, the $count under $key, and its level. */
+    private function assertSpan(string $action, string $verification, string $key, int $count, Level $level): void
+    {
+        $spans = $this->spans->of($action);
+        $this->assertCount(1, $spans, "expected one {$action} span");
+        $this->assertSame($verification, $spans[0]->get('mqtt.verification'));
+        $this->assertSame($count, $spans[0]->get($key));
+        $this->assertSame($level->value, $spans[0]->get('level'));
     }
 
     /** Open and index a connection as $userId, then seed its store subscriptions to $topics. */
@@ -243,6 +259,7 @@ final class HandlerTest extends TestCase
             Coroutine::sleep(0.05);
             $this->assertCount(1, $this->network->disconnects(1), 'the late verification disconnected the connection again');
             $this->assertSame([1], $this->network->closed);
+            $this->assertSpan('mqtt.revoke', 'timed_out', 'mqtt.disconnected', 1, Level::Error);
         });
     }
 
@@ -276,6 +293,7 @@ final class HandlerTest extends TestCase
             $this->assertSame(0, $this->accounts->authorizations, 'the revoke was checked inline at the coroutine limit');
             $this->assertSame(Disconnect::NOT_AUTHORIZED, $this->network->disconnects(1)[0]->reasonCode);
             $this->assertSame([1], $this->network->closed);
+            $this->assertSpan('mqtt.revoke', 'coroutine_limit', 'mqtt.disconnected', 1, Level::Error);
         });
     }
 
@@ -295,6 +313,7 @@ final class HandlerTest extends TestCase
             $this->assertSame([], $this->store->getSubscribers(self::PROJECT, 'scores'));
             $this->assertArrayHasKey(1, $this->store->getSubscribers(self::PROJECT, 'news'));
             $this->assertSame([], $this->network->closed);
+            $this->assertSpan('mqtt.unsubscribe', 'coroutine_limit', 'mqtt.unsubscribed', 1, Level::Error);
         });
     }
 
@@ -316,6 +335,10 @@ final class HandlerTest extends TestCase
             $this->assertSame([1], $this->network->closed, 'an authorized user was disconnected');
             $this->assertCount(1, $this->network->publishes(2));
             $this->assertSame(2, $this->accounts->authorizations, 'a revoke was decided without verification');
+            $revokes = $this->spans->of('mqtt.revoke');
+            $this->assertSame(['verified', 'verified'], \array_map(fn (Span $span) => $span->get('mqtt.verification'), $revokes));
+            $this->assertSame([1, 0], \array_map(fn (Span $span) => $span->get('mqtt.disconnected'), $revokes));
+            $this->assertSame([Level::Info->value, Level::Info->value], \array_map(fn (Span $span) => $span->get('level'), $revokes));
         });
     }
 
@@ -362,6 +385,7 @@ final class HandlerTest extends TestCase
             Coroutine::sleep(0.05);
             $this->assertArrayHasKey(1, $this->store->getSubscribers(self::PROJECT, 'news'), 'the late check dropped another subscription');
             $this->assertSame([], $this->network->closed);
+            $this->assertSpan('mqtt.unsubscribe', 'timed_out', 'mqtt.unsubscribed', 1, Level::Error);
         });
     }
 }
