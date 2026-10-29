@@ -37,23 +37,24 @@ final class PermissionsChangedTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!\extension_loaded('swoole') || !\extension_loaded('redis')) {
-            $this->markTestSkipped('Needs the swoole and redis extensions; run inside the appwrite container.');
+        if (!\extension_loaded('swoole') || !\extension_loaded('redis') || !\extension_loaded('posix')) {
+            $this->markTestSkipped('Needs the swoole, redis and posix extensions; run inside the appwrite container.');
         }
     }
 
     protected function tearDown(): void
     {
         if (\is_resource($this->process)) {
-            // SIGTERM first so the Swoole master reaps its worker processes.
-            \proc_terminate($this->process, 15);
+            // The harness leads its own process group (see Harness/server.php), so signalling
+            // the group reaches the Swoole manager and worker too. SIGTERM first for a clean
+            // shutdown, then SIGKILL so no worker outlives the test holding the port.
+            $group = -\proc_get_status($this->process)['pid'];
+            \posix_kill($group, SIGTERM);
             $deadline = \microtime(true) + 5;
             while (\microtime(true) < $deadline && \proc_get_status($this->process)['running']) {
                 \usleep(100_000);
             }
-            if (\proc_get_status($this->process)['running']) {
-                \proc_terminate($this->process, 9);
-            }
+            \posix_kill($group, SIGKILL);
             \proc_close($this->process);
             $this->process = null;
         }
@@ -65,8 +66,12 @@ final class PermissionsChangedTest extends TestCase
 
     private function startServer(bool $frozenBlocks): void
     {
-        $this->port = \random_int(20000, 29999);
-        $this->log = \sys_get_temp_dir() . '/realtime-harness-' . $this->port . '.log';
+        // A port the kernel just handed out, rather than a random pick, and a log no other run shares.
+        $probe = \stream_socket_server('tcp://127.0.0.1:0');
+        $this->assertNotFalse($probe, 'Failed to find a free port');
+        $this->port = (int) \substr((string) \strrchr((string) \stream_socket_get_name($probe, false), ':'), 1);
+        \fclose($probe);
+        $this->log = (string) \tempnam(\sys_get_temp_dir(), 'realtime-harness-');
 
         $env = \array_merge(\getenv(), [
             'PORT' => (string) $this->port,
@@ -88,6 +93,11 @@ final class PermissionsChangedTest extends TestCase
 
         $deadline = \microtime(true) + 30;
         while (\microtime(true) < $deadline) {
+            // A harness that died (port taken) must not pass on someone else's listener.
+            if (!\proc_get_status($this->process)['running']) {
+                $this->fail('Realtime harness exited before listening: ' . $this->tailLog());
+            }
+
             $socket = @\fsockopen('127.0.0.1', $this->port, $errorCode, $errorMessage, 1);
             if ($socket !== false) {
                 \fclose($socket);

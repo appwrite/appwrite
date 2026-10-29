@@ -12,6 +12,9 @@
  * - anything else: resolves to an active user
  */
 
+// Lead a process group, so the test can signal the Swoole master, manager and worker at once.
+\posix_setsid();
+
 require_once __DIR__ . '/../../../../app/init.php';
 
 use Appwrite\Utopia\Database\Documents\User;
