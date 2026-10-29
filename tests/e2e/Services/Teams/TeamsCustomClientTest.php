@@ -183,6 +183,75 @@ final class TeamsCustomClientTest extends Scope
         $this->assertFalse($account['body']['phoneVerification']);
     }
 
+    public function testUpdateMembershipStatusRevokesUnverifiedAccountCredentials(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper('Claimed Invites');
+        $email = \uniqid() . 'claimed-invite@localhost.test';
+        $password = 'password';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => 'unique()',
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $cookie = 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId];
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $params = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertEquals(200, $confirmation['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $confirmation['cookies']['a_session_' . $projectId],
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['emailVerification']);
+
+        /**
+         * Test for FAILURE
+         * The registrant's session and password no longer reach the claimed account.
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => $cookie,
+        ]));
+        $this->assertEquals(401, $account['headers']['status-code']);
+
+        $login = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(401, $login['headers']['status-code']);
+    }
+
     public function testUpdateMembershipStatusAfterEmailChange(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -527,6 +596,27 @@ final class TeamsCustomClientTest extends Scope
 
         $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertEquals(2, $team['body']['total']);
+    }
+
+    public function testCreateMembershipKeepsRedirectPlaceholders(): void
+    {
+        $team = $this->createTeamHelper('evil.test/x?');
+        $email = \uniqid() . 'invitee@localhost.test';
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/{{team}}/join-us',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $this->assertStringContainsString('href="http://localhost:5000/{{team}}/join-us?', (string) $lastEmail['html']);
+        $this->assertStringNotContainsString('http://localhost:5000/evil.test/x?', (string) $lastEmail['html']);
     }
 
     public function testMembershipWritesFollowPrivacy(): void

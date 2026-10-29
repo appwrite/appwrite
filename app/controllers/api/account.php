@@ -23,12 +23,14 @@ use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -239,11 +241,16 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     // Claim the token and issue the session together: of concurrent exchanges only the one that deletes the token
     // gets a session, and a failed insert rolls the claim back so the token can be retried. The user row lock
     // orders this against an address change, which deletes the token and resets the verification it proves
-    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification) {
-        $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project) {
+        $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
 
         if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        // Proving an unverified email claims the account, so whoever registered it keeps no other way in
+        if ($verification === 'emailVerification' && !$locked->getAttribute('emailVerification', false)) {
+            $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
         }
 
         $session = $dbForProject->createDocument('sessions', $session
@@ -273,10 +280,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         locale: $locale->default,
     ));
 
-    $queueForEvents
-        ->setParam('userId', $user->getId())
-        ->setParam('sessionId', $session->getId());
-
     $encoded = $store
         ->setProperty('id', $user->getId())
         ->setProperty('secret', $sessionSecret)
@@ -302,6 +305,11 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ->setAttribute('expire', $expire)
         ->setAttribute('secret', $encoded)
     ;
+
+    $queueForEvents
+        ->setParam('userId', $user->getId())
+        ->setParam('sessionId', $session->getId())
+        ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
     $response->dynamic($session, Response::MODEL_SESSION);
 };
@@ -569,7 +577,9 @@ Http::delete('/v1/account')
     ->inject('publisherForDeletes')
     ->inject('authorization')
     ->inject('mqtt')
-    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization, Mqtt $mqtt) {
+    ->inject('queueForRealtime')
+    ->inject('usage')
+    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime, Context $usage) {
         if ($targetUser->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
@@ -607,6 +617,8 @@ Http::delete('/v1/account')
         } catch (\Throwable $error) {
             Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
         }
+
+        (new PresenceState())->deleteForUser($dbForProject, $project, $targetUser, $queueForRealtime, $usage);
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
@@ -745,7 +757,7 @@ Http::delete('/v1/account/sessions')
                 // Use current session for events.
                 $currentSession = $session;
                 $queueForEvents
-                    ->setPayload($response->output($session, Response::MODEL_SESSION));
+                    ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
                 $publisherForDeletes->enqueue(new DeleteMessage(
                     project: $queueForEvents->getProject(),
@@ -911,7 +923,7 @@ Http::delete('/v1/account/sessions/:sessionId')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $session->getId())
-                ->setPayload($response->output($session, Response::MODEL_SESSION));
+                ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
             $publisherForDeletes->enqueue(new DeleteMessage(
                 project: $queueForEvents->getProject(),
@@ -1028,7 +1040,7 @@ Http::patch('/v1/account/sessions/:sessionId')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION))
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1224,6 +1236,7 @@ Http::post('/v1/account/sessions/email')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $bus->dispatch(new SessionCreated(
@@ -1368,11 +1381,6 @@ Http::post('/v1/account/sessions/anonymous')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
-
         $encoded = $store
             ->setProperty('id', $user->getId())
             ->setProperty('secret', $secret)
@@ -1396,6 +1404,12 @@ Http::post('/v1/account/sessions/anonymous')
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('secret', $encoded)
+        ;
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1981,7 +1995,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
                     if (!$user->getAttribute('emailVerification', false)) {
-                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user));
+                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
                     }
                     // The provider verified this address, or its canonical form on the same domain
                     if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
@@ -2368,7 +2382,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $session->getId())
-                ->setPayload($response->output($session, Response::MODEL_SESSION))
+                ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
             ;
 
             // TODO: Remove this deprecated workaround - support only token
@@ -4256,7 +4270,9 @@ Http::patch('/v1/account/status')
     ->inject('cookieDomain')
     ->inject('project')
     ->inject('mqtt')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain, Document $project, Mqtt $mqtt) {
+    ->inject('queueForRealtime')
+    ->inject('usage')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain, Document $project, Mqtt $mqtt, Realtime $queueForRealtime, Context $usage) {
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => false]));
 
         try {
@@ -4264,6 +4280,8 @@ Http::patch('/v1/account/status')
         } catch (\Throwable $error) {
             Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
         }
+
+        (new PresenceState())->deleteForUser($dbForProject, $project, $user, $queueForRealtime, $usage);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -4639,10 +4657,16 @@ Http::put('/v1/account/recovery')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
+            }
+
+            // Recovery proves an unverified email, so whoever registered it keeps no other way in
+            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+            if (!$locked->getAttribute('emailVerification', false)) {
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
@@ -5060,10 +5084,16 @@ Http::put('/v1/account/recovery/otp')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword) {
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
+            }
+
+            // Recovery proves an unverified email, so whoever registered it keeps no other way in
+            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+            if (!$locked->getAttribute('emailVerification', false)) {
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(

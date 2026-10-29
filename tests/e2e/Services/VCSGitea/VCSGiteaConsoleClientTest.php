@@ -1427,10 +1427,12 @@ final class VCSGiteaConsoleClientTest extends Scope
         $params = $this->extractQueryParamsFromEmailLink($email['html']);
         $this->assertNotEmpty($params['secret'] ?? '');
 
+        // Signed in, as accepting signed out claims the unverified account and revokes its session
         $accept = $this->client->call(Client::METHOD_PATCH, '/teams/' . $a['teamId'] . '/memberships/' . $membership['body']['$id'] . '/status', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $b['session'],
         ], [
             'userId' => $b['userId'],
             'secret' => $params['secret'],

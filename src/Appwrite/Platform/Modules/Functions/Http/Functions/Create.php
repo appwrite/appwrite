@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Deployment\Deployments;
@@ -146,6 +147,7 @@ class Create extends Base
             ->inject('authorization')
             ->inject('bus')
             ->inject('platform')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -197,8 +199,13 @@ class Create extends Base
         RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
         Bus $bus,
-        array $platform
+        array $platform,
+        ?Key $apiKey,
     ) {
+        if ($apiKey !== null && !$apiKey->mayGrant($scopes)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
+        }
+
         $schedule ??= '';
 
         if ($schedule !== '' && $interval !== 0) {
