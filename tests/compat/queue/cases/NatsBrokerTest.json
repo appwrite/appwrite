@@ -500,7 +500,8 @@
           },
           "expect": {
             "subjects": [
-              "q.${ns}-jobs.dead"
+              "q.${ns}-jobs.dead",
+              "q.${ns}-jobs.dead.>"
             ],
             "retention": "workqueue",
             "max_msgs": -1,
@@ -4387,19 +4388,195 @@
       ]
     },
     {
-      "name": "reap is a no-op",
+      "name": "reap moves a message the consumer gave up on",
       "state": [],
       "steps": [
         {
           "op": "nats.broker",
           "args": {
             "time": 1700000000,
-            "ack_wait": 2.0,
-            "max_deliver": 3
+            "ack_wait": 1.0,
+            "max_deliver": 1,
+            "stranded_after": 0.0,
+            "live": true
           },
           "bind": "n",
           "expect": {
             "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "poison": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.lapse",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": [
+            1,
+            1
+          ]
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "later": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.ack_next",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": {
+            "seq": 2,
+            "floor": 2,
+            "first": 1
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "healthy": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "timeout": 2,
+            "n": 1
+          },
+          "bind": "h",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "${ns}-jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "healthy",
+                          true
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    3
+                  ],
+                  [
+                    "receipt",
+                    null
+                  ],
+                  [
+                    "size",
+                    97
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "later": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.stream",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": {
+            "subjects": [
+              "q.${ns}-jobs.normal"
+            ],
+            "retention": "workqueue",
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msg_size": -1,
+            "max_age": 0.0,
+            "storage": "file",
+            "replicas": 1,
+            "discard": "old",
+            "duplicate_window": 120.0,
+            "identity": "12:utopia-queue:${ns}-jobs",
+            "messages": 3
           }
         },
         {
@@ -4411,10 +4588,940 @@
             "queue": {
               "name": "${ns}-jobs",
               "namespace": "utopia-queue"
-            },
-            "older_than": 0
+            }
           },
           "expect": 0
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "nats.stream",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": {
+            "subjects": [
+              "q.${ns}-jobs.normal"
+            ],
+            "retention": "workqueue",
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msg_size": -1,
+            "max_age": 0.0,
+            "storage": "file",
+            "replicas": 1,
+            "discard": "old",
+            "duplicate_window": 120.0,
+            "identity": "12:utopia-queue:${ns}-jobs",
+            "messages": 2
+          }
+        },
+        {
+          "op": "nats.stream",
+          "args": {
+            "queue": "${ns}-jobs",
+            "dead": true
+          },
+          "expect": {
+            "subjects": [
+              "q.${ns}-jobs.dead",
+              "q.${ns}-jobs.dead.>"
+            ],
+            "retention": "workqueue",
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msg_size": -1,
+            "max_age": 0.0,
+            "storage": "file",
+            "replicas": 1,
+            "discard": "old",
+            "duplicate_window": 120.0,
+            "identity": "12:utopia-queue:${ns}-jobs",
+            "messages": 1
+          }
+        },
+        {
+          "op": "nats.message",
+          "args": {
+            "queue": "${ns}-jobs",
+            "dead": true,
+            "seq": 1
+          },
+          "mask": {
+            "paths": [
+              "/subject"
+            ],
+            "reason": "a dead letter's subject hashes its data, which names the run's queue"
+          },
+          "expect": {
+            "subject": "<masked>",
+            "data": "{\"pid\":\"pid0001\",\"queue\":\"${ns}-jobs\",\"timestamp\":1700000000,\"payload\":{\"poison\":true}}",
+            "content_type": "application/json",
+            "id": "pid0001.dead.1"
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "message": {
+              "$ref": "h",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "nats.delete",
+          "args": {
+            "queues": [
+              "${ns}-jobs"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "maintain reaps the other queues when one fails",
+      "state": [],
+      "steps": [
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 1.0,
+            "max_deliver": 1,
+            "stranded_after": 0.0
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "poison": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.lapse",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": [
+            1,
+            1
+          ]
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "later": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.ack_next",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": {
+            "seq": 2,
+            "floor": 2,
+            "first": 1
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-other",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "poison": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.lapse",
+          "args": {
+            "queue": "${ns}-other"
+          },
+          "expect": [
+            1,
+            1
+          ]
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-other",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "later": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.ack_next",
+          "args": {
+            "queue": "${ns}-other"
+          },
+          "expect": {
+            "seq": 2,
+            "floor": 2,
+            "first": 1
+          }
+        },
+        {
+          "op": "nats.reconfigure",
+          "args": {
+            "queue": "${ns}-jobs",
+            "changes": {
+              "deny_delete": true
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "timeout": 1,
+            "n": 1
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-other",
+              "namespace": "utopia-queue"
+            },
+            "timeout": 1,
+            "n": 1
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "the server's refusal is worded by each runtime's NATS client"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "nats.stream",
+          "args": {
+            "queue": "${ns}-other"
+          },
+          "expect": {
+            "subjects": [
+              "q.${ns}-other.normal"
+            ],
+            "retention": "workqueue",
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msg_size": -1,
+            "max_age": 0.0,
+            "storage": "file",
+            "replicas": 1,
+            "discard": "old",
+            "duplicate_window": 120.0,
+            "identity": "12:utopia-queue:${ns}-other",
+            "messages": 0
+          }
+        },
+        {
+          "op": "nats.stream",
+          "args": {
+            "queue": "${ns}-other",
+            "dead": true
+          },
+          "expect": {
+            "subjects": [
+              "q.${ns}-other.dead",
+              "q.${ns}-other.dead.>"
+            ],
+            "retention": "workqueue",
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msg_size": -1,
+            "max_age": 0.0,
+            "storage": "file",
+            "replicas": 1,
+            "discard": "old",
+            "duplicate_window": 120.0,
+            "identity": "12:utopia-queue:${ns}-other",
+            "messages": 1
+          }
+        },
+        {
+          "op": "nats.delete",
+          "args": {
+            "queues": [
+              "${ns}-jobs",
+              "${ns}-other"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "reap waits for the floor to stand",
+      "state": [],
+      "steps": [
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 1.0,
+            "max_deliver": 1,
+            "stranded_after": 0.0,
+            "live": true
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 1.0,
+            "max_deliver": 1,
+            "stranded_after": 3600.0,
+            "live": true
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "poison": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.lapse",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": [
+            1,
+            1
+          ]
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "later": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.ack_next",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": {
+            "seq": 2,
+            "floor": 2,
+            "first": 1
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "nats.recreate_consumer",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": null
+        },
+        {
+          "op": "nats.lapse",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": [
+            1,
+            1
+          ]
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "later": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.ack_next",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": {
+            "seq": 3,
+            "floor": 3,
+            "first": 1
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "nats.stream",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": {
+            "subjects": [
+              "q.${ns}-jobs.normal"
+            ],
+            "retention": "workqueue",
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msg_size": -1,
+            "max_age": 0.0,
+            "storage": "file",
+            "replicas": 1,
+            "discard": "old",
+            "duplicate_window": 120.0,
+            "identity": "12:utopia-queue:${ns}-jobs",
+            "messages": 1
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "nats.delete",
+          "args": {
+            "queues": [
+              "${ns}-jobs"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "reap copies a dead letter once while its delete keeps failing",
+      "state": [],
+      "steps": [
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 1.0,
+            "max_deliver": 1,
+            "stranded_after": 0.0,
+            "live": true
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "first"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "poison": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.lapse",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": [
+            1,
+            1
+          ]
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "first"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "later": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "nats.ack_next",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": {
+            "seq": 2,
+            "floor": 2,
+            "first": 1
+          }
+        },
+        {
+          "op": "nats.reconfigure",
+          "args": {
+            "queue": "${ns}-jobs",
+            "changes": {
+              "deny_delete": true
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "nats.reconfigure",
+          "args": {
+            "queue": "${ns}-jobs",
+            "dead": true,
+            "changes": {
+              "duplicate_window": 1000000000
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 1.0,
+            "max_deliver": 1,
+            "stranded_after": 0.0,
+            "live": true
+          },
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "first"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "second"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "first"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "the server's refusal is worded by each runtime's NATS client"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 1500
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "first"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "the server's refusal is worded by each runtime's NATS client"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 1500
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "second"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "the server's refusal is worded by each runtime's NATS client"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 1500
+          },
+          "expect": null
+        },
+        {
+          "op": "nats.stream",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": {
+            "subjects": [
+              "q.${ns}-jobs.normal"
+            ],
+            "retention": "workqueue",
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msg_size": -1,
+            "max_age": 0.0,
+            "storage": "file",
+            "replicas": 1,
+            "discard": "old",
+            "duplicate_window": 120.0,
+            "identity": "12:utopia-queue:${ns}-jobs",
+            "messages": 1
+          }
+        },
+        {
+          "op": "nats.stream",
+          "args": {
+            "queue": "${ns}-jobs",
+            "dead": true
+          },
+          "expect": {
+            "subjects": [
+              "q.${ns}-jobs.dead",
+              "q.${ns}-jobs.dead.>"
+            ],
+            "retention": "workqueue",
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msg_size": -1,
+            "max_age": 0.0,
+            "storage": "file",
+            "replicas": 1,
+            "discard": "old",
+            "duplicate_window": 1.0,
+            "identity": "12:utopia-queue:${ns}-jobs",
+            "messages": 1
+          }
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "first"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "the server's refusal is worded by each runtime's NATS client"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "nats.stream",
+          "args": {
+            "queue": "${ns}-jobs"
+          },
+          "expect": {
+            "subjects": [
+              "q.${ns}-jobs.normal"
+            ],
+            "retention": "workqueue",
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msg_size": -1,
+            "max_age": 0.0,
+            "storage": "file",
+            "replicas": 1,
+            "discard": "old",
+            "duplicate_window": 120.0,
+            "identity": "12:utopia-queue:${ns}-jobs",
+            "messages": 1
+          }
+        },
+        {
+          "op": "nats.stream",
+          "args": {
+            "queue": "${ns}-jobs",
+            "dead": true
+          },
+          "expect": {
+            "subjects": [
+              "q.${ns}-jobs.dead",
+              "q.${ns}-jobs.dead.>"
+            ],
+            "retention": "workqueue",
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msg_size": -1,
+            "max_age": 0.0,
+            "storage": "file",
+            "replicas": 1,
+            "discard": "old",
+            "duplicate_window": 1.0,
+            "identity": "12:utopia-queue:${ns}-jobs",
+            "messages": 1
+          }
         },
         {
           "op": "nats.delete",
@@ -4669,7 +5776,8 @@
           },
           "expect": {
             "subjects": [
-              "q.${ns}-jobs.dead"
+              "q.${ns}-jobs.dead",
+              "q.${ns}-jobs.dead.>"
             ],
             "retention": "workqueue",
             "max_msgs": -1,
@@ -6568,7 +7676,8 @@
           },
           "expect": {
             "subjects": [
-              "q.${ns}-jobs.dead"
+              "q.${ns}-jobs.dead",
+              "q.${ns}-jobs.dead.>"
             ],
             "retention": "workqueue",
             "max_msgs": -1,

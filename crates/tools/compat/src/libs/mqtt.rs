@@ -230,7 +230,7 @@ pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
         }
         "fanout" => {
             let adapter = Memory::new();
-            let server = Server::new(adapter.clone(), Deliver);
+            let server = Server::new(adapter.clone(), Deliver, Store::new(), 0);
             server.start().await;
             let connect = v5::connect(b"c", 0, true, None).map_err(fault)?;
             let subscribe = v5::subscribe(1, &[b"news/+"], 0, None).map_err(fault)?;
@@ -500,10 +500,16 @@ impl Handler for Recorder {
         if connect.auth_method.as_deref() == Some(b"challenge") {
             return Ok(ConnectReply::Auth(Auth::challenge(b"challenge", b"nonce")));
         }
-        let properties = connect
-            .auth_method
-            .as_ref()
-            .map(|m| Properties::new().with(Property::bytes(Property::AUTHENTICATION_METHOD, m.clone())));
+        // A "keepalive" User Property becomes the CONNACK's own Server Keep Alive.
+        let mut properties = user.iter().find(|(k, _)| k == b"keepalive").map(|(_, v)| {
+            Properties::new()
+                .with(Property::new(Property::SERVER_KEEP_ALIVE, PropertyValue::Int(php_std::format::str_to_int(v))))
+        });
+        if let Some(method) = &connect.auth_method {
+            properties = Some(
+                properties.unwrap_or_default().with(Property::bytes(Property::AUTHENTICATION_METHOD, method.clone())),
+            );
+        }
         Ok(ConnectReply::Connack(Connack::accept(false, properties)))
     }
 
@@ -533,6 +539,10 @@ impl Handler for Recorder {
         push(&self.log, json!(["subscribe", connection.fd(), subscribe.packet_id, filters]));
         let mut suback = Suback::new();
         for filter in &subscribe.filters {
+            if filter.topic == b"close" {
+                // A handler enforcing a limit drops the connection.
+                connection.disconnect(Disconnect::NORMAL, None)?;
+            }
             if filter.topic.starts_with(b"deny") {
                 suback.deny(Suback::DENIED);
             } else if filter.topic != b"short" {
@@ -1313,7 +1323,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "server.new" => {
             let r = session.get_mut::<Rig>(a.value("rig")?)?;
             let recorder = Recorder { adapter: Some(r.adapter.clone()), ..Recorder::new(r.log.clone()) };
-            r.server = Some(Server::new(r.adapter.clone(), recorder));
+            r.server = Some(Server::new(r.adapter.clone(), recorder, Store::new(), 0));
             Outcome::Ok(Value::Null)
         }
         "server.telemetry" => {
@@ -1361,7 +1371,9 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "server.metrics" => Outcome::Ok(rig(session, &a)?.metrics()),
         "server.session" => {
             let mut r = Rig::new(true);
-            let server = Server::new(r.adapter.clone(), Recorder::new(r.log.clone()));
+            let max_keep_alive = u16::try_from(a.opt_i64("max_keep_alive")?.unwrap_or(0))
+                .map_err(|_| Fault::new("max_keep_alive out of range"))?;
+            let server = Server::new(r.adapter.clone(), Recorder::new(r.log.clone()), Store::new(), max_keep_alive);
             let telemetry = MemoryTelemetry::new();
             server.set_telemetry(&telemetry);
             r.telemetry = Some(telemetry);
@@ -1792,7 +1804,7 @@ async fn start_broker(host: &str) -> Result<Network, Fault> {
         })),
         ..Recorder::new(Log::default())
     };
-    let server = Server::new(adapter.clone(), recorder);
+    let server = Server::new(adapter.clone(), recorder, Store::new(), 0);
     utopia_async::spawn(async move { server.start().await });
     utopia_async::timeout(Duration::from_secs(5), adapter.listening())
         .await

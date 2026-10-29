@@ -4808,6 +4808,7 @@ dependencies = [
  "utopia-dsn",
  "utopia-lock",
  "utopia-validators",
+ "xxhash-rust",
 ]
 
 [[package]]

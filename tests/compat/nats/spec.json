@@ -900,12 +900,18 @@
         "Utopia\\NATS\\ConnectionOptions::__construct"
       ]
     },
+    "fake.discovered": {
+      "doc": "Connection::connect() over fake transports advertising connect_urls [peer:4222] and refusing host 'other'; the first server then announces lame duck mode: {first, peer, scheme} (the host and scheme the discovered peer is dialled with)"
+    },
     "conn.connect_counted": {
       "doc": "Connection::connect(options) to the service with a factory counting the TlsTransport(tls) it builds: {error {class, message, previous {class, contains}}, connects}",
       "covers": [
         "Utopia\\NATS\\Connection::connect",
         "Utopia\\NATS\\Transport\\TlsTransport::connect"
       ]
+    },
+    "conn.connect_failure": {
+      "doc": "Connection::connect(options) over the default transports, expected to fail: {error: connectError(e, contains)}"
     },
     "transport.tls_failure": {
       "doc": "TlsFailureTest against a loopback listener: upgrade (TcpTransport, the peer answers the ClientHello with HTTP, closed first when close_peer) or refused (TlsTransport to a port nothing listens on): {error {class, message (upgrade only: the refusal carries the OS errno)}, connected, peer_eof?}",

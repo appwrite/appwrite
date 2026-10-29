@@ -84,8 +84,10 @@ pub const OPS: &[&str] = &[
     "fake.state",
     "fake.tls_options",
     "fake.connect_passes",
+    "fake.discovered",
     "transport.tls_failure",
     "conn.connect_counted",
+    "conn.connect_failure",
     "conn.connect",
     "conn.publish",
     "conn.subscribe",
@@ -341,6 +343,7 @@ struct FakeState {
     connected: bool,
     captured: Vec<String>,
     refuse: Option<Value>,
+    refuse_hosts: Vec<String>,
     host: String,
 }
 
@@ -479,11 +482,16 @@ fn rule_matches(when: &Value, data: &[u8]) -> bool {
 
 #[async_trait]
 impl Transport for Fake {
-    async fn connect(&mut self, host: &str, _port: u16, _timeout: Duration) -> utopia_nats::Result<()> {
+    async fn connect(&mut self, host: &str, port: u16, _timeout: Duration) -> utopia_nats::Result<()> {
         let mut state = self.lock();
         state.host = host.to_owned();
         if let Some(refuse) = &state.refuse {
             return Err(scripted_error(refuse));
+        }
+        if state.refuse_hosts.iter().any(|h| h == host) {
+            return Err(Error::Connection(format!(
+                "Failed to connect to tcp://{host}:{port}: [111] Connection refused"
+            )));
         }
         state.connected = true;
         state.connects += 1;
@@ -1818,6 +1826,38 @@ async fn tls_failure(a: &Args<'_>) -> OpResult {
     Ok(Outcome::ok(out))
 }
 
+/// `fake.discovered` in Adapter.php: a server advertising `peer:4222` in its
+/// INFO, then entering lame duck mode; the scheme the peer is dialled with.
+async fn discovered(a: &Args<'_>) -> OpResult {
+    let fakes: Arc<Mutex<Vec<(String, Fake)>>> = Arc::default();
+    let log = Log::default();
+    let options = connection_options(a.opt("options").unwrap_or(&json!({})), &log)?;
+    let factory_fakes = fakes.clone();
+    let options = ConnectionOptions {
+        transport_factory: Some(Arc::new(move |scheme: &str| {
+            let mut info = Map::new();
+            info.insert("connect_urls".into(), json!(["peer:4222"]));
+            let fake = Fake::new(info);
+            fake.lock().refuse_hosts = vec!["other".to_owned()];
+            factory_fakes
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .push((scheme.to_owned(), fake.clone()));
+            Ok(Box::new(fake) as Box<dyn Transport>)
+        })),
+        ..options
+    };
+    let mut conn = try_lib!(Connection::connect(options).await);
+    let first = fakes.lock().unwrap_or_else(std::sync::PoisonError::into_inner)[0].1.clone();
+    let first_host = first.lock().host.clone();
+    first.push(b"INFO {\"server_id\":\"FAKE\",\"ldm\":true}\r\n");
+    try_lib!(conn.process_message(Some(Duration::from_secs(1))).await);
+    let _ = conn.close().await;
+    let fakes = fakes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+    let (scheme, peer) = fakes.last().map(|(s, f)| (s.clone(), f.lock().host.clone())).unwrap_or_default();
+    Ok(Outcome::ok(json!({"first": first_host, "peer": peer, "scheme": scheme})))
+}
+
 /// Connection::connect() with a factory counting the TLS transports it
 /// builds (TlsTest's untrusted-certificate case).
 async fn connect_counted(a: &Args<'_>, session: &Session) -> OpResult {
@@ -2375,8 +2415,21 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
 
         "transport.round_trip" => round_trip(&a, session).await,
         "fake.connect_passes" => connect_passes(&a).await,
+        "fake.discovered" => discovered(&a).await,
         "transport.tls_failure" => tls_failure(&a).await,
         "conn.connect_counted" => connect_counted(&a, session).await,
+        "conn.connect_failure" => {
+            let log = Log::default();
+            let options = connection_options(a.opt("options").unwrap_or(&json!({})), &log)?;
+            let error = match Connection::connect(options).await {
+                Ok(mut conn) => {
+                    let _ = conn.close().await;
+                    Value::Null
+                }
+                Err(e) => connect_error(&e, a.opt_str("contains")?),
+            };
+            Ok(Outcome::ok(json!({"error": error})))
+        }
 
         _ => call_jetstream(op, &a, session).await,
     }

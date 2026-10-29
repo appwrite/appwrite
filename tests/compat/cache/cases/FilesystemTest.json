@@ -888,7 +888,7 @@
               "$ref": "c"
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "cache.size",
@@ -905,7 +905,7 @@
       ]
     },
     {
-      "name": "flushing an empty or missing directory fails",
+      "name": "flushing a missing directory fails, an empty one succeeds",
       "steps": [
         {
           "op": "filesystem.new",
@@ -989,12 +989,7 @@
               "$ref": "c"
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Exception",
-              "message": "Error happened during glob"
-            }
-          }
+          "expect": true
         }
       ],
       "state": [
@@ -1092,6 +1087,121 @@
             }
           }
         }
+      ]
+    },
+    {
+      "name": "testFlushEmpty",
+      "steps": [
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/flush-empty",
+            "recursive": true
+          },
+          "expect": true
+        },
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/flush-empty"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.flush",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "files"
+      ]
+    },
+    {
+      "name": "testFlushKeepsRoot",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/flush-root"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "item",
+            "data": "data"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.flush",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.ping",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.size",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": 0
+        }
+      ],
+      "state": [
+        "files"
       ]
     }
   ]

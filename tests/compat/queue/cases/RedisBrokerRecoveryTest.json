@@ -8126,6 +8126,337 @@
           "expect": 1
         }
       ]
+    },
+    {
+      "name": "retry leaves the job failed when its queue destination is not a list",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ],
+                  [
+                    "size",
+                    77
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "SET",
+              "${ns}.queue.recovery",
+              "occupied"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "WRONGTYPE queue retry"
+            }
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.failed.recovery",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "pid0001"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "retry leaves the job failed when its dead destination is not a list",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ],
+                  [
+                    "size",
+                    77
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "SET",
+              "${ns}.dead.recovery",
+              "occupied"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "max_attempts": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "WRONGTYPE queue retry"
+            }
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.failed.recovery",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "pid0001"
+          ]
+        }
+      ]
     }
   ]
 }

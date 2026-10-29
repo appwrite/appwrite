@@ -68,17 +68,22 @@ impl File {
 
 impl Lock for File {
     /// Retries with a growing delay (10 ms doubling up to 250 ms) until the
-    /// lock is taken or the wait runs out. [`Wait::Forever`] tries once.
+    /// lock is taken or the wait runs out; [`Wait::Forever`] until it is
+    /// released.
     async fn acquire(&self, wait: Wait) -> Result<bool, Error> {
         self.open()?;
-        let Wait::For(timeout) = wait else { return self.try_acquire().await };
-        let deadline = Instant::now() + timeout;
+        let deadline = match wait {
+            Wait::None => return self.try_acquire().await,
+            Wait::For(timeout) => Some(Instant::now() + timeout),
+            Wait::Forever => None,
+        };
         let mut delay = 0.01_f64;
         loop {
             if self.try_acquire().await? {
                 return Ok(true);
             }
-            let remaining = deadline.saturating_duration_since(Instant::now()).as_secs_f64();
+            let remaining =
+                deadline.map_or(f64::INFINITY, |d| d.saturating_duration_since(Instant::now()).as_secs_f64());
             if remaining <= 0.0 {
                 return Ok(false);
             }

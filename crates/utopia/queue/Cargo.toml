@@ -13,7 +13,7 @@ default = ["cluster", "nats"]
 # Redis Cluster connection.
 cluster = ["redis/cluster-async"]
 # NATS JetStream broker.
-nats = ["dep:async-nats"]
+nats = ["dep:async-nats", "dep:xxhash-rust"]
 
 [dependencies]
 async-nats = { workspace = true, optional = true }
@@ -32,8 +32,9 @@ utopia-async.workspace = true
 utopia-dsn.workspace = true
 utopia-lock.workspace = true
 utopia-validators.workspace = true
+xxhash-rust = { workspace = true, optional = true }
 
 
 [package.metadata.utopia]
 category = "servers"
-php-sync = "b69230deec5466c2bc84ceb007fb1514969c80af"
+php-sync = "9b01b3da56433061bbdac7a20ec5ba8424d65106"

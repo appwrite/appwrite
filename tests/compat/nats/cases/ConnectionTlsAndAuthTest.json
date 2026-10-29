@@ -262,6 +262,170 @@
       ]
     },
     {
+      "name": "a discovered server inherits the advertising server's TLS: tls seed",
+      "steps": [
+        {
+          "op": "fake.discovered",
+          "args": {
+            "options": {
+              "servers": [
+                "tls://seed:4222"
+              ],
+              "tls": false,
+              "noRandomize": true
+            }
+          },
+          "expect": {
+            "first": "seed",
+            "peer": "peer",
+            "scheme": "tls"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a discovered server inherits the advertising server's TLS: wss seed",
+      "steps": [
+        {
+          "op": "fake.discovered",
+          "args": {
+            "options": {
+              "servers": [
+                "wss://seed:443"
+              ],
+              "tls": false,
+              "noRandomize": true
+            }
+          },
+          "expect": {
+            "first": "seed",
+            "peer": "peer",
+            "scheme": "tls"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a discovered server inherits the advertising server's TLS: tls option",
+      "steps": [
+        {
+          "op": "fake.discovered",
+          "args": {
+            "options": {
+              "servers": [
+                "nats://seed:4222"
+              ],
+              "tls": true,
+              "noRandomize": true
+            }
+          },
+          "expect": {
+            "first": "seed",
+            "peer": "peer",
+            "scheme": "tls"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a discovered server inherits the advertising server's TLS: plaintext seed",
+      "steps": [
+        {
+          "op": "fake.discovered",
+          "args": {
+            "options": {
+              "servers": [
+                "nats://seed:4222"
+              ],
+              "tls": false,
+              "noRandomize": true
+            }
+          },
+          "expect": {
+            "first": "seed",
+            "peer": "peer",
+            "scheme": "nats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a discovered server inherits the advertising server's TLS: tls seed in a mixed pool",
+      "steps": [
+        {
+          "op": "fake.discovered",
+          "args": {
+            "options": {
+              "servers": [
+                "tls://seed:4222",
+                "nats://other:4222"
+              ],
+              "tls": false,
+              "noRandomize": true
+            }
+          },
+          "expect": {
+            "first": "seed",
+            "peer": "peer",
+            "scheme": "tls"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a discovered server inherits the advertising server's TLS: plaintext seed in a mixed pool",
+      "steps": [
+        {
+          "op": "fake.discovered",
+          "args": {
+            "options": {
+              "servers": [
+                "nats://seed:4222",
+                "tls://other:4222"
+              ],
+              "tls": false,
+              "noRandomize": true
+            }
+          },
+          "expect": {
+            "first": "seed",
+            "peer": "peer",
+            "scheme": "nats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an explicit plaintext seed stays plaintext beside a TLS seed",
+      "steps": [
+        {
+          "op": "conn.connect_failure",
+          "args": {
+            "options": {
+              "servers": [
+                "tls://127.0.0.1:1",
+                "nats://127.0.0.1:1"
+              ],
+              "noRandomize": true,
+              "connectTimeout": 0.5,
+              "connectAttempts": 1
+            },
+            "contains": "tcp://127.0.0.1:1"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed to connect to any NATS server",
+              "previous": {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "contains": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "the token provider is resolved at connect",
       "steps": [
         {

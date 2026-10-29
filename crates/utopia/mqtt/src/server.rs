@@ -12,7 +12,7 @@ use crate::packet::{
     pingresp,
 };
 use crate::spec::{v3, v5};
-use crate::{Connection, Error, Properties, Property, Store};
+use crate::{Connection, Error, Properties, Property, Store, Value};
 
 /// The highest QoS a SUBACK code grants; above it, a code is a failure.
 const MAX_QOS: u8 = 2;
@@ -136,6 +136,7 @@ struct Inner<A, H> {
     state: Mutex<State>,
     metrics: RwLock<Metrics>,
     callbacks: RwLock<Callbacks>,
+    max_keep_alive: u16,
 }
 
 /// An MQTT broker over an [`Adapter`], with a [`Handler`] making its
@@ -155,7 +156,7 @@ struct Inner<A, H> {
 /// use utopia_mqtt::packet::{Auth, Connack, Connect, Disconnect, Puback, Publish, Suback, Subscribe, Unsuback, Unsubscribe};
 /// use utopia_mqtt::server::{AuthReply, ConnectReply, Subscriber};
 /// use utopia_mqtt::spec::v5;
-/// use utopia_mqtt::{Connection, Error, Handler, Memory, Server};
+/// use utopia_mqtt::{Connection, Error, Handler, Memory, Server, Store};
 ///
 /// struct Echo;
 ///
@@ -187,7 +188,7 @@ struct Inner<A, H> {
 /// }
 ///
 /// let adapter = Memory::new();
-/// let server = Server::new(adapter.clone(), Echo);
+/// let server = Server::new(adapter.clone(), Echo, Store::new(), 0);
 /// # utopia_async::Builder::current_thread().build()?.block_on(async {
 /// server.start().await;
 /// # });
@@ -225,21 +226,19 @@ impl<A: Adapter, H: Handler> Clone for Server<A, H> {
 }
 
 impl<A: Adapter + Send + Sync, H: Handler> Server<A, H> {
-    /// A broker on `adapter`, deciding with `handler`, with an empty store
-    /// and no telemetry.
+    /// A broker on `adapter`, deciding with `handler`, keeping its
+    /// subscriptions in `store`, with no telemetry. `max_keep_alive` is the
+    /// longest keep-alive in seconds the broker honours, also used for a
+    /// client that disables it; 0 for no limit.
     ///
-    /// PHP: `new Server(Adapter $adapter, Handler $handler, Store $store = new Store())`.
-    pub fn new(adapter: A, handler: H) -> Self {
-        Self::with_store(adapter, handler, Store::new())
-    }
-
-    /// A broker keeping its subscriptions in `store`.
-    pub fn with_store(adapter: A, handler: H, store: Store) -> Self {
+    /// PHP: `new Server(Adapter $adapter, Handler $handler, Store $store = new Store(), int $maxKeepAlive = 0)`.
+    pub fn new(adapter: A, handler: H, store: Store, max_keep_alive: u16) -> Self {
         Self {
             inner: Arc::new(Inner {
                 adapter,
                 handler,
                 state: Mutex::new(State { connections: HashMap::new(), store }),
+                max_keep_alive,
                 metrics: RwLock::new(Metrics::new(&NoTelemetry)),
                 callbacks: RwLock::default(),
             }),
@@ -393,6 +392,24 @@ impl<A: Adapter + Send + Sync, H: Handler> Server<A, H> {
         Ok(())
     }
 
+    /// The keep-alive the broker enforces. A disabled (0) one becomes
+    /// `max_keep_alive`, so an idle client is still reaped: 3.1.1 lets a
+    /// server drop an inactive client whatever its keep-alive (3.1.2.10). A
+    /// longer one is lowered only for 5.0, which is told through Server Keep
+    /// Alive; 3.1.1 cannot be told, so its declared interval stands.
+    ///
+    /// PHP: `Server::keepAlive()` (private).
+    fn keep_alive(&self, requested: u16, protocol: u8) -> u16 {
+        let max = self.inner.max_keep_alive;
+        if max == 0 {
+            return requested;
+        }
+        if requested == 0 {
+            return max;
+        }
+        if protocol >= v5::PROTOCOL_LEVEL { requested.min(max) } else { requested }
+    }
+
     fn dispatch(&self, packet: &Packet<'_>, connection: &Arc<Connection>) -> Result<(), Error> {
         let adapter = &self.inner.adapter;
         let fd = connection.fd();
@@ -410,7 +427,7 @@ impl<A: Adapter + Send + Sync, H: Handler> Server<A, H> {
                     let mut state = connection.state();
                     state.protocol = connect.protocol_level;
                     state.clean_start = connect.clean_start;
-                    state.keep_alive = connect.keep_alive;
+                    state.keep_alive = self.keep_alive(connect.keep_alive, connect.protocol_level);
                 }
                 connection.set_client_id(&connect.client_id);
                 let reply = self.inner.handler.on_connect(&connect, connection)?;
@@ -419,7 +436,27 @@ impl<A: Adapter + Send + Sync, H: Handler> Server<A, H> {
                 if connection.state().closed {
                     return Ok(());
                 }
-                let protocol = connection.state().protocol;
+                let (protocol, keep_alive) = {
+                    let state = connection.state();
+                    (state.protocol, state.keep_alive)
+                };
+                // MQTT 5.0 3.2.2.3.14: the client must use the Server Keep Alive instead of its own.
+                let reply = match reply {
+                    ConnectReply::Connack(connack)
+                        if connack.accepted() && protocol >= v5::PROTOCOL_LEVEL && keep_alive != connect.keep_alive =>
+                    {
+                        let mut properties = Properties::new();
+                        for property in connack.properties.as_ref().map_or(&[][..], Properties::all) {
+                            // The property may appear only once, and the broker enforces its own value.
+                            if property.id != Property::SERVER_KEEP_ALIVE {
+                                properties.add(property.clone());
+                            }
+                        }
+                        properties.add(Property::new(Property::SERVER_KEEP_ALIVE, Value::Int(i64::from(keep_alive))));
+                        ConnectReply::Connack(Connack::accept(connack.session_present, Some(properties)))
+                    }
+                    other => other,
+                };
                 let encoded = match &reply {
                     ConnectReply::Connack(connack) => encode_connack(connack, protocol)?,
                     ConnectReply::Auth(auth) => encode_auth(auth)?,
@@ -454,6 +491,9 @@ impl<A: Adapter + Send + Sync, H: Handler> Server<A, H> {
             Kind::Subscribe => {
                 let subscribe = Subscribe::decode(packet.body, connection.state().protocol)?;
                 let suback = self.inner.handler.on_subscribe(&subscribe, connection)?;
+                if connection.state().closed {
+                    return Ok(());
+                }
                 self.record(&subscribe, &suback, connection);
                 let protocol = connection.state().protocol;
                 adapter.send(fd, &encode_suback(&suback, subscribe.packet_id, protocol)?)?;

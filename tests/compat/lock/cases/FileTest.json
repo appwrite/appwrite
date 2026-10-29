@@ -425,6 +425,68 @@
           "expect": null
         }
       ]
+    },
+    {
+      "name": "a negative timeout waits until release",
+      "steps": [
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock"
+          },
+          "bind": "child",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "child"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "file.new",
+          "args": {
+            "path": "/tmp/${ns}.lock"
+          },
+          "bind": "parent",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.acquire_elapsed",
+          "args": {
+            "lock": {
+              "$ref": "parent"
+            },
+            "timeout": -1.0,
+            "release": {
+              "$ref": "child"
+            },
+            "release_after_ms": 300,
+            "at_least": 0.25,
+            "below": 5.0
+          },
+          "expect": {
+            "acquired": true,
+            "within": true
+          }
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "parent"
+            }
+          },
+          "expect": null
+        }
+      ]
     }
   ]
 }
