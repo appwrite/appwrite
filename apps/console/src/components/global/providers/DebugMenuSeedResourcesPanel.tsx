@@ -193,6 +193,7 @@ export function DebugMenuSeedResourcesPanel() {
   const { features } = useConsoleProfile()
   const params = useParams({ strict: false }) as {
     orgId?: string
+    partnerId?: string
     projectId?: string
     databaseId?: string
     dbKind?: string
@@ -201,7 +202,12 @@ export function DebugMenuSeedResourcesPanel() {
     siteId?: string
   }
 
-  const routeOrgId = typeof params.orgId === 'string' ? params.orgId : undefined
+  const routeOrgId =
+    typeof params.orgId === 'string'
+      ? params.orgId
+      : typeof params.partnerId === 'string'
+        ? params.partnerId
+        : undefined
   const projectId =
     typeof params.projectId === 'string' ? params.projectId : undefined
   const functionId =

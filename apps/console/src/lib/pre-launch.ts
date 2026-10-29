@@ -32,6 +32,9 @@ const AUTH_ALLOWED_PATHS = new Set([
   '/auth/magic-url',
   '/auth/oauth2/success',
   '/auth/oauth2/failure',
+  '/partner',
+  '/partner/sign-in',
+  '/partner/sign-up',
 ])
 
 // Legal pages must stay crawlable even while locked: OAuth and app-store
@@ -158,7 +161,8 @@ export const PRE_LAUNCH_BOOT_SCRIPT = `(function(){
     var auth = {
       '/sign-in': 1, '/sign-up': 1, '/sign-out': 1, '/recovery': 1, '/reset': 1,
       '/mfa': 1, '/verify-email': 1, '/auth/magic-url': 1,
-      '/auth/oauth2/success': 1, '/auth/oauth2/failure': 1
+      '/auth/oauth2/success': 1, '/auth/oauth2/failure': 1,
+      '/partner': 1, '/partner/sign-in': 1, '/partner/sign-up': 1
     };
     if (auth[path]) return;
     location.replace('/init');

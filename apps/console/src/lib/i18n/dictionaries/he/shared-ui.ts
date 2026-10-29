@@ -72,6 +72,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Add account': 'הוספת חשבון',
   'Add filter': 'הוספת סינון',
   'Add value': 'הוספת ערך',
+  'Appwrite team members': 'חברי צוות Appwrite',
   'Add installation': 'הוספת התקנה',
   'Add one or more environment variables. You can add multiple variables at once.':
     'הוסיפו משתנה סביבה אחד או יותר. אפשר להוסיף כמה משתנים בבת אחת.',
@@ -641,6 +642,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   Submit: 'שליחה',
   Support: 'תמיכה',
   'Support hours': 'שעות תמיכה',
+  'Slack channel': 'ערוץ Slack',
   'Supports optional impersonation.': 'תומך בהתחזות אופציונלית.',
   'System status': 'סטטוס מערכת',
   Tab: 'לשונית',
@@ -747,6 +749,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our':
     'אנחנו משתמשים בעוגיות חיוניות כדי לשמור אתכם מחוברים, לנהל גישה לאתר ולזכור את ההעדפות שלכם. באישורכם, אנחנו משתמשים גם באנליטיקה כדי להבין איך Appwrite בשימוש ולשפר אותו. קראו את', // pragma: allowlist secret
   'We value your privacy': 'הפרטיות שלכם חשובה לנו',
+  'Your private channel with the Appwrite partner team.':
+    'הערוץ הפרטי שלכם עם צוות השותפים של Appwrite.',
   'You cannot impersonate your own operator account.':
     'לא ניתן להתחזות לחשבון המפעיל של עצמכם.',
   "You're offline": 'אין חיבור לאינטרנט',

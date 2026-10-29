@@ -51,6 +51,8 @@ import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
   buildDatabasesSidebarWidthPrefs,
   buildMysqlSqlEditorHeightPrefs,
+  buildPartnerClientsColumnWidthPrefs,
+  buildPartnerClientNavColumnWidthPrefs,
   buildPostgresSqlEditorHeightPrefs,
   buildSavedFiltersPrefs,
   buildSavedImageTransformPresetsPrefs,
@@ -58,9 +60,15 @@ import {
   buildVideosSidebarWidthPrefs,
   DATABASES_SIDEBAR_DEFAULT_WIDTH_PX,
   MYSQL_SQL_EDITOR_DEFAULT_HEIGHT_PX,
+  PARTNER_CLIENTS_COLUMN_DEFAULT_WIDTH_PX,
+  PARTNER_CLIENT_NAV_COLUMN_DEFAULT_WIDTH_PX,
   POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   parseDatabasesSidebarWidthPx,
   parseMysqlSqlEditorHeightPx,
+  parsePartnerClientsColumnCollapsed,
+  parsePartnerClientsColumnWidthPx,
+  parsePartnerClientNavColumnWidthPx,
+  parsePinnedClientIds,
   parsePostgresSqlEditorHeightPx,
   parseStorageSidebarWidthPx,
   parseVideosSidebarWidthPx,
@@ -113,6 +121,8 @@ import {
   mergeCliShellSessionsSidebarWidthPxIntoPrefs,
   mergeConnectProjectTabIntoPrefs,
   mergeDatabaseAdminNavCollapsedIntoPrefs,
+  mergePartnerClientsColumnCollapsedIntoPrefs,
+  mergePinnedClientIdsIntoPrefs,
   mergeSidebarCollapsedIntoPrefs,
   getCliShellSessionsKey,
   parseCliShellHistory,
@@ -2165,6 +2175,263 @@ export function useTableViewSidebarWidth(
       updateMutation.mutate(value)
     },
     [updateMutation],
+  )
+
+  return { widthPx, persistSidebarWidthPx }
+}
+
+/**
+ * Persisted clients list column width and collapsed state for the partner workspace.
+ * Keys: `console.partners.clientsColumnWidth`, `console.partners.clientsColumnCollapsed`.
+ */
+export function usePartnerClientsColumnLayout(
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+  const accountPrefs = account?.prefs as UserPrefs | undefined
+
+  const widthPx =
+    parsePartnerClientsColumnWidthPx(accountPrefs) ??
+    PARTNER_CLIENTS_COLUMN_DEFAULT_WIDTH_PX
+  const collapsed = parsePartnerClientsColumnCollapsed(accountPrefs)
+
+  const widthMutation = useMutation({
+    mutationFn: async (value: number) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        {
+          ...account.prefs,
+          ...buildPartnerClientsColumnWidthPrefs(value),
+        },
+        'partner-clients-column-width',
+      )
+    },
+    onMutate: async (value) => {
+      const patch = buildPartnerClientsColumnWidthPrefs(value)
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const collapsedMutation = useMutation({
+    mutationFn: async (value: boolean) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergePartnerClientsColumnCollapsedIntoPrefs(
+          { ...(account.prefs ?? {}) },
+          value,
+        ),
+        'partner-clients-column-collapsed',
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergePartnerClientsColumnCollapsedIntoPrefs(
+                  { ...(current.prefs ?? {}) },
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const persistSidebarWidthPx = useCallback(
+    (value: number) => {
+      widthMutation.mutate(value)
+    },
+    [widthMutation],
+  )
+
+  const persistCollapsed = useCallback(
+    (value: boolean) => {
+      collapsedMutation.mutate(value)
+    },
+    [collapsedMutation],
+  )
+
+  return { widthPx, persistSidebarWidthPx, collapsed, persistCollapsed }
+}
+
+/**
+ * Pinned partner client IDs for one partner (`console.pinnedClientIds.<partnerId>`).
+ * Array order is the pinned sort order. Per-user, not shared across partners.
+ */
+export function usePinnedPartnerClientIds(
+  account: { prefs?: Record<string, unknown> } | undefined,
+  partnerId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  const pinnedClientIds = useMemo(
+    () =>
+      parsePinnedClientIds(
+        account?.prefs as UserPrefs | undefined,
+        partnerId,
+      ),
+    [account?.prefs, partnerId],
+  )
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: string[]) => {
+      if (!account || !partnerId) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergePinnedClientIdsIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          partnerId,
+          value,
+        ),
+        'partner-pinned-clients',
+      )
+    },
+    onMutate: async (value) => {
+      if (!partnerId) return
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergePinnedClientIdsIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  partnerId,
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const setPinnedClientIds = useCallback(
+    (value: string[] | ((prev: string[]) => string[])) => {
+      if (!account || !partnerId) return
+      const nextValue =
+        typeof value === 'function' ? value(pinnedClientIds) : value
+      const seen = new Set<string>()
+      const normalized: string[] = []
+      for (const entry of nextValue) {
+        const id = entry.trim()
+        if (!id || seen.has(id)) continue
+        seen.add(id)
+        normalized.push(id)
+      }
+      if (
+        normalized.length === pinnedClientIds.length &&
+        normalized.every((id, index) => id === pinnedClientIds[index])
+      ) {
+        return
+      }
+      updateMutation.mutate(normalized)
+    },
+    [account, partnerId, pinnedClientIds, updateMutation],
+  )
+
+  const togglePinnedClient = useCallback(
+    (clientId: string) => {
+      const id = clientId.trim()
+      if (!id) return
+      setPinnedClientIds((prev) =>
+        prev.includes(id)
+          ? prev.filter((pinnedId) => pinnedId !== id)
+          : [...prev, id],
+      )
+    },
+    [setPinnedClientIds],
+  )
+
+  return {
+    pinnedClientIds,
+    togglePinnedClient,
+    isPinPending: updateMutation.isPending,
+  }
+}
+
+/**
+ * Persisted client section menu column width for the partner workspace.
+ * Key: `console.partners.clientNavColumnWidth`.
+ */
+export function usePartnerClientNavColumnLayout(
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+  const accountPrefs = account?.prefs as UserPrefs | undefined
+
+  const widthPx =
+    parsePartnerClientNavColumnWidthPx(accountPrefs) ??
+    PARTNER_CLIENT_NAV_COLUMN_DEFAULT_WIDTH_PX
+
+  const widthMutation = useMutation({
+    mutationFn: async (value: number) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        {
+          ...account.prefs,
+          ...buildPartnerClientNavColumnWidthPrefs(value),
+        },
+        'partner-client-nav-column-width',
+      )
+    },
+    onMutate: async (value) => {
+      const patch = buildPartnerClientNavColumnWidthPrefs(value)
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const persistSidebarWidthPx = useCallback(
+    (value: number) => {
+      widthMutation.mutate(value)
+    },
+    [widthMutation],
   )
 
   return { widthPx, persistSidebarWidthPx }

@@ -36,10 +36,11 @@ const sizeStyles: Record<
   { text: string; icon: string; padding: string }
 > = {
   xs: {
-    text: 'text-[10px]',
+    text: 'text-[10px] leading-none',
     icon: 'h-2.5 w-2.5',
     // Extra end padding so the copy icon isn't flush with the badge edge.
-    padding: 'ps-1.5 pe-2 py-0.5',
+    // Tight vertical box so the pill hugs 10px text (not sm's py-0.5 + default leading).
+    padding: 'h-fit min-h-0 ps-1.5 pe-2 py-px',
   },
   sm: {
     text: 'text-[11px]',

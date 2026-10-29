@@ -20,11 +20,15 @@ import {
   clampAIChatConversationsSidebarWidthPx,
   clampCliShellSessionsSidebarWidthPx,
   clampMysqlSqlEditorHeightPx,
+  clampPartnerClientsColumnWidthPx,
+  clampPartnerClientNavColumnWidthPx,
   clampPostgresSqlEditorHeightPx,
   clampTableViewSidebarWidthPx,
   CLI_SHELL_SESSIONS_SIDEBAR_DEFAULT_WIDTH_PX,
   normalizeLegacySidebarWidthPrefValue,
   MYSQL_SQL_EDITOR_DEFAULT_HEIGHT_PX,
+  PARTNER_CLIENTS_COLUMN_DEFAULT_WIDTH_PX,
+  PARTNER_CLIENT_NAV_COLUMN_DEFAULT_WIDTH_PX,
   POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX,
   TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
   VIDEOS_SIDEBAR_BOUNDS,
@@ -1818,6 +1822,329 @@ export function buildVideosSidebarWidthPrefs(widthPx: number): UserPrefs {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Partners: clients list column width and collapsed state
+// ---------------------------------------------------------------------------
+
+/**
+ * Full key: `console.partners.clientsColumnWidth` - clients list column width
+ * in px for the partner workspace (`ClientsResizableLayout`).
+ */
+export const USER_PREFS_KEY_PARTNERS_CLIENTS_COLUMN_WIDTH =
+  'console.partners.clientsColumnWidth'
+
+export function parsePartnerClientsColumnWidthPx(
+  prefs: UserPrefs | null | undefined,
+): number | null {
+  if (!prefs) return null
+  const raw = prefs[USER_PREFS_KEY_PARTNERS_CLIENTS_COLUMN_WIDTH]
+  let value: number | null = null
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    value = raw
+  } else if (typeof raw === 'string' && raw.length > 0) {
+    const parsed = Number(raw)
+    if (Number.isFinite(parsed)) value = parsed
+  }
+  if (value === null) return null
+  return clampPartnerClientsColumnWidthPx(value)
+}
+
+export function buildPartnerClientsColumnWidthPrefs(widthPx: number): UserPrefs {
+  return {
+    [USER_PREFS_KEY_PARTNERS_CLIENTS_COLUMN_WIDTH]: String(
+      clampPartnerClientsColumnWidthPx(widthPx),
+    ),
+  }
+}
+
+/**
+ * Full key: `console.partners.clientsColumnCollapsed` - clients list
+ * minimized in the partner workspace when true.
+ */
+export const USER_PREFS_KEY_PARTNERS_CLIENTS_COLUMN_COLLAPSED =
+  'console.partners.clientsColumnCollapsed'
+
+export function parsePartnerClientsColumnCollapsed(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(
+      prefs?.[USER_PREFS_KEY_PARTNERS_CLIENTS_COLUMN_COLLAPSED],
+    ) ?? false
+  )
+}
+
+export function mergePartnerClientsColumnCollapsedIntoPrefs(
+  prefs: UserPrefs,
+  collapsed: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_PARTNERS_CLIENTS_COLUMN_COLLAPSED]: collapsed,
+  }
+}
+
+/**
+ * Full key: `console.pinnedClientIds.<partnerId>` - pinned partner client
+ * organization IDs as a JSON string array. Array order is the pin sort order.
+ * Per-user and per partner (not shared across partners).
+ */
+export const USER_PREFS_KEY_PINNED_CLIENT_IDS_PREFIX =
+  'console.pinnedClientIds'
+
+export function pinnedClientIdsPrefsKey(partnerId: string): string {
+  return `${USER_PREFS_KEY_PINNED_CLIENT_IDS_PREFIX}.${partnerId}`
+}
+
+const EMPTY_PINNED_CLIENT_IDS: string[] = []
+
+export function parsePinnedClientIds(
+  prefs: UserPrefs | null | undefined,
+  partnerId: string | null | undefined,
+): string[] {
+  if (!partnerId) return EMPTY_PINNED_CLIENT_IDS
+  const raw = prefs?.[pinnedClientIdsPrefsKey(partnerId)]
+  if (typeof raw !== 'string' || !raw.trim()) {
+    return EMPTY_PINNED_CLIENT_IDS
+  }
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return EMPTY_PINNED_CLIENT_IDS
+    const seen = new Set<string>()
+    const ids: string[] = []
+    for (const entry of parsed) {
+      if (typeof entry !== 'string') continue
+      const id = entry.trim()
+      if (!id || seen.has(id)) continue
+      seen.add(id)
+      ids.push(id)
+    }
+    return ids.length > 0 ? ids : EMPTY_PINNED_CLIENT_IDS
+  } catch {
+    return EMPTY_PINNED_CLIENT_IDS
+  }
+}
+
+export function mergePinnedClientIdsIntoPrefs(
+  prefs: UserPrefs,
+  partnerId: string,
+  clientIds: string[],
+): UserPrefs {
+  const seen = new Set<string>()
+  const ids: string[] = []
+  for (const entry of clientIds) {
+    const id = entry.trim()
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    ids.push(id)
+  }
+  return {
+    ...prefs,
+    [pinnedClientIdsPrefsKey(partnerId)]: JSON.stringify(ids),
+  }
+}
+
+/**
+ * Full key: `console.partners.clientNavColumnWidth` - client section menu
+ * column width in px for the partner workspace.
+ */
+export const USER_PREFS_KEY_PARTNERS_CLIENT_NAV_COLUMN_WIDTH =
+  'console.partners.clientNavColumnWidth'
+
+export function parsePartnerClientNavColumnWidthPx(
+  prefs: UserPrefs | null | undefined,
+): number | null {
+  if (!prefs) return null
+  const raw = prefs[USER_PREFS_KEY_PARTNERS_CLIENT_NAV_COLUMN_WIDTH]
+  let value: number | null = null
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    value = raw
+  } else if (typeof raw === 'string' && raw.length > 0) {
+    const parsed = Number(raw)
+    if (Number.isFinite(parsed)) value = parsed
+  }
+  if (value === null) return null
+  return clampPartnerClientNavColumnWidthPx(value)
+}
+
+export function buildPartnerClientNavColumnWidthPrefs(widthPx: number): UserPrefs {
+  return {
+    [USER_PREFS_KEY_PARTNERS_CLIENT_NAV_COLUMN_WIDTH]: String(
+      clampPartnerClientNavColumnWidthPx(widthPx),
+    ),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Partners: projects spreadsheet column widths (account - same for all clients)
+// ---------------------------------------------------------------------------
+
+/**
+ * Full key: `console.partners.spreadsheetColumnWidths` - JSON object of
+ * column id → width in px for the partner projects spreadsheet.
+ * Shared across every client and the development workspace. Never includes
+ * project or client IDs.
+ */
+export const USER_PREFS_KEY_PARTNERS_SPREADSHEET_COLUMN_WIDTHS =
+  'console.partners.spreadsheetColumnWidths'
+
+export const PARTNER_PROJECTS_COLUMN_WIDTH_KEYS = [
+  'status',
+  'project',
+  'projectId',
+  'endpoint',
+  'created',
+  'requests',
+  'bandwidth',
+  'executions',
+  'storage',
+  'compute',
+  'users',
+] as const
+
+export type PartnerProjectsColumnWidthKey =
+  (typeof PARTNER_PROJECTS_COLUMN_WIDTH_KEYS)[number]
+
+export const PARTNER_PROJECTS_USAGE_COLUMN_WIDTH_KEYS = [
+  'requests',
+  'bandwidth',
+  'executions',
+  'storage',
+  'compute',
+  'users',
+] as const satisfies readonly PartnerProjectsColumnWidthKey[]
+
+export const PARTNER_PROJECTS_COLUMN_MAX_WIDTH_PX = 640
+
+export const PARTNER_PROJECTS_COLUMN_DEFAULT_WIDTHS: Record<
+  PartnerProjectsColumnWidthKey,
+  number
+> = {
+  status: 128,
+  project: 200,
+  projectId: 148,
+  endpoint: 200,
+  created: 128,
+  requests: 148,
+  bandwidth: 148,
+  executions: 148,
+  storage: 148,
+  compute: 148,
+  users: 148,
+}
+
+export const PARTNER_PROJECTS_COLUMN_MIN_WIDTHS: Record<
+  PartnerProjectsColumnWidthKey,
+  number
+> = {
+  status: 96,
+  project: 120,
+  projectId: 100,
+  endpoint: 120,
+  created: 96,
+  requests: 88,
+  bandwidth: 88,
+  executions: 88,
+  storage: 88,
+  compute: 88,
+  users: 88,
+}
+
+const PARTNER_PROJECTS_COLUMN_WIDTH_KEY_SET = new Set<string>(
+  PARTNER_PROJECTS_COLUMN_WIDTH_KEYS,
+)
+
+export function clampPartnerProjectsColumnWidthPx(
+  columnId: PartnerProjectsColumnWidthKey,
+  px: number,
+): number {
+  return Math.min(
+    PARTNER_PROJECTS_COLUMN_MAX_WIDTH_PX,
+    Math.max(
+      PARTNER_PROJECTS_COLUMN_MIN_WIDTHS[columnId],
+      Math.round(px),
+    ),
+  )
+}
+
+export function mergePartnerProjectsColumnWidthsWithDefaults(
+  stored: Record<string, number> | undefined,
+): Record<PartnerProjectsColumnWidthKey, number> {
+  const out = { ...PARTNER_PROJECTS_COLUMN_DEFAULT_WIDTHS }
+  if (!stored) return out
+  for (const k of PARTNER_PROJECTS_COLUMN_WIDTH_KEYS) {
+    const v = stored[k]
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      out[k] = clampPartnerProjectsColumnWidthPx(k, v)
+    }
+  }
+  return out
+}
+
+export function getPartnerProjectsColumnWidthsFromPrefs(
+  prefs: UserPrefs | null | undefined,
+): Record<string, number> {
+  const raw = prefs?.[USER_PREFS_KEY_PARTNERS_SPREADSHEET_COLUMN_WIDTHS]
+  if (raw == null) return {}
+
+  let parsed: unknown
+  if (typeof raw === 'string') {
+    const s = raw.trim()
+    if (s.length === 0) return {}
+    try {
+      parsed = JSON.parse(s) as unknown
+    } catch {
+      return {}
+    }
+  } else if (typeof raw === 'object' && !Array.isArray(raw)) {
+    parsed = raw
+  } else {
+    return {}
+  }
+
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    return {}
+  }
+
+  const out: Record<string, number> = {}
+  for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+    if (!PARTNER_PROJECTS_COLUMN_WIDTH_KEY_SET.has(k)) continue
+    const n = typeof v === 'number' ? v : Number(v)
+    if (!Number.isFinite(n)) continue
+    out[k] = clampPartnerProjectsColumnWidthPx(
+      k as PartnerProjectsColumnWidthKey,
+      n,
+    )
+  }
+  return out
+}
+
+export function mergePartnerProjectsColumnWidthsIntoPrefs(
+  prefs: UserPrefs,
+  widths: Record<string, number | undefined>,
+): UserPrefs {
+  const next = { ...prefs }
+  const payload = { ...getPartnerProjectsColumnWidthsFromPrefs(prefs) }
+  for (const [k, v] of Object.entries(widths)) {
+    if (!PARTNER_PROJECTS_COLUMN_WIDTH_KEY_SET.has(k)) continue
+    if (typeof v !== 'number' || !Number.isFinite(v)) continue
+    payload[k] = clampPartnerProjectsColumnWidthPx(
+      k as PartnerProjectsColumnWidthKey,
+      v,
+    )
+  }
+  if (Object.keys(payload).length === 0) {
+    delete next[USER_PREFS_KEY_PARTNERS_SPREADSHEET_COLUMN_WIDTHS]
+    return next
+  }
+  next[USER_PREFS_KEY_PARTNERS_SPREADSHEET_COLUMN_WIDTHS] =
+    JSON.stringify(payload)
+  return next
+}
+
+export type PartnerProjectsSpreadsheetColumnWidthKey =
+  PartnerProjectsColumnWidthKey
+
 function parseSidebarWidthPxForKey(
   prefs: UserPrefs | null | undefined,
   key: string,
@@ -1846,6 +2173,8 @@ function buildSidebarWidthPxPrefsForKey(
 
 /** Default when account pref is unset. */
 export { TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX as DATABASES_SIDEBAR_DEFAULT_WIDTH_PX }
+export { PARTNER_CLIENTS_COLUMN_DEFAULT_WIDTH_PX }
+export { PARTNER_CLIENT_NAV_COLUMN_DEFAULT_WIDTH_PX }
 
 // ---------------------------------------------------------------------------
 // Postgres: SQL editor container height (vertical split in SQL workbench)

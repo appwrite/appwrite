@@ -8,7 +8,10 @@ import {
   getInvoiceStatusBadgeVariant,
   mapInvoiceApiStatus,
 } from '@/lib/utils/status-badge'
-import { useOrganizationInvoices } from '@/lib/react-query/hooks'
+import {
+  BILLING_INVOICES_PAGE_SIZE,
+  useOrganizationInvoices,
+} from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -17,7 +20,7 @@ import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { useT } from '@/lib/i18n/translate'
 import { RetryPayment, type RetryPaymentInvoice } from './RetryPayment'
 
-const ITEMS_PER_PAGE = 5
+const ITEMS_PER_PAGE = BILLING_INVOICES_PAGE_SIZE
 
 /**
  * Map API Invoice model to component Invoice interface.
@@ -56,10 +59,10 @@ function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
   }
 }
 
-export function PaymentHistory() {
+export function PaymentHistory({ orgId: orgIdProp }: { orgId?: string } = {}) {
   const t = useT()
   const params = useParams({ strict: false })
-  const orgId = params.orgId as string | undefined
+  const orgId = orgIdProp ?? (params.orgId as string | undefined)
   const [requestedPage, setRequestedPage] = useState(0)
   const [displayedPage, setDisplayedPage] = useState(0)
 

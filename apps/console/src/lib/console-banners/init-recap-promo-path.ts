@@ -1,4 +1,6 @@
+import { isPartnerAuthPath } from '@/lib/auth-audience'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page-path'
+import { isPartnerConsolePath } from '@/lib/partners'
 
 function isAuthPage(pathname: string): boolean {
   return (
@@ -9,7 +11,8 @@ function isAuthPage(pathname: string): boolean {
     pathname === '/join' ||
     pathname === '/mfa' ||
     pathname === '/verify-email' ||
-    pathname === '/auth/magic-url'
+    pathname === '/auth/magic-url' ||
+    isPartnerAuthPath(pathname)
   )
 }
 
@@ -42,6 +45,9 @@ export function isInitRecapPromoPath(pathname: string): boolean {
 
   const first = pathname.split('/').filter(Boolean)[0]
   return (
-    first === 'projects' || first === 'organizations' || first === 'account'
+    first === 'projects' ||
+    first === 'organizations' ||
+    first === 'account' ||
+    isPartnerConsolePath(pathname)
   )
 }

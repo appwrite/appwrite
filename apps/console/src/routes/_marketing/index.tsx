@@ -21,6 +21,7 @@ import {
 import { shouldServerRenderRootHome } from '@/lib/root-home-ssr'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
+import { isPartnerOrganization, organizationHomeLink } from '@/lib/partners'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import { prefetchVisitorCountry } from '@/lib/react-query/hooks/locale'
 import { searchParamsFromRouterLocation } from '@/lib/table-filters'
@@ -28,7 +29,8 @@ import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
 import {
   consoleAccountQueryOptions,
   ensureConsoleAccountQueryData,
-} from '@/lib/react-query/hooks/auth'
+  organizationQueryOptions,
+} from '@/lib/react-query/hooks'
 
 const HOME_VIEW: RootHomeLoaderData = { view: 'home' }
 const CONSOLE_VIEW: RootHomeLoaderData = { view: 'console' }
@@ -110,9 +112,11 @@ export const Route = createFileRoute('/_marketing/')({
         queryClient,
         account,
       )
+      const org = context.queryClient.getQueryData(
+        organizationQueryOptions(orgId).queryKey,
+      )
       throw redirect({
-        to: '/organizations/$orgId',
-        params: { orgId },
+        ...organizationHomeLink(orgId, isPartnerOrganization(org)),
         replace: true,
       })
     } catch (error) {

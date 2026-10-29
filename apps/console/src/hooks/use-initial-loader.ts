@@ -2,11 +2,13 @@ import { useEffect, useState, useRef, useMemo, useReducer } from 'react'
 import { useIsFetching, useIsMutating, useQueryClient } from '@tanstack/react-query'
 import { useRouterState, useLocation, useMatches } from '@tanstack/react-router'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
+import { isPartnerAuthPath } from '@/lib/auth-audience'
 import {
   isHttpPaymentRequiredError,
   isHttpProjectAccessError,
 } from '@/lib/utils/error-formatting'
 import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
+import { isPartnerConsolePath } from '@/lib/partners'
 import {
   INITIAL_LOADER_SHELL_GATE,
   getProjectIdFromPathname,
@@ -97,7 +99,8 @@ export function useInitialLoader() {
       location.pathname === '/mfa' ||
       location.pathname === '/join' ||
       location.pathname === '/sign-out' ||
-      location.pathname === '/verify-email',
+      location.pathname === '/verify-email' ||
+      isPartnerAuthPath(location.pathname),
     [location.pathname],
   )
 
@@ -106,10 +109,13 @@ export function useInitialLoader() {
     [location.pathname],
   )
 
-  const isMarketingRoute = useMemo(
-    () => isMarketingPage({ pathname: location.pathname, matches }),
-    [location.pathname, matches],
-  )
+  const isMarketingRoute = useMemo(() => {
+    // Pending matches can still be the marketing `/partners` page while the
+    // destination is `/partners/$id`. That would skip (and complete) the
+    // overlay, then re-show it when matches catch up.
+    if (isPartnerConsolePath(location.pathname)) return false
+    return isMarketingPage({ pathname: location.pathname, matches })
+  }, [location.pathname, matches])
 
   const skipStaticLoader =
     isAuthRoute || isInstantPublicRoute || isMarketingRoute
@@ -128,7 +134,8 @@ export function useInitialLoader() {
         location.pathname.startsWith('/projects') ||
         location.pathname.startsWith('/console') ||
         location.pathname.startsWith('/account') ||
-        location.pathname.startsWith('/generator')),
+        location.pathname.startsWith('/generator') ||
+        isPartnerConsolePath(location.pathname)),
     [location.pathname, skipStaticLoader],
   )
 
@@ -224,7 +231,17 @@ export function useInitialLoader() {
       ) {
         completeInitialLoad()
       }
-      if (wasLoadingRef.current) {
+      // Hide only for destinations that should never show the overlay.
+      // A one-frame skipStaticLoader flicker must not drop it while we still
+      // intend to cover the partner/console destination.
+      if (
+        wasLoadingRef.current &&
+        (skipStaticLoader ||
+          location.pathname === '/' ||
+          location.pathname === '/app' ||
+          hasCompletedInitialLoadRef.current ||
+          hasInitialLoaderCompleted())
+      ) {
         setIsLoading(false)
         wasLoadingRef.current = false
         startTimeRef.current = null

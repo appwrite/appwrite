@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { createContext, useContext, useMemo, useState } from 'react'
 import {
   Copy,
   Trash2,
@@ -16,6 +16,8 @@ import {
   Settings,
   Pin,
   PinOff,
+  Import,
+  type LucideIcon,
 } from 'lucide-react'
 import {
   ContextMenu,
@@ -27,6 +29,16 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
@@ -44,8 +56,13 @@ import {
   openDialogAfterOverlayCloses,
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
-import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import {
+  ContextMenuIcon,
+  MenuItemContent,
+  MenuItemIcon,
+} from '@/components/global/shared/ContextMenuIcon'
 import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { useT } from '@/lib/i18n/translate'
 
 type ProjectContextMenuProject = {
@@ -65,8 +82,30 @@ interface ProjectContextMenuProps {
   canPinMore?: boolean
   onPinProject?: (projectId: string) => void
   isPinPending?: boolean
+  openResourceInNewTab?: boolean
+  onHandoff?: (projectId: string) => void
+  handoffIcon?: LucideIcon
   children: React.ReactNode
 }
+
+type ProjectMenuAction = {
+  icon: LucideIcon
+  label: string
+  onSelect: () => void
+  disabled?: boolean
+}
+
+type ProjectMenuModel = {
+  tabs: ProjectMenuAction[]
+  pin: ProjectMenuAction | null
+  copyItems: ProjectMenuAction[]
+  links: ProjectMenuAction[]
+  handoff: ProjectMenuAction | null
+  canDeleteProject: boolean
+  handleDeleteClick: () => void
+}
+
+const ProjectMenuModelContext = createContext<ProjectMenuModel | null>(null)
 
 export function ProjectContextMenu({
   project,
@@ -78,6 +117,9 @@ export function ProjectContextMenu({
   canPinMore = false,
   onPinProject,
   isPinPending = false,
+  openResourceInNewTab = false,
+  onHandoff,
+  handoffIcon,
   children,
 }: ProjectContextMenuProps) {
   const t = useT()
@@ -100,6 +142,13 @@ export function ProjectContextMenu({
       | '/projects/$projectId/sites'
       | '/projects/$projectId/settings',
   ) => {
+    if (openResourceInNewTab) {
+      const href = path
+        .replace('$projectId', project.$id)
+        .replace('$bucketId', '-')
+      openInNewTab(buildConsoleUrl(href))
+      return
+    }
     navigate({
       to: path,
       params: { projectId: project.$id },
@@ -111,7 +160,6 @@ export function ProjectContextMenu({
       await deleteProject(project.$id, project.region)
     },
     onSuccess: async () => {
-      // Keep cards in sync across pinned and regular project queries.
       await queryClient.invalidateQueries({ queryKey: ['projects'] })
       await queryClient.invalidateQueries({
         queryKey: ['organization', project.teamId],
@@ -137,93 +185,184 @@ export function ProjectContextMenu({
     deleteMutation.mutate()
   }
 
+  const model = useMemo<ProjectMenuModel>(() => {
+    const tabs: ProjectMenuAction[] = [
+      {
+        icon: LayoutDashboard,
+        label: t('Overview'),
+        onSelect: () => navigateToTab('/projects/$projectId/overview'),
+      },
+      {
+        icon: Users,
+        label: t('Auth'),
+        onSelect: () => navigateToTab('/projects/$projectId/auth'),
+      },
+      {
+        icon: Database,
+        label: t('Databases'),
+        onSelect: () => navigateToTab('/projects/$projectId/databases'),
+      },
+      {
+        icon: Folder,
+        label: t('Storage'),
+        onSelect: () => {
+          if (openResourceInNewTab) {
+            openInNewTab(
+              buildConsoleUrl(`/projects/${project.$id}/storage/-`),
+            )
+            return
+          }
+          navigate({
+            to: '/projects/$projectId/storage/$bucketId',
+            params: { projectId: project.$id, bucketId: '-' },
+          })
+        },
+      },
+      {
+        icon: Zap,
+        label: t('Functions'),
+        onSelect: () => navigateToTab('/projects/$projectId/functions'),
+      },
+      {
+        icon: MessageSquare,
+        label: t('Messaging'),
+        onSelect: () => navigateToTab('/projects/$projectId/messaging'),
+      },
+      {
+        icon: Globe,
+        label: t('Sites'),
+        onSelect: () => navigateToTab('/projects/$projectId/sites'),
+      },
+    ]
+    if (showSettingsTab) {
+      tabs.push({
+        icon: Settings,
+        label: t('Settings'),
+        onSelect: () => navigateToTab('/projects/$projectId/settings'),
+      })
+    }
+
+    const showPin = canPinProjects && (isPinned || canPinMore)
+    const pin: ProjectMenuAction | null = showPin
+      ? {
+          icon: isPinned ? PinOff : Pin,
+          label: isPinned ? t('Unpin') : t('Pin'),
+          disabled: isPinPending,
+          onSelect: () => onPinProject?.(project.$id),
+        }
+      : null
+
+    const copyItems: ProjectMenuAction[] = [
+      {
+        icon: Copy,
+        label: t('Copy ID'),
+        onSelect: () => copyToClipboard('ID', project.$id),
+      },
+      {
+        icon: Link2,
+        label: t('Copy endpoint'),
+        onSelect: () => copyToClipboard('Endpoint', projectEndpoint),
+      },
+    ]
+    if (hasName) {
+      copyItems.push({
+        icon: Copy,
+        label: t('Copy name'),
+        onSelect: () => copyToClipboard('Name', project.name),
+      })
+    }
+    copyItems.push(
+      {
+        icon: Link2,
+        label: t('Copy link'),
+        onSelect: () => copyToClipboard('Link', projectHref),
+      },
+      {
+        icon: FileJson,
+        label: t('Copy as JSON'),
+        onSelect: () => void copyResourceAsJson(() => fetchProject(project.$id)),
+      },
+    )
+
+    const links: ProjectMenuAction[] = [
+      {
+        icon: ExternalLink,
+        label: t('Open in new tab'),
+        onSelect: () => openInNewTab(projectHref),
+      },
+      {
+        icon: Square,
+        label: t('Open in new window'),
+        onSelect: () => openInNewWindow(projectHref),
+      },
+    ]
+
+    const handoff: ProjectMenuAction | null = onHandoff
+      ? {
+          icon: handoffIcon ?? Import,
+          label: t('Handoff'),
+          onSelect: () =>
+            openDialogAfterOverlayCloses(() => onHandoff(project.$id)),
+        }
+      : null
+
+    return {
+      tabs,
+      pin,
+      copyItems,
+      links,
+      handoff,
+      canDeleteProject,
+      handleDeleteClick,
+    }
+  }, [
+    t,
+    project.$id,
+    project.name,
+    projectHref,
+    projectEndpoint,
+    hasName,
+    showSettingsTab,
+    canPinProjects,
+    isPinned,
+    canPinMore,
+    isPinPending,
+    onPinProject,
+    openResourceInNewTab,
+    onHandoff,
+    handoffIcon,
+    canDeleteProject,
+    navigate,
+  ])
+
   if (!project.$id) {
     return <>{children}</>
   }
 
   return (
-    <>
+    <ProjectMenuModelContext.Provider value={model}>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
-          <ContextMenuItem
-            onSelect={() => {
-              navigateToTab('/projects/$projectId/overview')
-            }}
-          >
-            <ContextMenuIcon icon={LayoutDashboard} />
-            {t('Overview')}
-          </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => {
-              navigateToTab('/projects/$projectId/auth')
-            }}
-          >
-            <ContextMenuIcon icon={Users} />
-            {t('Auth')}
-          </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => {
-              navigateToTab('/projects/$projectId/databases')
-            }}
-          >
-            <ContextMenuIcon icon={Database} />
-            {t('Databases')}
-          </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => {
-              navigate({
-                to: '/projects/$projectId/storage/$bucketId',
-                params: { projectId: project.$id, bucketId: '-' },
-              })
-            }}
-          >
-            <ContextMenuIcon icon={Folder} />
-            {t('Storage')}
-          </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => {
-              navigateToTab('/projects/$projectId/functions')
-            }}
-          >
-            <ContextMenuIcon icon={Zap} />
-            {t('Functions')}
-          </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => {
-              navigateToTab('/projects/$projectId/messaging')
-            }}
-          >
-            <ContextMenuIcon icon={MessageSquare} />
-            {t('Messaging')}
-          </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => {
-              navigateToTab('/projects/$projectId/sites')
-            }}
-          >
-            <ContextMenuIcon icon={Globe} />
-            {t('Sites')}
-          </ContextMenuItem>
-          {showSettingsTab && (
+          {model.tabs.map((item) => (
             <ContextMenuItem
-              onSelect={() => {
-                navigateToTab('/projects/$projectId/settings')
-              }}
+              key={item.label}
+              disabled={item.disabled}
+              onSelect={item.onSelect}
             >
-              <ContextMenuIcon icon={Settings} />
-              {t('Settings')}
+              <ContextMenuIcon icon={item.icon} />
+              {item.label}
             </ContextMenuItem>
-          )}
-          {canPinProjects && (isPinned || canPinMore) ? (
+          ))}
+          {model.pin ? (
             <>
               <ContextMenuSeparator />
               <ContextMenuItem
-                disabled={isPinPending}
-                onSelect={() => onPinProject?.(project.$id)}
+                disabled={model.pin.disabled}
+                onSelect={model.pin.onSelect}
               >
-                <ContextMenuIcon icon={isPinned ? PinOff : Pin} />
-                {isPinned ? t('Unpin') : t('Pin')}
+                <ContextMenuIcon icon={model.pin.icon} />
+                {model.pin.label}
               </ContextMenuItem>
             </>
           ) : null}
@@ -234,58 +373,36 @@ export function ProjectContextMenu({
               {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('ID', project.$id)}
-              >
-                <ContextMenuIcon icon={Copy} />
-                {t('Copy ID')}
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('Endpoint', projectEndpoint)}
-              >
-                <ContextMenuIcon icon={Link2} />
-                {t('Copy endpoint')}
-              </ContextMenuItem>
-              {hasName && (
-                <ContextMenuItem
-                  onSelect={() => copyToClipboard('Name', project.name)}
-                >
-                  <ContextMenuIcon icon={Copy} />
-                  {t('Copy name')}
+              {model.copyItems.map((item) => (
+                <ContextMenuItem key={item.label} onSelect={item.onSelect}>
+                  <ContextMenuIcon icon={item.icon} />
+                  {item.label}
                 </ContextMenuItem>
-              )}
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('Link', projectHref)}
-              >
-                <ContextMenuIcon icon={Link2} />
-                {t('Copy link')}
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() =>
-                  void copyResourceAsJson(() => fetchProject(project.$id))
-                }
-              >
-                <ContextMenuIcon icon={FileJson} />
-                {t('Copy as JSON')}
-              </ContextMenuItem>
+              ))}
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => openInNewTab(projectHref)}>
-            <ContextMenuIcon icon={ExternalLink} />
-            {t('Open in new tab')}
-          </ContextMenuItem>
-          <ContextMenuItem onSelect={() => openInNewWindow(projectHref)}>
-            <ContextMenuIcon icon={Square} />
-            {t('Open in new window')}
-          </ContextMenuItem>
-          {canDeleteProject && (
+          {model.links.map((item) => (
+            <ContextMenuItem key={item.label} onSelect={item.onSelect}>
+              <ContextMenuIcon icon={item.icon} />
+              {item.label}
+            </ContextMenuItem>
+          ))}
+          {(model.handoff || canDeleteProject) && (
             <>
               <ContextMenuSeparator />
-              <ContextMenuItem onSelect={handleDeleteClick}>
-                <ContextMenuIcon icon={Trash2} />
-                {t('Delete')}
-              </ContextMenuItem>
+              {model.handoff ? (
+                <ContextMenuItem onSelect={model.handoff.onSelect}>
+                  <ContextMenuIcon icon={model.handoff.icon} />
+                  {model.handoff.label}
+                </ContextMenuItem>
+              ) : null}
+              {canDeleteProject ? (
+                <ContextMenuItem onSelect={handleDeleteClick}>
+                  <ContextMenuIcon icon={Trash2} />
+                  {t('Delete')}
+                </ContextMenuItem>
+              ) : null}
             </>
           )}
         </ContextMenuContent>
@@ -307,6 +424,88 @@ export function ProjectContextMenu({
         onConfirm={handleDelete}
         isConfirming={deleteMutation.isPending}
       />
-    </>
+    </ProjectMenuModelContext.Provider>
+  )
+}
+
+export function ProjectRowActionsMenu() {
+  const t = useT()
+  const model = useContext(ProjectMenuModelContext)
+  if (!model) return null
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <RowActionsMenuTrigger
+          compact
+          onClick={(event) => event.stopPropagation()}
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="w-56"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {model.tabs.map((item) => (
+          <DropdownMenuItem
+            key={item.label}
+            disabled={item.disabled}
+            onSelect={item.onSelect}
+          >
+            <MenuItemContent icon={item.icon}>{item.label}</MenuItemContent>
+          </DropdownMenuItem>
+        ))}
+        {model.pin ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              disabled={model.pin.disabled}
+              onSelect={model.pin.onSelect}
+            >
+              <MenuItemContent icon={model.pin.icon}>
+                {model.pin.label}
+              </MenuItemContent>
+            </DropdownMenuItem>
+          </>
+        ) : null}
+        <DropdownMenuSeparator />
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <MenuItemIcon icon={Copy} />
+            {t('Copy')}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            {model.copyItems.map((item) => (
+              <DropdownMenuItem key={item.label} onSelect={item.onSelect}>
+                <MenuItemContent icon={item.icon}>{item.label}</MenuItemContent>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuSeparator />
+        {model.links.map((item) => (
+          <DropdownMenuItem key={item.label} onSelect={item.onSelect}>
+            <MenuItemContent icon={item.icon}>{item.label}</MenuItemContent>
+          </DropdownMenuItem>
+        ))}
+        {(model.handoff || model.canDeleteProject) && (
+          <>
+            <DropdownMenuSeparator />
+            {model.handoff ? (
+              <DropdownMenuItem onSelect={model.handoff.onSelect}>
+                <MenuItemContent icon={model.handoff.icon}>
+                  {model.handoff.label}
+                </MenuItemContent>
+              </DropdownMenuItem>
+            ) : null}
+            {model.canDeleteProject ? (
+              <DropdownMenuItem onSelect={model.handleDeleteClick}>
+                <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
+              </DropdownMenuItem>
+            ) : null}
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

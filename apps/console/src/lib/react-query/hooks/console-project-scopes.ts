@@ -20,6 +20,9 @@ export function consoleProjectScopesQueryOptions() {
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 

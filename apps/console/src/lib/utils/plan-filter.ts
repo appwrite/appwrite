@@ -14,6 +14,7 @@ export type CanonicalPlanId =
   | 'core'
   | 'custom'
   | 'education'
+  | 'partner'
 
 /**
  * Maps tier values to canonical plan ids
@@ -38,6 +39,9 @@ export function getPlanNameFromTier(
     if (AUTO_EDUCATION_PLAN.test(trimmed)) {
       return 'education'
     }
+    if (trimmed === 'partner-1' || trimmed.toLowerCase() === 'partner') {
+      return 'partner'
+    }
 
     const normalized = trimmed.toLowerCase()
     if (normalized === 'tier-1-1' || normalized === 'start') return 'start'
@@ -56,9 +60,15 @@ export function getPlanNameFromTier(
     if (trimmed === '2' || normalized === 'tier-2') return 'core'
 
     if (
-      ['free', 'start', 'pro', 'core', 'custom', 'education'].includes(
-        normalized,
-      )
+      [
+        'free',
+        'start',
+        'pro',
+        'core',
+        'custom',
+        'education',
+        'partner',
+      ].includes(normalized)
     ) {
       return normalized as CanonicalPlanId
     }
@@ -95,6 +105,8 @@ export function getCanonicalPlanDisplayLabel(plan: CanonicalPlanId): string {
       return 'Core'
     case 'education':
       return 'Education'
+    case 'partner':
+      return 'Partner'
     case 'custom':
     default:
       return 'Custom'
@@ -243,6 +255,7 @@ export function getPlanCanonicalFromRecord(
     const name = plan.name.toLowerCase()
     if (name.includes('free') || name === 'starter') return 'free'
     if (name === 'start') return 'start'
+    if (name.includes('partner')) return 'partner'
     if (name.includes('pro')) return 'pro'
     // Core (current) and Scale (legacy tier-2 name)
     if (name.includes('core') || name.includes('scale')) return 'core'

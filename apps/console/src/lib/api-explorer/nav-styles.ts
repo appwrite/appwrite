@@ -5,7 +5,7 @@ export const API_NAV_ACTIVE_BG_CLASS = 'bg-accent/60'
 
 export function apiNavItemClassName(active: boolean) {
   return cn(
-    'rounded-md px-2 py-1.5 text-[13px] font-medium leading-5 transition-colors',
+    'cursor-pointer rounded-md px-2 py-1.5 text-[13px] font-medium leading-5 transition-colors',
     active
       ? cn(API_NAV_ACTIVE_BG_CLASS, 'text-foreground')
       : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',

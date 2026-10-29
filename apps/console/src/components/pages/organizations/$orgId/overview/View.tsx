@@ -8,7 +8,7 @@ import {
   useRouterState} from '@tanstack/react-router'
 import {
   Plus,
-  Folder,
+  Boxes,
   Search,
   ChevronDown,
   Check,
@@ -109,6 +109,10 @@ import {
   canShowOrgComplianceNav,
   canSwitchOrganizations} from '@/lib/console-access-checks'
 import { OrgMemberContextMenu } from './_components/OrgMemberContextMenu'
+import {
+  OrgRoleBadge,
+  orgMembershipRoleDisplay,
+} from './_components/OrgRoleBadge'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
 import { ProjectsEmptyState } from './_components/ProjectsEmptyState'
 import {
@@ -172,6 +176,7 @@ import { isPaymentAuthentication } from '@/lib/billing/addons'
 import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+import { isDeveloperConsoleOrganization, isPartnerOrganization } from '@/lib/partners'
 import {
   getPlanBadgeColor,
   getPlanBadgeStyle,
@@ -298,33 +303,6 @@ const ROLE_OPTIONS = [
     description: 'Billing and payment management only.'},
 ] as const
 
-function orgMembershipRoleDisplay(role: string): {
-  Icon: (typeof ROLE_OPTIONS)[number]['icon']
-  label: string
-} {
-  const opt = ROLE_OPTIONS.find((r) => r.value === role)
-  if (opt) return { Icon: opt.icon, label: opt.label }
-  return {
-    Icon: Users,
-    label: role.charAt(0).toUpperCase() + role.slice(1)}
-}
-
-/** Single source for role badges, so the table and its tooltips cannot drift. */
-function OrgRoleBadge({ role }: { role: string }) {
-  const t = useT()
-  const { Icon, label } = orgMembershipRoleDisplay(role)
-  return (
-    <Badge
-      variant="secondary"
-      className={cn(
-        'inline-flex items-center gap-1 border px-2 py-0.5 text-[11px] font-medium',
-      )}
-    >
-      <Icon className="h-3 w-3 shrink-0" aria-hidden />
-      {t(label)}
-    </Badge>
-  )
-}
 
 /** Header avatar stack beside Invite: fixed width fits this many md avatars. */
 const HEADER_MEMBER_AVATAR_SLOTS = 2
@@ -964,6 +942,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         billingPlan?: string
         billingPlanId?: string
         billingPlanDowngrade?: unknown
+        managerType?: string
         tier?: string
         prefs?: Record<string, unknown>
         status?: string
@@ -982,6 +961,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           avatar: undefined, // Organizations from SDK don't have avatar
           plan,
           members: org.total || 0,
+          managerType: org.managerType,
           status: org.status,
           billingPlan: org.billingPlan,
           billingPlanId: org.billingPlanId,
@@ -990,6 +970,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       },
     )
   }, [organizationsData, billingPlans])
+
+  const switcherOrganizations = useMemo(
+    () => organizations.filter((org) => isDeveloperConsoleOrganization(org)),
+    [organizations],
+  )
 
   // Get selected organization from URL param (orgId)
   const selectedOrg = useMemo(() => {
@@ -1044,7 +1029,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const orgBillingReadonlyForFailedInvoice =
     showFailedInvoiceOrgAlert &&
     isOrganizationBillingReadonlyStatus(selectedOrg?.status)
-  const canSwitchOrgs = canSwitchOrganizations(features, organizations.length)
+  const canSwitchOrgs = canSwitchOrganizations(
+    features,
+    switcherOrganizations.length,
+  )
 
   const showBudgetLimitAlert =
     features.billing && isBudgetLimitReached(organizationDetail)
@@ -1172,7 +1160,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       if (waitingForOrganizationDetail) return
 
       const fallbackOrgId = resolveFallbackOrganizationIdFromList(
-        organizations,
+        switcherOrganizations,
         account,
       )
       if (fallbackOrgId) {
@@ -1188,6 +1176,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   }, [
     selectedOrg,
     organizations,
+    switcherOrganizations,
     organizationsLoading,
     waitingForOrganizationDetail,
     orgId,
@@ -2106,6 +2095,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const handleSelectOrg = async (org: Organization) => {
     setOrgSwitcherOpen(false)
 
+    if (isPartnerOrganization(org) || org.plan === 'partner') {
+      return
+    }
+
     // Navigate to the new organization route, preserving the current tab
     const tabRoutes = {
       projects: '/organizations/$orgId',
@@ -2292,7 +2285,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         </p>
                       </div>
                       <div className="max-h-64 overflow-y-auto py-1">
-                        {organizations.map((org) => (
+                        {switcherOrganizations.map((org) => (
                           <button
                             key={org.$id}
                             onClick={() => handleSelectOrg(org)}
@@ -3368,7 +3361,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               projectsSearchActive &&
                               displayedProjectsByTeam.length === 0 && (
                                 <EmptyState
-                                  icon={Folder}
+                                  icon={Boxes}
                                   hasFilters
                                   variant="card"
                                 />

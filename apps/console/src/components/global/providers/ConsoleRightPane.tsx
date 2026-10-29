@@ -36,6 +36,9 @@ const AUTH_ROUTE_PATHNAMES = new Set([
   '/join',
   '/sign-out',
   '/verify-email',
+  '/partner/sign-in',
+  '/partner/sign-up',
+  '/partner',
 ])
 
 function isAgentBlockedPath(pathname: string): boolean {

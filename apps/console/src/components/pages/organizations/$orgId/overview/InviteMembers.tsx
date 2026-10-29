@@ -334,7 +334,10 @@ export function InviteMembersDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0">
+      <DialogContent
+        className="z-[130] p-0 sm:max-w-2xl"
+        overlayClassName="z-[120]"
+      >
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Invite Members')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">

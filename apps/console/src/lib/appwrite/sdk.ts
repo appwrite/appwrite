@@ -176,6 +176,7 @@ export function getBaseEndpoint(): string {
 // Project region cache: when we fetch a project we register its region so forProject()
 // and getProjectApiEndpoint use the correct regional endpoint.
 const projectRegions = new Map<string, string>()
+const isolatedProjectSdks = new Map<string, ProjectSdk>()
 
 /**
  * Register a project's region so SDK uses the correct region endpoint for that project.
@@ -323,6 +324,11 @@ if (typeof window !== 'undefined') {
       clientConsole.setLocale(language)
       clientProject.setLocale(language)
     }
+    forEachIsolatedProjectClient((client) => {
+      if (client.config.locale !== language) {
+        client.setLocale(language)
+      }
+    })
   })
 }
 
@@ -340,6 +346,7 @@ if (typeof window !== 'undefined') {
     const base = getApiEndpoint()
     clientConsole.setEndpoint(base)
     clientProject.setEndpoint(base)
+    clearIsolatedProjectSdks()
     resetFingerprintServerTimeCache()
     void scheduleConsoleFingerprintServerTimeSync()
   })
@@ -408,6 +415,10 @@ export function applyConsoleImpersonateUserId(targetUserId: string) {
     clearImpersonationHeaders(client)
     applyImpersonateUserIdToClient(client, id)
   }
+  forEachIsolatedProjectClient((client) => {
+    clearImpersonationHeaders(client)
+    applyImpersonateUserIdToClient(client, id)
+  })
 }
 
 /** Remove impersonation headers from console and project clients. */
@@ -415,6 +426,7 @@ export function clearConsoleImpersonateUser() {
   for (const client of [clientConsole, clientProject]) {
     clearImpersonationHeaders(client)
   }
+  forEachIsolatedProjectClient(clearImpersonationHeaders)
 }
 
 const CONSOLE_SDK_PROJECT_ID = 'console'
@@ -458,6 +470,7 @@ export function clearConsoleSessionLocally(): void {
   }
   resetAuthOnClient(clientConsole)
   resetAuthOnClient(clientProject)
+  clearIsolatedProjectSdks()
 
   const cookieName = `a_session_${CONSOLE_SDK_PROJECT_ID}`
   const expired = 'Thu, 01 Jan 1970 00:00:00 GMT'
@@ -551,44 +564,120 @@ export function createRegionalConsoleRealtime(projectId: string): Realtime {
 }
 
 // Create Project SDK instance (raw), then wrap for slow-call reporting
-const sdkForProjectRaw = {
-  client: clientProject,
-  account: new Account(clientProject),
-  activities: new Activities(clientProject),
-  analytics: new Analytics(clientProject),
-  apps: new Apps(clientProject),
-  avatars: new Avatars(clientProject),
-  backups: new Backups(clientProject),
-  postgresql: new Postgresql(clientProject),
-  mysql: new Mysql(clientProject),
-  mongo: new Mongo(clientProject),
-  functions: new Functions(clientProject),
-  locale: new Locale(clientProject),
-  messaging: new Messaging(clientProject),
-  project: new Project(clientProject),
-  projectApi: new ProjectApi(clientProject),
-  storage: new Storage(clientProject),
-  tokens: new Tokens(clientProject),
-  teams: new Teams(clientProject),
-  users: new Users(clientProject),
-  vcs: new Vcs(clientProject),
-  proxy: new Proxy(clientProject),
-  migrations: new Migrations(clientProject),
-  sites: new Sites(clientProject),
-  tablesDB: new TablesDB(clientProject),
-  documentsDB: new DocumentsDB(clientProject),
-  vectorsDB: new VectorsDB(clientProject),
-  waf: new Waf(clientProject),
-  console: new Console(clientProject), // suggestions API, unified database list
-  usage: new Usage(clientProject),
-  videos: new Videos(clientProject),
-  webhooks: new Webhooks(clientProject),
+function createProjectSdkRaw(client: Client) {
+  return {
+    client,
+    account: new Account(client),
+    activities: new Activities(client),
+    analytics: new Analytics(client),
+    apps: new Apps(client),
+    avatars: new Avatars(client),
+    backups: new Backups(client),
+    postgresql: new Postgresql(client),
+    mysql: new Mysql(client),
+    mongo: new Mongo(client),
+    functions: new Functions(client),
+    locale: new Locale(client),
+    messaging: new Messaging(client),
+    project: new Project(client),
+    projectApi: new ProjectApi(client),
+    storage: new Storage(client),
+    tokens: new Tokens(client),
+    teams: new Teams(client),
+    users: new Users(client),
+    vcs: new Vcs(client),
+    proxy: new Proxy(client),
+    migrations: new Migrations(client),
+    sites: new Sites(client),
+    tablesDB: new TablesDB(client),
+    documentsDB: new DocumentsDB(client),
+    vectorsDB: new VectorsDB(client),
+    waf: new Waf(client),
+    console: new Console(client), // suggestions API, unified database list
+    usage: new Usage(client),
+    videos: new Videos(client),
+    webhooks: new Webhooks(client),
+  }
 }
 
-const sdkForProject = wrapServiceObject(
-  sdkForProjectRaw as Record<string, unknown>,
-  'forProject',
-) as typeof sdkForProjectRaw
+const sdkForProjectRaw = createProjectSdkRaw(clientProject)
+
+function isolatedProjectSdkCacheKey(projectId: string, endpoint: string) {
+  return `${endpoint}\0${projectId}`
+}
+
+function isAppwriteProjectHeader(key: string): boolean {
+  return key.toLowerCase() === 'x-appwrite-project'
+}
+
+function syncIsolatedProjectClient(
+  client: Client,
+  projectId: string,
+  endpoint: string,
+) {
+  // Copy session/locale/impersonation from the shared client, but never the
+  // project header. Parallel forProject() calls mutate the singleton, so
+  // copying X-Appwrite-Project would point every cached client at the last
+  // project. Always call setProject last to restore this instance's id.
+  for (const key of Object.keys(clientProject.headers)) {
+    if (isAppwriteProjectHeader(key)) continue
+    client.headers[key] = clientProject.headers[key]
+  }
+  for (const key of Object.keys(client.headers)) {
+    if (isAppwriteProjectHeader(key)) continue
+    if (!(key in clientProject.headers)) {
+      delete client.headers[key]
+    }
+  }
+  client.config.jwt = clientProject.config.jwt
+  client.config.key = clientProject.config.key
+  const language = getActiveLanguage()
+  if (client.config.locale !== language) {
+    client.setLocale(language)
+  }
+  if (client.config.endpoint !== endpoint) {
+    client.setEndpoint(endpoint)
+  }
+  client.setProject(projectId)
+}
+
+function getIsolatedProjectSdk(projectId: string, region?: string) {
+  const effectiveRegion = region ?? projectRegions.get(projectId)
+  const projectEndpoint = getApiEndpoint(effectiveRegion)
+  const cacheKey = isolatedProjectSdkCacheKey(projectId, projectEndpoint)
+  const cached = isolatedProjectSdks.get(cacheKey)
+  if (cached) {
+    syncIsolatedProjectClient(cached.client, projectId, projectEndpoint)
+    return cached
+  }
+
+  const client = new Client()
+  installSetProjectWithHeader(client)
+  Object.assign(client.config, clientProject.config)
+  Object.assign(client.headers, clientProject.headers)
+  client
+    .setEndpoint(projectEndpoint)
+    .setMode('admin')
+    .setLocale(getActiveLanguage())
+    .setProject(projectId)
+
+  const isolated = wrapServiceObject(
+    createProjectSdkRaw(client) as Record<string, unknown>,
+    'forProject',
+  ) as typeof sdkForProjectRaw
+  isolatedProjectSdks.set(cacheKey, isolated)
+  return isolated
+}
+
+function clearIsolatedProjectSdks() {
+  isolatedProjectSdks.clear()
+}
+
+function forEachIsolatedProjectClient(fn: (client: Client) => void) {
+  for (const isolated of isolatedProjectSdks.values()) {
+    fn(isolated.client)
+  }
+}
 
 const consoleSdkRawBase = createConsoleSdkRaw(clientConsole)
 registerConsoleAccountGet(
@@ -642,6 +731,8 @@ export const sdk = {
   // Project SDK - for managing project-specific resources.
   // Endpoint is set from cached region (setProjectRegion when project is fetched) or explicit region param.
   // Always fetch project first in loaders so region is cached before project-scoped calls.
+  // Returns a dedicated client per project so parallel calls (usage lists, etc.)
+  // do not share one mutating X-Appwrite-Project header.
   forProject(projectId: string, region?: string) {
     const effectiveRegion = region ?? projectRegions.get(projectId)
     const projectEndpoint = getApiEndpoint(effectiveRegion)
@@ -653,7 +744,7 @@ export const sdk = {
       clientProject.setProject(projectId)
     }
 
-    return sdkForProject
+    return getIsolatedProjectSdk(projectId, region)
   },
 
   /**
@@ -680,4 +771,4 @@ export const sdk = {
 
 // Export types for TypeScript
 export type ConsoleSdk = ReturnType<typeof createConsoleSdkRaw>
-export type ProjectSdk = typeof sdkForProject
+export type ProjectSdk = typeof sdkForProjectRaw

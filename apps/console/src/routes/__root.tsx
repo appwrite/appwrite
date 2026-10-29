@@ -60,6 +60,7 @@ import {
   FullscreenLoader,
 } from '@/components/ui/loader'
 import { useInitialLoader } from '@/hooks/use-initial-loader'
+import { isPartnerConsolePath } from '@/lib/partners'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { isConsoleImpersonationActive } from '@/lib/console-impersonation'
@@ -462,6 +463,17 @@ function RootInitialLoadCoordinator({
   const [clientMounted, setClientMounted] = useState(false)
   const { isCloud, features } = useConsoleProfile()
   const { account, isFetched } = useAuth()
+  // Pending path matches useInitialLoader. Resolved can still be `/` or the
+  // marketing `/partners` page while the overlay already covers `/partners/$id`.
+  const loaderBrand = useRouterState({
+    select: (s) => {
+      const pending = s.location.pathname
+      const resolved = s.resolvedLocation?.pathname ?? pending
+      return isPartnerConsolePath(pending) || isPartnerConsolePath(resolved)
+        ? 'partners'
+        : 'console'
+    },
+  })
   const cloudStatusEnabled = isCloud && features.systemStatus
   const showCloudStatusToOperator =
     isFetched && isOperatorAccount(account as OperatorAccount)
@@ -547,6 +559,7 @@ function RootInitialLoadCoordinator({
     <>
       <FullscreenLoader
         isVisible={loaderVisible}
+        brand={loaderBrand}
         statusBanner={
           clientMounted && isLoaderVisible ? statusBanner : undefined
         }

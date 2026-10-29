@@ -14,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
+  BILLING_CREDITS_PAGE_SIZE,
   useOrganizationById,
   useOrganizationPlan,
   organizationCreditsQueryOptions,
@@ -46,7 +47,7 @@ interface AvailableCreditsSectionProps {
   orgId?: string
 }
 
-const ITEMS_PER_PAGE = 5
+const ITEMS_PER_PAGE = BILLING_CREDITS_PAGE_SIZE
 
 export function AvailableCreditsSection({
   onAddCredits,

@@ -32,11 +32,15 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { RetryPayment } from './RetryPayment'
 
-export function BillingTab() {
+type BillingTabProps = {
+  organizationId?: string
+}
+
+export function BillingTab({ organizationId }: BillingTabProps = {}) {
   const t = useT()
   const params = useParams({ strict: false })
   const navigate = useNavigate()
-  const orgId = params.orgId as string | undefined
+  const orgId = organizationId ?? (params.orgId as string | undefined)
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [isBackupPaymentMethod, setIsBackupPaymentMethod] = useState(false)
@@ -237,7 +241,7 @@ export function BillingTab() {
           title: 'Payment history',
           keywords: ['invoice', 'invoices', 'receipt', 'payment history', 'paid'],
         },
-        node: <PaymentHistory />,
+        node: <PaymentHistory orgId={orgId} />,
       },
       {
         id: 'payment-methods',

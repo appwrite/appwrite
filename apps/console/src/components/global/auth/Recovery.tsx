@@ -22,6 +22,7 @@ import {
 } from '@/components/global/auth/AuthFlowCard'
 import { AuthFlowIllustrationColumn } from '@/components/global/auth/AuthFlowShell'
 import { useT, type Translator } from '@/lib/i18n/translate'
+import { getAuthEmailSearch, resolveAuthAudience } from '@/lib/auth-audience'
 
 const createRecoverySchema = (t: Translator) =>
   z.object({
@@ -38,8 +39,6 @@ interface RecoveryProps {
   preview?: boolean
 }
 
-const illustration = <AuthFlowIllustrationColumn />
-
 export function Recovery({
   onSubmit,
   isLoading,
@@ -47,7 +46,10 @@ export function Recovery({
   initialEmail,
   preview = false,
 }: RecoveryProps) {
+  const audience = resolveAuthAudience()
   const signInTo = preview ? '/debug/sign-in-preview' : '/sign-in'
+  const signInSearch = preview ? undefined : getAuthEmailSearch(audience)
+  const illustration = <AuthFlowIllustrationColumn audience={audience} />
   const t = useT()
   const form = useForm<RecoveryValues>({
     resolver: zodResolver(createRecoverySchema(t)),
@@ -70,7 +72,7 @@ export function Recovery({
               {t("We've sent a password recovery link to your email address.")}
             </AuthFlowDescription>
           </div>
-          <Link to={signInTo}>
+          <Link to={signInTo} search={signInSearch}>
             <Button variant="outline" className="w-full">
               {t('Back to sign in')}
             </Button>
@@ -130,7 +132,11 @@ export function Recovery({
 
           <AuthFlowDescription className="text-center">
             {t('Remember your password?')}{' '}
-            <Link to={signInTo} className="link-neutral">
+            <Link
+              to={signInTo}
+              search={signInSearch}
+              className="link-neutral"
+            >
               {t('Sign in')}
             </Link>
           </AuthFlowDescription>

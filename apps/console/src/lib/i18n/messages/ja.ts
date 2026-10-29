@@ -40,6 +40,7 @@ export const jaCatalog: EnCatalog = {
         signUp: 'サインアップ',
         signOut: 'サインアウト',
         backToOrganization: '組織に戻る',
+        backToCloud: 'Cloud に戻る',
       },
       createMenu: {
         ...enCatalog.app.header.createMenu,

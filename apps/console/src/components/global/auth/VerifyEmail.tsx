@@ -11,6 +11,7 @@ import {
 } from '@/components/global/auth/AuthFlowCard'
 import { AuthFlowIllustrationColumn } from '@/components/global/auth/AuthFlowShell'
 import { performConsoleSignOut } from '@/lib/react-query/hooks/auth'
+import { resolveAuthAudience } from '@/lib/auth-audience'
 import { useT } from '@/lib/i18n/translate'
 
 interface VerifyEmailProps {
@@ -32,6 +33,7 @@ export function VerifyEmail({
   preview = false,
 }: VerifyEmailProps) {
   const t = useT()
+  const audience = resolveAuthAudience()
   const queryClient = useQueryClient()
   const [isSigningOutToSignIn, setIsSigningOutToSignIn] = useState(false)
 
@@ -46,7 +48,9 @@ export function VerifyEmail({
   }
 
   return (
-    <AuthFlowIllustrationCard illustration={<AuthFlowIllustrationColumn />}>
+    <AuthFlowIllustrationCard
+      illustration={<AuthFlowIllustrationColumn audience={audience} />}
+    >
       <div className="space-y-6">
         <div className="space-y-2">
           <AuthFlowTitle>

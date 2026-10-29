@@ -9,10 +9,15 @@ import {
   isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
-  resolvePostAuthRedirect,
-  toRedirectNavigateOptions,
+  resolvePostAuthHomeTarget,
 } from '@/lib/post-auth-navigation'
-import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
+import { PartnerOrganizationRequiredError } from '@/lib/ensure-personal-org'
+import {
+  PARTNER_AUTH_ENTRY_PATH,
+  getAuthEmailSearch,
+  getAuthSignInPath,
+  resolveAuthAudience,
+} from '@/lib/auth-audience'
 import {
   mfaFactorsQueryOptions,
   refreshConsoleAccountAfterAuth,
@@ -61,25 +66,29 @@ export const Route = createFileRoute('/_auth/mfa')({
 
       await prefetchPostAuthDestination(queryClient, account, redirectSearch)
 
-      const targetRedirect = resolvePostAuthRedirect(redirectSearch)
-      if (targetRedirect) {
-        throw redirect({
-          ...toRedirectNavigateOptions(targetRedirect),
-          replace: true,
-        })
+      try {
+        throw redirect(
+          await resolvePostAuthHomeTarget(account, queryClient, {
+            redirect: redirectSearch,
+          }),
+        )
+      } catch (homeError) {
+        if (isRedirect(homeError)) throw homeError
+        if (homeError instanceof PartnerOrganizationRequiredError) {
+          throw redirect({ to: PARTNER_AUTH_ENTRY_PATH, replace: true })
+        }
+        throw homeError
       }
-
-      const orgId = await resolvePostAuthOrganizationId(account)
-      throw redirect({
-        to: '/organizations/$orgId',
-        params: { orgId },
-        replace: true,
-      })
     } catch (error: unknown) {
       if (isRedirect(error)) throw error
 
       if (!(error instanceof AppwriteException)) {
-        throw redirect({ to: '/sign-in', replace: true })
+        const audience = resolveAuthAudience()
+        throw redirect({
+          to: getAuthSignInPath(audience),
+          search: getAuthEmailSearch(audience),
+          replace: true,
+        })
       }
 
       if (error.type === 'user_more_factors_required') {
@@ -95,17 +104,25 @@ export const Route = createFileRoute('/_auth/mfa')({
       }
 
       if (error.code === 401) {
+        const audience = resolveAuthAudience()
         throw redirect({
-          to: '/sign-in',
-          search:
+          to: getAuthSignInPath(audience),
+          search: getAuthEmailSearch(
+            audience,
             redirectSearch && isValidRelativeRedirect(redirectSearch)
-              ? { redirect: redirectSearch }
+              ? redirectSearch
               : undefined,
+          ),
           replace: true,
         })
       }
 
-      throw redirect({ to: '/sign-in', replace: true })
+      const audience = resolveAuthAudience()
+      throw redirect({
+        to: getAuthSignInPath(audience),
+        search: getAuthEmailSearch(audience),
+        replace: true,
+      })
     }
   },
   component: MFAPage,

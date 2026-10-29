@@ -243,7 +243,14 @@ export const ANALYTICS_ACTIONS = {
 
   // Resource creation
   'create-project': 'Create Project Clicked',
+  'handoff-project': 'Handoff Project Clicked',
+  'handoff-domain': 'Handoff Domain Clicked',
+  'handoff-app': 'Handoff App Clicked',
   'create-organization': 'Create Organization Clicked',
+  'onboard-client': 'Onboard Client Clicked',
+  'onboard-client-cancel': 'Onboard Client Cancel Clicked',
+  'partner-docs': 'Partner Docs Clicked',
+  'partner-pin-client': 'Partner Pin Client Clicked',
   'create-database': 'Create Database Clicked',
   'postgres-promo-banner-try-now': 'PostgreSQL Promo Banner Try Now Clicked',
   'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
@@ -300,6 +307,7 @@ export const ANALYTICS_ACTIONS = {
   'firewall-attack-mode': 'Firewall Attack Mode Clicked',
   'buy-domain': 'Buy Domain Clicked',
   'add-org-domain': 'Add Org Domain Clicked',
+  'transfer-org-domain': 'Transfer Domain Clicked',
   'create-dns-record': 'Create DNS Record Clicked',
   'invite-org-member': 'Invite Org Member Clicked',
   'create-backup-policy': 'Create Backup Policy Clicked',

@@ -68,7 +68,9 @@ export {
 } from './filter-configs/databases'
 export { functionsFilterColumns } from './filter-configs/functions'
 export { sitesFilterColumns } from './filter-configs/sites'
+export { projectsFilterColumns } from './filter-configs/projects'
 export { domainsFilterColumns } from './filter-configs/domains'
+export { appsFilterColumns } from './filter-configs/apps'
 export { dnsRecordsFilterColumns } from './filter-configs/dns-records'
 export { deploymentsFilterColumns } from './filter-configs/deployments'
 export {

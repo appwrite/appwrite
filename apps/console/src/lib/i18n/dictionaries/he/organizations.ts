@@ -94,6 +94,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Alert added': 'ההתראה נוספה',
   'Alert removed': 'ההתראה הוסרה',
   'Alert when spending reaches': 'התראה כשההוצאה מגיעה ל',
+  'All clients': 'כל הלקוחות',
   'All projects': 'כל הפרויקטים',
   'Per project': 'לפי פרויקט',
   'Project access': 'גישה לפרויקטים',
@@ -186,6 +187,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Billing address updated': 'כתובת החיוב עודכנה',
   'Billing alerts': 'התראות חיוב',
   'Billing and payment management only.': 'ניהול חיוב ותשלומים בלבד.',
+  'Billing is not available on this console profile.':
+    'חיוב אינו זמין בפרופיל הקונסול הזה.',
   'Billing, team, cross-project. One key for the whole org.':
     'חיוב, צוות, חוצה-פרויקטים. מפתח אחד לכל הארגון.',
   Branding: 'מיתוג',
@@ -247,6 +250,117 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Clear search': 'ניקוי חיפוש',
   'Click to upload or drag and drop': 'לחצו להעלאה או גררו ושחררו',
   'Client type': 'סוג לקוח',
+  'Clients': 'לקוחות',
+  'Client pinned': 'הלקוח הוצמד',
+  'Client unpinned': 'הצמדת הלקוח בוטלה',
+  'Client resources': 'משאבי הלקוח',
+  'Collapse clients list': 'כיווץ רשימת הלקוחות',
+  'Expand clients list': 'הרחבת רשימת הלקוחות',
+  'Onboard': 'צירוף',
+  'New client': 'לקוח חדש',
+  'No clients': 'אין לקוחות',
+  'No clients match your search': 'אין לקוחות התואמים לחיפוש שלכם',
+  'Onboard a client organization to manage their projects and billing from this grid.':
+    'צרפו ארגון לקוח כדי לנהל מכאן את הפרויקטים והחיוב שלו.',
+  'Partners docs': 'דוקומנטציית שותפים',
+  'Learn to onboard clients and provision their projects.':
+    'למדו איך לצרף לקוחות ולהקצות להם פרויקטים.',
+  'This becomes the client organization billed through your partner account.':
+    'זה יהיה ארגון הלקוח שחויב דרך חשבון השותף שלכם.',
+  'Client organizations use Pro or Scale. Billing stays on this partner.':
+    'ארגוני לקוח משתמשים ב-Pro או Scale. החיוב נשאר אצל השותף הזה.',
+  'Handoff projects': 'מסירת פרויקטים',
+  'Handoff resources': 'מסירת משאבים',
+  'Handoff': 'מסירה',
+  'Handoff project': 'מסירת פרויקט',
+  'Handoff domain': 'מסירת דומיין',
+  'Handoff app': 'מסירת אפליקציה',
+  'Move development projects from this partner organization into the new client. Skip this if you will add projects later.':
+    'מסרו פרויקטי פיתוח מארגון השותף הזה לארגון הלקוח החדש. דלגו אם תוסיפו פרויקטים אחר כך.',
+  'Move development projects, apps, or domains from this partner organization into the new client. Skip this if you will add them later.':
+    'מסרו פרויקטים, אפליקציות או דומיינים מארגון השותף הזה לארגון הלקוח החדש. דלגו אם תוסיפו אותם אחר כך.',
+  'Clear selection': 'ניקוי בחירה',
+  'No development projects to hand off yet.': 'אין עדיין פרויקטי פיתוח למסירה.',
+  'No development domains to hand off yet.': 'אין עדיין דומייני פיתוח למסירה.',
+  'No development apps to hand off yet.': 'אין עדיין אפליקציות פיתוח למסירה.',
+  'No projects match your search': 'אין פרויקטים התואמים לחיפוש שלכם',
+  'No domains match your search': 'אין דומיינים התואמים לחיפוש שלכם',
+  'Move a development project into this client organization.':
+    'מסרו פרויקט פיתוח לארגון הלקוח הזה.',
+  'Move a development project to a client organization.':
+    'מסרו פרויקט פיתוח לארגון לקוח.',
+  'Move a development domain into this client organization.':
+    'מסרו דומיין פיתוח לארגון הלקוח הזה.',
+  'Move a development domain to a client organization.':
+    'מסרו דומיין פיתוח לארגון לקוח.',
+  'Move a development app into this client organization.':
+    'מסרו אפליקציית פיתוח לארגון הלקוח הזה.',
+  'Move a development app to a client organization.':
+    'מסרו אפליקציית פיתוח לארגון לקוח.',
+  'No client organizations yet.': 'אין עדיין ארגוני לקוח.',
+  'Project handed off': 'הפרויקט נמסר',
+  'Domain handed off': 'הדומיין נמסר',
+  'App handed off': 'האפליקציה נמסרה',
+  'Could not hand off project': 'לא ניתן היה למסור את הפרויקט',
+  'Could not hand off domain': 'לא ניתן היה למסור את הדומיין',
+  'Could not hand off app': 'לא ניתן היה למסור את האפליקציה',
+  'Select domain': 'בחירת דומיין',
+  'Select app': 'בחירת אפליקציה',
+  'Select client': 'בחירת לקוח',
+  'Create client': 'יצירת לקוח',
+  'Client organization created': 'ארגון הלקוח נוצר',
+  'Client organization created and projects handed off':
+    'ארגון הלקוח נוצר והפרויקטים נמסרו',
+  'Client organization created and resources handed off':
+    'ארגון הלקוח נוצר והמשאבים נמסרו',
+  'Client created. Some projects could not be handed off.':
+    'הלקוח נוצר. חלק מהפרויקטים לא נמסרו.',
+  'Client created. Some resources could not be handed off.':
+    'הלקוח נוצר. חלק מהמשאבים לא נמסרו.',
+  'Could not hand off the selected projects.': 'לא ניתן היה למסור את הפרויקטים שנבחרו.',
+  'Could not hand off the selected resources.': 'לא ניתן היה למסור את המשאבים שנבחרו.',
+  'Could not create client': 'לא ניתן היה ליצור לקוח',
+  'Complete card authentication to finish creating this client.':
+    'השלימו את אימות הכרטיס כדי לסיים את יצירת הלקוח.',
+  'Add a payment method to this partner organization before onboarding a client.':
+    'הוסיפו אמצעי תשלום לארגון השותף הזה לפני צירוף לקוח.',
+  'Add a billing address to this partner organization before onboarding a client.':
+    'הוסיפו כתובת חיוב לארגון השותף הזה לפני צירוף לקוח.',
+  'You need to be an owner of this partner organization to onboard a client.':
+    'צריך להיות בעלים של ארגון השותף הזה כדי לצרף לקוח.',
+  'Client organizations cannot manage other organizations.':
+    'ארגוני לקוח לא יכולים לנהל ארגונים אחרים.',
+  'Client organizations must use a paid plan.':
+    'ארגוני לקוח חייבים להשתמש בתוכנית בתשלום.',
+  'Playground projects can only be handed off to a client of this partner.':
+    'פרויקטי פיתוח אפשר למסור רק ללקוח של השותף הזה.',
+  'Disconnect partner': 'ניתוק שותף',
+  'Stop managing this client organization. The client keeps their projects and billing. You will lose partner access.':
+    'הפסיקו לנהל את ארגון הלקוח הזה. הלקוח שומר על הפרויקטים והחיוב. תאבדו גישת שותף.',
+  'This organization will no longer be managed by this partner.':
+    'הארגון הזה לא ינוהל יותר על ידי השותף הזה.',
+  'Partner disconnected': 'השותף נותק',
+  'This organization is not managed by a partner.':
+    'הארגון הזה אינו מנוהל על ידי שותף.',
+  "You don't have permission to disconnect this partner.":
+    'אין לכם הרשאה לנתק את השותף הזה.',
+  'Could not disconnect partner': 'לא ניתן היה לנתק את השותף',
+  'Enter an organization name.': 'הזינו שם ארגון.',
+  'Enter a monthly budget of at least $1.': 'הזינו תקציב חודשי של לפחות $1.',
+  'Review the client organization before you create it.':
+    'סקרו את ארגון הלקוח לפני היצירה.',
+  'Projects to hand off': 'פרויקטים למסירה',
+  'Resources to hand off': 'משאבים למסירה',
+  Plan: 'תוכנית',
+  Workspace: 'סביבת עבודה',
+  'Billed to': 'חיוב עבור',
+  'This partner': 'השותף הזה',
+  'Invoices for this client use the partner payment method.':
+    'חשבוניות של הלקוח הזה משתמשות באמצעי התשלום של השותף.',
+  'Invoices for this client use the selected payment method.':
+    'חשבוניות של הלקוח הזה יחויבו באמצעי התשלום שנבחר.',
+  'Recommended': 'מומלץ',
+  'Resize clients list': 'שינוי גודל רשימת הלקוחות',
   Close: 'סגירה',
   Code: 'קוד',
   Collapse: 'כיווץ',
@@ -264,6 +378,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Complete the selections above to review project resources.':
     'השלימו את הבחירות למעלה כדי לסקור את משאבי הפרויקט.',
   Compliance: 'ציות',
+  'Compliance is not available on this console profile.':
+    'ציות אינו זמין בפרופיל הקונסול הזה.',
   Compute: 'מחשוב',
   Confidential: 'חסוי',
   'Confidential clients authenticate token exchanges with a secret. Rotate regularly and store values in a secrets manager.':
@@ -306,6 +422,12 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'צרו ארגון חדש לניהול הפרויקטים וחברי הארגון שלכם.',
   'Create a new project in your organization.': 'צרו פרויקט חדש בארגון שלכם.',
   'Create a project first': 'צרו פרויקט תחילה',
+  'Create a project here to build and test before handing it off to a client.':
+    'צרו כאן פרויקט כדי לפתח ולבדוק לפני שמוסרים אותו ללקוח.',
+  'Create a project in the development env and hand it off here, or open the client console.':
+    'צרו פרויקט בסביבת הפיתוח ומסרו אותו לכאן, או פתחו את קונסולת הלקוח.',
+  'Create a project under this partner organization, then hand it off to a client.':
+    'צרו פרויקט בארגון השותף הזה, ואז מסרו אותו ללקוח.',
   'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.':
     'צרו סוד לתהליכי OAuth חסויים, כמו קוד הרשאה עם החלפת טוקנים בצד השרת.',
   'Create an OAuth2 app listing for the marketplace.':
@@ -313,6 +435,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Create an app to share it with other organizations on the marketplace.':
     'צרו אפליקציה כדי לשתף אותה עם ארגונים אחרים במרקטפלייס.',
   'Create organization': 'יצירת ארגון',
+  'Create domain': 'יצירת דומיין',
+  'Create a domain, or buy or transfer one into this organization.':
+    'צרו דומיין, או קנו או העבירו דומיין לארגון הזה.',
+  'Create a domain, hand one off from development, or buy or transfer one into this organization.':
+    'צרו דומיין, מסרו דומיין מפיתוח, או קנו או העבירו דומיין לארגון הזה.',
+  'Create an app here, or hand one off from development.':
+    'צרו אפליקציה כאן, או מסרו אחת מפיתוח.',
   'Create project': 'יצירת פרויקט',
   'Advanced security': 'אבטחה מתקדמת',
   'Security add-on': 'תוסף אבטחה',
@@ -400,6 +529,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Details: 'פרטים',
   Developer: 'מפתח',
   'Developer tools': 'כלי פיתוח',
+  Development: 'פיתוח',
   'Device flow': 'Device flow',
   Disabled: 'מושבת',
   Discount: 'הנחה',
@@ -454,6 +584,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'הזינו קוד קופון לעדכון הסכום המשוער. קרדיטים שהוחלו פגים לאחר תקופה מוגדרת ואינם נצברים.',
   'Enter a full domain name (e.g. example.com)':
     'הזינו שם דומיין מלא (למשל example.com)',
+  'Enter app name': 'הזינו שם אפליקציה',
   'Enter coupon code': 'הזינו קוד קופון',
   'Enter domain name': 'הזינו שם דומיין',
   'Enter organization name': 'הזינו שם ארגון',
@@ -537,6 +668,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to update budget cap': 'עדכון תקרת התקציב נכשל',
   'Failed to update organization name': 'עדכון שם הארגון נכשל',
   'Failed to update payment method': 'עדכון אמצעי התשלום נכשל',
+  'Failed to update pinned clients': 'עדכון הלקוחות המוצמדים נכשל',
   'Failed to update pinned projects': 'עדכון הפרויקטים המוצמדים נכשל',
   'Failed to update plan': 'עדכון התוכנית נכשל',
   'Failed to update role': 'עדכון התפקיד נכשל',
@@ -788,6 +920,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'מותר ארגון חינמי אחד בלבד לכל חשבון.',
   'Only one free organization per account.': 'ארגון חינמי אחד בלבד לכל חשבון.',
   Open: 'פתיחה',
+  Organization: 'ארגון',
   'Open in new tab': 'פתיחה בכרטיסייה חדשה',
   'Open in new window': 'פתיחה בחלון חדש',
   'Optional comment': 'הערה אופציונלית',
@@ -865,6 +998,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Phone is required (E.164, e.g. +15551234567)':
     'טלפון הוא שדה חובה (E.164, למשל +15551234567)',
   Pin: 'הצמדה',
+  'Pin client': 'הצמדת לקוח',
   'Pin project': 'הצמדת פרויקט',
   Pinned: 'מוצמד',
   'Plan Changes Restricted': 'שינויי תוכנית מוגבלים',
@@ -942,7 +1076,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Recap: 'סיכום',
   'Rewatch sessions and explore every launch from Init week.':
     'צפו שוב במפגשים ובכל ההשקות משבוע Init.',
-  Recommended: 'מומלץ',
   'Recurring Charge': 'חיוב חוזר',
   'Redirect URIs': 'כתובות URI להפניה',
   'Redirect URIs and client type for OAuth2 and OpenID Connect.':
@@ -1011,6 +1144,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Search: 'חיפוש',
   'Search app settings...': 'חיפוש בהגדרות האפליקציה',
   'Search apps...': 'חיפוש אפליקציות...',
+  'Search clients...': 'חיפוש לקוחות...',
   'Search domains...': 'חיפוש דומיינים...',
   'Search files': 'חיפוש קבצים',
   'Search members...': 'חיפוש חברים...',
@@ -1157,6 +1291,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Transfer could not be completed': 'לא ניתן היה להשלים את ההעברה',
   'Transfer could not be completed. Please try again.':
     'לא ניתן היה להשלים את ההעברה. נסו שוב.',
+  'Transfer domain': 'העברת דומיין',
   'Transfer domain in': 'העברת דומיין אל Appwrite', // pragma: allowlist secret
   'Transfer fees are charged to the selected payment method.':
     'עמלות ההעברה נגבות מאמצעי התשלום שנבחר.',
@@ -1186,6 +1321,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Unlimited: 'ללא הגבלה',
   'Unnamed app': 'אפליקציה ללא שם',
   Unpin: 'ביטול הצמדה',
+  'Unpin client': 'ביטול הצמדת לקוח',
   'Unpin project': 'ביטול הצמדת פרויקט',
   'Unselected domains will be deleted.': 'דומיינים שלא נבחרו יימחקו.',
   'Unselected members will be removed from the organization.':
@@ -1219,6 +1355,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'העלו לוגו PNG למסך ההסכמה ולשוק האפליקציות.',
   'Upload a PNG logo to get started.': 'העלו לוגו PNG כדי להתחיל.',
   Usage: 'שימוש',
+  Users: 'משתמשים',
   'Usage details': 'פרטי שימוש',
   'Usage unavailable': 'נתוני שימוש אינם זמינים',
   'Use @ for the root domain, or enter a subdomain (e.g., www, mail)':
@@ -1272,15 +1409,25 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Who should reach out': 'מי צריך לפנות',
   'Why it matters:': 'למה זה חשוב:',
   'Will delete': 'יימחק',
+  'Workspace view': 'תצוגת סביבת עבודה',
   You: 'אתם',
   'You are on a custom plan. To change your plan, contact your customer success manager or':
     'אתם בתוכנית מותאמת אישית. לשינוי התוכנית, פנו למנהל הצלחת הלקוח שלכם או',
   "You don't have any credits. Credits can be used to offset your monthly charges.":
     'אין לכם קרדיטים. ניתן להשתמש בקרדיטים לקיזוז החיובים החודשיים שלכם.',
+  "You don't have permission to view billing.":
+    'אין לכם הרשאה לצפות בחיוב.',
+  "You don't have permission to view compliance.":
+    'אין לכם הרשאה לצפות בציות.',
   "You don't have permission to create projects.":
     'אין לכם הרשאה ליצור פרויקטים.',
   "You don't have permission to invite members.": 'אין לכם הרשאה להזמין חברים.',
   "You don't have permission to manage members.": 'אין לכם הרשאה לנהל חברים.',
+  'You can pin up to 6 projects': 'ניתן להצמיד עד 6 פרויקטים',
+  "You don't have permission to manage domains.":
+    'אין לכם הרשאה לנהל דומיינים.',
+  "You don't have permission to manage apps.":
+    'אין לכם הרשאה לנהל אפליקציות.',
   'You have': 'יש לכם',
   'You have reached your member limit.': 'הגעתם למגבלת החברים שלכם.',
   'You will be charged': 'תחויבו בסך',
@@ -1607,4 +1754,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Build on top of Appwrite': 'בנו על גבי Appwrite',
   'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
     'צרו אפליקציות OAuth2 שמאפשרות למשתמשי Appwrite לחבר את הפרויקטים שלהם עם גישה מבוססת הסכמה ומוגבלת בהרשאות, במקום מפתחות API שמודבקים ידנית. פרסמו אותן במרקטפלייס כדי שכל ארגון יוכל למצוא אותן.',
+  'Partner settings': 'הגדרות שותף',
+  'Manage this partner organization and its team.':
+    'נהלו את ארגון השותף ואת הצוות שלו.',
+  "You don't have permission to update organization settings.":
+    'אין לכם הרשאה לעדכן את הגדרות הארגון.',
+  "You don't have permission to delete this organization.":
+    'אין לכם הרשאה למחוק ארגון זה.',
+  'Slack is assigned by Appwrite.': 'ערוץ Slack מוקצה על ידי Appwrite.',
+  'No channel assigned yet.': 'עדיין לא הוקצה ערוץ.',
 }

@@ -41,6 +41,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Add account': 'アカウントを追加',
   'Add filter': 'フィルターを追加',
   'Add value': '値を追加',
+  'Appwrite team members': 'Appwrite チームメンバー',
   'Add installation': 'インストールを追加',
   'Add variable': '変数を追加',
   'All shortcuts': 'すべてのショートカット',
@@ -434,6 +435,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Source code': 'ソースコード',
   'Status Code': 'ステータスコード',
   'Support hours': 'サポート時間',
+  'Slack channel': 'Slackチャネル',
   'Supports optional impersonation.':
     'オプションのなりすましに対応しています。',
   'System status': 'システムステータス',
@@ -979,6 +981,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'ビルドの完了を待つか、先にキャンセルしてください',
   'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our':
     'サインイン状態の維持、サイトアクセスの管理、設定の記憶のために、必須の Cookie を使用しています。許可いただいた場合、Appwrite の利用状況を把握し改善するために分析も使用します。詳しくは', // pragma: allowlist secret
+  'Your private channel with the Appwrite partner team.':
+    'Appwrite パートナーチームとのプライベートチャネルです。',
   'You cannot impersonate your own operator account.':
     '自分のオペレーターアカウントになりすますことはできません。',
   '75% hot-swap mechanical keyboard with Gateron G Pro Yellow switches, tri-mode USB-C/2.4GHz/BT, and 84 dye-sublimated keycaps optimized for Console shortcuts.':

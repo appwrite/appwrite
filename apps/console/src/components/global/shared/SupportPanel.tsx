@@ -9,13 +9,19 @@ import {
   AlertTriangle,
   Mail,
   Building2,
+  Hash,
   Wrench,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
+  useOrganizationById,
   useOrganizationPlan,
   useAppwriteCloudStatus,
 } from '@/lib/react-query/hooks'
+import {
+  PARTNER_SLACK_TEAM,
+  type PartnerAwareOrganization,
+} from '@/lib/partners'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { navigateToUpgradeWizard } from '@/lib/open-upgrade-wizard'
 import { useDebugOverrides } from '@/lib/debug-overrides'
@@ -136,6 +142,10 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
   const navigate = useNavigate()
 
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const { organization } = useOrganizationById(orgId)
+  const partner = organization as PartnerAwareOrganization | null
+  const slackUrl = partner?.programSlackChannelUrl?.trim() || null
+  const slackChannelName = partner?.programSlackChannelName?.replace(/^#/, '')
   const { isCloud, features } = useConsoleProfile()
   const cloudStatusEnabled = isCloud && features.systemStatus
   const { mockCloudStatusAlert } = useDebugOverrides()
@@ -260,6 +270,47 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
           </>
         ) : null}
       </div>
+
+      {slackUrl ? (
+        <>
+          <Separator />
+          <div className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <img src="/icons/slack.svg" alt="" className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1 space-y-1">
+                <h4 className="text-sm font-medium">{t('Slack channel')}</h4>
+                <p className="text-xs text-muted-foreground">
+                  {t('Your private channel with the Appwrite partner team.')}
+                </p>
+              </div>
+            </div>
+            <div
+              className="mt-3 flex -space-x-2"
+              aria-label={t('Appwrite team members')}
+            >
+              {PARTNER_SLACK_TEAM.map((person, index) => (
+                <img
+                  key={person.name}
+                  src={person.src}
+                  alt={person.name}
+                  title={person.name}
+                  className="h-8 w-8 rounded-full object-cover ring-2 ring-popover"
+                  style={{ zIndex: PARTNER_SLACK_TEAM.length - index }}
+                />
+              ))}
+            </div>
+            <Button asChild variant="outline" size="sm" className="mt-3 w-full">
+              <a href={slackUrl} target="_blank" rel="noopener noreferrer">
+                <Hash className="me-1.5 h-3.5 w-3.5" />
+                {slackChannelName || t('Slack channel')}
+                <ExternalLink className="ms-1.5 h-3 w-3 text-muted-foreground" />
+              </a>
+            </Button>
+          </div>
+        </>
+      ) : null}
 
       <Separator />
 

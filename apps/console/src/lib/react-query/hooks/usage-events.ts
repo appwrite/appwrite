@@ -2351,6 +2351,261 @@ export function useProjectListRequestsUsage(
   }, [uniqueIds, queries])
 }
 
+export type ProjectListBandwidthUsageEntry = {
+  isLoading: boolean
+  isError: boolean
+  data: ProjectBandwidthOverview | undefined
+}
+
+export function useProjectListBandwidthUsage(
+  projectIds: string[],
+  enabled: boolean,
+  plan?: UsageChartIntervalPlan,
+): Map<string, ProjectListBandwidthUsageEntry> {
+  const dateRange = useMemo(() => getProjectListRequestsChartDateRange(), [])
+  const planIntervalsKey = plan?.usageLogsIntervals?.join(',') ?? ''
+  const chartInterval = useMemo(
+    () =>
+      resolveUsageChartInterval(
+        DEFAULT_USAGE_CHART_INTERVAL,
+        dateRange,
+        plan,
+      ),
+    [dateRange, plan, planIntervalsKey],
+  )
+  const uniqueIds = useMemo(
+    () => [...new Set(projectIds.filter(Boolean))],
+    [projectIds],
+  )
+
+  const queries = useQueries({
+    queries: uniqueIds.map((projectId) => ({
+      ...bandwidthChartOnlyQueryOptions(projectId, dateRange, chartInterval),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(() => {
+    const map = new Map<string, ProjectListBandwidthUsageEntry>()
+    uniqueIds.forEach((projectId, index) => {
+      const query = queries[index]
+      map.set(projectId, {
+        isLoading: query.isPending && !query.data && !query.isError,
+        isError: query.isError,
+        data: query.data,
+      })
+    })
+    return map
+  }, [uniqueIds, queries])
+}
+
+export type ProjectListExecutionsUsageEntry = {
+  isLoading: boolean
+  isError: boolean
+  data: ProjectExecutionsOverview | undefined
+}
+
+export function useProjectListExecutionsUsage(
+  projectIds: string[],
+  enabled: boolean,
+  plan?: UsageChartIntervalPlan,
+): Map<string, ProjectListExecutionsUsageEntry> {
+  const dateRange = useMemo(() => getProjectListRequestsChartDateRange(), [])
+  const planIntervalsKey = plan?.usageLogsIntervals?.join(',') ?? ''
+  const chartInterval = useMemo(
+    () =>
+      resolveUsageChartInterval(
+        DEFAULT_USAGE_CHART_INTERVAL,
+        dateRange,
+        plan,
+      ),
+    [dateRange, plan, planIntervalsKey],
+  )
+  const uniqueIds = useMemo(
+    () => [...new Set(projectIds.filter(Boolean))],
+    [projectIds],
+  )
+
+  const queries = useQueries({
+    queries: uniqueIds.map((projectId) => ({
+      ...executionsOverviewQueryOptions(
+        projectId,
+        dateRange,
+        chartInterval,
+        false,
+      ),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(() => {
+    const map = new Map<string, ProjectListExecutionsUsageEntry>()
+    uniqueIds.forEach((projectId, index) => {
+      const query = queries[index]
+      map.set(projectId, {
+        isLoading: query.isPending && !query.data && !query.isError,
+        isError: query.isError,
+        data: query.data,
+      })
+    })
+    return map
+  }, [uniqueIds, queries])
+}
+
+export type ProjectListStorageUsageEntry = {
+  isLoading: boolean
+  isError: boolean
+  data: ProjectOverviewStorageOverview | undefined
+}
+
+export function useProjectListStorageUsage(
+  projectIds: string[],
+  enabled: boolean,
+  plan?: UsageChartIntervalPlan,
+): Map<string, ProjectListStorageUsageEntry> {
+  const dateRange = useMemo(() => getProjectListRequestsChartDateRange(), [])
+  const planIntervalsKey = plan?.usageLogsIntervals?.join(',') ?? ''
+  const chartInterval = useMemo(
+    () =>
+      resolveUsageChartInterval(
+        DEFAULT_USAGE_CHART_INTERVAL,
+        dateRange,
+        plan,
+      ),
+    [dateRange, plan, planIntervalsKey],
+  )
+  const uniqueIds = useMemo(
+    () => [...new Set(projectIds.filter(Boolean))],
+    [projectIds],
+  )
+
+  const queries = useQueries({
+    queries: uniqueIds.map((projectId) => ({
+      ...overviewStorageOverviewQueryOptions(
+        projectId,
+        dateRange,
+        chartInterval,
+        false,
+      ),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(() => {
+    const map = new Map<string, ProjectListStorageUsageEntry>()
+    uniqueIds.forEach((projectId, index) => {
+      const query = queries[index]
+      map.set(projectId, {
+        isLoading: query.isPending && !query.data && !query.isError,
+        isError: query.isError,
+        data: query.data,
+      })
+    })
+    return map
+  }, [uniqueIds, queries])
+}
+
+export type ProjectListComputeUsageEntry = {
+  isLoading: boolean
+  isError: boolean
+  data: ProjectGbHoursOverview | undefined
+}
+
+export function useProjectListComputeUsage(
+  projectIds: string[],
+  enabled: boolean,
+  plan?: UsageChartIntervalPlan,
+): Map<string, ProjectListComputeUsageEntry> {
+  const dateRange = useMemo(() => getProjectListRequestsChartDateRange(), [])
+  const planIntervalsKey = plan?.usageLogsIntervals?.join(',') ?? ''
+  const chartInterval = useMemo(
+    () =>
+      resolveUsageChartInterval(
+        DEFAULT_USAGE_CHART_INTERVAL,
+        dateRange,
+        plan,
+      ),
+    [dateRange, plan, planIntervalsKey],
+  )
+  const uniqueIds = useMemo(
+    () => [...new Set(projectIds.filter(Boolean))],
+    [projectIds],
+  )
+
+  const queries = useQueries({
+    queries: uniqueIds.map((projectId) => ({
+      ...gbHoursOverviewQueryOptions(
+        projectId,
+        dateRange,
+        chartInterval,
+        false,
+      ),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(() => {
+    const map = new Map<string, ProjectListComputeUsageEntry>()
+    uniqueIds.forEach((projectId, index) => {
+      const query = queries[index]
+      map.set(projectId, {
+        isLoading: query.isPending && !query.data && !query.isError,
+        isError: query.isError,
+        data: query.data,
+      })
+    })
+    return map
+  }, [uniqueIds, queries])
+}
+
+export type ProjectListAuthMauUsageEntry = {
+  isLoading: boolean
+  isError: boolean
+  data: AuthUsageChartOverview | undefined
+}
+
+export function useProjectListAuthMauUsage(
+  projectIds: string[],
+  enabled: boolean,
+  plan?: UsageChartIntervalPlan,
+): Map<string, ProjectListAuthMauUsageEntry> {
+  const dateRange = useMemo(() => getProjectListRequestsChartDateRange(), [])
+  const planIntervalsKey = plan?.usageLogsIntervals?.join(',') ?? ''
+  const chartInterval = useMemo(
+    () =>
+      resolveUsageChartInterval(
+        DEFAULT_USAGE_CHART_INTERVAL,
+        dateRange,
+        plan,
+      ),
+    [dateRange, plan, planIntervalsKey],
+  )
+  const uniqueIds = useMemo(
+    () => [...new Set(projectIds.filter(Boolean))],
+    [projectIds],
+  )
+
+  const queries = useQueries({
+    queries: uniqueIds.map((projectId) => ({
+      ...authMauChartQueryOptions(projectId, dateRange, chartInterval),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(() => {
+    const map = new Map<string, ProjectListAuthMauUsageEntry>()
+    uniqueIds.forEach((projectId, index) => {
+      const query = queries[index]
+      map.set(projectId, {
+        isLoading: query.isPending && !query.data && !query.isError,
+        isError: query.isError,
+        data: query.data,
+      })
+    })
+    return map
+  }, [uniqueIds, queries])
+}
+
 /** Prefetch org project-list request sparklines without blocking first paint. */
 export function prefetchProjectListRequestsUsage(
   queryClient: QueryClient,
@@ -3256,7 +3511,7 @@ export function refetchProjectRealtimeUsageQueries(
   })
 }
 
-function authMauChartQueryOptions(
+export function authMauChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
@@ -4007,6 +4262,7 @@ export type {
   ProjectBandwidthOverview,
   ProjectExecutionsOverview,
   ProjectGbHoursOverview,
+  ProjectOverviewStorageOverview,
   ProjectStorageOverview,
   StorageImageTransformationsOverview,
   StorageResourceTypeUsageOverview,
