@@ -22,10 +22,40 @@ describe('isFunctionEmailEnabled', () => {
 })
 
 describe('buildFunctionEmailAddress', () => {
-  test('lowercases project and zone but keeps the function ID case', () => {
+  test('puts function and project in the host and lowercases them', () => {
     expect(
       buildFunctionEmailAddress('MyProject', 'FnAbc', 'Appwrite.Email'),
-    ).toBe('FnAbc@myproject.appwrite.email')
+    ).toBe('contact@fnabc-myproject.appwrite.email')
+  })
+
+  test('keeps hyphens in the project ID', () => {
+    expect(
+      buildFunctionEmailAddress('my-app', 'sendmail', 'appwrite.email'),
+    ).toBe('contact@sendmail-my-app.appwrite.email')
+  })
+
+  test('uses the earlier form for a hyphenated function ID', () => {
+    // `foo-bar` in `baz` and `foo` in `bar-baz` would otherwise share a host.
+    expect(buildFunctionEmailAddress('baz', 'foo-bar', 'appwrite.email')).toBe(
+      'foo-bar@baz.appwrite.email',
+    )
+    expect(buildFunctionEmailAddress('bar-baz', 'foo', 'appwrite.email')).toBe(
+      'contact@foo-bar-baz.appwrite.email',
+    )
+  })
+
+  test('falls back to the function ID local part when the host cannot hold it', () => {
+    expect(buildFunctionEmailAddress('proj', 'Fn.Abc', 'appwrite.email')).toBe(
+      'Fn.Abc@proj.appwrite.email',
+    )
+    expect(buildFunctionEmailAddress('proj', 'fn_abc', 'appwrite.email')).toBe(
+      'fn_abc@proj.appwrite.email',
+    )
+    const longFn = 'f'.repeat(36)
+    const longProject = 'p'.repeat(36)
+    expect(
+      buildFunctionEmailAddress(longProject, longFn, 'appwrite.email'),
+    ).toBe(`${longFn}@${longProject}.appwrite.email`)
   })
 
   test('returns null when any part is missing', () => {
