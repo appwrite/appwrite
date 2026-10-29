@@ -9,6 +9,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Platform\Tasks\Schedule;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
@@ -17,21 +18,38 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 final class ScheduleTest extends TestCase
 {
-    private string|false $interval;
+    private const array INTERVALS = ['_APP_MAINTENANCE_INTERVAL', '_APP_MAINTENANCE_INACTIVE_INTERVAL'];
+
+    /** @var array<string, string|false> */
+    private array $intervals = [];
 
     protected function setUp(): void
     {
-        $this->interval = \getenv('_APP_MAINTENANCE_INACTIVE_INTERVAL');
+        foreach (self::INTERVALS as $name) {
+            $this->intervals[$name] = \getenv($name);
+        }
     }
 
     protected function tearDown(): void
     {
-        \putenv($this->interval === false ? '_APP_MAINTENANCE_INACTIVE_INTERVAL' : '_APP_MAINTENANCE_INACTIVE_INTERVAL=' . $this->interval);
+        foreach ($this->intervals as $name => $value) {
+            \putenv($value === false ? $name : $name . '=' . $value);
+        }
     }
 
-    public function testInvalidInactiveIntervalStopsTheProcessBeforeAnyLoopStarts(): void
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function intervals(): \Iterator
     {
-        \putenv('_APP_MAINTENANCE_INACTIVE_INTERVAL=weekly');
+        yield 'active' => ['_APP_MAINTENANCE_INTERVAL'];
+        yield 'inactive' => ['_APP_MAINTENANCE_INACTIVE_INTERVAL'];
+    }
+
+    #[DataProvider('intervals')]
+    public function testInvalidMaintenanceIntervalStopsTheProcessBeforeAnyLoopStarts(string $name): void
+    {
+        \putenv($name . '=weekly');
 
         $refused = null;
 

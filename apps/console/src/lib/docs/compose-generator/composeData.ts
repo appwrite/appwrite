@@ -683,6 +683,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {
@@ -1065,6 +1066,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {
@@ -1123,6 +1125,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {
