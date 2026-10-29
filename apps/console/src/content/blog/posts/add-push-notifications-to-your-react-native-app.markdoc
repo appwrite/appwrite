@@ -1,0 +1,302 @@
+---
+layout: post
+title: "Add push notifications to your React Native app without Firebase"
+description: Send push notifications to an Expo app with Appwrite Push. Notify customers when an order ships, deliver on Android while the app is closed, and open the order on tap.
+date: 2026-10-16
+cover: /images/blog/add-push-notifications-to-your-react-native-app/cover.avif
+timeToRead: 9
+author: atharva
+category: tutorials
+faqs:
+  - question: "How do I send push notifications to a React Native app without Firebase?"
+    answer: "Add an Appwrite Push provider to your Appwrite project, then subscribe with the Appwrite React Native SDK after the user signs in. The SDK keeps its own connection to Appwrite, so you don't add Firebase to the app or collect device tokens. A message you send with createPush to the user's ID reaches every device where they are signed in."
+  - question: "Does Appwrite Push work in Expo Go?"
+    answer: "No. Push uses native modules, such as react-native-tcp-socket for its connection, so it needs a development or standalone build. Build one with npx expo run:android or npx expo run:ios."
+  - question: "Do notifications arrive when the React Native app is closed?"
+    answer: "On Android, yes. The SDK's native module saves the subscription and wakes the app on a schedule to reconnect, so notifications arrive after the user leaves the app and after Android kills its process. On iOS, messages arrive while the app runs and for a short time after the user leaves it. Once iOS suspends the app, they wait until the app opens again."
+  - question: "How do I open a specific screen when a push notification is tapped?"
+    answer: "Send the screen's identifier in the message's data, for example an order ID. In the app, read push.getInitialNotification() at startup for the tap that launched the app, and register push.onNotificationOpened for taps while it runs. Both return the data you sent."
+  - question: "What happens to notifications sent while the phone is offline?"
+    answer: "Appwrite keeps them for up to 7 days. When the device reconnects, it replays the newest messages it missed, up to five per topic, oldest first."
+---
+
+Push notifications in a React Native app usually start in Firebase: a project, a `google-services.json` file for Android, an APNs key for iOS, and code that collects each device's token and stores it on your server. [Appwrite Push](/docs/products/messaging/appwrite-push) works without Firebase or tokens. The Appwrite React Native SDK keeps a connection open to Appwrite with the signed-in user's session, and a message you send to that user's ID arrives on every device they use.
+
+This tutorial adds order notifications to an Expo app. When an order's status changes to shipped or delivered, an Appwrite Function sends the customer a notification, and tapping it opens that order. On Android, notifications arrive while the app is in the background and after Android kills its process. On iOS, they arrive while the app runs, and the ones that arrive after iOS suspends the app show up when it opens again.
+
+# Create the Appwrite Push provider
+
+![The Add provider page in the Appwrite Console, with Appwrite listed under Push](/images/blog/announcing-appwrite-push/appwrite-provider-picker.avif)
+
+In the Console, open your project and go to **Messaging** > **Providers** > **Create provider**. Choose **Appwrite** under **Push**, give the provider a name, and click **Create provider**. Appwrite Push takes no credentials, so the provider can send as soon as it's created.
+
+# Register the app
+
+Open **Apps** and click **Add app**. Choose **Android** and enter your app's package name, such as `io.appwrite.orders`. For iOS, add an **Apple** app with your bundle ID too. Appwrite only accepts requests from apps registered in the project.
+
+# Create the orders table
+
+In **Databases**, create a database with the ID `shop`, and in it a table with the ID `orders` and these columns:
+
+{% table %}
+* Column
+* Type
+* Settings
+---
+* `userId`
+* Varchar
+* Size 36, required
+---
+* `item`
+* Varchar
+* Size 128, required
+---
+* `status`
+* Enum
+* Elements `placed`, `shipped`, and `delivered`, default `placed`
+{% /table %}
+
+In the table's settings, turn on **Row security** and leave the table permissions empty. Give each order a read permission for its customer, `read("user:<USER_ID>")`, so a customer can only list their own orders.
+
+# Install the SDK
+
+Install the SDK with the packages it needs. `react-native-tcp-socket` opens the connection to Appwrite, and `expo-notifications` and `react-native-background-actions` handle notifications and taps on iOS:
+
+```bash
+npx expo install react-native-appwrite expo-file-system react-native-url-polyfill react-native-tcp-socket expo-notifications react-native-background-actions
+```
+
+Push uses native modules, so it doesn't run in Expo Go. Build a development build instead, with `npx expo run:android` or `npx expo run:ios`.
+
+On Android, the SDK shows its own notifications and takes their icon from a `meta-data` entry in your app's manifest. The `expo-notifications` config plugin turns a white PNG into the `notification_icon` drawable. Add it to `app.json` together with a small plugin of your own that points the SDK at that drawable:
+
+```json
+{
+    "expo": {
+        "name": "Orders",
+        "android": { "package": "io.appwrite.orders" },
+        "ios": { "bundleIdentifier": "io.appwrite.orders" },
+        "plugins": [
+            ["expo-notifications", { "icon": "./assets/notification-icon.png" }],
+            "./plugins/with-appwrite-push-icon"
+        ]
+    }
+}
+```
+
+Save the plugin as `plugins/with-appwrite-push-icon.js`:
+
+```js
+const { AndroidConfig, withAndroidManifest } = require('expo/config-plugins');
+
+module.exports = (config) =>
+    withAndroidManifest(config, (config) => {
+        const application = AndroidConfig.Manifest.getMainApplicationOrThrow(config.modResults);
+        AndroidConfig.Manifest.addMetaDataItemToMainApplication(
+            application,
+            'io.appwrite.reactnative.push.notification_icon',
+            '@drawable/notification_icon',
+            'resource'
+        );
+        return config;
+    });
+```
+
+# Connect to Appwrite
+
+The SDK needs the URL polyfill, so import it once in your entry file, before anything else:
+
+```ts
+import 'react-native-url-polyfill/auto';
+import { registerRootComponent } from 'expo';
+import App from './App';
+
+registerRootComponent(App);
+```
+
+Then create one client for the whole app in `lib/appwrite.ts`, with your project's endpoint and ID from the Console and the package name you registered:
+
+```ts
+import { Account, Client, Push, TablesDB } from 'react-native-appwrite';
+
+export const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setPlatform('io.appwrite.orders');
+
+export const account = new Account(client);
+export const tablesDB = new TablesDB(client);
+export const push = new Push(client);
+```
+
+# Subscribe after the user signs in
+
+`Push` connects with the session the user signed in with, so subscribe after sign-in, and again at launch when a session already exists. Without a topic, `subscribe` listens for messages sent to the signed-in user:
+
+```tsx
+async function loadOrders() {
+    const { rows } = await tablesDB.listRows<Order>({ databaseId: 'shop', tableId: 'orders' });
+    setOrders(rows);
+}
+
+async function startPush() {
+    await push.subscribe((message) => {
+        console.log('Push message', message.data);
+        loadOrders();
+    });
+    await loadOrders();
+}
+
+async function signIn(email: string, password: string) {
+    await account.createEmailPasswordSession({ email, password });
+    setSignedIn(true);
+    await startPush();
+}
+```
+
+On the user's own topic, `subscribe` turns on background delivery by default. While your app is on screen, the callback receives each message and the SDK shows no notification. While it isn't, the SDK shows a system notification with the title and body you sent. On Android 13 and later, the first background subscription asks for the notification permission.
+
+In this app, the callback reloads the order list, so a new status shows up while your user is looking at it. Row security limits the list to the signed-in customer's orders. `Order` is the row type, `Models.Row & { userId: string; item: string; status: string }`.
+
+# Open the order when a notification is tapped
+
+`getInitialNotification` returns the tap that launched the app, and `onNotificationOpened` reports taps while the app is running. Both include the `data` you sent with the message. Read them when the app starts, in the same effect that restores the session:
+
+```tsx
+useEffect(() => {
+    // The tap that launched the app
+    push.getInitialNotification().then((opened) => {
+        if (opened) setOpenedOrderId(opened.data.orderId as string);
+    });
+    // Taps while the app is running
+    const stop = push.onNotificationOpened(({ data }) => setOpenedOrderId(data.orderId as string));
+
+    account.get().then(
+        () => {
+            setSignedIn(true);
+            startPush();
+        },
+        () => setSignedIn(false),
+    );
+
+    return stop;
+}, []);
+```
+
+When `openedOrderId` is set, the app shows that order. Load the row again instead of reading it from the list, because the status changed after the list loaded:
+
+```ts
+const order = await tablesDB.getRow<Order>({ databaseId: 'shop', tableId: 'orders', rowId: orderId });
+```
+
+# Send the notification from a Function
+
+An Appwrite Function sends the notification. It runs on every update to an order and sends a push when the new status is `shipped` or `delivered`:
+
+```js
+import { Client, ID, Messaging } from 'node-appwrite';
+
+const notifications = {
+  shipped: {
+    title: 'Your order has shipped',
+    body: (order) => `${order.item} is on its way.`,
+  },
+  delivered: {
+    title: 'Your order was delivered',
+    body: (order) => `${order.item} has arrived.`,
+  },
+};
+
+export default async ({ req, res, log }) => {
+  const order = req.bodyJson;
+  const notification = notifications[order.status];
+
+  if (!notification) {
+    return res.empty();
+  }
+
+  const client = new Client()
+    .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
+    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+    .setKey(req.headers['x-appwrite-key']);
+
+  await new Messaging(client).createPush({
+    messageId: ID.unique(),
+    title: notification.title,
+    body: notification.body(order),
+    users: [order.userId],
+    data: { orderId: order.$id },
+  });
+
+  log(`Sent the ${order.status} notification for order ${order.$id}`);
+  return res.empty();
+};
+```
+
+The event payload is the updated row. `users: [order.userId]` reaches every device where the customer is signed in, and `data` comes back to the app in `onNotificationOpened`. The function's API key comes from the `x-appwrite-key` header and has only the scopes you give the function.
+
+Save the code as `functions/notify-order-status/src/main.js`, with a `package.json` next to `src` that sets `"type": "module"` and depends on `node-appwrite`. Then add the function to your project's `appwrite.config.json`:
+
+```json
+{
+    "projectId": "<PROJECT_ID>",
+    "functions": [
+        {
+            "$id": "notify-order-status",
+            "name": "Notify order status",
+            "runtime": "node-24",
+            "path": "functions/notify-order-status",
+            "entrypoint": "src/main.js",
+            "commands": "npm install",
+            "execute": [],
+            "events": ["tablesdb.shop.tables.orders.rows.*.update"],
+            "scopes": ["messages.write"],
+            "timeout": 15
+        }
+    ]
+}
+```
+
+`events` runs the function on every update to a row in `orders`, `scopes` lets it send messages, and an empty `execute` list keeps anyone from calling it directly. Deploy it with the [Appwrite CLI](/docs/tooling/command-line/installation), signed in with `appwrite login`:
+
+```bash
+appwrite push functions
+```
+
+Every update to a shipped order sends the message again. If other columns of an order change after it ships, store the last status you notified about and compare it before sending.
+
+# Try it
+
+![An Android notification that says Your order was delivered, and the order screen it opens](/images/blog/add-push-notifications-to-your-react-native-app/notification-and-order.avif)
+
+Run the app on an Android phone, sign in as a customer with orders, then leave the app. In the Console, change one of their orders to `shipped` or `delivered`. The notification appears with your app's icon, and tapping it opens that order. Change it while the app is open and the list updates instead.
+
+# How quickly notifications arrive
+
+While your app is open, a message arrives within a second of the function sending it. Once the app is in the background on Android, the SDK's native module wakes it on a schedule to reconnect and show what arrived. In our tests on Android 15, background notifications arrived within 25 seconds of the order changing, also after Android killed the app's process. Messages sent while the phone was offline arrived a few seconds after it reconnected. Battery saver and Doze, the idle mode Android enters when the screen has been off for a while, can delay them by several minutes.
+
+For instant delivery in the background on Android, turn on the SDK's foreground service while the app is on screen, for example from a settings toggle:
+
+```ts
+await push.setForeground(true);
+```
+
+The service shows a quiet ongoing notification and uses the `remoteMessaging` foreground service type, which Google Play asks you to declare. [Delivery while the app is closed](/docs/products/messaging/appwrite-push#background-android) covers exact alarms and battery optimization, which also affect timing.
+
+On iOS, the app keeps its connection while it runs and for a short time after the user leaves it. Once iOS suspends the app, messages wait until the app opens again, and Appwrite then replays the ones it missed. To show notifications while an iOS app is suspended, use the [Appwrite Apple SDK](/blog/post/add-push-notifications-to-your-ios-app), which reaches a suspended app through APNs.
+
+# Sign out
+
+Close `Push` before you delete the session. It closes the connection and stops background delivery, so the device stops receiving the previous user's notifications:
+
+```ts
+push.close();
+await account.deleteSession({ sessionId: 'current' });
+```
+
+# Resources
+
+- [Appwrite Push](/docs/products/messaging/appwrite-push)
+- [Send push notifications](/docs/products/messaging/send-push-notifications)
+- [Function events](/docs/products/functions/execute#events)
+- [Join the Appwrite Discord](https://appwrite.io/discord)

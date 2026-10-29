@@ -29,6 +29,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "add-push-notifications-to-your-react-native-app",
+    "href": "/blog/post/add-push-notifications-to-your-react-native-app",
+    "title": "Add push notifications to your React Native app without Firebase",
+    "description": "Send push notifications to an Expo app with Appwrite Push. Notify customers when an order ships, deliver on Android while the app is closed, and open the order on tap.",
+    "date": "2026-10-16",
+    "lastUpdated": "2026-10-16",
+    "timeToRead": 9,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/add-push-notifications-to-your-react-native-app/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-push",
     "href": "/blog/post/announcing-appwrite-push",
     "title": "Announcing Appwrite Push: push notifications without Firebase",
