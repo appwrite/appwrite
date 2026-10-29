@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Projects;
 
-use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
 use Swoole\Coroutine;
 use Tests\E2E\Client;
@@ -82,7 +81,7 @@ final class InactiveProjectMaintenanceTest extends Scope
 
         $processed = $this->countProcessedJobs($queue);
 
-        $this->withFactory(function (DatabaseFactory $factory) use ($idle): void {
+        $this->withFactory(function ($factory) use ($idle): void {
             $factory->platform()->updateDocument('projects', $idle['$id'], new Document([
                 'accessedAt' => DateTime::addSeconds(new \DateTime(), -60 * 86400),
             ]));
@@ -96,7 +95,7 @@ final class InactiveProjectMaintenanceTest extends Scope
         $this->assertGreaterThan($processed, $this->countProcessedJobs($queue), 'a worker committed at least one job from the ' . $queue . ' queue while the test waited');
 
         $accessedAt = '';
-        $this->withFactory(function (DatabaseFactory $factory) use ($idle, &$accessedAt): void {
+        $this->withFactory(function ($factory) use ($idle, &$accessedAt): void {
             $accessedAt = (string) $factory->platform()->getDocument('projects', $idle['$id'])->getAttribute('accessedAt', '');
         });
         $this->assertLessThan(\time() - 30 * 86400, (new \DateTime($accessedAt))->getTimestamp(), 'the idle project stayed inactive for the whole wait');
@@ -226,7 +225,7 @@ final class InactiveProjectMaintenanceTest extends Scope
     private function countPresenceRows(string $projectId, string $presenceId): int
     {
         $count = -1;
-        $this->withFactory(function (DatabaseFactory $factory) use ($projectId, $presenceId, &$count): void {
+        $this->withFactory(function ($factory) use ($projectId, $presenceId, &$count): void {
             $project = $factory->platform()->getDocument('projects', $projectId);
             $count = \count($factory->project($project)->find('presenceLogs', [Query::equal('$id', [$presenceId])]));
         });
@@ -235,7 +234,7 @@ final class InactiveProjectMaintenanceTest extends Scope
     }
 
     /**
-     * @param callable(DatabaseFactory): void $callback receives the server's database factory
+     * @param callable(mixed): void $callback receives the server's database factory, untyped as an edition may register its own
      */
     private function withFactory(callable $callback): void
     {
