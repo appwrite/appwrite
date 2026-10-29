@@ -1665,6 +1665,7 @@ final class AccountCustomClientTest extends Scope
         });
         $verificationOtpSecret = $this->extractEmailCode((string) $verificationOtpMail['text']);
         $this->assertNotEmpty($verificationOtpSecret);
+        $this->assertSame('"' . $verificationOtpSecret . '"; origin="http://localhost"', $verificationOtpMail['headers']['otp-token'] ?? '');
 
         $magicUrl = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
             'userId' => $userId,
@@ -1697,6 +1698,7 @@ final class AccountCustomClientTest extends Scope
         });
         $recoveryOtpSecret = $this->extractEmailCode((string) $recoveryOtpMail['text']);
         $this->assertNotEmpty($recoveryOtpSecret);
+        $this->assertSame('"' . $recoveryOtpSecret . '"; origin="http://localhost"', $recoveryOtpMail['headers']['otp-token'] ?? '');
 
         $update = $this->client->call(Client::METHOD_PATCH, '/account/email', $sessionHeaders, [
             'email' => $newEmail,
@@ -5813,7 +5815,9 @@ final class AccountCustomClientTest extends Scope
             ]);
             $this->assertSame(200, $response['headers']['status-code']);
 
-            $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $sessionHeaders, [
+            $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', \array_merge($sessionHeaders, [
+                'origin' => 'http://localhost',
+            ]), [
                 'factor' => 'email',
             ]);
             $this->assertSame(201, $challenge['headers']['status-code']);
@@ -5823,6 +5827,7 @@ final class AccountCustomClientTest extends Scope
             });
             $code = $this->extractEmailCode((string) $mail['text']);
             $this->assertNotEmpty($code);
+            $this->assertSame('"' . $code . '"; origin="http://localhost"', $mail['headers']['otp-token'] ?? '');
 
             return [$challenge['body']['$id'], $code];
         };

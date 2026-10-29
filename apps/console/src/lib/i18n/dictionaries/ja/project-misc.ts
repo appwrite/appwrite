@@ -3544,4 +3544,45 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Your saved retention exceeds your plan limit. Save a supported period to update it.':
     '保存済みの保持期間がプランの上限を超えています。対応する期間を選択して保存してください。',
   '3 Years': '3 年',
+
+  // Environment copy at creation, its progress card, and backups in environments
+  'Start from': '開始方法',
+  'Empty environment': '空の環境',
+  'Nothing is copied from the project.':
+    'プロジェクトからは何もコピーしません。',
+  'Copy of the project': 'プロジェクトのコピー',
+  'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
+    '構造と設定をコピーし、データは指定した場合のみコピーします。コピーは環境の作成後に実行され、コピーしたものの ID はそのまま保持されます。',
+  'What to copy': 'コピーする内容',
+  'Pick what to copy, or start from an empty environment.':
+    'コピーする内容を選択するか、空の環境から開始してください。',
+  'Environment created. The copy from the project is under way.':
+    '環境を作成しました。プロジェクトからのコピーを実行中です。',
+  'Databases, tables, columns and indexes':
+    'データベース、テーブル、カラム、インデックス',
+  'Rows and documents': '行とドキュメント',
+  'Buckets and their settings': 'バケットとその設定',
+  'Teams, auth settings, security policies and OAuth2 providers':
+    'チーム、認証設定、セキュリティポリシー、OAuth2 プロバイダー',
+  'Users and memberships': 'ユーザーとメンバーシップ',
+  'The newest 90 users, with their passwords. An environment holds 100 users at most, so 10 places stay free for test accounts.':
+    '最新のユーザー 90 件を、パスワードごとコピーします。環境のユーザー数は最大 100 件のため、テストアカウント用に 10 件分の空きが残ります。',
+  'Functions, their variables and their active deployment':
+    '関数、その変数、アクティブなデプロイメント',
+  'Every deployment': 'すべてのデプロイメント',
+  'Sites, their variables and their active deployment':
+    'サイト、その変数、アクティブなデプロイメント',
+  'Providers and topics': 'プロバイダーとトピック',
+  'Platforms, SMTP, enabled services, project variables and email templates':
+    'プラットフォーム、SMTP、有効なサービス、プロジェクト変数、メールテンプレート',
+  'Copying from the project': 'プロジェクトからコピー中',
+  'Copied from the project': 'プロジェクトからコピーしました',
+  'Could not copy from the project': 'プロジェクトからコピーできませんでした',
+  Dismiss: '閉じる',
+  'Backups are not available in environments. Back up the project the environment belongs to.':
+    'バックアップは環境では利用できません。環境が属するプロジェクトをバックアップしてください。',
+  'Backed up with the project': 'プロジェクトと一緒にバックアップされます',
+  'Backup policies and archives are managed on the project this environment belongs to.':
+    'バックアップポリシーとアーカイブは、この環境が属するプロジェクトで管理します。',
+  'Open the project': 'プロジェクトを開く',
 }

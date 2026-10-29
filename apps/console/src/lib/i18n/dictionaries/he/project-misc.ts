@@ -3476,4 +3476,44 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Your saved retention exceeds your plan limit. Save a supported period to update it.':
     'תקופת השמירה שנשמרה חורגת ממגבלת התוכנית שלכם. בחרו תקופה נתמכת ושמרו לעדכון.',
   '3 Years': '3 שנים',
+
+  // Environment copy at creation, its progress card, and backups in environments
+  'Start from': 'נקודת התחלה',
+  'Empty environment': 'סביבה ריקה',
+  'Nothing is copied from the project.': 'דבר לא מועתק מהפרויקט.',
+  'Copy of the project': 'עותק של הפרויקט',
+  'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
+    'המבנה וההגדרות מועתקים, והנתונים רק היכן שתבקשו זאת. ההעתקה מתבצעת לאחר יצירת הסביבה ושומרת על המזהים של מה שהיא מעתיקה.',
+  'What to copy': 'מה להעתיק',
+  'Pick what to copy, or start from an empty environment.':
+    'בחרו מה להעתיק, או התחילו מסביבה ריקה.',
+  'Environment created. The copy from the project is under way.':
+    'הסביבה נוצרה. ההעתקה מהפרויקט מתבצעת כעת.',
+  'Databases, tables, columns and indexes':
+    'מסדי נתונים, טבלאות, עמודות ואינדקסים',
+  'Rows and documents': 'שורות ומסמכים',
+  'Buckets and their settings': 'באקטים וההגדרות שלהם',
+  'Teams, auth settings, security policies and OAuth2 providers':
+    'צוותים, הגדרות אימות, מדיניות אבטחה וספקי OAuth2',
+  'Users and memberships': 'משתמשים וחברויות',
+  'The newest 90 users, with their passwords. An environment holds 100 users at most, so 10 places stay free for test accounts.':
+    '90 המשתמשים החדשים ביותר, יחד עם הסיסמאות שלהם. סביבה מכילה עד 100 משתמשים, כך ש-10 מקומות נשארים פנויים לחשבונות בדיקה.',
+  'Functions, their variables and their active deployment':
+    'פונקציות, המשתנים שלהן והפריסה הפעילה שלהן',
+  'Every deployment': 'כל הפריסות',
+  'Sites, their variables and their active deployment':
+    'אתרים, המשתנים שלהם והפריסה הפעילה שלהם',
+  'Providers and topics': 'ספקים ונושאים',
+  'Platforms, SMTP, enabled services, project variables and email templates':
+    'פלטפורמות, SMTP, שירותים מופעלים, משתני פרויקט ותבניות אימייל',
+  'Copying from the project': 'ההעתקה מהפרויקט מתבצעת',
+  'Copied from the project': 'הועתק מהפרויקט',
+  'Could not copy from the project': 'לא ניתן היה להעתיק מהפרויקט',
+  Dismiss: 'סגירה',
+  'Backups are not available in environments. Back up the project the environment belongs to.':
+    'גיבויים אינם זמינים בסביבות. גבו את הפרויקט שהסביבה שייכת אליו.',
+  'Backed up with the project': 'מגובה יחד עם הפרויקט',
+  'Backup policies and archives are managed on the project this environment belongs to.':
+    'מדיניות הגיבוי והארכיונים מנוהלים בפרויקט שהסביבה הזו שייכת אליו.',
+  'Open the project': 'פתיחת הפרויקט',
 }

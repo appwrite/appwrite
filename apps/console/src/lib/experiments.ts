@@ -26,6 +26,12 @@ export const EXPERIMENTS: readonly Experiment[] = [
     description:
       'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.',
   },
+  {
+    flag: 'projectEnvironments',
+    name: 'Project environments',
+    description:
+      'Switch between environments of a project, such as staging and production, and create one as a copy of the project.',
+  },
 ]
 
 export function hasQualityLabel(

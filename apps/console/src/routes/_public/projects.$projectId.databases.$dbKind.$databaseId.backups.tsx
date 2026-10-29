@@ -44,7 +44,9 @@ export const Route = createFileRoute(
 
     if (!projectId || !databaseId) return
 
-    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    const project = await queryClient.ensureQueryData(
+      projectQueryOptions(projectId),
+    )
     await queryClient.ensureQueryData(
       databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind),
     )
@@ -59,24 +61,28 @@ export const Route = createFileRoute(
       ),
     )
 
-    await Promise.all([
-      queryClient.prefetchQuery(
-        backupPoliciesQueryOptions(
-          projectId,
-          databaseId,
-          dbKind as DatabaseRouteKind,
+    // An environment is backed up with its project: its backup routes refuse,
+    // so nothing is asked of them
+    if (!project?.parentId) {
+      await Promise.all([
+        queryClient.prefetchQuery(
+          backupPoliciesQueryOptions(
+            projectId,
+            databaseId,
+            dbKind as DatabaseRouteKind,
+          ),
         ),
-      ),
-      queryClient.prefetchQuery(
-        backupArchivesQueryOptions(
-          projectId,
-          databaseId,
-          0,
-          10,
-          dbKind as DatabaseRouteKind,
+        queryClient.prefetchQuery(
+          backupArchivesQueryOptions(
+            projectId,
+            databaseId,
+            0,
+            10,
+            dbKind as DatabaseRouteKind,
+          ),
         ),
-      ),
-    ]).catch(() => {})
+      ]).catch(() => {})
+    }
 
     const database = queryClient.getQueryData<{ name?: string }>(
       databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey,
