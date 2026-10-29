@@ -1114,7 +1114,8 @@ async fn stall(step: &Value, host: &str, port: u16) -> Result<Value, Fault> {
     let mut buffer = vec![0u8; 65536];
     let mut closed = false;
     while let Ok(read) =
-        utopia_async::timeout(deadline.saturating_duration_since(std::time::Instant::now()), stream.read(&mut buffer)).await
+        utopia_async::timeout(deadline.saturating_duration_since(std::time::Instant::now()), stream.read(&mut buffer))
+            .await
     {
         if matches!(read, Ok(0) | Err(_)) {
             closed = true;

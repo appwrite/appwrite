@@ -514,9 +514,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "e2e.run" => {
             Outcome::Ok(Value::Array(e2e(a.array("steps")?, a.opt_f64("send_timeout")?.unwrap_or(1.0)).await?))
         }
-        "tls.probe" => {
-            Outcome::Ok(tls_probe(a.str("scheme")?, a.value("headers")?).await?)
-        }
+        "tls.probe" => Outcome::Ok(tls_probe(a.str("scheme")?, a.value("headers")?).await?),
         _ => return Err(Fault::new(format!("websocket: unknown operation `{op}`"))),
     };
     Ok(result)
@@ -838,8 +836,8 @@ async fn tls_probe(scheme: &str, headers: &Value) -> Result<Value, Fault> {
         }
     });
     let spec = json!({ "headers": headers, "timeout": 2 });
-    let mut client = Client::new(&format!("{scheme}://127.0.0.1:{port}"), options(&spec)?)
-        .map_err(|e| Fault::new(e.to_string()))?;
+    let mut client =
+        Client::new(&format!("{scheme}://127.0.0.1:{port}"), options(&spec)?).map_err(|e| Fault::new(e.to_string()))?;
     let _ = client.connect().await;
     let received = accept.await.unwrap_or_default();
     let leaked: Vec<Value> = headers

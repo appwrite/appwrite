@@ -426,7 +426,8 @@ fn acceptor(name: &str) -> Result<tokio_rustls::TlsAcceptor, Fault> {
         .map_err(|e| failed(e.to_string()))?
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| failed(e.to_string()))?;
-    let key = PrivateKeyDer::from_pem_file(certificates().join(format!("{name}.key"))).map_err(|e| failed(e.to_string()))?;
+    let key =
+        PrivateKeyDer::from_pem_file(certificates().join(format!("{name}.key"))).map_err(|e| failed(e.to_string()))?;
     let config = rustls::ServerConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
         .with_safe_default_protocol_versions()
         .map_err(|e| failed(e.to_string()))?
@@ -458,7 +459,8 @@ fn collect(
                 match tls {
                     None => serve(socket, &script, &seen, |s| drop(s.set_zero_linger())).await,
                     Some(tls) => {
-                        if let Ok(Ok(stream)) = utopia_async::timeout(Duration::from_secs(5), tls.accept(socket)).await {
+                        if let Ok(Ok(stream)) = utopia_async::timeout(Duration::from_secs(5), tls.accept(socket)).await
+                        {
                             serve(stream, &script, &seen, |s| drop(s.get_ref().0.set_zero_linger())).await;
                         }
                     }
@@ -483,7 +485,10 @@ where
         };
         buffer.extend_from_slice(&chunk[..read]);
         loop {
-            let Some(line) = buffer.windows(2).position(|w| w == b"\r\n").map(|at| String::from_utf8_lossy(&buffer[..at]).into_owned())
+            let Some(line) = buffer
+                .windows(2)
+                .position(|w| w == b"\r\n")
+                .map(|at| String::from_utf8_lossy(&buffer[..at]).into_owned())
             else {
                 break;
             };
@@ -549,7 +554,8 @@ async fn exchange(a: &Args<'_>) -> Result<Json, Fault> {
     let port = listener.local_addr().map_err(|e| Fault::new(e.to_string()))?.port();
     let seen: Arc<Mutex<Seen>> = Arc::default();
     let connections: Arc<Mutex<Vec<utopia_async::JoinHandle<()>>>> = Arc::default();
-    let mut server = collect(listener, tls.map(acceptor).transpose()?, script.clone(), seen.clone(), connections.clone());
+    let mut server =
+        collect(listener, tls.map(acceptor).transpose()?, script.clone(), seen.clone(), connections.clone());
     let default = match tls {
         None => format!("http://127.0.0.1:{port}/v1/metrics"),
         Some(_) => format!(
