@@ -252,6 +252,77 @@ final class TeamsCustomClientTest extends Scope
         $this->assertEquals(401, $login['headers']['status-code']);
     }
 
+    public function testUpdateMembershipStatusByPhoneRevokesUnverifiedAccountCredentials(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper('Claimed Phone Invites');
+        $phone = '+1202' . \random_int(1000000, 9999999);
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        // A phone-only account registered by someone who does not own the phone
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', $headers);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $cookie = 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId];
+
+        $account = $this->client->call(Client::METHOD_PATCH, '/account/phone', \array_merge($headers, [
+            'cookie' => $cookie,
+        ]), [
+            'phone' => $phone,
+            'password' => 'registrant-password',
+        ]);
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertFalse($account['body']['phoneVerification']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'phone' => $phone,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $sms = $this->getLastRequestForProject($projectId, Scope::REQUEST_TYPE_SMS, [
+            'header_X-Username' => 'username',
+            'header_X-Key' => 'password',
+            'method' => 'POST',
+        ], probe: function (array $request) use ($phone) {
+            $this->assertEquals($phone, $request['data']['to'] ?? null);
+        });
+        $this->assertNotEmpty($sms);
+        \parse_str((string) \parse_url((string) $sms['data']['message'], PHP_URL_QUERY), $params);
+
+        /**
+         * Test for SUCCESS
+         */
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertEquals(200, $confirmation['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $confirmation['cookies']['a_session_' . $projectId],
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($phone, $account['body']['phone']);
+        $this->assertTrue($account['body']['phoneVerification']);
+
+        /**
+         * Test for FAILURE
+         * The registrant's session no longer reaches the claimed account.
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => $cookie,
+        ]));
+        $this->assertEquals(401, $account['headers']['status-code']);
+    }
+
     public function testUpdateMembershipStatusAfterEmailChange(): void
     {
         $projectId = $this->getProject()['$id'];
