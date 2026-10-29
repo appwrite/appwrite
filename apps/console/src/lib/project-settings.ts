@@ -61,6 +61,7 @@ export type ProjectAuthSecuritySnapshot = {
   authDenyAliasedEmail: boolean
   authDenyDisposableEmail: boolean
   authDenyCorporateEmail: boolean
+  authDenyRealtimeGuests: boolean
   authPasskey: PasskeyPolicy
   authMockNumbers: Array<{ phone: string; otp: string }>
   membershipsPrivacy: {
@@ -95,6 +96,7 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
   authDenyAliasedEmail: false,
   authDenyDisposableEmail: false,
   authDenyCorporateEmail: false,
+  authDenyRealtimeGuests: false,
   authPasskey: DEFAULT_PASSKEY_POLICY,
   authMockNumbers: [],
   membershipsPrivacy: {
@@ -199,6 +201,10 @@ export function parseProjectAuthSecurity(
     policies,
     AuthEmailPolicyId.DenyCorporateEmail,
   )
+  const denyRealtimeGuests = policyById(
+    policies,
+    ProjectPolicyId.Denyrealtimeguests,
+  )
   const passkey = policyById(policies, ProjectPolicyId.Passkey) as
     | Models.PolicyPasskey
     | undefined
@@ -248,6 +254,7 @@ export function parseProjectAuthSecurity(
     authDenyAliasedEmail: parsePolicyEnabled(denyAliasedEmail, false),
     authDenyDisposableEmail: parsePolicyEnabled(denyDisposableEmail, false),
     authDenyCorporateEmail: parsePolicyEnabled(denyCorporateEmail, false),
+    authDenyRealtimeGuests: parsePolicyEnabled(denyRealtimeGuests, false),
     authPasskey: parsePasskeyPolicy(passkey),
     authMockNumbers: (mockNumbers ?? []).map((n) => ({
       phone: n.number,

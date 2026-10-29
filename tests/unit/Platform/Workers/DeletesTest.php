@@ -8,6 +8,7 @@ use Appwrite\Deployment\Retention;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Realtime;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Schedule\Source\Functions as FunctionSchedules;
@@ -108,6 +109,7 @@ final class DeletesTest extends TestCase
                     publisherForUsage: $this->createStub(UsagePublisher::class),
                     bus: new Bus(),
                     executionStore: $this->createStub(ExecutionStore::class),
+                    queueForRealtime: $this->createStub(Realtime::class),
                 );
                 $this->assertFileDoesNotExist($oldPath);
                 $this->assertSame('replacement', file_get_contents($currentPath));
@@ -173,6 +175,7 @@ final class DeletesTest extends TestCase
                 publisherForUsage: $this->createStub(UsagePublisher::class),
                 bus: new Bus(),
                 executionStore: $executionStore,
+                queueForRealtime: $this->createStub(Realtime::class),
             );
         } catch (AssertionFailedError $failure) {
             // An unexpected call on a double is the failure under test, not the refusal.
@@ -238,6 +241,7 @@ final class DeletesTest extends TestCase
             publisherForUsage: $this->createStub(UsagePublisher::class),
             bus: new Bus(),
             executionStore: $this->createStub(ExecutionStore::class),
+            queueForRealtime: $this->createStub(Realtime::class),
         );
 
         $session = $this->database->skipFilters(fn () => $this->database->getDocument('sessions', 'platform-session'));

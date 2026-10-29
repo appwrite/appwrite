@@ -140,6 +140,8 @@ class Screenshots extends Action
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
             $apiKey = $jwtObj->encode([
                 Key::PURPOSE_CLAIM => Key::PURPOSE,
+                'hostname' => $rule->getAttribute('domain'),
+                'deploymentId' => $rule->getAttribute('deploymentId'),
                 'hostnameOverride' => true,
                 'disabledMetrics' => [
                     METRIC_EXECUTIONS,

@@ -11,6 +11,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
@@ -157,7 +158,7 @@ class Update extends Action
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
         }
 
-        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team, $targetUser, $secret, $proofForToken, &$session) {
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, &$session) {
             // Lock the user first, as an address change does, so a voided invite cannot slip through
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
 
@@ -184,6 +185,12 @@ class Update extends Action
                 $hasPhone && !$hasEmail => 'phoneVerification',
                 default => null,
             };
+
+            // Accepting while signed out proves an unverified email or phone, so whoever registered it keeps no other way in
+            if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false)) {
+                $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
+            }
 
             if ($verification !== null) {
                 $targetUser->setAttribute($verification, true);
