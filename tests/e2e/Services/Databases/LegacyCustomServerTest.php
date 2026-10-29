@@ -10,6 +10,7 @@ use Tests\E2E\Scopes\ApiLegacy;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 
 final class LegacyCustomServerTest extends Scope
@@ -110,5 +111,48 @@ final class LegacyCustomServerTest extends Scope
             ], $this->getHeaders()),
             ['queries' => $queries]
         );
+    }
+
+    public function testCreateDocumentWithTablesDBScopes(): void
+    {
+        $project = $this->getProject()['$id'];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => Id::unique(),
+            'name' => 'TablesDB scopes',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project,
+            'x-appwrite-key' => $this->getNewKey(['tables.write', 'columns.write', 'rows.write']),
+        ];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
+            'collectionId' => Id::unique(),
+            'name' => 'Movies',
+            'documentSecurity' => false,
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', $headers, [
+            'key' => 'title',
+            'size' => 64,
+            'required' => false,
+        ]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
+            'documentId' => Id::unique(),
+            'data' => [],
+        ]);
+        $this->assertSame(201, $document['headers']['status-code']);
     }
 }
