@@ -123,7 +123,7 @@ impl Arg<'_> {
         }
     }
 
-    /// `zval_get_string`, the `(string)` cast: floats with `precision` 14,
+    /// `zval_get_string`, the `(string)` cast: floats at the `precision` setting,
     /// arrays `"Array"`; a `stdClass` throws `Error`.
     pub fn to_bytes(&self) -> Result<Cow<'_, [u8]>, Error> {
         Ok(match *self {

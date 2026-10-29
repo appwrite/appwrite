@@ -484,7 +484,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Limit",
-              "message": "Attribute value exceeds maximum limit: 1.7976931348623E+308"
+              "message": "Attribute value exceeds maximum limit: 1.7976931348623157E+308"
             }
           }
         },
@@ -1035,7 +1035,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Limit",
-              "message": "Attribute value exceeds minimum limit: -1.7976931348623E+308"
+              "message": "Attribute value exceeds minimum limit: -1.7976931348623157E+308"
             }
           }
         },

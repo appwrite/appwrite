@@ -193,7 +193,7 @@ pub(crate) fn reply<T>(result: RedisResult<T>, cluster: bool) -> Result<Option<T
 }
 
 /// An argument as phpredis sends it: integers in decimal, floats as PHP's
-/// `(string)` prints them (`precision` 14).
+/// `(string)` prints them (the `precision` setting).
 pub(crate) enum Arg {
     /// An integer.
     Int(i64),

@@ -16,7 +16,7 @@
 //!   that is not valid UTF-8 makes the statement fail silently (`execute()`
 //!   returns `false` without running it), as PHP 8.5 does;
 //! - fetched booleans are `"1"`/`"0"`, floats are reprinted as PHP prints
-//!   them (precision 14), `NULL` is `null`, everything else is the text the
+//!   them (`precision` ini), `NULL` is `null`, everything else is the text the
 //!   server sent;
 //! - errors are `PDOException`s with PDO's message:
 //!   `SQLSTATE[23505]: Unique violation: 7 ERROR:  ...`, the server's

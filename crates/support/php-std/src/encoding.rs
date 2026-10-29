@@ -232,7 +232,7 @@ impl QueryBuilder<'_> {
 /// for data decoded from JSON (objects are PHP arrays; keys that are
 /// canonical integers are integer keys, which get `numeric_prefix` at the
 /// top level). Nested arrays become `a%5Bb%5D=...`; `null` values are
-/// skipped, booleans are `1`/`0`, floats use `precision` 14.
+/// skipped, booleans are `1`/`0`, floats use the `precision` setting.
 /// `arg_separator` `None` is PHP's `arg_separator.output` default, `&`.
 pub fn http_build_query(
     data: &Value,

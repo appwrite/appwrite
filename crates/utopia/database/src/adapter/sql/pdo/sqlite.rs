@@ -12,7 +12,7 @@
 //!   with `SQLSTATE[HY000]: General error: 25 column index out of range`;
 //!   placeholders left unbound are `NULL`;
 //! - fetched integers and floats become strings (`ATTR_STRINGIFY_FETCHES`;
-//!   floats as PHP prints them, precision 14), text and blobs their bytes,
+//!   floats as PHP prints them at the `precision` ini), text and blobs their bytes,
 //!   `NULL` `null`;
 //! - errors are `PDOException`s with PDO's message:
 //!   `SQLSTATE[23000]: Integrity constraint violation: 19 UNIQUE constraint
