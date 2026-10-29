@@ -22,7 +22,7 @@ faqs:
   - question: "Can I keep using FCM and APNs?"
     answer: "Yes. Appwrite Push is another provider next to FCM and APNs, and you can enable them together. A user with FCM or APNs targets gets the FCM or APNs notification. Register an Appwrite push target for them to also receive messages over Appwrite Push. On iOS, APNs then only wakes the app, so each message shows once. FCM still sends the full notification, so an Android app that registers both should skip duplicates by `messageId`."
   - question: "Can I use Appwrite Push when self-hosting?"
-    answer: "Yes. Self-hosted Appwrite runs the broker in the `appwrite-mqtt` container, with MQTT over TLS on port 8883 and secure WebSocket on port 8084. Point a `push.` DNS record at your server, or set the broker address with `client.setPushEndpoint()`."
+    answer: "Yes, from Appwrite 2.6.0. Self-hosted Appwrite runs the broker in the `appwrite-mqtt` container, with MQTT over TLS on port 8883 and secure WebSocket on port 8084. Point a `push.` DNS record at your server, or set the broker address with `client.setPushEndpoint()`."
 ---
 
 Push notifications usually take more setup outside your app than anything inside it. Before the first message goes out, you need a Firebase project and its service account key, code that collects each device's token and keeps it current, and a separate APNs setup for iOS.
@@ -121,7 +121,7 @@ The [iOS background delivery guide](/docs/products/messaging/appwrite-push#backg
 
 - **You are adding push to a new app.** Skip the Firebase project and the device token plumbing, and send your first message in minutes.
 - **You ship on several platforms.** One provider and one API cover Android, iOS, web, Flutter, and React Native.
-- **You self-host.** Messages go from your Appwrite server to your users' devices without passing through a third-party push service on Android and the web.
+- **You self-host.** Appwrite Push ships with self-hosted Appwrite from 2.6.0. On Android and the web, messages go from your Appwrite server to your users' devices without passing through a third-party push service.
 - **You need messages to survive flaky networks.** Offline replay delivers what a device missed when it comes back.
 
 FCM and APNs are still there. Use them when you need the operating system's own push channel, such as reaching a suspended iOS app built with Flutter or React Native. You can enable them next to Appwrite Push.
