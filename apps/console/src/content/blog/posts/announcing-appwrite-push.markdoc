@@ -47,7 +47,7 @@ In the Console, go to **Messaging** > **Providers** > **Create provider** > **Pu
 
 ## 2. Subscribe in your app
 
-Sign the user in, create `Push` from the same client, and subscribe. Without a topic, `subscribe` listens on the signed-in user's own topic.
+Push connects to Appwrite with the user's session, so sign the user in first. Then create a `Push` instance from the same `Client` and call `subscribe` with a callback. Without a topic, `subscribe` listens for messages sent to the signed-in user, and your callback runs for each one while the app is open. This example uses React Native, and the Web, Flutter, Android, and Apple SDKs work the same way.
 
 ```ts
 import { Account, Client, Push } from 'react-native-appwrite';
