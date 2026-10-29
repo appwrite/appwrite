@@ -24,7 +24,8 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
-use Appwrite\Logs\Store as RuntimeLogStore;
+use Appwrite\Logs\Adapter\ClickHouse as LogsClickHouse;
+use Appwrite\Logs\Logs;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
 use Appwrite\Network\Validator\DeploymentHostname;
@@ -308,10 +309,10 @@ $container->set('executionStore', function (): ExecutionStore {
     );
 }, []);
 
-$container->set('runtimeLogStore', function () {
+$container->set('logs', function () {
     $client = new HttpClientPool(new Connections(
         new SwoolePoolAdapter(),
-        'runtime_logs',
+        'logs',
         max(1, (int) System::getEnv('_APP_POOL_SIZE_EXECUTIONS', 2)),
         fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
         timeout: 3.0,
@@ -328,11 +329,13 @@ $container->set('runtimeLogStore', function () {
         $connection = $defaultConnection;
     }
 
-    return new RuntimeLogStore(
+    return new Logs(new LogsClickHouse(
         dsn: $connection,
         client: $client,
+        // Function and site runtime logs are what Alloy collects today.
+        table: 'runtime_logs',
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
-    );
+    ));
 }, []);
 
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(

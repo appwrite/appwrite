@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Logs;
+namespace Tests\Unit\Logs\Adapter;
 
-use Appwrite\Logs\Store;
+use Appwrite\Logs\Adapter\ClickHouse;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
@@ -14,14 +14,14 @@ use Utopia\Database\Query;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 
-final class StoreTest extends TestCase
+final class ClickHouseTest extends TestCase
 {
-    public function testCreatesRuntimeLogSnapshot(): void
+    public function testUpsertsLogSnapshot(): void
     {
         $client = new CapturingClient();
         $store = $this->store($client);
 
-        $store->create('project', new Document([
+        $store->upsert('project', [new Document([
             '$id' => 'log1',
             'resourceType' => 'functions',
             'resourceId' => 'fn',
@@ -31,7 +31,7 @@ final class StoreTest extends TestCase
             'timestamp' => '2026-08-25T10:00:00.000+00:00',
             'stream' => 'stdout',
             'message' => 'hello',
-        ]));
+        ])]);
 
         $request = $client->requests[0];
         $query = \urldecode((string) $request->getUri());
@@ -178,8 +178,8 @@ final class StoreTest extends TestCase
         ]);
         $store = $this->store($client);
 
-        $store->deleteProject('project');
-        $store->deleteByResource('project', '10', 'functions');
+        $store->delete('project');
+        $store->delete('project', 'functions', '10');
 
         $projectDelete = (string) $client->requests[0]->getBody();
         $this->assertStringContainsString('DELETE FROM', $projectDelete);
@@ -195,7 +195,7 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('SETTINGS lightweight_deletes_sync = 2', $resourceDelete);
     }
 
-    public function testGetById(): void
+    public function testGet(): void
     {
         $client = new CapturingClient([
             $this->jsonResponse([[
@@ -210,7 +210,7 @@ final class StoreTest extends TestCase
             ]]),
         ]);
 
-        $log = $this->store($client)->getById('project', 'log1');
+        $log = $this->store($client)->get('project', 'log1');
 
         $this->assertSame('log1', $log->getId());
         $this->assertSame('sites', $log->getAttribute('resourceType'));
@@ -237,34 +237,47 @@ final class StoreTest extends TestCase
     public function testRejectsInvalidStream(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Runtime log stream must be stdout or stderr');
+        $this->expectExceptionMessage('Log stream must be stdout or stderr');
 
-        $this->store(new CapturingClient())->create('project', new Document([
+        $this->store(new CapturingClient())->upsert('project', [new Document([
             '$id' => 'log1',
             'deploymentId' => 'dep',
             'stream' => 'other',
             'message' => 'x',
-        ]));
+        ])]);
     }
 
     public function testInsertFailuresPropagate(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('ClickHouse runtime log insert failed');
+        $this->expectExceptionMessage('ClickHouse log insert failed');
 
-        $this->store(new FailingClient())->create('project', new Document([
+        $this->store(new FailingClient())->upsert('project', [new Document([
             '$id' => 'log1',
             'deploymentId' => 'dep',
             'stream' => 'stdout',
             'message' => 'x',
-        ]));
+        ])]);
     }
 
-    private function store(ClientInterface $client): Store
+    public function testRejectsInvalidTable(): void
     {
-        return new Store(
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Invalid ClickHouse identifier: logs.lines');
+
+        new ClickHouse(
+            dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
+            client: new CapturingClient(),
+            table: 'logs.lines',
+        );
+    }
+
+    private function store(ClientInterface $client): ClickHouse
+    {
+        return new ClickHouse(
             dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
             client: $client,
+            table: 'runtime_logs',
         );
     }
 

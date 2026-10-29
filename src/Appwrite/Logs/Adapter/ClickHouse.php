@@ -1,7 +1,8 @@
 <?php
 
-namespace Appwrite\Logs;
+namespace Appwrite\Logs\Adapter;
 
+use Appwrite\Logs\Adapter;
 use Psr\Http\Client\ClientInterface;
 use Throwable;
 use Utopia\Database\DateTime;
@@ -17,17 +18,14 @@ use Utopia\Query\Builder\Statement;
 use Utopia\Query\Method as QueryMethod;
 
 /**
- * ClickHouse persistence for function and site runtime logs.
+ * ClickHouse persistence for log lines.
  *
- * Rows are append-only line snapshots written by Alloy (or tests). Unlike
- * executions there is no versioning — MergeTree + TTL on expiresAt is enough.
+ * Rows are append-only line snapshots written by a collector such as Alloy
+ * (or tests). Unlike executions there is no versioning — MergeTree + TTL on
+ * expiresAt is enough.
  */
-class Store
+class ClickHouse extends Adapter
 {
-    private const string TABLE = 'runtime_logs';
-
-    private const int READY_TTL_SECONDS = 15;
-
     private const array COLUMNS = [
         'projectId',
         'id',
@@ -68,23 +66,21 @@ class Store
 
     private bool $secure = false;
 
-    private bool $ready = false;
-
-    private float $checkedAt = 0.0;
-
     public function __construct(
         private readonly string $dsn,
         private readonly ?ClientInterface $client,
+        private readonly string $table = 'logs',
         private readonly int $retention = 1_209_600,
     ) {
         $this->requestFactory = new RequestFactory();
+        $this->identifier($this->table);
     }
 
     public function setup(): void
     {
         $this->connect();
         $database = $this->identifier($this->database);
-        $table = $this->table();
+        $table = $this->quotedTable();
 
         $this->query("CREATE DATABASE IF NOT EXISTS {$database}");
         $this->query(<<<SQL
@@ -125,9 +121,6 @@ class Store
                 MODIFY TTL expiresAt DELETE
                 SQL);
         }
-
-        $this->ready = true;
-        $this->checkedAt = \microtime(true);
     }
 
     /** @return array<string, mixed> */
@@ -138,12 +131,12 @@ class Store
                 'SELECT count() AS tables FROM system.tables WHERE database = {database:String} AND name = {table:String} FORMAT JSON',
                 [
                     'database' => $this->database(),
-                    'table' => self::TABLE,
+                    'table' => $this->table,
                 ]
             ));
             $ready = (int) ($rows[0]['tables'] ?? 0) === 1;
             if ($ready) {
-                $this->query('SELECT projectId, id, deploymentId, region, timestamp, stream, expiresAt FROM ' . $this->table() . ' LIMIT 0 FORMAT JSON');
+                $this->query('SELECT projectId, id, deploymentId, region, timestamp, stream, expiresAt FROM ' . $this->quotedTable() . ' LIMIT 0 FORMAT JSON');
             }
 
             return [
@@ -160,30 +153,8 @@ class Store
         }
     }
 
-    public function isReady(): bool
-    {
-        if ($this->ready && (\microtime(true) - $this->checkedAt) < self::READY_TTL_SECONDS) {
-            return true;
-        }
-
-        $this->ready = ($this->healthCheck()['schemaReady'] ?? false) === true;
-        $this->checkedAt = \microtime(true);
-
-        return $this->ready;
-    }
-
-    public function create(string $projectId, Document $log): void
-    {
-        $this->upsert($projectId, $log);
-    }
-
-    public function upsert(string $projectId, Document $log): void
-    {
-        $this->upsertMany($projectId, [$log]);
-    }
-
     /** @param array<Document> $logs */
-    public function upsertMany(string $projectId, array $logs): void
+    public function upsert(string $projectId, array $logs): void
     {
         if ($logs === []) {
             return;
@@ -197,20 +168,31 @@ class Store
         $this->insert($rows);
     }
 
-    public function deleteProject(string $projectId): void
-    {
-        $this->deleteWhere($projectId);
-    }
-
-    public function deleteByResource(
+    public function delete(
         string $projectId,
-        string $resourceInternalId,
-        string $resourceType,
+        ?string $resourceType = null,
+        ?string $resourceInternalId = null,
     ): void {
-        $this->deleteWhere($projectId, $resourceInternalId, $resourceType);
+        $params = ['projectId' => $projectId];
+        $conditions = ['projectId = {projectId:String}'];
+        if ($resourceType !== null) {
+            $params['resourceType'] = $resourceType;
+            $conditions[] = 'resourceType = {resourceType:String}';
+        }
+        if ($resourceInternalId !== null) {
+            $params['resourceInternalId'] = $resourceInternalId;
+            $conditions[] = 'resourceInternalId = {resourceInternalId:String}';
+        }
+
+        $where = \implode(' AND ', $conditions);
+        // Wait for the rows to be masked, whatever the server profile defaults to.
+        $this->query(
+            'DELETE FROM ' . $this->quotedTable() . " WHERE {$where} SETTINGS lightweight_deletes_sync = 2",
+            $params
+        );
     }
 
-    public function getById(string $projectId, string $logId): Document
+    public function get(string $projectId, string $logId): Document
     {
         $params = [
             'projectId' => $projectId,
@@ -292,7 +274,7 @@ class Store
     {
         $id = $log->getId();
         if ($id === '') {
-            throw new \InvalidArgumentException('Runtime log id is required');
+            throw new \InvalidArgumentException('Log id is required');
         }
 
         $timestamp = (string) $log->getAttribute('timestamp', '');
@@ -303,7 +285,7 @@ class Store
 
         $stream = (string) $log->getAttribute('stream', 'stdout');
         if ($stream !== 'stdout' && $stream !== 'stderr') {
-            throw new \InvalidArgumentException('Runtime log stream must be stdout or stderr');
+            throw new \InvalidArgumentException('Log stream must be stdout or stderr');
         }
 
         return [
@@ -324,31 +306,7 @@ class Store
     /** @param array<array<string, mixed>> $rows */
     private function insert(array $rows): void
     {
-        $this->insertRows($this->database() . '.' . self::TABLE, self::COLUMNS, $rows);
-    }
-
-    private function deleteWhere(
-        string $projectId,
-        ?string $resourceInternalId = null,
-        ?string $resourceType = null,
-    ): void {
-        $params = ['projectId' => $projectId];
-        $conditions = ['projectId = {projectId:String}'];
-        if ($resourceInternalId !== null) {
-            $params['resourceInternalId'] = $resourceInternalId;
-            $conditions[] = 'resourceInternalId = {resourceInternalId:String}';
-        }
-        if ($resourceType !== null) {
-            $params['resourceType'] = $resourceType;
-            $conditions[] = 'resourceType = {resourceType:String}';
-        }
-
-        $where = \implode(' AND ', $conditions);
-        // Wait for the rows to be masked, whatever the server profile defaults to.
-        $this->query(
-            'DELETE FROM ' . $this->table() . " WHERE {$where} SETTINGS lightweight_deletes_sync = 2",
-            $params
-        );
+        $this->insertRows($this->relation(), self::COLUMNS, $rows);
     }
 
     /**
@@ -367,11 +325,11 @@ class Store
         try {
             $response = $this->client()->sendRequest($request);
         } catch (Throwable $th) {
-            throw new \RuntimeException('ClickHouse runtime log insert failed: ' . $th->getMessage(), previous: $th);
+            throw new \RuntimeException('ClickHouse log insert failed: ' . $th->getMessage(), previous: $th);
         }
 
         if ($response->getStatusCode() !== 200) {
-            throw new \RuntimeException('ClickHouse runtime log insert failed with HTTP ' . $response->getStatusCode() . ': ' . (string) $response->getBody());
+            throw new \RuntimeException('ClickHouse log insert failed with HTTP ' . $response->getStatusCode() . ': ' . (string) $response->getBody());
         }
     }
 
@@ -442,12 +400,12 @@ class Store
             $parts = [];
             foreach ($query->getValues() as $nested) {
                 if (!$nested instanceof Query) {
-                    throw new \InvalidArgumentException('Invalid nested runtime log query');
+                    throw new \InvalidArgumentException('Invalid nested log query');
                 }
                 $parts[] = $this->filterSql($nested, $params);
             }
             if ($parts === []) {
-                throw new \InvalidArgumentException('Empty logical runtime log query');
+                throw new \InvalidArgumentException('Empty logical log query');
             }
 
             return '(' . \implode($method === QueryMethod::And ? ' AND ' : ' OR ', $parts) . ')';
@@ -481,7 +439,7 @@ class Store
             QueryMethod::NotContains => $this->containsSql($column, $parameters, true),
             QueryMethod::IsNull => "{$column} = ''",
             QueryMethod::IsNotNull => "{$column} != ''",
-            default => throw new \InvalidArgumentException("Unsupported runtime log query method: {$method->value}"),
+            default => throw new \InvalidArgumentException("Unsupported log query method: {$method->value}"),
         };
     }
 
@@ -575,7 +533,7 @@ class Store
     private function column(string $attribute): array
     {
         if (!isset(self::QUERY_COLUMNS[$attribute])) {
-            throw new \InvalidArgumentException("Unsupported runtime log query attribute: {$attribute}");
+            throw new \InvalidArgumentException("Unsupported log query attribute: {$attribute}");
         }
 
         return self::QUERY_COLUMNS[$attribute];
@@ -667,12 +625,12 @@ class Store
         try {
             $response = $this->client()->sendRequest($request);
         } catch (Throwable $th) {
-            throw new \RuntimeException('ClickHouse runtime log query failed: ' . $th->getMessage(), previous: $th);
+            throw new \RuntimeException('ClickHouse log query failed: ' . $th->getMessage(), previous: $th);
         }
 
         $body = (string) $response->getBody();
         if ($response->getStatusCode() !== 200) {
-            throw new \RuntimeException('ClickHouse runtime log query failed with HTTP ' . $response->getStatusCode() . ': ' . $body);
+            throw new \RuntimeException('ClickHouse log query failed with HTTP ' . $response->getStatusCode() . ': ' . $body);
         }
 
         return $body;
@@ -692,16 +650,16 @@ class Store
             return;
         }
         if ($this->dsn === '') {
-            throw new \RuntimeException('Runtime log ClickHouse connection is not configured');
+            throw new \RuntimeException('Log ClickHouse connection is not configured');
         }
         if ($this->client === null) {
-            throw new \RuntimeException('Runtime log ClickHouse HTTP client is not configured');
+            throw new \RuntimeException('Log ClickHouse HTTP client is not configured');
         }
 
         try {
             $dsn = new DSN($this->dsn);
         } catch (\InvalidArgumentException $exception) {
-            throw new \RuntimeException('Invalid runtime log ClickHouse DSN: ' . $exception->getMessage(), previous: $exception);
+            throw new \RuntimeException('Invalid log ClickHouse DSN: ' . $exception->getMessage(), previous: $exception);
         }
 
         $this->host = $dsn->getHost();
@@ -721,14 +679,14 @@ class Store
         return $this->database;
     }
 
-    private function table(): string
+    private function quotedTable(): string
     {
-        return $this->identifier($this->database()) . '.' . $this->identifier(self::TABLE);
+        return $this->identifier($this->database()) . '.' . $this->identifier($this->table);
     }
 
     private function relation(): string
     {
-        return $this->database() . '.' . self::TABLE;
+        return $this->database() . '.' . $this->table;
     }
 
     private function identifier(string $value): string
@@ -772,6 +730,6 @@ class Store
 
     private function client(): ClientInterface
     {
-        return $this->client ?? throw new \RuntimeException('Runtime log ClickHouse HTTP client is not configured');
+        return $this->client ?? throw new \RuntimeException('Log ClickHouse HTTP client is not configured');
     }
 }
