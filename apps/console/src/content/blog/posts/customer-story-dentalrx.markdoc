@@ -1,0 +1,152 @@
+---
+layout: post
+title: How DentalRx replaced Firebase and Algolia with Appwrite
+description: Learn how pharmacist Nickolas Steel moved DentalRx from Firebase and Algolia to Postgres on Appwrite to run a free drug reference for 6,000+ dental users.
+date: 2026-10-30
+cover: /images/blog/customer-story-dentalrx/cover.avif
+timeToRead: 7
+author: aditya-oberai
+category: customer-stories
+featured: false
+callToAction: true
+faqs:
+  - question: "What is DentalRx?"
+    answer: "DentalRx is a free drug reference app for dentists and dental students, built by clinical pharmacist Nickolas Steel and focused on Canada. It includes brand and generic drug search, dental-specific drug interactions, treatment guidelines, drug monographs, dosing calculators, and a medication history tool that produces printable patient summaries. It is available on iOS, Android, and the web."
+  - question: "How does DentalRx use Appwrite?"
+    answer: "DentalRx runs on Appwrite Cloud in the Toronto region. Its drug database lives in [Appwrite's managed PostgreSQL](/docs/products/databases/postgresql), [Appwrite Functions](/docs/products/functions) run backend logic, [Appwrite Messaging](/docs/products/messaging) sends push notifications through [Firebase Cloud Messaging](/docs/products/messaging/fcm), and the Flutter web app is hosted on [Appwrite Sites](/docs/products/sites). The team is also setting up [Appwrite Firewall](/docs/products/firewall) rules, starting from the Console's built-in rule presets."
+  - question: "Why did DentalRx move its drug database from Firebase to Postgres?"
+    answer: "Drug databases are relational. Each drug starts as a drug concept, with brand names, generic names, and drug classes attached to it. In Firebase's document model, each drug became a static document with subdocuments, and searching a large drug database was expensive enough that DentalRx synced its data to Algolia. Postgres models those relationships directly and handles search itself, which let DentalRx drop Algolia entirely."
+  - question: "Can Postgres replace Algolia for search in an app?"
+    answer: "For many apps, yes. DentalRx replaced Algolia with a Postgres search extension, and its founder has not noticed any lag, even though Postgres is slower on paper than Algolia's few-millisecond responses. [Appwrite's managed PostgreSQL](/docs/products/databases/postgresql) supports [extensions](/docs/products/databases/postgresql/extensions) such as `pg_trgm` for fuzzy search at no extra cost. A dedicated search service can still be worth it at very large scale, or when search relevance tuning is a product in itself."
+  - question: "How do I migrate from Firebase to Appwrite?"
+    answer: "Appwrite includes a Firebase migration that imports Firestore data, users, and storage files using a Firebase service account. You run it from the migration wizard in the Appwrite Console. Functions are not migrated automatically, and only top-level Firestore data is imported, so review the [Firebase migration guide](/docs/advanced/migrations/firebase) and its limitations before you start."
+  - question: "Can I host a Flutter web app on Appwrite Sites?"
+    answer: "Yes. [Appwrite Sites](/docs/products/sites) supports Flutter Web. DentalRx builds its Flutter app as a static web build and hosts it on Sites, while the same codebase ships to the App Store and Google Play. Follow the [Flutter quick start for Sites](/docs/products/sites/quick-start/flutter) to deploy your own, or [sign up for Appwrite Cloud](/sign-in) to get started."
+---
+
+From the outside, most medical apps look simple: a search bar, a few lists, a printable report. Nickolas Steel knows the hard part sits underneath, in the drug database.
+
+Nickolas is a clinically trained pharmacist with more than ten years of hospital experience. Their day job is in hospital informatics, managing the hospital's drug database and the backend engineering around it. [DentalRx](https://dentalrx.ca/dental-app) is what that expertise looks like with a simple front end built for dentistry.
+
+> "The front end is easy enough. The hard part is all the database and compliance."
+
+Today, DentalRx is a free drug reference used by over 6,000 dentists, dental students, and practices, most of them in Canada. It runs on Appwrite, and its move from Firebase and Algolia to Postgres on Appwrite is what made the next generation of its features possible.
+
+# The challenge
+
+Nickolas grew up close to dentistry. A parent is a dental hygienist, and other relatives work in the field. Add a pharmacy background, and the idea was straightforward: dentists treat patients who take all kinds of medications, and they should be able to understand a drug before they prescribe it or work on a patient who takes it.
+
+Building that reference is a database problem first. Most drug databases, including the hospital systems Nickolas manages, are organized around a **drug concept**. Brand names, generic names, and drug classes are separate tables attached to that concept. A single drug ends up as a web of relationships, and those relationships also change across borders. Canada and the United States have different regulations and drug classifications, and brand names vary from country to country.
+
+> "Postgres is the gold standard of how drug databases are set up."
+
+DentalRx did not start there. The first version was built on FlutterFlow, with Firebase as the database and Algolia synced alongside it for search. That stack shipped the product, but it did not fit the data.
+
+# What is DentalRx?
+
+DentalRx gives dentists and dental students a fast, dental-focused way to look up medications and act on what they find. It runs on the web and as a mobile app for iOS and Android.
+
+DentalRx is free. Nickolas treats it as a contribution to the dental and healthcare community, in the same spirit as clinicians who publish research and resources to move their field forward.
+
+> "This is quite literally a gesture of goodwill and a free resource for the healthcare field."
+
+![DentalRx home screen with quick search for medications and guidelines, and clinic workflows](/images/blog/customer-story-dentalrx/home.avif "contain")
+
+## Drug search
+
+Search is what most dentists use DentalRx for. When a patient is taking an unfamiliar drug, a dentist can look it up by generic or brand name and see its use and drug class, its brand names, dental-specific drug interactions, and dental pearls: short, practical notes to keep in mind before treatment.
+
+![DentalRx search result for amoxicillin with drug class, dental drug interactions, and dental pearls](/images/blog/customer-story-dentalrx/drug-search.avif "contain")
+
+## Treatment guidelines
+
+Practice guidelines cover how to treat common conditions in dentistry, from dry socket to odontogenic infections. Each one has a quick chairside summary and a detailed view with references. Dental students use them the most, since experienced dentists rarely need to look everything up.
+
+![DentalRx treatment guideline for odontogenic infections and abscess in the chairside view](/images/blog/customer-story-dentalrx/guidelines.avif "contain")
+
+## Drug monographs
+
+Monographs cover commonly prescribed dental medications, grouped into categories like anesthetics, analgesics, and antibiotics. Each one lists indications and dosing for different patients, such as a healthy adult, a child, or someone with kidney or liver disease.
+
+![DentalRx monograph for amoxicillin with dosing for adults, children, and patients with kidney or liver disease](/images/blog/customer-story-dentalrx/monograph.avif "contain")
+
+## Dose calculators
+
+Calculators work out weight-based doses for children and maximum local anesthetic doses, so a dentist doesn't have to do the math chairside.
+
+![DentalRx pediatric dose calculator showing an amoxicillin prophylaxis dose for a 20 kg patient](/images/blog/customer-story-dentalrx/calculator.avif "contain")
+
+## Medication history
+
+Dentists can enter all of a patient's medications, check them for dental interactions in one pass, and print a summary for their practice management system or for the patient.
+
+![DentalRx patient medication history checking ramipril, zopiclone, and sertraline for dental interactions](/images/blog/customer-story-dentalrx/med-history.avif "contain")
+
+## DentalRx on mobile
+
+The iOS and Android apps carry the same tools, with the clinic dashboard, search, and calculators in a bottom navigation bar, so a dentist can look up a drug or work out a maximum anesthetic dose from their phone.
+
+![DentalRx mobile app showing the clinic home screen, quick search, and the maximum anesthetic dose calculator](/images/blog/customer-story-dentalrx/mobile.avif "contain")
+
+# Building DentalRx with Appwrite
+
+## Leaving FlutterFlow and Firebase behind
+
+FlutterFlow let the team export the app's code, and with today's AI tooling, Nickolas could take full ownership of that codebase. The next step was to find a more mature backend than Firebase.
+
+Two things pointed to Appwrite. Nickolas cares about open source and about owning the data, and Appwrite offered a [migration path from Firebase](/docs/advanced/migrations/firebase). The team never evaluated other Postgres providers like Supabase or Neon. The migration path brought them to Appwrite, and Appwrite's open-source foundation made it an easy decision.
+
+> "I'm really into open source and being able to own all the data, and Appwrite was just the natural choice there."
+
+The first move kept the same shape as before. Drugs became rows in Appwrite, and Algolia still handled search.
+
+## Modeling drugs as concepts with Postgres
+
+The second move is the one that changed the product. DentalRx now keeps its drug database in [Appwrite's managed PostgreSQL](/docs/products/databases/postgresql), in the Toronto region, close to its Canadian users.
+
+In Firebase, every drug was a document with its own subdocuments. Nickolas describes that as static: each drug is a single record, not part of the dynamic web that Postgres allows. In Postgres, DentalRx models drugs the way hospital databases do, with a drug concept at the center and brand names, generic names, and classes attached as related tables.
+
+That structure shows up in every search. Typing "amoxic" returns each matching drug concept with all of its brand names attached, so a dentist finds the right drug whether they know it as amoxicillin, Amoxil, or Novamoxin.
+
+![DentalRx search results for amoxic showing amoxicillin and related drugs with their brand names](/images/blog/customer-story-dentalrx/search-results.avif "contain")
+
+## Replacing Algolia with Postgres search
+
+Every medical app needs a search bar, and DentalRx is no exception. On Firebase, searching through a large drug database document by document was cost-prohibitive, which is why the team paid for Algolia and kept it in sync.
+
+With Postgres, search moved into the database. Nickolas added a Postgres search [extension](/docs/products/databases/postgresql/extensions) and removed Algolia from the stack completely. The only concern was speed. Algolia answers in a few milliseconds, and Postgres is slower on paper.
+
+> "At first I was actually worried that you would be able to notice the lag for Postgres versus Algolia. But honestly, I don't notice at all. It literally is everything that I wanted for the database."
+
+DentalRx now has one less vendor and one less sync job to maintain. A dedicated search service may make sense at a much larger scale, but at DentalRx's size there is no reason to over-engineer before then.
+
+## Closing search gaps with AI
+
+Postgres also opened up a new way to grow the database. DentalRx is built for Canada, but people from other countries still find their way to it, and their searches often use local brand names that are not linked to any drug concept yet.
+
+The plan is to log every search in its own table and send the misses to an AI routine built on Claude. If someone searches for an Indian brand name, for example, the routine works out which drug concept it belongs to and adds the match to a queue. The team approves it, the brand name is attached to the concept, and the next person who searches for it finds the drug. International users end up helping build the database out, one search at a time.
+
+## Running the rest of DentalRx on Appwrite
+
+Beyond the database, DentalRx uses almost every Appwrite product. The only one it skips is Realtime, because the app does not need it.
+
+- **[Appwrite Functions](/docs/products/functions)** for backend logic
+- **[Appwrite Messaging](/docs/products/messaging)** for push notifications, delivered through [Firebase Cloud Messaging](/docs/products/messaging/fcm)
+- **[Appwrite Sites](/docs/products/sites)** to host the Flutter web app as a static build, while the same Flutter codebase ships to the App Store and Google Play
+- **[Appwrite Firewall](/docs/products/firewall)**, which the team has started setting up with the Console's built-in rule presets for common cases like OTP abuse protection, regional compliance, and scraping prevention
+
+Domains are the last piece. DentalRx still manages most of its domains on Cloudflare, and Nickolas plans to bring them into Appwrite so the entire stack lives in one place. That matters for how Nickolas works: with the [Appwrite CLI](/docs/tooling/command-line/installation), an AI agent can make changes across the project without leaving the editor.
+
+> "I can literally just point the agent to the CLI and be like, hey, make these changes, go ahead and do what you're scoped to do, and it'll just do it. Then I can just keep my work to the terminal or keep my work to the IDE."
+
+# DentalRx today
+
+DentalRx has passed **6,000 lifetime users**, a mix of dental students, dental practices, and individual dentists. All of that growth is organic. The team does no marketing for the app, and new users still sign up every day.
+
+The biggest feature on the roadmap is prescriptions, which the team switched off temporarily to rebuild on the new Postgres backend. On top of each drug concept, the team is attaching drug strings and order sets, the same building blocks hospitals use for prescribing. The data is ready. What remains is a clinical review of every entry and care around the legal side of prescribing. A business section is also planned, to connect practices with the services side of DentalRx.
+
+Along the way, Nickolas has become one of Appwrite's most vocal advocates, calling it a hidden gem, recommending it to every developer they know, and moving one of DentalRx's clients onto it as well. For a small team, the reason comes down to speed.
+
+> "We're a small team, so every extra SaaS or layer of infrastructure slows down how fast we can ship. With Appwrite, everything we need is already there, so there's nothing between building something and shipping it. If you're bootstrapping your project, or building your startup, that's a huge win."
+
+DentalRx shows what happens when deep domain expertise meets a backend that gets out of the way: a pharmacist built a clinical reference used by thousands, then rebuilt its data layer around the model the medical world already trusts. Learn more about DentalRx by visiting their [website](https://dentalrx.ca/dental-app).
