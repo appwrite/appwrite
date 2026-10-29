@@ -294,7 +294,6 @@ export const ANALYTICS_ACTIONS = {
   'create-api-key': 'Create API Key Clicked',
   'create-org-api-key': 'Create Org API Key Clicked',
   'create-webhook': 'Create Webhook Clicked',
-  'create-alert-rule': 'Create Alert Rule Clicked',
   'add-project-domain': 'Add Project Domain Clicked',
   'add-platform': 'Add Platform Clicked',
   'create-firewall-rule': 'Create Firewall Rule Clicked',

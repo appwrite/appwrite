@@ -1,28 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router'
-import {
-  alertRulesQueryOptions,
-  projectQueryOptions,
-} from '@/lib/react-query/hooks'
-import { View } from '@/components/pages/projects/$projectId/settings/View'
-import { pageTitle } from '@/lib/utils/page-title'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
+/** Alert rules moved next to the usage they watch. */
 export const Route = createFileRoute(
   '/_public/projects/$projectId/settings/alerts',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Alerts', 'Settings') }] }),
-  loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') return
-
-    const { projectId } = params
-    const { queryClient } = context
-
-    // Region must be cached before the project-scoped alerts call.
-    await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    await queryClient.ensureQueryData(alertRulesQueryOptions(projectId))
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      to: '/projects/$projectId/usage/alerts',
+      params: { projectId: params.projectId },
+      replace: true,
+    })
   },
-  component: SettingsAlertsPage,
 })
-
-function SettingsAlertsPage() {
-  return <View />
-}

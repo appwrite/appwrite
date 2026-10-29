@@ -63,12 +63,15 @@ interface CreateAlertProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
+  /** Fields a template or a usage page fills in before the form opens. */
+  initial?: Partial<RuleForm>
 }
 
 export function CreateAlert({
   open,
   onOpenChange,
   projectId,
+  initial,
 }: CreateAlertProps) {
   const t = useT()
   const createMutation = useCreateAlertRule(projectId)
@@ -76,8 +79,8 @@ export function CreateAlert({
   const [secret, setSecret] = useState('')
 
   useEffect(() => {
-    if (!open) setForm(emptyRuleForm())
-  }, [open])
+    if (open) setForm({ ...emptyRuleForm(), ...initial })
+  }, [open, initial])
 
   const error = ruleFormError(form, t)
   const isPending = createMutation.isPending
@@ -89,7 +92,7 @@ export function CreateAlert({
   const handleCreate = (event: React.FormEvent) => {
     event.preventDefault()
     if (error) return
-    createMutation.mutate(ruleInputFromForm(form), {
+    createMutation.mutate(ruleInputFromForm(form, t), {
       onSuccess: (rule) => {
         toast.success(t('Alert rule has been created'))
         onOpenChange(false)
@@ -106,7 +109,7 @@ export function CreateAlert({
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
+        <DialogContent className="sm:max-w-3xl p-0 max-h-[90dvh] flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Create alert rule')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">

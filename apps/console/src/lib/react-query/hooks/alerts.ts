@@ -10,7 +10,13 @@ import {
 } from '@tanstack/react-query'
 import { ID, Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import type { AlertRule, AlertRuleInput } from '@/lib/appwrite/alerts'
+import type {
+  AlertMetric,
+  AlertResourceType,
+  AlertRule,
+  AlertRuleInput,
+} from '@/lib/appwrite/alerts'
+import { fetchAlertSeries, hasSeries } from '@/lib/alerts/series'
 import { DEFAULT_STALE_TIME } from './constants'
 
 /** The API caps a page at 100 rules; the tab lists them all client-side like webhooks. */
@@ -58,6 +64,39 @@ export function useAlertRules(projectId: string | null | undefined) {
     error,
     refetch,
   }
+}
+
+/** The value a rule compares, bucket by bucket, over its chart's range. */
+export function alertSeriesQueryOptions(
+  projectId: string,
+  rule: {
+    metric: AlertMetric
+    resourceType: AlertResourceType
+    resourceId: string
+    window: number
+  },
+) {
+  const { metric, resourceType, resourceId, window } = rule
+  return queryOptions({
+    queryKey: [
+      'alert-series',
+      projectId,
+      metric,
+      resourceType,
+      resourceId,
+      window,
+    ],
+    queryFn: () =>
+      fetchAlertSeries(projectId, { metric, resourceType, resourceId, window }),
+    enabled:
+      !!projectId &&
+      hasSeries(metric) &&
+      (resourceType === 'project' || !!resourceId),
+    staleTime: 5 * 60 * 1000,
+    // Usage storage can answer 503 while ClickHouse is busy; a chart is worth a retry.
+    retry: 2,
+    refetchOnWindowFocus: false,
+  })
 }
 
 export function useCreateAlertRule(projectId: string | null | undefined) {

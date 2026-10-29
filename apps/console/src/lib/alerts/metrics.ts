@@ -115,12 +115,6 @@ export const METRICS: Record<AlertMetric, MetricDefinition> = {
   },
 }
 
-export function metricsFor(resourceType: AlertResourceType): AlertMetric[] {
-  return (Object.keys(METRICS) as AlertMetric[]).filter((metric) =>
-    METRICS[metric].resourceTypes.includes(resourceType),
-  )
-}
-
 export const COMPARATORS: {
   value: AlertComparator
   symbol: string
@@ -134,6 +128,7 @@ export const COMPARATORS: {
 
 /** Units a byte threshold can be typed in (decimal, matching usage pages). */
 export const BYTE_UNITS = [
+  { value: 'KB', bytes: 1e3 },
   { value: 'MB', bytes: 1e6 },
   { value: 'GB', bytes: 1e9 },
   { value: 'TB', bytes: 1e12 },
