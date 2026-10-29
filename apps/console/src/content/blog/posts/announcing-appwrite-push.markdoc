@@ -43,7 +43,13 @@ Today we're announcing **Appwrite Push**, a push provider built into [Appwrite M
 
 ## 1. Add the provider
 
-In the Console, go to **Messaging** > **Providers** > **Create provider** > **Push notification**, choose **Appwrite**, and name it. That's all the configuration there is.
+![The Add provider page in the Appwrite Console, with Appwrite listed under Push next to FCM and APNs](/images/blog/announcing-appwrite-push/appwrite-provider-picker.avif)
+
+In the Console, go to **Messaging** > **Providers** > **Create provider** and choose **Appwrite** under **Push**.
+
+![The Configure Appwrite form in the Appwrite Console, with the provider named Appwrite Push](/images/blog/announcing-appwrite-push/appwrite-provider-form.avif)
+
+Give the provider a name and click **Create provider**. There are no credentials to add, and quality of service and message expiry are optional.
 
 ## 2. Subscribe in your app
 
