@@ -1,12 +1,42 @@
-import { ArrowUpRight, Bell, Database, HardDrive, Network } from 'lucide-react'
+import { Bell, Database, HardDrive, Network } from 'lucide-react'
 import type { ComponentType } from 'react'
 import {
   ProductEmptyStateCreateButton,
   ProductEmptyStateHero,
   ProductEmptyStateVisual,
 } from '@/components/global/shared/ProductEmptyState'
+import {
+  METRICS,
+  formatMetricValue,
+  fromBytes,
+  suggestThreshold,
+  toBytes,
+} from '@/lib/alerts/metrics'
 import { useT } from '@/lib/i18n/translate'
 import { PRESETS, type AlertPreset } from './presets'
+import { useRuleSeries } from './RuleChart'
+
+const WEEK = 7 * 86400
+
+/** A template with a threshold taken from the project's last week, when it has any. */
+function suggested(
+  preset: AlertPreset,
+  observed: number | null,
+): { form: AlertPreset['form']; threshold: number } {
+  const metric = preset.form.metric!
+  const bytes = METRICS[metric].unit === 'bytes'
+  const fallback = bytes
+    ? toBytes(preset.form.threshold ?? 0, preset.form.byteUnit ?? 'GB')
+    : (preset.form.threshold ?? 0)
+  const threshold =
+    observed === null || observed <= 0 ? fallback : suggestThreshold(observed)
+  if (!bytes) return { form: { ...preset.form, threshold }, threshold }
+  const { amount, unit } = fromBytes(threshold)
+  return {
+    form: { ...preset.form, threshold: amount, byteUnit: unit },
+    threshold,
+  }
+}
 
 const PRESET_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   'egress-spike': Network,
@@ -62,12 +92,81 @@ function AlertsVisual() {
   )
 }
 
+function PresetCard({
+  projectId,
+  preset,
+  disabled,
+  onPick,
+}: {
+  projectId: string
+  preset: AlertPreset
+  disabled: boolean
+  onPick: (preset: AlertPreset) => void
+}) {
+  const t = useT()
+  const metric = preset.form.metric!
+  const counter = METRICS[metric].counter
+  const window = preset.form.window ?? 3600
+  const { data } = useRuleSeries(
+    projectId,
+    {
+      metric,
+      resourceType: 'project',
+      resourceId: '',
+      window,
+      comparator: 'greaterThan',
+      threshold: 0,
+    },
+    true,
+    WEEK,
+  )
+  const observed =
+    data && data.length > 0
+      ? counter
+        ? Math.max(...data.map((point) => point.value))
+        : data[data.length - 1].value
+      : null
+  const { form, threshold } = suggested(preset, observed)
+  const Icon = PRESET_ICONS[preset.id] ?? Bell
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onPick({ ...preset, form })}
+      className="group flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 text-start transition-colors hover:border-foreground/20 hover:bg-accent/40 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[13px] font-medium text-foreground">
+          {t(preset.title)}
+        </span>
+        <span className="mt-0.5 block text-[12px] text-muted-foreground">
+          {observed === null || observed <= 0
+            ? t(preset.description)
+            : `${counter ? t('Peak hour') : t('Now')} ${formatMetricValue(metric, observed)}`}
+        </span>
+        <span
+          dir="ltr"
+          className="mt-1.5 inline-block rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-foreground"
+        >
+          &gt; {formatMetricValue(metric, threshold)}
+          {counter && ' / 1 h'}
+        </span>
+      </span>
+    </button>
+  )
+}
+
 export function AlertsEmptyState({
+  projectId,
   onCreate,
   onPreset,
   createDisabled = false,
   createDisabledTooltip,
 }: {
+  projectId: string
   onCreate: () => void
   onPreset: (preset: AlertPreset) => void
   createDisabled?: boolean
@@ -75,7 +174,7 @@ export function AlertsEmptyState({
 }) {
   const t = useT()
   return (
-    <div className="mx-auto w-full max-w-4xl py-6 sm:py-10">
+    <div className="mx-auto w-full max-w-4xl py-4 sm:py-6">
       <ProductEmptyStateHero
         visual={<AlertsVisual />}
         icon={Bell}
@@ -89,40 +188,24 @@ export function AlertsEmptyState({
             disabled={createDisabled}
             disabledTooltip={createDisabledTooltip}
           >
-            {t('Create alert rule')}
+            {t('Create alert')}
           </ProductEmptyStateCreateButton>
         }
       />
-      <div className="mt-12">
-        <p className="mb-3 text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
-          {t('Start from a template')}
+      <div className="mt-8">
+        <p className="mb-3 text-[12px] font-medium text-muted-foreground">
+          {t('Suggested from your last 7 days of usage')}
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
-          {PRESETS.map((preset) => {
-            const Icon = PRESET_ICONS[preset.id] ?? Bell
-            return (
-              <button
-                key={preset.id}
-                type="button"
-                disabled={createDisabled}
-                onClick={() => onPreset(preset)}
-                className="group flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 text-start transition-colors hover:border-foreground/20 hover:bg-accent/40 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] font-medium text-foreground">
-                    {t(preset.title)}
-                  </span>
-                  <span className="mt-0.5 block text-[12px] text-muted-foreground">
-                    {t(preset.description)}
-                  </span>
-                </span>
-                <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-              </button>
-            )
-          })}
+          {PRESETS.map((preset) => (
+            <PresetCard
+              key={preset.id}
+              projectId={projectId}
+              preset={preset}
+              disabled={createDisabled}
+              onPick={onPreset}
+            />
+          ))}
         </div>
       </div>
     </div>

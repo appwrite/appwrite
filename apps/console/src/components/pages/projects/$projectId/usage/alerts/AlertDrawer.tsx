@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Trash2 } from 'lucide-react'
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { formatMetricValue } from '@/lib/alerts/metrics'
+import { Pause, Pencil, Play, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
@@ -14,10 +19,20 @@ import {
 } from '@/components/ui/tooltip'
 import { useUpdateAlertRule } from '@/lib/react-query/hooks'
 import type { AlertRule, AlertRuleInput } from '@/lib/appwrite/alerts'
+import {
+  COMPARATORS,
+  COOLDOWNS,
+  METRICS,
+  WINDOWS,
+  formatMetricValue,
+  thresholdRatio,
+} from '@/lib/alerts/metrics'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
-import { StatusPill } from './StatusPill'
+import { cn } from '@/lib/utils'
+import { RuleChart } from './RuleChart'
+import { StatusPill, ruleState } from './StatusPill'
 import {
   RuleFields,
   emptyRuleForm,
@@ -26,6 +41,9 @@ import {
   ruleInputFromForm,
   type RuleForm,
 } from './RuleFields'
+
+/** A check older than this means the scheduler has stopped evaluating the rule. */
+const STALE_AFTER_MS = 60 * 60 * 1000
 
 /** Fields of `next` that differ from `previous`, so the update stays sparse. */
 function changedFields(
@@ -47,57 +65,77 @@ function changedFields(
   return changes
 }
 
-/** Where the rule stood at its last check. */
+function Stat({
+  label,
+  value,
+  note,
+  hot = false,
+}: {
+  label: string
+  value: React.ReactNode
+  note?: React.ReactNode
+  hot?: boolean
+}) {
+  return (
+    <div className="min-w-0 bg-card px-4 py-3">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p
+        className={cn(
+          'mt-0.5 truncate text-[22px] font-semibold leading-tight tabular-nums',
+          hot ? 'text-red-500' : 'text-foreground',
+        )}
+      >
+        {value}
+      </p>
+      {note && (
+        <p className="truncate text-[12px] text-muted-foreground">{note}</p>
+      )}
+    </div>
+  )
+}
+
+/** What the rule last measured and when it started firing. */
 function RuleStatus({ rule }: { rule: AlertRule }) {
   const t = useT()
-  const firing = rule.enabled && rule.status === 'firing'
-  const items = [
-    {
-      label: t('Status'),
-      value: <StatusPill status={!rule.enabled ? 'paused' : rule.status} />,
-    },
-    {
-      label: t('Last value'),
-      value: (
-        <span
-          className={
-            firing ? 'font-medium text-red-500' : 'font-medium text-foreground'
-          }
-        >
-          {rule.value === null
-            ? '-'
-            : formatMetricValue(rule.metric, rule.value)}
-        </span>
-      ),
-    },
-    {
-      label: t('Last checked'),
-      value: rule.evaluatedAt ? (
-        <DateTooltip date={rule.evaluatedAt} />
-      ) : (
-        <span className="text-muted-foreground">{t('Never')}</span>
-      ),
-    },
-    {
-      label: t('Last fired'),
-      value: rule.triggeredAt ? (
-        <DateTooltip date={rule.triggeredAt} />
-      ) : (
-        <span className="text-muted-foreground">{t('Never')}</span>
-      ),
-    },
-  ]
+  const firing = ruleState(rule) === 'firing'
+  const ratio = firing ? thresholdRatio(rule) : null
+  const threshold = formatMetricValue(rule.metric, rule.threshold)
   return (
-    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4">
-      {items.map((item) => (
-        <div key={item.label} className="bg-card px-4 py-3">
-          <dt className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            {item.label}
-          </dt>
-          <dd className="mt-1 text-[13px]">{item.value}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-[1.3fr_1fr]">
+      <Stat
+        label={t('Last value')}
+        value={
+          rule.value === null ? '–' : formatMetricValue(rule.metric, rule.value)
+        }
+        note={
+          rule.value === null
+            ? t('Waiting for the first check')
+            : ratio
+              ? t('{ratio} the {threshold} threshold')
+                  .replace('{ratio}', ratio)
+                  .replace('{threshold}', threshold)
+              : t('Threshold {threshold}').replace('{threshold}', threshold)
+        }
+        hot={firing}
+      />
+      <Stat
+        label={firing ? t('Firing since') : t('Last fired')}
+        value={
+          rule.triggeredAt ? (
+            <DateTooltip date={rule.triggeredAt} />
+          ) : (
+            <span className="text-muted-foreground">{t('Never')}</span>
+          )
+        }
+        note={
+          rule.evaluatedAt ? (
+            <>
+              {t('Checked')} <DateTooltip date={rule.evaluatedAt} />
+            </>
+          ) : undefined
+        }
+      />
+    </div>
   )
 }
 
@@ -122,26 +160,24 @@ export function AlertDrawer({
   const t = useT()
   const updateMutation = useUpdateAlertRule(projectId)
   const [form, setForm] = useState<RuleForm>(emptyRuleForm)
-  const [enabled, setEnabled] = useState(true)
+  // The drawer opens on what the rule does; the form is one click away.
+  const [editing, setEditing] = useState(false)
   const isPending = updateMutation.isPending
-  const locked = isPending || readOnly
 
   useEffect(() => {
     if (open && rule) {
       setForm(ruleFormFromRule(rule))
-      setEnabled(rule.enabled)
+      setEditing(false)
     }
   }, [open, rule])
 
   const changes = useMemo(() => {
     if (!rule) return {}
-    const diff = changedFields(
+    return changedFields(
       ruleInputFromForm(ruleFormFromRule(rule), t),
       ruleInputFromForm(form, t),
     )
-    if (enabled !== rule.enabled) diff.enabled = enabled
-    return diff
-  }, [rule, form, enabled, t])
+  }, [rule, form, t])
 
   const error =
     ruleFormError(form, t) ??
@@ -159,11 +195,28 @@ export function AlertDrawer({
       {
         onSuccess: () => {
           toast.success(t('Alert rule has been updated'))
-          onOpenChange(false)
+          setEditing(false)
         },
         onError: (err: Error) => {
           toast.error(getErrorMessage(err, t('Failed to update alert rule')))
         },
+      },
+    )
+  }
+
+  const handleToggle = () => {
+    if (!rule) return
+    updateMutation.mutate(
+      { ruleId: rule.$id, changes: { enabled: !rule.enabled } },
+      {
+        onSuccess: () =>
+          toast.success(
+            rule.enabled
+              ? t('Alert rule has been paused')
+              : t('Alert rule has been resumed'),
+          ),
+        onError: (err: Error) =>
+          toast.error(getErrorMessage(err, t('Failed to update alert rule'))),
       },
     )
   }
@@ -174,109 +227,200 @@ export function AlertDrawer({
     openDialogAfterOverlayCloses(() => onDelete(rule))
   }
 
+  const stale =
+    !!rule?.enabled &&
+    !!rule.evaluatedAt &&
+    Date.now() - new Date(rule.evaluatedAt).getTime() > STALE_AFTER_MS
+
+  const condition = rule
+    ? [
+        t(METRICS[rule.metric]?.label ?? rule.metric),
+        COMPARATORS.find((entry) => entry.value === rule.comparator)?.symbol,
+        formatMetricValue(rule.metric, rule.threshold),
+        METRICS[rule.metric]?.counter
+          ? `${t('within')} ${t(WINDOWS.find((entry) => entry.value === rule.window)?.label ?? `${rule.window}s`)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' ')
+    : ''
+  const cooldown = rule
+    ? COOLDOWNS.find((entry) => entry.value === rule.cooldown)?.label
+    : undefined
+
+  const headerActions =
+    rule && !readOnly ? (
+      <div className="flex items-center gap-1.5">
+        <StatusPill status={ruleState(rule)} />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8"
+          onClick={handleToggle}
+          disabled={isPending}
+        >
+          {rule.enabled ? (
+            <Pause className="me-1.5 h-3.5 w-3.5" />
+          ) : (
+            <Play className="me-1.5 h-3.5 w-3.5" />
+          )}
+          {rule.enabled ? t('Pause') : t('Resume')}
+        </Button>
+        {!editing && (
+          <Button
+            type="button"
+            size="sm"
+            className="h-8"
+            onClick={() => setEditing(true)}
+          >
+            <Pencil className="me-1.5 h-3.5 w-3.5" />
+            {t('Edit')}
+          </Button>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <RowActionsMenuTrigger
+              aria-label={`${t('Actions for')} ${rule.name}`}
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={handleRequestDelete}
+            >
+              <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    ) : rule ? (
+      <StatusPill status={ruleState(rule)} />
+    ) : null
+
   return (
     <BaseDrawer
       open={open}
       onOpenChange={handleOpenChange}
       title={rule?.name ?? t('Alert rule')}
       maxWidth="sm:max-w-3xl"
+      headerActions={headerActions}
     >
       <>
         <div className="border-t border-border shrink-0" />
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 overflow-y-auto">
-            <div className="space-y-6 px-6 py-6">
-              {rule && <RuleStatus rule={rule} />}
-
-              <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card/50 px-4 py-3">
-                <div>
-                  <Label
-                    htmlFor="alert-enabled"
-                    className="text-[13px] font-medium"
-                  >
-                    {t('Active')}
-                  </Label>
-                  <p className="mt-1 text-[12px] text-muted-foreground">
-                    {t('Paused rules are not checked and never notify.')}
-                  </p>
-                </div>
-                <Switch
-                  id="alert-enabled"
-                  checked={enabled}
-                  onCheckedChange={setEnabled}
-                  disabled={locked}
-                />
-              </div>
-
+        {editing && rule ? (
+          <form
+            onSubmit={handleSubmit}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <div className="flex-1 overflow-y-auto px-6 py-6">
               <RuleFields
                 projectId={projectId}
                 form={form}
                 onChange={(next) =>
                   setForm((current) => ({ ...current, ...next }))
                 }
-                disabled={locked}
+                disabled={isPending}
               />
+            </div>
+            <div className="flex flex-shrink-0 items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
+              {error ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <Button type="submit" disabled>
+                        {t('Update')}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{error}</TooltipContent>
+                </Tooltip>
+              ) : (
+                <Button type="submit" disabled={isPending}>
+                  {t('Update')}
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setForm(ruleFormFromRule(rule))
+                  setEditing(false)
+                }}
+                disabled={isPending}
+              >
+                {t('Cancel')}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          rule && (
+            <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+              <RuleStatus rule={rule} />
 
-              {!readOnly && (
-                <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      {t('Delete alert rule')}
-                    </h3>
-                  </div>
-                  <div className="border-t border-destructive/20" />
-                  <div className="px-6 py-4">
-                    <p className="text-[13px] text-muted-foreground">
-                      {t(
-                        'Permanently delete this rule. It stops evaluating immediately. This action cannot be undone.',
-                      )}
-                    </p>
-                  </div>
-                  <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      onClick={handleRequestDelete}
-                      disabled={isPending}
-                    >
-                      <Trash2 className="me-1.5 h-4 w-4" />
-                      {t('Delete alert rule')}
-                    </Button>
-                  </div>
+              {stale && (
+                <div className="flex items-start gap-2.5 rounded-lg bg-amber-500/15 px-3 py-2.5 text-[12.5px] text-foreground">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-600 text-[11px] font-bold text-background">
+                    !
+                  </span>
+                  <span>
+                    {t('Last checked')}{' '}
+                    <DateTooltip date={rule.evaluatedAt as string} />.{' '}
+                    {t(
+                      'Checks run every few minutes, so this rule is not being evaluated.',
+                    )}
+                  </span>
                 </div>
               )}
-            </div>
-          </div>
 
-          <div className="flex flex-shrink-0 items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
-            {readOnly ? null : error ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex">
-                    <Button type="submit" disabled>
-                      {t('Update')}
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top">{error}</TooltipContent>
-              </Tooltip>
-            ) : (
-              <Button type="submit" disabled={isPending}>
-                {t('Update')}
-              </Button>
-            )}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              disabled={isPending}
-            >
-              {readOnly ? t('Close') : t('Cancel')}
-            </Button>
-          </div>
-        </form>
+              <RuleChart
+                projectId={projectId}
+                rule={{
+                  metric: rule.metric,
+                  resourceType: rule.resourceType,
+                  resourceId: rule.resourceId,
+                  window: rule.window,
+                  comparator: rule.comparator,
+                  threshold: rule.threshold,
+                }}
+              />
+
+              <dl className="grid grid-cols-[110px_1fr] text-[13px]">
+                <dt className="border-t border-border py-2 text-muted-foreground">
+                  {t('Condition')}
+                </dt>
+                <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
+                  {condition}
+                </dd>
+                <dt className="border-t border-border py-2 text-muted-foreground">
+                  {t('Notifies')}
+                </dt>
+                <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
+                  {rule.channels
+                    .map((channel) =>
+                      t(
+                        channel === 'email'
+                          ? 'Email'
+                          : channel === 'console'
+                            ? 'Console'
+                            : 'Webhook',
+                      ),
+                    )
+                    .join(', ')}
+                  {rule.cooldown > 0 && cooldown && (
+                    <span className="text-muted-foreground">
+                      {' · '}
+                      {t('at most once per {cooldown}').replace(
+                        '{cooldown}',
+                        t(cooldown),
+                      )}
+                    </span>
+                  )}
+                </dd>
+              </dl>
+            </div>
+          )
+        )}
       </>
     </BaseDrawer>
   )

@@ -195,3 +195,39 @@ export const COOLDOWNS: { value: number; label: string }[] = [
   { value: 0, label: 'No cooldown' },
   ...WINDOWS,
 ]
+
+/**
+ * How many times over an upper threshold a value is ("12×"), when that says
+ * more than "above": at least twice over. Null otherwise.
+ */
+export function thresholdRatio(rule: {
+  comparator: AlertComparator
+  threshold: number
+  value: number | null
+}): string | null {
+  if (
+    rule.value === null ||
+    rule.threshold <= 0 ||
+    (rule.comparator !== 'greaterThan' &&
+      rule.comparator !== 'greaterThanEqual')
+  ) {
+    return null
+  }
+  const times = rule.value / rule.threshold
+  if (times < 2) return null
+  return `${times < 10 ? parseFloat(times.toFixed(1)) : Math.round(times).toLocaleString('en-US')}×`
+}
+
+/**
+ * The smallest of 1, 2, 3 and 5 times a power of ten that is at least twice
+ * `value`, so a suggestion leaves headroom over what the project already does.
+ */
+export function suggestThreshold(value: number): number {
+  const target = value * 2
+  if (target <= 0) return 0
+  const power = 10 ** Math.floor(Math.log10(target))
+  for (const step of [1, 2, 3, 5, 10]) {
+    if (step * power >= target) return step * power
+  }
+  return 10 * power
+}

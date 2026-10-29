@@ -91,6 +91,32 @@ export class Alerts {
     )
   }
 
+  /** An organization's rules on its billing, where the edition has them. */
+  listOrganizationRules(params: {
+    organizationId: string
+    queries?: string[]
+  }): Promise<AlertRuleList> {
+    const { organizationId, ...rest } = params
+    return this.request(
+      'get',
+      `/organizations/${encodeURIComponent(organizationId)}/alerts/rules`,
+      rest,
+    )
+  }
+
+  updateOrganizationRule(
+    params: { organizationId: string; ruleId: string } & Partial<
+      Pick<AlertRuleInput, 'channels' | 'webhookUrl' | 'enabled'>
+    >,
+  ): Promise<AlertRule> {
+    const { organizationId, ruleId, ...changes } = params
+    return this.request(
+      'put',
+      `/organizations/${encodeURIComponent(organizationId)}/alerts/rules/${encodeURIComponent(ruleId)}`,
+      changes,
+    )
+  }
+
   deleteRule(params: { ruleId: string }): Promise<Record<string, never>> {
     return this.request(
       'delete',

@@ -3648,4 +3648,39 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   on: '対象',
   'the whole project': 'プロジェクト全体',
   within: '期間',
+  'Waiting for the first check': '最初のチェックを待っています',
+  'Would not have fired in the {range}': '{range}には発火しなかったはずです',
+  'Would have fired {count}× in the {range}':
+    '{range}に {count} 回発火したはずです',
+  'History range': '履歴の範囲',
+  'Organization owners': '組織のオーナー',
+  'Name, cooldown': '名前、クールダウン',
+  'Firing since': '発火開始',
+  Checked: 'チェック',
+  '{ratio} the {threshold} threshold': 'しきい値 {threshold} の {ratio}',
+  'Threshold {threshold}': 'しきい値 {threshold}',
+  'Checks run every few minutes, so this rule is not being evaluated.':
+    'チェックは数分ごとに実行されるため、このルールは評価されていません。',
+  Notifies: '通知先',
+  'at most once per {cooldown}': '{cooldown}に最大 1 回',
+  'Peak hour': 'ピーク時間',
+  'Suggested from your last 7 days of usage': '過去 7 日間の使用量からの提案',
+  'Budget alert rules': '予算アラートルール',
+  'Sent when additional usage reaches each threshold. They follow the budget cap and alerts above.':
+    '追加使用量が各しきい値に達すると送信されます。上の予算上限とアラートに従います。',
+  'Edit webhook': 'Webhook を編集',
+  'Add webhook': 'Webhook を追加',
+  'Cap reached': '上限に到達',
+  '{percent}% of {budget}': '{budget} の {percent}%',
+  'Managed by budget': '予算で管理',
+  'Last sent': '最終送信',
+  'Also posted to': '送信先',
+  'Budget alert webhook': '予算アラートの Webhook',
+  'Every budget alert also posts a signed request to this URL. Leave it empty to stop.':
+    'すべての予算アラートは、この URL に署名付きリクエストも送信します。停止するには空にしてください。',
+  'Webhook removed from budget alerts':
+    '予算アラートから Webhook を削除しました',
+  'Budget alerts will also post to the webhook':
+    '予算アラートは Webhook にも送信されます',
+  'Failed to update budget alerts': '予算アラートを更新できませんでした',
 }

@@ -1,12 +1,22 @@
+import type { AlertRule } from '@/lib/appwrite/alerts'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
-export type RuleState = 'firing' | 'ok' | 'paused'
+export type RuleState = 'firing' | 'ok' | 'pending' | 'paused'
+
+/** A rule that has never been checked is pending, not OK: nothing is known about it yet. */
+export function ruleState(
+  rule: Pick<AlertRule, 'enabled' | 'status' | 'evaluatedAt'>,
+): RuleState {
+  if (!rule.enabled) return 'paused'
+  if (!rule.evaluatedAt) return 'pending'
+  return rule.status === 'firing' ? 'firing' : 'ok'
+}
 
 const STYLES: Record<RuleState, { dot: string; text: string; label: string }> =
   {
     firing: {
-      dot: 'bg-red-500 animate-pulse',
+      dot: 'bg-red-500',
       text: 'text-red-600 dark:text-red-400 bg-red-500/10',
       label: 'Firing',
     },
@@ -14,6 +24,11 @@ const STYLES: Record<RuleState, { dot: string; text: string; label: string }> =
       dot: 'bg-emerald-500',
       text: 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10',
       label: 'OK',
+    },
+    pending: {
+      dot: 'border-[1.5px] border-blue-600 dark:border-blue-400',
+      text: 'text-blue-700 dark:text-blue-300 bg-blue-500/10',
+      label: 'Pending',
     },
     paused: {
       dot: 'bg-muted-foreground',

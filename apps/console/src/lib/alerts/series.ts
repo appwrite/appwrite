@@ -38,10 +38,20 @@ const INTERVALS: Record<number, UsageChartInterval> = {
   [DAY]: '1d',
 }
 
-/** Bucket size and history length a rule's chart reads. */
-export function seriesPlan(window: number, counter: boolean): AlertSeriesPlan {
+/** Ranges a rule's chart can show, in seconds. */
+export const SERIES_RANGES = [12 * HOUR, DAY, 7 * DAY, 30 * DAY] as const
+
+/**
+ * Bucket size and history length a rule's chart reads. `range` replaces the
+ * default history length; pick one of `seriesRanges()` so it fits a page.
+ */
+export function seriesPlan(
+  window: number,
+  counter: boolean,
+  range?: number,
+): AlertSeriesPlan {
   if (!counter) {
-    return { interval: '1h', bucket: HOUR, span: 1, range: 7 * DAY }
+    return { interval: '1h', bucket: HOUR, span: 1, range: range ?? 7 * DAY }
   }
   const bucket =
     window >= 7 * DAY
@@ -51,7 +61,7 @@ export function seriesPlan(window: number, counter: boolean): AlertSeriesPlan {
         : window % (15 * MINUTE) === 0
           ? 15 * MINUTE
           : MINUTE
-  const range =
+  const defaultRange =
     bucket === MINUTE
       ? 12 * HOUR
       : bucket === 15 * MINUTE
@@ -63,8 +73,16 @@ export function seriesPlan(window: number, counter: boolean): AlertSeriesPlan {
     interval: INTERVALS[bucket],
     bucket,
     span: Math.max(1, Math.ceil(window / bucket)),
-    range,
+    range: range ?? defaultRange,
   }
+}
+
+/** The ranges whose buckets fit in one usage page for this rule. */
+export function seriesRanges(window: number, counter: boolean): number[] {
+  const { bucket, span } = seriesPlan(window, counter)
+  return SERIES_RANGES.filter(
+    (range) => range / bucket + span <= USAGE_API_MAX_LIMIT,
+  )
 }
 
 /** Each point replaced by the sum of the `span` points ending at it; the first `span - 1` are dropped. */
@@ -234,11 +252,12 @@ export async function fetchAlertSeries(
     window: number
   },
   now: number = Date.now(),
+  range?: number,
 ): Promise<AlertPoint[] | null> {
   const from = source(rule.metric, rule.resourceType, rule.resourceId)
   if (!from) return null
   const counter = METRICS[rule.metric].counter
-  const plan = seriesPlan(rule.window, counter)
+  const plan = seriesPlan(rule.window, counter, range)
   const end = now
   const start = end - plan.range * 1000
   // A counter's first window needs the buckets before the range too.

@@ -1,6 +1,6 @@
-import type { ComponentType, ReactNode } from 'react'
+import { useState, type ComponentType, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Bell, Mail, Webhook } from 'lucide-react'
+import { Bell, Check, ChevronDown, Mail, Webhook } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
@@ -66,7 +66,7 @@ const CHANNELS: {
   {
     value: 'email',
     label: 'Email',
-    description: 'Project owners',
+    description: 'Organization owners',
     icon: Mail,
   },
   {
@@ -359,6 +359,11 @@ export function RuleFields({
     })
   }
 
+  // Folded unless the rule already sets either, so a new rule shows only what it needs.
+  const [optional, setOptional] = useState(
+    form.name !== '' || form.cooldown !== emptyRuleForm().cooldown,
+  )
+
   return (
     <div className="space-y-7">
       <section>
@@ -573,18 +578,26 @@ export function RuleFields({
                 className={cn(
                   'flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-60',
                   selected
-                    ? 'border-primary/60 bg-primary/5'
+                    ? 'border-foreground ring-1 ring-inset ring-foreground'
                     : 'border-border hover:bg-accent/40',
                 )}
               >
-                <Icon
+                <span
+                  aria-hidden
                   className={cn(
-                    'mt-0.5 h-4 w-4 shrink-0',
-                    selected ? 'text-primary' : 'text-muted-foreground',
+                    'mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[4px] border-[1.5px]',
+                    selected
+                      ? 'border-foreground bg-foreground text-background'
+                      : 'border-muted-foreground/60',
                   )}
-                />
+                >
+                  {selected && (
+                    <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                  )}
+                </span>
                 <span>
-                  <span className="block text-[13px] font-medium text-foreground">
+                  <span className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                     {t(channel.label)}
                   </span>
                   <span className="block text-[12px] text-muted-foreground">
@@ -614,45 +627,72 @@ export function RuleFields({
             />
           </div>
         )}
-
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Word>{t('Cooldown')}</Word>
-          <Select
-            value={String(form.cooldown)}
-            onValueChange={(next) => onChange({ cooldown: Number(next) })}
-            disabled={disabled}
-          >
-            <SelectTrigger
-              className="h-9 w-auto min-w-32"
-              aria-label={t('Cooldown')}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {durationOptions(COOLDOWNS, form.cooldown, t).map((option) => (
-                <SelectItem key={option.value} value={String(option.value)}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Word>{t('between two alerts from this rule.')}</Word>
-        </div>
       </section>
 
-      <section>
-        <Label htmlFor="alert-name" className="text-[13px] font-semibold">
-          {t('Name')}
-        </Label>
-        <Input
-          id="alert-name"
-          className="mt-2"
-          placeholder={suggestedName(form, t)}
-          value={form.name}
-          onChange={(event) => onChange({ name: event.target.value })}
-          disabled={disabled}
-          maxLength={128}
-        />
+      <section className="border-t border-border pt-4">
+        <button
+          type="button"
+          onClick={() => setOptional((open) => !open)}
+          aria-expanded={optional}
+          className="flex w-full items-center justify-between text-[13px] text-muted-foreground hover:text-foreground"
+        >
+          <span>{t('Name, cooldown')}</span>
+          <span className="inline-flex items-center gap-1">
+            {t('Optional')}
+            <ChevronDown
+              className={cn(
+                'h-4 w-4 transition-transform',
+                optional && 'rotate-180',
+              )}
+            />
+          </span>
+        </button>
+        {optional && (
+          <div className="mt-4 space-y-4">
+            <div>
+              <Label htmlFor="alert-name" className="text-[13px] font-semibold">
+                {t('Name')}
+              </Label>
+              <Input
+                id="alert-name"
+                className="mt-2"
+                placeholder={suggestedName(form, t)}
+                value={form.name}
+                onChange={(event) => onChange({ name: event.target.value })}
+                disabled={disabled}
+                maxLength={128}
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Word>{t('Cooldown')}</Word>
+              <Select
+                value={String(form.cooldown)}
+                onValueChange={(next) => onChange({ cooldown: Number(next) })}
+                disabled={disabled}
+              >
+                <SelectTrigger
+                  className="h-9 w-auto min-w-32"
+                  aria-label={t('Cooldown')}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {durationOptions(COOLDOWNS, form.cooldown, t).map(
+                    (option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={String(option.value)}
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+              <Word>{t('between two alerts from this rule.')}</Word>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   )

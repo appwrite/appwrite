@@ -5,14 +5,12 @@ import {
   Copy,
   FileJson,
   Loader2,
-  Mail,
   Pencil,
   Plus,
   Power,
   PowerOff,
   Search,
   Trash2,
-  Webhook,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -62,6 +60,7 @@ import {
   RESOURCE_TYPES,
   WINDOWS,
   formatMetricValue,
+  thresholdRatio,
 } from '@/lib/alerts/metrics'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -76,19 +75,19 @@ import { AlertDrawer } from './AlertDrawer'
 import { CreateAlert } from './CreateAlert'
 import type { RuleForm } from './RuleFields'
 import { RuleSparkline } from './RuleChart'
-import { StatusPill, type RuleState } from './StatusPill'
+import { StatusPill, ruleState, type RuleState } from './StatusPill'
 
-const STATE_ORDER: Record<RuleState, number> = { firing: 0, ok: 1, paused: 2 }
-
-const CHANNEL_ICONS: Record<AlertChannel, typeof Mail> = {
-  email: Mail,
-  console: Bell,
-  webhook: Webhook,
+const STATE_ORDER: Record<RuleState, number> = {
+  firing: 0,
+  pending: 1,
+  ok: 2,
+  paused: 3,
 }
 
-function ruleState(rule: AlertRule): RuleState {
-  if (!rule.enabled) return 'paused'
-  return rule.status === 'firing' ? 'firing' : 'ok'
+const CHANNEL_LABELS: Record<AlertChannel, string> = {
+  email: 'Email',
+  console: 'Console',
+  webhook: 'Webhook',
 }
 
 type Filter = 'all' | RuleState
@@ -191,6 +190,7 @@ export function Alerts({
     const result: Record<Filter, number> = {
       all: rules.length,
       firing: 0,
+      pending: 0,
       ok: 0,
       paused: 0,
     }
@@ -305,6 +305,7 @@ export function Alerts({
     <div>
       {rules.length === 0 ? (
         <AlertsEmptyState
+          projectId={projectId}
           onCreate={() => openCreate()}
           onPreset={(preset) => openCreate(preset.form)}
           createDisabled={createDisabled}
@@ -318,35 +319,39 @@ export function Alerts({
               aria-label={t('Filter alert rules')}
               className="flex flex-wrap gap-1.5"
             >
-              {(['all', 'firing', 'ok', 'paused'] as Filter[]).map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  role="tab"
-                  aria-selected={filter === key}
-                  onClick={() => setFilter(key)}
-                  className={cn(
-                    'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[12px] font-medium transition-colors',
-                    filter === key
-                      ? 'border-foreground/20 bg-accent text-foreground'
-                      : 'border-border text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {key === 'firing' && counts.firing > 0 && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                  )}
-                  {key === 'all'
-                    ? t('All')
-                    : key === 'firing'
-                      ? t('Firing')
-                      : key === 'ok'
-                        ? t('OK')
-                        : t('Paused')}
-                  <span className="tabular-nums text-muted-foreground">
-                    {counts[key]}
-                  </span>
-                </button>
-              ))}
+              {(['all', 'firing', 'ok', 'pending', 'paused'] as Filter[]).map(
+                (key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={filter === key}
+                    onClick={() => setFilter(key)}
+                    className={cn(
+                      'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[12px] font-medium transition-colors',
+                      filter === key
+                        ? 'border-foreground/20 bg-accent text-foreground'
+                        : 'border-border text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {key === 'firing' && counts.firing > 0 && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                    )}
+                    {key === 'all'
+                      ? t('All')
+                      : key === 'firing'
+                        ? t('Firing')
+                        : key === 'ok'
+                          ? t('OK')
+                          : key === 'pending'
+                            ? t('Pending')
+                            : t('Paused')}
+                    <span className="tabular-nums text-muted-foreground">
+                      {counts[key]}
+                    </span>
+                  </button>
+                ),
+              )}
             </div>
             <div className="flex items-center gap-2">
               <div className="relative flex-1 sm:w-64 sm:flex-none">
@@ -377,6 +382,11 @@ export function Alerts({
             <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
               {filtered.map((rule) => {
                 const state = ruleState(rule)
+                const named = !sentence(rule).startsWith(rule.name)
+                const ratio =
+                  state === 'firing' && rule.value !== null
+                    ? thresholdRatio(rule)
+                    : null
                 return (
                   <li
                     key={rule.$id}
@@ -387,15 +397,24 @@ export function Alerts({
                     )}
                     onClick={() => handleOpen(rule)}
                   >
-                    <StatusPill status={state} className="w-[72px] shrink-0" />
+                    <StatusPill status={state} className="w-[76px] shrink-0" />
                     <div className="min-w-0 flex-1">
+                      {/* A name that only repeats the condition is shown once, as the condition. */}
                       <p className="truncate text-[13px] font-medium text-foreground">
-                        {rule.name}
+                        {named ? rule.name : sentence(rule)}
                       </p>
                       <p className="truncate text-[12px] text-muted-foreground">
-                        {sentence(rule)}
-                        <span className="mx-1.5">·</span>
+                        {named && (
+                          <>
+                            {sentence(rule)}
+                            <span className="mx-1.5">·</span>
+                          </>
+                        )}
                         {scope(rule)}
+                        <span className="mx-1.5">·</span>
+                        {rule.channels
+                          .map((channel) => t(CHANNEL_LABELS[channel]))
+                          .join(', ')}
                       </p>
                     </div>
                     <RuleSparkline
@@ -406,7 +425,7 @@ export function Alerts({
                         state === 'paused' && 'opacity-50',
                       )}
                     />
-                    <div className="hidden w-28 shrink-0 text-end sm:block">
+                    <div className="hidden w-32 shrink-0 text-end sm:block">
                       <p
                         className={cn(
                           'text-[13px] font-medium tabular-nums',
@@ -415,29 +434,29 @@ export function Alerts({
                             : 'text-foreground',
                         )}
                       >
-                        {rule.value === null
-                          ? '-'
+                        {rule.value === null || state === 'pending'
+                          ? '–'
                           : formatMetricValue(rule.metric, rule.value)}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
-                        {rule.evaluatedAt ? (
-                          <DateTooltip date={rule.evaluatedAt} />
+                        {state === 'pending' ? (
+                          t('Waiting for the first check')
                         ) : (
-                          t('Not checked yet')
+                          <>
+                            {ratio && (
+                              <span className="text-red-500">
+                                {ratio}
+                                <span className="mx-1 text-muted-foreground">
+                                  ·
+                                </span>
+                              </span>
+                            )}
+                            {rule.evaluatedAt && (
+                              <DateTooltip date={rule.evaluatedAt} />
+                            )}
+                          </>
                         )}
                       </p>
-                    </div>
-                    <div className="hidden w-16 shrink-0 items-center justify-end gap-1.5 text-muted-foreground lg:flex">
-                      {rule.channels.map((channel) => {
-                        const Icon = CHANNEL_ICONS[channel]
-                        return (
-                          <Icon
-                            key={channel}
-                            className="h-3.5 w-3.5"
-                            aria-label={channel}
-                          />
-                        )
-                      })}
                     </div>
                     <div
                       className="flex shrink-0 justify-end"

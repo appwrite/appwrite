@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Area,
   AreaChart,
   CartesianGrid,
+  ReferenceArea,
   ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
@@ -24,6 +25,7 @@ import {
   firings,
   hasSeries,
   seriesPlan,
+  seriesRanges,
   type AlertPoint,
 } from '@/lib/alerts/series'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
@@ -32,6 +34,7 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const BREACH_COLOR = '#ef4444'
+const BRAND = 'var(--chart-brand)'
 
 export type ChartedRule = {
   metric: AlertMetric
@@ -46,8 +49,17 @@ export function useRuleSeries(
   projectId: string,
   rule: ChartedRule,
   enabled = true,
+  range?: number,
 ) {
-  return useQuery({ ...alertSeriesQueryOptions(projectId, rule), enabled })
+  return useQuery({
+    ...alertSeriesQueryOptions(projectId, rule, range),
+    enabled,
+  })
+}
+
+/** Upper thresholds fire above the line, lower ones below it. */
+function firesAbove(comparator: AlertComparator): boolean {
+  return comparator === 'greaterThan' || comparator === 'greaterThanEqual'
 }
 
 /** Whether the element has come into view, so a long list only loads what is seen. */
@@ -74,12 +86,18 @@ function useSeen<T extends HTMLElement>() {
   return { ref, seen }
 }
 
-function rangeLabel(rule: ChartedRule, t: (text: string) => string): string {
-  const { range } = seriesPlan(rule.window, METRICS[rule.metric].counter)
+function rangeLabel(range: number, t: (text: string) => string): string {
   if (range <= 43200) return t('last 12 hours')
   if (range <= 86400) return t('last 24 hours')
   if (range <= 604800) return t('last 7 days')
   return t('last 30 days')
+}
+
+function rangeShort(range: number): string {
+  if (range <= 43200) return '12h'
+  if (range <= 86400) return '24h'
+  if (range <= 604800) return '7d'
+  return '30d'
 }
 
 /** Small trend of a rule's value against its threshold, for the rules list. */
@@ -92,18 +110,17 @@ export function RuleSparkline({
   rule: ChartedRule
   className?: string
 }) {
+  const gradient = `spark-${useId().replace(/:/g, '')}`
   const { ref, seen } = useSeen<HTMLDivElement>()
   const { data } = useRuleSeries(projectId, rule, seen)
   if (!data || data.length === 0) {
     return <div ref={ref} className={cn('h-8 w-28', className)} />
   }
-  const max = Math.max(rule.threshold, ...data.map((point) => point.value))
-  const breaching = breaches(
-    rule.comparator,
-    data[data.length - 1].value,
-    rule.threshold,
-  )
-  const color = breaching ? BREACH_COLOR : 'var(--chart-brand)'
+  const top =
+    Math.max(rule.threshold, ...data.map((point) => point.value)) * 1.1 || 1
+  const above = firesAbove(rule.comparator)
+  // Where the threshold crosses the line's height, from the top: the stroke turns red past it.
+  const split = `${Math.min(100, Math.max(0, (1 - rule.threshold / top) * 100))}%`
   return (
     <div className={cn('h-8 w-28', FORCE_LTR_CLASS, className)} aria-hidden>
       <ResponsiveContainer width="100%" height="100%">
@@ -111,7 +128,22 @@ export function RuleSparkline({
           data={data}
           margin={{ top: 2, right: 0, bottom: 2, left: 0 }}
         >
-          <YAxis hide domain={[0, max * 1.1 || 1]} />
+          <defs>
+            <linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={above ? BREACH_COLOR : BRAND} />
+              <stop offset={split} stopColor={above ? BREACH_COLOR : BRAND} />
+              <stop offset={split} stopColor={above ? BRAND : BREACH_COLOR} />
+              <stop offset="100%" stopColor={above ? BRAND : BREACH_COLOR} />
+            </linearGradient>
+          </defs>
+          <YAxis hide domain={[0, top]} />
+          <ReferenceArea
+            y1={above ? rule.threshold : 0}
+            y2={above ? top : rule.threshold}
+            fill={BREACH_COLOR}
+            fillOpacity={0.08}
+            ifOverflow="hidden"
+          />
           <ReferenceLine
             y={rule.threshold}
             stroke="var(--muted-foreground)"
@@ -121,10 +153,9 @@ export function RuleSparkline({
           <Area
             type="monotone"
             dataKey="value"
-            stroke={color}
+            stroke={`url(#${gradient})`}
             strokeWidth={1.5}
-            fill={color}
-            fillOpacity={0.12}
+            fill="none"
             isAnimationActive={false}
           />
         </AreaChart>
@@ -147,7 +178,14 @@ export function RuleChart({
   height?: number
 }) {
   const t = useT()
-  const query = useRuleSeries(projectId, rule)
+  const counter = METRICS[rule.metric].counter
+  const ranges = seriesRanges(rule.window, counter)
+  const [picked, setPicked] = useState<number | undefined>()
+  const span =
+    picked !== undefined && ranges.includes(picked)
+      ? picked
+      : seriesPlan(rule.window, counter).range
+  const query = useRuleSeries(projectId, rule, true, span)
   const points: AlertPoint[] = useMemo(() => query.data ?? [], [query.data])
   const fired = useMemo(
     () => firings(points, rule.comparator, rule.threshold),
@@ -159,11 +197,10 @@ export function RuleChart({
     [points, rule.threshold],
   )
   const format = (value: number) => formatMetricValue(rule.metric, value)
-  const range = rangeLabel(rule, t)
-  const tickFormat =
-    seriesPlan(rule.window, METRICS[rule.metric].counter).range <= 86400
-      ? 'HH:mm'
-      : 'MMM d'
+  const range = rangeLabel(span, t)
+  const tickFormat = span <= 86400 ? 'HH:mm' : 'MMM d'
+  const above = firesAbove(rule.comparator)
+  const top = max * 1.15 || 1
 
   if (!hasSeries(rule.metric)) {
     return (
@@ -181,8 +218,56 @@ export function RuleChart({
     )
   }
 
+  const outcome =
+    fired.length === 0
+      ? t('Would not have fired in the {range}').replace('{range}', range)
+      : t('Would have fired {count}× in the {range}')
+          .replace('{count}', String(fired.length))
+          .replace('{range}', range)
+
   return (
     <div className="space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {!query.isLoading && !query.isError ? (
+          <span
+            className={cn(
+              'inline-flex items-center rounded-full px-2 py-0.5 text-[11.5px] font-medium',
+              fired.length === 0
+                ? 'bg-muted text-muted-foreground'
+                : 'bg-red-500/10 text-red-600 dark:text-red-400',
+            )}
+          >
+            {outcome}
+          </span>
+        ) : (
+          <span />
+        )}
+        {ranges.length > 1 && (
+          <div
+            role="tablist"
+            aria-label={t('History range')}
+            className="inline-flex gap-0.5 rounded-md border border-border bg-muted p-0.5"
+          >
+            {ranges.map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="tab"
+                aria-selected={option === span}
+                onClick={() => setPicked(option)}
+                className={cn(
+                  'rounded px-2 py-0.5 text-[11.5px] tabular-nums',
+                  option === span
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {rangeShort(option)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       <div
         className={cn('relative text-muted-foreground', FORCE_LTR_CLASS)}
         style={{ height }}
@@ -240,7 +325,7 @@ export function RuleChart({
                 minTickGap={40}
               />
               <YAxis
-                domain={[0, max * 1.15 || 1]}
+                domain={[0, top]}
                 tickFormatter={format}
                 tick={{ fontSize: 11, fill: 'currentColor' }}
                 tickLine={false}
@@ -276,11 +361,24 @@ export function RuleChart({
                   )
                 }}
               />
+              <ReferenceArea
+                y1={above ? rule.threshold : 0}
+                y2={above ? top : rule.threshold}
+                fill={BREACH_COLOR}
+                fillOpacity={0.06}
+                ifOverflow="hidden"
+              />
               <ReferenceLine
                 y={rule.threshold}
                 stroke={BREACH_COLOR}
                 strokeDasharray="4 4"
                 strokeOpacity={0.8}
+                label={{
+                  value: format(rule.threshold),
+                  position: 'insideTopRight',
+                  fill: BREACH_COLOR,
+                  fontSize: 10,
+                }}
               />
               <Area
                 type="monotone"
@@ -307,23 +405,6 @@ export function RuleChart({
           </ResponsiveContainer>
         )}
       </div>
-      {!query.isLoading && !query.isError && (
-        <p className="text-[12px] text-muted-foreground">
-          {fired.length === 0
-            ? t('Would not have fired in the {range}.').replace(
-                '{range}',
-                range,
-              )
-            : fired.length === 1
-              ? t('Would have fired once in the {range}.').replace(
-                  '{range}',
-                  range,
-                )
-              : t('Would have fired {count} times in the {range}.')
-                  .replace('{count}', String(fired.length))
-                  .replace('{range}', range)}
-        </p>
-      )}
     </div>
   )
 }

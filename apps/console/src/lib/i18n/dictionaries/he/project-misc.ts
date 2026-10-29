@@ -3578,4 +3578,39 @@ export const heProjectMiscDictionary: Record<string, string> = {
   on: 'עבור',
   'the whole project': 'הפרויקט כולו',
   within: 'בתוך',
+  'Waiting for the first check': 'ממתין לבדיקה הראשונה',
+  'Would not have fired in the {range}': 'לא היה מופעל ב{range}',
+  'Would have fired {count}× in the {range}':
+    'היה מופעל {count} פעמים ב{range}',
+  'History range': 'טווח היסטוריה',
+  'Organization owners': 'בעלי הארגון',
+  'Name, cooldown': 'שם, השהיה',
+  'Firing since': 'מופעל מאז',
+  Checked: 'נבדק',
+  '{ratio} the {threshold} threshold': '{ratio} מסף {threshold}',
+  'Threshold {threshold}': 'סף {threshold}',
+  'Checks run every few minutes, so this rule is not being evaluated.':
+    'בדיקות רצות כל כמה דקות, כך שכלל זה אינו מוערך.',
+  Notifies: 'מודיע ל',
+  'at most once per {cooldown}': 'לכל היותר פעם ב{cooldown}',
+  'Peak hour': 'שעת שיא',
+  'Suggested from your last 7 days of usage':
+    'הצעות לפי השימוש ב-7 הימים האחרונים',
+  'Budget alert rules': 'כללי התראת תקציב',
+  'Sent when additional usage reaches each threshold. They follow the budget cap and alerts above.':
+    'נשלח כשהשימוש הנוסף מגיע לכל סף. הם עוקבים אחר מגבלת התקציב וההתראות למעלה.',
+  'Edit webhook': 'עריכת Webhook',
+  'Add webhook': 'הוספת Webhook',
+  'Cap reached': 'הגיע למגבלה',
+  '{percent}% of {budget}': '{percent}% מתוך {budget}',
+  'Managed by budget': 'מנוהל לפי התקציב',
+  'Last sent': 'נשלח לאחרונה',
+  'Also posted to': 'נשלח גם אל',
+  'Budget alert webhook': 'Webhook להתראות תקציב',
+  'Every budget alert also posts a signed request to this URL. Leave it empty to stop.':
+    'כל התראת תקציב שולחת גם בקשה חתומה לכתובת זו. השאר ריק כדי להפסיק.',
+  'Webhook removed from budget alerts': 'ה-Webhook הוסר מהתראות התקציב',
+  'Budget alerts will also post to the webhook':
+    'התראות התקציב יישלחו גם ל-Webhook',
+  'Failed to update budget alerts': 'עדכון התראות התקציב נכשל',
 }

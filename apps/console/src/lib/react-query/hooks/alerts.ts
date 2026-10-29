@@ -75,6 +75,7 @@ export function alertSeriesQueryOptions(
     resourceId: string
     window: number
   },
+  range?: number,
 ) {
   const { metric, resourceType, resourceId, window } = rule
   return queryOptions({
@@ -85,9 +86,15 @@ export function alertSeriesQueryOptions(
       resourceType,
       resourceId,
       window,
+      range ?? null,
     ],
     queryFn: () =>
-      fetchAlertSeries(projectId, { metric, resourceType, resourceId, window }),
+      fetchAlertSeries(
+        projectId,
+        { metric, resourceType, resourceId, window },
+        Date.now(),
+        range,
+      ),
     enabled:
       !!projectId &&
       hasSeries(metric) &&
@@ -155,5 +162,58 @@ export function useDeleteAlertRule(projectId: string | null | undefined) {
         queryKey: ['alert-rules', 'project', projectId],
       })
     },
+  })
+}
+
+/** Budget alert rules an organization's budget settings keep, newest threshold first. */
+export function organizationBudgetRulesQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['alert-rules', 'organization', organizationId, 'budget'],
+    queryFn: async () => {
+      const response = await sdk.forConsole.alerts.listOrganizationRules({
+        organizationId: organizationId!,
+        queries: [
+          Query.equal('metric', ['billing.budgetUsed']),
+          Query.limit(25),
+        ],
+      })
+      return (response.rules ?? []).sort((a, b) => b.threshold - a.threshold)
+    },
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}
+
+/** Adds or removes a webhook on every budget alert rule of an organization. */
+export function useSetBudgetRulesWebhook(organizationId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      rules,
+      webhookUrl,
+    }: {
+      rules: AlertRule[]
+      webhookUrl: string
+    }) =>
+      Promise.all(
+        rules.map((rule) => {
+          const others = rule.channels.filter(
+            (channel) => channel !== 'webhook',
+          )
+          return sdk.forConsole.alerts.updateOrganizationRule({
+            organizationId,
+            ruleId: rule.$id,
+            channels: webhookUrl === '' ? others : [...others, 'webhook'],
+            webhookUrl: webhookUrl === '' ? undefined : webhookUrl,
+          })
+        }),
+      ),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ['alert-rules', 'organization', organizationId],
+      }),
   })
 }

@@ -224,6 +224,7 @@ function createConsoleSdkRaw(client: Client) {
     client,
     account: new Account(client),
     affiliates: new Affiliates(client),
+    alerts: new Alerts(client),
     apps: new Apps(client),
     oauth2: new Oauth2(client),
     avatars: new Avatars(client),

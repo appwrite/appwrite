@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'bun:test'
-import { fromBytes, toBytes } from '@/lib/alerts/metrics'
+import {
+  fromBytes,
+  suggestThreshold,
+  thresholdRatio,
+  toBytes,
+} from '@/lib/alerts/metrics'
 import { fillBuckets, firings, rolling, seriesPlan } from '@/lib/alerts/series'
 import {
   emptyRuleForm,
@@ -77,5 +82,28 @@ describe('alert rule form', () => {
     expect(ruleInputFromForm(emptyRuleForm(), t).name).toBe(
       'Outbound bandwidth > 10 GB',
     )
+  })
+})
+
+describe('alert threshold suggestions', () => {
+  test('leave room over what the project already does', () => {
+    expect(suggestThreshold(14_000)).toBe(30_000)
+    expect(suggestThreshold(2_140)).toBe(5_000)
+    expect(suggestThreshold(1_200_000)).toBe(3_000_000)
+    expect(suggestThreshold(5)).toBe(10)
+    expect(suggestThreshold(0)).toBe(0)
+  })
+})
+
+describe('alert threshold ratio', () => {
+  test('is said only for an upper threshold crossed at least twice over', () => {
+    const rule = { comparator: 'greaterThan' as const, threshold: 1000 }
+    expect(thresholdRatio({ ...rule, value: 12_000 })).toBe('12×')
+    expect(thresholdRatio({ ...rule, value: 2_500 })).toBe('2.5×')
+    expect(thresholdRatio({ ...rule, value: 1_500 })).toBeNull()
+    expect(
+      thresholdRatio({ ...rule, comparator: 'lessThan', value: 12_000 }),
+    ).toBeNull()
+    expect(thresholdRatio({ ...rule, value: null })).toBeNull()
   })
 })

@@ -18,6 +18,7 @@ import { AddCreditsModal } from './AddCreditsModal'
 import { TaxIdSection } from './TaxIdSection'
 import { BudgetCapSection } from './BudgetCapSection'
 import { BillingAlertsSection } from './BillingAlertsSection'
+import { BudgetAlertRules } from './BudgetAlertRules'
 import { AvailableCreditsSection } from './AvailableCreditsSection'
 import {
   SettingsCardsList,
@@ -44,9 +45,7 @@ export function BillingTab() {
   const [retryInvoiceOpen, setRetryInvoiceOpen] = useState(false)
 
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
-  const orgRefs = organization
-    ? asOrganizationPaymentRefs(organization)
-    : null
+  const orgRefs = organization ? asOrganizationPaymentRefs(organization) : null
 
   const primaryPaymentMethod = useOrganizationPaymentMethod(
     orgId,
@@ -59,8 +58,7 @@ export function BillingTab() {
 
   const failedInvoice = orgRefs?.failedInvoice
   const hasFailedInvoice = isSubscriptionFailedInvoiceWithError(failedInvoice)
-  const { data: invoicePresence } =
-    useOrganizationBillingInvoicePresence(orgId)
+  const { data: invoicePresence } = useOrganizationBillingInvoicePresence(orgId)
   const hasInvoiceRequiringAuthentication =
     !hasFailedInvoice &&
     invoicePresence?.hasInvoiceRequiringAuthentication === true
@@ -220,10 +218,10 @@ export function BillingTab() {
             'upgrade',
             'downgrade',
             'change plan',
-      'pro',
-      'scale',
-      'core',
-      'free',
+            'pro',
+            'scale',
+            'core',
+            'free',
             'next payment',
             'charges',
             'billing cycle',
@@ -235,7 +233,13 @@ export function BillingTab() {
         id: 'payment-history',
         search: {
           title: 'Payment history',
-          keywords: ['invoice', 'invoices', 'receipt', 'payment history', 'paid'],
+          keywords: [
+            'invoice',
+            'invoices',
+            'receipt',
+            'payment history',
+            'paid',
+          ],
         },
         node: <PaymentHistory />,
       },
@@ -280,7 +284,13 @@ export function BillingTab() {
         id: 'budget-cap',
         search: {
           title: 'Budget cap',
-          keywords: ['budget', 'spending limit', 'cap', 'overage', 'usage limit'],
+          keywords: [
+            'budget',
+            'spending limit',
+            'cap',
+            'overage',
+            'usage limit',
+          ],
         },
         node: <BudgetCapSection orgId={orgId} />,
       },
@@ -293,10 +303,25 @@ export function BillingTab() {
         node: <BillingAlertsSection orgId={orgId} />,
       },
       {
+        id: 'budget-alert-rules',
+        search: {
+          title: 'Budget alert rules',
+          keywords: ['alerts', 'budget', 'webhook', 'rules'],
+        },
+        node: <BudgetAlertRules orgId={orgId} />,
+      },
+      {
         id: 'available-credits',
         search: {
           title: 'Available credits',
-          keywords: ['credits', 'balance', 'coupon', 'promo', 'prepaid', 'add credits'],
+          keywords: [
+            'credits',
+            'balance',
+            'coupon',
+            'promo',
+            'prepaid',
+            'add credits',
+          ],
         },
         node: (
           <AvailableCreditsSection
