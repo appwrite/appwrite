@@ -705,7 +705,7 @@ parameters:
 		-
 			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
 			identifier: argument.type
-			count: 3
+			count: 2
 			path: src/Adapter/Git/GitHub.php
 
 		-
@@ -1159,12 +1159,6 @@ parameters:
 			path: src/Adapter/Git/GitLab.php
 
 		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Adapter/Git/GitLab.php
-
-		-
 			message: '#^Parameter \#3 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -1558,12 +1552,6 @@ parameters:
 			message: '#^Parameter \#2 \$code of class Exception constructor expects int, mixed given\.$#'
 			identifier: argument.type
 			count: 21
-			path: src/Adapter/Git/Gitea.php
-
-		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
 			path: src/Adapter/Git/Gitea.php
 
 		-

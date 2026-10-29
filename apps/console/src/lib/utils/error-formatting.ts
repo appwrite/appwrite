@@ -97,8 +97,16 @@ export function isHttpForbiddenError(error: unknown): boolean {
  * - `provider` - the provider itself failed (outage, rate limit). Also
  *   transient, but a dead token can land here too (see below), so a reconnect
  *   stays available as a secondary action.
+ * - `missing` - the installation works but no longer reaches the repository:
+ *   it was deleted, removed from the installation's repository access, or
+ *   moved to another installation (an Entire mirror detached into a project).
+ *   The resource has to be connected to the repository again.
  */
-export type VcsInstallationErrorKind = 'reconnect' | 'locked' | 'provider'
+export type VcsInstallationErrorKind =
+  | 'reconnect'
+  | 'locked'
+  | 'provider'
+  | 'missing'
 
 /**
  * Classify an error from a VCS endpoint that refreshes the installation token
@@ -118,6 +126,7 @@ export function getVcsInstallationErrorKind(
   if (!error || typeof error !== 'object') return null
   const e = error as { type?: string; message?: string }
   if (e.type === 'general_resource_locked') return 'locked'
+  if (e.type === 'provider_repository_not_found') return 'missing'
   if (e.type !== 'general_provider_failure') return null
   const message = typeof e.message === 'string' ? e.message.toLowerCase() : ''
   return message.includes('reconnect') ? 'reconnect' : 'provider'

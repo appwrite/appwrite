@@ -23,6 +23,7 @@ use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
+use Psr\Http\Message\StreamInterface;
 use Utopia\Config\Config;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
@@ -708,6 +709,8 @@ readonly class Deployments
      * Whether $path holds a deployment file that is safe to read: on the local
      * device a regular file inside the device root, reached without symbolic
      * links, since builds can write the builds volume.
+     *
+     * @phpstan-impure
      */
     public static function isArtifact(Device $device, string $path): bool
     {
@@ -723,6 +726,39 @@ readonly class Deployments
             && !\is_link($path)
             && \is_file($path)
             && \realpath($path) === $path;
+    }
+
+    /**
+     * Opens a local deployment file that isArtifact() accepts, or null. The handle is kept only when it is still
+     * the file at $path, so a build swapping in a link after the check cannot redirect reads made through it.
+     */
+    public static function openArtifact(Device $device, string $path): ?StreamInterface
+    {
+        if ($device->getType() !== DeviceType::Local || !static::isArtifact($device, $path)) {
+            return null;
+        }
+
+        $handle = \fopen($path, 'rb');
+        if ($handle === false) {
+            return null;
+        }
+
+        $opened = \fstat($handle);
+        $current = \lstat($path);
+
+        if (
+            $opened === false
+            || $current === false
+            || $opened['ino'] !== $current['ino']
+            || $opened['dev'] !== $current['dev']
+            || !static::isArtifact($device, $path)
+        ) {
+            \fclose($handle);
+
+            return null;
+        }
+
+        return Stream::fromResource($handle);
     }
 
     /**

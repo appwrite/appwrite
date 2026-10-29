@@ -65,6 +65,7 @@ final class RevokeTest extends TestCase
         $container->set('getRedis', fn (): \Closure => fn (): \Redis => $this->redis);
         $container->set('authenticator', fn (): \Closure => $this->accounts->authenticate(...));
         $container->set('authorizer', fn (): \Closure => $this->accounts->authorize(...));
+        $container->set('getPlan', fn (): \Closure => fn (string $projectId): array => []);
 
         $this->mqtt = new Mqtt(new NoTelemetry(), new NullPubSub());
         $this->handler = new Handler(

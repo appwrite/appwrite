@@ -1362,4 +1362,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Project environments': 'プロジェクト環境',
   'Switch between environments of a project, such as staging and production, and create one as a copy of the project.':
     'ステージングや本番など、プロジェクトの環境を切り替え、プロジェクトのコピーとして環境を作成します。',
+  'Repository not available': 'リポジトリを利用できません',
+  'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
+    'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',
 }

@@ -825,7 +825,9 @@ export function RepositoryConfigView({
                     {t('Silent mode')}
                   </Label>
                   <p className="text-[11px] text-muted-foreground">
-                    {t('Disable automated comments on repository commits')}
+                    {t(
+                      'Skip pull request comments, checks and deployment reports',
+                    )}
                   </p>
                 </div>
                 <Switch

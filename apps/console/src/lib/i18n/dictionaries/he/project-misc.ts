@@ -2584,8 +2584,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   SMTP: 'SMTP',
   'SMTP server has been disabled.': 'שרת ה-SMTP הושבת.',
   'SMTP server has been enabled.': 'שרת ה-SMTP הופעל.',
-  'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.':
-    'תעודת SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות, לא נדרשת פעולה מצדכם.',
+  "SSL certificate is being issued. This usually takes a few minutes. If the logs ask for a DNS record, add it where your domain's DNS is managed.":
+    'תעודת SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות. אם הלוגים מבקשים רשומת DNS, הוסיפו אותה במקום שבו מנוהל ה-DNS של הדומיין שלכם.',
   'Search domains...': 'חיפוש דומיינים...',
   'Search migrations...': 'חיפוש מיגרציות...',
   'Search webhooks...': 'חיפוש webhooks...',
