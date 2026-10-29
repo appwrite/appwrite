@@ -334,8 +334,9 @@ fn document_json(document: &Document) -> Json {
     utopia_database::value::to_plain(&Value::from(document.clone())).to_json()
 }
 
-/// `DELETE_TYPE_SESSION_TARGETS`: the targets of a deleted session.
-fn delete_targets(ctx: &mut Context, mut session: Document, current: bool, country: &str) {
+/// `DELETE_TYPE_SESSION_TARGETS`: the targets of a deleted session, queued
+/// now, as the action's publisher does (before the MQTT revoke).
+async fn delete_targets(ctx: &mut Context, mut session: Document, current: bool, country: &str) {
     session.put("current", Value::Bool(current));
     session.put("countryName", Value::from(country));
     let message = appwrite_core::event::delete_message(
@@ -343,7 +344,8 @@ fn delete_targets(ctx: &mut Context, mut session: Document, current: bool, count
         "session_targets",
         document_json(&session),
     );
-    ctx.events.deletes.push(message);
+    let queue = ctx.state.config.queue_deletes.clone();
+    ctx.enqueue(&queue, &message).await;
 }
 
 /// `DELETE /v1/account/sessions`.
@@ -376,7 +378,7 @@ pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
             let payload = base::session_payload(ctx, &session, true, &country, None);
             ctx.events.payload = Some(payload);
             ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
-            delete_targets(ctx, document, true, &country);
+            delete_targets(ctx, document, true, &country).await;
             current_session = Some(session);
         }
     }
@@ -389,6 +391,7 @@ pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
         }
         // `$queueForEvents->reset()`: no event.
         None => {
+            ctx.events.event = Some(String::new());
             ctx.events.params.clear();
             ctx.events.payload = None;
         }

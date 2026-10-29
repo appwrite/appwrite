@@ -311,6 +311,12 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
             Some(&name),
             input.phone.as_deref(),
             true,
+            // Hashed imports cannot be checked against the deny list.
+            &if input.hash.name() == "plaintext" {
+                ctx.project.auth_strings("personalDataDenyList")
+            } else {
+                Vec::new()
+            },
         )
     {
         return Err(Error::new(ErrorType::UserPasswordPersonalData));

@@ -29,6 +29,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
             dictionary: &state.dictionary,
             enabled: ctx.project.auth_bool("passwordDictionary", false),
             allow_empty: false,
+            deny_list: ctx.project.auth_strings("passwordDictionaryDenyList"),
         }),
     ]));
     let password = ctx.optional("password", json!(""), &password_validator)?;
@@ -114,8 +115,10 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     // The delete reads the user back; nothing reads its sub-queries.
     let skipped = filters::names(filters::USERS_SUBQUERIES);
     db.skip_filters(Some(skipped.as_slice()), db.delete_document("users", &user_id)).await?;
+    ctx.mqtt_revoke(&user.id).await;
     base::delete_user_identities(&db, user.sequence).await?;
     base::delete_user_targets(&db, user.sequence).await?;
+    ctx.delete_presences(&user).await;
 
     let document = json!({
         "$id": user.id,

@@ -42,7 +42,8 @@ pub struct Store {
 /// Event state filled by actions (`$queueForEvents`).
 #[derive(Debug, Default)]
 pub struct EventState {
-    /// `setEvent()`: replaces the route's event pattern.
+    /// `setEvent()`: replaces the route's event pattern (empty after
+    /// `reset()`: no event).
     pub event: Option<String>,
     pub params: Vec<(String, String)>,
     /// Explicit payload (`setPayload`); defaults to the response body.
@@ -328,17 +329,7 @@ impl Context {
     /// `$mqtt->revoke($projectId, $userId)`: asks the MQTT brokers to drop
     /// the user's connections. Failures are logged, as in PHP.
     pub async fn mqtt_revoke(&self, user_id: &str) {
-        let message = crate::json::to_string(&serde_json::json!({
-            "action": "revoke",
-            "project": self.project.id,
-            "userId": user_id,
-        }));
-        let mut pubsub = self.state.pubsub.clone();
-        let sent: std::result::Result<i64, _> =
-            utopia_cache::redis::cmd("PUBLISH").arg("mqtt").arg(message).query_async(&mut pubsub).await;
-        if let Err(e) = sent {
-            tracing::error!(error = %e, "Failed to revoke MQTT connections");
-        }
+        mqtt_revoke(&self.state, &self.project.id, user_id).await;
     }
 
     /// `(clone $queueForRealtime)->reset()->setProject($project)
@@ -357,6 +348,73 @@ impl Context {
         if let Err(e) = sent {
             tracing::warn!(error = %e, "realtime publish failed");
         }
+    }
+
+    /// `PresenceState::deleteForUser()`: the presences of a user who can no
+    /// longer be online (blocked or deleted) are deleted now, not at their
+    /// `expiresAt`, and their subscribers told. The user is already blocked
+    /// or deleted, so a failure is logged, not returned.
+    pub async fn delete_presences(&mut self, user: &crate::database::documents::User) {
+        let deleted = match self.delete_user_presences(user).await {
+            Ok(deleted) => deleted,
+            Err(e) => {
+                tracing::warn!(error = %e, project = %self.project.id, user = %user.id, "presence cleanup failed");
+                return;
+            }
+        };
+        if deleted.is_empty() {
+            return;
+        }
+        self.metric("users.presence", -(deleted.len() as i64));
+        let mut pubsub = self.state.pubsub.clone();
+        for mut presence in deleted {
+            for attribute in ["$collection", "$tenant", "hostname", "permissionsHash", "userInternalId", "connections"]
+            {
+                presence.remove(attribute);
+            }
+            let params = [("presenceId".to_owned(), presence.id().to_owned())];
+            let Ok(events) = crate::event::generate_events("presences.[presenceId].delete", &params) else { continue };
+            let Some(mut target) = events.first().and_then(|e| crate::event::realtime_target(e, None)) else {
+                continue;
+            };
+            target.roles = presence.permissions_by_type("read").unwrap_or_default();
+            let json = utopia_database::value::to_plain(&utopia_database::Value::from(presence)).to_json();
+            let Ok(payload) = serde_json::value::RawValue::from_string(crate::json::to_string(&json)) else { continue };
+            let message = crate::event::realtime_message(&self.project.id, &target, None, &events, &payload);
+            let sent: std::result::Result<i64, _> =
+                utopia_cache::redis::cmd("PUBLISH").arg("realtime").arg(&message[..]).query_async(&mut pubsub).await;
+            if let Err(e) = sent {
+                tracing::warn!(error = %e, "realtime publish failed");
+            }
+        }
+    }
+
+    /// Deletes `user`'s presences (skipping authorization) and purges the
+    /// presences list cache, returning the deleted documents.
+    async fn delete_user_presences(
+        &mut self,
+        user: &crate::database::documents::User,
+    ) -> Result<Vec<utopia_database::Document>> {
+        let db = self.db()?;
+        let mut deleted: Vec<utopia_database::Document> = Vec::new();
+        let mut collect = |presence: utopia_database::Document| -> utopia_database::Result<()> {
+            deleted.push(presence);
+            Ok(())
+        };
+        db.authorization()
+            .skip(db.delete_documents(
+                "presences",
+                vec![utopia_database::Query::equal("userInternalId", [user.sequence.to_string()])],
+                utopia_database::database::BATCH_SIZE,
+                Some(&mut collect),
+            ))
+            .await?;
+        if !deleted.is_empty() {
+            // `purgeListCache()`: the collection's cache key.
+            let (key, _, _) = db.cache_keys("presences", None, &[]).await?;
+            db.cache().purge(&key, "").await.map_err(|e| crate::Error::internal(e.to_string()))?;
+        }
+        Ok(deleted)
     }
 
     /// `setPayload($response->output(...), sensitive: $keys)`: the payload,
@@ -500,4 +558,19 @@ fn request_hostname(request: &Request, trusted_proxies: &[String]) -> String {
         raw.split(':').next().unwrap_or("").to_owned()
     };
     host.to_lowercase()
+}
+
+/// `$mqtt->revoke($projectId, $userId)`, for hooks without a [`Context`].
+pub(crate) async fn mqtt_revoke(state: &State, project_id: &str, user_id: &str) {
+    let message = crate::json::to_string(&serde_json::json!({
+        "action": "revoke",
+        "project": project_id,
+        "userId": user_id,
+    }));
+    let mut pubsub = state.pubsub.clone();
+    let sent: std::result::Result<i64, _> =
+        utopia_cache::redis::cmd("PUBLISH").arg("mqtt").arg(message).query_async(&mut pubsub).await;
+    if let Err(e) = sent {
+        tracing::error!(error = %e, "Failed to revoke MQTT connections");
+    }
 }

@@ -174,6 +174,10 @@ pub struct RealtimeTarget {
     pub permissions_changed: bool,
 }
 
+/// `Realtime::CONSOLE_ALLOWLIST`: the route groups whose events reach
+/// realtime in the console project too.
+pub const CONSOLE_ALLOWLIST: [&str; 4] = ["presences", "teams", "account", "users"];
+
 /// `Realtime::SUPPORTED_ACTIONS`.
 const ACTIONS: [&str; 4] = ["create", "update", "upsert", "delete"];
 
@@ -220,6 +224,11 @@ pub fn realtime_target(event: &str, user_id: Option<&str>) -> Option<RealtimeTar
             } else {
                 (vec!["teams".to_owned(), format!("teams.{id}")], roles, parts[2] == "create")
             }
+        }
+        // The roles are the presence's read permissions, which the caller
+        // sets from the payload.
+        Some("presences") if parts.len() > 1 => {
+            (vec!["presences".to_owned(), format!("presences.{}", parts[1])], Vec::new(), false)
         }
         _ => return None,
     };

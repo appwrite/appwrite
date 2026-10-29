@@ -35,7 +35,16 @@ async fn update_one(ctx: &mut Context, user_id: &str, key: &str, value: DbValue)
 pub async fn status(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let status = php::truthy(&ctx.required("status", &Boolean::LOOSE)?);
-    update_one(ctx, &user_id, "status", DbValue::Bool(status)).await
+    let user = base::user_or_404(ctx, &user_id, &[]).await?;
+    let mut updates = Document::default();
+    updates.put("status", DbValue::Bool(status));
+    let user = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
+    // A blocked user can no longer be connected nor online.
+    if !status {
+        ctx.mqtt_revoke(&user.id).await;
+        ctx.delete_presences(&user).await;
+    }
+    respond(ctx, &user).await
 }
 
 /// `PUT /v1/users/:userId/labels`.
@@ -95,6 +104,7 @@ pub async fn password(ctx: &mut Context) -> Result<Response> {
             dictionary: &state.dictionary,
             enabled: ctx.project.auth_bool("passwordDictionary", false),
             allow_empty: true,
+            deny_list: ctx.project.auth_strings("passwordDictionaryDenyList"),
         }),
     ]);
     let password = ctx.required_str("password", &validator)?;
@@ -110,6 +120,7 @@ pub async fn password(ctx: &mut Context) -> Result<Response> {
             user.name.as_deref(),
             user.phone.as_deref(),
             false,
+            &ctx.project.auth_strings("personalDataDenyList"),
         )
     {
         return Err(Error::new(ErrorType::UserPasswordPersonalData));
@@ -276,17 +287,8 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
                 }
                 None => {}
             }
-            if locked_email.as_deref() != Some(email.as_str()) && user.sequence != 0 {
-                db.delete_documents(
-                    "tokens",
-                    vec![
-                        Query::equal("userInternalId", [user.sequence.to_string()]),
-                        Query::equal("type", EMAIL_BOUND_TOKENS),
-                    ],
-                    utopia_database::database::BATCH_SIZE,
-                    None,
-                )
-                .await?;
+            if locked_email.as_deref() != Some(email.as_str()) {
+                User::void_address_proofs(&db, user.sequence, "email").await?;
             }
             Ok(Some(user))
         })
@@ -302,18 +304,12 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     respond(ctx, &updated).await
 }
 
-/// The token types bound to the address they were sent to: recovery,
-/// recovery OTP, verification, verification OTP, magic URL and email OTP
-/// (`TOKEN_TYPE_*`).
-const EMAIL_BOUND_TOKENS: [i64; 6] = [3, 11, 2, 10, 5, 9];
-
 /// `PATCH /v1/users/:userId/phone`.
 pub async fn phone(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let number = ctx.required_str("number", &Phone { allow_empty: true })?;
     let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let db = ctx.db()?;
-    let old_phone = user.phone.clone();
     if !number.is_empty() && base::target_by_identifier(&db, &number).await?.is_some() {
         return Err(Error::new(ErrorType::UserTargetAlreadyExists));
     }
@@ -322,54 +318,62 @@ pub async fn phone(ctx: &mut Context) -> Result<Response> {
     let mut updates = Document::default();
     updates.put("phone", text(value));
     updates.put("phoneVerification", DbValue::Bool(false));
-    let result = async {
-        let mut updated = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
-        sync_target(ctx, &mut updated, old_phone.as_deref(), &number, "sms").await?;
-        Ok::<User, Error>(updated)
-    }
+
+    // Under the user's row lock: the number it had then moves (or loses)
+    // its target, and a change of number voids the proofs sent to the old one.
+    let locked = Box::pin(db.with_transaction(|| {
+        let db = db.clone();
+        let id = user.id.clone();
+        let updates = updates.clone();
+        let number = number.clone();
+        Box::pin(async move {
+            let current = db.get_document("users", &id, Vec::new(), true).await?;
+            if current.is_empty() {
+                return Ok(None);
+            }
+            let locked_phone = documents::Attributes::string(&current, "phone");
+            let skipped = base::skipped(&[]);
+            let mut updated =
+                db.skip_filters(Some(skipped.as_slice()), db.update_document("users", &id, updates)).await?;
+            let targets = filters::sub_query(&db, base::TARGETS, &updated).await?;
+            updated.put("targets", targets);
+            let mut user = User::from(&updated);
+            let old = locked_phone.as_deref().and_then(|l| user.targets.iter().position(|t| t.identifier == l));
+            match old {
+                Some(index) if !number.is_empty() => {
+                    let mut moved = Document::default();
+                    moved.put("identifier", DbValue::from(number.as_str()));
+                    db.update_document("targets", &user.targets[index].id, moved).await?;
+                    user.targets[index].identifier = number.clone();
+                }
+                // The deleted target stays in the response (PHP keeps it in memory).
+                Some(index) => {
+                    db.delete_document("targets", &user.targets[index].id).await?;
+                }
+                None if !number.is_empty() => {
+                    let target = db.create_document("targets", base::new_target(&user, "sms", &number)).await?;
+                    user.targets.push((&target).into());
+                }
+                None => {}
+            }
+            if locked_phone.as_deref() != value_of(&number) {
+                User::void_address_proofs(&db, user.sequence, "phone").await?;
+            }
+            Ok(Some(user))
+        })
+    }))
     .await;
-    let updated = result.map_err(|e| duplicate_as(e, ErrorType::UserPhoneAlreadyExists))?;
+    let updated = match locked {
+        Ok(Some(updated)) => updated,
+        Ok(None) => return Err(Error::new(ErrorType::UserNotFound)),
+        Err(e) if e.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::UserPhoneAlreadyExists)),
+        Err(e) => return Err(e.into()),
+    };
+    db.purge_cached_document("users", &updated.id).await?;
     respond(ctx, &updated).await
 }
 
-/// PHP catches `Duplicate` around the update and the target sync.
-fn duplicate_as(error: Error, kind: ErrorType) -> Error {
-    if error.kind == ErrorType::DocumentAlreadyExists { Error::new(kind) } else { error }
-}
-
-/// Keeps the email/sms target in sync with the new identifier.
-async fn sync_target(
-    ctx: &mut Context,
-    user: &mut User,
-    old: Option<&str>,
-    new: &str,
-    provider_type: &str,
-) -> Result<()> {
-    let db = ctx.db()?;
-    let existing = old.and_then(|o| user.targets.iter().position(|t| t.identifier == o));
-    match existing {
-        Some(index) => {
-            let target_id = user.targets[index].id.clone();
-            if !new.is_empty() {
-                let mut updates = Document::default();
-                updates.put("identifier", DbValue::from(new));
-                db.update_document("targets", &target_id, updates).await?;
-                // The response keeps the target as loaded, with the new identifier.
-                user.targets[index].identifier = new.to_owned();
-            } else {
-                // The deleted target stays in the response (PHP keeps it in memory).
-                db.delete_document("targets", &target_id).await?;
-            }
-        }
-        None if !new.is_empty() => {
-            match db.create_document("targets", base::new_target(user, provider_type, new)).await {
-                Ok(target) => user.targets.push((&target).into()),
-                Err(e) if e.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::DocumentAlreadyExists)),
-                Err(e) => return Err(e.into()),
-            }
-        }
-        None => {}
-    }
-    db.purge_cached_document("users", &user.id).await?;
-    Ok(())
+/// The stored phone of `number`: none when it is empty.
+fn value_of(number: &str) -> Option<&str> {
+    if number.is_empty() { None } else { Some(number) }
 }

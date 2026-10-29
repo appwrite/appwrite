@@ -62,7 +62,7 @@ pub(in crate::platform) async fn abuse(ctx: &mut Context) -> Result<()> {
 }
 
 /// The abuse key parameters: the project, the user, the client and the
-/// request's non-empty parameters (`{param-<name>}`).
+/// request's and the route's non-empty parameters (`{param-<name>}`).
 fn abuse_params(ctx: &Context) -> Vec<(String, String)> {
     // `getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE)`: the chunk the
     // range starts in, keyed on the server's chunk size (a size bound that
@@ -80,7 +80,11 @@ fn abuse_params(ctx: &Context) -> Vec<(String, String)> {
         ("{method}".to_owned(), ctx.request.method().to_string()),
         ("{chunkId}".to_owned(), chunk.to_string()),
     ];
-    for (name, value) in ctx.request.params() {
+    // `array_merge($request->getParams(), $pathParams)`: path params are not
+    // part of the request input, and the query must not override them.
+    let request = ctx.request.params().iter().filter(|(name, _)| !ctx.path_params.iter().any(|(k, _)| k == *name));
+    let path = ctx.path_params.iter().map(|(k, v)| (k, v));
+    for (name, value) in request.chain(path) {
         if php_std::value::empty(value) {
             continue;
         }
