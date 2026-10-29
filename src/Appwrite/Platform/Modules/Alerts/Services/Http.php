@@ -2,12 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Services;
 
+use Appwrite\Platform\Modules\Alerts\Http\Alerts\Get as GetAlert;
+use Appwrite\Platform\Modules\Alerts\Http\Alerts\XList as ListAlerts;
 use Appwrite\Platform\Modules\Alerts\Http\Init;
-use Appwrite\Platform\Modules\Alerts\Http\Rules\Create as CreateRule;
-use Appwrite\Platform\Modules\Alerts\Http\Rules\Delete as DeleteRule;
-use Appwrite\Platform\Modules\Alerts\Http\Rules\Get as GetRule;
-use Appwrite\Platform\Modules\Alerts\Http\Rules\Update as UpdateRule;
-use Appwrite\Platform\Modules\Alerts\Http\Rules\XList as ListRules;
+use Appwrite\Platform\Modules\Alerts\Http\Monitors\Delete as DeleteMonitor;
+use Appwrite\Platform\Modules\Alerts\Http\Monitors\Get as GetMonitor;
+use Appwrite\Platform\Modules\Alerts\Http\Monitors\Usage\Create as CreateUsageMonitor;
+use Appwrite\Platform\Modules\Alerts\Http\Monitors\Usage\Update as UpdateUsageMonitor;
+use Appwrite\Platform\Modules\Alerts\Http\Monitors\XList as ListMonitors;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -18,10 +20,13 @@ class Http extends Service
 
         $this->addAction(Init::getName(), new Init());
 
-        $this->addAction(CreateRule::getName(), new CreateRule());
-        $this->addAction(ListRules::getName(), new ListRules());
-        $this->addAction(GetRule::getName(), new GetRule());
-        $this->addAction(UpdateRule::getName(), new UpdateRule());
-        $this->addAction(DeleteRule::getName(), new DeleteRule());
+        $this->addAction(CreateUsageMonitor::getName(), new CreateUsageMonitor());
+        $this->addAction(UpdateUsageMonitor::getName(), new UpdateUsageMonitor());
+        $this->addAction(ListMonitors::getName(), new ListMonitors());
+        $this->addAction(GetMonitor::getName(), new GetMonitor());
+        $this->addAction(DeleteMonitor::getName(), new DeleteMonitor());
+
+        $this->addAction(ListAlerts::getName(), new ListAlerts());
+        $this->addAction(GetAlert::getName(), new GetAlert());
     }
 }

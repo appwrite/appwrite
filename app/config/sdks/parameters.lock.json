@@ -1140,43 +1140,12 @@
             "queries",
             "total"
         ],
-        "alerts.createRule": [
-            "ruleId",
-            "name",
-            "metric",
-            "comparator",
-            "threshold",
-            "resourceType",
-            "resourceId",
-            "window",
-            "cooldown",
-            "channels",
-            "webhookUrl",
-            "enabled"
+        "alerts.get": [
+            "alertId"
         ],
-        "alerts.deleteRule": [
-            "ruleId"
-        ],
-        "alerts.getRule": [
-            "ruleId"
-        ],
-        "alerts.listRules": [
+        "alerts.list": [
             "queries",
             "total"
-        ],
-        "alerts.updateRule": [
-            "ruleId",
-            "name",
-            "metric",
-            "comparator",
-            "threshold",
-            "resourceType",
-            "resourceId",
-            "window",
-            "cooldown",
-            "channels",
-            "webhookUrl",
-            "enabled"
         ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
@@ -2859,6 +2828,36 @@
         ],
         "migrations.retry": [
             "migrationId"
+        ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "channels",
+            "webhookUrl",
+            "enabled"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "channels",
+            "webhookUrl",
+            "enabled"
         ],
         "notifications.list": [
             "queries",
@@ -5289,43 +5288,12 @@
             "queries",
             "total"
         ],
-        "alerts.createRule": [
-            "ruleId",
-            "name",
-            "metric",
-            "comparator",
-            "threshold",
-            "resourceType",
-            "resourceId",
-            "window",
-            "cooldown",
-            "channels",
-            "webhookUrl",
-            "enabled"
+        "alerts.get": [
+            "alertId"
         ],
-        "alerts.deleteRule": [
-            "ruleId"
-        ],
-        "alerts.getRule": [
-            "ruleId"
-        ],
-        "alerts.listRules": [
+        "alerts.list": [
             "queries",
             "total"
-        ],
-        "alerts.updateRule": [
-            "ruleId",
-            "name",
-            "metric",
-            "comparator",
-            "threshold",
-            "resourceType",
-            "resourceId",
-            "window",
-            "cooldown",
-            "channels",
-            "webhookUrl",
-            "enabled"
         ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
@@ -6984,6 +6952,36 @@
         ],
         "migrations.retry": [
             "migrationId"
+        ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "channels",
+            "webhookUrl",
+            "enabled"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "channels",
+            "webhookUrl",
+            "enabled"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",

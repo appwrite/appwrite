@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Alerts\Http\Rules;
+namespace Appwrite\Platform\Modules\Alerts\Http\Monitors;
 
 use Appwrite\Platform\Modules\Alerts\Base;
 use Appwrite\SDK\AuthType;
@@ -19,33 +19,33 @@ class Get extends Base
 
     public static function getName(): string
     {
-        return 'getRule';
+        return 'getMonitor';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/alerts/rules/:ruleId')
-            ->desc('Get alert rule')
+            ->setHttpPath('/v1/monitors/:monitorId')
+            ->desc('Get monitor')
             ->groups(['api', 'alerts'])
-            ->label('scope', 'alertRules.read')
+            ->label('scope', 'monitors.read')
             ->label('sdk', new Method(
-                namespace: 'alerts',
-                group: 'rules',
-                name: 'getRule',
+                namespace: 'monitors',
+                group: null,
+                name: 'get',
                 description: <<<EOT
-                Get an alert rule by its unique ID, with its state as of its last evaluation.
+                Get a monitor by its unique ID, with its state as of its last evaluation.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_ALERT_RULE,
+                        model: Response::MODEL_MONITOR,
                     ),
                 ]
             ))
-            ->param('ruleId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Rule ID.', false, ['dbForPlatform'])
+            ->param('monitorId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Monitor ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -54,15 +54,15 @@ class Get extends Base
     }
 
     public function action(
-        string $ruleId,
+        string $monitorId,
         Response $response,
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
     ): void {
-        $rule = $this->getRule($dbForPlatform, $authorization, $project, $ruleId);
-        $rule->removeAttribute('webhookSecret');
+        $monitor = $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId);
+        $monitor->removeAttribute('webhookSecret');
 
-        $response->dynamic($rule, Response::MODEL_ALERT_RULE);
+        $response->dynamic($monitor, Response::MODEL_MONITOR);
     }
 }
