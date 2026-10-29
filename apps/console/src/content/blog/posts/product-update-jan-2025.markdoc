@@ -1,0 +1,140 @@
+---
+layout: post
+title: "Product update January 2025: Partners program, Scale plan and more"
+description: Get a full recap of products, features and programs we released in January.
+date: 2025-02-06
+lastUpdated: 2026-06-29
+cover: /images/blog/product-update-jan-2025/cover-image.avif
+timeToRead: 10
+author: dennis-ivy
+category: products
+featured: false
+callToAction: true
+faqs:
+  - question: "What is the Appwrite Partners program?"
+    answer: "The Appwrite Partners program is for agencies, dev studios, system integrators, and freelancers who build solutions on Appwrite for clients. Partners get co-marketing opportunities, engineering support, training, and a listing in the partner catalog."
+  - question: "Who is the Appwrite Enterprise plan for?"
+    answer: "The Enterprise plan is built for organizations that need priority support, higher resource limits, advanced compliance (BAA, SOC-2, HIPAA), SSO, custom backup policies, and bring-your-own-cloud. See the [pricing page](/pricing) for the current breakdown."
+  - question: "What new compute options are available for Functions?"
+    answer: "Appwrite Cloud now offers premium compute tiers with up to 4 CPU cores and 4 GB of memory per function. You can pick the spec per function, so you only pay for the heavier resources where you need them."
+  - question: "What changed in push notifications?"
+    answer: "[Appwrite Messaging](/docs/products/messaging) added new delivery options, including silent background updates and critical alerts that bypass Do Not Disturb. This gives you more control over how time sensitive your notifications are."
+  - question: "Which new function runtimes were added in January 2025?"
+    answer: "Appwrite Functions added PHP 8.3, Ruby 3.3, and Python 3.12. The team also resolved GitHub identity conflicts that were affecting deployments from connected repositories."
+  - question: "How do I apply to be an Appwrite partner?"
+    answer: "Visit the [partners page](/partners) and submit an application with information about your agency or freelance practice. The Appwrite team reviews each application and follows up with next steps if you qualify."
+---
+
+
+2025 is off to a strong start for Appwrite. Here’s what happened in January:
+
+- A new program for Appwrite Partners
+- Launch of the Scale plan: Empowering Growing Companies
+- More powerful computing options
+- Improved push notifications
+
+Let’s dive in.
+ 
+![The Appwrite Partners program](/images/blog/product-update-jan-2025/partner-image.avif)
+
+# The Appwrite Partners program
+
+We’ve launched a new program for agencies, development studios, system integrators, and freelancers to help you build innovative solutions for your clients using Appwrite.
+
+Partner with Appwrite and get exclusive benefits like:
+
+- Co-marketing: Dedicated partner catalog on our website, content collaborations, featured in our product update, and many more opportunities.
+- Support: Get access to the Appwrite engineering team to help you build the best custom products for your clients.
+- In-depth training: We provide in-depth training and workshops to help you master Appwrite for your clients.
+
+There are many more benefits that can help you deliver powerful solutions to clients, increase revenue, and expand your reach.
+
+Become a partner and grow your business.
+
+[Apply now](https://appwrite.io/partners)
+
+![The Appwrite Scale plan](/images/blog/product-update-jan-2025/scale-image.avif)
+
+# The Appwrite Partners program
+
+This month, we also launched the Scale plan, a new offering to empower larger teams and create new opportunities for developers.
+
+Specially designed for agencies, startups, scale-ups, and SMBs needing priority support, enhanced flexibility, and advanced compliance to confidently scale their operations.
+
+Check out how you can use the Scale plan to take your projects to the next level!
+
+[Learn more](https://appwrite.io/blog/post/scale-plan-now-available)
+
+# Product updates
+
+![Push Notfications](/images/blog/product-update-jan-2025/push-notifications-image.avif)
+
+## Push Notifications: New delivery options
+
+Push Notifications just got a major upgrade this month. Now, you can run background updates silently, send critical alerts that bypass Do Not Disturb, and do other useful things, all designed to help you deliver personalized and impactful notifications.
+
+[Read the announcement](https://appwrite.io/blog/post/announcing-new-push-notifications-features)
+
+## Billing improvements, UI fixes, and performance updates
+
+We believe little things make big things happen. That’s why we rolled out small yet impactful updates, including a clearer billing system, UI improvements, and fixes for tables and mobile experiences, all aimed at improving your overall Appwrite experience.
+
+[Go to changelog](https://appwrite.io/changelog/entry/2025-01-03)
+
+![New compute capabilities for Appwrite Functions](/images/blog/product-update-jan-2025/compute-image.avif)
+
+## Introducing new compute capabilities for Appwrite Functions
+
+We've just added multiple new premium compute options to Appwrite Cloud. You can now choose up to 4 CPU cores and 4GB of memory to juice your Functions or customize the runtime specs according to your requirements.
+
+[Read the announcement](https://appwrite.io/blog/post/introducing-new-compute-capabilities-appwrite-functions)
+
+## New Function runtimes and GitHub identity improvements
+
+We always keep on adding support to new runtimes. This month, we added PHP 8.3, Ruby 3.3, and Python 3.12 to your functions. Plus, we resolved Github identity conflicts to ensure smooth functionality.
+
+[Go to changelog](https://appwrite.io/changelog/entry/2025-01-14)
+
+## Database improvements and fixes
+
+From improved handling of database indexes and attributes to enhanced error handling, we’ve released several database updates to improve your database performance and reliability.
+
+[Go to changelog](https://appwrite.io/changelog/entry/2025-01-17)
+
+![Community recognitions](/images/blog/product-update-jan-2025/community-image.avif)
+
+# Community recognitions
+
+This month, we’re excited to feature Praxis by ReveredInsan as part of our Monthly Community Recognitions.
+
+Praxis matches your profile with recently funded startups, giving you access to active job openings and helping you land your dream role.
+
+A big shout-out to ReveredInsan. Check out Praxis [here](https://www.joinpraxis.org/)
+
+If you'd like to participate in next month's Community Recognitions, [join our Discord server](https://appwrite.io/discord) to showcase your project.
+
+# Engineering resources
+
+**Read**  
+- [5 VS Code extensions that replace entire development tools](https://appwrite.io/blog/post/5-vs-code-extensions-that-replace-entire-dev-tools)  
+- [Budget caps: How to stop unexpected cloud bills before they happen](https://appwrite.io/blog/post/budget-caps-stop-unexpected-cloud-bills)  
+
+**Build**  
+- [Building a full-stack app with Svelte and Appwrite](https://appwrite.io/blog/post/build-fullstack-svelte-appwrite)  
+- [Building custom authentication flows with Appwrite](https://appwrite.io/blog/post/building-custom-auth-flows)  
+- [Email your users using Resend and Appwrite Messaging](https://appwrite.io/blog/post/integrate-resend-smtp)  
+
+**Watch**  
+- [Build an app and master React in 2 hours](https://www.youtube.com/watch?v=dCLhUialKPQ&t)  
+- [React Native Appwrite SDK - Getting started](https://www.youtube.com/watch?v=YSUmzHH_OMg)  
+- [Setup custom SMTP for your Appwrite self-hosted instance](https://www.youtube.com/watch?v=gUWP9J2Hp0k)  
+
+# What's to come
+
+That’s a wrap for January. Here is what you can expect in the next weeks:
+
+- New Cloud regions
+- Init announcement
+- More feature updates and improvements
+
+Follow us on [X](https://x.com/appwrite) and check our [Changelog](https://appwrite.io/changelog) regularly, as we will release more information in the coming weeks.

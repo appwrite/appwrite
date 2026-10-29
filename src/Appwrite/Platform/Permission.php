@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform;
 
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission as DbPermission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission as DbPermission;
+use Utopia\Database\Role;
 
 trait Permission
 {
@@ -19,19 +19,19 @@ trait Permission
     {
         return [
             // Team-wide permissions
-            DbPermission::read(Role::team(ID::custom($teamId), 'owner')),
-            DbPermission::read(Role::team(ID::custom($teamId), 'developer')),
-            DbPermission::update(Role::team(ID::custom($teamId), 'owner')),
-            DbPermission::update(Role::team(ID::custom($teamId), 'developer')),
-            DbPermission::delete(Role::team(ID::custom($teamId), 'owner')),
-            DbPermission::delete(Role::team(ID::custom($teamId), 'developer')),
+            DbPermission::read(Role::team(Id::custom($teamId), 'owner')),
+            DbPermission::read(Role::team(Id::custom($teamId), 'developer')),
+            DbPermission::update(Role::team(Id::custom($teamId), 'owner')),
+            DbPermission::update(Role::team(Id::custom($teamId), 'developer')),
+            DbPermission::delete(Role::team(Id::custom($teamId), 'owner')),
+            DbPermission::delete(Role::team(Id::custom($teamId), 'developer')),
             // Project-wide permissions
-            DbPermission::read(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
-            DbPermission::read(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
-            DbPermission::update(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
-            DbPermission::update(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
-            DbPermission::delete(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
-            DbPermission::delete(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
+            DbPermission::read(Role::team(Id::custom($teamId), "project-{$projectId}-owner")),
+            DbPermission::read(Role::team(Id::custom($teamId), "project-{$projectId}-developer")),
+            DbPermission::update(Role::team(Id::custom($teamId), "project-{$projectId}-owner")),
+            DbPermission::update(Role::team(Id::custom($teamId), "project-{$projectId}-developer")),
+            DbPermission::delete(Role::team(Id::custom($teamId), "project-{$projectId}-owner")),
+            DbPermission::delete(Role::team(Id::custom($teamId), "project-{$projectId}-developer")),
         ];
     }
 }

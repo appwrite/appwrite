@@ -120,7 +120,6 @@ class SQLiteIntegrationTest extends IntegrationTestCase
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         $this->assertNotFalse($row);
-        \assert(\is_array($row));
         $this->assertSame($indexName, $row['name']);
     }
 

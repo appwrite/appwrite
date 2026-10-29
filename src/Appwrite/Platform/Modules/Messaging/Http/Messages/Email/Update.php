@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -59,35 +60,43 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
+            ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Message ID.', false, ['dbForProject'])
+            ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of Topic IDs.', true, ['dbForProject'])
+            ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of User IDs.', true, ['dbForProject'])
+            ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of Targets IDs.', true, ['dbForProject'])
             ->param('subject', null, new Nullable(new Text(998)), 'Email Subject.', true)
             ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
-            ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Topic IDs.', true, ['dbForProject'])
-            ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of User IDs.', true, ['dbForProject'])
-            ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
-            ->param('cc', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
-            ->param('bcc', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
+            ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
+            ->param('html', null, new Nullable(new Boolean()), 'Is content of type HTML', true)
+            ->param('cc', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
+            ->param('bcc', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
+            ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
             ->param('attachments', null, new Nullable(new ArrayList(new CompoundUID())), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
             ->param('replyToEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email address to reply to. Pass an empty string to restore the provider or sender default.', true)
             ->param('replyToName', null, new Nullable(new Text(128, 0)), 'Name of the reply to recipient. Pass an empty string to restore the provider or sender default.', true)
-            ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
-            ->param('html', null, new Nullable(new Boolean()), 'Is content of type HTML', true)
-            ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+            ->param('emails', null, new Nullable(new ArrayList(new Email())), 'List of email addresses to send the message to. Use this to deliver to recipients that are not backed by an Appwrite user, target, or topic.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('publisherForMessaging')
             ->inject('response')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?string $subject, ?string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, ?string $replyToEmail, ?string $replyToName, ?bool $draft, ?bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
+    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, ?string $replyToEmail, ?string $replyToName, ?array $emails, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, Request $request)
     {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        // Stored attachments are delivered too, so any update of an attached message needs files.read.
+        $hasAttachments = !empty($attachments ?? $message->getAttribute('data', [])['attachments'] ?? []);
+        if ($hasAttachments && !\in_array('files.read', $request->getScopes(), true)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Attachments require the files.read scope.');
         }
 
         if (!\is_null($draft) || !\is_null($scheduledAt)) {
@@ -107,6 +116,7 @@ class Update extends Action
             && \count($topics ?? $message->getAttribute('topics', [])) === 0
             && \count($users ?? $message->getAttribute('users', [])) === 0
             && \count($targets ?? $message->getAttribute('targets', [])) === 0
+            && \count($emails ?? $message->getAttribute('data', [])['emails'] ?? []) === 0
         ) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
@@ -230,6 +240,10 @@ class Update extends Action
 
         if (!\is_null($bcc)) {
             $data['bcc'] = $bcc;
+        }
+
+        if (!\is_null($emails)) {
+            $data['emails'] = $emails;
         }
 
         if (!\is_null($replyToEmail)) {

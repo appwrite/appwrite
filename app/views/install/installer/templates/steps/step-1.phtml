@@ -146,16 +146,14 @@ $sslEmailValue = htmlspecialchars((string) $defaultEmailCertificates, ENT_QUOTES
                         <div class="input-group stack-xs">
                             <label for="http-port" class="label-text typography-text-xs-500 text-neutral-secondary">HTTP port</label>
                             <input
-                                type="number"
+                                type="text"
                                 id="http-port"
                                 name="httpPort"
                                 class="input-field typography-text-m-400 text-neutral-primary"
                                 placeholder="<?php echo $httpPortValue; ?>"
                                 value="<?php echo $httpPortValue; ?>"
                                 data-default="<?php echo $httpPortValue; ?>"
-                                min="1"
-                                max="65535"
-                                step="1"
+                                spellcheck="false"
                                 autocomplete="off"
                                 data-1p-ignore
                                 data-lpignore="true"
@@ -172,16 +170,14 @@ $sslEmailValue = htmlspecialchars((string) $defaultEmailCertificates, ENT_QUOTES
                         <div class="input-group stack-xs">
                             <label for="https-port" class="label-text typography-text-xs-500 text-neutral-secondary">HTTPS port</label>
                             <input
-                                type="number"
+                                type="text"
                                 id="https-port"
                                 name="httpsPort"
                                 class="input-field typography-text-m-400 text-neutral-primary"
                                 placeholder="<?php echo $httpsPortValue; ?>"
                                 value="<?php echo $httpsPortValue; ?>"
                                 data-default="<?php echo $httpsPortValue; ?>"
-                                min="1"
-                                max="65535"
-                                step="1"
+                                spellcheck="false"
                                 autocomplete="off"
                                 data-1p-ignore
                                 data-lpignore="true"

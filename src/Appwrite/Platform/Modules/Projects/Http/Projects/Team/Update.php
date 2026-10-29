@@ -2,11 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Projects\Http\Projects\Team;
 
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -50,10 +52,12 @@ class Update extends Action
             ->param('teamId', '', new UID(), 'Team ID of the team to transfer project to.')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('targetUser')
+            ->inject('queueForRealtime')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform)
+    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform, User $targetUser, Realtime $queueForRealtime): void
     {
         $project = $dbForPlatform->getDocument('projects', $projectId);
         $team = $dbForPlatform->getDocument('teams', $teamId);
@@ -66,6 +70,13 @@ class Update extends Action
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
+        if (
+            !$this->isOwner($dbForPlatform, $targetUser, $project->getAttribute('teamInternalId', ''))
+            || !$this->isOwner($dbForPlatform, $targetUser, $team->getSequence())
+        ) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Transferring a project requires the owner role on both the current and the destination organization.');
+        }
+
         $permissions = $this->getPermissions($teamId, $projectId);
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
@@ -74,6 +85,16 @@ class Update extends Action
             '$permissions' => $permissions,
         ]));
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+
+        $queueForRealtime
+            ->setProject($project)
+            ->setEvent('projects.[projectId].update.team')
+            ->setParam('projectId', $project->getId())
+            ->setPayload([
+                '$id' => $project->getId(),
+                'teamId' => $teamId,
+            ])
+            ->trigger();
 
         $installations = $dbForPlatform->find('installations', [
             Query::equal('projectInternalId', [$project->getSequence()]),
@@ -97,5 +118,20 @@ class Update extends Action
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
+    }
+
+    private function isOwner(Database $dbForPlatform, User $user, string $teamInternalId): bool
+    {
+        if ($user->isEmpty() || $teamInternalId === '') {
+            return false;
+        }
+
+        $membership = $dbForPlatform->findOne('memberships', [
+            Query::equal('teamInternalId', [$teamInternalId]),
+            Query::equal('userInternalId', [$user->getSequence()]),
+            Query::equal('confirm', [true]),
+        ]);
+
+        return \in_array(User::ROLE_OWNER, $membership->getAttribute('roles', []), true);
     }
 }

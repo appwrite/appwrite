@@ -1,0 +1,236 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit\Utopia\Database\Hook;
+
+use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Extend\Exception;
+use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
+use PHPUnit\Framework\TestCase;
+use Utopia\Cache\Adapter\None as NoCache;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Hook\Relationships;
+use Utopia\Database\Permission;
+use Utopia\Database\Query;
+use Utopia\Database\Relationship;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Authorization;
+use Utopia\DI\Container;
+use Utopia\Http\Adapter\FPM\Server;
+use Utopia\Http\Http;
+
+/**
+ * The HTTP `getDatabasesDB` resource wires the Metadata hook of every tenant database it hands out: the hook must
+ * know the public ID of the collection the caller passed without querying the catalog for it, and must record
+ * what it decorates on the request's operations counter. It also wires the Joins hook, whose refusals name the resource
+ * of the request being served. Cloud keeps its own copy of the resource, so the closure contract stays as it is.
+ */
+final class MetadataResourceTest extends TestCase
+{
+    private const string MOVIES = 'database_4_collection_9';
+    private const string ACTORS = 'database_4_collection_10';
+
+    private Authorization $authorization;
+
+    private Memory $adapter;
+
+    protected function setUp(): void
+    {
+        $this->authorization = new Authorization();
+        $this->authorization->addRole(Role::any()->toString());
+        $this->adapter = new Memory();
+
+        $tenant = $this->tenant();
+        $this->authorization->skip(function () use ($tenant): void {
+            $tenant->create();
+            foreach ([self::MOVIES, self::ACTORS] as $collection) {
+                $tenant->createCollection(Collection::create(
+                    id: $collection,
+                    attributes: [Attribute::string(key: 'name', size: 100, required: false)],
+                    permissions: [Permission::read(Role::any()), Permission::create(Role::any())],
+                ));
+            }
+            $tenant->createRelationship(self::MOVIES, Relationship::manyToOne(
+                relatedCollection: self::ACTORS,
+                key: 'lead',
+            ));
+            $tenant->createDocument(self::ACTORS, new Document(['$id' => 'actor']));
+            $tenant->createDocument(self::MOVIES, new Document(['$id' => 'film', 'lead' => 'actor']));
+        });
+    }
+
+    public function testRequestResourceKnowsThePublicIdOfTheCollectionItWasGiven(): void
+    {
+        $catalog = $this->createMock(Database::class);
+        $catalog->expects($this->never())->method('findOne');
+        $catalog->method('getAuthorization')->willReturn($this->authorization);
+        $catalog->method('silent')->willReturnCallback(static fn (callable $callback): mixed => $callback());
+
+        $getDatabasesDB = $this->requestContainer($catalog)->get('getDatabasesDB');
+        $database = $getDatabasesDB(
+            new Document(['$id' => 'cinema', '$sequence' => '4']),
+            new Document(['$id' => 'movies', '$sequence' => '9']),
+        );
+
+        $film = $database->skipRelationships(fn (): Document => $database->getDocument(self::MOVIES, 'film'));
+
+        $this->assertSame('movies', $film->getAttribute('$collectionId'), 'the public ID comes from the collection the caller passed');
+        $this->assertSame('cinema', $film->getAttribute('$databaseId'));
+    }
+
+    public function testRequestResourceRecordsReadsOnTheRequestCounter(): void
+    {
+        $container = $this->requestContainer($this->catalog());
+        $getDatabasesDB = $container->get('getDatabasesDB');
+        $cinema = new Document(['$id' => 'cinema', '$sequence' => '4']);
+        $movies = new Document(['$id' => 'movies', '$sequence' => '9']);
+
+        $film = $getDatabasesDB($cinema, $movies)->getDocument(self::MOVIES, 'film');
+        $again = $getDatabasesDB($cinema, $movies)->getDocument(self::MOVIES, 'film');
+
+        $this->assertInstanceOf(Document::class, $film->getAttribute('lead'));
+        $this->assertSame(2, $container->get('operations')->reads([$film]), 'the film and its lead actor');
+        $this->assertSame(4, $container->get('operations')->reads([$film, $again]), 'every tenant database of the request records on one counter');
+    }
+
+    public function testRequestResourceKeepsItsClosureContract(): void
+    {
+        $getDatabasesDB = $this->requestContainer($this->catalog())->get('getDatabasesDB');
+        $cinema = new Document(['$id' => 'cinema', '$sequence' => '4']);
+
+        $databases = [
+            'without a collection' => $getDatabasesDB($cinema),
+            'with a collection' => $getDatabasesDB(database: $cinema, collection: new Document(['$id' => 'movies', '$sequence' => '9'])),
+        ];
+
+        foreach ($databases as $call => $database) {
+            $film = $database->skipRelationships(fn (): Document => $database->getDocument(self::MOVIES, 'film'));
+
+            $this->assertSame('film', $film->getId(), 'the database handed out ' . $call . ' reads the tenant');
+            $this->assertSame('movies', $film->getAttribute('$collectionId'), 'the database handed out ' . $call . ' knows the public ID');
+        }
+    }
+
+    public function testRequestResourceRefusesAJoinOfAnUnknownCollectionAsCollectionNotFound(): void
+    {
+        $getDatabasesDB = $this->requestContainer($this->catalog())->get('getDatabasesDB');
+
+        $refusal = $this->joinRefusal($getDatabasesDB(new Document(['$id' => 'cinema', '$sequence' => '4'])));
+
+        $this->assertSame(Exception::COLLECTION_NOT_FOUND, $refusal->getType());
+        $this->assertStringContainsString("'directors'", $refusal->getMessage());
+    }
+
+    public function testRequestResourceNamesTheResourceOfTheOperationBeingServed(): void
+    {
+        $container = $this->requestContainer($this->catalog());
+        $operation = new Container($container);
+        $operation->set('request', fn (): Request => $this->request('/v1/tablesdb/cinema/tables/movies/rows'));
+        $container->set('utopia', static fn (): Http => new Http(new Server($operation), 'UTC'));
+
+        $refusal = $this->joinRefusal($container->get('getDatabasesDB')(new Document(['$id' => 'cinema', '$sequence' => '4'])));
+
+        $this->assertSame(Exception::TABLE_NOT_FOUND, $refusal->getType(), 'a GraphQL operation serves its own request from a child container, not the request the database was built for');
+    }
+
+    public function testWorkerResourceTakesTheProjectByName(): void
+    {
+        $projects = [];
+        $factory = $this->createStub(DatabaseFactory::class);
+        $factory->method('tenant')->willReturnCallback(function (Document $database, Document $project) use (&$projects): Database {
+            $projects[] = $project->getId();
+
+            return $this->createStub(Database::class);
+        });
+
+        $register = require __DIR__ . '/../../../../../app/init/worker/message.php';
+        $container = new Container();
+        $register($container);
+        $container->set('databaseFactory', static fn (): DatabaseFactory => $factory);
+        $container->set('project', static fn (): Document => new Document(['$id' => 'message', 'database' => 'mariadb://shared']));
+        $container->set('usage', static fn (): Context => new Context());
+
+        $getDatabasesDB = $container->get('getDatabasesDB');
+        $database = new Document(['$id' => 'cinema', 'database' => 'mariadb://dedicated']);
+        $getDatabasesDB($database);
+        $getDatabasesDB($database, project: new Document(['$id' => 'source', 'database' => 'mariadb://source']));
+
+        $this->assertSame(['message', 'source'], $projects);
+    }
+
+    private function tenant(): Database
+    {
+        $tenant = (new Database($this->adapter, new Cache(new NoCache())))
+            ->setDatabase('resource')
+            ->setNamespace('metadata')
+            ->setAuthorization($this->authorization);
+
+        return $tenant->addHook(new Relationships());
+    }
+
+    private function catalog(): Database
+    {
+        $catalog = (new Database(new Memory(), new Cache(new NoCache())))
+            ->setDatabase('resource')
+            ->setNamespace('catalog')
+            ->setAuthorization($this->authorization);
+        $this->authorization->skip(function () use ($catalog): void {
+            $catalog->create();
+            $catalog->createCollection(Collection::create(id: 'database_4'));
+            $catalog->createDocument('database_4', new Document(['$id' => 'movies', '$sequence' => '9']));
+            $catalog->createDocument('database_4', new Document(['$id' => 'actors', '$sequence' => '10']));
+        });
+
+        return $catalog;
+    }
+
+    private function requestContainer(Database $catalog): Container
+    {
+        $factory = $this->createStub(DatabaseFactory::class);
+        $factory->method('tenant')->willReturnCallback(fn (): Database => $this->tenant());
+
+        $request = $this->request('/v1/databases/cinema/collections/movies/documents/film');
+
+        $register = require __DIR__ . '/../../../../../app/init/resources/request.php';
+        $container = new Container();
+        $register($container);
+        $container->set('databaseFactory', static fn (): DatabaseFactory => $factory);
+        $container->set('project', static fn (): Document => new Document(['$id' => 'project']));
+        $container->set('request', static fn (): Request => $request);
+        $container->set('dbForProject', static fn (): Database => $catalog);
+        $container->set('usage', static fn (): Context => new Context());
+        $container->set('authorization', fn (): Authorization => $this->authorization);
+        $container->set('user', static fn (): User => new User());
+        $container->set('utopia', static fn (): Http => new Http(new Server($container), 'UTC'));
+
+        return $container;
+    }
+
+    private function request(string $uri): Request
+    {
+        $request = $this->createStub(Request::class);
+        $request->method('getURI')->willReturn($uri);
+        $request->method('getHeaderLine')->willReturn('');
+
+        return $request;
+    }
+
+    private function joinRefusal(Database $database): Exception
+    {
+        try {
+            $database->find(self::MOVIES, [Query::join('directors', 'director', [Query::on('lead', '$id')])]);
+        } catch (Exception $refusal) {
+            return $refusal;
+        }
+
+        $this->fail('the join of an unknown collection must be refused');
+    }
+}

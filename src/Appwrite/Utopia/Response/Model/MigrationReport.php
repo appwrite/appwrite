@@ -125,6 +125,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 7,
             ])
+            ->addRule(Resource::TYPE_PROJECT_ENVIRONMENT, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of project environments to be migrated. Each is recreated under a new ID, empty: its own resources belong to a separate project.',
+                'default' => 0,
+                'example' => 2,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',

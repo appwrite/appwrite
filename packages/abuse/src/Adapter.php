@@ -31,8 +31,10 @@ abstract readonly class Adapter
         return \strtr($this->key, $this->params);
     }
 
+    /** @phpstan-impure */
     abstract public function check(): Result;
 
+    /** @phpstan-impure */
     abstract public function peek(): Result;
 
     abstract public function reset(): void;

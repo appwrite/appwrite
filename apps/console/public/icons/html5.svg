@@ -1,0 +1,10 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<mask id="html5Mask">
+<rect width="24" height="24" fill="white"/>
+<path d="M7.4375 12.0625L6.8125 6.125H16.5L16.1875 8H8.6875L9 10.1875H15.875L15.25 16.125L11.5 17.375L7.75 16.125L7.4375 13H9.3125L9.625 14.5625L11.5 15.1875L13.375 14.5625L13.6875 12.0625H7.4375Z" fill="black"/>
+</mask>
+</defs>
+<path d="M5.25 18.625L4 3H19L17.75 18.625L11.5 20.5L5.25 18.625Z" fill="#C4C6D7" mask="url(#html5Mask)"/>
+<path d="M17.75 4.25H11.5V19.5625L16.5 18L17.75 4.25Z" fill="#C4C6D7" mask="url(#html5Mask)"/>
+</svg>

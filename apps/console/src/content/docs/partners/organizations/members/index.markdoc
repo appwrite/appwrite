@@ -1,0 +1,29 @@
+---
+layout: article
+title: Members and roles
+description: Manage organization members and roles from your partner platform using the Console Organization and Teams APIs.
+---
+
+Partner platforms often invite customer admins to an Appwrite organization or sync membership from an existing identity provider.
+
+# Organization roles {% #organization-roles %}
+
+Appwrite organizations use roles such as owner, developer, and analyst to control Console access. Your platform should assign the minimum role required for each member.
+
+When you proxy Console access, enforce the same role boundaries in your product UI.
+
+# Invite members {% #invite-members %}
+
+Use organization membership APIs to invite users by email. Invited users receive Appwrite Console access according to the role you assign.
+
+Store membership state in your platform so you can show pending invites and revoke access when a customer removes a user from your product.
+
+# OAuth-linked organizations {% #oauth-linked-organizations %}
+
+When using [OAuth connect](/docs/partners/oauth-connect), membership changes may originate in Appwrite or in your product. Decide which system is the source of truth and sync accordingly.
+
+# Related {% #related %}
+
+{% arrow_link href="/docs/advanced/security/roles" %}
+Platform roles
+{% /arrow_link %}

@@ -1,38 +1,46 @@
-## Getting Started
+## Installation
 
-Agent Skills to help developers using AI coding agents with Appwrite. Agent Skills are folders of instructions, scripts, and resources that agents like Claude Code, Cursor, GitHub Copilot, and others can discover and use to work more accurately and efficiently.
-
-These skills follow the Agent Skills Open Standard: https://agentskills.io/home
-
-### Install the skills
-
-Install directly with the Skills CLI:
+Install the skills with the [Skills CLI](https://github.com/vercel-labs/skills):
 
 ```bash
-npx skills add appwrite/agent-skills
+npx skills add appwrite/skills
 ```
 
-This installs the packaged `appwrite-*` skills into your local skills directory.
+The CLI asks which skills to install, which agents should use them, and whether to install them in the current project or globally. To skip the prompts, pass the choices as flags:
 
-### Available language skills
+```bash
+npx skills add appwrite/skills --skill appwrite-typescript --skill appwrite-cli --agent claude-code --global --yes
+```
 
-- `appwrite-typescript`
-- `appwrite-dart`
-- `appwrite-kotlin`
-- `appwrite-swift`
-- `appwrite-php`
-- `appwrite-python`
-- `appwrite-ruby`
-- `appwrite-go`
-- `appwrite-dotnet`
+Run `npx skills add appwrite/skills --list` to see every skill in the repository without installing anything.
 
-### Usage
+If you use Claude Code, Cursor, or Codex, the Appwrite plugin for that tool bundles these skills together with the hosted Appwrite MCP server:
 
-Skills are automatically available once installed. The agent will use them when relevant tasks are detected.
+- [Claude Code plugin](https://github.com/appwrite/claude-plugin)
+- [Cursor plugin](https://github.com/appwrite/cursor-plugin)
+- [Codex plugin](https://github.com/appwrite/codex-plugin)
+
+## Available skills
+
+| Skill | Use it for |
+| --- | --- |
+| `appwrite-typescript` | Web, React Native, Node.js, and Deno apps |
+| `appwrite-dart` | Flutter apps and Dart servers |
+| `appwrite-kotlin` | Android apps and Kotlin/JVM servers |
+| `appwrite-swift` | Apple platform apps and Swift servers |
+| `appwrite-php` | PHP servers, including Laravel and Symfony |
+| `appwrite-python` | Python servers, including Django, Flask, and FastAPI |
+| `appwrite-ruby` | Ruby servers, including Rails and Sinatra |
+| `appwrite-go` | Go servers |
+| `appwrite-rust` | Rust servers |
+| `appwrite-dotnet` | C# and .NET servers |
+| `appwrite-cli` | The Appwrite CLI: project config, deployments, and code generation |
+
+## Usage
+
+Agents load a skill automatically when a task matches its description. To make sure a specific skill is used, name it in your prompt.
 
 ### Prompt examples
-
-Use these as copy-paste prompt starters.
 
 #### TypeScript (server-side)
 
@@ -75,7 +83,7 @@ Prefer dependency injection for the Appwrite client.
 
 ```text
 Use the appwrite-go skill.
-Implement a CLI command that creates a document-style row, then reads it back and prints JSON output.
+Implement a CLI command that creates a row in TablesDB, then reads it back and prints JSON output.
 Use context timeouts and structured error messages.
 ```
 
@@ -85,6 +93,13 @@ Use context timeouts and structured error messages.
 Use the appwrite-kotlin skill.
 Generate Android repository code to paginate rows using cursor queries and expose a suspend function API.
 Keep UI concerns out of the data layer.
+```
+
+#### Appwrite CLI
+
+```text
+Use the appwrite-cli skill.
+Pull the functions in my project, add a new Node.js function that runs on a schedule, and deploy it.
 ```
 
 #### Migration prompt (Databases -> TablesDB)

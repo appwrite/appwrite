@@ -9,7 +9,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class AvatarsCustomServerTest extends Scope
 {
@@ -24,7 +26,7 @@ final class AvatarsCustomServerTest extends Scope
          * caller: Gravatar and Libravatar miss on the random email, so the
          * target's name renders as initials.
          */
-        $userId = ID::unique();
+        $userId = Id::unique();
 
         $user = $this->client->call(Client::METHOD_POST, '/users', \array_merge([
             'content-type' => 'application/json',
@@ -86,7 +88,7 @@ final class AvatarsCustomServerTest extends Scope
          * gets the static fallback. Initials must never derive from the
          * email address.
          */
-        $namelessId = ID::unique();
+        $namelessId = Id::unique();
 
         $user = $this->client->call(Client::METHOD_POST, '/users', \array_merge([
             'content-type' => 'application/json',
@@ -118,7 +120,7 @@ final class AvatarsCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -178,5 +180,105 @@ final class AvatarsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
+    /**
+     * The remote file is served by this Appwrite instance through an API rule on a
+     * nip.io name that resolves to loopback, which the test environment allows
+     * through _APP_ALLOWED_INTERNAL_ADDRESSES; router protection refuses bare IPs.
+     */
+    public function testGetRemoteFileTooLarge(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge(['x-appwrite-project' => $projectId], $this->getHeaders());
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', \array_merge([
+            'content-type' => 'application/json',
+        ], $headers), [
+            'bucketId' => Id::unique(),
+            'name' => 'Avatars remote files',
+            'fileSecurity' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $small = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+        ], $headers), [
+            'fileId' => Id::unique(),
+            'file' => new \CURLFile(\realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+
+        $this->assertEquals(201, $small['headers']['status-code']);
+
+        $source = __DIR__ . '/../../../resources/disk-a/large-file.mp4';
+        $size = \filesize($source);
+        $this->assertGreaterThan(APP_STORAGE_READ_BUFFER, $size);
+
+        $chunkSize = 5 * 1024 * 1024;
+        $handle = \fopen($source, 'rb');
+        $offset = 0;
+        $largeId = Id::unique();
+
+        try {
+            while ($offset < $size) {
+                $chunk = \fread($handle, $chunkSize);
+                $end = $offset + \strlen($chunk) - 1;
+
+                $large = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge([
+                    'content-type' => 'multipart/form-data',
+                    'content-range' => 'bytes ' . $offset . '-' . $end . '/' . $size,
+                    'x-appwrite-id' => $largeId,
+                ], $headers), [
+                    'fileId' => $largeId,
+                    'file' => new \CURLFile('data://video/mp4;base64,' . \base64_encode($chunk), 'video/mp4', 'large-file.mp4'),
+                ]);
+
+                $this->assertEquals(201, $large['headers']['status-code']);
+
+                $offset = $end + 1;
+            }
+        } finally {
+            \fclose($handle);
+        }
+
+        $domain = 'avatars-' . \uniqid() . '.127.0.0.1.nip.io';
+
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', \array_merge([
+            'content-type' => 'application/json',
+        ], $headers), [
+            'domain' => $domain,
+        ]);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+
+        $view = fn (string $fileId): string => 'http://' . $domain . '/v1/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view?project=' . $projectId;
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/image', $headers, [
+            'url' => $view($small['body']['$id']),
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['/avatars/image', '/avatars/favicon'] as $path) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, [
+                'url' => $view($largeId),
+            ]);
+
+            $this->assertEquals(404, $response['headers']['status-code'], $path);
+            $this->assertEquals(Exception::AVATAR_REMOTE_URL_FAILED, $response['body']['type'], $path);
+        }
     }
 }

@@ -1,0 +1,85 @@
+---
+layout: post
+title: "Choosing the right database for AI applications: When to use MongoDB"
+description: Choose the right database for AI workloads. Learn when MongoDB fits dynamic, high-write AI data and how Appwrite lets you build on it without managing backend infrastructure.
+date: 2026-04-03
+lastUpdated: 2026-06-29
+cover: /images/blog/choosing-the-right-database-for-ai-applications-when-to-use-mongodb/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: products
+featured: false
+faqs:
+  - question: "When should I use MongoDB for an AI application?"
+    answer: "Use MongoDB when your data structure changes often, your data is unstructured or semi-structured (prompts, model outputs, embeddings), your write volume is high, or you need to iterate fast. The flexible document model means schema changes do not block product changes, which matters most for early-stage AI work."
+  - question: "When is a relational database better for AI workloads?"
+    answer: "Pick a relational database when your schema is stable and predictable, your queries involve complex joins across many tables, or you need strict ACID guarantees. Financial systems, compliance reporting, and structured analytics tend to land on SQL. Many production systems mix both: relational for the business layer, MongoDB for AI data."
+  - question: "Does Appwrite support MongoDB?"
+    answer: "Appwrite Databases now offers MongoDB as a database engine alongside its relational option. You get the same SDK, permissions, and realtime experience, with a document-shaped backend underneath. See [Appwrite Databases](/docs/products/databases) for details on how to choose an engine for a new database."
+  - question: "Do I need to manage MongoDB infrastructure to use it with Appwrite?"
+    answer: "No. When you select MongoDB as the engine in [Appwrite Databases](/docs/products/databases), Appwrite handles the underlying infrastructure, scaling, and backups. You interact with tables and rows through the same Appwrite SDK, so there is no separate connection string or driver to manage."
+  - question: "Can MongoDB store vector embeddings for RAG?"
+    answer: "Yes. MongoDB Atlas supports vector search with HNSW indexes, which means you can store embeddings alongside the original documents and query them with cosine or euclidean similarity. Storing vectors next to source data avoids the round-trip of a separate vector database for many retrieval-augmented generation workloads."
+  - question: "How does schema flexibility help an AI product iterate faster?"
+    answer: "Every model update or new feature tends to change what fields you want to store, for example adding a confidence score or a new evaluation metric. With a document model, new fields can be added without a migration, and old documents stay valid. That removes one of the most common bottlenecks in fast-moving AI teams."
+---
+
+Not every AI project needs the same database. And picking the wrong one doesn't announce itself immediately, it shows up gradually, in slower iteration cycles, mounting migration overhead, and engineering time spent on database maintenance instead of actual AI work.
+
+This is a practical guide to help you decide when to use [MongoDB](https://mongodb.com) for AI, when a relational database is the better call, and how to tell the difference before it becomes a problem.
+
+# Start here: Four questions that cut through the noise
+
+Before evaluating any specific database, answer these four questions about your AI workload:
+
+**1. How often does your data structure change?**
+If the shape of your data, what fields exist, how outputs are structured, changes frequently as your product iterates, a fixed schema will slow you down every time.
+
+**2. How structured is your data?**
+Text, embeddings, model outputs, and event logs don't map cleanly to relational tables. If your pipeline handles unstructured or semi-structured data, a document model fits more naturally.
+
+**3. What does your write pattern look like?**
+Real-time predictions, continuous ingestion, and streaming events create heavy, unpredictable write workloads. Not every database handles these well at scale.
+
+**4. How fast do you need to move?**
+Early-stage AI products live and die on iteration speed. Every time the data layer becomes a bottleneck, the product slows down with it.
+
+If your answers skew toward frequent change, unstructured data, high write volume, and fast iteration, MongoDB is likely the right database for your AI application. If they skew the other way, a relational database may serve you better. The rest of this guide explains why.
+
+# The case for MongoDB in AI workloads
+
+AI data is fundamentally different from the structured, predictable data that relational databases were built for. A single AI pipeline might store raw user prompts, model responses, confidence scores, vector embeddings, feedback signals, and system logs, all at once, all changing as the product evolves. Forcing this into a rigid schema creates friction that compounds over time. Every model update, every new feature, every pipeline change becomes a database migration problem too.
+
+MongoDB's document model is designed for exactly this environment. Records aren't bound to a fixed structure, new fields can be added without touching existing documents, different versions of the same data can coexist in the same collection, and pipelines can evolve without a database redesign. For AI teams shipping frequently, this flexibility directly translates to faster iteration.
+
+Scalability is the other major factor. Production AI systems write constantly, real-time predictions, streaming events, inference logs, and that volume grows as the product scales. MongoDB is optimized for high write throughput and scales horizontally across nodes, handling traffic spikes and continuous ingestion without becoming the bottleneck.
+
+# Where MongoDB makes the most difference
+
+The advantages show up most clearly in the parts of an AI system that change fastest.
+
+In **real-time inference pipelines**, decisions need to be written the moment they're made. Fraud detection, recommendation engines, and AI assistants all generate a continuous stream of outputs that need to be stored immediately and queried fast. MongoDB handles this write-heavy pattern well, particularly when the shape of those outputs changes as models are updated.
+
+In **experiment tracking and evaluation**, AI teams regularly test new prompts, features, and model versions alongside their production system. Storing experiment metadata, outputs, and evaluation results in the same flexible document model, without schema conflicts, keeps that process clean.
+
+In **user state and context management**, most AI applications need to store session history, conversation context, user preferences, and long-running workflow state. These are naturally nested, variable structures that fit a document model far better than relational tables.
+
+# When a relational database is the better call
+
+Making an honest case for MongoDB means being clear about where it doesn't fit. Relational databases remain the right choice when your schema is stable and predictable, when your workload depends on complex joins across many tables, or when strict transactional integrity and ACID guarantees are non-negotiable. Financial systems, compliance reporting, and structured analytics are all better served by SQL.
+
+A quality production AI system would end up using both, a relational database for the structured business layer and MongoDB for the dynamic, fast-changing AI workloads on top. The decision isn't always either/or. It's about matching the tool to the specific workload, not finding one database that does everything.
+
+# Building on MongoDB with Appwrite
+
+Choosing the right database for AI applications is one decision, but the database is only one piece of a production backend. Auth, file storage, APIs, real-time capabilities, and access control all need to be in place before a product can ship, and building that infrastructure from scratch adds weeks of overhead before a single AI feature goes live.
+
+Appwrite provides the backend layer built on top of MongoDB in its open-source, self-hosted version. When you set up a new self-hosted instance, Appwrite's installation wizard lets you choose MongoDB as your database backend, it then spins up and manages its own MongoDB instance, configured automatically as a replica set, with its own schema. There's nothing to configure manually. Your Appwrite API and SDK behavior stays exactly the same regardless of which database you choose, only the underlying storage engine changes. MongoDB handles the data. Appwrite handles the rest.
+
+[Self-host Appwrite with MongoDB configured](/integrations/self-hosted-mongodb) and ship your AI product faster.
+
+# Closing thoughts
+
+The right database for an AI application is the one that matches your data shape, scales with your workload, and lets your team move at the pace AI development demands. For many teams, that means MongoDB, particularly when data is unstructured, fast-changing, or high-volume. For others, it means a relational database, or a combination of both.
+
+The decision is worth making deliberately. A database that fits your workload from the start is invisible, it just works. One that doesn't fit becomes the thing everyone blames when the team can't move fast enough.

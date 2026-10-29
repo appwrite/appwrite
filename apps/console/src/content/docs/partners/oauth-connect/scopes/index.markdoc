@@ -1,0 +1,39 @@
+---
+layout: article
+title: OAuth connect scopes
+description: Request the right Console OAuth scopes when connecting to user Appwrite accounts from your partner platform.
+---
+
+OAuth scopes define what your platform can do after a user grants consent. Request only the scopes required for your integration.
+
+# Scope principles {% #scope-principles %}
+
+- Start with read-only scopes if your product only displays Appwrite data
+- Add write scopes when your platform creates or updates resources
+- Separate scopes for organizations, projects, and domains where possible
+- Document which features require which scopes in your product UI
+
+# Common scope categories {% #common-scope-categories %}
+
+| Category | Typical use |
+| -------- | ----------- |
+| Organization read | List organizations the user belongs to |
+| Organization write | Create or update organization settings |
+| Projects read | List and inspect projects |
+| Projects write | Create projects and update project settings |
+| Domains read | List organization domains and DNS |
+| Domains write | Register domains and manage DNS records |
+
+Exact scope names are listed in the Appwrite Console when you configure your OAuth app.
+
+# Least privilege {% #least-privilege %}
+
+If your platform only provisions projects inside organizations the user selects, request project write scopes without domain write unless you manage hostnames.
+
+If users can disconnect your integration, delete stored tokens and stop calling Console APIs immediately.
+
+# Related {% #related %}
+
+{% arrow_link href="/docs/partners/oauth-connect/setup" %}
+OAuth connect setup
+{% /arrow_link %}
