@@ -347,10 +347,7 @@ $statsDocument = null;
 // deployment's job. `_APP_WORKERS_NUM` still overrides.
 $workerNumber = intval(System::getEnv('_APP_WORKERS_NUM', 0)) ?: 1;
 
-// How long one permissionsChanged event may hold the pub/sub subscriber while its
-// verification runs against the database. On expiry the affected connections are
-// closed unverified (fail closed) and the firehose moves on. Clamped, as a
-// non-positive Channel::pop() timeout waits forever or not at all.
+// Clamped: a non-positive Channel::pop() timeout waits forever or not at all.
 $permissionTimeout = \max(0.1, (float) System::getEnv('_APP_REALTIME_PERMISSION_TIMEOUT', '5'));
 
 $adapter = new SwooleAdapter(port: System::getEnv('PORT', 80));
@@ -592,11 +589,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         }
     });
 
-    // Verification reads the platform and project databases. Run in this subscriber
-    // coroutine, a cached half-open connection would park the whole firehose on a
-    // socket read, so it runs in a child coroutine, whose fresh context resolves
-    // fresh database objects, and the subscriber waits at most $permissionTimeout.
-    // A timeout or an error leaves the user unverified, so both fail closed.
+    // A child coroutine gets fresh database objects, so a dead cached one cannot park the subscriber.
     $verifyPermissions = function (callable $verify, callable $onFailure) use ($permissionTimeout): array {
         $done = new Channel(1);
         $started = go(function () use ($verify, $done): void {
@@ -607,8 +600,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
         });
 
-        // Verifying inline would bring back the unbounded hang, and saturation is
-        // likely when stuck children pile up, so this fails closed too.
+        // Never inline: that brings back the unbounded wait.
         if ($started === false) {
             return $onFailure('skipped: coroutine limit reached');
         }
@@ -679,13 +671,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $administering = $projectId === 'console' ? $realtime->getAdminConnections($userId) : [];
 
                         if (!empty($connections) || !empty($impersonating) || !empty($administering)) {
-                            // Set by the subscriber when verification times out or fails: the connections were
-                            // closed unverified, so a late-finishing child must not touch their state.
+                            // Set on timeout or failure so a late check leaves state alone.
                             $abandoned = false;
 
                             $onFailure = function (string $reason) use ($event, $projectId, $userId, $connections, $impersonating, $administering, &$abandoned): array {
-                                // Fail closed: a reconnect re-authenticates with fresh roles, so an
-                                // unverifiable user is excluded rather than served on stale roles.
+                                // Fails closed: a reconnect re-authenticates with fresh roles.
                                 $abandoned = true;
                                 Console::error('Realtime permission verification ' . $reason . ' (project: ' . $projectId . ', user: ' . $userId . ', event: ' . ($event['data']['events'][0] ?? 'unknown') . '); closing the user\'s connections unverified');
 
@@ -886,13 +876,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         }
 
                         if ($targetProjectId !== '' && $targetProjectId !== 'console') {
-                            // Set by the subscriber when verification times out or fails: the connections were
-                            // closed unverified, so a late-finishing child must not touch their state.
+                            // Set on timeout or failure so a late check leaves state alone.
                             $abandoned = false;
 
                             $onFailure = function (string $reason) use ($realtime, $event, $targetProjectId, &$abandoned): array {
-                                // Fail closed: a reconnect re-authenticates against the new session
-                                // state, so an unverifiable session is excluded rather than kept alive.
+                                // Fails closed: a reconnect re-authenticates with fresh roles.
                                 $abandoned = true;
                                 Console::error('Realtime permission verification ' . $reason . ' (project: ' . $targetProjectId . ', event: ' . ($event['data']['events'][0] ?? 'unknown') . '); closing its session connections unverified');
 
@@ -901,7 +889,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                     $userId = $realtime->connections[$connection]['userId'] ?? '';
                                     $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
 
-                                    // Admin-mode connections are re-checked by the verifier too, so they close.
                                     if (($realtime->connections[$connection]['admin'] ?? null) !== null) {
                                         $closing[$connection] = true;
                                         continue;
@@ -1099,7 +1086,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $eventTailRegistry->ingest($tailProjectId, Realtime::toTailMetadata($event), \microtime(true));
                     }
                 } catch (\Throwable $th) {
-                    // One bad event must not unwind the subscription and stall the firehose.
                     Console::error('Realtime event handling failed: ' . $th->getMessage());
                 }
             });
