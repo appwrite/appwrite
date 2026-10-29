@@ -7,6 +7,7 @@ use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Handler;
+use Appwrite\Mqtt\Subscriber;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Usage\Context as UsageContext;
 use Swoole\Coroutine;
@@ -47,7 +48,6 @@ require_once __DIR__ . '/init/span.php';
 $register = $GLOBALS['register'] ?? throw new \RuntimeException('Registry not initialized');
 
 $registerConnectionResources ??= require __DIR__ . '/init/mqtt/connection.php';
-$subscriberForMqtt ??= require __DIR__ . '/init/mqtt/subscriber.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -198,7 +198,7 @@ $server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$
 
 // Server-initiated delivery: bridge the Redis 'mqtt' firehose to this worker's local subscribers.
 // Appwrite clients never PUBLISH; messages are produced by the Messaging worker onto the channel.
-$server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register, $container, $telemetry, $subscriberForMqtt): void {
+$server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register, $container, $telemetry): void {
     if (!$telemetry instanceof NoTelemetry) {
         // Liveness signal that is off the client path. Every other broker metric is a synchronous
         // counter or histogram, recorded only when a client acts, so a freshly rolled worker in a
@@ -254,13 +254,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
         });
     });
 
-    // The per-action dispatcher for the 'mqtt' control/delivery channel (see init/mqtt/subscriber.php).
     // Revoke and unsubscribe verification is bounded: a check stuck on a dead database read must not
-    // park this subscriber, so past the timeout the broker fails closed and moves on.
-    $permissionTimeout = \max(0.1, (float) System::getEnv('_APP_MQTT_PERMISSION_TIMEOUT', '5'));
-    $onMessage = $subscriberForMqtt($server, $handler, $mqtt, $permissionTimeout);
+    // park the subscriber, so past the timeout the broker fails closed and moves on.
+    $subscriber = new Subscriber($server, $handler, $mqtt, \max(0.1, (float) System::getEnv('_APP_MQTT_PERMISSION_TIMEOUT', '5')));
 
-    go(function () use ($register, $onMessage): void {
+    go(function () use ($register, $subscriber): void {
         $attempts = 0;
         while ($attempts < 60) {
             try {
@@ -270,7 +268,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                     $attempts = 0;
                 }
 
-                $pubsub->subscribe(['mqtt'], $onMessage);
+                $pubsub->subscribe(['mqtt'], $subscriber->receive(...));
             } catch (\Throwable $error) {
                 $attempts++;
                 Console::error('MQTT pub/sub connection error: ' . $error->getMessage());
