@@ -72,13 +72,13 @@ class Review extends Model
             ])
             ->addRule('trigger', [
                 'type' => self::TYPE_STRING,
-                'description' => 'What queued the review. Possible values: opened, synchronize, ready_for_review, retry, mention.',
+                'description' => 'What queued the review. Possible values: opened, synchronize, retry, mention.',
                 'default' => '',
                 'example' => 'opened',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Review status. Possible values: queued, processing, completed, skipped, failed.',
+                'description' => 'Review status. Possible values: queued, processing, completed, skipped, failed, superseded.',
                 'default' => '',
                 'example' => 'completed',
             ])
@@ -94,11 +94,23 @@ class Review extends Model
                 'default' => '',
                 'example' => 'A',
             ])
+            ->addRule('tierReason', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Why the review has its tier.',
+                'default' => '',
+                'example' => 'One minor finding is still open.',
+            ])
             ->addRule('summary', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Review summary in Markdown.',
                 'default' => '',
                 'example' => 'Looks good overall; one missing null check.',
+            ])
+            ->addRule('walkthrough', [
+                'type' => self::TYPE_JSON,
+                'description' => 'What each changed file does, as a list of path and change.',
+                'default' => [],
+                'example' => [['path' => 'src/index.ts', 'change' => 'Adds a null check.']],
             ])
             ->addRule('reason', [
                 'type' => self::TYPE_STRING,
@@ -126,7 +138,7 @@ class Review extends Model
             ])
             ->addRule('findings', [
                 'type' => Response::MODEL_REVIEW_FINDING,
-                'description' => 'Findings posted with the review.',
+                'description' => 'Findings of the review, posted or not.',
                 'default' => [],
                 'example' => [],
                 'array' => true,

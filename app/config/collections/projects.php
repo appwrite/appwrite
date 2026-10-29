@@ -602,17 +602,22 @@ return [
             Attribute::string(key: 'providerRepositoryOwner'),
             Attribute::string(key: 'providerRepositoryName'),
             Attribute::string(key: 'providerPullRequestId', required: true),
-            // The head the review was queued for, replaced by the head it actually reviews.
-            Attribute::string(key: 'providerCommitHash', size: 64, required: true),
+            // The head the review was queued for, replaced by the head it actually reviews. Empty
+            // for a mention until it starts: it reviews whatever the head is then.
+            Attribute::string(key: 'providerCommitHash', size: 64),
             Attribute::string(key: 'providerBaseCommitHash', size: 64),
-            // opened, synchronize, ready_for_review, retry or mention.
+            // opened, synchronize, retry or mention.
             Attribute::string(key: 'trigger', size: 32, required: true),
             Attribute::string(key: 'providerCommentId'),
-            // queued, processing, completed, skipped or failed.
+            // queued, processing, completed, skipped, failed or superseded (a newer review of the
+            // pull request was queued before this one started).
             Attribute::string(key: 'status', size: 16, required: true),
             Attribute::string(key: 'verdict', size: 32),
             Attribute::string(key: 'tier', size: 8),
+            Attribute::string(key: 'tierReason', size: 2048),
             Attribute::text(key: 'summary', size: 65535),
+            // What each changed file does, as [{path, change}].
+            Attribute::string(key: 'walkthrough', size: 65535, default: [], filters: [Filter::Json]),
             // Why a review was skipped or failed, shown to the project's users.
             Attribute::string(key: 'reason', size: 2048),
             Attribute::string(key: 'providerReviewId'),
@@ -641,11 +646,37 @@ return [
             Attribute::string(key: 'category', size: 64, required: true),
             Attribute::string(key: 'title', size: 1024, required: true),
             Attribute::text(key: 'body', size: 65535, required: true),
-            // The inline comment the finding was posted as.
+            // A replacement for the lines, offered as a GitHub suggestion.
+            Attribute::text(key: 'suggestion', size: 65535),
+            // posted (open on the pull request), dropped (never posted), resolved (fixed by a later
+            // commit) or dismissed (settled in its thread or by a maintainer).
+            Attribute::string(key: 'status', size: 16, default: 'posted'),
+            // Why it was dropped, resolved or dismissed.
+            Attribute::string(key: 'dropReason', size: 2048),
+            // The comment the finding was posted as, the root of its thread. Empty when it was
+            // listed in the review body instead.
             Attribute::string(key: 'providerCommentId'),
         ],
         'indexes' => [
             Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),
+        ],
+    ],
+
+    // Team preferences the reviewer was asked to remember in a conversation, per repository.
+    'reviewLearnings' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewLearnings'),
+        'name' => 'Review Learnings',
+        'attributes' => [
+            Attribute::string(key: 'repositoryId', required: true),
+            Attribute::string(key: 'repositoryInternalId', required: true),
+            Attribute::text(key: 'body', size: 65535, required: true),
+            // GitHub login of who asked, and the comment they asked in.
+            Attribute::string(key: 'author', required: true),
+            Attribute::string(key: 'sourceUrl', size: 2048),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_repositoryInternalId', attributes: ['repositoryInternalId']),
         ],
     ],
 
