@@ -359,6 +359,9 @@ class Deletes extends Action
             case DELETE_TYPE_SCHEDULES:
                 $this->deleteSchedules($dbForPlatform, $getProjectDB, $datetime);
                 break;
+            case DELETE_TYPE_ALERTS:
+                $this->deleteAlerts($dbForPlatform, $datetime);
+                break;
             case DELETE_TYPE_TOPIC:
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
@@ -409,6 +412,7 @@ class Deletes extends Action
             DELETE_TYPE_TEAM_PROJECTS,
             DELETE_TYPE_REALTIME,
             DELETE_TYPE_SCHEDULES,
+            DELETE_TYPE_ALERTS,
             DELETE_TYPE_CSV_EXPORTS,
             DELETE_TYPE_REPORT,
         ], true);
@@ -495,6 +499,19 @@ class Deletes extends Action
      * @throws Structure
      * @throws DatabaseException|Exception
      */
+    /**
+     * Removes this region's alerts that resolved before the retention cutoff;
+     * a firing alert is kept however old it is.
+     */
+    private function deleteAlerts(Database $dbForPlatform, string $datetime): void
+    {
+        $this->deleteByGroup('alerts', [
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+            Query::equal('status', ['resolved']),
+            Query::lessThan('resolvedAt', $datetime),
+        ], $dbForPlatform);
+    }
+
     private function deleteSchedules(Database $dbForPlatform, callable $getProjectDB, string $datetime): void
     {
         $this->listByGroup(
