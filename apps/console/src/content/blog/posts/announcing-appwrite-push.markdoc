@@ -117,16 +117,6 @@ The [iOS background delivery guide](/docs/products/messaging/appwrite-push#backg
 
 **On the web**, messages arrive while the tab is open. Give each browser a stable client ID with `client.setPushClientId()`, and the ones sent while it was closed are replayed when the page opens again.
 
-# Topics, delivery guarantees, and expiry
-
-Appwrite Push works with [Messaging topics](/docs/products/messaging/topics). Register an Appwrite push target for the device, subscribe it to the topic, and listen in the app:
-
-```ts
-await push.subscribe(['news'], onNews, { background: true, title: 'News' });
-```
-
-Each provider and topic chooses its delivery guarantee. **At least once** (QoS 1, the default) stores every message and replays it to devices that reconnect. **At most once** (QoS 0) delivers only to devices connected right now, which suits live scores or typing indicators. **Message expiry** sets how long messages are kept for offline devices, up to 7 days.
-
 # When to reach for Appwrite Push
 
 - **You are adding push to a new app.** Skip the Firebase project and the device token plumbing, and send your first message in minutes.
