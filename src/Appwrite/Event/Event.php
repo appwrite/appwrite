@@ -41,6 +41,8 @@ class Event
 
     public const JOBS_QUEUE_NAME = 'v1-jobs';
 
+    public const REVIEWS_QUEUE_NAME = 'v1-reviews';
+
     public const SCREENSHOTS_QUEUE_NAME = 'v1-screenshots';
 
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';

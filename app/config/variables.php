@@ -1871,6 +1871,48 @@ return [
         ],
     ],
     [
+        'category' => 'Reviews',
+        'description' => 'AI code review for GitHub pull requests, run by the appwrite/hansi service. Optional: reviews stay off until `_APP_REVIEWS_SECRET` is set, and the installer adds the service only then. The service reads jobs from the Redis queue at `_APP_REDIS_HOST` and `_APP_REDIS_PORT`, with `_APP_REDIS_USER` and `_APP_REDIS_PASS`. It runs reviews read-only, without sandboxes. The GitHub App needs these repository permissions: Contents and Metadata (read), Pull requests, Issues and Checks (read and write). It must also subscribe to the "Pull request", "Issue comment" and "Pull request review comment" events. Comments that mention the app (`_APP_VCS_GITHUB_APP_NAME`) are answered, and "@app review" asks for a review.',
+        'variables' => [
+            [
+                'name' => '_APP_REVIEWS_SECRET',
+                'description' => 'Enables code reviews. The secret the code review service sends in the `X-Appwrite-Reviews-Secret` header to report results and request installation tokens. Leave it empty to keep reviews disabled: repositories cannot be enrolled, pull requests queue no reviews and the internal review routes reject every call. **Keep it a secret**.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_MODEL',
+                'description' => 'The model that reviews pull requests, as an AI Gateway model ID such as `anthropic/claude-sonnet-4.5`. Required when reviews are enabled.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_VERIFY_MODEL',
+                'description' => 'The model that double-checks findings before they are posted, as an AI Gateway model ID. Empty uses `_APP_REVIEWS_MODEL`.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_AI_GATEWAY_KEY',
+                'description' => 'API key for the Vercel AI Gateway, which serves the review models. **Keep it a secret**.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
         'category' => 'Maintenance',
         'description' => '',
         'variables' => [

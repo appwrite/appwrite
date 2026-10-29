@@ -19,6 +19,10 @@ class GitHub extends Git
 
     public const EVENT_INSTALLATION = 'installation';
 
+    public const EVENT_ISSUE_COMMENT = 'issue_comment';
+
+    public const EVENT_PULL_REQUEST_REVIEW_COMMENT = 'pull_request_review_comment';
+
     public const CONTENTS_DIRECTORY = 'dir';
 
     public const CONTENTS_FILE = 'file';
@@ -688,6 +692,36 @@ class GitHub extends Git
     }
 
     /**
+     * Create an installation access token for a service that acts on the installation's
+     * repositories itself, limited to the given repositories when any are named.
+     *
+     * @param array<int> $repositoryIds
+     * @return array{token: string, expiresAt: string}
+     *
+     * @throws Exception
+     */
+    public function createAccessToken(array $repositoryIds = []): array
+    {
+        $params = $repositoryIds === [] ? [] : ['repository_ids' => $repositoryIds];
+
+        $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->jwtToken], $params);
+        $responseBody = $response['body'] ?? [];
+        $responseHeaders = $response['headers'] ?? [];
+        $statusCode = \is_array($responseHeaders) ? ($responseHeaders['status-code'] ?? 0) : 0;
+        $statusCode = \is_int($statusCode) ? $statusCode : 0;
+
+        if (!\is_array($responseBody) || !\is_string($responseBody['token'] ?? null) || !\is_string($responseBody['expires_at'] ?? null)) {
+            $safeBody = \is_array($responseBody) ? json_encode(array_intersect_key($responseBody, array_flip(['message', 'documentation_url']))) : '';
+            throw new Exception('Failed to create access token from GitHub API. Status: ' . $statusCode . '. Response: ' . $safeBody, $statusCode);
+        }
+
+        return [
+            'token' => $responseBody['token'],
+            'expiresAt' => $responseBody['expires_at'],
+        ];
+    }
+
+    /**
      * Get user
      *
      * @return array<mixed>
@@ -746,6 +780,35 @@ class GitHub extends Git
         }
 
         return $response['body'] ?? [];
+    }
+
+    /**
+     * Get a user's permission on a repository
+     *
+     * @return string admin, write, read or none; none also for a user GitHub does not know
+     *
+     * @throws Exception
+     */
+    public function getCollaboratorPermission(string $owner, string $repositoryName, string $username): string
+    {
+        $url = "/repos/{$owner}/{$repositoryName}/collaborators/{$username}/permission";
+
+        $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "Bearer $this->accessToken"]);
+
+        $responseHeaders = $response['headers'] ?? [];
+        $statusCode = \is_array($responseHeaders) ? ($responseHeaders['status-code'] ?? 0) : 0;
+        $statusCode = \is_int($statusCode) ? $statusCode : 0;
+        if ($statusCode === 404) {
+            return 'none';
+        }
+        if ($statusCode >= 400) {
+            throw new Exception('Failed to get collaborator permission: HTTP ' . $statusCode, $statusCode);
+        }
+
+        $body = $response['body'] ?? [];
+        $permission = \is_array($body) ? ($body['permission'] ?? 'none') : 'none';
+
+        return \is_string($permission) ? $permission : 'none';
     }
 
     /**
@@ -1396,6 +1459,51 @@ class GitHub extends Git
                     'external' => $external,
                     'pullRequestNumber' => $pullRequestNumber,
                     'action' => $action,
+                ]];
+            case 'issue_comment':
+            case 'pull_request_review_comment':
+                $payloadRepository = $payload['repository'] ?? [];
+                $payloadRepository = \is_array($payloadRepository) ? $payloadRepository : [];
+                $payloadRepositoryOwner = $payloadRepository['owner'] ?? [];
+                $payloadRepositoryOwner = \is_array($payloadRepositoryOwner) ? $payloadRepositoryOwner : [];
+                $payloadComment = $payload['comment'] ?? [];
+                $payloadComment = \is_array($payloadComment) ? $payloadComment : [];
+                $payloadCommentUser = $payloadComment['user'] ?? [];
+                $payloadCommentUser = \is_array($payloadCommentUser) ? $payloadCommentUser : [];
+
+                if ($event === 'issue_comment') {
+                    $payloadIssue = $payload['issue'] ?? [];
+                    $payloadIssue = \is_array($payloadIssue) ? $payloadIssue : [];
+                    // Issues and pull requests share the conversation; only pull requests are of interest.
+                    if (empty($payloadIssue['pull_request'])) {
+                        return [];
+                    }
+                    $pullRequestNumber = $payloadIssue['number'] ?? 0;
+                } else {
+                    $payloadPullRequest = $payload['pull_request'] ?? [];
+                    $pullRequestNumber = \is_array($payloadPullRequest) ? ($payloadPullRequest['number'] ?? 0) : 0;
+                }
+
+                $repositoryId = $payloadRepository['id'] ?? '';
+                $commentId = $payloadComment['id'] ?? 0;
+                // The first comment of a review thread; empty for a thread's first comment.
+                $commentReplyToId = $payloadComment['in_reply_to_id'] ?? 0;
+
+                return [[
+                    'repositoryId' => \is_int($repositoryId) || \is_string($repositoryId) ? \strval($repositoryId) : '',
+                    'repositoryName' => $payloadRepository['name'] ?? '',
+                    'owner' => $payloadRepositoryOwner['login'] ?? '',
+                    'installationId' => $installationId,
+                    'pullRequestNumber' => \is_int($pullRequestNumber) ? $pullRequestNumber : 0,
+                    'action' => $payload['action'] ?? '',
+                    'commentId' => \is_int($commentId) ? $commentId : 0,
+                    'commentKind' => $event === 'issue_comment' ? 'issue' : 'review',
+                    'commentReplyToId' => \is_int($commentReplyToId) ? $commentReplyToId : 0,
+                    'commentBody' => $payloadComment['body'] ?? '',
+                    'commentUrl' => $payloadComment['html_url'] ?? '',
+                    'commentAuthor' => $payloadCommentUser['login'] ?? '',
+                    'commentAuthorType' => $payloadCommentUser['type'] ?? '',
+                    'commentAuthorAssociation' => $payloadComment['author_association'] ?? '',
                 ]];
             case 'installation':
             case 'installation_repositories':
