@@ -39,6 +39,16 @@ abstract class IntegrationTestCase extends TestCase
         return $this->mariadb ??= new Offline();
     }
 
+    protected function openMysql(): Offline
+    {
+        return new Offline();
+    }
+
+    protected function openMariadb(): Offline
+    {
+        return new Offline();
+    }
+
     protected function connectPostgres(): Offline
     {
         return $this->postgres ??= new Offline();

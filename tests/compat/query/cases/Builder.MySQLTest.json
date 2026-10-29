@@ -119593,9 +119593,234 @@
           "$value": "Builder\\Statement",
           "id": 2,
           "props": {
+            "query": "SELECT * FROM `articles` WHERE (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
+            "bindings": [
+              "+exact +phrase",
+              "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `articles` WHERE (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
+        [
+          "+exact +phrase",
+          "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
+        ],
+        [
+          "+exact +phrase",
+          "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
+        ],
+        "SELECT * FROM `articles` WHERE (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
+        "SELECT * FROM `articles` WHERE (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
+        [
+          "+exact +phrase",
+          "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
+        ]
+      ]
+    },
+    {
+      "name": "testCompileSearchExprExactMatchRequiresOnlyIndexedWords",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "filterSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "search",
+              "\"users.service@updated.com\""
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `users` WHERE (MATCH(`search`) AGAINST(? IN BOOLEAN MODE) AND `search` REGEXP ?)",
+            "bindings": [
+              "+users +service +updated",
+              "(^|[^[:alnum:]_])users[^[:alnum:]_]+service[^[:alnum:]_]+updated[^[:alnum:]_]+com([^[:alnum:]_]|$)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` WHERE (MATCH(`search`) AGAINST(? IN BOOLEAN MODE) AND `search` REGEXP ?)",
+        [
+          "+users +service +updated",
+          "(^|[^[:alnum:]_])users[^[:alnum:]_]+service[^[:alnum:]_]+updated[^[:alnum:]_]+com([^[:alnum:]_]|$)"
+        ],
+        [
+          "+users +service +updated",
+          "(^|[^[:alnum:]_])users[^[:alnum:]_]+service[^[:alnum:]_]+updated[^[:alnum:]_]+com([^[:alnum:]_]|$)"
+        ],
+        "SELECT * FROM `users` WHERE (MATCH(`search`) AGAINST(? IN BOOLEAN MODE) AND `search` REGEXP ?)",
+        [
+          "+users +service +updated",
+          "(^|[^[:alnum:]_])users[^[:alnum:]_]+service[^[:alnum:]_]+updated[^[:alnum:]_]+com([^[:alnum:]_]|$)"
+        ]
+      ]
+    },
+    {
+      "name": "testCompileSearchExprExactMatchOfUnindexedWordsKeepsPhrase",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "filterSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "title",
+              "\"to be\""
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
             "query": "SELECT * FROM `articles` WHERE MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
             "bindings": [
-              "\"exact phrase\""
+              "\"to be\""
             ],
             "readOnly": true,
             "namedBindings": null
@@ -119603,16 +119828,122 @@
         },
         "SELECT * FROM `articles` WHERE MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
         [
-          "\"exact phrase\""
+          "\"to be\""
         ],
         [
-          "\"exact phrase\""
+          "\"to be\""
         ],
         "SELECT * FROM `articles` WHERE MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
         "SELECT * FROM `articles` WHERE MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
         [
-          "\"exact phrase\""
+          "\"to be\""
         ]
+      ]
+    },
+    {
+      "name": "testCompileNotSearchExprExactMatch",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "filterNotSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "title",
+              "\"exact phrase\""
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `articles` WHERE NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
+            "bindings": [
+              "+exact +phrase",
+              "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `articles` WHERE NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
+        [
+          "+exact +phrase",
+          "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
+        ],
+        [
+          "+exact +phrase",
+          "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
+        ],
+        "SELECT * FROM `articles` WHERE NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
+        "SELECT * FROM `articles` WHERE NOT (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)"
       ]
     },
     {
@@ -149629,27 +149960,32 @@
           "$value": "Builder\\Statement",
           "id": 3,
           "props": {
-            "query": "SELECT * FROM `t` WHERE MATCH(`content`) AGAINST(? IN BOOLEAN MODE)",
+            "query": "SELECT * FROM `t` WHERE (MATCH(`content`) AGAINST(? IN BOOLEAN MODE) AND `content` REGEXP ?)",
             "bindings": [
-              "\"exact phrase\""
+              "+exact +phrase",
+              "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
             ],
             "readOnly": true,
             "namedBindings": null
           }
         },
-        "SELECT * FROM `t` WHERE MATCH(`content`) AGAINST(? IN BOOLEAN MODE)",
+        "SELECT * FROM `t` WHERE (MATCH(`content`) AGAINST(? IN BOOLEAN MODE) AND `content` REGEXP ?)",
         [
-          "\"exact phrase\""
+          "+exact +phrase",
+          "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
         ],
         [
-          "\"exact phrase\""
+          "+exact +phrase",
+          "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
         ],
-        "SELECT * FROM `t` WHERE MATCH(`content`) AGAINST(? IN BOOLEAN MODE)",
+        "SELECT * FROM `t` WHERE (MATCH(`content`) AGAINST(? IN BOOLEAN MODE) AND `content` REGEXP ?)",
         [
-          "\"exact phrase\""
+          "+exact +phrase",
+          "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
         ],
         [
-          "\"exact phrase\""
+          "+exact +phrase",
+          "(^|[^[:alnum:]_])exact[^[:alnum:]_]+phrase([^[:alnum:]_]|$)"
         ]
       ]
     },
@@ -149888,24 +150224,28 @@
           "$value": "Builder\\Statement",
           "id": 3,
           "props": {
-            "query": "SELECT * FROM `t` WHERE MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+            "query": "SELECT * FROM `t` WHERE (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
             "bindings": [
-              "\"hello world\""
+              "+hello +world",
+              "(^|[^[:alnum:]_])hello[^[:alnum:]_]+world([^[:alnum:]_]|$)"
             ],
             "readOnly": true,
             "namedBindings": null
           }
         },
-        "SELECT * FROM `t` WHERE MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+        "SELECT * FROM `t` WHERE (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
         [
-          "\"hello world\""
+          "+hello +world",
+          "(^|[^[:alnum:]_])hello[^[:alnum:]_]+world([^[:alnum:]_]|$)"
         ],
         [
-          "\"hello world\""
+          "+hello +world",
+          "(^|[^[:alnum:]_])hello[^[:alnum:]_]+world([^[:alnum:]_]|$)"
         ],
-        "SELECT * FROM `t` WHERE MATCH(`title`) AGAINST(? IN BOOLEAN MODE)",
+        "SELECT * FROM `t` WHERE (MATCH(`title`) AGAINST(? IN BOOLEAN MODE) AND `title` REGEXP ?)",
         [
-          "\"hello world\""
+          "+hello +world",
+          "(^|[^[:alnum:]_])hello[^[:alnum:]_]+world([^[:alnum:]_]|$)"
         ]
       ]
     },

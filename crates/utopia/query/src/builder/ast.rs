@@ -300,7 +300,7 @@ impl<D: Dialect> Builder<D> {
                 Binary::new(self.column_to_ast(&left), operator, self.column_to_ast(&right)).into()
             }
             Method::Raw => Raw::new(attribute).into(),
-            _ => Raw::new(if attribute.is_empty() { "1 = 1" } else { attribute }).into(),
+            _ => return Err(Error::Unsupported(format!("Unsupported filter type: {}", query.method().as_str()))),
         })
     }
 
