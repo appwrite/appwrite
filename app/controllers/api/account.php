@@ -2050,6 +2050,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     if (!$isVerified) {
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
+                    // An address held by identities of more than one user matches nobody
+                    $identityOfAnotherUser = $dbForProject->findOne('identities', [
+                        Query::equal('providerEmail', [$providerEmail]),
+                        Query::notEqual('userInternalId', $identityWithMatchingEmail->getAttribute('userInternalId')),
+                    ]);
+                    if (!$identityOfAnotherUser->isEmpty()) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    }
                     $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
                 }
             }

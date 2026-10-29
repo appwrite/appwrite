@@ -4676,6 +4676,16 @@ final class AccountCustomClientTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($ownerId, $response['body']['userId']);
+
+        /**
+         * Test for SUCCESS - several identities of the same owner holding the address still match
+         */
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => 'verified-' . \bin2hex(\random_bytes(8)), 'email' => $providerEmail, 'email_verified' => true]),
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($ownerId, $response['body']['userId']);
     }
 
     public function testOAuth2LinkedEmailStoredOnceVerified(): void
