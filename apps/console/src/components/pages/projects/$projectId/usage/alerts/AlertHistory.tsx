@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Bell, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -60,11 +60,13 @@ export function AlertHistory({
 }: AlertHistoryProps) {
   const t = useT()
   const [filter, setFilter] = useState<Filter>('all')
-  const { data, isLoading } = useQuery(
-    alertsQueryOptions(projectId, {
+  // Switching filters keeps the current feed on screen until the next one arrives.
+  const { data, isLoading } = useQuery({
+    ...alertsQueryOptions(projectId, {
       status: filter === 'all' ? undefined : filter,
     }),
-  )
+    placeholderData: keepPreviousData,
+  })
   const alerts = useMemo(() => data?.alerts ?? [], [data])
   // One clock for the whole feed, so ongoing bars and day labels agree.
   const now = useMemo(() => (data ? Date.now() : 0), [data])

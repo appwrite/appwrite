@@ -1,7 +1,10 @@
 import { useCallback } from 'react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
-import { projectQueryOptions } from '@/lib/react-query/hooks'
+import {
+  alertsQueryOptions,
+  projectQueryOptions,
+} from '@/lib/react-query/hooks'
 import { AlertHistory } from '@/components/pages/projects/$projectId/usage/alerts/AlertHistory'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -41,6 +44,10 @@ export const Route = createFileRoute(
     // Region must be cached before the project-scoped alerts call.
     await context.queryClient.ensureQueryData(
       projectQueryOptions(params.projectId),
+    )
+    // The feed's first page, the "All" filter, so it renders without a skeleton.
+    await context.queryClient.ensureQueryData(
+      alertsQueryOptions(params.projectId),
     )
   },
   component: UsageAlertsPage,

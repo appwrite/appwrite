@@ -2,6 +2,9 @@ import { useCallback, useMemo } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
+  bucketsQueryOptions,
+  databasesQueryOptions,
+  dedicatedDatabasesQueryOptions,
   monitorsQueryOptions,
   projectQueryOptions,
   useOrganizationScopes,
@@ -41,7 +44,21 @@ export const Route = createFileRoute(
 
     // Region must be cached before the project-scoped monitors call.
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    await queryClient.ensureQueryData(monitorsQueryOptions(projectId))
+    const { monitors } = await queryClient.ensureQueryData(
+      monitorsQueryOptions(projectId),
+    )
+
+    // Rows name the database or bucket they watch; load those names with the
+    // list so the scope does not change under the reader.
+    const types = new Set(monitors.map((monitor) => monitor.resourceType))
+    await Promise.all([
+      types.has('database') &&
+        queryClient.ensureQueryData(databasesQueryOptions(projectId, 0, 100)),
+      types.has('bucket') &&
+        queryClient.ensureQueryData(bucketsQueryOptions(projectId, 0, 100)),
+      types.has('dedicatedDatabase') &&
+        queryClient.ensureQueryData(dedicatedDatabasesQueryOptions(projectId)),
+    ]).catch(() => undefined)
   },
   component: UsageMonitorsPage,
 })
