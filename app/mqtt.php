@@ -254,7 +254,14 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
         });
     });
 
-    $eventHandler = new EventHandler($server, $handler, $mqtt, \max(0.1, (float) System::getEnv('_APP_MQTT_PERMISSION_TIMEOUT', '5')));
+    // Half the database pool may be held by permission checks, so a slow database cannot drain it.
+    $eventHandler = new EventHandler(
+        $server,
+        $handler,
+        $mqtt,
+        \max(0.1, (float) System::getEnv('_APP_MQTT_PERMISSION_TIMEOUT', '5')),
+        \max(1, \intdiv($register->get('pools')->get('console')->size, 2)),
+    );
 
     go(function () use ($register, $eventHandler): void {
         $attempts = 0;

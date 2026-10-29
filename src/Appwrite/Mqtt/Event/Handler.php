@@ -11,11 +11,15 @@ use Utopia\Span\Span;
 /** Handles the broker's internal events: revoke, unsubscribe and deliver. */
 class Handler
 {
+    /** Permission checks in flight, revoke and unsubscribe together. */
+    private int $running = 0;
+
     public function __construct(
         private readonly Server $server,
         private readonly Broker $broker,
         private readonly Mqtt $mqtt,
         private readonly float $timeout,
+        private readonly int $checks,
     ) {
     }
 
@@ -50,26 +54,12 @@ class Handler
         $span->set('mqtt.is_broker', true);
 
         try {
-            // The child sends back its count, or what it threw; the span stays here.
-            $result = new Channel(1);
-            $started = \go(function () use ($result, $projectId, $userId): void {
-                try {
-                    $result->push($this->broker->revoke($projectId, $userId));
-                } catch (\Throwable $error) {
-                    $result->push($error);
-                }
-            });
+            $outcome = $this->verify(fn (): int => $this->broker->revoke($projectId, $userId));
 
-            // An inline check could block on the same dead read.
-            $outcome = $started === false ? null : $result->pop($this->timeout);
-
-            if ($outcome === null || $outcome === false) {
-                $span->set('mqtt.verification', $outcome === null ? 'coroutine_limit' : 'timed_out');
+            if (\is_string($outcome)) {
+                $span->set('mqtt.verification', $outcome);
                 $span->set('mqtt.disconnected', $this->broker->expel($projectId, $userId));
-                // A check that could not complete is a failure: the error keeps the span past trace filters.
-                $span->setError(new \RuntimeException($outcome === null
-                    ? 'Permission verification skipped: coroutine limit reached'
-                    : "Permission verification timed out after {$this->timeout}s"));
+                $span->setError($this->unverified($outcome));
 
                 return;
             }
@@ -105,23 +95,12 @@ class Handler
         $span->set('mqtt.is_broker', true);
 
         try {
-            $result = new Channel(1);
-            $started = \go(function () use ($result, $projectId, $userId, $topic): void {
-                try {
-                    $result->push($this->broker->unsubscribe($this->server, $projectId, $userId, $topic));
-                } catch (\Throwable $error) {
-                    $result->push($error);
-                }
-            });
+            $outcome = $this->verify(fn (): int => $this->broker->unsubscribe($this->server, $projectId, $userId, $topic));
 
-            $outcome = $started === false ? null : $result->pop($this->timeout);
-
-            if ($outcome === null || $outcome === false) {
-                $span->set('mqtt.verification', $outcome === null ? 'coroutine_limit' : 'timed_out');
+            if (\is_string($outcome)) {
+                $span->set('mqtt.verification', $outcome);
                 $span->set('mqtt.unsubscribed', $this->broker->drop($this->server, $projectId, $userId, $topic));
-                $span->setError(new \RuntimeException($outcome === null
-                    ? 'Permission verification skipped: coroutine limit reached'
-                    : "Permission verification timed out after {$this->timeout}s"));
+                $span->setError($this->unverified($outcome));
 
                 return;
             }
@@ -138,6 +117,53 @@ class Handler
         } finally {
             $span->finish();
         }
+    }
+
+    /**
+     * Run a permission check in a child coroutine, waiting at most $timeout.
+     *
+     * @param \Closure(): int $check
+     * @return int|\Throwable|string the check's count or error, or why it fails closed unverified
+     */
+    private function verify(\Closure $check): int|\Throwable|string
+    {
+        // A stuck check keeps its slot and its database connection, so the cap bounds the leak.
+        if ($this->running >= $this->checks) {
+            return 'check_limit';
+        }
+
+        $result = new Channel(1);
+        $this->running++;
+        $started = \go(function () use ($check, $result): void {
+            try {
+                $result->push($check());
+            } catch (\Throwable $error) {
+                $result->push($error);
+            } finally {
+                $this->running--;
+            }
+        });
+
+        // An inline check could block on the same dead read.
+        if ($started === false) {
+            $this->running--;
+
+            return 'coroutine_limit';
+        }
+
+        $outcome = $result->pop($this->timeout);
+
+        return $outcome === false ? 'timed_out' : $outcome;
+    }
+
+    /** A check that could not complete is a failure: the error keeps the span past trace filters. */
+    private function unverified(string $reason): \RuntimeException
+    {
+        return new \RuntimeException(match ($reason) {
+            'timed_out' => "Permission verification timed out after {$this->timeout}s",
+            'coroutine_limit' => 'Permission verification skipped: coroutine limit reached',
+            default => 'Permission verification skipped: check limit reached',
+        });
     }
 
     /** @param array<string, mixed> $event */

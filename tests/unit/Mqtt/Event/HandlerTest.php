@@ -98,7 +98,7 @@ final class HandlerTest extends TestCase
      * Build the broker and its event handler. While $blocking is set, the authorizer and the first
      * database touch park on the gate, as a read on a half-open connection would.
      */
-    private function boot(): void
+    private function boot(int $checks = 8): void
     {
         $this->accounts = new Accounts();
         $this->gate = new Channel(1);
@@ -164,7 +164,7 @@ final class HandlerTest extends TestCase
         $this->server = new Server($this->network, $this->handler, $this->store);
         $this->server->start();
 
-        $this->eventHandler = new EventHandler($this->server, $this->handler, $mqtt, self::TIMEOUT);
+        $this->eventHandler = new EventHandler($this->server, $this->handler, $mqtt, self::TIMEOUT, $checks);
 
         $this->spans = new RecordingExporter();
         Span::setExporters($this->spans);
@@ -396,6 +396,46 @@ final class HandlerTest extends TestCase
             $this->assertArrayHasKey(1, $this->store->getSubscribers(self::PROJECT, 'news'), 'the late check dropped another subscription');
             $this->assertSame([], $this->network->closed);
             $this->assertSpan('mqtt.unsubscribe', 'timed_out', 'mqtt.unsubscribed', 1, Level::Error);
+        });
+    }
+
+    #[RunInSeparateProcess]
+    public function testChecksPastTheCapFailClosedImmediately(): void
+    {
+        run(function (): void {
+            $this->boot(checks: 1);
+            $this->connect(1, 'victim');
+            $this->connect(2, 'other');
+            $this->connect(3, 'reader', 'news');
+            $this->connect(4, 'later');
+            $this->blocking = true;
+
+            // The stuck check times out but keeps the only slot until its read returns.
+            $this->eventHandler->handle(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'victim']));
+
+            $start = \microtime(true);
+            $this->eventHandler->handle(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'other']));
+            $elapsed = \microtime(true) - $start;
+            $this->eventHandler->handle(null, 'mqtt', $this->deliverEvent('news', 'hello'));
+
+            // Test for SUCCESS: past the cap the check is not started; the user is closed unverified at once.
+            $this->assertLessThan(self::TIMEOUT / 2, $elapsed, 'a check past the cap waited instead of failing fast');
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $this->network->disconnects(2)[0]->reasonCode);
+            $this->assertCount(1, $this->network->publishes(3), 'delivery stopped at the check cap');
+            $this->assertSame(['timed_out', 'check_limit'], \array_map(fn (Span $span) => $span->get('mqtt.verification'), $this->spans->of('mqtt.revoke')));
+            $error = $this->spans->of('mqtt.revoke')[1]->getError();
+            $this->assertInstanceOf(\RuntimeException::class, $error);
+            $this->assertSame('Permission verification skipped: check limit reached', $error->getMessage());
+
+            // The read returns at last: the slot is free and the next check is verified.
+            $this->blocking = false;
+            $this->gate->push(true);
+            $this->await(fn (): bool => $this->accounts->authorizations > 0);
+            Coroutine::sleep(0.05);
+            $this->eventHandler->handle(null, 'mqtt', $this->event(['action' => Mqtt::ACTION_REVOKE, 'userId' => 'later']));
+
+            $this->assertSame('verified', $this->spans->of('mqtt.revoke')[2]->get('mqtt.verification'), 'the stuck check never released its slot');
+            $this->assertSame([], $this->network->disconnects(4), 'an authorized user was disconnected');
         });
     }
 }
