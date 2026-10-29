@@ -3,13 +3,16 @@
 //! to.
 //!
 //! [`cache`] purges cached content by path, domain, key or whole zone,
-//! through [`cache::Cloudflare`], [`cache::Fastly`], or [`cache::Balancer`],
-//! which fans a purge out over every [`CdnOption`] a balancer's filters
-//! leave. [`certificates`] issues, checks, renews and deletes certificates
-//! through [`certificates::Cloudflare`] (custom hostnames),
+//! through [`cache::Cloudflare`], [`cache::Fastly`], [`cache::CloudFront`]
+//! (distribution tenants), or [`cache::Balancer`], which fans a purge out
+//! over every [`CdnOption`] a balancer's filters leave. [`certificates`]
+//! issues, checks, renews and deletes certificates through
+//! [`certificates::Cloudflare`] (custom hostnames),
 //! [`certificates::Fastly`] (domains with TLS subscriptions),
-//! [`certificates::FastlyTls`] (subscriptions alone), or
-//! [`certificates::Proxy`], which routes by domain.
+//! [`certificates::FastlyTls`] (subscriptions alone),
+//! [`certificates::CloudFront`] (managed certificates on distribution
+//! tenants), or [`certificates::Proxy`], which routes by domain. The
+//! CloudFront providers sign their requests with [`aws::Signature`].
 //!
 //! ```no_run
 //! use utopia_cdn::cache::{Cache, Fastly};
@@ -45,6 +48,7 @@
 //! | `Utopia\Cdn\Cache\Adapter` | [`cache::Adapter`] |
 //! | `Cache\Adapter\Cloudflare` (`PATHS_PER_PURGE`, `KEYS_PER_PURGE`) | [`cache::Cloudflare`] ([`cache::Cloudflare::PATHS_PER_PURGE`], [`cache::Cloudflare::KEYS_PER_PURGE`]) |
 //! | `Cache\Adapter\Fastly` (`KEYS_PER_PURGE`) | [`cache::Fastly`] ([`cache::Fastly::KEYS_PER_PURGE`]) |
+//! | `Cache\Adapter\CloudFront` (`PATHS_PER_PURGE`, `KEYS_PER_PURGE`, `THROTTLE_RETRIES`, `KEY_MAX_LENGTH`, ...) | [`cache::CloudFront`] ([`cache::CloudFront::PATHS_PER_PURGE`], [`cache::CloudFront::KEYS_PER_PURGE`], ...) |
 //! | `Cache\Adapter\Balancer` | [`cache::Balancer`] |
 //! | `Utopia\Cdn\Extend\CdnOption` (`getAdapter()`, `getProvider()`, `isEdge()`, constants) | [`CdnOption`] ([`CdnOption::adapter`], [`CdnOption::provider`], [`CdnOption::is_edge`], [`CdnOption::PROVIDER_FASTLY`], ...) |
 //! | `Utopia\Cdn\Certificates` | [`certificates::Certificates`] |
@@ -52,6 +56,9 @@
 //! | `issueCertificate()`, `isInstantGeneration()`, `getCertificateStatus()`, `isRenewRequired()`, `deleteCertificate()` | [`certificates::Provider::issue_certificate`], [`certificates::Provider::is_instant_generation`], [`certificates::Provider::certificate_status`], [`certificates::Provider::is_renew_required`], [`certificates::Provider::delete_certificate`] |
 //! | `Certificates\Status` | [`certificates::Status`] |
 //! | `Certificates\Challenge` | [`certificates::Challenge`] |
+//! | `Certificates\ValidationToken` | [`certificates::ValidationToken`] |
+//! | `Certificates\Provider\CloudFront` (`getValidationTokens()`, constants) | [`certificates::CloudFront`] ([`certificates::CloudFront::validation_tokens`], [`certificates::CloudFront::RECHECK_INTERVAL`], ...) |
+//! | `Utopia\Cdn\Aws\Signature` (`sign()`, `ALGORITHM`) | [`aws::Signature`] ([`aws::Signature::sign`], [`aws::Signature::ALGORITHM`]) |
 //! | `Certificates\Provider\Cloudflare`, `Fastly`, `FastlyTls`, `Proxy` | [`certificates::Cloudflare`], [`certificates::Fastly`], [`certificates::FastlyTls`], [`certificates::Proxy`] |
 //! | `FastlyTls::CHALLENGE_MANAGED_DNS` | [`certificates::FastlyTls::CHALLENGE_MANAGED_DNS`] |
 //! | the `$client` of a provider (`Psr\Http\Client\ClientInterface`) | any [`utopia_client::Adapter`]; [`DefaultClient`] by default |
@@ -59,23 +66,28 @@
 //! | `Exception\Purge` (`getErrors()`) | [`Error::Purge`] |
 //! | `Exception\Configuration`, `UnsupportedOperation` | [`Error::Configuration`], [`Error::UnsupportedOperation`] |
 //!
-//! PHP passes optional constructor arguments positionally; here each is a
-//! `with_*` method (`with_service_id`, `with_soft_purge`, `with_api_base`,
-//! `with_client`, ...). Certificate statuses are a [`certificates::Status`]
-//! enum rather than strings.
+//! PHP passes optional constructor arguments positionally; for the
+//! Cloudflare and Fastly providers each is a `with_*` method
+//! (`with_service_id`, `with_soft_purge`, `with_api_base`, `with_client`,
+//! ...), while the CloudFront providers take every argument in PHP's order,
+//! `None` standing for PHP's default (the client is required: pass
+//! [`default_client()`] for PHP's). Certificate statuses are a
+//! [`certificates::Status`] enum rather than strings.
 #![warn(missing_docs)]
 
 mod api;
+pub mod aws;
 pub mod cache;
 pub mod certificates;
 pub mod domain;
 mod error;
 mod option;
+mod xml;
 
 use std::future::Future;
 use std::pin::Pin;
 
-pub use api::DefaultClient;
+pub use api::{DefaultClient, default_client};
 pub use error::{Blocked, Error};
 pub use option::CdnOption;
 

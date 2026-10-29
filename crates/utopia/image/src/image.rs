@@ -73,9 +73,14 @@ impl Image {
     /// reads its EXIF orientation (3, 6 and 8 rotate the image when it is
     /// written; mirrored orientations are ignored).
     ///
+    /// The format is read from the signature first ([`Format::detect`]):
+    /// anything but JPEG, PNG, GIF, WebP, AVIF and HEIC fails with
+    /// [`Error::UnsupportedFormat`] before a decoder sees it.
+    ///
     /// PHP: `new Image($data)`.
     pub fn new(data: &[u8]) -> Result<Image> {
-        let frames = decode::decode(data)?;
+        // Only decoders for the detected format ever see the data.
+        let frames = decode::decode(data, Format::detect(data)?)?;
         let rotation = match decode::orientation(data) {
             Some(3) => 180,
             Some(6) => 90,

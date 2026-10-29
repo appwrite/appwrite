@@ -9,7 +9,11 @@ repository = "https://github.com/utopia-rs/cdn"
 publish.workspace = true
 
 [dependencies]
+getrandom.workspace = true
+hmac.workspace = true
 php-std.workspace = true
+quick-xml.workspace = true
+sha2.workspace = true
 thiserror.workspace = true
 utopia-async.workspace = true
 utopia-balancer.workspace = true
@@ -18,4 +22,4 @@ utopia-client.workspace = true
 
 [package.metadata.utopia]
 category = "integrations"
-php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"
+php-sync = "b1347bcf365d1c279be7e2d1d91adae2cec838a7"

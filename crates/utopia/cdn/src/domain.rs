@@ -50,7 +50,14 @@ pub fn validate(domain: &str) -> Result<Cow<'_, str>, Error> {
     })
 }
 
-/// Checks that every cache path begins with `/`.
+/// Checks that every cache path begins with `/` and has no `.` or `..`
+/// segment.
+///
+/// Cache paths are joined onto provider API routes (Fastly purges at
+/// `/purge/{domain}{path}`), and HTTP clients resolve `.` and `..`
+/// segments before sending, so such a segment would move the request off
+/// that route. No cached URL contains one, so they are refused,
+/// percent-encoded or not.
 ///
 /// Fails with [`Error::InvalidArgument`] otherwise.
 ///
@@ -70,9 +77,28 @@ pub fn validate(domain: &str) -> Result<Cow<'_, str>, Error> {
 /// PHP: `Domain::validatePaths()`, which returns the paths unchanged; an
 /// entry that is not a string cannot be expressed here.
 pub fn validate_paths<S: AsRef<str>>(paths: &[S]) -> Result<(), Error> {
-    if paths.iter().all(|path| path.as_ref().starts_with('/')) {
-        Ok(())
-    } else {
-        Err(Error::InvalidArgument("Every cache path must be a string beginning with \"/\".".into()))
+    for path in paths {
+        let path = path.as_ref();
+        if !path.starts_with('/') {
+            return Err(Error::InvalidArgument("Every cache path must be a string beginning with \"/\".".into()));
+        }
+        if has_dot_segment(path) {
+            return Err(Error::InvalidArgument("Cache paths must not contain \".\" or \"..\" segments.".into()));
+        }
     }
+    Ok(())
+}
+
+/// Whether the path part, before any query or fragment, has a `.` or `..`
+/// segment (`%2e` counting as a dot, in either case).
+///
+/// PHP: `Domain::hasDotSegment()` (private).
+fn has_dot_segment(path: &str) -> bool {
+    let end = path.find(['?', '#']).unwrap_or(path.len());
+    path[..end].split('/').any(|segment| {
+        let folded = segment.to_ascii_lowercase().replace("%2e", ".");
+        // Only the dots of a segment `.` or `..` can match, so folding the
+        // case of the rest changes nothing.
+        folded == "." || folded == ".."
+    })
 }

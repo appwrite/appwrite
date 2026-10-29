@@ -11,7 +11,7 @@ use std::io::Cursor;
 
 use image::AnimationDecoder;
 use serde_json::{Value, json};
-use utopia_image::{Error, FocalPoint, Gravity, Image, OutputFormat, Resource, set_resource_limit};
+use utopia_image::{Error, FocalPoint, Format, Gravity, Image, OutputFormat, Resource, set_resource_limit};
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, float};
 use crate::bench::Bench;
@@ -33,6 +33,7 @@ pub const OPS: &[&str] = &[
     "image.size_by_fixed_height",
     "image.size_by_fixed_width",
     "image.gravity_types",
+    "format.detect",
     "image.set_resource_limit",
     "file.probe",
     "file.compare",
@@ -96,6 +97,30 @@ fn read(path: &str) -> Result<Vec<u8>, Fault> {
 
 fn err(e: Error) -> Outcome {
     Outcome::err(e.php_class(), e.to_string())
+}
+
+/// Bytes built from segments (as `data()` in Adapter.php): bytes as they
+/// are, `{"N": n}` / `{"J": n}` as `pack()` writes n (32 / 64-bit big
+/// endian), `{"repeat": bytes, "times": n}` the bytes n times.
+fn data(segments: &[Value]) -> Result<Vec<u8>, Fault> {
+    let mut out = Vec::new();
+    for segment in segments {
+        if let Some(n) = segment.get("N").and_then(Value::as_i64) {
+            out.extend_from_slice(&(n as u32).to_be_bytes());
+        } else if let Some(n) = segment.get("J").and_then(Value::as_i64) {
+            out.extend_from_slice(&(n as u64).to_be_bytes());
+        } else if let Some(part) = segment.get("repeat") {
+            let part = crate::adapter::bytes(part).ok_or_else(|| Fault::new("`repeat` must be bytes"))?;
+            let times = segment.get("times").and_then(Value::as_u64).unwrap_or(0);
+            out.extend(part.repeat(usize::try_from(times).unwrap_or(0)));
+        } else {
+            out.extend(
+                crate::adapter::bytes(segment)
+                    .ok_or_else(|| Fault::new("a data segment is bytes, {N}, {J} or {repeat, times}"))?,
+            );
+        }
+    }
+    Ok(out)
 }
 
 fn dimension(a: &Args, key: &str) -> Result<u32, Fault> {
@@ -243,6 +268,10 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             }
         }
         "image.gravity_types" => Outcome::ok(Gravity::ALL.iter().map(|g| g.name()).collect::<Vec<_>>()),
+        "format.detect" => match Format::detect(&data(a.array("data")?)?) {
+            Ok(format) => Outcome::ok(format.value()),
+            Err(e) => err(e),
+        },
         "image.set_resource_limit" => {
             let name = a.str("type")?;
             let resource = Resource::from_name(name)

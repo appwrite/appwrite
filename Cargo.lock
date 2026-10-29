@@ -4376,7 +4376,11 @@ dependencies = [
 name = "utopia-cdn"
 version = "0.1.0"
 dependencies = [
+ "getrandom 0.3.4",
+ "hmac 0.12.1",
  "php-std",
+ "quick-xml",
+ "sha2 0.10.9",
  "thiserror",
  "utopia-async",
  "utopia-balancer",

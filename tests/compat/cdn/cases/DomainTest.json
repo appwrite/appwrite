@@ -326,6 +326,182 @@
           "message": "Every cache path must be a string beginning with \"/\"."
         }
       }
+    },
+    {
+      "name": "rejects paths with dot segments: parent at the start",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/../../service/service-id/purge_all"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cache paths must not contain \".\" or \"..\" segments."
+        }
+      }
+    },
+    {
+      "name": "rejects paths with dot segments: parent in the middle",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/assets/../admin"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cache paths must not contain \".\" or \"..\" segments."
+        }
+      }
+    },
+    {
+      "name": "rejects paths with dot segments: parent at the end",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/assets/.."
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cache paths must not contain \".\" or \"..\" segments."
+        }
+      }
+    },
+    {
+      "name": "rejects paths with dot segments: current directory",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/assets/./app.js"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cache paths must not contain \".\" or \"..\" segments."
+        }
+      }
+    },
+    {
+      "name": "rejects paths with dot segments: parent before a query",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/..?x=1"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cache paths must not contain \".\" or \"..\" segments."
+        }
+      }
+    },
+    {
+      "name": "rejects paths with dot segments: encoded parent",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/%2e%2e/purge_all"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cache paths must not contain \".\" or \"..\" segments."
+        }
+      }
+    },
+    {
+      "name": "rejects paths with dot segments: encoded parent, upper case",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/%2E%2E/purge_all"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cache paths must not contain \".\" or \"..\" segments."
+        }
+      }
+    },
+    {
+      "name": "rejects paths with dot segments: half-encoded parent",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/.%2e/purge_all"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cache paths must not contain \".\" or \"..\" segments."
+        }
+      }
+    },
+    {
+      "name": "rejects paths with dot segments: encoded current directory",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/%2e/app.js"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Cache paths must not contain \".\" or \"..\" segments."
+        }
+      }
+    },
+    {
+      "name": "accepts dots that are not segments",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/app.js",
+          "/.well-known/security.txt",
+          "/..png",
+          "/a..b/c",
+          "/...",
+          "/redirect?to=../login",
+          "/page#../section"
+        ]
+      },
+      "expect": [
+        "/app.js",
+        "/.well-known/security.txt",
+        "/..png",
+        "/a..b/c",
+        "/...",
+        "/redirect?to=../login",
+        "/page#../section"
+      ]
+    },
+    {
+      "name": "a later path with a dot segment",
+      "op": "domain.validate_paths",
+      "args": {
+        "paths": [
+          "/ok",
+          "relative",
+          "/.."
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Every cache path must be a string beginning with \"/\"."
+        }
+      }
     }
   ]
 }
