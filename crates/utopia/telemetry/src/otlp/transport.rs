@@ -2,13 +2,15 @@
 //! the default.
 
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
 
 use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
 use hyper::client::conn::http1::{self, SendRequest};
 use hyper_rustls::HttpsConnector;
+use rustls::pki_types::CertificateDer;
+use rustls::pki_types::pem::PemObject;
 use tower_service::Service;
 use utopia_async::hyper::Connector;
 
@@ -74,6 +76,7 @@ pub struct HttpTransport {
     timeout: Duration,
     pool_size: usize,
     socket_buffer_size: usize,
+    certificate_authority: Option<String>,
     idle: Mutex<Vec<Sender>>,
     shutdown: AtomicBool,
 }
@@ -126,6 +129,7 @@ impl HttpTransport {
             timeout: Duration::from_secs(10),
             pool_size: 8,
             socket_buffer_size: 64 * 1024,
+            certificate_authority: None,
             idle: Mutex::new(Vec::new()),
             shutdown: AtomicBool::new(false),
         })
@@ -172,6 +176,35 @@ impl HttpTransport {
         self
     }
 
+    /// Trusts the certificates of the PEM bundle at `path` for `https`
+    /// endpoints instead of the default roots. The collector's certificate
+    /// is always verified, its IP addresses too when the endpoint names one.
+    ///
+    /// PHP: the `$certificateAuthority` argument.
+    pub fn with_certificate_authority(mut self, path: &str) -> Self {
+        self.certificate_authority = Some(path.to_owned());
+        self
+    }
+
+    /// The TLS settings of `https` connections: the trusted roots.
+    fn tls(&self) -> Result<rustls::ClientConfig, Error> {
+        let mut roots = rustls::RootCertStore::empty();
+        match &self.certificate_authority {
+            Some(path) => {
+                let certificates = CertificateDer::pem_file_iter(path)
+                    .map_err(|_| Error::Telemetry(format!("TLS setup failed: cannot read {path}")))?;
+                for certificate in certificates.flatten() {
+                    let _ = roots.add(certificate);
+                }
+            }
+            None => roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned()),
+        }
+        rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
+            .with_safe_default_protocol_versions()
+            .map(|builder| builder.with_root_certificates(roots).with_no_client_auth())
+            .map_err(|e| Error::Telemetry(format!("TLS setup failed: {e}")))
+    }
+
     fn idle(&self) -> MutexGuard<'_, Vec<Sender>> {
         self.idle.lock().unwrap_or_else(|e| e.into_inner())
     }
@@ -196,15 +229,48 @@ impl HttpTransport {
         http.set_send_buffer_size(Some(self.socket_buffer_size));
         http.set_recv_buffer_size(Some(self.socket_buffer_size));
         let mut https: HttpsConnector<Connector> = hyper_rustls::HttpsConnectorBuilder::new()
-            .with_provider_and_webpki_roots(rustls::crypto::ring::default_provider())
-            .map_err(|e| Error::Telemetry(format!("TLS setup failed: {e}")))?
+            .with_tls_config(self.tls()?)
             .https_or_http()
             .enable_http1()
             .wrap_connector(http);
         let stream = https.call(self.url.clone()).await.map_err(|e| connection_failed(&*e))?;
-        let (sender, connection) = http1::handshake(stream).await.map_err(|e| connection_failed(&e))?;
+        let (mut sender, connection) = http1::handshake(stream).await.map_err(|e| connection_failed(&e))?;
         utopia_async::spawn(connection);
+        if self.address() {
+            self.probe(&mut sender).await?;
+        }
         Ok(sender)
+    }
+
+    /// Whether the endpoint is `https` on an IP literal, whose certificate
+    /// must name that address.
+    fn address(&self) -> bool {
+        let host = self.url.host().unwrap_or_default().trim_matches(['[', ']']);
+        self.url.scheme_str() == Some("https") && host.parse::<std::net::IpAddr>().is_ok()
+    }
+
+    /// A HEAD request for the root, carrying none of the endpoint's path,
+    /// query, headers or payload, before the connection carries an export
+    /// (the handshake has checked the certificate names the address).
+    ///
+    /// PHP: `Swoole::verifyAddress()`.
+    async fn probe(&self, sender: &mut Sender) -> Result<(), Error> {
+        let request = hyper::Request::head("/")
+            .header("Host", self.authority.as_str())
+            .header("Connection", "keep-alive")
+            .body(Full::new(Bytes::new()))
+            .map_err(|e| Error::Telemetry(e.to_string()))?;
+        let exchange = async {
+            sender.ready().await?;
+            let response = sender.send_request(request).await?;
+            response.into_body().collect().await?;
+            Ok::<_, hyper::Error>(())
+        };
+        match utopia_async::timeout(self.timeout, exchange).await {
+            Err(_) => Err(Error::Telemetry("OTLP connection failed: Operation timed out (code: 110)".into())),
+            Ok(Err(e)) => Err(connection_failed(&e)),
+            Ok(Ok(())) => Ok(()),
+        }
     }
 
     async fn post(&self, sender: &mut Sender, payload: Bytes) -> Result<(u16, Bytes), Failure> {

@@ -4925,6 +4925,7 @@ dependencies = [
  "thiserror",
  "tower-service",
  "utopia-async",
+ "webpki-roots 1.0.10",
 ]
 
 [[package]]

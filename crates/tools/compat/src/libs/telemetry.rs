@@ -245,6 +245,9 @@ fn transport(endpoint: &str, a: &Args<'_>) -> Result<HttpTransport, Error> {
     if let Ok(Some(size)) = a.opt_i64("socket_buffer_size") {
         t = t.with_socket_buffer_size(size.max(0) as usize);
     }
+    if let Ok(Some(path)) = a.opt_str("certificate_authority") {
+        t = t.with_certificate_authority(path);
+    }
     Ok(t)
 }
 

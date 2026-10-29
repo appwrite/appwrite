@@ -111,6 +111,9 @@ struct Inner {
     instruments: Mutex<Vec<(Kind, String, Instrument)>>,
     /// Streams in the order they were registered (first measurement).
     streams: Mutex<Vec<Arc<Stream>>>,
+    /// Held while a collect exports, so overlapping collects (a timer tick
+    /// still exporting when shutdown flushes) run one at a time.
+    collecting: utopia_async::sync::Mutex<()>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -304,6 +307,7 @@ impl OpenTelemetry {
                 resource,
                 instruments: Mutex::new(Vec::new()),
                 streams: Mutex::new(Vec::new()),
+                collecting: utopia_async::sync::Mutex::new(()),
             }),
         }
     }
@@ -530,12 +534,64 @@ impl Telemetry for OpenTelemetry {
 
     /// Runs the observable gauges' callbacks and sends every metric with a
     /// data point in one request; `false` when the transport fails.
+    /// Overlapping calls run one at a time.
     fn collect(&self) -> BoxFuture<'_, bool> {
         Box::pin(async move {
+            let _collecting = self.inner.collecting.lock().await;
             match self.request().await {
                 None => true,
                 Some(payload) => self.inner.transport.send(payload).await.is_ok(),
             }
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    use super::*;
+    use crate::Telemetry;
+
+    /// Counts sends, and the most that were in flight at once.
+    #[derive(Default)]
+    struct Slow {
+        sending: AtomicUsize,
+        overlapping: AtomicUsize,
+        sent: AtomicUsize,
+    }
+
+    impl Transport for Slow {
+        fn content_type(&self) -> &str {
+            "application/x-protobuf"
+        }
+
+        fn send(&self, _payload: Vec<u8>) -> BoxFuture<'_, Result<Vec<u8>, crate::Error>> {
+            Box::pin(async move {
+                let now = self.sending.fetch_add(1, Ordering::SeqCst) + 1;
+                self.overlapping.fetch_max(now, Ordering::SeqCst);
+                utopia_async::sleep(std::time::Duration::from_millis(50)).await;
+                self.sending.fetch_sub(1, Ordering::SeqCst);
+                self.sent.fetch_add(1, Ordering::SeqCst);
+                Ok(Vec::new())
+            })
+        }
+
+        fn shutdown(&self) -> bool {
+            true
+        }
+    }
+
+    #[utopia_async::test]
+    async fn overlapping_collects_export_one_at_a_time() {
+        let transport = Arc::new(Slow::default());
+        let telemetry = OpenTelemetry::with_transport("namespace", "service", "instance", transport.clone());
+        telemetry.counter("counter", None, None).add(1, &[]);
+
+        let (first, second) = utopia_async::join!(telemetry.collect(), telemetry.collect());
+
+        assert!(first && second);
+        assert_eq!(transport.sent.load(Ordering::SeqCst), 2);
+        assert_eq!(transport.overlapping.load(Ordering::SeqCst), 1);
     }
 }

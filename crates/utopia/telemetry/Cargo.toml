@@ -11,7 +11,7 @@ publish.workspace = true
 [features]
 default = ["otlp"]
 # The OpenTelemetry backend: OTLP/protobuf over HTTP(S).
-otlp = ["dep:bytes", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:rustls", "dep:utopia-async", "dep:tower-service"]
+otlp = ["dep:bytes", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:rustls", "dep:utopia-async", "dep:tower-service", "dep:webpki-roots"]
 
 [dependencies]
 bytes = { workspace = true, optional = true }
@@ -24,10 +24,11 @@ rustls = { workspace = true, optional = true }
 thiserror.workspace = true
 utopia-async = { workspace = true, optional = true, features = ["hyper"] }
 tower-service = { workspace = true, optional = true }
+webpki-roots = { workspace = true, optional = true }
 
 [dev-dependencies]
 utopia-async.workspace = true
 
 [package.metadata.utopia]
 category = "observability"
-php-sync = "cdb86de54b4d3a1db8fe7b4da00a34affdcae61b"
+php-sync = "eacd96a27146a10aeefe92480af9e93f1a030fcf"

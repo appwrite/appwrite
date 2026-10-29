@@ -399,6 +399,7 @@ final class Adapter implements Base, Benchmarks
             ...(isset($a['timeout']) ? ['timeout' => (float) $a['timeout']] : []),
             ...(isset($a['pool_size']) ? ['poolSize' => $a['pool_size']] : []),
             ...(isset($a['socket_buffer_size']) ? ['socketBufferSize' => $a['socket_buffer_size']] : []),
+            ...(isset($a['certificate_authority']) ? ['certificateAuthority' => $a['certificate_authority']] : []),
         );
     }
 
