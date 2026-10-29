@@ -103,11 +103,23 @@ pub(crate) struct Base<'a> {
     pub(crate) source_version: String,
     pub(crate) schemas: SchemaReader,
     pub(crate) resolver: LocalResolver<'a>,
+    /// Each referenced header, expanded once (PHP: `$referencedHeaders`).
+    referenced_headers: std::cell::RefCell<std::collections::HashMap<Vec<u8>, Header>>,
+    /// The header references being expanded (PHP: `$expandingHeaders`).
+    expanding_headers: std::cell::RefCell<Vec<Vec<u8>>>,
 }
 
 impl<'a> Base<'a> {
     pub(crate) fn new(document: &'a Array, version: Version, source_version: String, schemas: SchemaReader) -> Self {
-        Base { document, version, source_version, schemas, resolver: LocalResolver::new(document) }
+        Base {
+            document,
+            version,
+            source_version,
+            schemas,
+            resolver: LocalResolver::new(document),
+            referenced_headers: Default::default(),
+            expanding_headers: Default::default(),
+        }
     }
 
     fn field(&self, key: &str) -> Option<&'a Value> {
@@ -331,33 +343,71 @@ impl<'a> Base<'a> {
         let raw = shape::object_at(raw, location)?;
         let mut headers = Map::with_capacity(raw.len());
         for (name, item) in raw.iter() {
-            let header_location = location.key(name);
-            let data = self.resolve_object(item, &header_location)?;
-            let schema = if let Some(raw) = data.get_str("schema") {
-                Some(self.schemas.read_at(raw, &header_location.name("schema"))?)
-            } else if openapi2 && isset(&data, "type").is_some() {
-                Some(self.schemas.parameter_fields_at(&data, &header_location)?)
-            } else {
-                None
-            };
-            headers.insert(
-                key_text(name),
-                Header {
-                    description: optional_or_empty(&data, "description")?,
-                    required: flag(&data, "required"),
-                    deprecated: flag(&data, "deprecated"),
-                    schema,
-                    content: match isset(&data, "content") {
-                        Some(raw) => self.media_types(raw, &header_location.name("content"))?,
-                        None => Map::new(),
-                    },
-                    style: optional(&data, "style")?,
-                    explode: optional_flag(&data, "explode"),
-                    extensions: shape::extensions(&data),
-                },
-            );
+            headers.insert(key_text(name), self.header(item, &location.key(name), openapi2)?);
         }
         Ok(headers)
+    }
+
+    /// A header. A referenced header is expanded once and shared, so
+    /// references that fan out through media-type encodings cost linear
+    /// work, and one that reaches itself through its own content is
+    /// [`Error::CircularReference`].
+    ///
+    /// PHP: `AbstractReader::parseHeader()` (private).
+    fn header(&self, item: &Value, location: &Loc<'_>, openapi2: bool) -> Result<Header, Error> {
+        let reference = match item {
+            Value::Array(item) => match item.get_str("$ref") {
+                Some(Value::Str(reference)) => Some(reference.to_vec()),
+                _ => None,
+            },
+            _ => None,
+        };
+        let Some(reference) = reference else {
+            return self.build_header(&*self.resolve_object(item, location)?, location, openapi2);
+        };
+        if let Some(header) = self.referenced_headers.borrow().get(&reference) {
+            return Ok(header.clone());
+        }
+        if self.expanding_headers.borrow().contains(&reference) {
+            let expanding = self.expanding_headers.borrow();
+            let trail = expanding
+                .iter()
+                .chain(std::iter::once(&reference))
+                .map(|r| String::from_utf8_lossy(r))
+                .collect::<Vec<_>>()
+                .join(" -> ");
+            return Err(Error::CircularReference(format!("Circular reference: {trail}")));
+        }
+        self.expanding_headers.borrow_mut().push(reference.clone());
+        let header = self.resolve_object(item, location).and_then(|data| self.build_header(&data, location, openapi2));
+        self.expanding_headers.borrow_mut().pop();
+        let header = header?;
+        self.referenced_headers.borrow_mut().insert(reference, header.clone());
+        Ok(header)
+    }
+
+    /// PHP: `AbstractReader::buildHeader()` (private).
+    fn build_header(&self, data: &Array, location: &Loc<'_>, openapi2: bool) -> Result<Header, Error> {
+        let schema = if let Some(raw) = data.get_str("schema") {
+            Some(self.schemas.read_at(raw, &location.name("schema"))?)
+        } else if openapi2 && isset(data, "type").is_some() {
+            Some(self.schemas.parameter_fields_at(data, location)?)
+        } else {
+            None
+        };
+        Ok(Header {
+            description: optional_or_empty(data, "description")?,
+            required: flag(data, "required"),
+            deprecated: flag(data, "deprecated"),
+            schema,
+            content: match isset(data, "content") {
+                Some(raw) => self.media_types(raw, &location.name("content"))?,
+                None => Map::new(),
+            },
+            style: optional(data, "style")?,
+            explode: optional_flag(data, "explode"),
+            extensions: shape::extensions(data),
+        })
     }
 
     /// The object at `raw`, or the object its `$ref` chain leads to.
