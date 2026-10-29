@@ -349,8 +349,9 @@ $workerNumber = intval(System::getEnv('_APP_WORKERS_NUM', 0)) ?: 1;
 
 // How long one permissionsChanged event may hold the pub/sub subscriber while its
 // verification runs against the database. On expiry the affected connections are
-// closed unverified (fail closed) and the firehose moves on.
-$permissionTimeout = (float) System::getEnv('_APP_REALTIME_PERMISSION_TIMEOUT', '5');
+// closed unverified (fail closed) and the firehose moves on. Clamped, as a
+// non-positive Channel::pop() timeout waits forever or not at all.
+$permissionTimeout = \max(0.1, (float) System::getEnv('_APP_REALTIME_PERMISSION_TIMEOUT', '5'));
 
 $adapter = new SwooleAdapter(port: System::getEnv('PORT', 80));
 $adapter
@@ -595,7 +596,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     // coroutine, a cached half-open connection would park the whole firehose on a
     // socket read, so it runs in a child coroutine, whose fresh context resolves
     // fresh database objects, and the subscriber waits at most $permissionTimeout.
-    $verifyPermissions = function (callable $verify, callable $onTimeout) use ($permissionTimeout): array {
+    // A timeout or an error leaves the user unverified, so both fail closed.
+    $verifyPermissions = function (callable $verify, callable $onFailure) use ($permissionTimeout): array {
         $done = new Channel(1);
         $started = go(function () use ($verify, $done): void {
             try {
@@ -608,15 +610,19 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         if ($started === false) {
             Console::warning('Coroutine limit reached, verifying realtime permissions inline');
 
-            return $verify();
+            try {
+                return $verify();
+            } catch (\Throwable $th) {
+                return $onFailure('failed: ' . $th->getMessage());
+            }
         }
 
         $result = $done->pop($permissionTimeout);
         if ($result === false) {
-            return $onTimeout();
+            return $onFailure('timed out');
         }
         if (isset($result['error'])) {
-            throw $result['error'];
+            return $onFailure('failed: ' . $result['error']->getMessage());
         }
 
         return $result['closing'];
@@ -677,15 +683,15 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $administering = $projectId === 'console' ? $realtime->getAdminConnections($userId) : [];
 
                         if (!empty($connections) || !empty($impersonating) || !empty($administering)) {
-                            // Set by the subscriber when verification times out: the connections were
+                            // Set by the subscriber when verification times out or fails: the connections were
                             // closed unverified, so a late-finishing child must not touch their state.
                             $abandoned = false;
 
-                            $onTimeout = function () use ($event, $projectId, $userId, $connections, $impersonating, $administering, &$abandoned): array {
+                            $onFailure = function (string $reason) use ($event, $projectId, $userId, $connections, $impersonating, $administering, &$abandoned): array {
                                 // Fail closed: a reconnect re-authenticates with fresh roles, so an
                                 // unverifiable user is excluded rather than served on stale roles.
                                 $abandoned = true;
-                                Console::error('Realtime permission verification timed out (project: ' . $projectId . ', user: ' . $userId . ', event: ' . ($event['data']['events'][0] ?? 'unknown') . '); closing the user\'s connections unverified');
+                                Console::error('Realtime permission verification ' . $reason . ' (project: ' . $projectId . ', user: ' . $userId . ', event: ' . ($event['data']['events'][0] ?? 'unknown') . '); closing the user\'s connections unverified');
 
                                 $closing = [];
                                 foreach ([...$connections, ...$impersonating, ...$administering] as $connection) {
@@ -866,7 +872,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 return $closing;
                             };
 
-                            $closing += $verifyPermissions($verify, $onTimeout);
+                            $closing += $verifyPermissions($verify, $onFailure);
                         }
                     } elseif ($event['permissionsChanged']) {
                         // `projects.{projectId}.sessions.delete`: every connection of the named
@@ -884,15 +890,15 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         }
 
                         if ($targetProjectId !== '' && $targetProjectId !== 'console') {
-                            // Set by the subscriber when verification times out: the connections were
+                            // Set by the subscriber when verification times out or fails: the connections were
                             // closed unverified, so a late-finishing child must not touch their state.
                             $abandoned = false;
 
-                            $onTimeout = function () use ($realtime, $event, $targetProjectId, &$abandoned): array {
+                            $onFailure = function (string $reason) use ($realtime, $event, $targetProjectId, &$abandoned): array {
                                 // Fail closed: a reconnect re-authenticates against the new session
                                 // state, so an unverifiable session is excluded rather than kept alive.
                                 $abandoned = true;
-                                Console::error('Realtime permission verification timed out (project: ' . $targetProjectId . ', event: ' . ($event['data']['events'][0] ?? 'unknown') . '); closing its session connections unverified');
+                                Console::error('Realtime permission verification ' . $reason . ' (project: ' . $targetProjectId . ', event: ' . ($event['data']['events'][0] ?? 'unknown') . '); closing its session connections unverified');
 
                                 $closing = [];
                                 foreach ($realtime->getProjectConnections($targetProjectId) as $connection) {
@@ -961,7 +967,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 return $closing;
                             };
 
-                            $closing += $verifyPermissions($verify, $onTimeout);
+                            $closing += $verifyPermissions($verify, $onFailure);
                         }
                     }
 
