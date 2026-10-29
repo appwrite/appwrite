@@ -1,1 +1,1 @@
-file:///workspace/app/init/resources/request.php
+@/tmp/request_php_only.txt
