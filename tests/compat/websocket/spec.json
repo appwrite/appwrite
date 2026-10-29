@@ -298,6 +298,12 @@
         "Utopia\\WebSocket\\Adapter\\Swoole::onClose",
         "Utopia\\WebSocket\\Adapter\\Swoole::onRequest"
       ]
+    },
+    "tls.probe": {
+      "doc": "a plain TCP listener on a free port keeps the first bytes a client on <scheme>://127.0.0.1:<port> sends (Swoole coroutine socket in PHP): whether any arrived, whether they start a TLS handshake record, and which header values they carry in clear",
+      "covers": [
+        "Utopia\\WebSocket\\Client::connect"
+      ]
     }
   },
   "generators": {

@@ -51,6 +51,7 @@ pub const OPS: &[&str] = &[
     "client.log",
     "swoole.config",
     "e2e.run",
+    "tls.probe",
 ];
 
 /// Benchmark inputs, the same as in Adapter.php.
@@ -513,6 +514,9 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "e2e.run" => {
             Outcome::Ok(Value::Array(e2e(a.array("steps")?, a.opt_f64("send_timeout")?.unwrap_or(1.0)).await?))
         }
+        "tls.probe" => {
+            Outcome::Ok(tls_probe(a.str("scheme")?, a.value("headers")?).await?)
+        }
         _ => return Err(Fault::new(format!("websocket: unknown operation `{op}`"))),
     };
     Ok(result)
@@ -814,4 +818,41 @@ async fn run(
         }
         other => return Err(Fault::new(format!("unknown step {other}"))),
     })
+}
+
+/// A plain TCP listener on a free port takes one connection and keeps the
+/// first bytes a client on `<scheme>://127.0.0.1:<port>` sends: a TLS
+/// ClientHello starts with a handshake record (0x16).
+async fn tls_probe(scheme: &str, headers: &Value) -> Result<Value, Fault> {
+    let io = |e: std::io::Error| Fault::new(e.to_string());
+    let listener = utopia_async::net::TcpListener::bind("127.0.0.1:0").await.map_err(io)?;
+    let port = listener.local_addr().map_err(io)?.port();
+    let accept = utopia_async::spawn(async move {
+        let Ok(Ok((mut connection, _))) = utopia_async::timeout(Duration::from_secs(5), listener.accept()).await else {
+            return Vec::new();
+        };
+        let mut buffer = vec![0u8; 65535];
+        match utopia_async::timeout(Duration::from_secs(5), connection.read(&mut buffer)).await {
+            Ok(Ok(n)) => buffer[..n].to_vec(),
+            _ => Vec::new(),
+        }
+    });
+    let spec = json!({ "headers": headers, "timeout": 2 });
+    let mut client = Client::new(&format!("{scheme}://127.0.0.1:{port}"), options(&spec)?)
+        .map_err(|e| Fault::new(e.to_string()))?;
+    let _ = client.connect().await;
+    let received = accept.await.unwrap_or_default();
+    let leaked: Vec<Value> = headers
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|header| header.get(1).and_then(Value::as_str))
+        .filter(|value| received.windows(value.len()).any(|w| w == value.as_bytes()))
+        .map(|value| json!(value))
+        .collect();
+    Ok(json!({
+        "received": !received.is_empty(),
+        "handshake": received.first() == Some(&0x16),
+        "leaked": leaked,
+    }))
 }
