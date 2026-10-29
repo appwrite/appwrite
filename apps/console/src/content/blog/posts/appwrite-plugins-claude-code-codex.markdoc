@@ -1,0 +1,82 @@
+---
+layout: post
+title: "Updated Appwrite plugins for Claude Code and Codex are live"
+description: The Appwrite plugins for Claude Code and Codex now include the hosted Appwrite MCP server, so your agent can work with your Appwrite project after one OAuth sign-in.
+date: 2026-09-23
+cover: /images/blog/appwrite-plugins-claude-code-codex/cover.avif
+timeToRead: 4
+author: atharva
+category: announcements
+featured: false
+faqs:
+  - question: "What changed in the Appwrite plugins for Claude Code and Codex?"
+    answer: "Both plugins now include the hosted [Appwrite MCP server](/docs/tooling/ai/mcp-servers) at `https://mcp.appwrite.io/`, which uses OAuth. The earlier versions bundled local MCP servers that needed an endpoint, a project ID, and an API key."
+  - question: "How do I install the Appwrite plugin for Claude Code?"
+    answer: "Run `claude plugin install appwrite@claude-plugins-official` in your terminal. See the [Claude Code docs](/docs/tooling/ai/agents/claude-code) for the full setup."
+  - question: "How do I install the Appwrite plugin for Codex?"
+    answer: "In the ChatGPT desktop app, click **Plugins** in the sidebar, search for `Appwrite`, select the plugin, and click **Install plugin**. In the Codex CLI, run `/plugins`, switch to the **OpenAI Curated** marketplace, search for `Appwrite`, and select **Install plugin**. See the [Codex docs](/docs/tooling/ai/agents/codex) for the full setup."
+  - question: "Do the Appwrite plugins need an API key?"
+    answer: "No. The hosted Appwrite MCP server uses OAuth. When your agent connects for the first time, your browser opens so you can sign in to your Appwrite account and authorize access."
+  - question: "Do I still need to add the Appwrite marketplace to Codex?"
+    answer: "No. The plugin is available in the **OpenAI Curated** marketplace that Codex includes by default, so the `codex plugin marketplace add appwrite/codex-plugin` step is no longer required."
+---
+
+In July we moved the Appwrite MCP server to a [hosted server](/blog/post/announcing-remote-appwrite-mcp-server). You no longer need to run the server on your machine or give it an API key. You can sign in with your Appwrite account instead. Our plugins for Claude Code and Codex still carried the old setup, so we had to update both.
+
+The updated plugins are live. The Codex plugin is also part of the official Codex plugin directory now, so you no longer need to add the Appwrite marketplace.
+
+# What changed in the plugins
+
+- **The hosted MCP server replaces the old MCP servers.** Both plugins now connect to `https://mcp.appwrite.io/`. Your agent opens a browser window the first time it connects, and you can sign in with your Appwrite account.
+- **Neither plugin asks for an API key.** The earlier Claude Code plugin asked for an endpoint, a project ID, and an API key after the install. The earlier Codex plugin had no way to collect those values, so it included only the docs MCP server and could not work with your project. With OAuth, both plugins can work with your project after you sign in with your Appwrite account.
+- **The skills are unchanged.** Both plugins include skills for the Appwrite CLI and the TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, Rust, and Swift SDKs. The Claude Code plugin adds `deploy-site` and `deploy-function` commands, and the Codex plugin includes the same two workflows as skills.
+
+# Install the plugin for Claude Code
+
+Run the following command in your terminal:
+
+```bash
+claude plugin install appwrite@claude-plugins-official
+```
+
+If you installed an earlier version, run `/plugins` in Claude Code, open the **Installed** tab, and update the **Appwrite** plugin.
+
+# Install the plugin for Codex
+
+The plugin is available in the ChatGPT desktop app and in the Codex CLI.
+
+![Appwrite plugin page in the ChatGPT desktop app](/images/docs/mcp/codex/install-plugin.avif)
+
+In the ChatGPT desktop app:
+
+1. Click **Plugins** in the sidebar.
+2. Search for `Appwrite` and select the **Appwrite** plugin.
+3. Click **Install plugin**.
+
+In the Codex CLI:
+
+1. Run `codex` in your terminal, then run `/plugins`.
+2. Switch to the **OpenAI Curated** marketplace.
+3. Search for `Appwrite` and select the **Appwrite** plugin.
+4. Select **Install plugin**.
+
+The plugin from the Appwrite marketplace does not include the hosted MCP server. To remove the old plugin, use the following commands:
+
+```bash
+codex plugin remove appwrite@appwrite
+codex plugin marketplace remove appwrite
+```
+
+# What this means for building with Appwrite
+
+Appwrite used to have two MCP servers. The docs MCP server searched the Appwrite documentation. The API MCP server worked with your project, and it ran on your machine with an endpoint, a project ID, and an API key that you had to create yourself. The Claude Code plugin asked you for those three values after the install, and the Codex plugin included only the docs MCP server.
+
+The hosted MCP server merges the two, and it uses OAuth. Your agent connects to one server and opens your browser, where you can sign in with your Appwrite account. You do not need to create an API key or add it to a config file. After you authorize access, your agent can search the docs through that server. It can also create tables, manage users, and deploy functions and sites in your project.
+
+# Resources
+
+- [Claude Code docs](/docs/tooling/ai/agents/claude-code)
+- [Codex docs](/docs/tooling/ai/agents/codex)
+- [Appwrite MCP server](/docs/tooling/ai/mcp-servers)
+- [Appwrite Skills](/docs/tooling/ai/skills)
+- [Discord community](https://appwrite.io/discord)

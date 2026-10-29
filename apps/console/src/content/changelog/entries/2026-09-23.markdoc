@@ -1,0 +1,18 @@
+---
+layout: changelog
+title: Appwrite is now an official ChatGPT plugin
+date: 2026-09-23
+cover: /images/blog/announcing-appwrite-chatgpt-plugin/cover.avif
+---
+
+Appwrite is now available as an official ChatGPT plugin, which can also be used within Codex. Install it from the ChatGPT plugin directory and connect your Appwrite account to explore projects, inspect databases and storage, and manage users, functions, messaging, and sites from a conversation.
+
+The hosted [Appwrite connection](/docs/tooling/ai/mcp-servers) uses OAuth, so there is no local MCP server or API key to configure. The plugin also includes thirteen agent skills for the Appwrite CLI, SDKs, and deployment workflows in Codex.
+
+{% arrow_link href="/blog/post/announcing-appwrite-chatgpt-plugin" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/blog/post/appwrite-codex-plugin-hosted-mcp" %}
+Follow the Codex tutorial
+{% /arrow_link %}

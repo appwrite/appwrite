@@ -2,7 +2,7 @@
 
 namespace Appwrite\SDK\Specification\Validator;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class PasswordFormat extends Validator
 {

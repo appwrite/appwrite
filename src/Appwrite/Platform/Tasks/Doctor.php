@@ -3,12 +3,15 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\JobsSecret;
 use Appwrite\ClamAV\Network;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Storage\Bytes;
 use Utopia\Cache\Adapter\Pool as CachePool;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
@@ -16,6 +19,9 @@ use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
@@ -83,6 +89,12 @@ class Doctor extends Action
             Console::log('🔴 Not using a unique secret key for encryption');
         } else {
             Console::log('🟢 Using a unique secret key for encryption');
+        }
+
+        if (JobsSecret::isInsecure(System::getEnv('_APP_JOBS_SECRET'))) {
+            Console::log('🔴 Not using a unique secret key for jobs callbacks');
+        } else {
+            Console::log('🟢 Using a unique secret key for jobs callbacks');
         }
 
         if (System::getEnv('_APP_ENV', 'development') !== 'production') {
@@ -299,13 +311,18 @@ class Doctor extends Action
         try {
             if (Http::isProduction()) {
                 Console::log('');
-                $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
+                $response = (new Client(new CurlAdapter()))
+                    ->withConnectTimeout(5)
+                    ->withTimeout(5)
+                    ->withHeaders([Header::USER_AGENT => 'Appwrite'])
+                    ->sendRequest((new RequestFactory())->createRequest(Method::GET, 'https://api.github.com/repos/appwrite/appwrite/releases/latest'));
+                $release = \json_decode((string) $response->getBody(), true);
 
-                if ($version && isset($version['version'])) {
-                    if (\version_compare($version['version'], System::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
-                        Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
+                if ($release && isset($release['tag_name'])) {
+                    if (\version_compare($release['tag_name'], System::getEnv('_APP_VERSION', 'UNKNOWN'), '>')) {
+                        Console::info('A new version (' . $release['tag_name'] . ') is available! 🥳' . "\n");
                     } else {
-                        Console::info('A new version (' . $version['version'] . ') is available! 🥳' . "\n");
+                        Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
                     }
                 } else {
                     Console::error('Failed to check for a newer version' . "\n");

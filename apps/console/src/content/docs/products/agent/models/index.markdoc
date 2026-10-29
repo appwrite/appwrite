@@ -1,0 +1,50 @@
+---
+layout: article
+title: Models
+description: Learn how Appwrite Agent models work, including the default model and bring-your-own provider keys.
+---
+
+**Models** control which large language model the Agent uses for a conversation. Most of the time you can leave the picker on **Appwrite default** and focus on the prompt. When you need a specific provider, latency profile, or model family, register your own credentials under **Agent** > **Settings** > **Models** and select that model on the thread.
+
+The choice is stored on the conversation (and optionally on an [automation](/docs/products/agent/automations)), so different threads can use different models without changing a global default.
+
+# Default vs custom {% #default-vs-custom %}
+
+**Appwrite default** uses the models Appwrite provides in the Agent model picker. You do not add API keys. This is the right starting point for everyday Console work.
+
+**Custom** models use provider credentials you register. The Agent calls that provider with your key for conversations (or automation runs) that select the model. Use custom models when you want a particular OpenAI, Anthropic, Google, OpenRouter, Azure, or OpenAI-compatible endpoint, or when your organization already standardizes on a vendor.
+
+Temperature is managed for you: everyday chat uses a low default for steadier Console guidance, and certain reasoning-oriented model families are normalized to a fixed higher temperature so you do not have to tune knobs per send.
+
+# Supported providers {% #supported-providers %}
+
+When adding a custom model, choose a provider and fill in the API key, model id, and optional base URL.
+
+| Provider | Examples |
+|----------|----------|
+| OpenAI | GPT-4o, GPT-4.1, o3, o4-mini |
+| Anthropic | Claude Sonnet, Opus, Haiku |
+| Google | Gemini 2.5 Pro, Gemini 2.5 Flash |
+| OpenRouter | Routed models across providers |
+| Azure | Azure OpenAI deployments |
+| Custom | Any OpenAI-compatible endpoint |
+
+Exact preset lists in the Console change as providers ship new versions. If a model id is not in the preset list, you can usually enter it manually.
+
+# Managing models {% #managing-models %}
+
+From **Settings** > **Models** you add a model with provider, credentials, and model id; enable or disable a saved model; and update or delete an existing one.
+
+Disabled models remain saved but are hidden from the conversation picker until you enable them again. That is useful when you rotate keys or temporarily stop sending traffic to a provider without losing the configuration.
+
+The model picker searches and pages through your enabled models so long lists stay usable. Selecting a model updates the current conversation immediately; the next send uses that choice.
+
+# Privacy and keys {% #privacy-and-keys %}
+
+Custom API keys are stored for your Console account so the Agent can call the provider you chose. Prefer least-privilege keys, restrict them by provider project where possible, and rotate them if they are exposed.
+
+When you use a custom provider, that provider’s data policies apply to the prompts, context, tool summaries, and responses sent through that model. Appwrite default models keep you on Appwrite-managed routing; custom models move generation to the vendor behind your key.
+
+{% arrow_link href="/docs/products/agent/add-model" %}
+Add a custom model
+{% /arrow_link %}

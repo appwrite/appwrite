@@ -1,0 +1,32 @@
+rules:
+  - id: php.appwrite.raw-sql-interpolation
+    message: >
+      SQL text built by interpolation or concatenation and passed to
+      query / exec / prepare. Use utopia-php/database queries, or bind
+      values with prepare() placeholders. Identifiers that must be dynamic
+      go through the adapter's quoting, never raw request strings.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    patterns:
+      - pattern-either:
+          - pattern: $DB->query($SQL, ...)
+          - pattern: $DB->exec($SQL, ...)
+          - pattern: $DB->prepare($SQL, ...)
+      - metavariable-pattern:
+          metavariable: $SQL
+          pattern-either:
+            - pattern: "$A . $B"
+            - pattern: sprintf(...)
+            - pattern: \sprintf(...)
+            - pattern-regex: ^"[^"]*\$\{?[A-Za-z_]
+      - metavariable-regex:
+          metavariable: $SQL
+          regex: (?is)^\W*(?:sprintf\(\s*)?['"]\s*(?:SELECT|INSERT|UPDATE|DELETE|REPLACE|ALTER|CREATE|DROP|TRUNCATE|GRANT|WITH)\b

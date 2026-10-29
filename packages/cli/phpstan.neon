@@ -2,6 +2,8 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
+    # Match the PHP 8.5 runtime used by CI and the root Composer platform.
+    phpVersion: 80500
     level: max
     paths:
         - src

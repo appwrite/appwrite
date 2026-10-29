@@ -1,0 +1,77 @@
+---
+layout: article
+title: Start with Firewall
+description: Create your first Appwrite Firewall rule and see how it affects project API traffic.
+difficulty: beginner
+readtime: 5
+---
+
+In this quick start you create a deny rule on the project **API**, send a request that it blocks, and find that request in the traffic overview.
+
+# Open Firewall {% #open-firewall %}
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
+2. Open a project.
+3. Open **Firewall** in the sidebar.
+
+# Create a deny rule {% #create-a-deny-rule %}
+
+{% only_dark %}
+![Create firewall rule wizard with a deny rule](/images/docs/firewall/dark/create-rule.avif)
+{% /only_dark %}
+{% only_light %}
+![Create firewall rule wizard with a deny rule](/images/docs/firewall/create-rule.avif)
+{% /only_light %}
+
+1. Click **Create rule**.
+2. Enter a **Rule name** (for example `Deny staging admin path`).
+3. Leave **Resource type** set to **API** so the rule applies to project API traffic (`/v1/...`).
+4. Under conditions, set:
+   - Attribute: **Path**
+   - Operator: **Starts with**
+   - Value: a path you want to block (for example `/v1/account`)
+5. Under **Then**, choose **Deny**.
+6. Keep **Priority** at `100`.
+7. Leave **Enabled** on.
+8. Review the impact preview in the sidebar, then click **Create rule**.
+
+# Confirm the rule {% #confirm-the-rule %}
+
+{% only_dark %}
+![Firewall rules list with the new deny rule](/images/docs/firewall/dark/rules-list.avif)
+{% /only_dark %}
+{% only_light %}
+![Firewall rules list with the new deny rule](/images/docs/firewall/rules-list.avif)
+{% /only_light %}
+
+1. On the Firewall page, make sure the resource selector above the rules list shows **API**.
+2. Find your rule in the list. It should show **Deny** and its status toggle should be on.
+
+To change the rule later, open its actions menu and choose **Update**.
+
+# Test the rule {% #test-the-rule %}
+
+Firewall never blocks the Console, so send the request with a client SDK or an API key instead.
+
+```sh
+curl -i https://cloud.appwrite.io/v1/account \
+  -H "X-Appwrite-Project: <PROJECT_ID>"
+```
+
+The response is `403`, and its headers name the rule that stopped it:
+
+```
+HTTP/2 403
+x-appwrite-waf-rule: <RULE_ID>
+x-appwrite-waf-action: deny
+```
+
+# See it in traffic overview {% #see-it-in-traffic-overview %}
+
+Open **Firewall** in your project. The chart above the rules list shows requests that reached your project (**Passed**) alongside each Firewall outcome. The **Denied** series rises as matching requests arrive.
+
+See [Traffic overview](/docs/products/firewall/monitor) for metrics and date ranges, and [Actions](/docs/products/firewall/actions) for what each outcome means.
+
+# Next steps {% #next-steps %}
+
+The [guides](/docs/products/firewall#guides) cover country blocks, IP allowlists, rate limits, challenges, and redirects.

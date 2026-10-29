@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Deploy Jaspr apps with server-side rendering on Appwrite Sites"
+date: 2026-10-02
+cover: /images/blog/announcing-jaspr-support/cover.avif
+tags: sites
+---
+
+Appwrite Sites now supports [Jaspr](/docs/products/sites/quick-start/jaspr), the web framework for Dart, with server-side rendering. Set `mode: server` in the `jaspr` section of `pubspec.yaml`, connect the repository, and pick **Jaspr** as the framework. Appwrite builds the project on the Flutter 3.44 runtime with `dart pub get` and `jaspr build`, then runs the compiled Dart server for every request.
+
+Server components can read the site's ephemeral API key from the `x-appwrite-key` header and call Appwrite with the Dart server SDK. The build image ships with the Jaspr CLI, and projects need Jaspr 0.23.0 or later.
+
+{% arrow_link href="/blog/post/announcing-jaspr-support" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/sites/quick-start/jaspr" %}
+Deploy a Jaspr app
+{% /arrow_link %}

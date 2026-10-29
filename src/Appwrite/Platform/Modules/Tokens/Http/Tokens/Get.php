@@ -48,7 +48,7 @@ class Get extends Action
             ],
             contentType: ContentType::JSON
         ))
-        ->param('tokenId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Token ID.', false, ['dbForProject'])
+        ->param('tokenId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Token ID.', false, ['dbForProject'])
         ->inject('response')
         ->inject('dbForProject')
         ->inject('usage')

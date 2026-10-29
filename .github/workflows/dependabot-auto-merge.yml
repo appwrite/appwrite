@@ -1,0 +1,24 @@
+name: Dependabot auto-merge
+
+# Approves and merges Dependabot patch and minor updates once every check has passed.
+# Runs after each workflow a pull request triggers; the shared gate waits for all of them.
+on:
+  workflow_run: # zizmor: ignore[dangerous-triggers] runs no pull request code; the shared gate only reads the API
+    workflows:
+      - 'CI'
+      - 'CodeQL'
+      - 'Console'
+      - 'SDK Preview'
+    types:
+      - completed
+
+permissions:
+  actions: read
+  checks: read
+  contents: write
+  pull-requests: write
+  statuses: read
+
+jobs:
+  dependabot:
+    uses: appwrite/.github/.github/workflows/dependabot-auto-merge.yml@9c5284d897bd0f37e9e91913b6fa48205b340663 # main

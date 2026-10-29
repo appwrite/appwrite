@@ -1,0 +1,121 @@
+---
+layout: post
+title: "Cursor Origin review: An engineer’s perspective"
+description: A detailed review of Cursor Origin, covering Git hosting, GitHub sync, cloud agents, current limitations, and whether it’s worth switching.
+date: 2026-08-18
+cover: /images/blog/cursor-origin-review-an-engineers-perspective/cover.avif
+timeToRead: 5
+author: matej-baco
+category: ai
+featured: false
+faqs:
+  - question: Does Cursor Origin support CI/CD?
+    answer: Yes, but the setup depends on how the repository is hosted. GitHub-mirrored repositories continue using their existing GitHub CI, while Origin-hosted repositories can integrate with tools such as Depot and Buildkite.
+  - question: What happens if you detach Cursor Origin from GitHub?
+    answer: Detaching stops synchronization and turns the Origin copy into a standalone repository. Cursor Origin then becomes the source of truth, while the original GitHub repository remains unchanged.
+  - question: Should I switch from GitHub to Cursor Origin?
+    answer: For most established teams, mirroring an existing GitHub repository is a lower-risk way to evaluate Cursor Origin than migrating immediately. GitHub remains the source of truth while the repository is mirrored, so existing workflows can continue running.
+---
+Git forges have been a settled question for most engineering teams for over a decade. You pick GitHub, you wire up CI, you write the branch protection rules once, and then you stop thinking about it. So when Cursor shipped **Origin**, its own code hosting product, the interesting question is not whether it works. It is whether anything about it justifies touching a layer of the stack that has been boring on purpose for years.
+
+Cursor positions Origin as ["a git forge for the agentic era"](https://cursor.com/origin): code is now produced faster than the infrastructure around it was designed to handle, so the forge should be where agents live rather than a system they call into from outside.
+
+This review combines Cursor's documented Origin features with my experience using the early beta. I wanted to understand not just what Origin claims to support, but what it actually feels like to use as an engineer, where the workflow works well, and where the product still feels early.
+
+# What is Cursor Origin?
+
+Cursor Origin is Cursor's own Git hosting service. It stores repositories, serves code browsing and search at `cursor.com/codebase`, supports pull requests, and can mirror repositories from GitHub. Cursor lists it as early beta on Pro, Teams, and Enterprise plans, with enterprise admins able to opt out.
+
+The mental model is straightforward. You claim a codebase namespace, which becomes part of every repository URL (`cursor.com/codebase/acme-corp`). You install the Origin CLI, run `origin auth login`, and then standard Git operations work over HTTPS against `https://origin.cursor.com/{owner}/{repo}.git`. Cursor's docs note the CLI is needed for authentication, not for every subsequent Git command.
+
+# What Cursor Origin ships in early beta
+
+Here is what Cursor documents as available today, and what it explicitly does not carry over.
+
+| Capability                      | Status in early beta                                                   |
+| ------------------------------- | ---------------------------------------------------------------------- |
+| Repositories, clone, push, pull | Supported over HTTPS after CLI auth                                    |
+| Code browsing and search        | Supported at `cursor.com/codebase`                                     |
+| Pull requests                   | Timeline, commits, checks, file diffs, line comments, reviewers, merge |
+| GitHub mirroring                | Git history, branches, and tags sync; PRs sync both ways               |
+| Third-party apps                | Vercel preview deployments, Depot and Buildkite for CI                 |
+| Cloud agents                    | Can clone, branch, commit, push, and open PRs on Origin repos          |
+| Automations                     | Trigger cloud agents on schedules or source-control events             |
+| GitHub Issues, Actions, secrets | Not synced                                                             |
+
+That last row matters more than it looks. Cursor is explicit that mirroring covers code and pull requests, not the surrounding project management and automation layer.
+
+# What Cursor Origin feels like to use
+
+Origin is still very clearly an early beta. The core repository and pull request workflows work, but after using it for a while, there are a number of smaller rough edges that make it feel less mature than the Git tooling developers are used to.
+
+I ran into issues while switching between accounts, including rate limits, and some repository creation flows left old modals open on previous pages. None of these were serious enough to make the product unusable, but they are the kind of details you notice quickly when using Origin day to day.
+
+The bigger limitation for me is how much repository management still happens outside the UI. For basic tasks such as creating a README, creating or deleting a branch, or editing files, I often need to use an agent, the Origin CLI, or Git directly rather than managing everything from the web interface.
+
+The pull request experience also feels unfinished in places. Things developers are used to seeing at a glance, such as the number of open pull requests or labels directly in the PR list, are missing. Origin also defaults the pull request view to my own PRs, which means agent-created PRs or PRs opened by teammates are not immediately visible without changing the filter.
+
+Individually, these are small issues. Together, they make Origin feel more like a functional early forge than a finished replacement for the Git platforms engineering teams already use.
+
+# Where Cursor Origin still feels early
+
+Some of Origin's limitations are expected for an early beta, but they matter if you are evaluating it as your primary Git forge.
+
+* **No public repositories.** Origin repositories are currently private, which means open source projects cannot make Origin their public home.
+* **No built-in CI/CD platform.** Origin supports app integrations such as Depot and Buildkite, but there is no native equivalent to a full CI/CD system like GitHub Actions.
+* **The platform surface is still small.** Features developers may expect from a mature Git platform, including Discussions, Insights, Projects, Releases, Issues, and Packages, are not part of Origin today.
+* **Repository management is limited in the UI.** Some basic operations still require Git, the CLI, or an agent rather than being available directly through the interface.
+* **The integration surface has gaps.** OAuth2 support is limited, and some installation APIs are missing write operations. Git can work around several of these limitations, but actions such as repository deletion expose gaps that cannot always be avoided that way.
+* **The UX still needs polish.** Pull request discovery, filtering, labels, and other small workflow details do not yet have the depth developers are accustomed to from mature Git platforms.
+
+None of these make Origin unusable. They do make it clear that the product is still at the beginning of its lifecycle.
+
+# What Cursor Origin gets right: agents and repositories in one place
+
+The strongest argument for Origin is not the code browser. It is that Cursor's cloud agents can operate on Origin repositories natively, cloning, branching, committing, pushing, and opening pull requests, and that automations can trigger those agents on schedules or source-control events like a push or PR.
+
+That is a meaningful architectural difference from connecting an agent to an external forge through an app integration. When the agent, repository, and review surface live within the same platform, there is less integration plumbing between those parts of the workflow. If you already run [parallel agents in Cursor](/blog/post/cursor-3-parallel-fleets-appwrite), that tighter integration could become one of Origin's strongest advantages.
+
+Origin already supports agentic workflows through Cloud Agents and Automations. Cursor says additional agent-native features are still coming.
+
+That is also where I think Origin has the most room to become interesting. As a Git forge by itself, much of what Origin does already exists elsewhere. The opportunity is in what happens when the repository, agents, automations, and review workflow are designed as one system rather than connected through integrations.
+
+# Should you switch to Cursor Origin? An engineer's verdict
+
+Here is the nuanced read, split by who is asking.
+
+**Try it now if** you are an individual developer or a small team already doing most development inside Cursor, without years of accumulated GitHub automation. The cost of experimenting is relatively low, the mirror lets you evaluate Origin without immediately moving your source of truth, and you are the audience the beta is shaped around.
+
+**Mirror, but do not move, if** you have a working GitHub setup with real automation. Point Origin at one active repository, use it for browsing and review, and let pushes keep flowing to GitHub. You get a genuine read on the product without betting your release process on a beta.
+
+**Wait if** your workflow depends heavily on GitHub-specific governance, CODEOWNERS, merge queues, GitHub Issues, or a large ecosystem of internal and third-party integrations. Origin is still in early beta, and teams with years of policy and automation around GitHub should verify that their requirements are covered before moving their primary repositories.
+
+My impression after using Origin is that the Git hosting itself is not revolutionary yet. Most of the core concepts are familiar, and several parts of the experience are still less complete than what developers expect from mature Git platforms.
+
+That does not make Origin uninteresting. The bet is clearly bigger than rebuilding GitHub inside Cursor. If Cursor can make repositories, agents, automations, and code review work together in ways that are difficult to reproduce with separate tools, Origin could become meaningfully different.
+
+For now, I would treat it as an interesting early beta rather than a Git forge I would immediately move an established engineering workflow onto.
+
+# Where your backend fits when your git forge changes
+
+Anything downstream of your repository is coupled to whichever forge is authoritative, so check this before you experiment.
+
+[Appwrite Sites](/docs/products/sites) supports [deploy from Git](/docs/products/sites/deploy-from-git) against a GitHub repository, creating a deployment on every push to your production branch and preview deployments on other branches. While an Origin repository is mirrored, pushes pass through to GitHub, so those deployments keep working unchanged. Detaching from GitHub is what breaks that connection, which is a concrete reason to keep the mirror in place while you evaluate.
+
+The forge-agnostic path is the [Appwrite CLI](/docs/tooling/command-line), which deploys Sites and [Functions](/docs/products/functions) from any CI system. Depot and Buildkite both run existing GitHub Actions workflows, so an Appwrite CLI deploy step keeps working regardless of where the repository lives.
+
+# Building with Cursor and Appwrite
+
+Whether or not you move code hosting, the agent side of Cursor is where the day-to-day gain is, and that gain depends on the agent knowing your backend. The [Appwrite Cursor plugin](/blog/post/announcing-appwrite-cursor-plugin) bundles [Appwrite Skills](/docs/tooling/ai/skills) and [MCP servers](/docs/tooling/ai/mcp-servers) so agents generate correct SDK calls instead of inventing methods, which matters a great deal more when an agent is opening pull requests on its own.
+
+Set it up with the [Cursor integration guide](/docs/tooling/ai/agents/cursor), then let your agents build against real [Auth](/docs/products/auth), [Databases](/docs/products/databases), and [Functions](/docs/products/functions). [Create a free Appwrite project](https://cloud.appwrite.io/) and point Cursor at it.
+
+# Resources
+
+* [Appwrite documentation](/docs)
+* [Cursor integration guide](/docs/tooling/ai/agents/cursor)
+* [Appwrite Skills](/docs/tooling/ai/skills)
+* [Appwrite MCP servers](/docs/tooling/ai/mcp-servers)
+* [Deploy Appwrite Sites from Git](/docs/products/sites/deploy-from-git)
+* [Build a fullstack app with Cursor and Appwrite](/blog/post/build-fullstack-notes-app-cursor-appwrite-tanstack-start)
+* [Join the Appwrite Discord](https://appwrite.io/discord)

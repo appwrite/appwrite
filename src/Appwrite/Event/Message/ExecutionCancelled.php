@@ -12,15 +12,17 @@ final class ExecutionCancelled extends Base
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
             'operation' => 'delete',
-            'project' => $this->project->getArrayCopy(),
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'execution' => $this->execution->getArrayCopy(),
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(

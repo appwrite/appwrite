@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Avatars;
 
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 trait AvatarsBase
 {
@@ -354,6 +354,44 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         return [];
+    }
+
+    /**
+     * Every avatar that fetches a caller-supplied URL refuses targets that are
+     * not on the public internet, before any request leaves the server.
+     */
+    public function testGetRemoteURLNotPublic(): void
+    {
+        $paths = ['/avatars/image', '/avatars/favicon', '/avatars/screenshots'];
+        $urls = [
+            'http://localhost/',
+            'http://appwrite/v1/health/version',
+            'http://metadata.google.internal/computeMetadata/v1/',
+            'http://2130706433/',
+            'http://169.254.169.254/latest/meta-data/',
+            'http://10.0.0.5:8080/',
+            'http://192.168.1.1/',
+            'http://[::ffff:127.0.0.1]/',
+            'http://user:password@10.0.0.5/',
+            'file:///etc/passwd',
+            'gopher://10.0.0.5:6379/_INFO',
+        ];
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ($paths as $path) {
+            foreach ($urls as $url) {
+                $response = $this->client->call(Client::METHOD_GET, $path, [
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], [
+                    'url' => $url,
+                ]);
+
+                $this->assertEquals(400, $response['headers']['status-code'], "{$path} should reject {$url}");
+                $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type'], "{$path} should reject {$url}");
+            }
+        }
     }
 
     public function testGetQR(): array
@@ -1825,7 +1863,7 @@ trait AvatarsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'User Name',

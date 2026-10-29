@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "scope": [
+        "src/Appwrite",
+        "app/controllers",
+        "app/init"
+    ],
+    "findings": [
+        {
+            "rule": "guest-write-without-abuse-limit",
+            "severity": "WARNING",
+            "path": "app/controllers/api/account.php",
+            "line": 1575,
+            "text": "Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')"
+        },
+        {
+            "rule": "secret-compare-timing",
+            "severity": "WARNING",
+            "path": "app/controllers/shared/api.php",
+            "line": 1135,
+            "text": "$signature !== $cacheLog->getAttribute('signature')) {"
+        },
+        {
+            "rule": "weak-secret-env-default",
+            "severity": "WARNING",
+            "path": "app/init/resources.php",
+            "line": 254,
+            "text": "System::getEnv('_APP_USAGE_PASS', 'appwrite'))"
+        },
+        {
+            "rule": "weak-secret-env-default",
+            "severity": "WARNING",
+            "path": "app/init/resources.php",
+            "line": 280,
+            "text": "System::getEnv('_APP_USAGE_PASS', 'appwrite'))"
+        },
+        {
+            "rule": "guest-write-without-abuse-limit",
+            "severity": "WARNING",
+            "path": "src/Appwrite/Platform/Modules/Databases/Http/VectorsDB/Collections/Documents/Queries/Create.php",
+            "line": 26,
+            "text": "$this ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST) ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents/query')"
+        },
+        {
+            "rule": "guest-write-without-abuse-limit",
+            "severity": "WARNING",
+            "path": "src/Appwrite/Platform/Modules/Functions/Http/Jobs/Event/Create.php",
+            "line": 33,
+            "text": "$this ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST) ->setHttpPath('/v1/jobs/event')"
+        }
+    ]
+}

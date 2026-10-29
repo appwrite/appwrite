@@ -1,0 +1,14 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path
+    fill="#C4C6D7"
+    d="M11 5.25a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Z"
+  />
+  <path
+    fill="#C4C6D7"
+    d="M11.5 11.75a6.25 5.25 0 1 0 0 10.5 6.25 5.25 0 0 0 0-10.5Z"
+  />
+  <path
+    fill="#C4C6D7"
+    d="m13.85 7.85 2.9.65-2.9.95V7.85Z"
+  />
+</svg>

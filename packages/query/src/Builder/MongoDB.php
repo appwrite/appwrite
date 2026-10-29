@@ -111,6 +111,14 @@ class MongoDB extends BaseBuilder implements
         return $attribute . ' REGEX ?';
     }
 
+    private function resolveFilterField(string $attribute): string
+    {
+        $field = $this->resolveAttribute($attribute);
+        $this->validateFieldName($field);
+
+        return $field;
+    }
+
     private function validateFieldName(string $field): void
     {
         if ($field === '' || \str_starts_with($field, '$')) {
@@ -847,8 +855,22 @@ class MongoDB extends BaseBuilder implements
      */
     private function buildFilterQuery(Query $query): array
     {
+        return match ($query->getMethod()) {
+            Method::And => $this->buildLogical($query, '$and'),
+            Method::Or => $this->buildLogical($query, '$or'),
+            Method::Exists => $this->buildFieldExists($query, true),
+            Method::NotExists => $this->buildFieldExists($query, false),
+            default => $this->buildFieldFilter($query),
+        };
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildFieldFilter(Query $query): array
+    {
         $method = $query->getMethod();
-        $attribute = $this->resolveAttribute($query->getAttribute());
+        $attribute = $this->resolveFilterField($query->getAttribute());
         $values = $query->getValues();
 
         return match ($method) {
@@ -873,10 +895,6 @@ class MongoDB extends BaseBuilder implements
             Method::Regex => $this->buildUserRegex($attribute, $values),
             Method::IsNull => [$attribute => null],
             Method::IsNotNull => [$attribute => ['$ne' => null]],
-            Method::And => $this->buildLogical($query, '$and'),
-            Method::Or => $this->buildLogical($query, '$or'),
-            Method::Exists => $this->buildFieldExists($query, true),
-            Method::NotExists => $this->buildFieldExists($query, false),
             default => throw new UnsupportedException('Unsupported filter type for MongoDB: ' . $method->value),
         };
     }
@@ -1138,7 +1156,7 @@ class MongoDB extends BaseBuilder implements
         $conditions = [];
         foreach ($query->getValues() as $attr) {
             /** @var string $attr */
-            $field = $this->resolveAttribute($attr);
+            $field = $this->resolveFilterField($attr);
             if ($exists) {
                 $conditions[] = [$field => ['$exists' => true, '$ne' => null]];
             } else {
@@ -1226,8 +1244,7 @@ class MongoDB extends BaseBuilder implements
         foreach ($grouped->aggregations as $agg) {
             $method = $agg->getMethod();
             $attr = $agg->getAttribute();
-            /** @var string $alias */
-            $alias = $agg->getValue('');
+            $alias = $agg->getAlias();
             if ($alias === '') {
                 $alias = $method->value;
             }
@@ -1265,8 +1282,7 @@ class MongoDB extends BaseBuilder implements
         }
 
         foreach ($grouped->aggregations as $agg) {
-            /** @var string $alias */
-            $alias = $agg->getValue('');
+            $alias = $agg->getAlias();
             if ($alias === '') {
                 $alias = $agg->getMethod()->value;
             }
@@ -1282,7 +1298,6 @@ class MongoDB extends BaseBuilder implements
     private function buildJoinStages(Query $joinQuery): array
     {
         $table = $joinQuery->getAttribute();
-        $values = $joinQuery->getValues();
         $stages = [];
 
         if ($joinQuery->getMethod() === Method::CrossJoin || $joinQuery->getMethod() === Method::NaturalJoin) {
@@ -1292,18 +1307,28 @@ class MongoDB extends BaseBuilder implements
             );
         }
 
-        if (empty($values)) {
+        $conditions = $joinQuery->getJoinOnQueries();
+        if ($conditions === []) {
             throw new ValidationException('Join query must have values.');
         }
 
-        /** @var string $leftCol */
-        $leftCol = $values[0];
-        /** @var string $operator */
-        $operator = $values[1] ?? '=';
-        /** @var string $rightCol */
-        $rightCol = $values[2];
-        /** @var string $alias */
-        $alias = $values[3] ?? $table;
+        if (\count($conditions) > 1 || $conditions[0]->getMethod() !== Method::On) {
+            throw new UnsupportedException(
+                'MongoDB $lookup in localField/foreignField form only supports a single on() condition. '
+                . 'Use a pipeline-form $lookup via a raw stage for filtered joins.'
+            );
+        }
+
+        /** @var array{0?: string, 1?: string, 2?: string} $columns */
+        $columns = $conditions[0]->getValues();
+        $leftCol = $columns[0] ?? '';
+        $operator = $columns[1] ?? '=';
+        $rightCol = $columns[2] ?? '';
+        $alias = $joinQuery->getAlias() !== '' ? $joinQuery->getAlias() : $table;
+
+        if ($leftCol === '' || $rightCol === '') {
+            throw new ValidationException('Join ON requires left and right columns');
+        }
 
         if ($operator !== '=') {
             throw new UnsupportedException(

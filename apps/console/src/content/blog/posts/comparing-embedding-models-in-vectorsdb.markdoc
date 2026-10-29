@@ -1,0 +1,386 @@
+---
+layout: post
+title: "Comparing the embedding models available in VectorsDB"
+description: Compare the four text embedding models built into Appwrite VectorsDB on language coverage, input limit, training task, and vector dimension, and pick one before you create a collection.
+date: 2026-09-02
+cover: /images/blog/comparing-embedding-models-in-vectorsdb/cover.avif
+timeToRead: 9
+author: atharva
+category: ai, comparisons
+featured: false
+draft: true
+faqs:
+  - question: "Which embedding model does Appwrite use by default?"
+    answer: "`nomic-embed-text`. If you call `createTextEmbeddings` without a `model`, Appwrite uses it and returns 768-dimensional vectors."
+  - question: "Can I store embeddings from two different models in one collection?"
+    answer: "No, even when both models produce the same dimension. A sentence lands in different coordinates under each model, so similarity scores across them are meaningless. Use one model per collection and re-embed everything if you change it."
+  - question: "What happens if my text is longer than the model's limit?"
+    answer: "The model truncates the input and embeds only the part that fits. Anything past the limit has no effect on the vector. Split long text into chunks, embed each chunk, and store one document per chunk."
+  - question: "Do 768-dimensional models search better than 384-dimensional models?"
+    answer: "Not automatically. Dimension is capacity, not quality. `bge-small` produces 384-dimensional vectors and is trained for query-to-passage retrieval, which makes it a strong candidate for short English passages. Which model ranks your data best is something you have to measure on your own queries."
+  - question: "Can I change the embedding model after I create a collection?"
+    answer: "A collection's dimension is fixed at creation. You can switch to another model of the same dimension, but the vectors you already stored stay in the old model's coordinates, so you have to regenerate them. Moving to a different dimension means a new collection."
+  - question: "Which model should I use for content that is not in English?"
+    answer: "`embedding-gemma`. It covers over 100 languages and matches across them, so a query in one language can find a document written in another. The other three models are English-only."
+---
+
+A VectorsDB collection has a fixed dimension, and that number comes from the embedding model you plan to use. The model is the first thing you decide, before the collection exists. Changing it later always means re-embedding every document you stored, and changing to a model of another dimension means a new collection as well.
+
+Appwrite ships four text embedding models: `nomic-embed-text`, `embedding-gemma`, `all-minilm`, and `bge-small`. They are not four quality tiers of the same thing. They differ in how much text they accept, which languages they understand, and which task they were trained on, and those differences shape your search results more than the size of the vector does.
+
+# What the model choice decides
+
+Three properties matter when you compare the models.
+
+**Dimension** is how many numbers the model produces for one piece of text. Two of the models return 768 numbers, two return 384. A 768-dimensional vector holds twice as many numbers as a 384-dimensional one, so each document takes up twice as much room in the collection, and every similarity comparison reads twice as many numbers. Dimension is capacity, not quality. A model trained well for your task at 384 dimensions can rank better than a general-purpose model at 768.
+
+**Maximum input** is how much text the model reads before it stops. Every model has a limit, and text past that limit is dropped rather than summarized. If you embed a 4,000-word article with a model that reads 256 tokens, you have embedded the first paragraph and thrown the article away.
+
+**Task and language** describe what the model was trained to do. Some models compare two sentences of similar length. Others match a short question against a longer passage, which is the shape of a search feature. One of the four understands more than 100 languages, and the other three understand only English.
+
+# nomic-embed-text
+
+`nomic-embed-text` is Nomic AI's `nomic-embed-text-v1.5`, and it is Appwrite's default model. It produces 768-dimensional vectors and reads up to 8,192 tokens.
+
+Nomic built it on a long-context BERT encoder, which is where the 8,192 tokens come from, then trained it in two stages: unsupervised contrastive training on weakly related text pairs, followed by fine-tuning on labeled data. That second stage is what lets one model handle both query-to-document retrieval and plain text-to-text similarity, rather than specializing in one of them.
+
+Pick it when any of these describe your data:
+
+- **Long documents.** A support article, a documentation page, or a long section of a PDF fits in one embedding.
+- **Fewer, larger chunks.** Store 200 documents instead of 2,000 fragments, and merge fewer results on every query.
+- **Context stays attached.** A paragraph carries the section around it into the same vector instead of standing alone.
+
+Three things to weigh against that:
+
+- **English only.** A query in another language finds nothing.
+- **768 numbers per document.** Both the collection and every similarity comparison handle twice the numbers a 384-dimensional model would produce.
+- **Big chunks average out.** A document covering several unrelated topics collapses into one blurred vector, so test your chunk size against queries you expect rather than assuming bigger is better.
+
+# embedding-gemma
+
+`embedding-gemma` is Google's EmbeddingGemma, a 308M parameter model built on a Gemma 3 encoder. It produces 768-dimensional vectors and reads up to 2,048 tokens.
+
+It is the only multilingual model of the four, covering over 100 languages, and Google reports it as the highest-scoring text-only multilingual embedding model under 500M parameters on the Massive Text Embedding Benchmark. It also matches across languages, placing a sentence and its translation close together in the vector space.
+
+Pick it when either of these is true:
+
+- **Mixed-language content.** Your documents are not all in one language, or your users ask questions in a language your documents are not written in. A query typed in German returns a document written in English, with no translation step anywhere in your code.
+- **User-generated text.** You cannot control which language it arrives in.
+
+Plan around two things:
+
+- **2,048 tokens.** A quarter of what `nomic-embed-text` reads, so long documents still need chunking.
+- **768 numbers per document.** Twice what a 384-dimensional model produces. If your content is all in one language, that is capacity you never query.
+
+If either of those first two situations describes you, the decision is already made. Nothing else in the list can connect text across languages at all.
+
+# all-minilm
+
+`all-minilm` is `all-MiniLM-L6-v2` from the Sentence Transformers project. It produces 384-dimensional vectors and reads up to 256 tokens.
+
+It was fine-tuned on more than a billion sentence pairs to answer one question well: are these two pieces of text about the same thing? That is a different question from the one a search box asks, and it shapes what the model is good for.
+
+Pick it for these jobs:
+
+- **Comparing like with like.** Grouping duplicate support tickets, or finding related products by title.
+- **High-volume ingestion.** You store 384 numbers per document, and every comparison touches half as many numbers as a 768-dimensional model does.
+
+Two limits decide whether you can use it:
+
+- **256 tokens, roughly 190 English words.** This is the sharpest limit in the list and the easiest to miss. The model truncates everything after it, so a page of text reaches the vector as its opening paragraph.
+- **English only.** Multilingual content needs `embedding-gemma`.
+
+Keep the inputs short. If your text is not short, pick a different model rather than working around this one.
+
+# bge-small
+
+`bge-small` is BAAI's `bge-small-en-v1.5`. It produces 384-dimensional vectors, the same numbers per document as `all-minilm`, but reads up to 512 tokens, twice as much.
+
+The difference is what it was trained for. BAAI trained it contrastively for retrieval, matching a short query against a longer passage, which is the shape of most semantic search features.
+
+Pick it when your search looks like this:
+
+- **Question-to-passage search.** A person types a question and you return passages. That is the task the training targeted.
+- **Half the numbers per document.** You get retrieval-tuned ranking at 384 dimensions instead of 768.
+
+Check two limits first:
+
+- **English only.** Anything not in English belongs with `embedding-gemma`.
+- **512 tokens.** Still modest, so anything document-length belongs with `nomic-embed-text`.
+
+For English search over paragraph-length content, `bge-small` is the one to try first, though how it ranks your data is something only your queries can tell you.
+
+# How the four compare
+
+| Model | Dimension | Maximum input | Languages | Trained for |
+| --- | --- | --- | --- | --- |
+| `nomic-embed-text` | 768 | 8,192 tokens | English | General-purpose embedding of long text |
+| `embedding-gemma` | 768 | 2,048 tokens | 100+ | Multilingual and cross-lingual matching |
+| `all-minilm` | 384 | 256 tokens | English | Similarity between short pieces of text |
+| `bge-small` | 384 | 512 tokens | English | Matching a query against a passage |
+
+Read the table by constraint, starting with the one you cannot change:
+
+- Your content is not all in English, or your users do not all write in the same language. Pick `embedding-gemma`. Language coverage beats every other consideration, because the other three models cannot connect text across languages at all.
+- Your documents are long and you want to index them whole. Pick `nomic-embed-text`. It is the only model that reads more than a few thousand tokens.
+- You are building search, where a person types a question and you return passages. Pick `bge-small`. It is trained for exactly that shape, and it stores half the numbers per document that the 768-dimensional models do.
+- You are comparing short texts to each other, in volume, and index size matters. Pick `all-minilm`, and keep every input under a couple of sentences.
+
+If two of these apply at once, start by ruling out any model that fails your language requirement, since that one has no workaround. Chunking can usually settle the rest.
+
+# Create a collection that matches your model
+
+![Create collection dialog in the Appwrite Console](/images/docs/products/databases/vectorsdb/dark/create-collection.avif)
+
+In the Console, the model and the dimension are one choice. You pick the model, and the collection takes that model's dimension.
+
+1. Open your VectorsDB database and click **Create collection**.
+2. Name the collection. Optionally, set a custom collection ID.
+3. Under **Embedding model**, select the model you settled on above.
+4. Click **Create**.
+
+![Embedding model list in the create collection dialog](/images/docs/products/databases/vectorsdb/dark/create-collection-model.avif)
+
+The same list ends with a **Custom dimension** option. Choose it when you generate embeddings with a model you run yourself, and set the dimension to whatever that model produces.
+
+If you create the collection through an SDK instead, set `dimension` to the number in the table above. A collection holds only vectors of its own dimension, so the dimension has to match the model before you write your first document.
+
+# Generate embeddings with a specific model
+
+To choose a model for a call, pass `model` to `createTextEmbeddings`. By default, Appwrite uses `nomic-embed-text`. Server SDKs need an [API key](/docs/partners/project/api-keys) with the `embeddings.write` scope.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const embeddings = new sdk.Embeddings(client);
+
+const result = await embeddings.createTextEmbeddings({
+    texts: ['Appwrite Functions run your code in response to events'],
+    model: sdk.EmbeddingModel.Embeddinggemma // store these in a collection with dimension 768
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const embeddings = new sdk.Embeddings(client);
+
+const result = await embeddings.createTextEmbeddings({
+    texts: ['Appwrite Functions run your code in response to events'],
+    model: sdk.EmbeddingModel.Embeddinggemma // store these in a collection with dimension 768
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Embeddings;
+use Appwrite\Enums\EmbeddingModel;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$embeddings = new Embeddings($client);
+
+$result = $embeddings->createTextEmbeddings(
+    texts: ['Appwrite Functions run your code in response to events'],
+    model: EmbeddingModel::EMBEDDINGGEMMA() // store these in a collection with dimension 768
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.embeddings import Embeddings
+from appwrite.enums import EmbeddingModel
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+embeddings = Embeddings(client)
+
+result = embeddings.create_text_embeddings(
+    texts = ['Appwrite Functions run your code in response to events'],
+    model = EmbeddingModel.EMBEDDING_GEMMA # store these in a collection with dimension 768
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+embeddings = Embeddings.new(client)
+
+result = embeddings.create_text_embeddings(
+    texts: ['Appwrite Functions run your code in response to events'],
+    model: EmbeddingModel::EMBEDDING_GEMMA # store these in a collection with dimension 768
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+Embeddings embeddings = new Embeddings(client);
+
+EmbeddingList result = await embeddings.CreateTextEmbeddings(
+    texts: new List<string> { "Appwrite Functions run your code in response to events" },
+    model: EmbeddingModel.EmbeddingGemma // store these in a collection with dimension 768
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+Embeddings embeddings = Embeddings(client);
+
+EmbeddingList result = await embeddings.createTextEmbeddings(
+    texts: ['Appwrite Functions run your code in response to events'],
+    model: enums.EmbeddingModel.embeddingGemma, // store these in a collection with dimension 768
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.Embeddings
+import io.appwrite.enums.EmbeddingModel
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val embeddings = Embeddings(client)
+
+val response = embeddings.createTextEmbeddings(
+    texts = listOf("Appwrite Functions run your code in response to events"),
+    model = EmbeddingModel.EMBEDDING_GEMMA // store these in a collection with dimension 768
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Embeddings;
+import io.appwrite.enums.EmbeddingModel;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+Embeddings embeddings = new Embeddings(client);
+
+embeddings.createTextEmbeddings(
+    List.of("Appwrite Functions run your code in response to events"), // texts
+    EmbeddingModel.EMBEDDING_GEMMA, // store these in a collection with dimension 768
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let embeddings = Embeddings(client)
+
+let embeddingList = try await embeddings.createTextEmbeddings(
+    texts: ["Appwrite Functions run your code in response to events"],
+    model: .embeddingGemma // store these in a collection with dimension 768
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Embeddings;
+use appwrite::enums::EmbeddingModel;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let embeddings = Embeddings::new(&client);
+
+    let result = embeddings.create_text_embeddings(
+        vec!["Appwrite Functions run your code in response to events"],
+        Some(EmbeddingModel::EmbeddingGemma), // store these in a collection with dimension 768
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite embeddings create-text-embeddings \
+    --texts 'Appwrite Functions run your code in response to events' \
+    --model 'embedding-gemma'
+```
+{% /multicode %}
+
+The response holds one entry per input text, in the order you passed them, and each entry reports the `model` and `dimension` it came from.
+
+```json
+{
+    "total": 1,
+    "embeddings": [
+        {
+            "model": "embedding-gemma",
+            "dimension": 768,
+            "embedding": [-0.012246467, 0.02621112, -0.15247375, ...],
+            "error": ""
+        }
+    ]
+}
+```
+
+Use the same model for the documents you store and for the queries you search with.
+
+Pick a model, create a collection with the matching dimension, and generate your first embeddings from the Console or an SDK.
+
+# Resources
+
+- [VectorsDB documentation](/docs/products/databases/vectorsdb)
+- [Embeddings](/docs/products/databases/vectorsdb/embeddings)
+- [Quick start](/docs/products/databases/vectorsdb/quick-start)
+- [Vector search](/docs/products/databases/vectorsdb/vector-search)
+- [Join the Appwrite Discord](https://appwrite.io/discord)

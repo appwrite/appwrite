@@ -9,6 +9,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -60,10 +61,11 @@ class Update extends Action
                 ]
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('keyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Key ID.', false, ['dbForPlatform'])
+            ->param('keyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Key ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
             ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', optional: false, example: '["users.read"]', enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('expire', null, new Nullable(new Datetime()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the key.', true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
@@ -71,6 +73,7 @@ class Update extends Action
             ->inject('authorization')
             ->inject('apiKey')
             ->inject('auditContext')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -80,6 +83,7 @@ class Update extends Action
         string $name,
         array $scopes,
         ?string $expire,
+        ?string $description,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForPlatform,
@@ -87,7 +91,18 @@ class Update extends Action
         Authorization $authorization,
         ?Key $apiKey,
         AuditContext $auditContext,
+        Request $request,
     ) {
+        // A JWT stands in for its session for a few minutes; a key it left behind would outlive it
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
+        // A key hands out no more than it holds: no broader scopes and no later expiry
+        if ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $scopes, $expire)) {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
         // The request may run through the console project; events and audits belong to the resolved project
@@ -104,6 +119,10 @@ class Update extends Action
             'scopes' => $scopes,
             'expire' => $expire,
         ]);
+
+        if (!\is_null($description)) {
+            $updates->setAttribute('description', $description);
+        }
 
         try {
             $key = $authorization->skip(fn () => $dbForPlatform->updateDocument('keys', $key->getId(), $updates));

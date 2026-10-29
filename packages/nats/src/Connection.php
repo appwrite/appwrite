@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\NATS;
 
+use Swoole\Coroutine;
 use Utopia\NATS\Auth\Authenticator;
 use Utopia\NATS\Auth\CredentialsAuth;
 use Utopia\NATS\Auth\NKeyAuth;
@@ -14,9 +15,11 @@ use Utopia\NATS\Exception\AuthenticationException;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\MaxPayloadException;
 use Utopia\NATS\Exception\NatsException;
+use Utopia\NATS\Exception\NoRespondersException;
 use Utopia\NATS\Exception\PermissionException;
 use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Exception\TlsException;
 use Utopia\NATS\Internal\CallbackException;
 use Utopia\NATS\Protocol\Parser;
 use Utopia\NATS\Protocol\ServerOp;
@@ -283,7 +286,7 @@ final class Connection
                         $index = $pending[$token];
                         unset($pending[$token]);
                         $response = $message->headers?->getStatus() === '503'
-                            ? new NatsException('No responders for request') : $message;
+                            ? new NoRespondersException('No responders for request') : $message;
                         $this->notify($reply, $index, $response);
                     }
                 }
@@ -619,16 +622,37 @@ final class Connection
     {
         $this->status = self::STATUS_CONNECTING;
         $lastError = null;
+        $deadline = microtime(true) + $this->options->connectTimeout;
 
-        foreach ($this->serverPool as $url) {
-            try {
-                $this->connectToServer($url);
-                $this->status = self::STATUS_CONNECTED;
-                return;
-            } catch (\Throwable $e) {
-                $lastError = $e;
-                continue;
+        for ($attempt = 1; ; $attempt++) {
+            $retryable = true;
+
+            foreach ($this->serverPool as $url) {
+                try {
+                    $this->connectToServer($url);
+                    $this->status = self::STATUS_CONNECTED;
+                    return;
+                } catch (\Throwable $e) {
+                    $lastError = $e;
+                    $retryable = $retryable && self::retriesConnect($e);
+                    // Close the failed attempt's socket before the next one.
+                    if (isset($this->transport)) {
+                        $this->transport->close();
+                    }
+                }
             }
+
+            if (!$retryable || $attempt >= $this->options->connectAttempts) {
+                break;
+            }
+
+            // Give up rather than start a pass after connectTimeout.
+            $pause = $this->options->connectRetryWait + mt_rand() / mt_getrandmax() * $this->options->connectRetryJitter;
+            if (microtime(true) + $pause >= $deadline) {
+                break;
+            }
+
+            self::pause($pause);
         }
 
         $this->status = self::STATUS_DISCONNECTED;
@@ -636,6 +660,34 @@ final class Connection
             'Failed to connect to any NATS server',
             previous: $lastError,
         );
+    }
+
+    /**
+     * Whether a new connection could succeed: not for rejected auth or a failed TLS handshake.
+     */
+    private static function retriesConnect(\Throwable $error): bool
+    {
+        return $error instanceof ConnectionException
+            && !$error instanceof TlsException
+            && self::reconnectsAfter($error->getMessage());
+    }
+
+    /**
+     * Sleep without blocking other coroutines.
+     */
+    private static function pause(float $seconds): void
+    {
+        if ($seconds <= 0) {
+            return;
+        }
+
+        if (class_exists(Coroutine::class) && Coroutine::getCid() !== -1) {
+            Coroutine::sleep($seconds);
+
+            return;
+        }
+
+        usleep((int) ($seconds * 1_000_000));
     }
 
     private function connectToServer(string $url): void
@@ -669,17 +721,15 @@ final class Connection
         // Merge connect_urls into server pool
         foreach ($this->serverInfo->connectUrls as $connectUrl) {
             if (!\in_array($connectUrl, $this->serverPool, true)) {
-                $this->serverPool[] = $this->normalizeUrl($connectUrl);
+                $this->serverPool[] = $this->normalizeUrl($connectUrl, $this->isSecure($scheme));
             }
         }
 
         // TLS upgrade over a plaintext TCP connection: when the server requires
-        // TLS, or when the caller opted in and the server advertises it is
-        // available. A TlsTransport / custom transport handles its own TLS.
+        // TLS, or when the caller opted in, whatever the server advertises. A
+        // TlsTransport / custom transport handles its own TLS.
         if ($this->transport instanceof TcpTransport && $scheme !== 'tls') {
-            $wantsUpgrade = $this->serverInfo->tlsRequired
-                || ($this->options->tls && $this->serverInfo->tlsAvailable);
-            if ($wantsUpgrade) {
+            if ($this->serverInfo->tlsRequired || $this->options->tls) {
                 $this->transport->upgradeTls($this->tlsOptions());
             }
         }
@@ -938,8 +988,9 @@ final class Connection
 
             // Async INFO may advertise additional cluster members; fold any new
             // ones into the pool so failover has somewhere to go.
+            $secure = $this->isSecure($this->parseUrl($this->currentServer)['scheme']);
             foreach ($this->serverInfo->connectUrls as $connectUrl) {
-                $normalized = $this->normalizeUrl($connectUrl);
+                $normalized = $this->normalizeUrl($connectUrl, $secure);
                 if (!\in_array($normalized, $this->serverPool, true)) {
                     $this->serverPool[] = $normalized;
                 }
@@ -1287,12 +1338,22 @@ final class Connection
         return $opts;
     }
 
-    private function normalizeUrl(string $url): string
+    /**
+     * Scheme-less URLs come from INFO connect_urls; $secure carries the TLS of
+     * the server that advertised them, so a TLS connection never fails over to
+     * a plaintext one.
+     */
+    private function normalizeUrl(string $url, bool $secure = false): string
     {
         if (!preg_match('#^(nats|tls|ws|wss)://#', $url)) {
-            return 'nats://' . $url;
+            return ($secure ? 'tls://' : 'nats://') . $url;
         }
         return $url;
+    }
+
+    private function isSecure(string $scheme): bool
+    {
+        return $scheme === 'tls' || $scheme === 'wss' || $this->options->tls;
     }
 
     /**

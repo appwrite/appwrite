@@ -15,10 +15,11 @@ final class Executions extends Base
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
-            'project' => $this->project->getArrayCopy(),
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'executions' => \array_map(
                 fn (Document $execution) => $execution->getArrayCopy(),
                 $this->executions
@@ -26,6 +27,7 @@ final class Executions extends Base
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(

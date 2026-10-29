@@ -1,0 +1,209 @@
+---
+layout: article
+title: Kysely
+description: Use Kysely with an Appwrite native PostgreSQL database. Configure PostgresDialect with node-postgres, run migrations against the direct connection, and pool runtime traffic from serverless environments.
+---
+
+Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so [Kysely](https://kysely.dev/) works against it with no Appwrite-specific dialect or driver. Point `PostgresDialect` and a `pg` pool at the connection string from the [Connections](/docs/products/databases/postgresql/connections) page and use the type-safe query builder as you would against any PostgreSQL server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [native PostgreSQL databases](/docs/products/databases/postgresql) to create one and [Connections](/docs/products/databases/postgresql/connections) to retrieve the connection string. The primary user is `admin`, and the database name is generated per database.
+{% /info %}
+
+# Set the connection string {% #connection-string %}
+
+In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`postgresql.get()`](/docs/products/databases/postgresql/connections#credentials). Put it in your environment, never commit it:
+
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+Use the pooled `DATABASE_URL` (port `6432`) for runtime traffic and `DIRECT_URL` (port `5432`) for migrations and CLI tools. The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network, so no extra certificate configuration is needed. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
+
+# Install and configure Kysely {% #driver %}
+
+Install Kysely and `node-postgres`:
+
+```bash
+npm install kysely pg
+npm install -D @types/pg typescript kysely-ctl
+```
+
+Create a typed database interface and a `Kysely` instance backed by `PostgresDialect`. Mark database-generated columns with `Generated<T>` so insert-only payloads typecheck:
+
+```ts
+import { Generated, Kysely, PostgresDialect } from 'kysely';
+import { Pool } from 'pg';
+
+interface UsersTable {
+  id: Generated<number>;
+  email: string;
+  created_at: Generated<Date>;
+}
+
+interface Database {
+  users: UsersTable;
+}
+
+const dialect = new PostgresDialect({
+  pool: new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 10
+  })
+});
+
+export const db = new Kysely<Database>({ dialect });
+```
+
+`pg` honors `sslmode=require` in the URL. If you pass discrete host options instead of a URL, set `ssl: { rejectUnauthorized: true }` so the driver verifies the server certificate against Node's built-in CA store.
+
+# Run migrations {% #migrate %}
+
+Prefer [kysely-ctl](https://github.com/kysely-org/kysely-ctl) for the migration happy path. Point it at `DIRECT_URL` on the **direct** engine port (`5432`). Migrations issue DDL and often rely on session-level locks, which need a session-level connection rather than the transaction-mode pooler.
+
+Create `kysely.config.ts` (project root or `.config/`):
+
+```ts
+import { PostgresDialect } from 'kysely';
+import { defineConfig } from 'kysely-ctl';
+import { Pool } from 'pg';
+
+export default defineConfig({
+  dialect: new PostgresDialect({
+    pool: new Pool({
+      connectionString: process.env.DIRECT_URL
+    })
+  }),
+  migrations: {
+    migrationFolder: 'migrations'
+  }
+});
+```
+
+Generate and apply migrations:
+
+```bash
+npx kysely migrate make create_users
+npx kysely migrate latest
+```
+
+A migration file that creates the `users` table:
+
+```ts
+import { Kysely, sql } from 'kysely';
+
+export async function up(db: Kysely<any>): Promise<void> {
+  await db.schema
+    .createTable('users')
+    .addColumn('id', 'serial', (col) => col.primaryKey())
+    .addColumn('email', 'text', (col) => col.notNull().unique())
+    .addColumn('created_at', 'timestamptz', (col) =>
+      col.notNull().defaultTo(sql`now()`)
+    )
+    .execute();
+}
+
+export async function down(db: Kysely<any>): Promise<void> {
+  await db.schema.dropTable('users').execute();
+}
+```
+
+After the schema exists, you can optionally generate TypeScript types with [kysely-codegen](https://github.com/RobinBlomberg/kysely-codegen) (`npx kysely-codegen`) instead of hand-writing table interfaces. Keep `Generated<T>` on database-generated columns either way.
+
+### Alternate: Migrator API
+
+If you prefer not to use kysely-ctl, Kysely's built-in `Migrator` works the same way against `DIRECT_URL`:
+
+```ts
+import { promises as fs } from 'fs';
+import { Kysely, PostgresDialect } from 'kysely';
+import { FileMigrationProvider, Migrator } from 'kysely/migration';
+import * as path from 'path';
+import { Pool } from 'pg';
+
+const db = new Kysely({
+  dialect: new PostgresDialect({
+    pool: new Pool({ connectionString: process.env.DIRECT_URL })
+  })
+});
+
+const migrator = new Migrator({
+  db,
+  provider: new FileMigrationProvider({
+    fs,
+    path,
+    migrationFolder: path.join(__dirname, 'migrations')
+  })
+});
+
+const { error, results } = await migrator.migrateToLatest();
+await db.destroy();
+
+if (error) {
+  throw error;
+}
+```
+
+The primary `admin` user owns the generated database and can run schema changes. Use narrower [database roles](/docs/products/databases/postgresql/connections#roles) for application traffic that does not need DDL privileges.
+
+# Query with Kysely {% #query %}
+
+Once the schema is migrated, use the query builder:
+
+```ts
+import { db } from './db';
+
+const user = await db
+  .insertInto('users')
+  .values({ email: 'ada@example.com' })
+  .returningAll()
+  .executeTakeFirstOrThrow();
+
+const recent = await db
+  .selectFrom('users')
+  .selectAll()
+  .orderBy('created_at', 'desc')
+  .limit(10)
+  .execute();
+```
+
+On long-running servers, create the `Kysely` instance once at module scope and reuse it. On serverless, keep a single instance per module scope so warm invocations reuse the pool, and rely on the Appwrite pooler to absorb cold-start connection churn. Call `db.destroy()` on shutdown.
+
+# Pool connections from serverless {% #pooling %}
+
+Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling). The primary `DATABASE_URL` already uses the pooler port (`6432`) on the same hostname.
+
+The pooler defaults to **transaction mode**, which does not keep a backend connection across statements. Keep kysely-ctl (and any `Migrator` script) pointed at `DIRECT_URL` so DDL still runs over a session-level connection.
+
+Size the `pg` `Pool` conservatively for serverless (often `max: 1` or a small single-digit value per isolate). Prefer Kysely's normal parameterized queries over session-scoped prepared statement workflows when you use transaction pooling.
+
+If your application relies on advisory locks, `LISTEN`/`NOTIFY`, temporary tables, or `SET LOCAL`, switch the pooler to **session mode** or use the direct port. See the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL` (and the pooled variant as `DATABASE_URL`).
+3. Run `kysely migrate latest` (or `migrateToLatest`) and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and create database roles.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network security" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}
