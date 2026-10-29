@@ -188,6 +188,23 @@ function getRelationshipPreviewText(
   }
 }
 
+// Number inputs accept exponent and sign characters; block them on both typing and paste.
+function blockChars(chars: string[]) {
+  return {
+    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (chars.includes(e.key)) {
+        e.preventDefault()
+      }
+    },
+    onPaste: (e: React.ClipboardEvent<HTMLInputElement>) => {
+      const text = e.clipboardData.getData('text')
+      if (chars.some((c) => text.includes(c))) {
+        e.preventDefault()
+      }
+    },
+  }
+}
+
 export function ColumnDrawer({
   open,
   onOpenChange,
@@ -705,11 +722,7 @@ export function ColumnDrawer({
                       const size = parseInt(e.target.value) || 0
                       setFormData((prev) => ({ ...prev, size }))
                     }}
-                    onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                        e.preventDefault()
-                      }
-                    }}
+                    {...blockChars(['e', 'E', '+', '-', '.'])}
                     placeholder={t('Enter size')}
                     min={formData.encrypt ? 150 : 1}
                     disabled={isLoading}
@@ -752,11 +765,7 @@ export function ColumnDrawer({
                         size: size || undefined,
                       }))
                     }}
-                    onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                        e.preventDefault()
-                      }
-                    }}
+                    {...blockChars(['e', 'E', '+', '-', '.'])}
                     placeholder="255"
                     min={formData.encrypt ? 150 : VARCHAR_SIZE_MIN}
                     max={VARCHAR_SIZE_MAX}
@@ -891,14 +900,11 @@ export function ColumnDrawer({
                                 : parseInt(e.target.value, 10)
                           setFormData((prev) => ({ ...prev, min }))
                         }}
-                        onKeyDown={(e) => {
-                          if (
-                            ['e', 'E', '+'].includes(e.key) ||
-                            (formData.type === 'integer' && e.key === '.')
-                          ) {
-                            e.preventDefault()
-                          }
-                        }}
+                        {...blockChars(
+                          formData.type === 'integer'
+                            ? ['e', 'E', '+', '.']
+                            : ['e', 'E', '+'],
+                        )}
                         placeholder={t('Enter min')}
                         step={formData.type === 'double' ? 0.1 : 1}
                         disabled={isLoading}
@@ -951,14 +957,11 @@ export function ColumnDrawer({
                                 : parseInt(e.target.value, 10)
                           setFormData((prev) => ({ ...prev, max }))
                         }}
-                        onKeyDown={(e) => {
-                          if (
-                            ['e', 'E', '+'].includes(e.key) ||
-                            (formData.type === 'integer' && e.key === '.')
-                          ) {
-                            e.preventDefault()
-                          }
-                        }}
+                        {...blockChars(
+                          formData.type === 'integer'
+                            ? ['e', 'E', '+', '.']
+                            : ['e', 'E', '+'],
+                        )}
                         placeholder={t('Enter max')}
                         step={formData.type === 'double' ? 0.1 : 1}
                         disabled={isLoading}
