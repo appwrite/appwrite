@@ -673,10 +673,28 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             }
                         }
 
+                        // One query for every administered project, instead of one per connection.
+                        $administeredIds = [];
+                        foreach ($administering as $connection) {
+                            $administeredIds[$realtime->connections[$connection]['projectId'] ?? ''] = true;
+                        }
+                        unset($administeredIds['']);
+                        $administeredProjects = [];
+                        if (!empty($administeredIds)) {
+                            $found = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->find('projects', [
+                                Query::equal('$id', \array_map(\strval(...), \array_keys($administeredIds))),
+                                Query::limit(\count($administeredIds)),
+                            ]));
+                            foreach ($found as $administered) {
+                                $administeredProjects[$administered->getId()] = $administered;
+                            }
+                        }
+
                         foreach ($administering as $connection) {
                             $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
                             $admin = $realtime->connections[$connection]['admin'];
-                            $administered = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $realtime->connections[$connection]['projectId'] ?? ''));
+                            // A deleted project is an empty document here and ends the connection below.
+                            $administered = $administeredProjects[$realtime->connections[$connection]['projectId'] ?? ''] ?? new Document();
 
                             // Its roles came from this membership, so any change to it ends the connection.
                             if (
