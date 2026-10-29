@@ -74,6 +74,7 @@ pub const OPS: &[&str] = &[
     "fs.exists",
     "fs.is_dir",
     "fs.mkdir",
+    "fs.symlink",
     "fs.perms",
     "fs.md5",
     "fs.unlink",

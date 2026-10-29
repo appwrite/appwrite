@@ -217,7 +217,8 @@
             "path": "/tmp/compat-fs/${ns}/disk/telemetry.txt",
             "size": 3,
             "modified": "<masked>",
-            "etag": "b8a9f715dbb64fd5c56e7783c6820a61"
+            "etag": "b8a9f715dbb64fd5c56e7783c6820a61",
+            "mime_type": "text/plain"
           }
         },
         {
@@ -471,19 +472,22 @@
                 "path": "/tmp/compat-fs/${ns}/disk/a.txt",
                 "size": 4,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               },
               {
                 "path": "/tmp/compat-fs/${ns}/disk/b.txt",
                 "size": 1,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               },
               {
                 "path": "/tmp/compat-fs/${ns}/disk/d.txt",
                 "size": 1,
                 "modified": "<masked>",
-                "etag": null
+                "etag": null,
+                "mime_type": null
               }
             ],
             "cursor": null

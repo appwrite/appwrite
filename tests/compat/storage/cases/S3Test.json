@@ -2557,7 +2557,6 @@
               "url": "https://s3.example.com/root/a.jpg",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -2692,7 +2691,6 @@
               "url": "https://s3.example.com/root/a.bin",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -2890,7 +2888,6 @@
               "url": "https://s3.example.com/root/a.bin",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -2987,7 +2984,6 @@
               "url": "https://s3.example.com/root/b.bin?uploadId=upload-1",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -3171,7 +3167,6 @@
               "url": "https://s3.example.com/root/a.jpg",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -3186,7 +3181,6 @@
               "url": "https://s3.example.com/root/a.jpg",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -3201,7 +3195,6 @@
               "url": "https://s3.example.com/root/a.jpg",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -3659,7 +3652,6 @@
               "url": "https://s3.example.com/root/dest.bin?uploadId=upload-123",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -3727,13 +3719,15 @@
                 "path": "root/a.txt",
                 "size": 11,
                 "modified": "2026-01-02T03:04:05.000000+00:00",
-                "etag": "abc123"
+                "etag": "abc123",
+                "mime_type": null
               },
               {
                 "path": "root/b.txt",
                 "size": 22,
                 "modified": "2026-01-02T03:04:06.123000+00:00",
-                "etag": "def456"
+                "etag": "def456",
+                "mime_type": null
               }
             ],
             "cursor": "next-token"
@@ -3752,7 +3746,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Ftesting&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -3823,7 +3816,8 @@
                 "path": "root/a.txt",
                 "size": 11,
                 "modified": "2026-01-02T03:04:05.000000+00:00",
-                "etag": "abc123"
+                "etag": "abc123",
+                "mime_type": null
               }
             ],
             "cursor": null
@@ -3842,7 +3836,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Ftesting&max-keys=5&continuation-token=tok",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -3958,7 +3951,8 @@
                   "path": "a",
                   "size": 0,
                   "modified": null,
-                  "etag": null
+                  "etag": null,
+                  "mime_type": null
                 }
               ],
               "cursor": null
@@ -3982,7 +3976,8 @@
                   "path": "a & b",
                   "size": 3,
                   "modified": null,
-                  "etag": "c"
+                  "etag": "c",
+                  "mime_type": null
                 }
               ],
               "cursor": null
@@ -4548,7 +4543,6 @@
               "url": "https://s3.example.com/root/file.txt",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -5194,7 +5188,6 @@
               "url": "https://s3.example.com/root/file.txt",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -6125,7 +6118,6 @@
               "url": "https://s3.example.com/root/file.txt",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -6142,7 +6134,6 @@
               "url": "https://s3.example.com/root/file.txt",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -6158,7 +6149,6 @@
               "url": "https://s3.example.com/root/file.txt",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -6332,7 +6322,8 @@
             "path": "/root/file.txt",
             "size": 11,
             "modified": "2026-09-18T08:41:25.000000+00:00",
-            "etag": "abc123"
+            "etag": "abc123",
+            "mime_type": "text/plain"
           }
         },
         {
@@ -6347,7 +6338,8 @@
             "path": "/root/file.txt",
             "size": 7,
             "modified": null,
-            "etag": "x"
+            "etag": "x",
+            "mime_type": null
           }
         },
         {
@@ -6393,7 +6385,6 @@
               "url": "https://s3.example.com/root/file.txt",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -6408,7 +6399,6 @@
               "url": "https://s3.example.com/root/file.txt",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -6423,7 +6413,6 @@
               "url": "https://s3.example.com/root/file.txt",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -6438,7 +6427,6 @@
               "url": "https://s3.example.com/root/file.txt",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -6453,7 +6441,6 @@
               "url": "https://s3.example.com/root/file.txt",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -6848,7 +6835,6 @@
               "url": "https://s3.example.com/?uploads=&prefix=root%2F&max-uploads=2",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -6864,7 +6850,6 @@
               "url": "https://s3.example.com/?uploads=&prefix=root%2F&max-uploads=2&key-marker=root%2Fb.mp4&upload-id-marker=upload-2",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -7159,7 +7144,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fbucket%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -7191,7 +7175,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fbucket%2F&max-keys=1000&continuation-token=t2",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -7306,7 +7289,6 @@
               "url": "https://s3.example.com/root/a%20b%2Bc.txt",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -7321,7 +7303,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%20b%2Bc.txt%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -7337,7 +7318,6 @@
               "url": "https://s3.example.com/root/x?y.bin?uploadId=u-1",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -7513,7 +7493,6 @@
               "url": "https://s3.example.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -7546,7 +7525,6 @@
               "url": "https://s3.example.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -7813,7 +7791,6 @@
               "url": "https://my-bucket.s3.us-east-1.amazonaws.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "my-bucket.s3.us-east-1.amazonaws.com",
@@ -8034,7 +8011,6 @@
               "url": "https://my-bucket.s3.us-west-004.backblazeb2.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "my-bucket.s3.us-west-004.backblazeb2.com",
@@ -8255,7 +8231,6 @@
               "url": "https://my-bucket.nyc3.digitaloceanspaces.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "my-bucket.nyc3.digitaloceanspaces.com",
@@ -8476,7 +8451,6 @@
               "url": "https://my-bucket.eu-central-1.linodeobjects.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "my-bucket.eu-central-1.linodeobjects.com",
@@ -8697,7 +8671,6 @@
               "url": "https://my-bucket.s3.eu-central-1.wasabisys.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "my-bucket.s3.eu-central-1.wasabisys.com",
@@ -8879,7 +8852,6 @@
                 "url": "http://minio:9000/bucket/root/%C3%A4.txt",
                 "headers": {
                   "authorization": "<masked>",
-                  "content-length": "0",
                   "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                   "date": "<masked>",
                   "host": "minio:9000",
@@ -8927,7 +8899,6 @@
                 "url": "https://s3.example.com:8443/?list-type=2&prefix=root%2F&max-keys=1000&continuation-token=next",
                 "headers": {
                   "authorization": "<masked>",
-                  "content-length": "0",
                   "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                   "content-type": "text/plain",
                   "date": "<masked>",
@@ -8999,7 +8970,6 @@
                 "url": "https://s3.example.com/x",
                 "headers": {
                   "authorization": "<masked>",
-                  "content-length": "0",
                   "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                   "date": "<masked>",
                   "host": "s3.example.com",
@@ -9075,7 +9045,6 @@
               "url": "https://s3.example.com/root/object",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -9176,7 +9145,6 @@
               "url": "https://s3.example.com/root/object",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -9192,7 +9160,6 @@
               "url": "https://s3.example.com/root/missing",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -9295,7 +9262,6 @@
               "url": "https://s3.example.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "s3.example.com",
@@ -9310,7 +9276,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -9342,7 +9307,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000&continuation-token=page-2",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -9451,7 +9415,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -9467,7 +9430,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000&continuation-token=page-2",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -9566,7 +9528,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -9649,7 +9610,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -9742,7 +9702,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -9758,7 +9717,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000&continuation-token=page-2",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -9861,7 +9819,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -9980,7 +9937,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -10099,7 +10055,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -10218,7 +10173,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -10411,7 +10365,6 @@
               "url": "https://my-bucket.s3.us-east-1.amazonaws.com/?list-type=2&prefix=root%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -10427,7 +10380,6 @@
               "url": "https://my-bucket.s3.us-east-1.amazonaws.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -10459,7 +10411,6 @@
               "url": "https://my-bucket.s3.us-east-1.amazonaws.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "my-bucket.s3.us-east-1.amazonaws.com",
@@ -10653,7 +10604,6 @@
               "url": "https://my-bucket.s3.cn-north-1.amazonaws.cn/?list-type=2&prefix=root%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -10669,7 +10619,6 @@
               "url": "https://my-bucket.s3.cn-north-1.amazonaws.cn/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -10701,7 +10650,6 @@
               "url": "https://my-bucket.s3.cn-north-1.amazonaws.cn/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "my-bucket.s3.cn-north-1.amazonaws.cn",
@@ -10895,7 +10843,6 @@
               "url": "https://my-bucket.nyc3.digitaloceanspaces.com/?list-type=2&prefix=root%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -10911,7 +10858,6 @@
               "url": "https://my-bucket.nyc3.digitaloceanspaces.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -10943,7 +10889,6 @@
               "url": "https://my-bucket.nyc3.digitaloceanspaces.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "my-bucket.nyc3.digitaloceanspaces.com",
@@ -11137,7 +11082,6 @@
               "url": "https://my-bucket.s3.us-west-004.backblazeb2.com/?list-type=2&prefix=root%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -11153,7 +11097,6 @@
               "url": "https://my-bucket.s3.us-west-004.backblazeb2.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -11185,7 +11128,6 @@
               "url": "https://my-bucket.s3.us-west-004.backblazeb2.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "my-bucket.s3.us-west-004.backblazeb2.com",
@@ -11379,7 +11321,6 @@
               "url": "https://my-bucket.eu-central-1.linodeobjects.com/?list-type=2&prefix=root%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -11395,7 +11336,6 @@
               "url": "https://my-bucket.eu-central-1.linodeobjects.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -11427,7 +11367,6 @@
               "url": "https://my-bucket.eu-central-1.linodeobjects.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "my-bucket.eu-central-1.linodeobjects.com",
@@ -11621,7 +11560,6 @@
               "url": "https://my-bucket.s3.eu-central-1.wasabisys.com/?list-type=2&prefix=root%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -11637,7 +11575,6 @@
               "url": "https://my-bucket.s3.eu-central-1.wasabisys.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -11669,7 +11606,6 @@
               "url": "https://my-bucket.s3.eu-central-1.wasabisys.com/root/a",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "date": "<masked>",
                 "host": "my-bucket.s3.eu-central-1.wasabisys.com",
@@ -11769,7 +11705,6 @@
               "url": "https://my-bucket.s3.us-east-1.amazonaws.com/?list-type=2&prefix=my-bucket%2Froot%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -11852,7 +11787,6 @@
               "url": "https://my.dotted.bucket.s3.example.com/?list-type=2&prefix=my.dotted.bucket%2Froot%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -11935,7 +11869,6 @@
               "url": "https://my-bucket.s3.example.com/?list-type=2&prefix=my-bucket%2Froot%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12018,7 +11951,6 @@
               "url": "https://assets.example.com/?list-type=2&prefix=assets.example.com%2Froot%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12101,7 +12033,6 @@
               "url": "http://minio:9000/minio?list-type=2&prefix=root%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12184,7 +12115,6 @@
               "url": "http://storage.internal:9000/files?list-type=2&prefix=root%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12267,7 +12197,6 @@
               "url": "https://storage.example.com/files?list-type=2&prefix=root%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12350,7 +12279,6 @@
               "url": "https://storage.example.com/s3/files?list-type=2&prefix=root%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12433,7 +12361,6 @@
               "url": "https://storage.example.com/s3/files/?list-type=2&prefix=files%2Froot%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12516,7 +12443,6 @@
               "url": "http://minio:9000/MyBucket/?list-type=2&prefix=MyBucket%2Froot%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12599,7 +12525,6 @@
               "url": "http://minio:9000/mybucket/MyBucket?list-type=2&prefix=root%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12683,7 +12608,6 @@
               "url": "https://storage.example.com/?list-type=2&prefix=files%2Froot%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12767,7 +12691,6 @@
               "url": "https://b.example.com/b?list-type=2&prefix=root%2Fx&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12851,7 +12774,6 @@
               "url": "https://storage.example.com/?list-type=2&prefix=files%2Froot%2Fx%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -12935,7 +12857,6 @@
               "url": "https://storage.example.com/files?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -13095,7 +13016,6 @@
               "url": "https://s3.example.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
-                "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
                 "content-type": "text/plain",
                 "date": "<masked>",
@@ -13180,7 +13100,10 @@
               }
             ]
           },
-          "bind": "c"
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "s3.new",
@@ -13193,15 +13116,9 @@
             },
             "retry_delay": 0.0
           },
-          "bind": "d"
-        },
-        {
-          "op": "device.file_info",
-          "args": {
-            "device": {
-              "$ref": "d"
-            },
-            "path": "/root/file.bin"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
           }
         },
         {
@@ -13211,6 +13128,13 @@
               "$ref": "d"
             },
             "path": "/root/file.bin"
+          },
+          "expect": {
+            "path": "/root/file.bin",
+            "size": 0,
+            "modified": null,
+            "etag": null,
+            "mime_type": null
           }
         },
         {
@@ -13220,6 +13144,13 @@
               "$ref": "d"
             },
             "path": "/root/file.bin"
+          },
+          "expect": {
+            "path": "/root/file.bin",
+            "size": 0,
+            "modified": null,
+            "etag": null,
+            "mime_type": null
           }
         },
         {
@@ -13229,6 +13160,13 @@
               "$ref": "d"
             },
             "path": "/root/file.bin"
+          },
+          "expect": {
+            "path": "/root/file.bin",
+            "size": 0,
+            "modified": null,
+            "etag": null,
+            "mime_type": "application/octet-stream"
           }
         },
         {
@@ -13238,6 +13176,29 @@
               "$ref": "d"
             },
             "path": "/root/file.bin"
+          },
+          "expect": {
+            "path": "/root/file.bin",
+            "size": 0,
+            "modified": null,
+            "etag": null,
+            "mime_type": "text/plain"
+          }
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/file.bin"
+          },
+          "expect": {
+            "path": "/root/file.bin",
+            "size": 0,
+            "modified": null,
+            "etag": null,
+            "mime_type": null
           }
         },
         {
@@ -13246,7 +13207,79 @@
             "client": {
               "$ref": "c"
             }
-          }
+          },
+          "expect": [
+            {
+              "method": "HEAD",
+              "url": "https://s3.example.com/root/file.bin",
+              "headers": {
+                "authorization": "<masked>",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "HEAD",
+              "url": "https://s3.example.com/root/file.bin",
+              "headers": {
+                "authorization": "<masked>",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "HEAD",
+              "url": "https://s3.example.com/root/file.bin",
+              "headers": {
+                "authorization": "<masked>",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "HEAD",
+              "url": "https://s3.example.com/root/file.bin",
+              "headers": {
+                "authorization": "<masked>",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "HEAD",
+              "url": "https://s3.example.com/root/file.bin",
+              "headers": {
+                "authorization": "<masked>",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
         }
       ]
     }
