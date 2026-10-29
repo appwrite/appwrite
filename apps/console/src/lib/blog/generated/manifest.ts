@@ -16,6 +16,19 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "add-push-notifications-to-your-ios-app",
+    "href": "/blog/post/add-push-notifications-to-your-ios-app",
+    "title": "Add push notifications to your iOS app with Appwrite Push",
+    "description": "Send push notifications to a SwiftUI app with Appwrite Push. Notify customers when an order ships, show the message while the app is suspended, and open the order on tap.",
+    "date": "2026-10-16",
+    "lastUpdated": "2026-10-16",
+    "timeToRead": 10,
+    "author": "atharva",
+    "category": "tutorials",
+    "cover": "/images/blog/add-push-notifications-to-your-ios-app/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-push",
     "href": "/blog/post/announcing-appwrite-push",
     "title": "Announcing Appwrite Push: push notifications without Firebase",
