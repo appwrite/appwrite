@@ -11,7 +11,6 @@ use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -113,7 +112,6 @@ class Create extends Action
             ->inject('plan')
             ->inject('proofForToken')
             ->inject('proofForCode')
-            ->inject('originValidator')
             ->callback($this->action(...));
     }
 
@@ -132,8 +130,7 @@ class Create extends Action
         Context $usage,
         array $plan,
         ProofsToken $proofForToken,
-        ProofsCode $proofForCode,
-        Origin $originValidator
+        ProofsCode $proofForCode
     ): void {
         $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
         $factorEnabled = match ($factor) {
@@ -355,9 +352,7 @@ class Create extends Action
                     variables: $emailVariables,
                     customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
                     platform: $platform,
-                    headers: $originValidator->isValid($request->getOrigin())
-                        ? OTPToken::from($code, $request->getOrigin())?->toHeaders() ?? []
-                        : [],
+                    headers: OTPToken::from($code, $request->getOrigin())?->toHeaders() ?? [],
                 );
                 break;
         }
