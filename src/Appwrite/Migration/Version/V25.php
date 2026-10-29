@@ -436,15 +436,19 @@ class V25 extends Migration
 
                     // Identity email lookups match users, so keep only addresses the owner has verified.
                     // Other identities regain their email on the next verified sign-in.
-                    $identities = [];
-                    foreach ($this->dbForProject->cursor($id, [Query::notEqual('providerEmail', '')], batchSize: 100) as $identity) {
-                        $identities[] = $identity;
-                        if (\count($identities) === 100) {
-                            $this->clearUnverifiedIdentityEmails($identities);
-                            $identities = [];
+                    try {
+                        $identities = [];
+                        foreach ($this->dbForProject->cursor($id, [Query::notEqual('providerEmail', '')], batchSize: 100) as $identity) {
+                            $identities[] = $identity;
+                            if (\count($identities) === 100) {
+                                $this->clearUnverifiedIdentityEmails($identities);
+                                $identities = [];
+                            }
                         }
+                        $this->clearUnverifiedIdentityEmails($identities);
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to clear unverified \"providerEmail\" values in collection {$id}: {$th->getMessage()}");
                     }
-                    $this->clearUnverifiedIdentityEmails($identities);
                     break;
 
                 case 'sessions':
