@@ -137,86 +137,79 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
 
     let secret_hash = token_hash(&secret)?;
     let console = ctx.project.is_console();
-    let outcome = db
-        .with_transaction(|| {
-            let db = db.clone();
-            let session = session.clone();
-            let secret_hash = secret_hash.clone();
-            let joined = joined.clone();
-            let target_id = target.id.clone();
-            let membership_id = membership.id.clone();
-            let team_id = team.id.clone();
-            async move {
-                let authorization = db.authorization();
-                // Lock the user first, as an address change does, so a voided
-                // invite cannot slip through.
-                let locked = authorization.skip(db.get_document("users", &target_id, Vec::new(), true)).await?;
-                // Re-read under a lock: a concurrent accept of the same invite
-                // must not be counted twice.
-                let current =
-                    authorization.skip(db.get_document("memberships", &membership_id, Vec::new(), true)).await?;
-                if current.get("confirm") == Some(&Value::Bool(true)) {
-                    return Ok(Accept::AlreadyConfirmed);
-                }
-                if current.string_or_empty("secret") != secret_hash {
-                    return Ok(Accept::InvalidSecret);
-                }
-                let mut updates = Document::default();
-                updates.put("joined", joined);
-                updates.put("confirm", Value::Bool(true));
-                let confirmed = db.update_document("memberships", &membership_id, updates).await?;
-                authorization
-                    .skip(db.increase_document_attribute("teams", &team_id, "total", Value::Int(1), None))
-                    .await?;
-
-                // The invite proves the address it was sent to, and only one
-                // address on file tells which that was.
-                let mut user = User::from(&locked);
-                let has_email = user.email.as_deref().is_some_and(|e| !e.is_empty());
-                let has_phone = user.phone.as_deref().is_some_and(|p| !p.is_empty());
-                let verification = match (has_email, has_phone) {
-                    (true, false) => Some("emailVerification"),
-                    (false, true) => Some("phoneVerification"),
-                    _ => None,
-                };
-                let phone_proof = verification == Some("phoneVerification");
-                // Accepting while signed out proves an unverified email or
-                // phone, so whoever registered it keeps no other way in.
-                let mut claimed = None;
-                if let Some(attribute) = verification
-                    && !has_session
-                    && !matches!(locked.get(attribute), Some(Value::Bool(true)))
-                {
-                    let proven = if phone_proof { "sms" } else { "email" };
-                    authorization
-                        .skip(user.revoke_credentials(&db, console, proven))
-                        .await
-                        .map_err(|e| utopia_database::Error::new(Kind::Exception, e.message.into_owned()))?;
-                    claimed = Some(user.id.clone());
-                }
-                if let Some(attribute) = verification {
-                    let mut verified = Document::default();
-                    verified.put(attribute, Value::Bool(true));
-                    authorization.skip(db.update_document("users", &target_id, verified)).await?;
-                }
-                // The session counts only the channel the invite proved; when
-                // that is unknown the user signs in instead.
-                let mut created = false;
-                if let (Some(mut session), Some(_)) = (session, verification) {
-                    session.put("provider", Value::from(if phone_proof { "phone" } else { "email" }));
-                    let uid = if phone_proof { user.phone.as_deref() } else { user.email.as_deref() };
-                    session.put("providerUid", text(uid));
-                    session.put(
-                        "factors",
-                        documents::strings(&[(if phone_proof { "phone" } else { "email" }).to_owned()]),
-                    );
-                    db.create_document("sessions", session).await?;
-                    created = true;
-                }
-                Ok(Accept::Confirmed { membership: confirmed, created, claimed })
+    let outcome = Box::pin(db.with_transaction(|| {
+        let db = db.clone();
+        let session = session.clone();
+        let secret_hash = secret_hash.clone();
+        let joined = joined.clone();
+        let target_id = target.id.clone();
+        let membership_id = membership.id.clone();
+        let team_id = team.id.clone();
+        async move {
+            let authorization = db.authorization();
+            // Lock the user first, as an address change does, so a voided
+            // invite cannot slip through.
+            let locked = authorization.skip(db.get_document("users", &target_id, Vec::new(), true)).await?;
+            // Re-read under a lock: a concurrent accept of the same invite
+            // must not be counted twice.
+            let current = authorization.skip(db.get_document("memberships", &membership_id, Vec::new(), true)).await?;
+            if current.get("confirm") == Some(&Value::Bool(true)) {
+                return Ok(Accept::AlreadyConfirmed);
             }
-        })
-        .await?;
+            if current.string_or_empty("secret") != secret_hash {
+                return Ok(Accept::InvalidSecret);
+            }
+            let mut updates = Document::default();
+            updates.put("joined", joined);
+            updates.put("confirm", Value::Bool(true));
+            let confirmed = db.update_document("memberships", &membership_id, updates).await?;
+            authorization.skip(db.increase_document_attribute("teams", &team_id, "total", Value::Int(1), None)).await?;
+
+            // The invite proves the address it was sent to, and only one
+            // address on file tells which that was.
+            let mut user = User::from(&locked);
+            let has_email = user.email.as_deref().is_some_and(|e| !e.is_empty());
+            let has_phone = user.phone.as_deref().is_some_and(|p| !p.is_empty());
+            let verification = match (has_email, has_phone) {
+                (true, false) => Some("emailVerification"),
+                (false, true) => Some("phoneVerification"),
+                _ => None,
+            };
+            let phone_proof = verification == Some("phoneVerification");
+            // Accepting while signed out proves an unverified email or
+            // phone, so whoever registered it keeps no other way in.
+            let mut claimed = None;
+            if let Some(attribute) = verification
+                && !has_session
+                && !matches!(locked.get(attribute), Some(Value::Bool(true)))
+            {
+                let proven = if phone_proof { "sms" } else { "email" };
+                authorization
+                    .skip(Box::pin(user.revoke_credentials(&db, console, proven)))
+                    .await
+                    .map_err(|e| utopia_database::Error::new(Kind::Exception, e.message.into_owned()))?;
+                claimed = Some(user.id.clone());
+            }
+            if let Some(attribute) = verification {
+                let mut verified = Document::default();
+                verified.put(attribute, Value::Bool(true));
+                authorization.skip(db.update_document("users", &target_id, verified)).await?;
+            }
+            // The session counts only the channel the invite proved; when
+            // that is unknown the user signs in instead.
+            let mut created = false;
+            if let (Some(mut session), Some(_)) = (session, verification) {
+                session.put("provider", Value::from(if phone_proof { "phone" } else { "email" }));
+                let uid = if phone_proof { user.phone.as_deref() } else { user.email.as_deref() };
+                session.put("providerUid", text(uid));
+                session.put("factors", documents::strings(&[(if phone_proof { "phone" } else { "email" }).to_owned()]));
+                db.create_document("sessions", session).await?;
+                created = true;
+            }
+            Ok(Accept::Confirmed { membership: confirmed, created, claimed })
+        }
+    }))
+    .await?;
     let (confirmed, created, claimed) = match outcome {
         Accept::AlreadyConfirmed => return Err(Error::new(ErrorType::MembershipAlreadyConfirmed)),
         Accept::InvalidSecret => return Err(Error::new(ErrorType::TeamInvalidSecret)),

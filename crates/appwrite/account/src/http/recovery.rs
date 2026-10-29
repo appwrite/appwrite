@@ -337,7 +337,7 @@ async fn confirm(ctx: &mut Context, kind: i64) -> Result<Response> {
                 let locked = auth.skip(db.get_document("users", &profile.id, Vec::new(), true)).await?;
                 let claimed = !matches!(locked.get("emailVerification"), Some(Value::Bool(true)));
                 if claimed {
-                    auth.skip(profile.revoke_credentials(&db, console, "email")).await.map_err(|e| {
+                    auth.skip(Box::pin(profile.revoke_credentials(&db, console, "email"))).await.map_err(|e| {
                         utopia_database::Error::new(utopia_database::Kind::Exception, e.message.into_owned())
                     })?;
                 }

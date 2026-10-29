@@ -1906,7 +1906,9 @@ async fn resolve_user(
                 let mut found = User::from(&found);
                 // The verified owner of the address claims an unverified account: nobody else keeps access.
                 if found.email_verification != Some(true) {
-                    db.authorization().skip(found.revoke_credentials(&db, ctx.project.is_console(), "email")).await?;
+                    db.authorization()
+                        .skip(Box::pin(found.revoke_credentials(&db, ctx.project.is_console(), "email")))
+                        .await?;
                     db.purge_cached_document("users", &found.id).await?;
                     ctx.mqtt_revoke(&found.id).await;
                     // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data.
@@ -2424,7 +2426,9 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
                 let mut found = User::from(&found);
                 // The verified owner of the address claims an unverified account: nobody else keeps access.
                 if found.email_verification != Some(true) {
-                    db.authorization().skip(found.revoke_credentials(&db, ctx.project.is_console(), "email")).await?;
+                    db.authorization()
+                        .skip(Box::pin(found.revoke_credentials(&db, ctx.project.is_console(), "email")))
+                        .await?;
                     db.purge_cached_document("users", &found.id).await?;
                     ctx.mqtt_revoke(&found.id).await;
                     // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data.

@@ -1693,8 +1693,19 @@ fn effect(args: &[String]) -> Option<Value> {
     let command = args.first()?.to_ascii_uppercase();
     match command.as_str() {
         "LPUSH" | "RPUSH" if args.get(1).is_some_and(|k| k.starts_with("utopia-queue")) => {
-            let messages: Vec<Value> =
+            let mut messages: Vec<Value> =
                 args[2..].iter().map(|m| serde_json::from_str(m).unwrap_or(Value::String(m.clone()))).collect();
+            // A function message's `body` is the payload's JSON (generated
+            // IDs, datetimes and hashes inside): compared as JSON, so they
+            // are aligned like everywhere else.
+            for message in &mut messages {
+                if let Some(body) = message.pointer_mut("/payload/body")
+                    && let Some(parsed) = body.as_str().and_then(|b| serde_json::from_str::<Value>(b).ok())
+                    && (parsed.is_object() || parsed.is_array())
+                {
+                    *body = json!({ "json": parsed });
+                }
+            }
             Some(json!({"queue": args[1], "messages": messages}))
         }
         "PUBLISH" => Some(

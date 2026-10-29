@@ -800,7 +800,7 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
                     && !locked.get(attribute).is_some_and(|v| matches!(v, Value::Bool(true)))
                 {
                     let proven = if attribute == "phoneVerification" { "sms" } else { "email" };
-                    auth.skip(user.revoke_credentials(&db, console, proven)).await.map_err(|e| {
+                    auth.skip(Box::pin(user.revoke_credentials(&db, console, proven))).await.map_err(|e| {
                         utopia_database::Error::new(utopia_database::Kind::Exception, e.message.into_owned())
                     })?;
                     claimed = true;
