@@ -31,13 +31,13 @@ Today we're announcing **Appwrite Push**, a push provider built into [Appwrite M
 
 # What Appwrite Push gives you
 
-- **Nothing to configure.** The provider takes no credentials. Create it in the Console and you can send.
-- **Every user has their own topic.** A signed-in user subscribes to their own topic with one call. Send to `users: ['<USER_ID>']` and the message reaches all of their devices. If they don't use FCM or APNs too, there's no target to register first.
-- **Five SDKs, one API.** `Push` works the same way in the Web, Flutter, React Native, Android, and Apple SDKs.
-- **Delivery while the app is closed.** On Android, the SDK wakes the app to reconnect, or keeps a foreground service running for immediate delivery. On iOS, it works together with APNs to show the real message while the app is suspended.
-- **Missed messages are replayed.** Messages are kept for up to 7 days and replayed when a device reconnects, so a phone that was offline for the night still gets the evening's messages.
-- **Notifications and taps handled.** The SDK posts a notification with the title, body, and image you sent, and tells your app which notification the user tapped and the `data` it carried.
-- **Secure by default.** Devices connect with the user's session, can only subscribe to their own topic and topics they are subscribed to, and never publish. Blocking or deleting a user closes their connections immediately.
+- **Message a user on every device they use.** Send a message to a user ID and it reaches each device where that user is signed in. You don't have to register their devices first.
+- **Delivery while the app is closed.** On Android, the SDK wakes your app to check for new messages, or keeps a foreground service running for instant delivery. On iOS, it works with APNs to show the message while the app is suspended.
+- **Nothing lost while offline.** Appwrite keeps messages for up to 7 days, so a phone that was offline overnight still gets the evening's messages when it reconnects.
+- **Notifications and taps handled for you.** The SDK shows a system notification with the title, body, and image you sent. When your user taps it, your app gets the data you attached so it can open the right screen.
+- **Android, iOS, web, Flutter, and React Native.** Push is part of the Web, Flutter, React Native, Android, and Apple SDKs and works the same way in each.
+- **Set up in a minute.** There are no keys or config files to upload. Create the provider in the Console and you can start sending.
+- **Messages reach only the right user.** Each device connects with the signed-in user's session and receives only that user's messages and those of topics they're subscribed to. Blocking or deleting a user disconnects their devices right away.
 
 # Send your first push in three steps
 
