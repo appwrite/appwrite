@@ -8,7 +8,9 @@ use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Telemetry\Histogram;
 use Utopia\Telemetry\UpDownCounter;
-use Utopia\Validator;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Validator;
 
 class Http
 {
@@ -743,7 +745,8 @@ class Http
             $paramExists = $existsInRequest || $existsInValues;
 
             $arg = $existsInRequest ? $requestParams[$requestKey] : $param['default'];
-            if (\is_callable($arg) && !\is_string($arg)) {
+            // Only a default registered by the route is resolved; request values are always data.
+            if (!$existsInRequest && \is_callable($arg) && !\is_string($arg)) {
                 $context = $this->adapter->context();
                 $arg = \call_user_func_array($arg, array_map($context->get(...), $param['injections']));
             }
@@ -756,6 +759,7 @@ class Http
 
                 if ($paramExists) {
                     $this->validate($key, $param, $value);
+                    $value = $this->coerce($param, $value);
                 }
             }
 
@@ -902,6 +906,30 @@ class Http
         if (!$validator->isValid($value)) {
             throw new Exception('Invalid `' . $key . '` param: ' . $validator->getDescription(), 400);
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $param
+     */
+    private function coerce(array $param, mixed $value): mixed
+    {
+        $boolean = match ($value) {
+            'true', '1', 1 => true,
+            'false', '0', 0 => false,
+            default => null,
+        };
+
+        if ($boolean === null) {
+            return $value;
+        }
+
+        $validator = $this->resolveValidator($param);
+
+        while ($validator instanceof Nullable) {
+            $validator = $validator->getValidator();
+        }
+
+        return $validator instanceof Boolean ? $boolean : $value;
     }
 
     /**

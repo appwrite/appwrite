@@ -76,7 +76,7 @@ class Delete extends Action
                     contentType: ContentType::NONE
                 )
             ])
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.', enum: new Enum(name: 'AuthenticatorType'))
             ->inject('response')
             ->inject('dbForProject')

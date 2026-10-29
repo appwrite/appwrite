@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Utopia\Request\Filters;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request\Filter;
 use Appwrite\Utopia\Request\Filters\V17;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -70,6 +71,21 @@ final class V17Test extends TestCase
                 ]
             ],
         ];
+
+        yield 'keep unknown method for endpoint validation' => [
+            [
+                'queries' => [
+                    'bogus("title", "x")',
+                    'equal("title", ["x"])',
+                ]
+            ],
+            [
+                'queries' => [
+                    '{"method":"bogus"}',
+                    '{"method":"equal","attribute":"title","values":["x"]}',
+                ]
+            ],
+        ];
     }
 
     #[DataProvider('createQueryProvider')]
@@ -80,5 +96,13 @@ final class V17Test extends TestCase
         $result = $this->filter->parse($content, $model);
 
         $this->assertEquals($expected, $result);
+    }
+
+    public function testRejectsDeprecatedDottedMethod(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Invalid query method');
+
+        $this->filter->parse(['queries' => ['title.equal("x")']], 'databases.listDocuments');
     }
 }

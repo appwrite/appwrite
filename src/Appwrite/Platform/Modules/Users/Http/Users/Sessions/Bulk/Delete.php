@@ -4,14 +4,18 @@ namespace Appwrite\Platform\Modules\Users\Http\Users\Sessions\Bulk;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
@@ -49,15 +53,23 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
+            ->inject('user')
+            ->inject('project')
+            ->inject('mqtt')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, Response $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $userId, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $authorization, User $authUser, Document $project, Mqtt $mqtt): void
     {
+        if (!$authUser->isKey($authorization->getRoles()) && !$authUser->isPrivileged($authorization->getRoles())) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        }
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -73,6 +85,12 @@ class Delete extends Action
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        try {
+            $mqtt->revoke($project->getId(), $user->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
         $queueForEvents
             ->setParam('userId', $user->getId())

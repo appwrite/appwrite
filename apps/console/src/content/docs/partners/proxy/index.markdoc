@@ -1,0 +1,249 @@
+---
+layout: article
+title: Proxy API
+description: Point custom domains at a customer's Appwrite project API, functions, and sites with the Proxy API, then verify them over DNS.
+---
+
+The Proxy API attaches a custom domain to a resource inside one Appwrite project. A rule maps one hostname to one target, and the target is the project API, a function, a site, or a redirect to another URL.
+
+Partner platforms use the Proxy API to give each customer a branded hostname. When a customer sets `api.customer.com` in your product, your backend creates a rule on that customer's project and reports the verification state back to your UI.
+
+# Authentication {% #authentication %}
+
+Proxy rules belong to a project, not to an organization. Authenticate with the customer's project ID and a project API key. A Partners key cannot read or write proxy rules.
+
+| Scope | Operations |
+| ----- | ---------- |
+| `rules.read` | List rules, get a rule |
+| `rules.write` | Create a rule, verify a rule, delete a rule |
+| `proxy.invalidations.write` | Invalidate cached responses |
+
+{% multicode %}
+```server-nodejs
+import { Client, Proxy } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey(process.env.APPWRITE_API_KEY);
+
+const proxy = new Proxy(client);
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::Proxy;
+
+let client = Client::new()
+    .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .set_project("<PROJECT_ID>")
+    .set_key(std::env::var("APPWRITE_API_KEY")?);
+
+let proxy = Proxy::new(&client);
+```
+{% /multicode %}
+
+# Rule types {% #rule-types %}
+
+Each create operation produces a rule with a fixed `type`. The `type` field tells you what the hostname resolves to.
+
+| Operation | `type` | Target |
+| --------- | ------ | ------ |
+| `createAPIRule` | `api` | The project's Appwrite API |
+| `createFunctionRule` | `deployment` | A function in the project |
+| `createSiteRule` | `deployment` | A site in the project |
+| `createRedirectRule` | `redirect` | Another URL, with a status code |
+
+Appwrite derives the rule ID from the domain. A second rule for the same hostname fails with `409 rule_already_exists`, so your provisioning code can treat that error as "already configured" instead of a fatal failure.
+
+# API rules {% #api-rules %}
+
+An API rule points a hostname at the project's Appwrite API, so customer apps call `api.customer.com` instead of the regional Appwrite endpoint.
+
+{% multicode %}
+```server-nodejs
+const rule = await proxy.createAPIRule({
+    domain: 'api.customer.com',
+});
+
+console.log(rule.$id, rule.status); // unverified
+```
+```server-rust
+let rule = proxy.create_api_rule("api.customer.com").await?;
+
+println!("{} {:?}", rule.id, rule.status); // Unverified
+```
+{% /multicode %}
+
+# Function and site rules {% #function-and-site-rules %}
+
+Function and site rules both take an optional `branch`. With a branch set, Appwrite moves the rule to the newest deployment from that branch.
+
+{% multicode %}
+```server-nodejs
+const functionRule = await proxy.createFunctionRule({
+    domain: 'hooks.customer.com',
+    functionId: '<FUNCTION_ID>',
+    branch: 'main',
+});
+
+const siteRule = await proxy.createSiteRule({
+    domain: 'www.customer.com',
+    siteId: '<SITE_ID>',
+    branch: 'main',
+});
+```
+```server-rust
+let function_rule = proxy
+    .create_function_rule("hooks.customer.com", "<FUNCTION_ID>", Some("main"))
+    .await?;
+
+let site_rule = proxy
+    .create_site_rule("www.customer.com", "<SITE_ID>", Some("main"))
+    .await?;
+```
+{% /multicode %}
+
+Both rules come back with `type` set to `deployment`. `deploymentResourceType` holds `function` or `site` and tells them apart.
+
+# Redirect rules {% #redirect-rules %}
+
+A redirect rule sends traffic to another URL. `resourceType` accepts `function` or `site`, and `resourceId` names the resource the redirect belongs to. `statusCode` accepts `301`, `302`, `307`, and `308`.
+
+{% multicode %}
+```server-nodejs
+const redirect = await proxy.createRedirectRule({
+    domain: 'customer.com',
+    url: 'https://www.customer.com',
+    statusCode: '301',
+    resourceId: '<SITE_ID>',
+    resourceType: 'site',
+});
+```
+```server-rust
+use appwrite::enums::{ProxyResourceType, StatusCode};
+
+let redirect = proxy
+    .create_redirect_rule(
+        "customer.com",
+        "https://www.customer.com",
+        StatusCode::MovedPermanently,
+        "<SITE_ID>",
+        ProxyResourceType::Site,
+    )
+    .await?;
+```
+{% /multicode %}
+
+# Verification {% #verification %}
+
+A new rule starts at `unverified`. Appwrite checks DNS only when the verify operation runs, so the customer has to publish the record first. The sequence is:
+
+1. The rule is created, and your backend stores its `$id`.
+2. The customer adds a CNAME record for the hostname. The record value depends on the rule type and the deployment, and the domain's verification panel in the Console shows it.
+3. The verify operation runs. Appwrite resolves the hostname and issues a certificate.
+
+Some DNS providers reject a CNAME record on an apex domain. If the customer's provider rejects one, the customer can delegate the zone to the Appwrite nameservers instead.
+
+{% multicode %}
+```server-nodejs
+const verified = await proxy.updateRuleStatus({
+    ruleId: rule.$id,
+});
+
+console.log(verified.status);
+```
+```server-rust
+let verified = proxy.update_rule_status(&rule.id).await?;
+
+println!("{:?}", verified.status);
+```
+{% /multicode %}
+
+If the CNAME record is missing, the call fails and the message names the hostname and the resolver that ran the lookup. The rule also keeps the last failure in its `logs` field, so your UI can show the reason without repeating the call.
+
+You can retry verification after the customer fixes DNS, because the check is idempotent.
+
+# Reading rules {% #reading-rules %}
+
+{% multicode %}
+```server-nodejs
+const rules = await proxy.listRules({ total: true });
+
+for (const rule of rules.rules) {
+    console.log(rule.domain, rule.type, rule.status);
+}
+
+const one = await proxy.getRule({ ruleId: '<RULE_ID>' });
+```
+```server-rust
+let rules = proxy.list_rules(None, Some(true)).await?;
+
+for rule in &rules.rules {
+    println!("{} {} {:?}", rule.domain, rule.r#type, rule.status);
+}
+
+let one = proxy.get_rule("<RULE_ID>").await?;
+```
+{% /multicode %}
+
+# Rule deletion {% #rule-deletion %}
+
+Deleting a rule stops Appwrite from serving the hostname. The customer's DNS record survives the delete and has to be removed separately.
+
+{% multicode %}
+```server-nodejs
+await proxy.deleteRule({ ruleId: '<RULE_ID>' });
+```
+```server-rust
+proxy.delete_rule("<RULE_ID>").await?;
+```
+{% /multicode %}
+
+# Invalidations {% #invalidations %}
+
+Appwrite caches responses served through a verified domain, and an invalidation clears that cache for one domain. The domain must be verified first, because an unverified domain has nothing cached.
+
+| `type` | `reference` holds |
+| ------ | ----------------- |
+| `all` | Nothing. Clears every cached response for the domain |
+| `path` | A path to clear |
+| `tag` | A cache tag name |
+
+{% multicode %}
+```server-nodejs
+await proxy.createInvalidation({
+    domain: 'www.customer.com',
+    type: 'all',
+});
+```
+```server-rust
+use appwrite::enums::InvalidationType;
+
+proxy
+    .create_invalidation("www.customer.com", InvalidationType::All, None)
+    .await?;
+```
+{% /multicode %}
+
+# Rule fields {% #rule-fields %}
+
+| Field | Description |
+| ----- | ----------- |
+| `$id` | Rule ID, derived from the domain |
+| `domain` | The hostname the rule serves |
+| `type` | `api`, `deployment`, or `redirect` |
+| `trigger` | `manual` for rules you create, `deployment` for rules Appwrite creates |
+| `status` | `unverified`, `verifying`, or `verified` |
+| `logs` | The last verification message, empty until a check runs |
+| `deploymentResourceType` | `function` or `site` on deployment rules, empty otherwise |
+| `deploymentResourceId` | The function ID or site ID on deployment rules |
+| `deploymentVcsProviderBranch` | The branch whose deployments the rule follows, empty when unset |
+| `redirectUrl` | The target URL on redirect rules |
+| `redirectStatusCode` | The HTTP status code on redirect rules |
+| `renewAt` | When Appwrite renews the certificate |
+
+# Related {% #related %}
+
+{% arrow_link href="/docs/partners/project/api-keys" %}
+Project API keys
+{% /arrow_link %}

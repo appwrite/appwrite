@@ -1,0 +1,229 @@
+---
+layout: article
+title: Auth.js
+description: Use an Appwrite native PostgreSQL database as the backing store for Auth.js (NextAuth.js). Persist users, accounts, and sessions through a Prisma or Drizzle adapter, pooled from serverless runtimes.
+---
+
+[Auth.js](https://authjs.dev/) (formerly NextAuth.js) persists users, accounts, sessions, and verification tokens through a database adapter. When you configure an adapter, those records live in your own database instead of only in a cookie, which is what makes database sessions, account linking, and email sign-in possible. An Appwrite [native PostgreSQL database](/docs/products/databases/postgresql) is a standard PostgreSQL engine, so any Auth.js adapter built on a PostgreSQL ORM works against it with no Appwrite-specific configuration.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [native PostgreSQL databases](/docs/products/databases/postgresql) to create one, then open the database in the Console and click **Credentials**. The primary user is `admin`, and each database has its own generated database name.
+{% /info %}
+
+# Choose an adapter {% #adapter %}
+
+Auth.js doesn't talk to the database directly, it goes through an official adapter. For a native PostgreSQL database, use whichever ORM you already run:
+
+- **Prisma** through [`@auth/prisma-adapter`](https://authjs.dev/getting-started/adapters/prisma). See the [Prisma guide](/docs/products/databases/postgresql/integrations/prisma) for the full datasource, pooling, and migration setup.
+- **Drizzle** through [`@auth/drizzle-adapter`](https://authjs.dev/getting-started/adapters/drizzle). See the [Drizzle guide](/docs/products/databases/postgresql/integrations/drizzle) for the driver connection and `drizzle-kit` migration setup.
+
+The connection details, ports, and pooling behaviour are the same for both. The rest of this page shows the Prisma path and notes the Drizzle equivalents.
+
+# Set the connection string {% #connection-string %}
+
+Auth.js adapters read the database URL from the environment, exactly like any other ORM workload. Copy the connection string from the Console **Credentials** dialog or from `postgresql.get()` in the [API](/docs/products/databases/postgresql/connections#credentials), and give the adapter two URLs: a **pooled** one for the running app and a **direct** one for migrations.
+
+```env
+# Runtime: pooled, transaction mode (prepared statements off)
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require&pgbouncer=true"
+
+# Migrations: direct connection to the engine
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+
+# Development migrations: separate branch or database used only by Prisma Migrate
+SHADOW_DATABASE_URL="postgresql://admin:<password>@db-<shadow-hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+The app runtime connects on the [pooler](/docs/products/databases/postgresql/connection-pooling) port (`6432`), and schema migrations run over the direct engine port (`5432`). The TLS parameter (`sslmode=require`) is already part of the string Appwrite returns. The edge proxy terminates TLS, so no certificate setup is needed. For full certificate verification (`verify-full`) or mTLS, see the [Network](/docs/products/databases/postgresql/network-security) page.
+
+`SHADOW_DATABASE_URL` must point at a separate PostgreSQL database or branch. Prisma Migrate uses it during `migrate dev` to detect schema drift. It can reset the shadow target, so never set it to the same value as `DIRECT_URL`. `migrate deploy` does not use the shadow database.
+
+# Create the adapter schema {% #schema %}
+
+Auth.js ships a [canonical schema](https://authjs.dev/getting-started/database#models) of four core models, `User`, `Account`, `Session`, and `VerificationToken`. With Prisma, add them to `prisma/schema.prisma` and keep connection URLs in `prisma.config.ts` and your Prisma Client setup:
+
+```prisma
+datasource db {
+  provider = "postgresql"
+}
+```
+
+The generator and models are engine-agnostic:
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+```
+
+Configure Prisma CLI commands in `prisma.config.ts`. The CLI uses `DIRECT_URL` because migrations need a direct session connection, while Prisma Client uses the pooled `DATABASE_URL` at runtime.
+
+```ts
+import 'dotenv/config';
+import { defineConfig, env } from 'prisma/config';
+
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  migrations: {
+    path: 'prisma/migrations',
+  },
+  datasource: {
+    url: env('DIRECT_URL'),
+    shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL,
+  },
+});
+```
+
+With Drizzle, define the equivalent PostgreSQL tables in your schema file and generate a `drizzle-kit` migration instead. The table shapes are the same, and the official adapter docs include a ready-made PostgreSQL schema.
+
+# Run the migration over the direct connection {% #migrate %}
+
+Create the tables before the app serves any traffic. Prisma Migrate connects with `DIRECT_URL` (the engine port), so it gets a real session connection with full DDL privileges:
+
+```bash
+npx prisma migrate dev --name authjs-init
+```
+
+In CI or production, apply already-generated migrations without prompting:
+
+```bash
+npx prisma migrate deploy
+```
+
+If your build does not run `migrate dev`, generate Prisma Client explicitly:
+
+```bash
+npx prisma generate
+```
+
+With Drizzle, run `drizzle-kit push` (or `migrate()`) against the same direct URL. The primary `admin` user owns the default database and can run schema changes. Narrower [connection users](/docs/products/databases/postgresql/connections#roles) (`readonly` / `readwrite`) intentionally cannot run DDL, so always migrate as `admin`.
+
+# Wire the adapter into Auth.js {% #config %}
+
+Create one Prisma Client with the PostgreSQL driver adapter, pointed at the pooled `DATABASE_URL`:
+
+```ts
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error('DATABASE_URL is required');
+
+const adapter = new PrismaPg({ connectionString });
+
+export const prisma = new PrismaClient({ adapter });
+```
+
+Pass the adapter to your Auth.js config through the `adapter` key. The adapter uses Prisma Client for every runtime read and write:
+
+```ts
+import NextAuth from 'next-auth';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { prisma } from '@/prisma';
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    // your providers, e.g. GitHub, Google, Resend
+  ],
+});
+```
+
+The Drizzle equivalent is identical apart from the import, `adapter: DrizzleAdapter(db)` from `@auth/drizzle-adapter`, where `db` is your Drizzle instance.
+
+# Database vs JWT sessions {% #sessions %}
+
+Auth.js has two session strategies, and the adapter changes the default:
+
+- **`database`**: the default *once an adapter is configured*. A session row is written to the `Session` table and only an opaque session ID is stored in an `HttpOnly` cookie. Each request looks the session up in the native PostgreSQL database. Sessions can be revoked server-side.
+- **`jwt`**: the default when no adapter is set. Session state lives entirely in a signed cookie, and the database is not read on the session path.
+
+You can set it explicitly:
+
+```ts
+export const { handlers, auth } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  session: { strategy: 'database' },
+  providers: [],
+});
+```
+
+Even with `strategy: 'jwt'`, the adapter still persists users and linked accounts, so account linking and the admin view of users keep working; only the per-request session read moves off the database.
+
+# Pooling note {% #pooling %}
+
+On serverless and edge platforms (Vercel, Netlify, Cloudflare) every invocation is a fresh instance, so connecting straight to the engine fans out into more backend connections than it allows. Routing through the pooler in **transaction mode** (the default) absorbs that churn. Auth.js tables are write-light and read-heavy, exactly the access pattern transaction-mode pooling handles best, so the pooled `DATABASE_URL` above is the right default for the app runtime.
+
+Transaction mode does not hold a backend connection across statements, so server-side prepared statements are unavailable. The pooled Prisma URL carries `pgbouncer=true`, and Drizzle's `postgres.js` client should be created with `prepare: false`. Migrations always use the direct connection, so they keep a full session connection. If you need session-bound features, switch the pooler to **session mode**, see the [pooler modes](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are instant, isolated copies of a database with their own hostname and connection string, ideal for a pull-request preview or an integration-test job that signs users in and out against throwaway data:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export the direct variant as `DIRECT_URL` and the pooled variant as `DATABASE_URL`.
+3. Run `prisma migrate deploy` (or `drizzle-kit push`) and your auth flow against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the Auth.js tables already exist with realistic data, so preview sign-ins behave like production without touching it.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/integrations/prisma" title="Prisma" %}
+Datasource, pooled and direct URLs, and migrations for the Prisma adapter.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/integrations/drizzle" title="Drizzle" %}
+Driver connection, pooler settings, and drizzle-kit migrations for PostgreSQL.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Transaction vs session mode, ports, and serverless connection handling.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/integrations/better-auth" title="Better Auth" %}
+The same pattern for Better Auth on a native PostgreSQL database.
+{% /cards_item %}
+{% /cards %}

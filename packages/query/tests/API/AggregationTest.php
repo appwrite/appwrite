@@ -29,8 +29,8 @@ class AggregationTest extends TestCase
     {
         $query = Query::count('*', 'total');
         $this->assertSame('*', $query->getAttribute());
-        $this->assertSame(['total'], $query->getValues());
-        $this->assertSame('total', $query->getValue());
+        $this->assertSame('total', $query->getAlias());
+        $this->assertSame([], $query->getValues());
     }
 
     public function testSum(): void
@@ -44,7 +44,7 @@ class AggregationTest extends TestCase
     public function testSumWithAlias(): void
     {
         $query = Query::sum('price', 'total_price');
-        $this->assertSame(['total_price'], $query->getValues());
+        $this->assertSame('total_price', $query->getAlias());
     }
 
     public function testAvg(): void
@@ -118,26 +118,27 @@ class AggregationTest extends TestCase
     public function testSumWithEmptyAlias(): void
     {
         $query = Query::sum('price', '');
+        $this->assertSame('', $query->getAlias());
         $this->assertSame([], $query->getValues());
     }
 
     public function testAvgWithAlias(): void
     {
         $query = Query::avg('score', 'avg_score');
-        $this->assertSame(['avg_score'], $query->getValues());
-        $this->assertSame('avg_score', $query->getValue());
+        $this->assertSame('avg_score', $query->getAlias());
+        $this->assertSame([], $query->getValues());
     }
 
     public function testMinWithAlias(): void
     {
         $query = Query::min('price', 'min_price');
-        $this->assertSame(['min_price'], $query->getValues());
+        $this->assertSame('min_price', $query->getAlias());
     }
 
     public function testMaxWithAlias(): void
     {
         $query = Query::max('price', 'max_price');
-        $this->assertSame(['max_price'], $query->getValues());
+        $this->assertSame('max_price', $query->getAlias());
     }
 
     public function testGroupByEmpty(): void

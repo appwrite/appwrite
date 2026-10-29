@@ -1,0 +1,149 @@
+---
+layout: post
+title: See what is new with Appwrite 1.5
+description: Here is a recap off all announcements for Appwrite 1.5.
+date: 2024-03-05
+lastUpdated: 2026-06-29
+cover: /images/blog/everything-new-with-appwrite-1.5/1.5-recap.avif
+timeToRead: 6
+author: dennis-ivy
+category: products
+featured: false
+faqs:
+  - question: "What is new in Appwrite 1.5?"
+    answer: "Appwrite 1.5 introduced [Appwrite Messaging](/docs/products/messaging) for SMS, email, and push notifications, improved server-side rendering (SSR) authentication patterns, two-factor authentication (2FA) with TOTP and OTP factors, new database query operators (`contains` and `or`), Enum SDK support, and refreshed function runtimes."
+  - question: "What does the new SSR auth support do?"
+    answer: "Before 1.5, Appwrite was optimized for client-side rendering. With 1.5, you can generate and access sessions server-side, set session cookies from your server, and authorize future requests using those cookies. This unlocks patterns for Next.js, SvelteKit, Nuxt, and similar frameworks where most data fetching happens on the server."
+  - question: "How do I enable two-factor authentication in Appwrite 1.5?"
+    answer: "Use [Appwrite Auth](/docs/products/auth) to create a multi-factor challenge with `createMFAChallenge`, choosing a factor like email, phone, or TOTP. Submit the user's one-time code to `updateMFAChallenge` to complete the challenge. The flow lets you layer 2FA on top of any existing login method."
+  - question: "What are the contains and or query operators?"
+    answer: "The `contains` operator does partial text matches on text columns or element matches inside array columns. The `or` operator lets you combine queries with logical OR, instead of only AND. Together they unlock searches like \"name contains ivy OR age greater than 30\" in a single call to [Appwrite Databases](/docs/products/databases)."
+  - question: "Does Appwrite Messaging support push notifications?"
+    answer: "Yes. [Appwrite Messaging](/docs/products/messaging) supports SMS, email, and push notifications through a unified API. Providers include Twilio, Vonage, SendGrid, Mailgun, APNs, and Firebase Cloud Messaging, so you can configure delivery channels without writing separate integrations for each."
+  - question: "What is Init at Appwrite?"
+    answer: "Init is Appwrite's release event where the team unveils new products and features over several days. Appwrite 1.5 was announced during one such Init, with each day dedicated to a different launch: Messaging, SSR, 2FA, and the new database operators."
+---
+
+Appwrite just finished its release announcements for version 1.5 with a week of celebration called Init_, so here's the TLDR on all the announcements we made last week.
+
+## Day 0 - Messaging
+
+A new product that allows you to send SMS, email, and push notifications through a variety of 3rd party providers such as Twilio, APNS, Firebase cloud messaging, Vonage, Sendgrid, Mailgun, and more.
+
+With just a few lines of backend code, you can set up a full-functioning messaging service under one unified platform.
+
+```ts
+messaging.createSms(
+    {
+    messageId: '6541...ea30',
+    content: 'Thanks for signing up!',
+    topics: ['65415281565570ca1f9c']
+},
+);
+```
+
+With messaging, we also have a fully functional interface for organizing messages, recipients and providers all directly from the console
+
+![Messaging Console](/images/blog/everything-new-with-appwrite-1.5/messaging-console.avif)
+
+## Day 1 - SSR
+
+Improved support for server-side rendering authentication patterns. Appwrite was optimized for CSR before the 1.5 release, and now we've added official methods and patterns for using Appwrite authentication with popular frameworks like NextJS, Svelte kit, Nuxt, and others like them.
+
+The big change was that Appwrite now allows you to generate and access sessions server side to set session cookies and use these sessions to authorize future requests.
+
+```ts
+const session = account.createEmailPasswordSession({
+  email,
+  password
+})
+console.log(session.secret) // Output: 'eyJpZCI...sdfahfkjjy'
+```
+
+Using the new `setSession` method, we can now retrieve a session secret from our cookies and authorize users to perform authenticated request to our server.
+
+```ts
+client.setSession(session.secret)
+const currentUser = await account.get()
+```
+
+## Day 2 - 2FA
+
+With the addition of Two-factor authentication, you can now require users to provide a second authentication factor by choosing between a one-time code sent via phone, email, or TOTP with an authenticator app.
+
+Implementing Two-factor authentication is as easy as creating a challenge using the `createMFAChallenge` method, which will generate a one-time code, and solving the challenge with the `updateMFAChallenge` method using the one-time code you received.
+
+```ts
+const challenge = await account.createMFAChallenge({
+    type: 'email'
+});
+const challengeId = challenge.$id;
+
+await account.updateMFAChallenge({
+    challengeId,
+    otp: 'challengeCode'
+});
+```
+
+## Day 3 - Database Operators
+
+Two new database operators for more control and flexibility when writing queries.
+
+- `contains` - partial text matches on text columns, array element matching on array columns
+- `or` - write logical OR queries
+
+```ts
+Query.contains('content', ['happy', 'love'])
+
+Query.or([
+    Query.contains('name','ivy'),
+    Query.greaterThan('age',30)
+  ])
+```
+
+In addition to these key announcements, Appwrite announced Enum SDK support and the addition of more updated runtimes to the Appwrite ecosystem.
+
+## Content list
+You can find all the official release announcements and documentation for each day of the week below
+
+### Day 0: Messaging
+
+- [Announcement Video](https://youtu.be/w-izHSKXqtU)
+- [Product tour](https://youtu.be/QdDgPeuBZ1I)
+- [Announcement article](/blog/post/announcing-appwrite-messaging)
+- [Docs](/docs/products/messaging)
+
+### Day 1: SSR
+
+- [Announcement Video](https://youtu.be/jeL4cSovOBA)
+- [Product tour](https://youtu.be/7LN05c-ov_0)
+- [Announcement article](/blog/post/introducing-support-for-server-side-rendering)
+- [Docs](/docs/products/auth/server-side-rendering)
+
+### Day 2: 2FA & Enum SDK support
+
+- [Announcement Video](https://youtu.be/hpdUXOFay4M) - 2FA
+- [Product tour](https://youtu.be/OWRju8ZZuQ8) - 2FA
+- [Announcement article](/blog/post/announcing-two-factor-authentication) - 2FA
+- [Announcement article - Enum SDK support](/blog/post/introducing-enum-sdk-support)
+- [Docs - 2FA](/docs/products/auth/mfa)
+- [Docs - Enum SDK support](/docs/sdks#enums)
+
+### Day 3:  Database Operators
+
+- [Announcement Video](https://youtu.be/73flN6mZqAs)
+- [Product tour](https://youtu.be/IMgl9f_iht4)
+- [Announcement article](/blog/post/introducing-new-database-operators)
+- [Docs](/docs/products/databases/queries)
+
+### Day 4:  New runtimes
+
+- [Announcement article](/blog/post/introducing-enum-sdk-support)
+- [Docs](/docs/products/functions/runtimes)
+
+Join us on Discord to be part of the discussion, view our blog and YouTube channel, or visit our GitHub repository to see our open-source code.
+
+- [Discord](https://appwrite.io/discord)
+- [Blog](/blog)
+- [YouTube](https://www.youtube.com/channel/UCtBJ1v69gm8NgbCju_03Fiw)
+- [GitHub](https://github.com/appwrite/appwrite)

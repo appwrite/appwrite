@@ -1,0 +1,40 @@
+---
+layout: article
+title: Accounts
+description: Unlock advanced user management - Appwrite's Account API for seamless signups, authentication, and dynamic permissions.
+---
+
+Appwrite Account API is used for user signup and login in client applications.
+Users can be organized into teams and be given labels, so they can be given different permissions and access different resources.
+
+{% partial file="account-vs-user.md" /%}
+
+# Signup and login {% #signup-login %}
+
+You can signup and login a user with an account create through
+[email password](/docs/products/auth/email-password),
+[phone (SMS)](/docs/products/auth/phone-sms),
+[Anonymous](/docs/products/auth/anonymous),
+[magic URL](/docs/products/auth/magic-url), and
+[OAuth 2](/docs/products/auth/oauth2)
+authentication.
+
+To control which email addresses can sign up, enable [email policies](/docs/products/auth/email-policies) to block free, aliased, or disposable email providers.
+
+# Permissions {% #permissions %}
+
+You can grant permissions to all users using the `Role.users(<STATUS>)` role or
+individual users using the `Role.user(<USER_ID>, <STATUS>)` role.
+| Description                                 | Role                               |
+| ------------------------------------------- | ------------------------------------------- |
+| Verified users   | `Role.users('verified')`|
+| Unverified users | `Role.users('unverified')` |
+| Verified user   | `Role.user(<USER_ID>, 'verified')`|
+| Unverified user | `Role.user(<USER_ID>, 'unverified')` |
+
+
+{% arrow_link href="/docs/advanced/security/permissions" %}
+Learn more about permissions
+{% /arrow_link %}
+
+

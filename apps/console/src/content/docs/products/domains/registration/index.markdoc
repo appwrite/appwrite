@@ -1,0 +1,54 @@
+---
+layout: article
+title: Registration
+description: Learn how domain registration works in Appwrite, including Appwrite-registered and external domains, organization scope, and verification.
+---
+
+In Appwrite Domains, **registration** describes who holds the domain at the registry and how the domain is added to your organization. DNS management in Appwrite is separate from registration: you can delegate DNS to Appwrite for domains registered elsewhere.
+
+# Domain types {% #domain-types %}
+
+Appwrite distinguishes domains by how they are managed:
+
+| Type | How it is added | Registrar in Console | Auto-renewal |
+|------|-----------------|----------------------|--------------|
+| **Appwrite-registered** | [Register](/docs/products/domains/register) or [transfer in](/docs/products/domains/transfer) through Appwrite | Appwrite | Available |
+| **External** | [Add external domain](/docs/products/domains/external) and point nameservers to Appwrite | External registrar | Managed at your registrar |
+
+Both types can use Appwrite DNS once nameservers point to `ns1.appwrite.zone` and `ns2.appwrite.zone` and verification completes.
+
+{% arrow_link href="/docs/products/domains/pricing" %}
+Learn about pricing
+{% /arrow_link %}
+
+# Organization scope {% #organization-scope %}
+
+Domains belong to an **organization**, not an individual project. Plan limits apply per organization. You can [change organization](/docs/products/domains/change-organization) from the domain **Settings** tab to reassign a domain to another organization you control.
+
+When you connect a verified domain to a Site, Function, or API endpoint, Appwrite uses the same DNS zone you manage under **Organization** > **Domains**.
+
+# Verification {% #verification %}
+
+External domains must be verified before Appwrite treats the zone as authoritative. Verification succeeds when the domain's nameservers delegate to Appwrite (`nameservers` shows **Appwrite** in the Console).
+
+Appwrite-registered domains use Appwrite nameservers automatically and show **Verified** once DNS is active.
+
+If verification fails after a nameserver change, use **Verify** on the domain to retry. Nameserver updates can take up to 48 hours to propagate globally.
+
+# Plan limits {% #plan-limits %}
+
+Each organization plan includes a maximum number of domains. Registration, transfer in, and adding external domains are blocked when you reach the limit until you delete a domain or [upgrade your plan](/docs/advanced/platform/billing).
+
+Downgrading a plan may require removing domains to meet the new limit before the change completes.
+
+# Transfer status {% #transfer-status %}
+
+Domains being transferred into Appwrite show a transfer status until the registry completes the move. Status values include pending owner approval, pending admin approval, pending registry, completed, cancelled, and not transferrable.
+
+See [Transfer a domain](/docs/products/domains/transfer) for the full transfer-in and transfer-out workflows.
+
+# Access {% #access %}
+
+On Appwrite Cloud with [organization roles](/docs/advanced/platform/roles) enabled, owners and developers with the domains write scope can manage domains, DNS records, and settings. Viewers cannot change domain configuration.
+
+When [organization roles](/docs/advanced/platform/roles) are disabled (for example self-hosted profiles without org roles), all organization members can manage domains where the feature is available.

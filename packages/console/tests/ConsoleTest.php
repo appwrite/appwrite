@@ -6,8 +6,8 @@ namespace Utopia\Console\Tests;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 
 final class ConsoleTest extends TestCase
 {

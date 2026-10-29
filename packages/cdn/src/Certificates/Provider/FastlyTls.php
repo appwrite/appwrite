@@ -22,6 +22,13 @@ class FastlyTls implements Provider
      */
     public const string CHALLENGE_MANAGED_DNS = 'managed-dns';
 
+    /**
+     * Seconds before a certificate expires by which Fastly should have issued
+     * its replacement. Fastly renews from about ten days before expiry, so a
+     * newest certificate this close to expiry means the renewal is stuck.
+     */
+    private const int RENEWAL_DEADLINE = 7 * 24 * 60 * 60;
+
     private readonly ClientInterface $client;
 
     public function __construct(
@@ -44,7 +51,12 @@ class FastlyTls implements Provider
             $subscription = $this->retrySubscription($subscription['resource']['id']);
         }
 
-        return $this->extractRenewDate($subscription);
+        $renewDate = $this->extractRenewDate($subscription);
+        if ($renewDate !== null) {
+            $this->ensureActivated($subscription, $domain);
+        }
+
+        return $renewDate;
     }
 
     public function isInstantGeneration(string $domain, ?string $domainType): bool
@@ -65,10 +77,19 @@ class FastlyTls implements Provider
 
         $status = $this->mapStatus($subscription['resource']['attributes']['state'] ?? '');
 
+        if ($status === Status::ISSUED && !$this->ensureActivated($subscription, $domain)) {
+            return Status::PROCESSING;
+        }
+
+        // Fastly marks a subscription failed only days after its certificate
+        // expired, so a renewal stuck until this close to expiry is reported first.
+        $certificate = $this->newestCertificate($subscription);
+        $expiring = $certificate !== null && $certificate['expiry'] - time() <= self::RENEWAL_DEADLINE;
+
         // An issued certificate needs nothing from the domain owner, whatever
         // an authorization left over from an earlier order still says.
         if ($status === Status::ISSUED || $status === Status::UNKNOWN) {
-            return $status;
+            return $expiring && $status === Status::ISSUED ? Status::EXPIRING : $status;
         }
 
         // Fastly keeps the subscription `pending` while an authorization is
@@ -76,7 +97,11 @@ class FastlyTls implements Provider
         // subscription state alone cannot tell waiting from progress.
         $authorizations = $this->findAuthorizations($subscription, $domain);
         if ($status !== Status::FAILED && !$this->isBlocked($authorizations)) {
-            return $status;
+            if ($status === Status::RENEWING && !$this->ensureActivated($subscription, $domain)) {
+                return Status::PROCESSING;
+            }
+
+            return $expiring ? Status::EXPIRING : $status;
         }
 
         $status = $status === Status::FAILED ? Status::FAILED : Status::BLOCKED;
@@ -417,49 +442,230 @@ class FastlyTls implements Provider
     }
 
     /**
+     * Without an activation, the hostname keeps serving the shared default
+     * certificate instead of this one.
+     *
+     * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
+     * @return bool False when Fastly reports the subscription issued or renewing before its certificate appears.
+     */
+    private function ensureActivated(array $subscription, string $domain): bool
+    {
+        if ($this->tlsConfigurationId === '') {
+            return true;
+        }
+
+        // The latest-expiring certificate, so a renewal activates the new one.
+        // Without an expiry to compare, the last reference is the newest.
+        $certificateId = $this->newestCertificate($subscription)['id']
+            ?? array_last($this->references($subscription['resource'], 'tls_certificates'));
+        if ($certificateId === null) {
+            return false;
+        }
+
+        // Every hostname on the subscription, so the apex also activates www when one certificate covers both
+        $hostnames = [];
+        foreach ([...$this->references($subscription['resource'], 'tls_domains'), $domain] as $name) {
+            $hostnames[strtolower($name)] ??= $name;
+        }
+
+        foreach ($hostnames as $hostname) {
+            $activation = $this->findActivation($hostname);
+
+            if ($activation === null) {
+                $this->createActivation($certificateId, $hostname);
+                continue;
+            }
+
+            if ($activation['certificate'] === $certificateId) {
+                continue;
+            }
+
+            // A renewal leaves the hostname on the subscription's previous certificate
+            if (!\in_array($activation['certificate'], $this->references($subscription['resource'], 'tls_certificates'), true)) {
+                throw new \RuntimeException('Another certificate already terminates TLS for ' . $hostname . '.');
+            }
+
+            $this->updateActivation($activation['id'], $certificateId, $hostname);
+        }
+
+        return true;
+    }
+
+    /**
+     * The subscription's latest-expiring certificate. During a renewal the
+     * subscription references both the new certificate and the one it replaces.
+     *
+     * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
+     * @return array{id:string,expiry:int}|null The certificate ID and its `not_after` as a Unix timestamp.
+     */
+    private function newestCertificate(array $subscription): ?array
+    {
+        $ids = $this->references($subscription['resource'], 'tls_certificates');
+
+        $newest = null;
+        foreach ($subscription['included'] as $included) {
+            $id = $included['id'] ?? null;
+            if (($included['type'] ?? null) !== 'tls_certificate' || !\is_string($id) || !\in_array($id, $ids, true)) {
+                continue;
+            }
+
+            $attributes = $included['attributes'] ?? null;
+            $notAfter = \is_array($attributes) ? ($attributes['not_after'] ?? null) : null;
+            $expiry = \is_string($notAfter) ? strtotime($notAfter) : false;
+            if ($expiry === false) {
+                continue;
+            }
+
+            if ($newest === null || $expiry > $newest['expiry']) {
+                $newest = ['id' => $id, 'expiry' => $expiry];
+            }
+        }
+
+        return $newest;
+    }
+
+    /**
+     * @param array<string, mixed> $resource
+     * @return list<string>
+     */
+    private function references(array $resource, string $relationship): array
+    {
+        $relationships = $resource['relationships'] ?? null;
+        $entry = \is_array($relationships) ? ($relationships[$relationship] ?? null) : null;
+        $data = \is_array($entry) ? ($entry['data'] ?? null) : null;
+        if (!\is_array($data)) {
+            return [];
+        }
+
+        $ids = [];
+        foreach ($data as $reference) {
+            if (\is_array($reference) && \is_string($reference['id'] ?? null)) {
+                $ids[] = $reference['id'];
+            }
+        }
+
+        return $ids;
+    }
+
+    /** @return array{id:string,certificate:string}|null */
+    private function findActivation(string $hostname): ?array
+    {
+        $query = http_build_query([
+            'filter[tls_configuration.id]' => $this->tlsConfigurationId,
+            'filter[tls_domain.id]' => $hostname,
+            'page[size]' => 1,
+        ]);
+
+        $result = $this->request('GET', '/tls/activations?' . $query);
+
+        if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
+            throw new \RuntimeException($this->formatError('Failed to fetch Fastly TLS activations', $result));
+        }
+
+        if (!\is_array($result['response'])) {
+            throw new \RuntimeException('Fastly TLS activations response was not valid JSON.');
+        }
+
+        $data = $result['response']['data'] ?? null;
+        if (!\is_array($data)) {
+            throw new \RuntimeException('Fastly TLS activations response was missing its data list.');
+        }
+
+        $activation = $data[0] ?? null;
+        if (!\is_array($activation) || !\is_string($activation['id'] ?? null)) {
+            return null;
+        }
+
+        $relationships = $activation['relationships'] ?? null;
+        $certificate = \is_array($relationships) ? ($relationships['tls_certificate'] ?? null) : null;
+        $reference = \is_array($certificate) ? ($certificate['data'] ?? null) : null;
+
+        return ['id' => $activation['id'], 'certificate' => \is_array($reference) && \is_string($reference['id'] ?? null) ? $reference['id'] : ''];
+    }
+
+    private function createActivation(string $certificateId, string $hostname): void
+    {
+        $result = $this->request('POST', '/tls/activations', [
+            'data' => [
+                'type' => 'tls_activation',
+                'relationships' => [
+                    'tls_certificate' => [
+                        'data' => [
+                            'type' => 'tls_certificate',
+                            'id' => $certificateId,
+                        ],
+                    ],
+                    'tls_configuration' => [
+                        'data' => [
+                            'type' => 'tls_configuration',
+                            'id' => $this->tlsConfigurationId,
+                        ],
+                    ],
+                    'tls_domain' => [
+                        'data' => [
+                            'type' => 'tls_domain',
+                            'id' => $hostname,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        if ($result['statusCode'] === 409) {
+            // A conflict is either our own activation, made concurrently, or
+            // another certificate already holding the hostname.
+            if (($this->findActivation($hostname)['certificate'] ?? null) === $certificateId) {
+                return;
+            }
+
+            throw new \RuntimeException($this->formatError('Another certificate already terminates TLS for ' . $hostname, $result));
+        }
+
+        if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
+            throw new \RuntimeException($this->formatError('Failed to activate Fastly TLS certificate for ' . $hostname, $result));
+        }
+    }
+
+    private function updateActivation(string $activationId, string $certificateId, string $hostname): void
+    {
+        $result = $this->request('PATCH', '/tls/activations/' . $activationId, [
+            'data' => [
+                'id' => $activationId,
+                'type' => 'tls_activation',
+                'relationships' => [
+                    'tls_certificate' => [
+                        'data' => [
+                            'type' => 'tls_certificate',
+                            'id' => $certificateId,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        if ($result['statusCode'] < 200 || $result['statusCode'] >= 300) {
+            throw new \RuntimeException($this->formatError('Failed to move the Fastly TLS activation for ' . $hostname, $result));
+        }
+    }
+
+    /**
      * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
      */
     private function extractRenewDate(array $subscription): ?string
     {
-        $resource = $subscription['resource'];
-        $state = $this->mapStatus($resource['attributes']['state'] ?? '');
+        $state = $this->mapStatus($subscription['resource']['attributes']['state'] ?? '');
 
         if ($state !== Status::ISSUED && $state !== Status::RENEWING) {
             return null;
         }
 
-        $relationship = $resource['relationships']['tls_certificates']['data'] ?? [];
-        $certificateIds = [];
-        if (\is_array($relationship)) {
-            foreach ($relationship as $reference) {
-                if (\is_array($reference) && \is_string($reference['id'] ?? null)) {
-                    $certificateIds[] = $reference['id'];
-                }
-            }
-        }
-
-        $dates = [];
-        foreach ($subscription['included'] as $included) {
-            if (($included['type'] ?? null) !== 'tls_certificate') {
-                continue;
-            }
-            if (!\in_array($included['id'] ?? null, $certificateIds, true)) {
-                continue;
-            }
-            $notAfter = $included['attributes']['not_after'] ?? null;
-            if (\is_string($notAfter) && $notAfter !== '') {
-                $dates[] = $notAfter;
-            }
-        }
-
-        if ($dates === []) {
+        $certificate = $this->newestCertificate($subscription);
+        if ($certificate === null) {
             return null;
         }
 
-        usort($dates, static fn (string $left, string $right): int => strtotime($right) <=> strtotime($left));
-        $date = new \DateTimeImmutable($dates[0]);
-
-        return $date->modify('-30 days')->format('Y-m-d H:i:s.v');
+        // Check again once Fastly should have renewed the certificate
+        return new \DateTimeImmutable('@' . ($certificate['expiry'] - self::RENEWAL_DEADLINE))->format('Y-m-d H:i:s.v');
     }
 
     /**

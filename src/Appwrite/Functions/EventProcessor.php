@@ -34,11 +34,10 @@ class EventProcessor
             return [];
         }
 
-        $hostname = $dbForProject->getAdapter()->getHostname();
         $cacheKey = \sprintf(
             '%s-cache-%s:%s:%s:project:%s:functions:events',
             $dbForProject->getCacheName(),
-            $hostname,
+            $dbForProject->getHostname() ?? '',
             $dbForProject->getNamespace(),
             $dbForProject->getTenant(),
             $project->getId()

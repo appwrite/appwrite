@@ -1,0 +1,95 @@
+---
+layout: article
+title: Execution
+description: Learn how Appwrite handles serverless function executions. More specifically, execution status, details and function logging.
+---
+
+Each time an Appwrite Function runs, an **execution** is created.
+Each execution has a unique ID. If [you enable execution logs](/docs/products/functions/functions#execution-logs) in your function,
+you can find function executions logged in the **Executions** tab.
+
+# Execution table {% #execution-table %}
+
+In your function's **Executions** tab, you will see a table of your recent executions.
+Here's the information shown on this table.
+
+{% table %}
+- Column
+- Description
+---
+- Execution ID
+- Unique identifier for each execution
+---
+- Status
+- The current status of the execution
+---
+- Created
+- Timestamp of when the execution was created
+---
+- Trigger
+- The [platform event](/docs/apis/events) that triggered the execution
+---
+- Method
+- The HTTP method used to create the execution
+---
+- Path
+- The URL path the function execution was called with
+---
+- Duration
+- The time taken for the execution
+{% /table %}
+
+## Execution status {% #execution-status %}
+
+Each execution can have one of the follow status.
+
+{% table %}
+- Status
+- description
+---
+- `scheduled`
+- The function execution will trigger later.
+---
+- `waiting`
+- The execution is queued but has not been picked up for processing.
+---
+- `processing`
+- The function execution has begun and has not finished.
+---
+- `completed`
+- The function executed successfully.
+---
+- `failed`
+- The function execution was not successful.
+{% /table %}
+
+# Execution details {% #execution-details %}
+
+When you click on an execution, you will be taken to an execution detail screen.
+
+{% only_dark %}
+![Execution details screen](/images/docs/functions/execution/dark/execute-function.avif)
+{% /only_dark %}
+
+{% only_light %}
+![Execution details screen](/images/docs/functions/execution/execute-function.avif)
+{% /only_light %}
+
+You can find both request and response details.
+Request and response body are **not logged** to protect user privacy.
+This ensures that developers do not see user data by default and no sensitive data is retained.
+
+If you need to log debug data or audit logs, you can use [function logging features](/docs/products/functions/develop#logging)
+to explicitly log the information you need.
+
+{% info title="Access control" %}
+Only the user who created an execution can retrieve it using the [Get execution](/docs/references/cloud/client-web/functions#getExecution) endpoint.
+{% /info %}
+
+# Log retention {% #log-retention %}
+
+Logs are not retained forever in order to be compliant with GDPR and other data privacy standards.
+Free plan organizations will retain logs for 24 hours, Pro plan organizations will retain logs for 7 days.
+
+If you need longer log retention, you can log to an Appwrite table.
+Remember to configure proper permissions and implement Appwrite Functions or other scheduled tasks to expire and clean up logs.

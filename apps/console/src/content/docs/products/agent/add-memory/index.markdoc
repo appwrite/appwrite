@@ -1,0 +1,33 @@
+---
+layout: article
+title: Add memory
+description: Save a preference, instruction, or fact for the Appwrite Agent to reuse across conversations.
+---
+
+Add memory when you want the Agent to remember standing guidance without repeating it in every chat. Use preferences for reply style, instructions for org conventions, and facts for stable stack details. Do not put one-off incident context or secrets into memory.
+
+# Add memory {% #add-memory %}
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
+2. Go to `/agent/settings/memory`, or open **Agent** > **Settings** > **Memory**.
+3. Click **Add memory**.
+4. Enter a **key** (short label; fixed after create) and **content**.
+5. Choose a category: **Preference**, **Instruction**, or **Fact**.
+6. Optionally set a **priority** so important memories are kept first when context space is limited.
+7. Leave the memory **active**, then save.
+
+Memories you create here are scoped to your Console user. Keep the content specific enough that the Agent will not over-generalize across unrelated projects.
+
+# Update or archive {% #update-or-archive %}
+
+Open an existing memory to change its content, category, priority, or active state. Archive a memory to stop using it without deleting it (for example when a temporary preference should not apply). Delete it when you no longer need it.
+
+If two memories conflict, raise the priority of the one you want, or archive the outdated note.
+
+# Verify it is used {% #verify-it-is-used %}
+
+1. Start a new conversation (or continue an existing one).
+2. Ask something that depends on the memory (for example a preference about answer format).
+3. Confirm the Agent follows the saved guidance.
+
+If it does not, check that the memory is active, that its content is unambiguous, and that a higher-priority memory is not overriding it. See [Memory](/docs/products/agent/memory) for categories and writing tips.

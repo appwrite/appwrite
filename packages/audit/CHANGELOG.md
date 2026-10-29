@@ -2,7 +2,40 @@
 
 All notable changes to `utopia-php/audit` are documented in this file.
 
+## 5.0.0 (unreleased) — utopia-php/database 8
+
+### Breaking changes
+
+- Requires utopia-php/database `^8.1.2` instead of `^7.0.0`. PHP `>=8.5` is
+  unchanged from 4.0.3.
+- `ClickHouse::getAttributes()`, `ClickHouse::getIndexes()`,
+  `SQL::getAttributes()` and `SQL::getIndexes()` return
+  `Utopia\Database\Attribute` and `Utopia\Database\Index` models instead of
+  arrays.
+- `SQL::getAttributeDocuments()` and `SQL::getIndexDocuments()` return those
+  same models (still `Document`s) instead of `Document`s built from the arrays.
+- `SQL::getAttribute()` declares `?Attribute` and returns `null` for an unknown
+  ID, instead of an untyped array or `null`.
+
+### Changed
+
+- `Utopia\Audit\Query`'s legacy `TYPE_*` constants take their values from
+  `Utopia\Query\Method`; the strings are the same.
+- Requires utopia-php/query `^0.7`, dropping `^0.6`. `minimum-stability`
+  stays `stable`: every dependency, utopia-php/database 8.1.2 included, is
+  tagged.
+
 ## Unreleased
+
+### utopia-php/client 0.6
+
+- Require `utopia-php/client` ^0.6.
+
+### utopia-php/query 0.7
+
+- `utopia-php/query` widened from `0.6.*` to `^0.6 || ^0.7`.
+  `Query::__construct()` takes the query's alias as a fourth argument and
+  passes it on. Array and object cursors work on both lines.
 
 ### ClickHouse adapter — migrated to the utopia-php/query 0.6 builder
 

@@ -1,0 +1,65 @@
+---
+layout: article
+title: Uptime SLA
+description: Learn about Appwrite's uptime service level agreement and commitments for different subscription plans.
+---
+
+This Uptime Service Level Agreement ("SLA") describes the uptime commitments and related service credit terms provided by APPWRITE ("we," "us," or "our") to users of our products and services ("you" or "user"). By using our services, you agree to the terms of this SLA.
+
+# Uptime commitments {% #uptime-commitments %}
+
+We commit to maintaining the following monthly uptime percentages based on your subscription plan:
+
+| Plan | Monthly Uptime Commitment |
+| --- | --- |
+| **Free** | N/A |
+| **Pro** | 99.5% |
+| **Scale** | 99.9% |
+| **Enterprise** | 99.95% |
+
+Uptime is measured only for the specific Appwrite services your organization actively uses. An outage affecting services that your organization does not use will not be counted as downtime under this SLA.
+
+# Allowed downtime {% #allowed-downtime %}
+
+Based on the above uptime commitments, permissible downtime durations are:
+
+| Plan | Annual Downtime | Monthly Downtime |
+| --- | --- | --- |
+| **Free** | N/A | N/A |
+| **Pro** | ~1.83 days | ~3.6 hours |
+| **Scale** | ~8.76 hours | ~43.2 minutes |
+| **Enterprise** | ~4.38 hours | ~21.6 minutes |
+
+# Service credit terms {% #service-credit-terms %}
+
+If we fail to meet our uptime commitment, affected users may be eligible for service credits according to the following schedule:
+
+| Plan | Uptime < Commitment but ≥ 99% | Uptime < 99% but ≥ 95% | Uptime < 95% |
+| --- | --- | --- | --- |
+| **Pro** | 10% of monthly fee | 25% of monthly fee | 50% of monthly fee |
+| **Scale** | 10% of monthly fee | 25% of monthly fee | 50% of monthly fee |
+| **Enterprise** | 10% of monthly fee | 25% of monthly fee | 50% of monthly fee |
+
+Credits are calculated based on the monthly fee for your base subscription plan plus any non-usage-based add-ons (e.g., BAA, SOC-2). Usage-based charges are excluded from credit calculations.
+
+# Credit request procedure {% #credit-request-procedure %}
+
+To receive service credits, you must submit a support ticket within **30 days** of the incident via the Appwrite Console, providing relevant data, logs, or screenshots.
+
+# SLA exclusions {% #sla-exclusions %}
+
+Downtime specifically excludes periods caused by:
+
+- Scheduled maintenance activities communicated in advance.
+- Events beyond our reasonable control (e.g., natural disasters, third-party outages, governmental actions).
+- Customer or third-party actions, including incorrect configurations or misuse of our services.
+- Minor performance degradations that do not materially impact core functionality.
+- External network issues beyond our infrastructure.
+
+# Commitment to continuous improvement {% #commitment-to-continuous-improvement %}
+
+We continuously strive to exceed the commitments outlined in this SLA by improving infrastructure resilience and service quality. While the maximum attainable uptime commitment is influenced by our upstream service providers, we aim for excellence and transparency in all operational matters.
+
+{% partial file="policy-modifications.md" /%}
+
+{% partial file="policy-contact-us.md" /%}

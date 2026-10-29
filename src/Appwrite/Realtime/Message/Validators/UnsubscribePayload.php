@@ -2,7 +2,7 @@
 
 namespace Appwrite\Realtime\Message\Validators;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class UnsubscribePayload extends Validator
 {
@@ -27,6 +27,10 @@ class UnsubscribePayload extends Validator
     {
         if (!\is_array($value) || !\array_is_list($value)) {
             $this->description = 'Payload is not valid.';
+            return false;
+        }
+        if (\count($value) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+            $this->description = 'Payload must contain at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.';
             return false;
         }
 

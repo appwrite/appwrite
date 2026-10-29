@@ -1342,6 +1342,12 @@ class MongoDBTest extends TestCase
         $this->assertSame(1, $eventCount['$sum']);
     }
 
+    public function testFilterRelationshipThrowsException(): void
+    {
+        $this->expectException(UnsupportedException::class);
+        new Builder()->from('t')->filter([Query::relationship('attr', [Query::equal('x', [1])])])->build();
+    }
+
     public function testWindowFunctionUnsupportedThrows(): void
     {
         $this->expectException(UnsupportedException::class);
@@ -1554,6 +1560,33 @@ class MongoDBTest extends TestCase
             ['email' => ['$type' => 10]],
             ['phone' => ['$type' => 10]],
         ]], $op['filter']);
+    }
+
+    /**
+     * @return array<string, array{Query}>
+     */
+    public static function operatorFieldFilterProvider(): array
+    {
+        return [
+            'equal' => [Query::equal('$where', ['this.secret == "s2"'])],
+            'greater than' => [Query::greaterThan('$expr', 1)],
+            'nested in or' => [Query::or([Query::equal('name', ['a']), Query::equal('$where', ['true'])])],
+            'nested in and' => [Query::and([Query::equal('name', ['a']), Query::isNull('$where')])],
+            'exists' => [Query::exists(['email', '$where'])],
+            'not exists' => [Query::notExists(['$where'])],
+            'empty field' => [Query::equal('', ['a'])],
+        ];
+    }
+
+    #[DataProvider('operatorFieldFilterProvider')]
+    public function testFilterRejectsOperatorAsFieldName(Query $filter): void
+    {
+        $this->expectException(ValidationException::class);
+
+        new Builder()
+            ->from('users')
+            ->filter([$filter])
+            ->build();
     }
 
     public function testContainsAnyOnArray(): void
@@ -3810,7 +3843,7 @@ class MongoDBTest extends TestCase
 
         new Builder()
             ->from('users')
-            ->queries([Query::crossJoin('roles')])
+            ->queries([Query::crossJoin('roles', 'r')])
             ->build();
     }
 
@@ -3821,7 +3854,7 @@ class MongoDBTest extends TestCase
 
         new Builder()
             ->from('users')
-            ->queries([Query::naturalJoin('roles')])
+            ->queries([Query::naturalJoin('roles', 'r')])
             ->build();
     }
 
@@ -4249,6 +4282,53 @@ class MongoDBTest extends TestCase
         /** @var array<string, mixed> $lookupBody */
         $lookupBody = $lookupStage['$lookup'];
         $this->assertSame('users', $lookupBody['as']);
+    }
+
+    public function testJoinQueryLooksUpUnderItsAlias(): void
+    {
+        $result = new Builder()
+            ->from('orders')
+            ->queries([Query::leftJoin('users', 'u', [Query::on('orders.user_id', 'u.id')])])
+            ->build();
+        $this->assertBindingCount($result);
+
+        $op = $this->decode($result->query);
+        /** @var list<array<string, mixed>> $pipeline */
+        $pipeline = $op['pipeline'];
+
+        $lookupStage = $this->findStage($pipeline, '$lookup');
+        $this->assertNotNull($lookupStage);
+        /** @var array<string, mixed> $lookupBody */
+        $lookupBody = $lookupStage['$lookup'];
+        $this->assertSame('users', $lookupBody['from']);
+        $this->assertSame('user_id', $lookupBody['localField']);
+        $this->assertSame('id', $lookupBody['foreignField']);
+        $this->assertSame('u', $lookupBody['as']);
+    }
+
+    public function testJoinQueryRequiresBothColumns(): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Join ON requires left and right columns');
+
+        new Builder()
+            ->from('orders')
+            ->queries([Query::join('users', 'u', [Query::on('', 'u.id')])])
+            ->build();
+    }
+
+    public function testJoinQueryWithFilteredOnListIsUnsupported(): void
+    {
+        $this->expectException(UnsupportedException::class);
+        $this->expectExceptionMessage('only supports a single on() condition');
+
+        new Builder()
+            ->from('orders')
+            ->queries([Query::join('users', 'u', [
+                Query::on('orders.user_id', 'u.id'),
+                Query::equal('u.status', ['active']),
+            ])])
+            ->build();
     }
 
     public function testSortRandomWithSortAscCombined(): void
