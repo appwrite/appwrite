@@ -590,7 +590,8 @@ Http::init()
     ->inject('user')
     ->inject('timelimit')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Authorization $authorization) {
+    ->inject('params')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Authorization $authorization, array $pathParams) {
         $response->setUser($user);
         $request->setUser($user);
 
@@ -624,7 +625,8 @@ Http::init()
                     '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
                 ];
 
-                foreach ($request->getParams() as $key => $value) {
+                // Path params are not part of the request input, and the query must not override them.
+                foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
                     if (! empty($value)) {
                         $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
                         // Sign in matches emails case-insensitively, so the limit must too
@@ -994,7 +996,8 @@ Http::shutdown()
     ->inject('project')
     ->inject('user')
     ->inject('timelimit')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit) {
+    ->inject('params')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, array $pathParams) {
         $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
         $abuseResetCode = $route->getLabel('abuse-reset', []);
         $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
@@ -1017,7 +1020,7 @@ Http::shutdown()
                 '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
             ];
 
-            foreach ($request->getParams() as $key => $value) {
+            foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
                 if (! empty($value)) {
                     $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
                     // Sign in matches emails case-insensitively, so the limit must too
