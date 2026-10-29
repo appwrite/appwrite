@@ -852,6 +852,18 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     }
                 }
 
+                // Deleting an organization names no user, so end its admin-mode connections here.
+                if (($event['project'] ?? '') === 'console') {
+                    foreach (($event['data']['events'] ?? []) as $name) {
+                        $parts = \explode('.', $name);
+                        if (\count($parts) === 3 && $parts[0] === 'teams' && $parts[1] !== '*' && $parts[2] === 'delete') {
+                            foreach ($realtime->getTeamAdminConnections($parts[1]) as $connection) {
+                                $closing[$connection] = true;
+                            }
+                        }
+                    }
+                }
+
                 $receivers = $realtime->getSubscribers($event);
 
                 if (System::getEnv('_APP_ENV', 'production') === 'development' && !empty($receivers)) {

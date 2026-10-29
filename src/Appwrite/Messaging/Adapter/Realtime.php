@@ -581,6 +581,27 @@ class Realtime extends MessagingAdapter
     }
 
     /**
+     * Connection IDs of every admin-mode connection opened through a membership of the organization.
+     *
+     * @return array<int, mixed>
+     */
+    public function getTeamAdminConnections(string $teamId): array
+    {
+        if ($teamId === '') {
+            return [];
+        }
+
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['admin']['teamId'] ?? null) === $teamId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
+    }
+
+    /**
      * Sends an event to the Realtime Server
      * @param string $projectId
      * @param array $payload
