@@ -7,8 +7,6 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Maintenance\Grid;
-use DateInterval;
-use DateTime;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
@@ -58,32 +56,7 @@ class Maintenance extends Action
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
-            // Iterate through project only if it was accessed in last 30 days
-            $dateInterval  = DateInterval::createFromDateString('30 days');
-            $before30days = (new DateTime())->sub($dateInterval);
-
-            $dbForPlatform->skipFilters(
-                function () use ($dbForPlatform, $publisherForDeletes, $before30days): void {
-                    $projects = $dbForPlatform->cursor(
-                        'projects',
-                        [
-                            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                            Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
-                            Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
-                        ],
-                        batchSize: 1000,
-                    );
-
-                    foreach ($projects as $project) {
-                        $publisherForDeletes->enqueue(new DeleteMessage(
-                            project: $project,
-                            type: DELETE_TYPE_MAINTENANCE,
-                        ));
-                    }
-                },
-                APP_PROJECTS_SUBQUERIES
-            );
-
+            // Projects are maintained by schedule-maintenance, a slot at a time, so the deletes queue never takes them all at once.
             $publisherForDeletes->enqueue(new DeleteMessage(
                 project: $console,
                 type: DELETE_TYPE_MAINTENANCE,
