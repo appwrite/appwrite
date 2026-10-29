@@ -241,7 +241,13 @@ impl Database {
         let result = crate::adapter::with_transaction(adapter.as_ref(), || {
             returned.store(false, std::sync::atomic::Ordering::SeqCst);
             discard();
-            let run = callback();
+            // Boxed: the callback's future can be large (a transaction's
+            // writes, each through the hooks), and every layer below (the
+            // attempts, the transaction scope) would otherwise keep it, and
+            // the temporaries of polling it, inline. Unoptimized builds
+            // reserve stack for each copy, which overflowed a worker's stack
+            // with a transaction nested in another.
+            let run = Box::pin(callback());
             let returned = &returned;
             async move {
                 let value = run.await?;
