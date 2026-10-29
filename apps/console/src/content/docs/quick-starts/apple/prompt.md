@@ -28,7 +28,7 @@ Goal: Add Appwrite auth to an Apple (iOS/macOS/watchOS/tvOS) app with a working 
 - The SDK requires Xcode 16.3 or later and supports iOS 15, macOS 12, tvOS 15 and watchOS 8 or later.
 - In Xcode, open the **File** menu and click **Add Packages**.
 - In the **Package URL** search box, enter: `https://github.com/appwrite/sdk-for-apple`
-- Use `21.0.0` as version, select **Up to Next Major Version** as **Dependency Rule**, and click **Add Package**.
+- Use `21.1.1` as version, select **Up to Next Major Version** as **Dependency Rule**, and click **Add Package**.
 - When resolution is complete, click **Add Package** again to add the SDK to the target.
 - Ask the user for their **Project ID** and add the following URL scheme to `Info.plist` for OAuth sessions:
 

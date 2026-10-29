@@ -4,11 +4,13 @@ namespace Appwrite\Platform\Modules\Messaging\Http\Providers\Smtp;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
@@ -93,11 +95,18 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('response')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
-    public function action(string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response)
+    public function action(string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response, PublicHostname $publicHostname)
     {
+        // Workers dial the host later and check it again there; one that does not resolve yet is kept.
+        $hostname = new Host($publicHostname, resolved: false);
+        if ($host !== '' && !$hostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        }
+
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {

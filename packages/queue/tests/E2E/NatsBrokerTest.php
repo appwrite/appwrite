@@ -14,7 +14,10 @@ use Utopia\NATS\Exception\NatsException;
 use Utopia\NATS\Exception\NoRespondersException;
 use Utopia\NATS\JetStream\ConsumerConfig;
 use Utopia\NATS\JetStream\DiscardPolicy;
+use Utopia\NATS\JetStream\JetStream;
+use Utopia\NATS\JetStream\JetStreamMessage;
 use Utopia\NATS\JetStream\StorageType;
+use Utopia\NATS\JetStream\StreamConfig;
 use Utopia\NATS\Transport\TcpTransport;
 use Utopia\NATS\Transport\Transport;
 use Utopia\Queue\Adapter\Swoole;
@@ -32,6 +35,9 @@ final class NatsBrokerTest extends TestCase
 {
     private Nats $broker;
     private Queue $queue;
+
+    /** @var list<Nats> brokers a test builds itself, closed whether or not it passes */
+    private array $brokers = [];
 
     protected function setUp(): void
     {
@@ -54,6 +60,9 @@ final class NatsBrokerTest extends TestCase
     protected function tearDown(): void
     {
         $this->broker->close();
+        foreach ($this->brokers as $broker) {
+            $broker->close();
+        }
     }
 
     public function testPublishReceiveCommit(): void
@@ -150,23 +159,14 @@ final class NatsBrokerTest extends TestCase
             $messages = $broker->receive($this->queue, 1, 2);
             $this->assertCount(2, $messages);
             $state->fail = true;
-            try {
-                $broker->commit($this->queue, $messages[0]);
-                $this->fail('Expected acknowledgement failure');
-            } catch (ConnectionException $error) {
-                $this->assertSame($failure, $error);
-            }
-            $this->assertSame(2, $connections, 'A failed acknowledgement is not retried');
-            $broker->commit($this->queue, $messages[1]);
-            $this->assertSame(3, $connections, 'Only the command connection is replaced');
-            $this->assertSame(0, $broker->getQueueSize($this->queue));
             $broker->commit($this->queue, $messages[0]);
-            $redelivered = $broker->receive($this->queue, 1);
-            $this->assertCount($delivered ? 0 : 1, $redelivered);
-            if (!$delivered) {
-                $this->assertSame('uncertain', $redelivered[0]->getPayload()['task']);
-                $broker->commit($this->queue, $redelivered[0]);
-            }
+            $this->assertFalse($state->fail, 'the fault fired');
+            $this->assertSame(3, $connections, 'Only the command connection is replaced');
+            $broker->commit($this->queue, $messages[1]);
+            $this->assertSame(0, $broker->getQueueSize($this->queue));
+            // Past ackWait: an unacknowledged delivery would be back by now.
+            usleep(500_000);
+            $this->assertSame([], $broker->receive($this->queue, 1), 'neither message is redelivered');
         } finally {
             $broker->close();
         }
@@ -256,6 +256,27 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame('retryable', $second->getPayload()['task']);
         $this->assertSame(1, $second->getAttempts());
         $this->broker->commit($this->queue, $second);
+    }
+
+    public function testOnlyTheDeliveryARejectDeadLettersReportsItselfAsTheLast(): void
+    {
+        $this->broker->publish($this->queue, ['task' => 'last']);
+
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            $message = $this->broker->receive($this->queue, 3)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $message);
+            $this->assertSame(3, $message->getMaxAttempts());
+            $this->assertFalse($message->isLastAttempt());
+            $this->broker->reject($this->queue, $message);
+            $this->assertSame(0, $this->broker->getQueueSize($this->queue, true), 'a reject before the last attempt dead-lettered');
+        }
+
+        $last = $this->broker->receive($this->queue, 3)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $last);
+        $this->assertTrue($last->isLastAttempt());
+
+        $this->broker->reject($this->queue, $last);
+        $this->assertSame(1, $this->broker->getQueueSize($this->queue, true));
     }
 
     public function testExhaustedMessageIsDeadLetteredThenRetried(): void
@@ -924,10 +945,208 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame(0, $this->broker->getQueueSize($ttlQueue), 'message expired after MaxAge');
     }
 
-    public function testReapIsANoOp(): void
+    /**
+     * A message whose every delivery died unacknowledged while no broker listened for the
+     * max-deliveries advisory: the server moves the ack floor past it and never delivers
+     * it again, and before reap() swept behind the floor it stayed on the work stream for
+     * good, reading as neither pending nor in flight.
+     */
+    public function testReapMovesAMessageTheConsumerGaveUpOn(): void
     {
-        // AckWait redelivery reclaims stranded jobs, so reap() has nothing to do.
-        $this->assertSame(0, $this->broker->reap($this->queue));
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $this->brokers[] = $broker = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
+        $stream = 'Q_' . strtoupper($this->queue->name);
+
+        $broker->publish($this->queue, ['poison' => true]);
+        $this->strand($broker, $url, $stream);
+
+        // Above the floor, so left alone: one in flight, one not delivered yet.
+        $broker->publish($this->queue, ['healthy' => true]);
+        [$inFlight] = $broker->receive($this->queue, 2);
+        $this->assertSame(['healthy' => true], $inFlight->getPayload());
+        $broker->publish($this->queue, ['later' => true]);
+
+        $js = Connection::connect($url)->jetStream();
+        $this->assertSame(3, $js->getStreamInfo($stream)->state->messages);
+
+        $this->assertSame(0, $broker->reap($this->queue), 'the first reading moves nothing');
+        $this->assertSame(1, $broker->reap($this->queue));
+
+        $this->assertSame(2, $js->getStreamInfo($stream)->state->messages, 'the messages in flight and not yet delivered are left');
+        $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'the stranded message is on the dead stream');
+        $dead = json_decode($js->getMessage($stream . '_DEAD', 1)->data, true);
+        $this->assertIsArray($dead);
+        $this->assertSame(['poison' => true], $dead['payload']);
+
+        $broker->commit($this->queue, $inFlight);
+    }
+
+    public function testMaintainReapsTheOtherQueuesWhenOneFails(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $this->brokers[] = $broker = new Nats(static fn (): Connection => Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
+        $failing = $this->queue;
+        $healthy = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $js = Connection::connect($url)->jetStream();
+
+        foreach ([$failing, $healthy] as $queue) {
+            $stream = 'Q_' . strtoupper($queue->name);
+            $broker->publish($queue, ['poison' => true]);
+            $this->strand($broker, $url, $stream, $queue);
+        }
+        $this->refuseDeletes($js, 'Q_' . strtoupper($failing->name));
+
+        // Received in this order, so the failing queue is reaped first.
+        $this->assertSame([], $broker->receive($failing, 1));
+        $this->assertSame([], $broker->receive($healthy, 1));
+
+        $broker->maintain();
+        try {
+            $broker->maintain();
+            $this->fail('the failing queue is raised for the adapter to report');
+        } catch (JetStreamException) {
+        }
+
+        $stream = 'Q_' . strtoupper($healthy->name);
+        $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'the healthy queue was still swept');
+        $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages);
+    }
+
+    /**
+     * A message behind the floor is only swept once the floor has stood for strandedAfter,
+     * so an ack whose delete has not landed is not taken for it. A consumer recreated
+     * between two readings starts a floor of its own, which says nothing about how long
+     * it has stood, so the sweep waits for a reading of the new consumer.
+     */
+    public function testReapWaitsForTheFloorToStand(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $this->brokers[] = $broker = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
+        $this->brokers[] = $patient = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 3600.0);
+        $stream = 'Q_' . strtoupper($this->queue->name);
+
+        $broker->publish($this->queue, ['poison' => true]);
+        $this->strand($broker, $url, $stream);
+        $this->assertSame([0, 0], [$patient->reap($this->queue), $patient->reap($this->queue)], 'the floor has not stood for an hour');
+        $this->assertSame(0, $broker->reap($this->queue), 'the first reading moves nothing');
+
+        // A new consumer gives up on the same message, and its floor passes the old one.
+        $js = Connection::connect($url)->jetStream();
+        $config = $js->getConsumer($stream, 'worker')->info(true)->config;
+        $js->deleteConsumer($stream, 'worker');
+        $worker = $js->createConsumer($stream, $config);
+        for ($delivery = 1; $delivery <= 2; $delivery++) {
+            $this->assertCount(1, iterator_to_array($worker->fetch(1, 3.0, false), false));
+            usleep(1_500_000);
+        }
+        $broker->publish($this->queue, ['later' => true]);
+        $later = null;
+        foreach ($worker->fetch(1, 3.0, false) as $delivery) {
+            $later = $delivery;
+        }
+        $this->assertInstanceOf(JetStreamMessage::class, $later);
+        $later->ackSync();
+        $this->assertSame(3, $worker->info(true)->ackFloor->streamSeq);
+
+        $this->assertSame(0, $broker->reap($this->queue), 'a reading of the new consumer moves nothing');
+        $this->assertSame(1, $js->getStreamInfo($stream)->state->messages);
+        $this->assertSame(1, $broker->reap($this->queue));
+    }
+
+    /**
+     * The dead stream remembers a message id only for its duplicate window, and a broker
+     * remembers nothing past a restart. A delete refused for longer than both, retried
+     * by another broker, still leaves one dead copy. Nor does retry() re-drive that copy
+     * while the original stays, which would free it to be copied again.
+     */
+    public function testReapCopiesADeadLetterOnceWhileItsDeleteKeepsFailing(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $stream = 'Q_' . strtoupper($this->queue->name);
+        $js = Connection::connect($url)->jetStream();
+        $this->brokers[] = $first = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
+
+        $first->publish($this->queue, ['poison' => true]);
+        $this->strand($first, $url, $stream);
+        $this->refuseDeletes($js, $stream);
+        $this->reconfigure($js, $stream . '_DEAD', ['duplicate_window' => 1_000_000_000]);
+
+        // A restarted broker, or another replica, finds the same message later on.
+        $this->brokers[] = $second = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 1, strandedAfter: 0.0);
+        $this->assertSame(0, $first->reap($this->queue), 'the first reading moves nothing');
+        $this->assertSame(0, $second->reap($this->queue), 'the first reading moves nothing');
+        foreach ([$first, $first, $second] as $broker) {
+            try {
+                $broker->reap($this->queue);
+                $this->fail('the delete was refused');
+            } catch (JetStreamException) {
+            }
+            usleep(1_500_000); // past the dead stream's duplicate window
+        }
+
+        $this->assertSame(1, $js->getStreamInfo($stream)->state->messages, 'still on the work stream');
+        $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'copied once');
+
+        try {
+            $first->retry($this->queue);
+            $this->fail('the original could not be deleted');
+        } catch (JetStreamException) {
+        }
+        $this->assertSame(1, $js->getStreamInfo($stream)->state->messages, 'only the original, not re-driven');
+        $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'the dead letter stays');
+    }
+
+    /** Deletes are refused for good: the server will not lift deny_delete. */
+    private function refuseDeletes(JetStream $js, string $stream): void
+    {
+        $this->reconfigure($js, $stream, ['deny_delete' => true]);
+    }
+
+    /** @param array<string, mixed> $changes */
+    private function reconfigure(JetStream $js, string $stream, array $changes): void
+    {
+        // Empty sections are dropped: they round-trip as a JSON list the server refuses.
+        $config = array_filter($js->getStreamInfo($stream)->config->toArray(), static fn (mixed $value): bool => $value !== []);
+        $js->updateStream(StreamConfig::fromArray([...$config, ...$changes]));
+    }
+
+    /**
+     * Strand the oldest message the way production does: every delivery taken straight
+     * off the work consumer and left to lapse, as a worker dying holding it would, with
+     * no broker subscribed to the advisory the last one raises. The server stops
+     * delivering it, and the next message acknowledged moves the ack floor past it.
+     */
+    private function strand(Nats $broker, string $url, string $stream, ?Queue $queue = null): void
+    {
+        $worker = Connection::connect($url)->jetStream()->getConsumer($stream, 'worker');
+        for ($delivery = 1; $delivery <= 2; $delivery++) {
+            $fetched = 0;
+            foreach ($worker->fetch(1, 3.0, false) as $ignored) {
+                $fetched++;
+            }
+            $this->assertSame(1, $fetched, "delivery {$delivery}");
+            usleep(1_500_000); // past ackWait, so the server redelivers or gives up
+        }
+
+        // Acknowledged off the durable as well: a broker that received here would join
+        // the advisory group, and the advisory path would move the message instead.
+        $broker->publish($queue ?? $this->queue, ['later' => true]);
+        $later = null;
+        foreach ($worker->fetch(1, 3.0, false) as $delivery) {
+            $later = $delivery;
+        }
+        $this->assertInstanceOf(JetStreamMessage::class, $later);
+        $this->assertSame(2, $later->metadata()->streamSequence, 'the exhausted message is not delivered again');
+        $later->ackSync();
+
+        $floor = 0;
+        $deadline = microtime(true) + 5.0;
+        while ($floor < 2 && microtime(true) < $deadline) {
+            usleep(50_000);
+            $floor = $worker->info(true)->ackFloor->streamSeq;
+        }
+        $this->assertSame(2, $floor, 'the floor has passed the exhausted message');
+        $this->assertSame(1, Connection::connect($url)->jetStream()->getStreamInfo($stream)->state->firstSeq, 'which is still on the work stream');
     }
 
     public function testCrashLoopedMessageIsTerminallyDeadLettered(): void
@@ -1412,6 +1631,259 @@ final class NatsBrokerTest extends TestCase
         $this->assertLessThan(15.0, microtime(true) - $started, 'the caller is released within the retry budget');
     }
 
+    /** @return iterable<string, array{string, int}> */
+    public static function lostAcknowledgementConnection(): iterable
+    {
+        yield 'socket closed before the write' => ['before', 1];
+        yield 'socket closed after the write landed' => ['after', 1];
+        yield 'server reported the connection stale' => ['stale', 1];
+        yield 'socket closed on the retry too' => ['before', 2];
+        yield 'no responders while the consumer moves' => ['no-responders', 2];
+    }
+
+    /** On maxDeliver 1 a lost ack parks the redelivery as dead. */
+    #[DataProvider('lostAcknowledgementConnection')]
+    public function testACommitSurvivesTheServerHavingClosedItsConnection(string $fault, int $times): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $state = new PublishFaults(0);
+        $state->subject = '$JS.ACK.';
+        $broker = new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
+            servers: $url,
+            reconnectWait: 0.01,
+            transportFactory: self::faulting($fault, $state),
+        )), ackWait: 1.0, maxDeliver: 1);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+        $js = Connection::connect($url)->jetStream();
+
+        try {
+            $broker->publish($queue, ['task' => 'done']);
+            $message = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $message);
+
+            $state->faults = $times;
+            $broker->commit($queue, $message);
+            $this->assertSame(0, $state->faults, 'every fault fired');
+
+            // Past ackWait: an unacknowledged delivery would be back, and parked as dead.
+            usleep(1_500_000);
+            $this->assertSame([], $broker->receive($queue, 1), 'the committed message is not redelivered');
+            $consumer = $js->getConsumer($stream, 'worker')->info(true);
+            $this->assertSame(1, $consumer->delivered->consumerSeq, 'delivered once');
+            $this->assertSame($message->getSequence(), $consumer->ackFloor->streamSeq, 'acknowledged');
+            $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'removed from the work stream');
+            $this->assertSame(0, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'nothing dead-lettered');
+        } finally {
+            $broker->close();
+        }
+    }
+
+    public function testACommitWhoseAckIsNeverAnsweredIsSentAgain(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $state = new PublishFaults(0);
+        $state->subject = '$JS.ACK.';
+        $broker = new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
+            servers: $url,
+            reconnectWait: 0.01,
+            transportFactory: self::faulting('drop', $state),
+        )), ackWait: 10.0, maxDeliver: 1);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+        $js = Connection::connect($url)->jetStream();
+
+        try {
+            $broker->publish($queue, ['task' => 'done']);
+            $message = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $message);
+
+            $state->faults = 1;
+            $broker->commit($queue, $message);
+            $this->assertSame(0, $state->faults, 'the ack was swallowed');
+
+            $consumer = $js->getConsumer($stream, 'worker')->info(true);
+            $this->assertSame($message->getSequence(), $consumer->ackFloor->streamSeq, 'acknowledged by the retry');
+            $this->assertSame(0, $consumer->numAckPending, 'nothing left awaiting an ack');
+            $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'removed from the work stream');
+        } finally {
+            $broker->close();
+        }
+    }
+
+    /** A heartbeat held past ackWait would get a running job redelivered. */
+    public function testAnAckRetryDoesNotHoldTheCommandsConnectionThroughItsBackoff(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $state = new PublishFaults(0);
+        $state->subject = '$JS.ACK.';
+        $broker = new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
+            servers: $url,
+            reconnectWait: 0.01,
+            transportFactory: self::faulting('no-responders', $state),
+        )), ackWait: 10.0, maxDeliver: 1);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+
+        $readSeconds = null;
+        $commitSeconds = null;
+        $error = null;
+
+        \Swoole\Coroutine\run(function () use ($broker, $queue, $state, &$readSeconds, &$commitSeconds, &$error): void {
+            $broker->publish($queue, ['task' => 'done']);
+            $message = $broker->receive($queue, 2)[0] ?? null;
+            if (!$message instanceof Message) {
+                $error = new \RuntimeException('the published message was not delivered');
+
+                return;
+            }
+            $broker->getQueueSize($queue);
+
+            // Three 503s: the ack is retried after 0s, 0.25s and 1s.
+            $state->faults = 3;
+            $wg = new \Swoole\Coroutine\WaitGroup();
+
+            $wg->add();
+            \Swoole\Coroutine::create(function () use ($broker, $queue, $message, $wg, &$commitSeconds, &$error): void {
+                $started = microtime(true);
+                try {
+                    $broker->commit($queue, $message);
+                } catch (\Throwable $e) {
+                    $error ??= $e;
+                }
+                $commitSeconds = microtime(true) - $started;
+                $wg->done();
+            });
+
+            $wg->add();
+            \Swoole\Coroutine::create(function () use ($broker, $queue, $wg, &$readSeconds, &$error): void {
+                \Swoole\Coroutine::sleep(0.4); // inside the 1s backoff
+                $started = microtime(true);
+                try {
+                    $broker->getQueueSize($queue);
+                } catch (\Throwable $e) {
+                    $error ??= $e;
+                }
+                $readSeconds = microtime(true) - $started;
+                $wg->done();
+            });
+
+            $wg->wait();
+        });
+
+        try {
+            $this->assertNull($error, (string) $error?->getMessage());
+            $this->assertSame(0, $state->faults, 'every 503 was answered');
+            $this->assertGreaterThan(1.0, $commitSeconds, 'the ack waited out its backoff');
+            $this->assertLessThan(0.5, $readSeconds, 'the depth read waited behind the ack\'s backoff');
+
+            $js = Connection::connect($url)->jetStream();
+            $this->assertSame(0, $js->getConsumer($stream, 'worker')->info(true)->numAckPending, 'the retried ack landed');
+            $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'removed from the work stream');
+        } finally {
+            $broker->close();
+        }
+    }
+
+    public function testReleasingABatchStaysInsideOneBudgetWhenTheServerStopsAnswering(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $state = new PublishFaults(0);
+        $state->subject = '$JS.API.STREAM.INFO.';
+        $broker = new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
+            servers: $url,
+            reconnectWait: 0.01,
+            requestTimeout: 1.0,
+            transportFactory: self::faulting('drop', $state),
+        )), ackWait: 30.0, maxDeliver: 3, releaseDelay: 0.0);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+        $total = 8;
+
+        try {
+            for ($i = 0; $i < $total; $i++) {
+                $broker->publish($queue, ['task' => "job-{$i}"]);
+            }
+            $messages = [];
+            while (\count($messages) < $total) {
+                $batch = $broker->receive($queue, 2, $total - \count($messages));
+                $this->assertNotSame([], $batch, 'every published message is delivered');
+                $messages = [...$messages, ...$batch];
+            }
+
+            $state->faults = 1000;
+            $started = microtime(true);
+            $broker->release($queue, ...$messages);
+            $elapsed = microtime(true) - $started;
+
+            // The 10s budget, plus the attempt already running when it ran out.
+            $this->assertLessThan(12.5, $elapsed, 'release() overran its budget by a request timeout per message');
+        } finally {
+            $broker->close();
+        }
+
+        $clean = new Nats(static fn (): Connection => Connection::connect($url), ackWait: 30.0, maxDeliver: 3);
+        try {
+            $tasks = [];
+            $until = microtime(true) + 5.0;
+            while (\count($tasks) < $total && microtime(true) < $until) {
+                foreach ($clean->receive($queue, 1, $total) as $message) {
+                    $tasks[] = $message->getPayload()['task'];
+                    $clean->commit($queue, $message);
+                }
+            }
+            sort($tasks);
+            $expected = array_map(static fn (int $i): string => "job-{$i}", range(0, $total - 1));
+            sort($expected);
+            $this->assertSame($expected, $tasks, 'every released job is delivered again');
+            $this->assertSame(0, Connection::connect($url)->jetStream()->getStreamInfo($stream . '_DEAD')->state->messages, 'nothing dead-lettered');
+        } finally {
+            $clean->close();
+        }
+    }
+
+    /** @return iterable<string, array{string, int}> */
+    public static function lostRejectConnection(): iterable
+    {
+        yield 'socket closed before the write' => ['before', 1];
+        yield 'socket closed after the write landed' => ['after', 1];
+        yield 'no responders while the stream elects a leader' => ['no-responders', 2];
+    }
+
+    /** A retried dead-letter copy is stored once. */
+    #[DataProvider('lostRejectConnection')]
+    public function testAnExhaustedRejectSurvivesTheServerHavingClosedItsConnection(string $fault, int $times): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $state = new PublishFaults(0);
+        $broker = new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
+            servers: $url,
+            reconnectWait: 0.01,
+            transportFactory: self::faulting($fault, $state),
+        )), ackWait: 1.0, maxDeliver: 1);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+        $js = Connection::connect($url)->jetStream();
+
+        try {
+            $broker->publish($queue, ['task' => 'failed']);
+            $message = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $message);
+
+            $state->faults = $times;
+            $broker->reject($queue, $message);
+            $this->assertSame(0, $state->faults, 'every fault fired');
+
+            usleep(1_500_000);
+            $this->assertSame([], $broker->receive($queue, 1), 'the terminated message is not redelivered');
+            $this->assertSame(1, $js->getConsumer($stream, 'worker')->info(true)->delivered->consumerSeq, 'delivered once');
+            $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'removed from the work stream');
+            $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'dead-lettered once');
+        } finally {
+            $broker->close();
+        }
+    }
+
     public function testRetriedPublishUnderAStableIdStoresOneMessage(): void
     {
         $broker = $this->brokerWithStableIds();
@@ -1886,7 +2358,7 @@ final class NatsBrokerTest extends TestCase
                     }
                     // PUB <subject> <reply> <size>, or HPUB with a header size before it.
                     $replied = \count($words) >= ($words[0] === 'HPUB' ? 5 : 4);
-                    if ($publish === null && \in_array($words[0], ['PUB', 'HPUB'], true) && str_starts_with($words[1] ?? '', 'q.') && $replied) {
+                    if ($publish === null && \in_array($words[0], ['PUB', 'HPUB'], true) && str_starts_with($words[1] ?? '', $this->state->subject) && $replied) {
                         $publish = $words[2];
                     }
                 }
@@ -1915,6 +2387,10 @@ final class NatsBrokerTest extends TestCase
                             ?? throw new \LogicException("no inbox subscription for {$reply}");
                         $this->state->injected .= "HMSG {$reply} {$sid} 16 16\r\nNATS/1.0 503\r\n\r\n\r\n";
 
+                        return \strlen($data);
+                    }
+                    if ($this->fault === 'drop') {
+                        // Swallowed: the request is never answered, so it times out.
                         return \strlen($data);
                     }
                     if ($this->fault === 'before') {

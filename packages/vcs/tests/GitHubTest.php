@@ -9,6 +9,7 @@ use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\OwnerNotFound;
+use Utopia\VCS\Exception\RepositoryNotFound;
 
 final class GitHubTest extends Base
 {
@@ -119,6 +120,32 @@ final class GitHubTest extends Base
 
         $this->assertSame('deleted', $result['action']);
         $this->assertSame('1234', $result['installationId']);
+    }
+
+    public function testUpdateCheckNamesTheStatusAfterItsSuite(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var list<array{path: string, params: array<mixed>}> */
+            public array $captured = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->captured[] = ['path' => $path, 'params' => $params];
+
+                return [
+                    'body' => [],
+                    'headers' => ['status-code' => 201],
+                ];
+            }
+        };
+
+        $adapter->updateCheck('owner', 'repo', 'abc123', 'queued', 'Billing', 'Starting...', '- Function Billing', 'https://cloud.appwrite.io', 'Atlas Production');
+        $adapter->updateCheck('owner', 'repo', 'abc123', 'success', 'Billing', 'Build succeeded.');
+
+        // A commit status has no suite, so the project stays in its context
+        $this->assertSame('/repos/owner/repo/statuses/abc123', $adapter->captured[0]['path']);
+        $this->assertSame(['state' => 'pending', 'target_url' => 'https://cloud.appwrite.io', 'description' => 'Starting...', 'context' => 'Billing (Atlas Production)'], $adapter->captured[0]['params']);
+        $this->assertSame('Billing', $adapter->captured[1]['params']['context']);
     }
 
     public function testInitializeVariablesSignsJwtWithPemString(): void
@@ -246,6 +273,28 @@ final class GitHubTest extends Base
         $result = $adapter->searchRepositories('private-owner', 1, 10);
 
         $this->assertSame(['items' => [['id' => 1, 'name' => 'private-repository']], 'total' => 1], $result);
+    }
+
+    public function testGetInstallationRepositoryScansPastThousandRepositories(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $page = \is_int($params['page'] ?? null) ? $params['page'] : 1;
+                $repositories = [];
+                foreach (\range(1, $page <= 10 ? 100 : 1) as $index) {
+                    $id = ($page - 1) * 100 + $index;
+                    $repositories[] = ['id' => $id, 'name' => 'repository-' . $id];
+                }
+
+                return ['body' => ['repositories' => $repositories]];
+            }
+        };
+
+        $this->assertSame(['id' => 1001, 'name' => 'repository-1001'], $adapter->getInstallationRepository('repository-1001'));
+
+        $this->expectException(RepositoryNotFound::class);
+        $adapter->getInstallationRepository('repository-1002');
     }
 
     public function testSearchRepositoriesUnknownOwner(): void

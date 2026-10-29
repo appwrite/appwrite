@@ -6,6 +6,7 @@ use Appwrite\AppwriteException;
 use Appwrite\Enums\ProjectAuthMethodId;
 use Appwrite\Enums\ProjectPolicyId;
 use Appwrite\Enums\ProjectProtocolId;
+use Appwrite\Models\PolicyDenyRealtimeGuests;
 use Appwrite\Models\PolicyPasskey;
 use Appwrite\Models\PolicyPasswordPwned;
 use Appwrite\Models\PolicyPasswordRotation;
@@ -829,6 +830,7 @@ class Appwrite extends Source
         $passwordPwned = $this->getPolicyIfSupported(ProjectPolicyId::PASSWORDPWNED());
         $passwordRotation = $this->getPolicyIfSupported(ProjectPolicyId::PASSWORDROTATION());
         $passkey = $this->getPolicyIfSupported(ProjectPolicyId::PASSKEY());
+        $denyRealtimeGuests = $this->getPolicyIfSupported(ProjectPolicyId::DENYREALTIMEGUESTS());
 
         $policies = new Policies(
             $this->projectId,
@@ -873,6 +875,7 @@ class Appwrite extends Source
                 'maxAge' => $passwordRotation->maxAge,
             ],
             passkeyRpId: $passkey instanceof PolicyPasskey ? $passkey->rpId : null,
+            denyRealtimeGuests: $denyRealtimeGuests instanceof PolicyDenyRealtimeGuests ? $denyRealtimeGuests->enabled : null,
         );
 
         $this->callback([$policies]);
@@ -1231,6 +1234,7 @@ class Appwrite extends Source
             $response = $this->reader->listDatabases($queries);
 
             foreach ($response as $database) {
+                $database = $database instanceof UtopiaDocument ? $database->getArrayCopy() : $database;
                 $originalType = $database['type'] ?? Resource::TYPE_DATABASE_LEGACY;
 
                 $databaseFamilyType = $originalType;
@@ -1242,6 +1246,7 @@ class Appwrite extends Source
                     $newDatabase = self::getDatabase($databaseFamilyType, [
                         'id' => $database['$id'],
                         'name' => $database['name'],
+                        'description' => \is_array($database) && \is_string($database['description'] ?? null) ? $database['description'] : '',
                         'createdAt' => $database['$createdAt'],
                         'updatedAt' => $database['$updatedAt'],
                         'type' => $originalType,
@@ -1303,10 +1308,12 @@ class Appwrite extends Source
 
                 $response = $this->reader->listTables($database, $queries);
                 foreach ($response as $table) {
+                    $table = $table instanceof UtopiaDocument ? $table->getArrayCopy() : $table;
                     $rowSecurity = $table['rowSecurity'] ?? $table['documentSecurity'] ?? false;
                     $newTable = self::getEntity($databaseName, [
                         'id' => $table['$id'],
                         'name' => $table['name'],
+                        'description' => \is_array($table) && \is_string($table['description'] ?? null) ? $table['description'] : '',
                         'rowSecurity' => $rowSecurity,
                         'documentSecurity' => $rowSecurity,
                         'permissions' => $table['$permissions'],
@@ -1317,6 +1324,7 @@ class Appwrite extends Source
                         'database' => [
                             'id' => $database->getId(),
                             'name' => $database->getDatabaseName(),
+                            'description' => $database->getDescription(),
                             'type' => $database->getType(),
                             'database' => $database->getDatabase(),
                         ]
@@ -1420,7 +1428,8 @@ class Appwrite extends Source
                 $response = $this->reader->listIndexes($table, $queries);
 
                 foreach ($response as $index) {
-                    $indexes[] = new Index(
+                    $index = $index instanceof UtopiaDocument ? $index->getArrayCopy() : $index;
+                    $indexes[] = (new Index(
                         $index['$id'],
                         $index['key'],
                         $table,
@@ -1430,7 +1439,7 @@ class Appwrite extends Source
                         $index['orders'] ?? [],
                         $index['$createdAt'] = empty($index['$createdAt']) ? UtopiaDateTime::now() : $index['$createdAt'],
                         $index['$updatedAt'] = empty($index['$updatedAt']) ? UtopiaDateTime::now() : $index['$updatedAt'],
-                    );
+                    ))->setDescription(\is_array($index) && \is_string($index['description'] ?? null) ? $index['description'] : '');
                 }
 
                 if (empty($indexes)) {
@@ -1462,12 +1471,13 @@ class Appwrite extends Source
             /** @var Table $table */
             $lastRow = null;
             $iterationCount = 0;
+            $limit = $batchSize;
 
             while (true) {
                 $iterationCount++;
 
                 $queries = [
-                    $this->reader->queryLimit($batchSize),
+                    $this->reader->queryLimit($limit),
                     ...$this->queries,
                 ];
 
@@ -1498,7 +1508,18 @@ class Appwrite extends Source
 
                 $queries[] = $this->reader->querySelect($selects);
 
-                $response = $this->reader->listRows($table, $queries);
+                try {
+                    $response = $this->reader->listRows($table, $queries);
+                } catch (AppwriteException $error) {
+                    // A page of large rows can decode past the response size cap
+                    if ($error->getCode() !== \CURLE_FILESIZE_EXCEEDED || $limit === 1) {
+                        throw $error;
+                    }
+
+                    $limit = \intdiv($limit, 2);
+
+                    continue;
+                }
 
                 foreach ($response as $row) {
                     // HACK: Handle many to many (only for schema-based databases)
@@ -1561,7 +1582,7 @@ class Appwrite extends Source
 
                 $this->callback($rows);
 
-                if (count($response) < $batchSize) {
+                if (count($response) < $limit) {
                     break;
                 }
             }
@@ -1620,7 +1641,7 @@ class Appwrite extends Source
         $convertedBuckets = [];
 
         foreach ($buckets->buckets as $bucket) {
-            $convertedBuckets[] = new Bucket(
+            $convertedBuckets[] = (new Bucket(
                 $bucket->id,
                 $bucket->name,
                 $bucket->permissions,
@@ -1633,7 +1654,8 @@ class Appwrite extends Source
                 $bucket->antivirus,
                 false,
                 $bucket->transformations ?? false,
-            );
+                stripMetadata: $bucket->stripMetadata,
+            ))->setDescription($bucket->description);
         }
 
         if (empty($convertedBuckets)) {
@@ -2237,14 +2259,14 @@ class Appwrite extends Source
             $variables = [];
 
             foreach ($response->variables as $variable) {
-                $variables[] = new ProjectVariable(
+                $variables[] = (new ProjectVariable(
                     $variable->id,
                     $variable->key,
                     $variable->value,
                     $variable->secret,
                     createdAt: $variable->createdAt,
                     updatedAt: $variable->updatedAt,
-                );
+                ))->setDescription($variable->description);
 
                 $lastId = $variable->id;
             }
@@ -2284,7 +2306,7 @@ class Appwrite extends Source
             $webhooks = [];
 
             foreach ($response->webhooks as $webhook) {
-                $webhooks[] = new Webhook(
+                $webhooks[] = (new Webhook(
                     $webhook->id,
                     $webhook->name,
                     $webhook->url,
@@ -2295,7 +2317,7 @@ class Appwrite extends Source
                     $webhook->enabled,
                     createdAt: $webhook->createdAt,
                     updatedAt: $webhook->updatedAt,
-                );
+                ))->setDescription($webhook->description);
 
                 $lastId = $webhook->id;
             }
@@ -2341,7 +2363,7 @@ class Appwrite extends Source
             $convertedResources = [];
 
             foreach ($response->functions as $function) {
-                $convertedFunc = new Func(
+                $convertedFunc = (new Func(
                     $function->id,
                     $function->name,
                     $function->runtime,
@@ -2359,19 +2381,19 @@ class Appwrite extends Source
                     $function->buildSpecification ?: '',
                     $function->interval ?? 0,
                     $function->deploymentRetention,
-                );
+                ))->setDescription($function->description);
                 $functions[] = $convertedFunc;
 
                 $convertedResources[] = $convertedFunc;
 
                 foreach ($this->functions->listVariables($function->id)->variables as $var) {
-                    $convertedResources[] = new EnvVar(
+                    $convertedResources[] = (new EnvVar(
                         $var->id,
                         $convertedFunc,
                         $var->key,
                         $var->value,
                         $var->secret,
-                    );
+                    ))->setDescription($var->description);
                 }
             }
 
@@ -2462,8 +2484,25 @@ class Appwrite extends Source
             $responseHeaders
         );
 
-        // content-length header missing, file is less than max buffer size
-        if (!array_key_exists('content-length', $responseHeaders)) {
+        // Archives past the server's read buffer stream without content-length
+        $fileSize = (int) ($responseHeaders['content-length'] ?? $deployment->sourceSize);
+
+        // Deployments that recorded no size report it in a ranged response
+        if (!array_key_exists('content-length', $responseHeaders) && $fileSize === 0) {
+            $rangeHeaders = [];
+
+            $this->call(
+                'GET',
+                "/functions/{$func->getId()}/deployments/{$deployment->id}/download",
+                ['range' => 'bytes=0-0'],
+                [],
+                $rangeHeaders
+            );
+
+            $fileSize = (int) (\explode('/', $rangeHeaders['content-range'] ?? '', 2)[1] ?? 0);
+        }
+
+        if (!array_key_exists('content-length', $responseHeaders) && $fileSize === 0) {
             $file = $this->call(
                 'GET',
                 "/functions/{$func->getId()}/deployments/{$deployment->id}/download",
@@ -2494,8 +2533,6 @@ class Appwrite extends Source
 
             return;
         }
-
-        $fileSize = (int) $responseHeaders['content-length'];
 
         if ($end >= $fileSize) {
             $end = $fileSize - 1;
@@ -2774,7 +2811,7 @@ class Appwrite extends Source
             }
 
             foreach ($response->topics as $topic) {
-                $topics[] = new Topic(
+                $topics[] = (new Topic(
                     $topic->id,
                     $topic->name,
                     $topic->subscribe ?? [],
@@ -2782,7 +2819,7 @@ class Appwrite extends Source
                     $topic->updatedAt ?? '',
                     $topic->qos,
                     $topic->expiry,
-                );
+                ))->setDescription($topic->description);
 
                 $lastDocument = $topic->id;
             }
@@ -2931,7 +2968,7 @@ class Appwrite extends Source
             $convertedResources = [];
 
             foreach ($response->sites as $site) {
-                $convertedSite = new Site(
+                $convertedSite = (new Site(
                     $site->id,
                     $site->name,
                     $site->framework,
@@ -2950,19 +2987,19 @@ class Appwrite extends Source
                     $site->startCommand,
                     $site->deploymentRetention,
                     $site->scopes,
-                );
+                ))->setDescription($site->description);
                 $sites[] = $convertedSite;
                 $convertedResources[] = $convertedSite;
 
                 $variables = $this->sites->listVariables($site->id);
                 foreach ($variables->variables ?? [] as $var) {
-                    $convertedResources[] = new SiteEnvVar(
+                    $convertedResources[] = (new SiteEnvVar(
                         $var->id,
                         $convertedSite,
                         $var->key,
                         $var->value,
                         $var->secret,
-                    );
+                    ))->setDescription($var->description);
                 }
             }
 
@@ -3052,7 +3089,25 @@ class Appwrite extends Source
             $responseHeaders
         );
 
-        if (!\array_key_exists('content-length', $responseHeaders)) {
+        // Archives past the server's read buffer stream without content-length
+        $fileSize = (int) ($responseHeaders['content-length'] ?? $deployment->sourceSize);
+
+        // Deployments that recorded no size report it in a ranged response
+        if (!\array_key_exists('content-length', $responseHeaders) && $fileSize === 0) {
+            $rangeHeaders = [];
+
+            $this->call(
+                'GET',
+                "/sites/{$site->getId()}/deployments/{$deployment->id}/download",
+                ['range' => 'bytes=0-0'],
+                [],
+                $rangeHeaders
+            );
+
+            $fileSize = (int) (\explode('/', $rangeHeaders['content-range'] ?? '', 2)[1] ?? 0);
+        }
+
+        if (!\array_key_exists('content-length', $responseHeaders) && $fileSize === 0) {
             $file = $this->call(
                 'GET',
                 "/sites/{$site->getId()}/deployments/{$deployment->id}/download",
@@ -3082,8 +3137,6 @@ class Appwrite extends Source
 
             return;
         }
-
-        $fileSize = (int) $responseHeaders['content-length'];
 
         if ($end >= $fileSize) {
             $end = $fileSize - 1;
@@ -3371,7 +3424,7 @@ class Appwrite extends Source
             $apiKeys = [];
 
             foreach ($response->keys as $key) {
-                $apiKeys[] = new ApiKey(
+                $apiKeys[] = (new ApiKey(
                     $key->id,
                     $key->name,
                     $key->scopes,
@@ -3380,7 +3433,7 @@ class Appwrite extends Source
                     $key->sdks,
                     createdAt: $key->createdAt,
                     updatedAt: $key->updatedAt,
-                );
+                ))->setDescription($key->description);
 
                 $lastId = $key->id;
             }
@@ -3445,7 +3498,7 @@ class Appwrite extends Source
         // size the type itself implies. Resolve both the way the server does.
         ['type' => $type, 'format' => $format, 'size' => $size] = Column::resolve($column);
 
-        return match ($type) {
+        return (match ($type) {
             Column::TYPE_STRING => match ($format) {
                 Column::TYPE_EMAIL => new Email(
                     $column['key'],
@@ -3662,7 +3715,7 @@ class Appwrite extends Source
 
 
             default => throw new \InvalidArgumentException("Unsupported column type: {$type}"),
-        };
+        })->setDescription(\is_array($column) && \is_string($column['description'] ?? null) ? $column['description'] : '');
     }
 
     /**

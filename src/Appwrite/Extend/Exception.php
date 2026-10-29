@@ -49,6 +49,7 @@ class Exception extends \Exception
     public const string GENERAL_SMTP_DISABLED = 'general_smtp_disabled';
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
     public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
+    public const string GENERAL_CACHE_UNAVAILABLE = 'general_cache_unavailable';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';
@@ -327,6 +328,11 @@ class Exception extends \Exception
     public const string PROJECT_INVALID_FAILURE_URL = 'project_invalid_failure_url';
     public const string PROJECT_RESERVED_PROJECT = 'project_reserved_project';
     public const string PROJECT_KEY_EXPIRED = 'project_key_expired';
+    public const string TRANSFER_NOT_FOUND = 'transfer_not_found';
+    public const string TRANSFER_INVALID_SECRET = 'transfer_invalid_secret';
+    public const string TRANSFER_EXPIRED = 'transfer_expired';
+    public const string TRANSFER_RECIPIENT_MISMATCH = 'transfer_recipient_mismatch';
+    public const string TRANSFER_ALREADY_OWNED = 'transfer_already_owned';
     public const string ACCOUNT_KEY_EXPIRED = 'account_key_expired';
 
     public const string PROJECT_SMTP_CONFIG_INVALID = 'project_smtp_config_invalid';

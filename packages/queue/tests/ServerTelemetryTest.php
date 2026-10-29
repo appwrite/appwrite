@@ -13,6 +13,7 @@ use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 use Utopia\Queue\Server;
 use Utopia\Telemetry\Adapter\Test as TestTelemetry;
+use Utopia\Telemetry\Histogram;
 
 final class ServerTelemetryTest extends TestCase
 {
@@ -93,7 +94,7 @@ final class ServerTelemetryTest extends TestCase
             1,
             'appwrite',
         );
-        $telemetry = new TestTelemetry();
+        $telemetry = new ServerTelemetryAttributeTelemetry();
 
         $server = new Server($adapter);
         $server->setTelemetry($telemetry);
@@ -117,17 +118,14 @@ final class ServerTelemetryTest extends TestCase
             ],
         ];
 
-        /** @var object{values: array<int, float|int>, attributes: array<int, array<string, mixed>>} $wait */
         $wait = $telemetry->histograms['messaging.process.wait.duration'];
         $this->assertSame($expected, $wait->attributes);
         $this->assertGreaterThan(100.0, $wait->values[0]);
         $this->assertLessThan(100.0, $wait->values[1]);
 
-        /** @var object{attributes: array<int, array<string, mixed>>} $duration */
         $duration = $telemetry->histograms['messaging.process.duration'];
         $this->assertSame($expected, $duration->attributes);
 
-        /** @var object{values: array<int, float|int>, attributes: array<int, array<string, mixed>>} $size */
         $size = $telemetry->histograms['messaging.process.message.size'];
         $this->assertSame([512, 2048], $size->values);
         $this->assertSame($expected, $size->attributes);
@@ -286,6 +284,39 @@ final class ServerTelemetryTest extends TestCase
         }
 
         return $values;
+    }
+}
+
+final class ServerTelemetryAttributeHistogram extends Histogram
+{
+    /** @var list<float|int> */
+    public array $values = [];
+
+    /** @var list<array<mixed>> */
+    public array $attributes = [];
+
+    #[\Override]
+    public function record(float|int $amount, iterable $attributes = []): void
+    {
+        $this->values[] = $amount;
+        $this->attributes[] = \is_array($attributes) ? $attributes : \iterator_to_array($attributes);
+    }
+}
+
+/**
+ * Keeps each histogram recording's attributes, which the released Test adapter does
+ * not: the package is tested against the telemetry release it requires.
+ */
+final class ServerTelemetryAttributeTelemetry extends TestTelemetry
+{
+    /** @var array<string, ServerTelemetryAttributeHistogram> */
+    #[\Override]
+    public array $histograms = [];
+
+    #[\Override]
+    public function createHistogram(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): ServerTelemetryAttributeHistogram
+    {
+        return $this->histograms[$name] = new ServerTelemetryAttributeHistogram();
     }
 }
 
