@@ -1359,4 +1359,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Appwrite Analytics': 'Appwrite Analytics',
   'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
     'コンソールにアナリティクスを表示し、プロジェクト内の訪問者、ページ、参照元、キャンペーン、カスタムイベントを計測します。',
+  'Project environments': 'プロジェクト環境',
+  'Switch between environments of a project, such as staging and production, and create one as a copy of the project.':
+    'ステージングや本番など、プロジェクトの環境を切り替え、プロジェクトのコピーとして環境を作成します。',
 }
