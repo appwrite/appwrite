@@ -663,4 +663,53 @@ impl User {
         user.targets.clear();
         Ok(())
     }
+
+    /// The proofs bound to the address a user just moved off (`channel`:
+    /// `email` or `phone`): its tokens and MFA challenges are deleted, and
+    /// pending invites, sent to the old address, can no longer prove the new
+    /// one (their secret is voided). Run under the user's row lock, when the
+    /// locked address differs from the new one.
+    pub async fn void_address_proofs(db: &Database, sequence: i64, channel: &str) -> utopia_database::Result<()> {
+        if sequence == 0 {
+            return Ok(());
+        }
+        let sequence = sequence.to_string();
+        // `TOKEN_TYPE_*`: recovery, recovery OTP, verification, verification
+        // OTP, magic URL and email OTP; or phone.
+        let tokens: &[i64] = if channel == "phone" { &[6] } else { &[3, 11, 2, 10, 5, 9] };
+        db.delete_documents(
+            "tokens",
+            vec![
+                utopia_database::Query::equal("userInternalId", [sequence.as_str()]),
+                utopia_database::Query::equal("type", tokens),
+            ],
+            utopia_database::database::BATCH_SIZE,
+            None,
+        )
+        .await?;
+        db.delete_documents(
+            "challenges",
+            vec![
+                utopia_database::Query::equal("userInternalId", [sequence.as_str()]),
+                utopia_database::Query::equal("type", [channel]),
+            ],
+            utopia_database::database::BATCH_SIZE,
+            None,
+        )
+        .await?;
+        let mut voided = Document::default();
+        voided.put("secret", Value::from(""));
+        db.update_documents(
+            "memberships",
+            voided,
+            vec![
+                utopia_database::Query::equal("userInternalId", [sequence.as_str()]),
+                utopia_database::Query::equal("confirm", [false]),
+            ],
+            utopia_database::database::BATCH_SIZE,
+            None,
+        )
+        .await?;
+        Ok(())
+    }
 }

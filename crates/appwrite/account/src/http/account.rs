@@ -53,6 +53,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
             dictionary: &state.dictionary,
             enabled: ctx.project.auth_bool("passwordDictionary", false),
             allow_empty: false,
+            deny_list: ctx.project.auth_strings("passwordDictionaryDenyList"),
         }),
     ]);
     let password = ctx.required_str("password", &password_validator)?;
@@ -87,6 +88,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
             Some(&name),
             None,
             true,
+            &ctx.project.auth_strings("personalDataDenyList"),
         )
     {
         return Err(Error::new(ErrorType::UserPasswordPersonalData));

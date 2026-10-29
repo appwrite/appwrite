@@ -27,5 +27,7 @@ impl Job {
             }
         }
         let _ = db.purge_cached_document("users", user_id).await;
+        // The deleted sessions' live connections end too.
+        crate::platform::context::mqtt_revoke(&self.state, &self.project.id, user_id).await;
     }
 }

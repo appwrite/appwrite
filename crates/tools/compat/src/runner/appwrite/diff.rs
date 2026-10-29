@@ -2050,6 +2050,17 @@ impl Normalizer {
                                 (k, Value::String(code)) if one_time_code(k, x) => {
                                     Value::String(self.number(code.clone(), "otp"))
                                 }
+                                // A mail's `OTP-Token` header quotes the code it
+                                // carries: `"123456"; origin="https://..."`.
+                                ("OTP-Token", Value::String(v)) if otp_token_code(v).is_some() => {
+                                    let code = otp_token_code(v).unwrap_or_default();
+                                    let rest = &v[code.len() + 2..];
+                                    Value::String(format!(
+                                        "\"{}\"{}",
+                                        self.number(code.to_owned(), "otp"),
+                                        self.text(rest)
+                                    ))
+                                }
                                 (k, Value::String(hash)) if secret_hash(k, x) => {
                                     Value::String(self.number(hash.clone(), "secret-hash"))
                                 }
@@ -2221,6 +2232,13 @@ fn query_datetime(s: &str) -> String {
 fn one_time_code(key: &str, value: &Value) -> bool {
     matches!(key, "secret" | "otp" | "content")
         && value.as_str().is_some_and(|s| s.len() == 6 && s.bytes().all(|b| b.is_ascii_digit()))
+}
+
+/// The code an `OTP-Token` header value quotes first (`"123456"; origin=...`).
+fn otp_token_code(value: &str) -> Option<&str> {
+    let code = value.strip_prefix('"')?.split('"').next()?;
+    (code.len() == 6 && code.bytes().all(|b| b.is_ascii_digit()) && value[1 + code.len()..].starts_with('"'))
+        .then_some(code)
 }
 
 /// A stored session or token secret (`proofForToken->hash()`: SHA-256 hex

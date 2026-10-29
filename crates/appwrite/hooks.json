@@ -28,7 +28,7 @@
       "rust": {
         "file": "crates/appwrite/core/src/platform/hooks/init/abuse.rs",
         "status": "done",
-        "note": "Teams' `createMembership` (`abuse-limit` 10 on the default key) and `updateMembershipStatus` (`ip:{ip},url:{url}`) and the Account recovery, verification and password routes (keys with `{param-email}`, `{userId}` and `{param-userId}`, several keys per route) prove the counters and the `X-RateLimit-*` headers in `bin/compat appwrite diff` (the dev stack runs with `_APP_OPTIONS_ABUSE=disabled`, so requests are counted, not refused). `{url}` is the route path alone (no request host), `{param-email}` is lowercased (sign in matches emails case-insensitively) and `{chunkId}` the chunk a `Content-Range` starts in at the 5MB server chunk size.",
+        "note": "Teams' `createMembership` (`abuse-limit` 10 on the default key) and `updateMembershipStatus` (`ip:{ip},url:{url}`) and the Account recovery, verification and password routes (keys with `{param-email}`, `{userId}` and `{param-userId}`, several keys per route) prove the counters and the `X-RateLimit-*` headers in `bin/compat appwrite diff` (the dev stack runs with `_APP_OPTIONS_ABUSE=disabled`, so requests are counted, not refused). `{url}` is the route path alone (no request host), `{param-<name>}` covers the route's path params too, which a query param of the same name cannot override, `{param-email}` is lowercased (sign in matches emails case-insensitively) and `{chunkId}` the chunk a `Content-Range` starts in at the 5MB server chunk size.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/hooks/init/abuse.rs", "anchor": "async fn abuse" }
         ]
@@ -72,7 +72,7 @@
       "rust": {
         "file": "crates/appwrite/core/src/platform/hooks/shutdown/session_limit.rs",
         "status": "done",
-        "note": "Runs after every route in the `session` group (the session's user from the response). The diff's `account.sessions.email.limit` signs `s2` in at the project's `maxSessions` (10): both runtimes delete the same oldest session. PHP runs it after the `api` group's shutdowns, so the deleted sessions are not in the usage message; Rust leaves them out the same way (its own database, without listeners).",
+        "note": "Runs after every route in the `session` group (the session's user from the response). The diff's `account.sessions.email.limit` signs `s2` in at the project's `maxSessions` (10): both runtimes delete the same oldest session, then revoke the user's MQTT connections. PHP runs it after the `api` group's shutdowns, so the deleted sessions are not in the usage message; Rust leaves them out the same way (its own database, without listeners).",
         "where": [
           { "file": "crates/appwrite/core/src/platform/hooks/shutdown/session_limit.rs", "anchor": "async fn session_limit" }
         ]
@@ -86,7 +86,7 @@
       "rust": {
         "file": "crates/appwrite/core/src/platform/hooks/shutdown/events.rs",
         "status": "done",
-        "note": "Function events are cached in the same Redis hash as PHP's. Realtime adds the action-suffixed account channels and leaves out the keys a route marks sensitive (`setPayload(..., sensitive: [...])`: session secrets and provider tokens, token secrets, recovery codes, TOTP secrets); function messages carry the whole project document, and their `body` is the payload's JSON when PHP's queue decoding would change its shape (an empty object or a list-keyed object, `Func::fromEvent`). `appwrite diff` compares every message and publication. Not yet followed: main's console realtime for the `teams`, `account` and `users` events (`Realtime::CONSOLE_ALLOWLIST`) and the project read roles on console copies of project events.",
+        "note": "Function events are cached in the same Redis hash as PHP's. Realtime adds the action-suffixed account channels and leaves out the keys a route marks sensitive (`setPayload(..., sensitive: [...])`: session secrets and provider tokens, token secrets, recovery codes, TOTP secrets); function messages carry the whole project document, and their `body` is the payload's JSON when PHP's queue decoding would change its shape (an empty object or a list-keyed object, `Func::fromEvent`). `appwrite diff` compares every message and publication. On the console, the events of routes in the `teams`, `account`, `users` and `presences` groups reach realtime too (`Realtime::CONSOLE_ALLOWLIST`); the project read roles PHP puts on console copies of project events apply to events published to extra subscribers, which no ported route sets. An event the action reset (`$queueForEvents->reset()`, an empty event) publishes nothing.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/hooks/shutdown/events.rs", "anchor": "async fn trigger" },
           { "file": "crates/appwrite/core/src/platform/hooks/shutdown/events.rs", "anchor": "async fn function_events" }

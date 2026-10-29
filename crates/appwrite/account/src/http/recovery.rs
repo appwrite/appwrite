@@ -90,6 +90,7 @@ fn password_param(ctx: &Context) -> Result<String> {
             dictionary: &state.dictionary,
             enabled: ctx.project.auth_bool("passwordDictionary", false),
             allow_empty: false,
+            deny_list: ctx.project.auth_strings("passwordDictionaryDenyList"),
         }),
     ]);
     ctx.required_str("password", &validator)

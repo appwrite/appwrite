@@ -258,6 +258,15 @@ impl Project {
         }
     }
 
+    /// `auths[key] ?? []`: the strings of a list (a deny list).
+    pub fn auth_strings(&self, key: &str) -> Vec<String> {
+        match self.auth(key) {
+            Some(Value::Array(items)) => items.iter().filter_map(|v| v.as_str().map(str::to_owned)).collect(),
+            Some(Value::Object(items)) => items.values().filter_map(|v| v.as_str().map(str::to_owned)).collect(),
+            _ => Vec::new(),
+        }
+    }
+
     /// `auths[key] ?? default` as an integer.
     pub fn auth_int(&self, key: &str, default: i64) -> i64 {
         match self.auth(key) {

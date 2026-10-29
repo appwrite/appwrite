@@ -32,7 +32,10 @@ impl Job {
     pub(super) async fn trigger(&self, events: &[String], project_payload: &Value, trimmed: &Value) {
         let payload = raw(&self.payload);
         let user_id = self.params.iter().find(|(k, _)| k == "userId").map(|(_, v)| v.as_str());
-        if !self.project.is_console() {
+        // Account, user and team events reach realtime in the console too, so
+        // a console user's connections end with their access.
+        let allowed_on_console = self.route.groups.iter().any(|g| event::CONSOLE_ALLOWLIST.contains(g));
+        if !self.project.is_console() || allowed_on_console {
             if self.sensitive.is_empty() {
                 self.realtime(events, user_id, &payload).await;
             } else {

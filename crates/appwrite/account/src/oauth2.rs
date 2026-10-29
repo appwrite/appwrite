@@ -2660,7 +2660,9 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
     if let Err(e) = base::session_alert(ctx, &user, &session).await {
         tracing::warn!(error = %e, "session alert failed");
     }
-    // The replaced session goes once the caller holds the new one.
+    // The replaced session goes once the caller holds the new one, and its
+    // live connections with it.
+    let replaced = current.is_some();
     if let Some(current) = current {
         let document = db.get_document("sessions", &current.id, Vec::new(), false).await?;
         if !document.is_empty() {
@@ -2668,6 +2670,9 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
         }
     }
     db.purge_cached_document("users", &user.id).await?;
+    if replaced {
+        ctx.mqtt_revoke(&user.id).await;
+    }
     Ok(response)
 }
 

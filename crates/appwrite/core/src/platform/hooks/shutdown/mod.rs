@@ -216,7 +216,8 @@ impl Job {
             self.publish(queue, message).await;
         }
 
-        if let Some(pattern) = self.event.as_deref().or(self.route.event) {
+        // An empty event is one the action reset (`$queueForEvents->reset()`).
+        if let Some(pattern) = self.event.as_deref().or(self.route.event).filter(|p| !p.is_empty()) {
             match event::generate_events(pattern, &self.params) {
                 Ok(events) => self.trigger(&events, &project_payload, &trimmed).await,
                 Err(e) => tracing::warn!(error = %e, pattern, "event generation failed"),
