@@ -14,7 +14,6 @@ Both support greater than, greater than or equal, less than, less than or equal,
 
 On API rules, guests and API keys have no session, so these attributes are empty for them. Add a separate **is empty** rule to block them. On Functions rules, the value comes from the user JWT. Sites rules don't offer these conditions.
 
-Usage data doesn't record session or MFA age, so **Estimated impact** shows **Preview unavailable** for rules that use them, and now names the conditions it can't estimate.
 
 {% arrow_link href="/docs/products/firewall/conditions" %}
 Read the firewall conditions docs
