@@ -1545,6 +1545,129 @@ final class RealtimeCustomClientTest extends Scope
         ]);
         $this->assertEquals(200, $confirmation['headers']['status-code']);
         $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner resets the password
+         */
+        [$userId, $email, $client] = $register();
+
+        $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $recovery['headers']['status-code']);
+
+        // The registrant still owns the account when recovery is requested, so it may see that
+        $this->receiveUntilEvent($client, fn (array $message) => \in_array("users.{$userId}.recovery.{$recovery['body']['$id']}.create", $message['data']['events'] ?? [], true));
+
+        $secret = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html'])['secret'];
+        $recovery = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $userId,
+            'secret' => $secret,
+            'password' => 'claimant-password',
+        ]);
+        $this->assertEquals(200, $recovery['headers']['status-code']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner signs in with an ID token
+         */
+        $console = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+        $provider = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', $console, [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $provider['headers']['status-code']);
+        $provider = $this->client->call(Client::METHOD_PATCH, '/mock/tests/general/oauth2/native', $console, [
+            'projectId' => $projectId,
+            'provider' => 'mock',
+            'enabled' => true,
+            'clientIds' => [],
+        ]);
+        $this->assertEquals(204, $provider['headers']['status-code']);
+
+        [$userId, $email, $client] = $register();
+
+        $idToken = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', $headers, [
+            'claims' => \json_encode([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+                'sub' => \uniqid('claimant-', true),
+                'email' => $email,
+                'email_verified' => true,
+            ]),
+            'header' => '',
+        ]);
+        $this->assertEquals(200, $idToken['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', $headers, [
+            'provider' => 'mock',
+            'idToken' => $idToken['body']['token'],
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertEquals($userId, $session['body']['userId']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner signs in with OAuth
+         */
+        // The mock provider always returns this address, so a fresh project keeps it away from other tests
+        $oauthProjectId = $this->getProject(true)['$id'];
+        $oauthHeaders = \array_merge($headers, ['x-appwrite-project' => $oauthProjectId]);
+        $cookieKey = 'a_session_' . $oauthProjectId;
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $oauthHeaders, [
+            'userId' => Id::unique(),
+            'email' => 'useroauth@localhost.test',
+            'password' => 'registrant-password',
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $oauthHeaders, [
+            'email' => 'useroauth@localhost.test',
+            'password' => 'registrant-password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookieKey . '=' . $session['cookies'][$cookieKey],
+        ], $oauthProjectId);
+        $response = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        $provider = $this->client->call(Client::METHOD_PATCH, '/projects/' . $oauthProjectId . '/oauth2', $console, [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $provider['headers']['status-code']);
+
+        // Follow the provider's redirects back to the app, as a browser would
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/mock', $oauthHeaders, [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $cookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
+        $browser = new Client();
+        $browser->setEndpoint('');
+        for ($hop = 0; $hop < 3; $hop++) {
+            $response = $browser->call(Client::METHOD_GET, $response['headers']['location'], $hop === 0 ? [] : ['cookie' => $cookies], followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+        }
+        $this->assertArrayHasKey($cookieKey, $response['cookies']);
+        $assertClosed($client);
     }
 
     public function testConnectionEndsWithImpersonatorSession(): void
