@@ -4898,6 +4898,118 @@ final class AccountCustomClientTest extends Scope
         $this->assertSame($providerEmail, $identity()['providerEmail']);
     }
 
+    public function testOAuth2LinkedEmailFollowsAddressChanges(): void
+    {
+        // A fresh project keeps the provider config changes away from parallel tests.
+        $project = $this->getProject(true);
+        $projectId = $project['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $suffix = \bin2hex(\random_bytes(4));
+        $uid = 'u' . $suffix;
+
+        $configure = function (string $appId) use ($projectId): void {
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ], [
+                'provider' => 'mock',
+                'appId' => $appId,
+                'secret' => '123456',
+                'enabled' => true,
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+        };
+
+        // Signs up with a password, then links the mock user as reported by $appId
+        $link = function (string $appId) use ($projectId, $sessionCookieKey, $configure): string {
+            $email = 'owner.' . \bin2hex(\random_bytes(6)) . '@localhost.test';
+            $response = $this->client->call(Client::METHOD_POST, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => 'password',
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $userId = $response['body']['$id'];
+
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], [
+                'email' => $email,
+                'password' => 'password',
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code']);
+
+            $configure($appId);
+            $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/mock', [
+                'x-appwrite-project' => $projectId,
+                'cookie' => $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey],
+            ]);
+            $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success', $response['headers']['location']);
+
+            return $userId;
+        };
+
+        // Signs in as the mock user reported by $appId and returns the stored identity email
+        $signIn = function (string $appId, string $expectedUserId) use ($projectId, $project, $uid, $configure): string {
+            $configure($appId);
+            $response = $this->followMockOAuth2Flow('/account/tokens/oauth2/mock', ['x-appwrite-project' => $projectId]);
+            $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
+
+            $params = [];
+            \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $params);
+            $this->assertEquals($expectedUserId, $params['userId']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/users/identities', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $project['apiKey'],
+            ], [
+                'queries' => [Query::equal('providerUid', [$uid])->toString()],
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertCount(1, $response['body']['identities']);
+
+            return $response['body']['identities'][0]['providerEmail'];
+        };
+
+        $first = 'first.' . $suffix . '@localhost.test';
+        $second = 'second.' . $suffix . '@localhost.test';
+        $third = 'third.' . $suffix . '@localhost.test';
+        $taken = 'taken.' . $suffix . '@localhost.test';
+
+        $ownerId = $link('canonical-' . $uid . '|' . $first);
+
+        /**
+         * Test for SUCCESS - the same address keeps the stored email, verified or not
+         */
+        $this->assertSame($first, $signIn('canonical-' . $uid . '|' . $first, $ownerId));
+        $this->assertSame($first, $signIn('canonical-' . $uid . '|' . $first . '#unverified', $ownerId));
+
+        /**
+         * Test for SUCCESS - a different unverified address drops the stored email
+         */
+        $this->assertSame('', $signIn('canonical-' . $uid . '|' . $second . '#unverified', $ownerId));
+
+        /**
+         * Test for SUCCESS - a different verified address is stored
+         */
+        $this->assertSame($third, $signIn('canonical-' . $uid . '|' . $third, $ownerId));
+
+        /**
+         * Test for SUCCESS - an address another user's identity holds is never stored
+         */
+        $link('canonical-v' . $suffix . '|' . $taken);
+        $this->assertSame('', $signIn('canonical-' . $uid . '|' . $taken, $ownerId));
+    }
+
     public function testIdTokenLinkedEmailMatchedOnceVerified(): void
     {
         $this->updateMockProvider(true);
@@ -5024,6 +5136,24 @@ final class AccountCustomClientTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEquals($linkerId, $response['body']['userId']);
+
+        /**
+         * Test for SUCCESS - a different verified address is stored and matches the owner
+         */
+        $nextEmail = 'verified.' . $providerEmail;
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => $sub, 'email' => $nextEmail, 'email_verified' => true]),
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($linkerId, $response['body']['userId']);
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => 'verified-' . \bin2hex(\random_bytes(8)), 'email' => $nextEmail, 'email_verified' => true]),
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($linkerId, $response['body']['userId']);
     }
 
     public function testCreateAccountAfterOAuth2AccountDelete(): void
