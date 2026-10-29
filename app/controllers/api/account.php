@@ -4,6 +4,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
+use Appwrite\Auth\OTPToken;
 use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
@@ -28,6 +29,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Messaging\Adapter\Mqtt;
+use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Presences\State as PresenceState;
@@ -2982,10 +2984,11 @@ Http::post('/v1/account/tokens/email')
     ->inject('publisherForMails')
     ->inject('plan')
     ->inject('proofForPassword')
+    ->inject('originValidator')
     ->inject('proofForCode')
     ->inject('authorization')
     ->inject('apiKey')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, Origin $originValidator, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -3307,6 +3310,9 @@ Http::post('/v1/account/tokens/email')
                 variables: $emailVariables,
                 customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
                 platform: $platform,
+                headers: $originValidator->isValid($request->getOrigin())
+                    ? OTPToken::from($tokenSecret, $request->getOrigin())?->toHeaders() ?? []
+                    : [],
             ));
         }
 
@@ -4812,10 +4818,11 @@ Http::post('/v1/account/recovery/otp')
     ->inject('locale')
     ->inject('publisherForMails')
     ->inject('queueForEvents')
+    ->inject('originValidator')
     ->inject('proofForCode')
     ->inject('authorization')
     ->inject('apiKey')
-    ->action(function (string $email, bool $phrase, Request $request, Response $response, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
+    ->action(function (string $email, bool $phrase, Request $request, Response $response, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, Origin $originValidator, ProofsCode $proofForCode, Authorization $authorization, ?Key $apiKey) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
@@ -5034,6 +5041,9 @@ Http::post('/v1/account/recovery/otp')
                 variables: $emailVariables,
                 customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
                 platform: $platform,
+                headers: $originValidator->isValid($request->getOrigin())
+                    ? OTPToken::from($secret, $request->getOrigin())?->toHeaders() ?? []
+                    : [],
             ));
         }
 
@@ -6272,9 +6282,10 @@ Http::post('/v1/account/verifications/email/otp')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('publisherForMails')
+    ->inject('originValidator')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (bool $phrase, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (bool $phrase, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, Origin $originValidator, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
@@ -6474,6 +6485,9 @@ Http::post('/v1/account/verifications/email/otp')
             variables: $emailVariables,
             customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
             platform: $platform,
+            headers: $originValidator->isValid($request->getOrigin())
+                ? OTPToken::from($secret, $request->getOrigin())?->toHeaders() ?? []
+                : [],
         ));
 
         $verification->setAttribute('secret', $secret);
