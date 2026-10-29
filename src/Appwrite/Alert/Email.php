@@ -5,7 +5,7 @@ namespace Appwrite\Alert;
 use Appwrite\Template\Template;
 
 /**
- * The email an alert rule sends when it starts or stops firing: a headline
+ * The email a monitor sends when it starts or stops firing: a headline
  * saying what crossed which threshold, where, the value against the threshold,
  * when the next email can come, and links to the rule.
  */
@@ -25,7 +25,7 @@ readonly class Email
      * @param string $location the line under the headline ("Storefront · Acme · Frankfurt")
      * @param ?\DateTimeImmutable $since when the rule started firing, for how long a resolved rule fired
      * @param int $cooldown seconds before the rule can email again while it keeps firing
-     * @param string $pauseUrl where the "Pause this rule" link goes; none when empty
+     * @param string $pauseUrl where the "Pause this monitor" link goes; none when empty
      */
     public function __construct(
         public Status $status,
@@ -98,7 +98,7 @@ readonly class Email
             $this->window === null ? 'Compared with the latest reading' : 'Summed over ' . $this->duration(),
         );
 
-        $rows = ['Rule' => $this->rule, ...$this->details];
+        $rows = ['Monitor' => $this->rule, ...$this->details];
         if ($this->firing() && $this->wording->status === null) {
             $rows['Next email'] = $this->cooldown > 0
                 ? 'On recovery, or in ' . self::length($this->cooldown) . ' if still firing'
@@ -226,7 +226,7 @@ readonly class Email
     {
         [$label, $url] = $this->wording->linkUrl !== null
             ? [(string) $this->wording->link, $this->wording->linkUrl]
-            : ['Pause this rule', $this->firing() ? $this->pauseUrl : ''];
+            : ['Pause this monitor', $this->firing() ? $this->pauseUrl : ''];
 
         if ($url === '' || $label === '') {
             return '';

@@ -159,14 +159,15 @@ final class ComparatorTest extends TestCase
         $this->assertStringContainsString('Firing for', $resolved);
         $this->assertStringContainsString('2 h 14 m', $resolved);
         $this->assertStringContainsString('09:45 to 11:59 UTC', $resolved);
-        $this->assertStringNotContainsString('Pause this rule', $resolved);
+        $this->assertStringNotContainsString('Pause this monitor', $resolved);
 
         // Just over the threshold reads as "above"; the ratio is for values well past it.
         $firing = $email(Status::Firing, 6000)->render($template);
         $this->assertStringContainsString('Above the threshold', $firing);
         $this->assertStringContainsString('Storefront · Acme · Frankfurt', $firing);
         $this->assertStringContainsString('On recovery, or in 1 hour if still firing', $firing);
-        $this->assertStringContainsString('Pause this rule', $firing);
+        $this->assertStringContainsString('Pause this monitor', $firing);
+        $this->assertStringContainsString('>Monitor</td>', $firing);
     }
 
     public function testRulesReadTheComparisonAndScope(): void
