@@ -25,17 +25,9 @@ faqs:
     answer: "Yes. Self-hosted Appwrite runs the broker in the `appwrite-mqtt` container, with MQTT over TLS on port 8883 and secure WebSocket on port 8084. Point a `push.` DNS record at your server, or set the broker address with `client.setPushEndpoint()`."
 ---
 
-Push notifications are usually the part of a mobile app that needs the most setup outside the app itself. Create a Firebase project, generate a service account key, upload it, add `google-services.json`, wire up a messaging service, collect device tokens, keep them fresh when they rotate, and do it all again for APNs on iOS. Only then can you send your first message.
+Push notifications usually take more setup outside your app than anything inside it. Before the first message goes out, you need a Firebase project and its service account key, code that collects each device's token and keeps it current, and a separate APNs setup for iOS.
 
-Today we are announcing **Appwrite Push**, a push provider built into [Appwrite Messaging](/docs/products/messaging). Your app connects to Appwrite with the SDK it already uses, and messages you send from the Console or a Server SDK arrive on the device. No Firebase project, no service account, no device token.
-
-```ts
-const push = new Push(client);
-
-await push.subscribe((message) => {
-    const { notification, data } = JSON.parse(message.data);
-});
-```
+Today we're announcing **Appwrite Push**, a push provider built into [Appwrite Messaging](/docs/products/messaging). The Appwrite SDK in your app keeps a connection open to Appwrite, and the messages you send from the Console or your server are delivered over that connection. Firebase isn't involved, and there are no device tokens to collect or store.
 
 # What Appwrite Push gives you
 
