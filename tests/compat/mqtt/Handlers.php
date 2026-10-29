@@ -120,7 +120,12 @@ final class Recorder implements Handler
         if ($connect->authMethod === 'challenge') {
             return Auth::challenge('challenge', 'nonce');
         }
-        $properties = $connect->authMethod === null ? null : (new Properties())->add(new Property(Property::AUTHENTICATION_METHOD, $connect->authMethod));
+        // A "keepalive" User Property becomes the CONNACK's own Server Keep Alive.
+        $properties = isset($user['keepalive']) ? (new Properties())->add(new Property(Property::SERVER_KEEP_ALIVE, (int) $user['keepalive'])) : null;
+        if ($connect->authMethod !== null) {
+            $properties ??= new Properties();
+            $properties->add(new Property(Property::AUTHENTICATION_METHOD, $connect->authMethod));
+        }
 
         return Connack::accept(false, $properties);
     }
@@ -143,6 +148,10 @@ final class Recorder implements Handler
         $this->log[] = ['subscribe', $connection->fd, $subscribe->packetId, array_map(fn (Filter $f) => [$f->topic, $f->qos], $subscribe->filters())];
         $suback = new Suback();
         foreach ($subscribe->filters() as $filter) {
+            if ($filter->topic === 'close') {
+                // A handler enforcing a limit drops the connection.
+                $connection->disconnect();
+            }
             if (str_starts_with($filter->topic, 'deny')) {
                 $suback->deny();
             } elseif ($filter->topic !== 'short') {

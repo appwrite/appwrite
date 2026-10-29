@@ -194,7 +194,7 @@ struct Inner {
 ///     1,
 ///     None,
 /// )?;
-/// // let server = utopia_mqtt::Server::new(adapter, handler);
+/// // let server = utopia_mqtt::Server::new(adapter, handler, utopia_mqtt::Store::new(), 0);
 /// // server.start().await;
 /// # Ok(())
 /// # }

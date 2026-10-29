@@ -380,27 +380,20 @@ impl Properties {
     /// The User Properties merged into one list of keys and values: a key
     /// seen again replaces the earlier value in place.
     ///
-    /// PHP merges them with `array_merge()`, which renumbers integer keys: a
-    /// key that is a decimal integer (`"7"`, `"-1"`, not `"07"`) is replaced
-    /// by its position among those keys (`"0"`, `"1"`, ...) and never
-    /// replaces another. The same happens here (a quirk the compat spec
-    /// records).
-    ///
     /// PHP: `user()`.
     pub fn user(&self) -> Vec<(Vec<u8>, Vec<u8>)> {
         let mut merged: Vec<(Vec<u8>, Vec<u8>)> = Vec::new();
-        let mut index = 0u64;
+        let mut positions: std::collections::HashMap<&[u8], usize> = std::collections::HashMap::new();
         for property in &self.properties {
             let (Property::USER, Value::Pair(key, value)) = (property.id, &property.value) else {
                 continue;
             };
-            if integer_key(key) {
-                merged.push((index.to_string().into_bytes(), value.clone()));
-                index += 1;
-            } else if let Some(entry) = merged.iter_mut().find(|(k, _)| k == key) {
-                entry.1 = value.clone();
-            } else {
-                merged.push((key.clone(), value.clone()));
+            match positions.get(key.as_slice()) {
+                Some(&at) => merged[at].1 = value.clone(),
+                None => {
+                    positions.insert(key, merged.len());
+                    merged.push((key.clone(), value.clone()));
+                }
             }
         }
         merged
@@ -431,21 +424,27 @@ impl Properties {
     }
 
     /// Parses the block at `offset`: the properties and the offset past the
-    /// block. An identifier that is not a property (including the zero a
-    /// block read past the end of `data` gives) is an [`Error::Runtime`].
+    /// block. An identifier that is not a property, a block longer than
+    /// `data`, or a last property running past the block's end is an
+    /// [`Error::Runtime`].
     ///
     /// PHP: `Properties::parse(string $data, int $offset)`.
     pub fn parse(data: &[u8], offset: usize) -> Result<(Properties, usize), Error> {
+        let malformed = || Error::Runtime("Malformed MQTT property block".into());
         let mut properties = Properties::new();
         let (length, bytes) = wire::decode_length(data, offset);
         let mut offset = offset.saturating_add(bytes);
-        let end = Length::from(offset).plus(length);
-        while before(offset, end) {
+        let end =
+            Length::from(offset).plus(length).as_usize().filter(|&end| end <= data.len()).ok_or_else(malformed)?;
+        while offset < end {
             let id = wire::byte(data, offset);
             offset = offset.saturating_add(1);
             let value;
             (value, offset) = read_value(id, data, offset)?;
             properties.properties.push(Property { id, value });
+        }
+        if offset != end {
+            return Err(malformed());
         }
         Ok((properties, offset))
     }
@@ -465,20 +464,6 @@ impl Properties {
                 Error::Type("Utopia\\Mqtt\\Properties::skip(): Return value must be of type int, float returned".into())
             })
     }
-}
-
-/// `$offset < $end`.
-fn before(offset: usize, end: Length) -> bool {
-    match end {
-        Length::Int(end) => (offset as i64) < end,
-        Length::Float(end) => (offset as f64) < end,
-    }
-}
-
-/// Whether PHP turns this array key into an integer: a decimal integer in the
-/// 64-bit range without leading zeros or a plus sign.
-pub(crate) fn integer_key(key: &[u8]) -> bool {
-    std::str::from_utf8(key).is_ok_and(php_std::encoding::is_integer_key)
 }
 
 fn read_value(id: u8, data: &[u8], offset: usize) -> Result<(Value, usize), Error> {
@@ -509,4 +494,31 @@ fn read_value(id: u8, data: &[u8], offset: usize) -> Result<(Value, usize), Erro
             (Value::Bytes(value.to_vec()), next)
         }
     })
+}
+
+#[cfg(test)]
+mod user_tests {
+    use super::*;
+
+    /// PHP: `PropertiesTest::testManyUserPropertiesMergeInLinearTime`.
+    #[test]
+    fn many_user_properties_merge_in_linear_time() {
+        let mut properties = Properties::new();
+        for index in 0..40_000 {
+            properties.add(Property::user(format!("key{index}"), "value"));
+        }
+        let start = std::time::Instant::now();
+        let user = properties.user();
+        let elapsed = start.elapsed();
+        assert_eq!(user.len(), 40_000);
+        assert!(elapsed.as_secs_f64() < 0.5, "{elapsed:?}");
+    }
+
+    /// PHP: `PropertiesTest::testUserPropertiesKeepNumericKeys`.
+    #[test]
+    fn user_properties_keep_numeric_keys() {
+        let mut properties = Properties::new();
+        properties.add(Property::user("7", "seven")).add(Property::user("region", "fra")).add(Property::user("7", "7"));
+        assert_eq!(properties.user(), vec![(b"7".to_vec(), b"7".to_vec()), (b"region".to_vec(), b"fra".to_vec())]);
+    }
 }

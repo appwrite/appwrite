@@ -2137,11 +2137,6 @@
   "tests_waived": {},
   "quirks": [
     {
-      "symbol": "Utopia\\Mqtt\\Properties::user",
-      "description": "User Properties are merged with array_merge(), so a key that is a decimal integer (\"7\", \"-1\", \"0\"; not \"07\") becomes an integer array key and is renumbered by its position among such keys (\"0\", \"1\", ...), never replacing another. The same holds wherever userProperties() is read (Connect, Auth, Publish), and the fixture broker's echo re-encodes the renumbered keys.",
-      "case": "Codec.json#User Properties: integer keys are renumbered by array_merge(), string keys replace in place"
-    },
-    {
       "symbol": "Utopia\\Mqtt\\Server::start",
       "description": "The Session Present flag of an accepted Connack is never encoded: CONNACK's acknowledge flags are always 0 (V3::connack and V5::connack have no parameter for it).",
       "case": "Server.json#the Session Present flag of an accepted CONNACK is not sent"
