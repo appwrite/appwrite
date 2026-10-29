@@ -378,6 +378,8 @@ final class PermissionsChangedTest extends TestCase
         $this->assertSame(1, $span['realtime.closed'] ?? null);
         $this->assertSame(self::PROJECT, $span['project.id'] ?? null);
         $this->assertSame('users.frozen.update.status', $span['realtime.event'] ?? null);
+        $this->assertSame(\Appwrite\Extend\Exception::class, $span['error.type'] ?? null);
+        $this->assertSame('Permission verification timed out after ' . self::PERMISSION_TIMEOUT . 's', $span['error.message'] ?? null);
 
         // And the subscriber is still alive for the next event.
         $this->publish($this->event(['documents.y.create'], ['documents'], ['users'], ['$id' => 'after']));

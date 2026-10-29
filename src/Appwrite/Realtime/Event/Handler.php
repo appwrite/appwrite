@@ -13,7 +13,6 @@ use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
-use Utopia\Span\Level;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Counter;
@@ -427,7 +426,6 @@ class Handler
             $span->set($key, $value);
         }
 
-        $level = null;
         $closing = [];
 
         try {
@@ -443,7 +441,7 @@ class Handler
             // Never inline: that brings back the unbounded wait.
             if ($started === false) {
                 $span->set('realtime.verification', 'coroutine_limit');
-                $level = Level::Error;
+                $span->setError(new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Permission verification skipped: coroutine limit reached'));
 
                 return $closing = $onFailure();
             }
@@ -451,7 +449,7 @@ class Handler
             $result = $done->pop($this->timeout);
             if ($result === false) {
                 $span->set('realtime.verification', 'timed_out');
-                $level = Level::Error;
+                $span->setError(new AppwriteException(AppwriteException::DATABASE_TIMEOUT, 'Permission verification timed out after ' . $this->timeout . 's'));
 
                 return $closing = $onFailure();
             }
@@ -467,7 +465,7 @@ class Handler
             return $closing = $result['closing'];
         } finally {
             $span->set('realtime.closed', \count($closing));
-            $span->finish(level: $level);
+            $span->finish();
         }
     }
 
