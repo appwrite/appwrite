@@ -234,13 +234,13 @@ proxy
 | `type` | `api`, `deployment`, or `redirect` |
 | `trigger` | `manual` for rules you create, `deployment` for rules Appwrite creates |
 | `status` | `unverified`, `verifying`, or `verified` |
-| `logs` | The last verification message, empty until a check runs |
+| `logs` | Output of the last verification or certificate check, empty until a check runs. A verified rule can carry a warning here, for example when its certificate expires soon and has not been renewed yet |
 | `deploymentResourceType` | `function` or `site` on deployment rules, empty otherwise |
 | `deploymentResourceId` | The function ID or site ID on deployment rules |
 | `deploymentVcsProviderBranch` | The branch whose deployments the rule follows, empty when unset |
 | `redirectUrl` | The target URL on redirect rules |
 | `redirectStatusCode` | The HTTP status code on redirect rules |
-| `renewAt` | When Appwrite renews the certificate |
+| `renewAt` | When the certificate is next due for a check. After a failed attempt, it is the time of that failure. A rule that ends up `unverified` is not checked again until you verify it again. It is not the expiry date, and it is empty until the rule has a certificate |
 
 # Related {% #related %}
 
