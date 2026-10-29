@@ -7,6 +7,7 @@ use Appwrite\Alert\Comparator;
 use Appwrite\Alert\Email;
 use Appwrite\Alert\Meter;
 use Appwrite\Alert\Quantity;
+use Appwrite\Alert\Schedules;
 use Appwrite\Alert\Status;
 use Appwrite\Event\Message\Alert as AlertMessage;
 use Appwrite\Event\Message\Notification as NotificationMessage;
@@ -69,7 +70,17 @@ class Alerts extends Action
         }
 
         $rule = $dbForPlatform->getDocument('alertRules', $ruleId);
-        if ($rule->isEmpty() || !$rule->getAttribute('enabled', false) || $rule->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
+        if ($rule->isEmpty()) {
+            // A schedule that outlived its rule stops here, and the schedules sweep removes it.
+            (new Schedules($dbForPlatform))->stop(new Document([
+                '$id' => $ruleId,
+                'region' => (string) $project->getAttribute('region', ''),
+                'projectId' => $project->getId(),
+            ]));
+
+            return;
+        }
+        if (!$rule->getAttribute('enabled', false) || $rule->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
             return;
         }
 

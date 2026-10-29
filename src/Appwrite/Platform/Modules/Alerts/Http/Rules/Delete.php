@@ -67,8 +67,10 @@ class Delete extends Base
     ): void {
         $rule = $this->getRule($dbForPlatform, $authorization, $project, $ruleId);
 
-        $authorization->skip(fn () => $dbForPlatform->deleteDocument('alertRules', $rule->getId()));
+        // Stopped first: if the delete then fails the rule is still there to retry,
+        // while a schedule left active after the rule is gone would fire forever.
         (new Schedules($dbForPlatform))->stop($rule);
+        $authorization->skip(fn () => $dbForPlatform->deleteDocument('alertRules', $rule->getId()));
 
         $response->noContent();
     }
