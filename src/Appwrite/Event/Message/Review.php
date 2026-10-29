@@ -10,7 +10,7 @@ namespace Appwrite\Event\Message;
 final class Review extends Base
 {
     /**
-     * @param array{projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string} $repository
+     * @param array{projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string, consoleUrl?: string} $repository
      * @param array{kind: string, comment?: array{id: int, kind: string}} $trigger
      */
     public function __construct(

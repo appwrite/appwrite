@@ -15,7 +15,6 @@ use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Id;
@@ -100,8 +99,8 @@ class Create extends Action
             // Without the secret no review service runs (optional on self-hosted), so nothing would consume the job.
             if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
                 match ($event) {
-                    GitHub::EVENT_PULL_REQUEST => $this->queueReviews($parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews),
-                    GitHub::EVENT_ISSUE_COMMENT, GitHub::EVENT_PULL_REQUEST_REVIEW_COMMENT => $this->queueComment($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews),
+                    GitHub::EVENT_PULL_REQUEST => $this->queueReviews($parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    GitHub::EVENT_ISSUE_COMMENT, GitHub::EVENT_PULL_REQUEST_REVIEW_COMMENT => $this->queueComment($parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     default => null,
                 };
             }
@@ -431,8 +430,8 @@ class Create extends Action
 
     /**
      * Queues a review of the pull request for each project that has code review on for the
-     * repository. A review that is still queued for the pull request absorbs the new head
-     * instead, so a burst of pushes costs one review; the service reviews the head it finds.
+     * repository, as hansi.codes does: reviews still queued for the pull request are superseded
+     * by the new one, so a burst of pushes runs one review, of the head it finds when it runs.
      */
     private function queueReviews(
         array $parsedPayload,
@@ -440,12 +439,12 @@ class Create extends Action
         Authorization $authorization,
         callable $getProjectDB,
         ReviewPublisher $publisherForReviews,
+        array $platform,
     ): void {
         // Drafts are queued too: the service decides from the repository's own config.
         $trigger = match ($parsedPayload['action'] ?? '') {
-            'opened', 'reopened' => 'opened',
+            'opened', 'reopened', 'ready_for_review' => 'opened',
             'synchronize' => 'synchronize',
-            'ready_for_review' => 'ready_for_review',
             default => null,
         };
         if ($trigger === null) {
@@ -453,7 +452,7 @@ class Create extends Action
         }
 
         $providerRepositoryId = $parsedPayload['repositoryId'] ?? '';
-        $providerPullRequestId = \strval($parsedPayload['pullRequestNumber'] ?? '');
+        $pullNumber = (int) ($parsedPayload['pullRequestNumber'] ?? 0);
         $providerCommitHash = $parsedPayload['commitHash'] ?? '';
 
         $repositories = $this->findRepositories($providerRepositoryId, $parsedPayload['installationId'] ?? '', [Query::equal('resourceType', [RESOURCE_TYPE_REVIEWS])], $dbForPlatform, $authorization);
@@ -465,58 +464,19 @@ class Create extends Action
                     continue;
                 }
 
-                $dbForProject = $getProjectDB($project);
-
-                // A queued review older than this was lost on the way (dead-lettered, or the
-                // service never answered); coalescing into it would silence the pull request.
-                $pending = $authorization->skip(fn () => $dbForProject->findOne('reviews', [
-                    Query::equal('repositoryInternalId', [$repository->getSequence()]),
-                    Query::equal('providerPullRequestId', [$providerPullRequestId]),
-                    Query::equal('status', ['queued']),
-                    Query::greaterThan('$createdAt', DateTime::addSeconds(new \DateTime(), -APP_REVIEWS_QUEUED_TTL)),
-                ]));
-
-                if (!$pending->isEmpty()) {
-                    $authorization->skip(fn () => $dbForProject->updateDocument('reviews', $pending->getId(), new Document([
-                        'providerCommitHash' => $providerCommitHash,
-                    ])));
-                    continue;
-                }
-
-                $review = $authorization->skip(fn () => $dbForProject->createDocument('reviews', new Document([
-                    '$id' => Id::unique(),
-                    'repositoryId' => $repository->getId(),
-                    'repositoryInternalId' => $repository->getSequence(),
-                    'providerRepositoryId' => $providerRepositoryId,
-                    'providerRepositoryOwner' => $parsedPayload['owner'] ?? '',
-                    'providerRepositoryName' => $parsedPayload['repositoryName'] ?? '',
-                    'providerPullRequestId' => $providerPullRequestId,
-                    'providerCommitHash' => $providerCommitHash,
-                    'trigger' => $trigger,
-                    'status' => 'queued',
-                ])));
-
-                try {
-                    $queued = $publisherForReviews->enqueue(new ReviewMessage(
-                        reviewId: $review->getId(),
-                        repository: $this->getReviewRepository($parsedPayload, $project, $repository),
-                        pullNumber: (int) $providerPullRequestId,
-                        headSha: $providerCommitHash,
-                        trigger: ['kind' => $trigger],
-                    ));
-
-                    if ($queued === false) {
-                        throw new \Exception('The broker rejected the review message.');
-                    }
-                } catch (\Throwable $error) {
-                    // Left queued, the review would absorb every later push without running.
-                    $authorization->skip(fn () => $dbForProject->updateDocument('reviews', $review->getId(), new Document([
-                        'status' => 'failed',
-                        'reason' => 'The review could not be queued.',
-                    ])));
-
-                    throw $error;
-                }
+                $this->queueReview(
+                    $parsedPayload,
+                    $project,
+                    $repository,
+                    $getProjectDB($project),
+                    $authorization,
+                    $publisherForReviews,
+                    $platform,
+                    $pullNumber,
+                    $providerCommitHash,
+                    ['kind' => $trigger],
+                    Id::unique(),
+                );
             } catch (\Throwable $error) {
                 Console::warning("Failed to queue review for repository '{$repository->getId()}': " . $error->getMessage());
             }
@@ -525,35 +485,32 @@ class Create extends Action
 
     /**
      * Queues work for a comment on a pull request, for each project that has code review on for
-     * the repository: a review when the reviewer is asked to review, an answer otherwise. A reply
-     * in a review thread that does not mention the reviewer is queued too; the service answers it
-     * only in a thread on one of its own findings. Edits and deletions queue nothing, and each
-     * comment queues at most once, however often GitHub delivers it.
+     * the repository, the way hansi.codes does: a review for "@app review", an answer for any
+     * other mention. A comment without a mention is queued when it may be talking to the
+     * reviewer: a reply in a review thread, or a conversation comment on a pull request with
+     * findings that were listed in a review body; the service answers only if it is. Edits and
+     * deletions queue nothing, and each comment queues at most once, however often GitHub
+     * delivers it.
      */
     private function queueComment(
         array $parsedPayload,
-        VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
         ReviewPublisher $publisherForReviews,
+        array $platform,
     ): void {
-        // Never another app's comment, which keeps the reviewer from answering itself in a loop.
-        if (($parsedPayload['action'] ?? '') !== 'created' || ($parsedPayload['commentAuthorType'] ?? '') === 'Bot') {
-            return;
-        }
-
         $commentId = (int) ($parsedPayload['commentId'] ?? 0);
         $commentKind = $parsedPayload['commentKind'] ?? '';
         $replyToId = (int) ($parsedPayload['commentReplyToId'] ?? 0);
         $pullNumber = (int) ($parsedPayload['pullRequestNumber'] ?? 0);
-        if ($commentId <= 0 || $pullNumber <= 0) {
+        if (($parsedPayload['action'] ?? '') !== 'created' || $commentId <= 0 || $pullNumber <= 0) {
             return;
         }
 
-        $request = $this->getMentionRequest($parsedPayload['commentBody'] ?? '', System::getEnv('_APP_VCS_GITHUB_APP_NAME', ''));
-        $unmentioned = $request === null;
-        if ($unmentioned && ($commentKind !== 'review' || $replyToId === 0)) {
+        $slug = System::getEnv('_APP_VCS_GITHUB_APP_NAME', '');
+        // Every answer is a model run the project pays for: trusted humans and other apps may ask, never the reviewer itself.
+        if (!$this->canTriggerFromComment($parsedPayload['commentAuthor'] ?? '', $parsedPayload['commentAuthorType'] ?? '', $parsedPayload['commentAuthorAssociation'] ?? '', $slug)) {
             return;
         }
 
@@ -563,45 +520,8 @@ class Create extends Action
             return;
         }
 
-        // "@reviewer review" asks for a review of the current head; anything else is a question.
-        $pullRequest = null;
-        $command = $request === null ? false : \strtok($request, " \t\r\n");
-        if ($command !== false && \strtolower(\rtrim($command, '.,:;!?')) === 'review') {
-            $vcs = $vcsFactory->fromInstallation(new Document([
-                'provider' => 'github',
-                'providerInstallationId' => $parsedPayload['installationId'] ?? '',
-            ]));
-            if (!$vcs instanceof GitHub) {
-                return;
-            }
-
-            try {
-                $pullRequest = $vcs->getPullRequest($parsedPayload['owner'] ?? '', $parsedPayload['repositoryName'] ?? '', $pullNumber);
-            } catch (\Throwable $error) {
-                Console::warning("Failed to read pull request #{$pullNumber} for a review request: " . $error->getMessage());
-                return;
-            }
-
-            if (\strlen($pullRequest['head']['sha'] ?? '') !== 40) {
-                return;
-            }
-
-            // A review is a model run the project pays for: the author, and people with write access.
-            // Association labels don't say that (MEMBER is any org member, COLLABORATOR may be read-only).
-            $author = $parsedPayload['commentAuthor'] ?? '';
-            if (($pullRequest['user']['login'] ?? null) !== $author) {
-                try {
-                    $permission = $vcs->getCollaboratorPermission($parsedPayload['owner'] ?? '', $parsedPayload['repositoryName'] ?? '', $author);
-                } catch (\Throwable $error) {
-                    Console::warning("Failed to read {$author}'s permission for a review request: " . $error->getMessage());
-                    return;
-                }
-
-                if (!\in_array($permission, ['admin', 'write'], true)) {
-                    return;
-                }
-            }
-        }
+        $intent = $this->getMentionIntent($parsedPayload['commentBody'] ?? '', $slug);
+        $isReviewThread = $commentKind === 'review';
 
         foreach ($repositories as $repository) {
             try {
@@ -612,8 +532,27 @@ class Create extends Action
 
                 $dbForProject = $getProjectDB($project);
 
-                if ($pullRequest !== null) {
-                    $this->queueMentionReview($parsedPayload, $pullRequest, $project, $repository, $dbForProject, $authorization, $publisherForReviews);
+                if ($intent === 'review') {
+                    // The service reviews whatever the head is when it runs, so no head is read here.
+                    $this->queueReview(
+                        $parsedPayload,
+                        $project,
+                        $repository,
+                        $dbForProject,
+                        $authorization,
+                        $publisherForReviews,
+                        $platform,
+                        $pullNumber,
+                        '',
+                        ['kind' => 'mention', 'comment' => ['id' => $commentId, 'kind' => $commentKind]],
+                        // One review per comment, however often GitHub delivers it.
+                        'mention-' . $commentId,
+                    );
+                    continue;
+                }
+
+                $unmentioned = $intent === null;
+                if ($unmentioned && !($isReviewThread ? $replyToId > 0 : $this->hasOpenBodyFindings($repository, $pullNumber, $dbForProject, $authorization))) {
                     continue;
                 }
 
@@ -639,14 +578,14 @@ class Create extends Action
                     'authorAssociation' => $parsedPayload['commentAuthorAssociation'] ?? '',
                     'url' => $parsedPayload['commentUrl'] ?? '',
                 ];
-                // Replies in a review thread attach to its first comment.
-                if ($replyToId > 0) {
-                    $comment['rootCommentId'] = $replyToId;
+                // A review thread's replies attach to its first comment, which this one is when it replies to nothing.
+                if ($isReviewThread) {
+                    $comment['rootCommentId'] = $replyToId > 0 ? $replyToId : $commentId;
                 }
 
                 try {
                     $queued = $publisherForReviews->enqueue(new ReviewChatMessage(
-                        repository: $this->getReviewRepository($parsedPayload, $project, $repository),
+                        repository: $this->getReviewRepository($parsedPayload, $project, $repository, $platform),
                         pullNumber: $pullNumber,
                         comment: $comment,
                         unmentioned: $unmentioned,
@@ -668,41 +607,65 @@ class Create extends Action
     }
 
     /**
-     * Queues a review asked for in a comment. It never coalesces into a queued review: that one
-     * carries an automatic trigger, which the repository's settings may skip.
+     * Creates a review and publishes it. Reviews still queued for the pull request are
+     * superseded first; one that is already running is left alone, and the service skips the new
+     * one when it finds the same head reviewed.
+     *
+     * @param array{kind: string, comment?: array{id: int, kind: string}} $trigger
      */
-    private function queueMentionReview(
+    private function queueReview(
         array $parsedPayload,
-        array $pullRequest,
         Document $project,
         Document $repository,
         Database $dbForProject,
         Authorization $authorization,
         ReviewPublisher $publisherForReviews,
+        array $platform,
+        int $pullNumber,
+        string $headSha,
+        array $trigger,
+        string $reviewId,
     ): void {
-        $commentId = (int) $parsedPayload['commentId'];
-        $headSha = $pullRequest['head']['sha'] ?? '';
+        $review = new Document([
+            '$id' => $reviewId,
+            'repositoryId' => $repository->getId(),
+            'repositoryInternalId' => $repository->getSequence(),
+            'providerRepositoryId' => $parsedPayload['repositoryId'] ?? '',
+            'providerRepositoryOwner' => $parsedPayload['owner'] ?? '',
+            'providerRepositoryName' => $parsedPayload['repositoryName'] ?? '',
+            'providerPullRequestId' => (string) $pullNumber,
+            'providerCommitHash' => $headSha,
+            'trigger' => $trigger['kind'],
+            'providerCommentId' => isset($trigger['comment']) ? (string) $trigger['comment']['id'] : '',
+            'status' => 'queued',
+        ]);
+
+        // A redelivered comment that already queued its review changes nothing, not even the
+        // reviews queued after it.
+        $existing = $authorization->skip(fn () => $dbForProject->getDocument('reviews', $reviewId));
+        if (!$existing->isEmpty() && $existing->getAttribute('status') !== 'failed') {
+            return;
+        }
+
+        // Older queued reviews of the pull request are superseded before this one is created, as
+        // hansi.codes does: two overlapping deliveries then both stay queued, and the worker skips
+        // the one that resolves to an already reviewed head, instead of superseding each other.
+        $authorization->skip(fn () => $dbForProject->updateDocuments('reviews', new Document([
+            'status' => 'superseded',
+        ]), [
+            Query::equal('repositoryInternalId', [$repository->getSequence()]),
+            Query::equal('providerPullRequestId', [(string) $pullNumber]),
+            Query::equal('status', ['queued']),
+            Query::notEqual('$id', $reviewId),
+        ]));
 
         try {
-            $review = $authorization->skip(fn () => $dbForProject->createDocument('reviews', new Document([
-                // One review per comment, however often GitHub delivers it.
-                '$id' => 'mention-' . $commentId,
-                'repositoryId' => $repository->getId(),
-                'repositoryInternalId' => $repository->getSequence(),
-                'providerRepositoryId' => $parsedPayload['repositoryId'] ?? '',
-                'providerRepositoryOwner' => $parsedPayload['owner'] ?? '',
-                'providerRepositoryName' => $parsedPayload['repositoryName'] ?? '',
-                'providerPullRequestId' => (string) $parsedPayload['pullRequestNumber'],
-                'providerCommitHash' => $headSha,
-                'trigger' => 'mention',
-                'providerCommentId' => (string) $commentId,
-                'status' => 'queued',
-            ])));
+            $review = $authorization->skip(fn () => $dbForProject->createDocument('reviews', $review));
         } catch (DuplicateException) {
             // A redelivered comment queues again only if its first attempt failed to. The row lock
             // lets one of two concurrent redeliveries take it back from failed.
-            $review = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $commentId): ?Document {
-                $review = $dbForProject->getDocument('reviews', 'mention-' . $commentId, forUpdate: true);
+            $review = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $reviewId): ?Document {
+                $review = $dbForProject->getDocument('reviews', $reviewId, forUpdate: true);
                 if ($review->getAttribute('status') !== 'failed') {
                     return null;
                 }
@@ -721,10 +684,10 @@ class Create extends Action
         try {
             $queued = $publisherForReviews->enqueue(new ReviewMessage(
                 reviewId: $review->getId(),
-                repository: $this->getReviewRepository($parsedPayload, $project, $repository),
-                pullNumber: (int) $parsedPayload['pullRequestNumber'],
+                repository: $this->getReviewRepository($parsedPayload, $project, $repository, $platform),
+                pullNumber: $pullNumber,
                 headSha: $headSha,
-                trigger: ['kind' => 'mention', 'comment' => ['id' => $commentId, 'kind' => $parsedPayload['commentKind']]],
+                trigger: $trigger,
             ));
 
             if ($queued === false) {
@@ -741,42 +704,125 @@ class Create extends Action
     }
 
     /**
-     * What a comment asks the reviewer, the text after its first mention of the GitHub App, or
-     * null when it does not mention it. A longer handle or an email address is not a mention.
+     * Whether a pull request has an open finding that was listed in a review body rather than
+     * posted inline. Such a finding has no thread, so a conversation comment may answer it.
      */
-    private function getMentionRequest(string $body, string $handle): ?string
+    private function hasOpenBodyFindings(Document $repository, int $pullNumber, Database $dbForProject, Authorization $authorization): bool
     {
-        if ($handle === '') {
+        $reviews = $authorization->skip(fn () => $dbForProject->find('reviews', [
+            Query::equal('repositoryInternalId', [$repository->getSequence()]),
+            Query::equal('providerPullRequestId', [(string) $pullNumber]),
+            Query::equal('status', ['completed']),
+            Query::limit(APP_LIMIT_REVIEWS_PULL),
+        ]));
+        if (empty($reviews)) {
+            return false;
+        }
+
+        $finding = $authorization->skip(fn () => $dbForProject->findOne('reviewFindings', [
+            Query::equal('reviewInternalId', \array_map(fn (Document $review) => $review->getSequence(), $reviews)),
+            Query::equal('status', ['posted']),
+            Query::equal('providerCommentId', ['']),
+        ]));
+
+        return !$finding->isEmpty();
+    }
+
+    /**
+     * Whether a comment may queue work. Humans need an owner, member or collaborator association;
+     * other GitHub Apps may ask too (an agent answering a finding), but never the reviewer
+     * itself, so it does not answer itself in a loop.
+     */
+    private function canTriggerFromComment(string $login, string $type, string $association, string $slug): bool
+    {
+        if ($type === 'Bot') {
+            $name = \str_ends_with(\strtolower($login), '[bot]') ? \substr($login, 0, -\strlen('[bot]')) : $login;
+
+            return \strtolower($name) !== \strtolower($slug);
+        }
+
+        return \in_array($association, ['OWNER', 'MEMBER', 'COLLABORATOR'], true);
+    }
+
+    /**
+     * What a comment asks of the reviewer: 'review' for "@app review" or "@app full review",
+     * 'chat' for any other mention, or null when it does not mention the app. Mentions in code
+     * and in quoted lines do not count, and a longer handle such as "@app-dev" is not a mention.
+     */
+    private function getMentionIntent(string $body, string $slug): ?string
+    {
+        if ($slug === '') {
             return null;
         }
 
-        $lower = \strtolower($body);
-        $needle = '@' . \strtolower($handle);
+        $text = \strtolower($this->stripQuotedText($body));
+        $needle = '@' . \strtolower($slug);
+        $intent = null;
         $offset = 0;
 
-        while (($position = \strpos($lower, $needle, $offset)) !== false) {
-            $end = $position + \strlen($needle);
-            $before = $position > 0 ? $lower[$position - 1] : ' ';
-            $after = $end < \strlen($lower) ? $lower[$end] : ' ';
-
-            if (!\ctype_alnum($before) && !\ctype_alnum($after) && $after !== '-' && $after !== '_') {
-                return \trim(\substr($body, $end));
+        while (($position = \strpos($text, $needle, $offset)) !== false) {
+            $offset = $position + \strlen($needle);
+            $next = $text[$offset] ?? '';
+            if ($next !== '' && (\ctype_alnum($next) || $next === '_' || $next === '-')) {
+                continue;
             }
 
-            $offset = $end;
+            $intent = 'chat';
+            $rest = \substr($text, $offset);
+            $words = \ltrim($rest);
+            if ($words === $rest) {
+                continue;
+            }
+            if (\str_starts_with($words, 'full') && \ltrim(\substr($words, 4)) !== \substr($words, 4)) {
+                $words = \ltrim(\substr($words, 4));
+            }
+            $after = $words[\strlen('review')] ?? '';
+            if (\str_starts_with($words, 'review') && ($after === '' || !(\ctype_alnum($after) || $after === '_'))) {
+                return 'review';
+            }
         }
 
-        return null;
+        return $intent;
+    }
+
+    /**
+     * A comment without its fenced code blocks, inline code spans and quoted lines.
+     */
+    private function stripQuotedText(string $body): string
+    {
+        $text = '';
+        $length = \strlen($body);
+        for ($i = 0; $i < $length;) {
+            if (\substr($body, $i, 3) === '```') {
+                $close = \strpos($body, '```', $i + 3);
+                if ($close !== false) {
+                    $i = $close + 3;
+                    continue;
+                }
+            } elseif ($body[$i] === '`') {
+                $close = \strpos($body, '`', $i + 1);
+                if ($close !== false && !\str_contains(\substr($body, $i + 1, $close - $i - 1), "\n")) {
+                    $i = $close + 1;
+                    continue;
+                }
+            }
+            $text .= $body[$i];
+            $i++;
+        }
+
+        $lines = \array_filter(\explode("\n", $text), fn (string $line) => !\str_starts_with(\ltrim($line), '>'));
+
+        return \implode("\n", $lines);
     }
 
     /**
      * The repository as the review service's jobs name it.
      *
-     * @return array{projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string}
+     * @return array{projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string, consoleUrl?: string}
      */
-    private function getReviewRepository(array $parsedPayload, Document $project, Document $repository): array
+    private function getReviewRepository(array $parsedPayload, Document $project, Document $repository, array $platform): array
     {
-        return [
+        $reviewRepository = [
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getSequence(),
             'repositoryId' => $repository->getId(),
@@ -786,5 +832,13 @@ class Create extends Action
             'owner' => $parsedPayload['owner'] ?? '',
             'name' => $parsedPayload['repositoryName'] ?? '',
         ];
+
+        // For links to the review, from its check run and the summary comment.
+        $consoleUrl = $platform['consoleUrl'] ?? '';
+        if ($consoleUrl !== '') {
+            $reviewRepository['consoleUrl'] = $consoleUrl;
+        }
+
+        return $reviewRepository;
     }
 }

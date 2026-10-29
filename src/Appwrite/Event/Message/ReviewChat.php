@@ -9,7 +9,7 @@ namespace Appwrite\Event\Message;
 final class ReviewChat extends Base
 {
     /**
-     * @param array{projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string} $repository
+     * @param array{projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string, consoleUrl?: string} $repository
      * @param array{id: int, kind: string, rootCommentId?: int, author: string, authorAssociation: string, url: string} $comment
      * @param bool $unmentioned A review thread reply that does not mention the reviewer, answered only in a thread on one of its own findings.
      */

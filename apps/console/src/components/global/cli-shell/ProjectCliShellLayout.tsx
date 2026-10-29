@@ -3,6 +3,7 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
 import { ProjectConnectDialogProvider } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { CsvExportBox, CsvImportBox } from '@/components/global/csv-migrations'
+import { EnvironmentCopyBox } from '@/components/global/environment-copy'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
 import { NativeOAuthPromoBanner } from '@/components/global/shared/NativeOAuthPromoBanner'
 import { canShowProjectTerminal } from '@/lib/console-access-checks'
@@ -54,6 +55,7 @@ export function ProjectCliShellLayout({
         <NativeOAuthPromoBanner />
         <div className="fixed bottom-4 end-4 z-50 flex flex-col gap-2 max-w-sm w-full">
           <GlobalUploadProgress embedded />
+          <EnvironmentCopyBox projectId={projectId} />
           <CsvImportBox projectId={projectId} />
           <CsvExportBox projectId={projectId} />
         </div>

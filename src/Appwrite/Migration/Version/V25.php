@@ -484,6 +484,12 @@ class V25 extends Migration
                     }
                     break;
 
+                case 'transfers':
+                    if ($collectionType === 'console') {
+                        $this->createCollection($id);
+                    }
+                    break;
+
                 case 'presenceLogs':
                     // Added in 1.9.5 and created only by V24, which an install that ran the 1.9.6
                     // migration or upgraded straight from 1.8.x never ran. createCollection() is a
@@ -515,6 +521,7 @@ class V25 extends Migration
                 case 'reviewFindings':
                 case 'reviewEvents':
                 case 'reviewChats':
+                case 'reviewLearnings':
                 case 'reviewUsage':
                     // New in 2.7.0. Created even with reviews disabled, so turning them on later needs no migration.
                     // On shared tables the collection is global: created with a project's tenant, its

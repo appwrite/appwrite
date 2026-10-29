@@ -52,12 +52,14 @@ class Update extends Base
             ->param('reviewId', '', new UID(), 'Review ID.')
             ->param('projectId', '', new UID(), 'Project ID.')
             ->param('status', '', new WhiteList(['processing', 'completed', 'skipped', 'failed'], true), 'Review status.')
-            ->param('headSha', '', new Text(64), 'Head commit the review works on. Required when processing.', true)
+            ->param('headSha', '', new Text(64), 'Head commit the review works on. Required when processing; when skipped, the head that was reviewed already.', true)
             ->param('baseSha', '', new Text(64), 'Base commit the head is compared with. Required when processing.', true)
             ->param('verdict', '', new WhiteList(['approve', 'request_changes', 'comment'], true), 'Review verdict. Required when completed.', true)
             ->param('tier', '', new WhiteList(['S', 'A', 'B', 'C', 'D', 'F'], true), 'Merge confidence tier. Required when completed.', true)
+            ->param('tierReason', '', new Text(2048, 0), 'Why the review has its tier.', true)
             ->param('summary', '', new Text(65535, 0), 'Review summary in Markdown.', true)
-            ->param('findings', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Findings posted with the review.', true)
+            ->param('walkthrough', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'What each changed file does, as path and change.', true)
+            ->param('findings', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Findings of the review, posted or dropped.', true)
             ->param('providerReviewId', 0, new Range(0, PHP_INT_MAX), 'GitHub review ID.', true)
             ->param('reason', '', new Text(2048, 0), 'Why the review was skipped or failed, shown to the project\'s users.', true)
             ->inject('request')
@@ -76,7 +78,9 @@ class Update extends Base
         string $baseSha,
         string $verdict,
         string $tier,
+        string $tierReason,
         string $summary,
+        array $walkthrough,
         array $findings,
         int $providerReviewId,
         string $reason,
@@ -99,12 +103,16 @@ class Update extends Base
 
         $update = match ($status) {
             'processing' => $this->start($headSha, $baseSha),
-            'completed' => $this->complete($verdict, $tier, $summary, $providerReviewId),
+            'completed' => $this->complete($verdict, $tier, $tierReason, $summary, $walkthrough, $providerReviewId),
             default => new Document([
                 'reason' => $reason,
                 'completedAt' => DateTime::now(),
             ]),
         };
+        // A skipped review names the head it found reviewed already.
+        if ($status === 'skipped' && $headSha !== '') {
+            $update->setAttribute('providerCommitHash', $headSha);
+        }
         $update->setAttribute('status', $status);
 
         $documents = $status === 'completed' ? $this->prepareFindings($review, $findings) : [];
@@ -134,16 +142,31 @@ class Update extends Base
         ]);
     }
 
-    private function complete(string $verdict, string $tier, string $summary, int $providerReviewId): Document
+    /**
+     * @param array<mixed> $walkthrough
+     */
+    private function complete(string $verdict, string $tier, string $tierReason, string $summary, array $walkthrough, int $providerReviewId): Document
     {
         if ($verdict === '' || $tier === '') {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "verdict" and "tier" are required when the status is completed.');
         }
 
+        $entries = [];
+        foreach ($walkthrough as $index => $entry) {
+            $path = \is_array($entry) ? ($entry['path'] ?? null) : null;
+            $change = \is_array($entry) ? ($entry['change'] ?? null) : null;
+            if (!\is_string($path) || $path === '' || !\is_string($change)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Walkthrough entry {$index} is invalid: it needs path and change.");
+            }
+            $entries[] = ['path' => $path, 'change' => $change];
+        }
+
         return new Document([
             'verdict' => $verdict,
             'tier' => $tier,
+            'tierReason' => $tierReason,
             'summary' => $summary,
+            'walkthrough' => $entries,
             'providerReviewId' => $providerReviewId === 0 ? '' : \strval($providerReviewId),
             'completedAt' => DateTime::now(),
         ]);
@@ -166,6 +189,9 @@ class Update extends Base
             $title = $finding['title'] ?? null;
             $body = $finding['body'] ?? null;
             $providerCommentId = $finding['providerCommentId'] ?? null;
+            $suggestion = $finding['suggestion'] ?? null;
+            $status = $finding['status'] ?? 'posted';
+            $dropReason = $finding['dropReason'] ?? null;
 
             $valid = \is_string($path) && $path !== '' && \strlen($path) <= 2048
                 && \is_int($startLine) && $startLine > 0
@@ -174,10 +200,13 @@ class Update extends Base
                 && \is_string($category) && $category !== '' && \strlen($category) <= 64
                 && \is_string($title) && $title !== '' && \strlen($title) <= 1024
                 && \is_string($body) && \strlen($body) <= 65535
+                && ($suggestion === null || (\is_string($suggestion) && \strlen($suggestion) <= 65535))
+                && \in_array($status, ['posted', 'dropped'], true)
+                && ($dropReason === null || (\is_string($dropReason) && \strlen($dropReason) <= 2048))
                 && ($providerCommentId === null || \is_int($providerCommentId));
 
             if (!$valid) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Finding {$index} is invalid: it needs path, startLine, endLine (from startLine), severity (" . \implode(', ', self::SEVERITIES) . '), category, title and body, and an optional numeric providerCommentId.');
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Finding {$index} is invalid: it needs path, startLine, endLine (from startLine), severity (" . \implode(', ', self::SEVERITIES) . '), category, title and body, with an optional suggestion, status (posted or dropped), dropReason and numeric providerCommentId.');
             }
 
             $documents[] = new Document([
@@ -191,6 +220,9 @@ class Update extends Base
                 'category' => $category,
                 'title' => $title,
                 'body' => $body,
+                'suggestion' => $suggestion ?? '',
+                'status' => $status,
+                'dropReason' => $dropReason ?? '',
                 'providerCommentId' => $providerCommentId === null ? '' : \strval($providerCommentId),
             ]);
         }

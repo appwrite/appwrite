@@ -360,7 +360,11 @@ final class AccountCustomServerTest extends Scope
         $this->assertNotEmpty($otp['body']['userId']);
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $otp['body']['expire']));
         $this->assertEmpty($otp['body']['secret']);
-        $this->assertNotEmpty($this->getLastEmailByAddress($email));
+
+        // Without an origin there is nothing to bind the code to
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail);
+        $this->assertArrayNotHasKey('otp-token', $lastEmail['headers'] ?? []);
 
         $magicUrl = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
             'userId' => Id::unique(),

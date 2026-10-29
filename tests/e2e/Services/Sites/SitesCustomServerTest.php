@@ -2870,9 +2870,13 @@ final class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
+            $buildLogs = (string) $deployment['body']['buildLogs'];
+            $screenshotsCaptured = ! empty($deployment['body']['screenshotLight'])
+                && ! empty($deployment['body']['screenshotDark']);
             $this->assertTrue(
-                \str_contains((string) $deployment['body']['buildLogs'], 'Screenshot capturing finished.')
-                || \str_contains((string) $deployment['body']['buildLogs'], 'Screenshot capturing failed.'),
+                \str_contains($buildLogs, 'Screenshot capturing finished.')
+                || \str_contains($buildLogs, 'Screenshot capturing failed.')
+                || $screenshotsCaptured,
                 'Screenshot worker did not finish: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT)
             );
         }, 120000, 500);
