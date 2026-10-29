@@ -156,7 +156,7 @@ struct Inner<A, H> {
 /// use utopia_mqtt::packet::{Auth, Connack, Connect, Disconnect, Puback, Publish, Suback, Subscribe, Unsuback, Unsubscribe};
 /// use utopia_mqtt::server::{AuthReply, ConnectReply, Subscriber};
 /// use utopia_mqtt::spec::v5;
-/// use utopia_mqtt::{Connection, Error, Handler, Memory, Server};
+/// use utopia_mqtt::{Connection, Error, Handler, Memory, Server, Store};
 ///
 /// struct Echo;
 ///

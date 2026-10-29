@@ -87,7 +87,7 @@ impl Handler for Recorder {
 
 let log: Log = Arc::default();
 let adapter = Memory::new();
-let server = Server::new(adapter.clone(), Recorder(log.clone()));
+let server = Server::new(adapter.clone(), Recorder(log.clone()), utopia_mqtt::Store::new(), 0);
 let (start, worker, stop) = (log.clone(), log.clone(), log.clone());
 server
     .on_start(move || start.lock().unwrap().push("start".into()))
@@ -184,7 +184,7 @@ use utopia_mqtt::{Memory, Server};
 
 let log: Log = Arc::default();
 let adapter = Memory::new();
-let server = Server::new(adapter.clone(), Recorder(log.clone()));
+let server = Server::new(adapter.clone(), Recorder(log.clone()), utopia_mqtt::Store::new(), 0);
 utopia_async::Builder::current_thread().build()?.block_on(server.start());
 
 adapter.open(1)?;
@@ -282,7 +282,7 @@ let now = php_std::datetime::time();
 let wheel = Arc::new(TimingWheel::new(20, 1.5, Some(now)));
 let log: Log = Arc::default();
 let adapter = Memory::with_timer(wheel.clone());
-let server = Server::new(adapter.clone(), Recorder(log.clone()));
+let server = Server::new(adapter.clone(), Recorder(log.clone()), utopia_mqtt::Store::new(), 0);
 utopia_async::Builder::current_thread().build()?.block_on(server.start());
 
 adapter.open(1)?;
@@ -374,7 +374,7 @@ use utopia_mqtt::{Memory, Server};
 
 let log: Log = Arc::default();
 let adapter = Memory::new();
-let server = Server::new(adapter.clone(), Recorder(log.clone()));
+let server = Server::new(adapter.clone(), Recorder(log.clone()), utopia_mqtt::Store::new(), 0);
 let failures = log.clone();
 server.error(move |error, stage| failures.lock().unwrap().push(format!("{stage}: {error}")));
 utopia_async::Builder::current_thread().build()?.block_on(server.start());
