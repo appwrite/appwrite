@@ -122,26 +122,23 @@ pub async fn password(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::UserPasswordPwned));
     }
 
-    // PHP answers immediately for an empty password and then keeps going
-    // (the client only ever sees this first response).
-    let mut early: Option<Response> = None;
-    let mut user = user;
+    // An empty password clears it, ends the user's sessions and answers.
     if password.is_empty() {
         let mut updates = Document::default();
         updates.put("password", DbValue::from(""));
         updates.put("passwordPwned", DbValue::Null);
         updates.put("passwordUpdate", datetime::value(&datetime::now()));
-        user = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
+        let user = base::update_user(ctx, &user.id, updates, &[base::TARGETS, base::SESSIONS]).await?;
+        if ctx.project.auth_bool("invalidateSessions", true) {
+            invalidate_sessions(ctx, &user).await?;
+        }
+        ctx.db()?.purge_cached_document("users", &user.id).await?;
         ctx.event_param("userId", user.id.clone());
-        early = Some(ctx.ok(&UserModel { user: &user, render: ctx.render() }));
+        return Ok(ctx.ok(&UserModel { user: &user, render: ctx.render() }));
     }
 
-    let result = finish_password(ctx, &user, password, pwned).await;
-    match (early, result) {
-        (Some(response), _) => Ok(response),
-        (None, Ok(updated)) => respond(ctx, &updated).await,
-        (None, Err(e)) => Err(e),
-    }
+    let updated = finish_password(ctx, &user, password, pwned).await?;
+    respond(ctx, &updated).await
 }
 
 async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned: Option<bool>) -> Result<User> {
@@ -199,6 +196,7 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
     }
     let db = ctx.db()?;
     db.purge_cached_document("users", &updated.id).await?;
+    ctx.mqtt_revoke(&updated.id).await;
     Ok(updated)
 }
 

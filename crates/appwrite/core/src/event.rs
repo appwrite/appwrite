@@ -268,7 +268,7 @@ pub struct FunctionMessage<'a> {
     pub jwt: &'a str,
     pub payload: &'a RawValue,
     pub events: &'a [String],
-    pub body: &'a str,
+    pub body: String,
     pub path: &'a str,
     pub headers: [(); 0],
     pub method: &'a str,
@@ -296,13 +296,53 @@ impl<'a> FunctionMessage<'a> {
             jwt: "",
             payload,
             events,
-            body: "",
+            body: preserved_body(payload),
             path: "",
             headers: [],
             method: "",
             platform,
             event_id: crate::database::unique_id(),
         }
+    }
+}
+
+/// `Func::fromEvent`'s `body`: queue decoders turn nested JSON objects into
+/// associative arrays, so the payload's JSON (`json_encode($payload)`) is
+/// kept only when that conversion changes its shape, else `''`.
+fn preserved_body(payload: &RawValue) -> String {
+    let Ok(value) = serde_json::from_str::<Value>(payload.get()) else {
+        return String::new();
+    };
+    if !changes_shape(&value) {
+        return String::new();
+    }
+    // `json_encode` without flags: non-ASCII characters as `\uXXXX`.
+    let mut body = String::with_capacity(payload.get().len());
+    for c in payload.get().chars() {
+        if c.is_ascii() {
+            body.push(c);
+        } else {
+            let mut units = [0u16; 2];
+            for unit in c.encode_utf16(&mut units) {
+                body.push_str(&format!("\\u{unit:04x}"));
+            }
+        }
+    }
+    body
+}
+
+/// Whether `json_encode(json_decode($json, true))` differs in shape from
+/// `$json`: an empty object becomes `[]`, and an object keyed `"0"`..`"n-1"`
+/// in order becomes a list.
+fn changes_shape(value: &Value) -> bool {
+    match value {
+        Value::Object(map) => {
+            map.is_empty()
+                || map.keys().enumerate().all(|(i, k)| *k == i.to_string())
+                || map.values().any(changes_shape)
+        }
+        Value::Array(items) => items.iter().any(changes_shape),
+        _ => false,
     }
 }
 
@@ -421,6 +461,22 @@ mod tests {
 
     fn p(items: &[(&str, &str)]) -> Vec<(String, String)> {
         items.iter().map(|(k, v)| ((*k).to_owned(), (*v).to_owned())).collect()
+    }
+
+    fn body(json: &str) -> String {
+        preserved_body(&RawValue::from_string(json.to_owned()).unwrap())
+    }
+
+    #[test]
+    fn function_body_is_kept_only_when_decoding_changes_the_shape() {
+        assert_eq!(body(r#"{"$id":"u","name":"a\/b"}"#), "");
+        assert_eq!(body(r#"[]"#), "");
+        assert_eq!(body(r#"{"list":[1,2],"n":{"a":1}}"#), "");
+        assert_eq!(body(r#"{"$id":"u","prefs":{}}"#), r#"{"$id":"u","prefs":{}}"#);
+        assert_eq!(body(r#"{"a":[{"b":{}}]}"#), r#"{"a":[{"b":{}}]}"#);
+        assert_eq!(body(r#"{"m":{"0":"x","1":"y"}}"#), r#"{"m":{"0":"x","1":"y"}}"#);
+        assert_eq!(body(r#"{"m":{"1":"x"}}"#), "");
+        assert_eq!(body(r#"{"name":"é😀","p":{}}"#), r#"{"name":"\u00e9\ud83d\ude00","p":{}}"#);
     }
 
     #[test]

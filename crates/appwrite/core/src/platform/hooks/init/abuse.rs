@@ -90,6 +90,8 @@ fn abuse_params(ctx: &Context) -> Vec<(String, String)> {
             Value::Number(n) => n.to_string(),
             other => crate::json::to_string(other),
         };
+        // Sign in matches emails case-insensitively, so the limit must too.
+        let text = if name == "email" { text.to_ascii_lowercase() } else { text };
         params.push((format!("{{param-{name}}}"), text));
     }
     params

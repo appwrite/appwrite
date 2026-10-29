@@ -177,6 +177,10 @@ impl Serialize for TargetListModel<'_> {
     }
 }
 
+/// The session fields a session event's realtime payload leaves out
+/// (`sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']`).
+pub const SESSION_SENSITIVE: &[&str] = &["secret", "providerAccessToken", "providerRefreshToken"];
+
 /// `session` model.
 pub struct SessionModel<'a> {
     pub session: &'a Session,

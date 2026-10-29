@@ -873,6 +873,8 @@ pub struct Mail {
     pub smtp: Json,
     pub variables: Map<String, Json>,
     pub custom_mail_options: Json,
+    /// Extra mail headers (the `OTP-Token` of a code sent by email).
+    pub headers: Map<String, Json>,
 }
 
 impl Mail {
@@ -894,7 +896,7 @@ impl Mail {
             "customMailOptions": self.custom_mail_options,
             "events": [],
             "platform": ctx.state.config.platform,
-            "headers": [],
+            "headers": if self.headers.is_empty() { Json::Array(Vec::new()) } else { Json::Object(self.headers) },
         });
         let queue = ctx.state.config.queue_mails.clone();
         ctx.events.queued.push((queue, message));
@@ -1028,6 +1030,7 @@ pub async fn session_alert(ctx: &mut Context, user: &User, session: &Session) ->
     };
     Mail {
         recipient: email,
+        headers: Map::new(),
         subject,
         template: "session-alert",
         body_template: format!(

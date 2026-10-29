@@ -28,7 +28,7 @@
       "rust": {
         "file": "crates/appwrite/core/src/platform/hooks/init/abuse.rs",
         "status": "done",
-        "note": "Teams' `createMembership` (`abuse-limit` 10 on the default key) and `updateMembershipStatus` (`ip:{ip},url:{url}`) and the Account recovery, verification and password routes (keys with `{param-email}`, `{userId}` and `{param-userId}`, several keys per route) prove the counters and the `X-RateLimit-*` headers in `bin/compat appwrite diff` (the dev stack runs with `_APP_OPTIONS_ABUSE=disabled`, so requests are counted, not refused). `{url}` is the route path alone (no request host) and `{chunkId}` the chunk a `Content-Range` starts in at the 5MB server chunk size.",
+        "note": "Teams' `createMembership` (`abuse-limit` 10 on the default key) and `updateMembershipStatus` (`ip:{ip},url:{url}`) and the Account recovery, verification and password routes (keys with `{param-email}`, `{userId}` and `{param-userId}`, several keys per route) prove the counters and the `X-RateLimit-*` headers in `bin/compat appwrite diff` (the dev stack runs with `_APP_OPTIONS_ABUSE=disabled`, so requests are counted, not refused). `{url}` is the route path alone (no request host), `{param-email}` is lowercased (sign in matches emails case-insensitively) and `{chunkId}` the chunk a `Content-Range` starts in at the 5MB server chunk size.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/hooks/init/abuse.rs", "anchor": "async fn abuse" }
         ]
@@ -86,7 +86,7 @@
       "rust": {
         "file": "crates/appwrite/core/src/platform/hooks/shutdown/events.rs",
         "status": "done",
-        "note": "Function events are cached in the same Redis hash as PHP's. Realtime adds the action-suffixed account channels; function messages carry the whole project document. `appwrite diff` compares every message and publication.",
+        "note": "Function events are cached in the same Redis hash as PHP's. Realtime adds the action-suffixed account channels and leaves out the keys a route marks sensitive (`setPayload(..., sensitive: [...])`: session secrets and provider tokens, token secrets, recovery codes, TOTP secrets); function messages carry the whole project document, and their `body` is the payload's JSON when PHP's queue decoding would change its shape (an empty object or a list-keyed object, `Func::fromEvent`). `appwrite diff` compares every message and publication. Not yet followed: main's console realtime for the `teams`, `account` and `users` events (`Realtime::CONSOLE_ALLOWLIST`) and the project read roles on console copies of project events.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/hooks/shutdown/events.rs", "anchor": "async fn trigger" },
           { "file": "crates/appwrite/core/src/platform/hooks/shutdown/events.rs", "anchor": "async fn function_events" }
@@ -488,12 +488,12 @@
     {
       "id": "resource-key",
       "title": "API key",
-      "description": "Decodes `X-Appwrite-Key` (none for a secret `Key::decode` refuses: unknown secret or prefix, a JWT that fails to decode, an ephemeral key of another project or project sequence) and requires the project, user or organization header its type names.",
+      "description": "Decodes `X-Appwrite-Key` (none for a secret `Key::decode` refuses: unknown secret or prefix, a JWT that fails to decode or has no `purpose: key` claim, an ephemeral key of another project or project sequence) and requires the project, user or organization header its type names.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('apiKey'" },
       "rust": {
         "file": "crates/appwrite/core/src/platform/hooks/resources/key.rs",
         "status": "done",
-        "note": "Project (standard and ephemeral), account and organization keys, with the header each requires. A refused secret leaves no key; the auth hook answers `user_unauthorized` for the header. Ephemeral keys carrying `projectSequence` must match the project's sequence.",
+        "note": "Project (standard and ephemeral), account and organization keys, with the header each requires. A refused secret leaves no key; the auth hook answers `user_unauthorized` for the header. Ephemeral and dynamic keys must carry `purpose: key`, and those carrying `projectSequence` must match the project's sequence.",
         "where": [{ "file": "crates/appwrite/core/src/platform/hooks/resources/key.rs", "anchor": "// -- API key" }]
       }
     },

@@ -299,8 +299,12 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     ctx.event_param("userId", invitee.id.clone());
     ctx.event_param("teamId", team.id.clone());
     ctx.event_param("membershipId", membership.id.clone());
-    let user_name = invitee.name.clone().unwrap_or_default();
-    let user_email = invitee.email.clone().unwrap_or_default();
+    // The privacy policy only hides other members: a member always sees
+    // their own details.
+    let own = ctx.user.as_ref().is_some_and(|u| u.sequence == invitee.sequence);
+    let privacy = if own { Privacy::ALL } else { Privacy::of(ctx) };
+    let user_name = if privacy.user_name { invitee.name.clone().unwrap_or_default() } else { String::new() };
+    let user_email = if privacy.user_email { invitee.email.clone().unwrap_or_default() } else { String::new() };
     Ok(ctx.created(&MembershipModel::new(&membership, &user_name, &user_email, &team_name, ctx.render())))
 }
 
@@ -710,8 +714,11 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     ctx.event_param("teamId", team.id.clone());
     ctx.event_param("membershipId", membership.id.clone());
     let team_name = team.name.clone().unwrap_or_default();
-    let user_name = profile.name.clone().unwrap_or_default();
-    let user_email = profile.email.clone().unwrap_or_default();
+    // The privacy policy only hides other members: a member always sees
+    // their own details.
+    let privacy = if base::is_self(ctx, &membership) { Privacy::ALL } else { Privacy::of(ctx) };
+    let user_name = if privacy.user_name { profile.name.clone().unwrap_or_default() } else { String::new() };
+    let user_email = if privacy.user_email { profile.email.clone().unwrap_or_default() } else { String::new() };
     Ok(ctx.ok(&MembershipModel::new(&membership, &user_name, &user_email, &team_name, ctx.render())))
 }
 
