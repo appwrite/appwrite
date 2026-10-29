@@ -640,6 +640,18 @@ class Create extends Action
             'status' => 'queued',
         ]);
 
+        // Older queued reviews of the pull request are superseded before this one is created, as
+        // hansi.codes does: two overlapping deliveries then both stay queued, and the worker skips
+        // the one that resolves to an already reviewed head, instead of superseding each other.
+        $authorization->skip(fn () => $dbForProject->updateDocuments('reviews', new Document([
+            'status' => 'superseded',
+        ]), [
+            Query::equal('repositoryInternalId', [$repository->getSequence()]),
+            Query::equal('providerPullRequestId', [(string) $pullNumber]),
+            Query::equal('status', ['queued']),
+            Query::notEqual('$id', $reviewId),
+        ]));
+
         try {
             $review = $authorization->skip(fn () => $dbForProject->createDocument('reviews', $review));
         } catch (DuplicateException) {
@@ -661,15 +673,6 @@ class Create extends Action
                 return;
             }
         }
-
-        $authorization->skip(fn () => $dbForProject->updateDocuments('reviews', new Document([
-            'status' => 'superseded',
-        ]), [
-            Query::equal('repositoryInternalId', [$repository->getSequence()]),
-            Query::equal('providerPullRequestId', [(string) $pullNumber]),
-            Query::equal('status', ['queued']),
-            Query::notEqual('$id', $review->getId()),
-        ]));
 
         try {
             $queued = $publisherForReviews->enqueue(new ReviewMessage(
