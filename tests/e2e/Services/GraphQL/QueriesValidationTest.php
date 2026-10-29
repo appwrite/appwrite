@@ -78,7 +78,10 @@ final class QueriesValidationTest extends Scope
         ]);
 
         $this->assertSame(400, $rest['headers']['status-code']);
-        $this->assertSame(Exception::GENERAL_QUERY_INVALID, $rest['body']['type']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $rest['body']['type']);
+        $this->assertStringContainsString('Invalid query method: bogus', (string) $rest['body']['message']);
+
+        $expectedGraphQLMessage = 'Invalid query method: bogus';
 
         $graphQLPayload = [
             'query' => $this->getQuery(self::GET_USERS),
@@ -95,6 +98,6 @@ final class QueriesValidationTest extends Scope
         $this->assertNotEquals(500, $graphql['headers']['status-code']);
         $this->assertSame(200, $graphql['headers']['status-code']);
         $this->assertArrayHasKey('errors', $graphql['body']);
-        $this->assertSame($rest['body']['message'], $graphql['body']['errors'][0]['message']);
+        $this->assertSame($expectedGraphQLMessage, $graphql['body']['errors'][0]['message']);
     }
 }
