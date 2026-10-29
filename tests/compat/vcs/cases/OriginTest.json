@@ -874,6 +874,45 @@
       ]
     },
     {
+      "name": "testCreateFileRejectsGitMetadataPath",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "filepath": "docs/../.Git/config",
+            "content": "content"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path names repository metadata: docs/../.Git/config",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
       "name": "testCreateFileRejectsEmptyPath",
       "steps": [
         {

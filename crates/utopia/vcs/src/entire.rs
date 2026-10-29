@@ -1,8 +1,9 @@
-//! Entire (entire.io), the agent-native Git host, through a plugin
+//! Entire (entire.com), the agent-native Git host, through a plugin
 //! installation.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use async_trait::async_trait;
 use php_std::{Array, Value};
@@ -11,11 +12,60 @@ use utopia_console::Command;
 
 use crate::adapter::{Adapter, Git, VcsType, WebhookId, WebhookScope};
 use crate::error::{Error, Result};
-use crate::git::{self, clone_command, match_glob, normalize_repository_path};
-use crate::origin::confined_path;
+use crate::git::{self, clone_command, confined_path, match_glob, normalize_repository_path};
 use crate::php::{self, at, at_index, each, empty, object, s};
 use crate::transport::{Call, Method, Response, Transport};
 use crate::{jwt, time};
+
+/// The forge an Entire-native repository path names (`et/{project}/{repo}`).
+///
+/// PHP: `Entire::FORGE_ENTIRE`.
+pub const FORGE_ENTIRE: &str = "et";
+
+/// The forge a GitHub mirror's path names (`gh/{owner}/{repo}`).
+///
+/// PHP: `Entire::FORGE_GITHUB`.
+pub const FORGE_GITHUB: &str = "gh";
+
+/// The repository permissions the plugin registers, requested as a whole so
+/// one token covers every selected repository: Entire refuses a token
+/// without a repository that asks for less than the installation holds, so
+/// a permission is asked for whether or not the plugin still uses it.
+///
+/// PHP: `Entire::PERMISSIONS`.
+pub const PERMISSIONS: [(&str, &str); 5] = [
+    ("contents", "write"),
+    ("checks", "write"),
+    ("deployments", "write"),
+    ("discussions", "write"),
+    ("repositories", "create"),
+];
+
+/// What a mint asks for when Entire refuses [`PERMISSIONS`], in order: the
+/// sets the plugin declared before, newest first.
+const FALLBACK_PERMISSIONS: [&[(&str, &str)]; 6] = [
+    &[("contents", "write"), ("checks", "write"), ("deployments", "write"), ("repositories", "create")],
+    &[("contents", "read"), ("checks", "write"), ("deployments", "write"), ("discussions", "write")],
+    &[("contents", "read"), ("checks", "write"), ("deployments", "write")],
+    &[("contents", "read"), ("checks", "write"), ("discussions", "write")],
+    &[("contents", "read"), ("checks", "write")],
+    &[("contents", "read")],
+];
+
+/// Mint refusals a different permission set can get past.
+const FALLBACK_CODES: [&str; 4] =
+    ["permission_not_accepted", "unsupported_permission", "coverage_changed", "repository_required"];
+
+/// How many times a created repository is looked for until it has a
+/// placement to serve Git and its cell's API from.
+const PROVISIONING_ATTEMPTS: usize = 30;
+
+/// Microseconds between looks for a created repository's placement.
+const PROVISIONING_INTERVAL: u64 = 1_000_000;
+
+/// The conclusions a suite takes from its runs, worst first.
+const SUITE_CONCLUSIONS: [&str; 7] =
+    ["failure", "timed_out", "action_required", "cancelled", "neutral", "skipped", "success"];
 
 /// A ref was created.
 ///
@@ -84,6 +134,87 @@ const CHECK_STATES: [(&str, &str, Option<&str>); 7] = [
     ("cancelled", "completed", Some("cancelled")),
 ];
 
+/// The deployment status and conclusion of each state
+/// [`Adapter::update_deployment`] takes: a check's, plus `inactive` for a
+/// resource that no longer exists.
+fn deployment_state(state: &str) -> (&'static str, Option<&'static str>) {
+    if state == "inactive" {
+        return ("inactive", None);
+    }
+    check_state(state)
+}
+
+/// The run status and conclusion of a check state; an unknown one fails.
+fn check_state(state: &str) -> (&'static str, Option<&'static str>) {
+    CHECK_STATES
+        .iter()
+        .find(|(s, _, _)| *s == state)
+        .map(|(_, status, conclusion)| (*status, *conclusion))
+        .unwrap_or(("completed", Some("failure")))
+}
+
+/// A permission set as the mint request carries it.
+fn permission_set(pairs: &[(&str, &str)]) -> Value {
+    Value::Array(pairs.iter().map(|(resource, access)| (php_std::ArrayKey::from(*resource), s(*access))).collect())
+}
+
+/// Whether Entire takes a URL as a link: https, without credentials. A
+/// plain-http one, such as a local console, is left off rather than
+/// refused.
+fn is_link(url: &str) -> bool {
+    url.strip_prefix("https://").is_some_and(|rest| !rest.contains('@'))
+}
+
+/// The web path of an owner: `et/{project}`, or `gh/{owner}` for GitHub
+/// mirrors, whose owner already names its forge.
+fn web_owner(owner: &str) -> String {
+    if owner.starts_with("gh/") { owner.to_owned() } else { format!("{FORGE_ENTIRE}/{owner}") }
+}
+
+/// The resource => access pairs a token, or its cache entry, lists.
+fn granted_permissions(permissions: &Value) -> Value {
+    let mut granted = Array::new();
+    if let Value::Array(fields) = permissions {
+        for (resource, access) in fields.iter() {
+            if let (php_std::types::KeyRef::Str(_), Value::Str(_)) = (&resource, access) {
+                granted.set(resource.to_owned(), access.clone());
+            }
+        }
+    }
+    Value::Array(granted)
+}
+
+/// `[...$target, ...$extra]` for string-keyed arrays.
+fn merge(target: &mut Value, extra: Value) {
+    if let (Value::Array(target), Value::Array(extra)) = (target, extra) {
+        for (key, value) in extra.iter() {
+            target.set(key.to_owned(), value.clone());
+        }
+    }
+}
+
+/// A suite's state from its runs: queued or running while any run is,
+/// otherwise completed with the worst conclusion among them.
+fn suite_state(runs: &[Value], at: &str) -> Value {
+    let mut state = object([("external_updated_at", s(at))]);
+    let statuses: Vec<String> = runs.iter().map(|run| text(run, "status")).collect();
+    if statuses.iter().any(|status| status != "completed") {
+        let status = if statuses.iter().all(|status| status == "queued") { "queued" } else { "in_progress" };
+        php::set(&mut state, "status", s(status));
+        return state;
+    }
+    let conclusions: Vec<String> = runs.iter().map(|run| text(run, "conclusion")).collect();
+    let conclusion = SUITE_CONCLUSIONS
+        .iter()
+        .find(|candidate| conclusions.iter().any(|conclusion| conclusion == *candidate))
+        .copied()
+        .unwrap_or("neutral");
+    php::set(&mut state, "status", s("completed"));
+    php::set(&mut state, "conclusion", s(conclusion));
+    php::set(&mut state, "completed_at", s(at));
+    state
+}
+
 const TRIM: &[u8] = b" \t\n\r\0\x0B";
 
 /// The Entire adapter: an Ed25519-signed (EdDSA) plugin JWT is exchanged on
@@ -103,7 +234,18 @@ pub struct Entire {
     plugin: String,
     installation_id: String,
     jwt_token: String,
-    access_token: String,
+    /// The plugin's private key, kept to sign a plugin JWT for another core:
+    /// a project's home core, which alone creates its repositories.
+    private_key: String,
+    access_token: Mutex<String>,
+    /// The permissions the installation token was granted (resource =>
+    /// access); `None` for a token cached before they were recorded.
+    permissions: Mutex<Option<Value>>,
+    /// Whether this instance minted its token, rather than reusing a cached
+    /// one that may predate permissions the installation accepted since.
+    minted: Mutex<bool>,
+    /// The branch holding each commit a check or deployment named.
+    branches: Mutex<HashMap<String, String>>,
     jwks: Mutex<HashMap<String, Vec<Value>>>,
     repositories: Mutex<Option<Vec<Value>>>,
     data_endpoints: Mutex<HashMap<String, String>>,
@@ -181,11 +323,15 @@ fn empty_array() -> Value {
     Value::Array(Array::new())
 }
 
+/// `$a ?: $b` for strings.
+fn or_else(a: String, b: impl FnOnce() -> String) -> String {
+    if a.is_empty() || a == "0" { b() } else { a }
+}
+
 /// The exception for a failed call, with Entire's problem detail.
 fn request_failed(action: &str, response: &Response) -> Error {
     let body = body(response);
-    let detail = text(&body, "detail");
-    let detail = if detail.is_empty() || detail == "0" { text(&body, "title") } else { detail };
+    let detail = or_else(text(&body, "detail"), || or_else(text(&body, "error"), || text(&body, "title")));
     let message = format!("{} {}", text(&body, "code"), detail);
     let message = php::text(php_std::string::trim(message.as_bytes(), TRIM));
     let suffix = if message.is_empty() { String::new() } else { format!(" ({message})") };
@@ -300,20 +446,48 @@ fn bearer_token(authorization: &[u8]) -> Vec<u8> {
     authorization.to_vec()
 }
 
-/// The owner and name a repository path carries (`et/{project}/{repo}`).
+/// The owner and name a repository path carries. An Entire-native
+/// repository is `et/{project}/{repo}`, or `{project}/{repo}` without its
+/// forge, and its owner is the project. A GitHub mirror is
+/// `gh/{owner}/{repo}`, and its owner keeps the forge, `gh/{owner}`. A clone
+/// URL's host comes before the path and is dropped.
 fn split_path(path: &str) -> (String, String) {
     let mut path = path.trim_matches('/');
     if let Some(stripped) = path.strip_suffix(".git") {
         path = stripped;
     }
-    let mut segments: Vec<&str> = path.split('/').collect();
-    if segments.len() >= 3 {
-        segments = segments[segments.len() - 2..].to_vec();
-    }
-    if segments.len() != 2 {
+    let segments: Vec<&str> = path.split('/').collect();
+    if segments.len() < 2 {
         return (String::new(), String::new());
     }
-    (segments[0].to_owned(), segments[1].to_owned())
+    let count = segments.len();
+    let (owner, name) = (segments[count - 2], segments[count - 1]);
+    let forge = if count >= 3 { segments[count - 3] } else { FORGE_ENTIRE };
+    let owner = if forge == FORGE_GITHUB { format!("{FORGE_GITHUB}/{owner}") } else { owner.to_owned() };
+    (owner, name.to_owned())
+}
+
+/// The installation's repository under this owner and name. Consumers
+/// resolve one owner per installation, which a mirrors project with several
+/// GitHub owners does not have, so a name the installation holds once still
+/// names one repository.
+fn match_repository(repositories: &[Value], owner: &str, repository_name: &str) -> Option<Value> {
+    let owner = php::lower(owner.as_bytes());
+    let name = php::lower(repository_name.as_bytes());
+    let mut named = Vec::new();
+    for repository in repositories {
+        if php::lower(text(repository, "name").as_bytes()) != name {
+            continue;
+        }
+        if php::lower(text(repository, "organization").as_bytes()) == owner {
+            return Some(repository.clone());
+        }
+        named.push(repository);
+    }
+    match named.as_slice() {
+        [only] => Some((*only).clone()),
+        _ => None,
+    }
 }
 
 /// The short names of listed refs.
@@ -394,11 +568,15 @@ impl Entire {
             transport: Transport::new("https://us.auth.entire.io/api/v1"),
             core_endpoint: "https://us.auth.entire.io".into(),
             issuer: String::new(),
-            web_endpoint: "https://entire.io".into(),
+            web_endpoint: "https://entire.com".into(),
             plugin: String::new(),
             installation_id: String::new(),
             jwt_token: String::new(),
-            access_token: String::new(),
+            private_key: String::new(),
+            access_token: Mutex::new(String::new()),
+            permissions: Mutex::new(None),
+            minted: Mutex::new(false),
+            branches: Mutex::new(HashMap::new()),
             jwks: Mutex::new(HashMap::new()),
             repositories: Mutex::new(None),
             data_endpoints: Mutex::new(HashMap::new()),
@@ -441,14 +619,16 @@ impl Entire {
         Ok(response)
     }
 
-    /// The EdDSA plugin JWT the core takes.
-    fn plugin_jwt(&self, private_key: &str, plugin: &str) -> Result<String> {
+    /// The EdDSA plugin JWT the core takes; `core` names another core's STS
+    /// as its audience (the configured core when empty).
+    fn plugin_jwt(&self, private_key: &str, plugin: &str, core: &str) -> Result<String> {
         let secret = ed25519_secret_key(private_key)?;
         let iat = time::now() - PLUGIN_JWT_SKEW;
         let header = object([("alg", s("EdDSA")), ("typ", s("JWT"))]);
+        let core = if core.is_empty() { self.core_endpoint.as_str() } else { core };
         let claims = object([
             ("iss", s(&self.issuer)),
-            ("aud", s(format!("{}/api/authz/sts", self.core_endpoint))),
+            ("aud", s(format!("{core}/api/authz/sts"))),
             ("plugin_id", s(plugin)),
             ("installation_id", s(&self.installation_id)),
             ("iat", Value::Int(iat)),
@@ -472,21 +652,25 @@ impl Entire {
             Some(p) if php::filled(p) => p,
             _ => return Err(Error::exception("Entire requires the plugin slug to sign the plugin JWT.", 0)),
         };
-        self.jwt_token = self.plugin_jwt(private_key, plugin)?;
-        let path = format!("/plugins/{}/installations/{}/access-tokens", raw(plugin), raw(&self.installation_id));
+        self.jwt_token = self.plugin_jwt(private_key, plugin, "")?;
+        self.mint_access_token().await
+    }
+
+    /// Exchanges the plugin JWT for an installation access token and caches
+    /// it. Entire refuses a set the installation does not hold exactly, so
+    /// the mint falls back through the sets the plugin declared before.
+    async fn mint_access_token(&self) -> Result<()> {
+        let path = format!("/plugins/{}/installations/{}/access-tokens", raw(&self.plugin), raw(&self.installation_id));
         let bearer = format!("Bearer {}", self.jwt_token);
-        let permissions = object([("contents", s("read")), ("checks", s("write"))]);
-        let mut response =
-            self.call_at(None, Call::post(&path).auth(&bearer).params(object([("permissions", permissions)]))).await?;
-        if response.status == 400 && text(&body(&response), "code") == "unsupported_permission" {
-            response = self
-                .call_at(
-                    None,
-                    Call::post(&path)
-                        .auth(&bearer)
-                        .params(object([("permissions", object([("contents", s("read"))]))])),
-                )
-                .await?;
+        let mint = |permissions: &[(&str, &str)]| {
+            Call::post(&path).auth(&bearer).params(object([("permissions", permission_set(permissions))]))
+        };
+        let mut response = self.call_at(None, mint(&PERMISSIONS)).await?;
+        for permissions in FALLBACK_PERMISSIONS {
+            if !FALLBACK_CODES.contains(&text(&body(&response), "code").as_str()) {
+                break;
+            }
+            response = self.call_at(None, mint(permissions)).await?;
         }
         let response_body = body(&response);
         let has_token = matches!(&response_body, Value::Array(a) if a.contains_key(&php_std::ArrayKey::from("token")));
@@ -508,14 +692,22 @@ impl Entire {
                 response.status,
             ));
         }
-        self.access_token = text(&response_body, "token");
+        let access_token = text(&response_body, "token");
+        let permissions = granted_permissions(&at(&response_body, "permissions"));
+        *lock(&self.access_token) = access_token.clone();
+        *lock(&self.permissions) = Some(permissions.clone());
+        *lock(&self.minted) = true;
         let expires_at = php_std::datetime::strtotime(
             text(&response_body, "expires_at").as_bytes(),
             time::now(),
             &php_std::datetime::TzInfo::utc(),
         )
         .unwrap_or(0);
-        let cached = object([("accessToken", s(&self.access_token)), ("expiresAt", Value::Int(expires_at))]);
+        let cached = object([
+            ("accessToken", s(access_token)),
+            ("expiresAt", Value::Int(expires_at)),
+            ("permissions", permissions),
+        ]);
         let cached = php::json_encode(&cached).unwrap_or_else(|| "{}".into());
         self.cache.save(&format!("entire-{}", self.installation_id), &s(cached), "", 0).await?;
         Ok(())
@@ -733,6 +925,9 @@ impl Entire {
         } else {
             String::new()
         };
+        // Entire names the default branch by its full ref
+        let default_branch = text(&repository, "default_branch");
+        let default_branch = default_branch.strip_prefix("refs/heads/").map(str::to_owned).unwrap_or(default_branch);
         let deleted = kind == EVENT_REF_DELETED;
         let commit_hash = if deleted { String::new() } else { text(payload, "after") };
         let account = nested(&nested(payload, "pusher"), "account");
@@ -757,7 +952,7 @@ impl Entire {
             ("installationId", s(&delivery[1].1)),
             ("deliveryId", s(&delivery[0].1)),
             ("apiUrl", s(&delivery[2].1)),
-            ("defaultBranch", s(text(&repository, "default_branch"))),
+            ("defaultBranch", s(default_branch)),
             ("commitHash", s(&commit_hash)),
             ("previousCommitHash", s(text(payload, "before"))),
             ("forced", Value::Bool(truthy(&at(payload, "forced")))),
@@ -826,7 +1021,14 @@ impl Entire {
     /// processing-primary placement the cell serving it.
     fn normalize_repository(&self, repository: &Value) -> Value {
         let full_name = text(repository, "full_name");
-        let (owner, name) = split_path(&full_name);
+        let path = text(repository, "path");
+        let (mut owner, name) = split_path(if full_name.is_empty() { &path } else { &full_name });
+        // The full name keeps the owner's own spelling but not its forge,
+        // which the path carries: a GitHub mirror is /gh/{owner}/{repo}
+        let mirror = split_path(&path).0.starts_with("gh/");
+        if mirror && !owner.starts_with("gh/") {
+            owner = format!("{FORGE_GITHUB}/{owner}");
+        }
         let id = text(repository, "id");
         let mut api_base_url = String::new();
         for placement in each(&nested(repository, "placements")) {
@@ -859,16 +1061,23 @@ impl Entire {
 
     /// The repository of the installation under this owner and name.
     async fn find_repository(&self, owner: &str, repository_name: &str) -> Result<Value> {
-        let owner = php::lower(owner.as_bytes());
-        let name = php::lower(repository_name.as_bytes());
-        for repository in self.installation_repositories().await? {
-            if php::lower(text(&repository, "organization").as_bytes()) == owner
-                && php::lower(text(&repository, "name").as_bytes()) == name
-            {
-                return Ok(repository);
-            }
+        let repositories = self.installation_repositories().await?;
+        match_repository(&repositories, owner, repository_name)
+            .ok_or_else(|| Error::RepositoryNotFound("Repository not found.".into()))
+    }
+
+    /// The owner a repository's web addresses go under: the installation's
+    /// own record of it once its repositories are listed, the owner given
+    /// otherwise.
+    fn canonical_owner(&self, owner: &str, repository_name: &str) -> String {
+        let listed = lock(&self.repositories);
+        let Some(repositories) = listed.as_ref() else {
+            return owner.to_owned();
+        };
+        match match_repository(repositories, owner, repository_name) {
+            Some(repository) => or_else(text(&repository, "organization"), || owner.to_owned()),
+            None => owner.to_owned(),
         }
-        Err(Error::RepositoryNotFound("Repository not found.".into()))
     }
 
     async fn repository_id(&self, owner: &str, repository_name: &str) -> Result<String> {
@@ -889,8 +1098,13 @@ impl Entire {
     /// A call against the cell serving a repository, with the installation
     /// token.
     async fn data_call(&self, repository_id: &str, call: Call) -> Result<Response> {
-        let base = format!("{}/api/v1", self.data_endpoint(repository_id).await?);
-        self.call_at(Some(&base), call.auth(format!("Bearer {}", self.access_token))).await
+        self.versioned_data_call(repository_id, call, "v1").await
+    }
+
+    /// A call against another version of the cell's API.
+    async fn versioned_data_call(&self, repository_id: &str, call: Call, version: &str) -> Result<Response> {
+        let base = format!("{}/api/{version}", self.data_endpoint(repository_id).await?);
+        self.call_at(Some(&base), call.auth(format!("Bearer {}", self.token()))).await
     }
 
     /// The serving cell's record of a repository, memoized.
@@ -1023,7 +1237,11 @@ impl Entire {
         Ok(message)
     }
 
-    /// The check run write for one report: a suite and its single run.
+    /// The check run write for one report: its run, keyed by the check's key
+    /// or else its name, filed under the named suite or a suite of its own.
+    /// A suite of its own carries the run's state; a shared one is stated
+    /// afterwards from all its runs, see [`Adapter::update_check`].
+    #[allow(clippy::too_many_arguments)]
     fn check_runs(
         &self,
         branch: &str,
@@ -1032,27 +1250,28 @@ impl Entire {
         title: &str,
         summary: &str,
         details_url: &str,
+        suite: &str,
+        key: &str,
+        suite_key: &str,
     ) -> Value {
-        let key = if php::filled(name) { name } else { "default" };
+        let name = if php::filled(name) { name } else { "default" };
+        let key = if key.is_empty() { name } else { key };
+        let shared = !suite.is_empty() || !suite_key.is_empty();
+        let suite_key = if suite_key.is_empty() { if suite.is_empty() { key } else { suite } } else { suite_key };
+        let suite = if suite.is_empty() { name } else { suite };
         let now = time::rfc3339_micros_now();
-        let (status, conclusion) = CHECK_STATES
-            .iter()
-            .find(|(s, _, _)| *s == state)
-            .map(|(_, status, conclusion)| (*status, *conclusion))
-            .unwrap_or(("completed", Some("failure")));
+        let (status, conclusion) = check_state(state);
         let mut run = object([
             ("key", s(key)),
-            ("name", s(key)),
+            ("name", s(name)),
             ("status", s(status)),
+            // The key is the run's identity, so its attempt id can stay stable too
             ("external_id", s(key)),
             ("external_updated_at", s(&now)),
         ]);
-        let mut suite = run.clone();
         if let Some(conclusion) = conclusion {
             php::set(&mut run, "conclusion", s(conclusion));
-            php::set(&mut suite, "conclusion", s(conclusion));
             php::set(&mut run, "completed_at", s(&now));
-            php::set(&mut suite, "completed_at", s(&now));
         }
         if !title.is_empty() {
             let trimmed = php_std::mb::mb_strimwidth(title.as_bytes(), 255).into_owned();
@@ -1062,17 +1281,82 @@ impl Entire {
                 object([("title", s(trimmed)), ("summary", s(if summary.is_empty() { title } else { summary }))]),
             );
         }
-        if let Some(rest) = details_url.strip_prefix("https://")
-            && !rest.contains('@')
-        {
+        if is_link(details_url) {
             php::set(&mut run, "details_url", s(details_url));
-            php::set(&mut suite, "details_url", s(details_url));
         }
-        object([("branch", s(branch)), ("check_suite", suite), ("check_runs", php::list(vec![run]))])
+        let mut check_suite = object([("key", s(suite_key)), ("name", s(suite)), ("external_id", s(suite_key))]);
+        if !shared {
+            merge(&mut check_suite, suite_state(std::slice::from_ref(&run), &now));
+        }
+        object([("branch", s(branch)), ("check_suite", check_suite), ("check_runs", php::list(vec![run]))])
+    }
+
+    /// Posts a check run write.
+    async fn write_check_runs(&self, repository_id: &str, path: &str, write: Value) -> Result<()> {
+        let response = self.data_call(repository_id, Call::post(path).params(write)).await?;
+        if response.status >= 400 {
+            return Err(request_failed("Failed to update commit status", &response));
+        }
+        Ok(())
+    }
+
+    /// The commit two refs last shared, such as where a branch left the
+    /// default branch. Each ref is a branch, tag or commit SHA.
+    ///
+    /// PHP: `getMergeBase()`.
+    pub async fn merge_base(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        commit_a: &str,
+        commit_b: &str,
+    ) -> Result<String> {
+        let repository_id = self.repository_id(owner, repository_name).await?;
+        let path = self.git_path(&repository_id, "/merge-base").await?;
+        let response = self
+            .data_call(
+                &repository_id,
+                Call::get(path).params(object([("commitA", s(commit_a)), ("commitB", s(commit_b))])),
+            )
+            .await?;
+        if response.status >= 400 {
+            return Err(request_failed("Failed to find the merge base", &response));
+        }
+        Ok(text(&body(&response), "mergeBaseSHA"))
+    }
+
+    /// Creates a repository on another core: the project's home core, when
+    /// the core this adapter talks to is another jurisdiction's. A token is
+    /// valid only on the core that minted it, so that core mints one for
+    /// creation alone.
+    async fn create_on_core(&self, core: &str, repository_name: &str) -> Result<Response> {
+        let jwt = self.plugin_jwt(&self.private_key, &self.plugin, core)?;
+        let base = format!("{core}/api/v1");
+        let path = format!("/plugins/{}/installations/{}/access-tokens", raw(&self.plugin), raw(&self.installation_id));
+        let minted = self
+            .call_at(
+                Some(&base),
+                Call::post(path)
+                    .auth(format!("Bearer {jwt}"))
+                    .params(object([("permissions", permission_set(&[("repositories", "create")]))])),
+            )
+            .await?;
+        let token = text(&body(&minted), "token");
+        if token.is_empty() {
+            return Err(request_failed("Failed to retrieve access token from Entire API", &minted));
+        }
+        self.call_at(
+            Some(&base),
+            Call::post("/repos").auth(format!("Bearer {token}")).params(object([("name", s(repository_name))])),
+        )
+        .await
     }
 
     /// A branch holding a commit, which a check run write must name.
     async fn branch_containing(&self, repository_id: &str, commit_hash: &str) -> Result<String> {
+        if let Some(branch) = lock(&self.branches).get(commit_hash) {
+            return Ok(branch.clone());
+        }
         let path = self.git_path(repository_id, "/branches-containing").await?;
         let response = self
             .data_call(repository_id, Call::post(path).params(object([("targets", php::list(vec![s(commit_hash)]))])))
@@ -1085,7 +1369,9 @@ impl Entire {
         if branch.is_empty() {
             return Err(Error::exception(format!("No branch contains commit {commit_hash}"), 0));
         }
-        Ok(branch.strip_prefix("refs/heads/").map(str::to_owned).unwrap_or(branch))
+        let branch = branch.strip_prefix("refs/heads/").map(str::to_owned).unwrap_or(branch);
+        lock(&self.branches).insert(commit_hash.to_owned(), branch.clone());
+        Ok(branch)
     }
 
     /// A trail's page.
@@ -1098,13 +1384,26 @@ impl Entire {
     /// A command run with the installation token where `git-remote-entire`
     /// reads it.
     fn with_token(&self, command: Command) -> Result<Command> {
-        if !php::filled(&self.access_token) {
+        let token = self.token();
+        if !php::filled(&token) {
             return Ok(command);
         }
-        Ok(Command::and(vec![
-            Command::new("export")?.argument(format!("ENTIRE_TOKEN={}", self.access_token))?,
-            command,
-        ])?)
+        Ok(Command::and(vec![Command::new("export")?.argument(format!("ENTIRE_TOKEN={token}"))?, command])?)
+    }
+
+    /// The installation access token.
+    fn token(&self) -> String {
+        lock(&self.access_token).clone()
+    }
+
+    /// Whether the token is known to lack a permission; a token cached
+    /// before its permissions were recorded is not.
+    fn lacks_permission(&self, resource: &str) -> bool {
+        match lock(&self.permissions).as_ref() {
+            Some(Value::Array(granted)) => !granted.contains_key(&php_std::ArrayKey::from(resource)),
+            Some(_) => true,
+            None => false,
+        }
     }
 
     async fn execute(&self, command: &Command, action: &str) -> Result<Vec<u8>> {
@@ -1114,8 +1413,9 @@ impl Entire {
             printed.push(b'\n');
             printed.extend_from_slice(&output.stderr);
             let mut printed = php_std::string::trim(&printed, TRIM).to_vec();
-            if php::filled(&self.access_token) {
-                printed = php_std::string::str_replace(self.access_token.as_bytes(), b"***", &printed).0.into_owned();
+            let token = self.token();
+            if php::filled(&token) {
+                printed = php_std::string::str_replace(token.as_bytes(), b"***", &printed).0.into_owned();
             }
             let mut message = format!("{action} failed: ").into_bytes();
             message.extend_from_slice(&printed);
@@ -1195,7 +1495,8 @@ impl Adapter for Entire {
         };
         self.installation_id = installation_id.to_owned();
         self.plugin = plugin.clone();
-        self.jwt_token = self.plugin_jwt(private_key, &plugin)?;
+        self.private_key = private_key.to_owned();
+        self.jwt_token = self.plugin_jwt(private_key, &plugin, "")?;
         let cached = self.cache.load(&format!("entire-{installation_id}"), TOKEN_CACHE_TTL, "").await?;
         let parsed = match cached {
             Some(Value::Str(raw)) => match php::json_decode(raw.as_bytes()) {
@@ -1209,7 +1510,9 @@ impl Adapter for Entire {
         if access_token.is_empty() || (expires_at > 0 && expires_at - 5 * LEEWAY <= time::now()) {
             return self.generate_access_token(private_key, Some(&plugin)).await;
         }
-        self.access_token = access_token;
+        *lock(&self.access_token) = access_token;
+        let listed = matches!(&parsed, Value::Array(a) if a.contains_key(&php_std::ArrayKey::from("permissions")));
+        *lock(&self.permissions) = listed.then(|| granted_permissions(&at(&parsed, "permissions")));
         Ok(())
     }
 
@@ -1226,13 +1529,12 @@ impl Adapter for Entire {
         Ok(false)
     }
 
-    async fn search_repositories(&self, owner: &str, page: i64, per_page: i64, search: &str) -> Result<Value> {
-        let owner_lower = php::lower(owner.as_bytes());
+    /// Every repository the installation covers is one to offer: a GitHub
+    /// mirrors project holds several owners' mirrors, so the owner narrows
+    /// nothing.
+    async fn search_repositories(&self, _owner: &str, page: i64, per_page: i64, search: &str) -> Result<Value> {
         let mut repositories = Vec::new();
         for repository in self.installation_repositories().await? {
-            if !owner.is_empty() && php::lower(text(&repository, "organization").as_bytes()) != owner_lower {
-                continue;
-            }
             if !search.is_empty()
                 && php_std::string::stripos(text(&repository, "name").as_bytes(), search.as_bytes(), 0)
                     .ok()
@@ -1265,8 +1567,79 @@ impl Adapter for Entire {
         Ok(repository)
     }
 
-    async fn create_repository(&self, _owner: &str, _repository_name: &str, _private: bool) -> Result<Value> {
-        Err(Error::exception("createRepository() is not supported by entire", 0))
+    /// Creates the repository in the installation's project through the
+    /// core, with a token holding `repositories:create`, then waits for its
+    /// placement (Git and its cell serve it only once provisioned) and gives
+    /// up waiting after 30 looks a second apart, handing back what is known.
+    /// Entire creates every repository private.
+    async fn create_repository(&self, owner: &str, repository_name: &str, _private: bool) -> Result<Value> {
+        // A cached token may predate the installation accepting repository creation
+        if self.lacks_permission("repositories") && !*lock(&self.minted) {
+            self.mint_access_token().await?;
+        }
+        if self.lacks_permission("repositories") {
+            return Err(Error::exception(
+                "This Entire installation cannot create repositories yet. Connect an existing repository, or accept the plugin's updated permissions in Entire if it asks for them.",
+                403,
+            ));
+        }
+
+        let mut response = self
+            .call_at(
+                None,
+                Call::post("/repos")
+                    .auth(format!("Bearer {}", self.token()))
+                    .params(object([("name", s(repository_name))])),
+            )
+            .await?;
+
+        // Only the project's home core creates its repositories; another
+        // jurisdiction's core names it
+        let home_core = text(&body(&response), "home_core_url");
+        if response.status == 421 && !home_core.is_empty() && self.is_trusted_core(&home_core) {
+            response = self.create_on_core(&rtrim_slash(&home_core), repository_name).await?;
+        }
+
+        if response.status == 409 {
+            return Err(Error::exception(
+                format!("A repository named {repository_name} already exists in {owner}."),
+                response.status,
+            ));
+        }
+        if response.status >= 400 {
+            return Err(request_failed("Failed to create repository", &response));
+        }
+
+        let repository_id = text(&body(&response), "repositoryId");
+        let mut created = None;
+        for _ in 0..PROVISIONING_ATTEMPTS {
+            // A fresh list each time; a placement appears once provisioning ends
+            *lock(&self.repositories) = None;
+            for repository in self.installation_repositories().await? {
+                if text(&repository, "id") == repository_id {
+                    created = Some(repository);
+                }
+            }
+            if let Some(repository) = &created
+                && lock(&self.data_endpoints).contains_key(&repository_id)
+            {
+                return Ok(repository.clone());
+            }
+            utopia_async::time::sleep(Duration::from_micros(PROVISIONING_INTERVAL)).await;
+        }
+
+        // Still provisioning: the repository exists, so hand it back; Git
+        // calls on it fail until Entire finishes
+        Ok(created.unwrap_or_else(|| {
+            object([
+                ("id", s(&repository_id)),
+                ("name", s(repository_name)),
+                ("full_name", s(format!("{owner}/{repository_name}"))),
+                ("organization", s(owner)),
+                ("private", Value::Bool(true)),
+                ("pushed_at", s("")),
+            ])
+        }))
     }
 
     async fn delete_repository(&self, _owner: &str, _repository_name: &str) -> Result<bool> {
@@ -1484,24 +1857,31 @@ impl Adapter for Entire {
         &[WebhookScope::Installation]
     }
 
+    /// Under the installation's own record of the owner once its
+    /// repositories are listed: `et/{project}`, or `gh/{owner}` for a GitHub
+    /// mirror.
     fn repository_url(&self, owner: &str, repository_name: &str) -> String {
-        format!("{}/et/{owner}/{repository_name}", self.web_endpoint)
+        format!("{}/{}/{repository_name}", self.web_endpoint, web_owner(&self.canonical_owner(owner, repository_name)))
     }
 
     fn organization_url(&self, owner: &str) -> Result<String> {
-        Ok(format!("{}/et/{owner}", self.web_endpoint))
+        Ok(format!("{}/{}", self.web_endpoint, web_owner(owner)))
     }
 
+    /// A branch's commits, which is how Entire shows a branch.
     fn branch_url(&self, owner: &str, repository_name: &str, branch: &str) -> String {
-        format!("{}/tree/{branch}", self.repository_url(owner, repository_name))
+        format!("{}/commits/{}", self.repository_url(owner, repository_name), raw(branch))
     }
 
     fn commit_url(&self, owner: &str, repository_name: &str, commit_hash: &str) -> String {
         format!("{}/commit/{commit_hash}", self.repository_url(owner, repository_name))
     }
 
+    /// A file as `{ref}/{path}`, the way other providers' blob addresses
+    /// take it; Entire names the ref in the query.
     fn file_url(&self, owner: &str, repository_name: &str, reference: &str) -> String {
-        format!("{}/blob/{reference}", self.repository_url(owner, repository_name))
+        let (reference, path) = reference.split_once('/').unwrap_or((reference, ""));
+        format!("{}/files/{path}?ref={}", self.repository_url(owner, repository_name), raw(reference))
     }
 
     async fn repository_name(&self, repository_id: &str) -> Result<String> {
@@ -1538,11 +1918,14 @@ impl Adapter for Entire {
         target_url: &str,
         context: &str,
     ) -> Result<()> {
-        self.update_check(owner, repository_name, sha, state, context, description, "", target_url).await
+        self.update_check(owner, repository_name, sha, state, context, description, "", target_url, "", "", "").await
     }
 
-    /// A check run upsert keyed by the check's name, in a suite of the same
-    /// name, on a branch holding the commit.
+    /// A check run upsert keyed by the check's key (its name by default), in
+    /// a suite of its own unless one is named, on a branch holding the
+    /// commit. Entire evaluates a trail's gate as a write lands, which can be
+    /// before it derives the suite's state from its runs, so a shared suite
+    /// is stated afterwards from every run under it.
     async fn update_check(
         &self,
         owner: &str,
@@ -1553,14 +1936,113 @@ impl Adapter for Entire {
         title: &str,
         summary: &str,
         details_url: &str,
+        suite: &str,
+        key: &str,
+        suite_key: &str,
     ) -> Result<()> {
         let repository_id = self.repository_id(owner, repository_name).await?;
         let path = format!("/repos/{}/commits/{}/check-runs", raw(&repository_id), raw(sha));
         let branch = self.branch_containing(&repository_id, sha).await?;
-        let write = self.check_runs(&branch, state, name, title, summary, details_url);
-        let response = self.data_call(&repository_id, Call::post(path).params(write)).await?;
+        let write = self.check_runs(&branch, state, name, title, summary, details_url, suite, key, suite_key);
+        self.write_check_runs(&repository_id, &path, write.clone()).await?;
+        if suite.is_empty() && suite_key.is_empty() {
+            return Ok(());
+        }
+
+        // Of reports that finish together, the last to read has seen them
+        // all, and Entire keeps the newest suite state
+        let read_at = time::rfc3339_micros_now();
+        let response = self.data_call(&repository_id, Call::get(&path)).await?;
         if response.status >= 400 {
-            return Err(request_failed("Failed to update commit status", &response));
+            return Err(request_failed("Failed to list check runs", &response));
+        }
+        let check_suite = at(&write, "check_suite");
+        let suite_key = text(&check_suite, "key");
+        let mut runs: Vec<(String, Value)> = Vec::new();
+        let mut keep = |run: Value| {
+            let key = text(&run, "key");
+            match runs.iter_mut().find(|(k, _)| *k == key) {
+                Some(slot) => slot.1 = run,
+                None => runs.push((key, run)),
+            }
+        };
+        for run in each(&nested(&body(&response), "check_runs")) {
+            if php::is_array(&run) && text(&run, "suite_key") == suite_key {
+                keep(run);
+            }
+        }
+        keep(at_index(&at(&write, "check_runs"), 0));
+        let runs: Vec<Value> = runs.into_iter().map(|(_, run)| run).collect();
+        let mut stated = check_suite;
+        merge(&mut stated, suite_state(&runs, &read_at));
+        self.write_check_runs(
+            &repository_id,
+            &path,
+            object([("branch", at(&write, "branch")), ("check_suite", stated), ("check_runs", empty_array())]),
+        )
+        .await
+    }
+
+    /// Reports a deployed resource through Entire's deployments API, which
+    /// shows it on every change holding the commit. A token the installation
+    /// has not granted deployments reports none.
+    async fn update_deployment(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        sha: &str,
+        key: &str,
+        name: &str,
+        state: &str,
+        environment: &str,
+        url: &str,
+        logs_url: &str,
+        kind: &str,
+        group_key: &str,
+        group_name: &str,
+    ) -> Result<()> {
+        if self.lacks_permission("deployments") {
+            return Ok(());
+        }
+        let repository_id = self.repository_id(owner, repository_name).await?;
+        let now = time::rfc3339_micros_now();
+        let (status, conclusion) = deployment_state(state);
+        let mut deployment = object([
+            ("key", s(key)),
+            ("name", s(name)),
+            ("status", s(status)),
+            ("environment", s(environment)),
+            ("external_updated_at", s(&now)),
+        ]);
+        if let Some(conclusion) = conclusion {
+            php::set(&mut deployment, "conclusion", s(conclusion));
+            php::set(&mut deployment, "completed_at", s(&now));
+        }
+        if !kind.is_empty() {
+            php::set(&mut deployment, "type", s(kind));
+        }
+        if !group_key.is_empty() {
+            let group_name = if group_name.is_empty() { group_key } else { group_name };
+            php::set(&mut deployment, "group", object([("key", s(group_key)), ("name", s(group_name))]));
+        }
+        // An inactive resource offers no links
+        if status != "inactive" && is_link(url) {
+            php::set(&mut deployment, "environment_url", s(url));
+        }
+        if status != "inactive" && is_link(logs_url) {
+            php::set(&mut deployment, "logs_url", s(logs_url));
+        }
+        let branch = self.branch_containing(&repository_id, sha).await?;
+        let response = self
+            .versioned_data_call(
+                &repository_id,
+                Call::post(format!("/repos/{}/commits/{}/deployments", raw(&repository_id), raw(sha)))
+                    .params(object([("branch", s(branch)), ("deployments", php::list(vec![deployment]))])),
+                "v0",
+            )
+            .await?;
+        if response.status >= 400 {
+            return Err(request_failed("Failed to report deployment", &response));
         }
         Ok(())
     }
@@ -1731,28 +2213,7 @@ impl Git for Entire {
                 )
                 .await?;
             }
-            let absolute = format!("{directory}/{relative}");
-            let parent = std::path::Path::new(&absolute).parent().map(|p| p.to_path_buf()).unwrap_or_default();
-            if !parent.is_dir() && utopia_async::fs::create_dir_all(&parent).await.is_err() {
-                return Err(Error::exception(format!("Failed to create directory for {filepath}"), 0));
-            }
-            let checkout = std::fs::canonicalize(&directory).ok();
-            let resolved = std::fs::canonicalize(&parent).ok();
-            let escapes = match (checkout, resolved) {
-                (Some(checkout), Some(resolved)) => {
-                    let root = format!("{}/", checkout.to_string_lossy());
-                    let inside = format!("{}/", resolved.to_string_lossy());
-                    !inside.starts_with(&root)
-                }
-                _ => true,
-            };
-            let is_link = std::fs::symlink_metadata(&absolute).map(|m| m.file_type().is_symlink()).unwrap_or(false);
-            if escapes || is_link {
-                return Err(Error::exception(format!("File path escapes the repository: {filepath}"), 0));
-            }
-            if utopia_async::fs::write(&absolute, content).await.is_err() {
-                return Err(Error::exception(format!("Failed to write {filepath}"), 0));
-            }
+            git::write_checkout_file(&directory, &relative, content).await?;
             self.execute(
                 &git::git(&directory)?.argument("add")?.argument("--")?.argument(relative.as_str())?,
                 "Staging the file",
@@ -1918,10 +2379,6 @@ impl Git for Entire {
         .await;
         self.remove_directory(&directory).await?;
         result
-    }
-
-    fn supports_repository_creation(&self) -> bool {
-        false
     }
 
     fn supports_repository_deletion(&self) -> bool {

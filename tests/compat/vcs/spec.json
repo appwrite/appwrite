@@ -1295,8 +1295,7 @@
       "doc": "$adapter->supportsRepositoryCreation(...named args): its result, a Command as its string, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
       "covers": [
         "Utopia\\VCS\\Adapter\\Git::supportsRepositoryCreation",
-        "Utopia\\VCS\\Adapter\\Git\\Origin::supportsRepositoryCreation",
-        "Utopia\\VCS\\Adapter\\Git\\Entire::supportsRepositoryCreation"
+        "Utopia\\VCS\\Adapter\\Git\\Origin::supportsRepositoryCreation"
       ],
       "services": [
         "vcs-http",
@@ -1896,6 +1895,27 @@
       "covers": [
         "Utopia\\VCS\\Adapter\\Git\\Entire::updateCheck",
         "Utopia\\VCS\\Adapter::updateCheck"
+      ],
+      "services": [
+        "vcs-http",
+        "vcs-https"
+      ]
+    },
+    "vcs.update_deployment": {
+      "doc": "$adapter->updateDeployment(...named args): its result, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
+      "covers": [
+        "Utopia\\VCS\\Adapter\\Git\\Entire::updateDeployment",
+        "Utopia\\VCS\\Adapter::updateDeployment"
+      ],
+      "services": [
+        "vcs-http",
+        "vcs-https"
+      ]
+    },
+    "vcs.get_merge_base": {
+      "doc": "$adapter->getMergeBase(...named args): its result, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
+      "covers": [
+        "Utopia\\VCS\\Adapter\\Git\\Entire::getMergeBase"
       ],
       "services": [
         "vcs-http",

@@ -185,6 +185,60 @@
       ]
     },
     {
+      "name": "testGetEventPushKeepsBranchNamedLikeRef",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "{\"ref\":\"refs\\/heads\\/refs\\/heads\\/master\",\"before\":\"abc123\",\"after\":\"def456\",\"created\":false,\"deleted\":false,\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"html_url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\",\"owner\":{\"login\":\"test-owner\"}},\"sender\":{\"login\":\"Test Author\",\"html_url\":\"http:\\/\\/gitea:3000\\/pusher-user\",\"avatar_url\":\"http:\\/\\/gitea:3000\\/avatars\\/pusher\"},\"head_commit\":{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"}},\"commits\":[{\"id\":\"def456\",\"added\":[],\"removed\":[],\"modified\":[]}]}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "refs/heads/master",
+              "branchUrl": "http://gitea:3000/test-owner/test-repo/src/branch/refs/heads/master",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "http://gitea:3000/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "http://gitea:3000/pusher-user",
+              "authorAvatarUrl": "http://gitea:3000/avatars/pusher",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "http://gitea:3000/test-owner/test-repo/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
       "name": "testGetEventPushDetectsBranchCreated",
       "steps": [
         {
@@ -568,6 +622,261 @@
             "$error": {
               "class": "Exception",
               "message": "Unsupported clone type: unknown",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testCreateFileRejectsUnsafePath with data set \"parent directory\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a2"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "filepath": "../escape.txt",
+            "content": "content",
+            "message": "Add file",
+            "branch": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path escapes the repository: ../escape.txt",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testCreateFileRejectsUnsafePath with data set \"parent directory on a branch\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a2"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "filepath": "docs/../../escape.txt",
+            "content": "content",
+            "message": "Add file",
+            "branch": "feature"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path escapes the repository: docs/../../escape.txt",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testCreateFileRejectsUnsafePath with data set \"git metadata\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a2"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "filepath": ".git/config",
+            "content": "content",
+            "message": "Add file",
+            "branch": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path names repository metadata: .git/config",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testCreateFileRejectsUnsafePath with data set \"git metadata on a branch\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a2"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "filepath": "nested/.GIT/hooks/pre-commit",
+            "content": "content",
+            "message": "Add file",
+            "branch": "feature"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path names repository metadata: nested/.GIT/hooks/pre-commit",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testCreateFileRejectsUnsafePath with data set \"no file\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a2"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "filepath": "./.",
+            "content": "content",
+            "message": "Add file",
+            "branch": "feature"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path names no file: ./.",
               "code": 0
             }
           }

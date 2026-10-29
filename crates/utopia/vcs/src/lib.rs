@@ -99,10 +99,11 @@ pub use origin::APP_JWT_EXPIRY as ORIGIN_APP_JWT_EXPIRY;
 /// Origin's push event type.
 pub use origin::EVENT_PUSH as ORIGIN_EVENT_PUSH;
 
-/// Entire's constants: event types, cores, JWT and token lifetimes.
+/// Entire's constants: forges, event types, cores, permissions, JWT and
+/// token lifetimes.
 pub mod entire_constants {
     pub use crate::entire::{
-        CORES, EVENT_INSTALLATION, EVENT_REF_CREATED, EVENT_REF_DELETED, EVENT_REF_UPDATED, PLUGIN_JWT_EXPIRY,
-        PLUGIN_JWT_SKEW, TOKEN_CACHE_TTL,
+        CORES, EVENT_INSTALLATION, EVENT_REF_CREATED, EVENT_REF_DELETED, EVENT_REF_UPDATED, FORGE_ENTIRE, FORGE_GITHUB,
+        PERMISSIONS, PLUGIN_JWT_EXPIRY, PLUGIN_JWT_SKEW, TOKEN_CACHE_TTL,
     };
 }

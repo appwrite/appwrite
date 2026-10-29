@@ -526,7 +526,7 @@ impl Adapter for GitLab {
                 }
 
                 let repository_url = or(at(&project, "web_url"), "");
-                let branch = php::str_replace("refs/heads/", "", &or(at(&payload, "ref"), ""));
+                let branch = crate::github::push_branch(&at(&payload, "ref"));
                 let branch_url = concat_if_both(&repository_url, "/-/tree/", &branch);
 
                 let mut affected: Array = Array::new();

@@ -646,9 +646,19 @@
                 "entire_clone_url": "",
                 "private": true,
                 "pushed_at": ""
+              },
+              {
+                "id": "repo_3",
+                "name": "lib",
+                "full_name": "gh/other-owner/lib.git",
+                "organization": "gh/other-owner",
+                "clone_url": "",
+                "entire_clone_url": "entire://cell.entire.test/gh/other-owner/lib",
+                "private": true,
+                "pushed_at": ""
               }
             ],
-            "total": 2
+            "total": 3
           }
         },
         {
@@ -715,8 +725,39 @@
             "per_page": 10
           },
           "expect": {
-            "items": [],
-            "total": 0
+            "items": [
+              {
+                "id": "repo_1",
+                "name": "app",
+                "full_name": "et/test-project/app",
+                "organization": "test-project",
+                "clone_url": "https://cell.entire.test/et/test-project/app.git",
+                "entire_clone_url": "",
+                "private": true,
+                "pushed_at": ""
+              },
+              {
+                "id": "repo_2",
+                "name": "website",
+                "full_name": "et/test-project/website",
+                "organization": "test-project",
+                "clone_url": "ssh://cell.entire.test/et/test-project/website",
+                "entire_clone_url": "",
+                "private": true,
+                "pushed_at": ""
+              },
+              {
+                "id": "repo_3",
+                "name": "lib",
+                "full_name": "gh/other-owner/lib.git",
+                "organization": "gh/other-owner",
+                "clone_url": "",
+                "entire_clone_url": "entire://cell.entire.test/gh/other-owner/lib",
+                "private": true,
+                "pushed_at": ""
+              }
+            ],
+            "total": 3
           }
         },
         {
@@ -1140,7 +1181,7 @@
             "commitAuthorAvatar": "",
             "commitAuthorUrl": "",
             "commitHash": "def4567890def4567890def4567890def4567890",
-            "commitUrl": "https://entire.io/et/test-project/app/commit/def4567890def4567890def4567890def4567890"
+            "commitUrl": "https://entire.com/et/test-project/app/commit/def4567890def4567890def4567890def4567890"
           }
         },
         {
@@ -1252,7 +1293,7 @@
             "commitAuthorAvatar": "",
             "commitAuthorUrl": "",
             "commitHash": "def4567890def4567890def4567890def4567890",
-            "commitUrl": "https://entire.io/et/test-project/app/commit/def4567890def4567890def4567890def4567890"
+            "commitUrl": "https://entire.com/et/test-project/app/commit/def4567890def4567890def4567890def4567890"
           }
         },
         {
@@ -1386,7 +1427,7 @@
             "directory": "/tmp/compat-fs/${ns}/clone",
             "rootDirectory": "src"
           },
-          "expect": "'export' 'ENTIRE_TOKEN=tok_fixture' && 'mkdir' '-p' '/tmp/compat-fs/${ns}/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'remote' 'add' 'origin' 'entire://cell.entire.test/et/test-project/app' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'src' >> '/tmp/compat-fs/${ns}/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/clone' 'main'"
+          "expect": "'export' 'ENTIRE_TOKEN=tok_fixture' && 'mkdir' '-p' '/tmp/compat-fs/${ns}/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'remote' 'add' 'origin' 'entire://cell.entire.test/et/test-project/app' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'src' >> '/tmp/compat-fs/${ns}/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/clone' 'main'"
         },
         {
           "op": "vcs.generate_clone_command",
@@ -1451,8 +1492,8 @@
           "expect": {
             "$error": {
               "class": "Exception",
-              "message": "createRepository() is not supported by entire",
-              "code": 0
+              "message": "This Entire installation cannot create repositories yet. Connect an existing repository, or accept the plugin's updated permissions in Entire if it asks for them.",
+              "code": 403
             }
           }
         },
@@ -1526,7 +1567,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"permissions\":{\"contents\":\"read\",\"checks\":\"write\"}}"
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
             },
             {
               "provider": "origin",
@@ -1558,7 +1599,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"permissions\":{\"contents\":\"read\"}}"
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"repositories\":\"create\"}}"
             },
             {
               "provider": "origin",
@@ -3552,7 +3593,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"permissions\":{\"contents\":\"read\",\"checks\":\"write\"}}"
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
             },
             {
               "provider": "origin",
@@ -3584,7 +3625,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"permissions\":{\"contents\":\"read\"}}"
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"repositories\":\"create\"}}"
             },
             {
               "provider": "origin",
@@ -4464,7 +4505,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"appwrite\",\"name\":\"appwrite\",\"status\":\"completed\",\"external_id\":\"appwrite\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"details_url\":\"https:\\/\\/appwrite.test\\/build\"},\"check_runs\":[{\"key\":\"appwrite\",\"name\":\"appwrite\",\"status\":\"completed\",\"external_id\":\"appwrite\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Built\",\"summary\":\"Built\"},\"details_url\":\"https:\\/\\/appwrite.test\\/build\"}]}"
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"appwrite\",\"name\":\"appwrite\",\"external_id\":\"appwrite\",\"external_updated_at\":\"<now>\",\"status\":\"completed\",\"conclusion\":\"success\",\"completed_at\":\"<now>\"},\"check_runs\":[{\"key\":\"appwrite\",\"name\":\"appwrite\",\"status\":\"completed\",\"external_id\":\"appwrite\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Built\",\"summary\":\"Built\"},\"details_url\":\"https:\\/\\/appwrite.test\\/build\"}]}"
             },
             {
               "provider": "origin",
@@ -4501,38 +4542,6 @@
             {
               "provider": "origin",
               "method": "POST",
-              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
-              "headers": [
-                [
-                  "Host",
-                  "<host>"
-                ],
-                [
-                  "User-Agent",
-                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
-                ],
-                [
-                  "Accept",
-                  "*/*"
-                ],
-                [
-                  "content-type",
-                  "application/json"
-                ],
-                [
-                  "Authorization",
-                  "Bearer tok_fixture"
-                ],
-                [
-                  "Content-Length",
-                  "<body>"
-                ]
-              ],
-              "body": "{\"targets\":[\"def4567890def4567890def4567890def4567890\"]}"
-            },
-            {
-              "provider": "origin",
-              "method": "POST",
               "target": "/entire-cell/api/v1/repos/repo_1/commits/def4567890def4567890def4567890def4567890/check-runs",
               "headers": [
                 [
@@ -4560,7 +4569,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"Site\",\"name\":\"Site\",\"status\":\"queued\",\"external_id\":\"Site\",\"external_updated_at\":\"<now>\"},\"check_runs\":[{\"key\":\"Site\",\"name\":\"Site\",\"status\":\"queued\",\"external_id\":\"Site\",\"external_updated_at\":\"<now>\",\"output\":{\"title\":\"Queued\",\"summary\":\"Queued\"}}]}"
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"Site\",\"name\":\"Site\",\"external_id\":\"Site\",\"external_updated_at\":\"<now>\",\"status\":\"queued\"},\"check_runs\":[{\"key\":\"Site\",\"name\":\"Site\",\"status\":\"queued\",\"external_id\":\"Site\",\"external_updated_at\":\"<now>\",\"output\":{\"title\":\"Queued\",\"summary\":\"Queued\"}}]}"
             },
             {
               "provider": "origin",
@@ -4882,7 +4891,7 @@
             "rootDirectory": "src"
           },
           "bind": "cmd",
-          "expect": "'export' 'ENTIRE_TOKEN=tok_fixture' && 'mkdir' '-p' '/tmp/compat-fs/${ns}/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'remote' 'add' 'origin' 'https://x-access-token:tok_fixture@${vcs-tls-host}/~${ns}/origin/git/test-owner/app.git' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'src' >> '/tmp/compat-fs/${ns}/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/clone' 'feature'"
+          "expect": "'export' 'ENTIRE_TOKEN=tok_fixture' && 'mkdir' '-p' '/tmp/compat-fs/${ns}/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'remote' 'add' 'origin' 'https://x-access-token:tok_fixture@${vcs-tls-host}/~${ns}/origin/git/test-owner/app.git' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'src' >> '/tmp/compat-fs/${ns}/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/clone' 'feature'"
         },
         {
           "op": "clone.run",
@@ -4937,7 +4946,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"permissions\":{\"contents\":\"read\",\"checks\":\"write\"}}"
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
             },
             {
               "provider": "origin",
@@ -5219,7 +5228,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"permissions\":{\"contents\":\"read\",\"checks\":\"write\"}}"
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
             },
             {
               "provider": "origin",
@@ -5251,7 +5260,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"permissions\":{\"contents\":\"read\",\"checks\":\"write\"}}"
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
             },
             {
               "provider": "origin",
@@ -5452,7 +5461,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"permissions\":{\"contents\":\"read\",\"checks\":\"write\"}}"
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
             },
             {
               "provider": "origin",
@@ -5484,7 +5493,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"permissions\":{\"contents\":\"read\",\"checks\":\"write\"}}"
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
             }
           ]
         }

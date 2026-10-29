@@ -190,6 +190,61 @@
       ]
     },
     {
+      "name": "testGetEventPushKeepsBranchNamedLikeRef",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "{\"created\":false,\"deleted\":false,\"ref\":\"refs\\/heads\\/refs\\/heads\\/main\",\"before\":\"abc123\",\"after\":\"def456\",\"repository\":{\"id\":123,\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"private\":true,\"html_url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\",\"owner\":{\"name\":\"test-owner\",\"login\":\"test-owner\"}},\"installation\":{\"id\":1234},\"head_commit\":{\"id\":\"def456\",\"message\":\"Test commit message\",\"url\":\"${vcs}\\/~${ns}\\/github\\/test-owner\\/test-repo\\/commit\\/def456\",\"author\":{\"name\":\"Test Author\",\"email\":\"author@example.com\"}},\"commits\":[{\"id\":\"def456\",\"added\":[],\"removed\":[],\"modified\":[]}],\"sender\":{\"html_url\":\"${vcs}\\/~${ns}\\/github\\/Test Author\",\"avatar_url\":\"https:\\/\\/avatars.githubusercontent.com\\/u\\/1?v=4\"}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "refs/heads/main",
+              "branchUrl": "${vcs}/~${ns}/github/test-owner/test-repo/tree/refs/heads/main",
+              "repositoryId": "123",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/github/test-owner/test-repo",
+              "installationId": "1234",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "${vcs}/~${ns}/github/Test Author",
+              "authorAvatarUrl": "https://avatars.githubusercontent.com/u/1?v=4",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "${vcs}/~${ns}/github/test-owner/test-repo/commit/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
       "name": "testGetEventPushDetectsBranchCreated",
       "steps": [
         {
@@ -632,6 +687,27 @@
       ]
     },
     {
+      "name": "testUpdateCheckNamesTheStatusAfterItsSuite",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
       "name": "testInitializeVariablesSignsJwtWithPemString",
       "steps": [
         {
@@ -738,6 +814,27 @@
     },
     {
       "name": "testSearchRepositoriesPrivateProfile",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetInstallationRepositoryScansPastThousandRepositories",
       "steps": [
         {
           "op": "vcs.new",

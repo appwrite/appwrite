@@ -63,6 +63,7 @@ const METHODS: &[&str] = &[
     "getInstallUrl",
     "getInstallationRepository",
     "getLatestCommit",
+    "getMergeBase",
     "getName",
     "getOrganizationUrl",
     "getOwnerName",
@@ -124,6 +125,7 @@ const METHODS: &[&str] = &[
     "updateCheckRun",
     "updateComment",
     "updateCommitStatus",
+    "updateDeployment",
     "updatePullRequest",
     "updatePullRequestReview",
     "validateWebhookEvent",
@@ -178,6 +180,7 @@ pub const OPS: &[&str] = &[
     "vcs.get_install_url",
     "vcs.get_installation_repository",
     "vcs.get_latest_commit",
+    "vcs.get_merge_base",
     "vcs.get_name",
     "vcs.get_organization_url",
     "vcs.get_owner_name",
@@ -239,6 +242,7 @@ pub const OPS: &[&str] = &[
     "vcs.update_check_run",
     "vcs.update_comment",
     "vcs.update_commit_status",
+    "vcs.update_deployment",
     "vcs.update_pull_request",
     "vcs.update_pull_request_review",
     "vcs.validate_webhook_event",
@@ -743,6 +747,28 @@ async fn invoke(any: &mut Any, method: &str, a: &Map<String, Value>) -> Result<V
                     required(a, "title")?,
                     string(a, "summary", "")?,
                     string(a, "detailsUrl", "")?,
+                    string(a, "suite", "")?,
+                    string(a, "key", "")?,
+                    string(a, "suiteKey", "")?,
+                )
+                .await,
+            |()| Value::Null
+        ),
+        "updateDeployment" => ok!(
+            any.git()
+                .update_deployment(
+                    owner()?,
+                    repo()?,
+                    required(a, "SHA")?,
+                    required(a, "key")?,
+                    required(a, "name")?,
+                    required(a, "state")?,
+                    string(a, "environment", "preview")?,
+                    string(a, "url", "")?,
+                    string(a, "logsUrl", "")?,
+                    string(a, "type", "")?,
+                    string(a, "groupKey", "")?,
+                    string(a, "groupName", "")?,
                 )
                 .await,
             |()| Value::Null
@@ -1193,6 +1219,10 @@ async fn entire_method(entire: &mut Entire, method: &str, a: &Map<String, Value>
         "getPullRequestUrl" => {
             json!(entire.pull_request_url(owner()?, repo()?, int(a, "pullRequestNumber", None)?))
         }
+        "getMergeBase" => ok!(
+            entire.merge_base(owner()?, repo()?, required(a, "commitA")?, required(a, "commitB")?).await,
+            |v: String| json!(v)
+        ),
         _ => undefined("Utopia\\VCS\\Adapter\\Git\\Entire", method),
     })
 }
