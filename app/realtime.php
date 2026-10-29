@@ -25,6 +25,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\WebSocket\Adapter\Swoole as SwooleAdapter;
 use Swoole\Coroutine;
+use Swoole\Coroutine\Channel;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Runtime;
@@ -346,6 +347,11 @@ $statsDocument = null;
 // deployment's job. `_APP_WORKERS_NUM` still overrides.
 $workerNumber = intval(System::getEnv('_APP_WORKERS_NUM', 0)) ?: 1;
 
+// How long one permissionsChanged event may hold the pub/sub subscriber while its
+// verification runs against the database. On expiry the affected connections are
+// closed unverified (fail closed) and the firehose moves on.
+$permissionTimeout = (float) System::getEnv('_APP_REALTIME_PERMISSION_TIMEOUT', '5');
+
 $adapter = new SwooleAdapter(port: System::getEnv('PORT', 80));
 $adapter
     ->setPackageMaxLength(64000) // Default maximum Package Size (64kb)
@@ -436,7 +442,7 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, $permissionTimeout) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -585,6 +591,37 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         }
     });
 
+    // Verification reads the platform and project databases. Run in this subscriber
+    // coroutine, a cached half-open connection would park the whole firehose on a
+    // socket read, so it runs in a child coroutine, whose fresh context resolves
+    // fresh database objects, and the subscriber waits at most $permissionTimeout.
+    $verifyPermissions = function (callable $verify, callable $onTimeout) use ($permissionTimeout): array {
+        $done = new Channel(1);
+        $started = go(function () use ($verify, $done): void {
+            try {
+                $done->push(['closing' => $verify()]);
+            } catch (\Throwable $th) {
+                $done->push(['error' => $th]);
+            }
+        });
+
+        if ($started === false) {
+            Console::warning('Coroutine limit reached, verifying realtime permissions inline');
+
+            return $verify();
+        }
+
+        $result = $done->pop($permissionTimeout);
+        if ($result === false) {
+            return $onTimeout();
+        }
+        if (isset($result['error'])) {
+            throw $result['error'];
+        }
+
+        return $result['closing'];
+    };
+
     while ($attempts < 300) {
         $span = Span::init('realtime.pubsub');
         try {
@@ -604,378 +641,458 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
-                $event = json_decode($payload, true);
-                $closing = [];
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, $verifyPermissions) {
+                try {
+                    $event = json_decode($payload, true);
+                    $closing = [];
 
-                $eventTimestamp = $event['data']['timestamp'] ?? null;
-                if (\is_string($eventTimestamp)) {
-                    try {
-                        $eventDate = new \DateTimeImmutable($eventTimestamp, new \DateTimeZone('UTC'));
-                        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
-                        $eventTimestampMs = (float) $eventDate->format('U.u') * 1000;
-                        $nowTimestampMs = (float) $now->format('U.u') * 1000;
-                        $arrivalDelayMs = (int) \max(0, $nowTimestampMs - $eventTimestampMs);
-
-                        $register->get('telemetry.arrivalDelayHistogram')->record($arrivalDelayMs);
-                    } catch (\Throwable) {
-                        // Ignore invalid timestamp payloads.
-                    }
-                }
-
-                if ($event['permissionsChanged'] && isset($event['userId'])) {
-                    $projectId = $event['project'];
-                    $userId = $event['userId'];
-
-                    // From connection state rather than the subscription tree: a connection
-                    // opened without channels, or that dropped its last subscription, still
-                    // holds its roles and can subscribe again later.
-                    $connections = $realtime->getUserConnections($projectId, $userId);
-                    // Connections this user opened while impersonating someone else carry
-                    // that user's roles but stand or fall with this user's session and status.
-                    $impersonating = $realtime->getImpersonatorConnections($projectId, $userId);
-                    // Admin-mode connections live in the project they administer, but end with
-                    // this console user's session, status and membership.
-                    $administering = $projectId === 'console' ? $realtime->getAdminConnections($userId) : [];
-
-                    if (!empty($connections) || !empty($impersonating) || !empty($administering)) {
-                        $consoleDatabase = getConsoleDB();
-                        $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
-                        $database = getProjectDB($project);
-
-                        /** @var User $user */
-                        $user = $database->getDocument('users', $userId);
-                        $roles = $user->getRoles($database->getAuthorization());
-
-                        // The HTTP API re-checks these on every request; a connection only
-                        // gets here, so this is where it learns that its user is gone or
-                        // blocked, or that the session it was opened with has ended. It
-                        // keeps its roles for this one event and is closed once that has
-                        // been delivered.
-                        $revoked = static fn (?string $sessionId): bool => $user->isEmpty()
-                            || $user->getAttribute('status') === false
-                            || ($sessionId !== null && (!$user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null) || !$user->sessionFactorsMet($sessionId)));
-
-                        foreach ($impersonating as $connection) {
-                            $impersonatorSessionId = $realtime->connections[$connection]['impersonator']['sessionId'] ?? null;
-
-                            // The HTTP API also stops impersonating as soon as this user is
-                            // no longer an impersonator.
-                            if ($revoked($impersonatorSessionId) || $user->getAttribute('impersonator', false) !== true) {
-                                $closing[$connection] = true;
-                                continue;
-                            }
-
-                            // The connection runs on this user's session, so extending that
-                            // session extends the connection.
-                            if ($impersonatorSessionId !== null) {
-                                $realtime->connections[$connection]['expire'] = $user->getSessionExpiry($impersonatorSessionId);
-                            }
-                        }
-
-                        // One query for every administered project, instead of one per connection.
-                        $administeredIds = [];
-                        foreach ($administering as $connection) {
-                            $administeredIds[$realtime->connections[$connection]['projectId'] ?? ''] = true;
-                        }
-                        unset($administeredIds['']);
-                        $administeredProjects = [];
-                        if (!empty($administeredIds)) {
-                            $found = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->find('projects', [
-                                Query::equal('$id', \array_map(\strval(...), \array_keys($administeredIds))),
-                                Query::limit(\count($administeredIds)),
-                            ]));
-                            foreach ($found as $administered) {
-                                $administeredProjects[$administered->getId()] = $administered;
-                            }
-                        }
-
-                        foreach ($administering as $connection) {
-                            $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
-                            $admin = $realtime->connections[$connection]['admin'];
-                            // A deleted project is an empty document here and ends the connection below.
-                            $administered = $administeredProjects[$realtime->connections[$connection]['projectId'] ?? ''] ?? new Document();
-
-                            // Its roles came from this membership, so any change to it ends the connection.
-                            if (
-                                $revoked($sessionId)
-                                || $administered->getAttribute('teamId', '') !== $admin['teamId']
-                                || $user->getMembershipRoles($admin['teamId']) !== $admin['roles']
-                            ) {
-                                $closing[$connection] = true;
-                                continue;
-                            }
-
-                            if ($sessionId !== null) {
-                                $realtime->connections[$connection]['expire'] = $user->getSessionExpiry($sessionId);
-                            }
-                        }
-
-                        foreach ($connections as $connection) {
-                            $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
-
-                            if ($revoked($sessionId)) {
-                                $closing[$connection] = true;
-                                continue;
-                            }
-
-                            $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
-                            $authorization = $realtime->connections[$connection]['authorization'] ?? null;
-                            $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
-                            $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
-                            $presence = $realtime->connections[$connection]['presence'] ?? null;
-                            $jwtExpire = $realtime->connections[$connection]['jwtExpire'] ?? null;
-                            $limits = $realtime->connections[$connection]['limits'] ?? null;
-                            // Re-read, as extending the session moves it. An impersonated
-                            // connection has no sessionId; its impersonator's events refresh it.
-                            $expire = $sessionId !== null
-                                ? $user->getSessionExpiry($sessionId)
-                                : ($realtime->connections[$connection]['expire'] ?? null);
-                            $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
-
-                            $meta = $realtime->getSubscriptionMetadata($connection);
-
-                            $realtime->unsubscribe($connection);
-
-                            foreach ($meta as $subscriptionId => $subscription) {
-                                $queries = Query::parseQueries($subscription['queries'] ?? []);
-                                $channels = Realtime::rebindAccountChannels(
-                                    $subscription['channels'] ?? [],
-                                    $previousUserId,
-                                    $userId
-                                );
-                                $realtime->subscribe(
-                                    $projectId,
-                                    $connection,
-                                    $subscriptionId,
-                                    $roles,
-                                    $channels,
-                                    $queries,
-                                    $userId
-                                );
-                            }
-
-
-                            // Restore authorization after subscribe
-                            // meta can be empty as well as the channels are not required query param to connect
-                            // channels and queries can be sent via message later on
-                            // so if meta is empty we are not subscribing above to the projectId
-                            if (!isset($realtime->connections[$connection])) {
-                                $realtime->subscribe($projectId, $connection, '', $roles, [], [], $userId);
-                            }
-                            if ($authorization !== null && isset($realtime->connections[$connection])) {
-                                $realtime->connections[$connection]['authorization'] = $authorization;
-                                $realtime->connections[$connection]['impersonatedUserId'] = $impersonatedUserId;
-                                $realtime->connections[$connection]['impersonator'] = $impersonator;
-                                $realtime->connections[$connection]['sessionId'] = $sessionId;
-                                $realtime->connections[$connection]['expire'] = $expire;
-                                $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
-                                // The presence hold must survive too, or closing the socket later
-                                // cannot release this worker's count (the holder index is not
-                                // cleared by unsubscribe, only the connection entry is).
-                                if ($presence !== null) {
-                                    $realtime->connections[$connection]['presence'] = $presence;
-                                }
-                            }
-                            if ($limits !== null && isset($realtime->connections[$connection])) {
-                                $realtime->connections[$connection]['limits'] = $limits;
-                            }
-
-                            $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
-                            $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
-                            if ($subscriptionDelta !== 0) {
-                                $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
-                            }
-
-                            // Tail entries live outside the subscription tree, so the rebuild
-                            // above doesn't touch them. Drop any whose authorizing team role
-                            // the connection no longer holds (membership revoked / project moved).
-                            $eventTailRegistry->revalidateConnection($connection, $roles);
-                        }
-                    }
-                } elseif ($event['permissionsChanged']) {
-                    // `projects.{projectId}.sessions.delete`: every connection of the named
-                    // project re-validates its session against the new invalidation timestamp.
-                    // `projects.{projectId}.update.team`: every tail of the project is
-                    // re-authorized against the project's new read roles.
-                    // The project is taken from the `projects.<id>` channel, as no single
-                    // userId covers all connections.
-                    $targetProjectId = '';
-                    foreach (($event['data']['channels'] ?? []) as $channel) {
-                        if (\str_starts_with($channel, 'projects.')) {
-                            $targetProjectId = \substr($channel, \strlen('projects.'));
-                            break;
-                        }
-                    }
-
-                    if ($targetProjectId !== '' && $targetProjectId !== 'console') {
-                        $consoleDatabase = getConsoleDB();
-                        $targetProject = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $targetProjectId));
-                        $database = getProjectDB($targetProject);
-                        $invalidatedAt = $targetProject->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
-
-                        foreach ($realtime->getProjectConnections($targetProjectId) as $connection) {
-                            $userId = $realtime->connections[$connection]['userId'] ?? '';
-                            $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
-                            $admin = $realtime->connections[$connection]['admin'] ?? null;
-
-                            // An admin-mode connection holds no project session, but a transfer
-                            // ends the access its organization gave it.
-                            if ($admin !== null) {
-                                if ($targetProject->getAttribute('teamId', '') !== $admin['teamId']) {
-                                    $closing[$connection] = true;
-                                }
-                                continue;
-                            }
-
-                            if ($userId === '' || $sessionId === null) {
-                                continue; // Guests and keys hold no project session to invalidate.
-                            }
-
-                            /** @var User $user */
-                            $user = $database->getDocument('users', $userId);
-
-                            if (
-                                $user->isEmpty()
-                                || $user->getAttribute('status') === false
-                                || !$user->sessionActive($sessionId, $invalidatedAt)
-                            ) {
-                                $closing[$connection] = true;
-                            }
-                        }
-
-                        $eventTailRegistry->reauthorizeProject(
-                            $targetProjectId,
-                            $targetProject->getPermissionsByType(PermissionType::Read),
-                            fn (int $connection): array => $realtime->connections[$connection]['roles'] ?? [],
-                        );
-                    }
-                }
-
-                // Deleting an organization names no user, so end its admin-mode connections here.
-                if (($event['project'] ?? '') === 'console') {
-                    foreach (($event['data']['events'] ?? []) as $name) {
-                        $parts = \explode('.', $name);
-                        if (\count($parts) === 3 && $parts[0] === 'teams' && $parts[1] !== '*' && $parts[2] === 'delete') {
-                            foreach ($realtime->getTeamAdminConnections($parts[1]) as $connection) {
-                                $closing[$connection] = true;
-                            }
-                        }
-                    }
-                }
-
-                $receivers = $realtime->getSubscribers($event);
-
-                if (System::getEnv('_APP_ENV', 'production') === 'development' && !empty($receivers)) {
-                    Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                    Console::log("[Debug][Worker {$workerId}] Connection IDs: " . json_encode(array_keys($receivers)));
-                    Console::log("[Debug][Worker {$workerId}] Matched: " . json_encode(array_values($receivers)));
-                    Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
-                }
-
-                $total = 0;
-                $outboundBytes = 0;
-
-                // One frame per connection: `subscriptions` carries that connection's
-                // matched subscription IDs, and those are ID::unique() per connection
-                // (see the subscribe handler), so no two connections can ever share a
-                // frame. (The grouping this replaced keyed on exactly those IDs and so
-                // never collapsed -- it always built one group of one.)
-                //
-                // `subscriptions` is the only part that varies, and it is small, so the
-                // document is serialised once per event rather than once per subscriber.
-                // This loop's json_encode was 26% of realtime's on-CPU work during a
-                // fan-out burst, against 2.8% at rest.
-                $data = $event['data'];
-                unset($data['subscriptions']);
-                // Decoding into arrays turns objects such as `prefs: {}` into `[]`, so when that
-                // changed the published JSON, the payload is re-read as objects for the frame.
-                if ($receivers !== [] && \json_encode($event) !== $payload) {
-                    $data['payload'] = \json_decode($payload)->data->payload ?? $data['payload'];
-                }
-                $tail = $data === [] ? '' : ',' . substr(json_encode($data), 1, -1);
-
-                $now = \time();
-                foreach ($receivers as $id => $matched) {
-                    // Expiry fires no event, so it is checked on every send. Nothing more
-                    // once the session or JWT has expired, as the HTTP API would refuse it;
-                    // the connection is closed below.
-                    if ($realtime->isExpired($id, $now)) {
-                        $closing[$id] = true;
-                        continue;
-                    }
-
-                    $payloadJson = '{"type":"event","data":{"subscriptions":'
-                        . json_encode(array_keys($matched)) . $tail . '}}';
-
-                    $server->send([$id], $payloadJson);
-
-                    $total++;
-                    $outboundBytes += strlen($payloadJson);
-                }
-
-                if ($total > 0) {
-                    $register->get('telemetry.messageSentCounter')->add($total);
-                    $register->get('telemetry.outboundBytesCounter')->add($outboundBytes);
-                    $stats->incr($event['project'], 'messages', $total);
-                    $updatedAt = $event['data']['payload']['$updatedAt'] ?? null;
-                    if (\is_string($updatedAt)) {
+                    $eventTimestamp = $event['data']['timestamp'] ?? null;
+                    if (\is_string($eventTimestamp)) {
                         try {
-                            $updatedAtDate = new \DateTimeImmutable($updatedAt, new \DateTimeZone('UTC'));
+                            $eventDate = new \DateTimeImmutable($eventTimestamp, new \DateTimeZone('UTC'));
                             $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
-                            $updatedAtTimestampMs = (float) $updatedAtDate->format('U.u') * 1000;
+                            $eventTimestampMs = (float) $eventDate->format('U.u') * 1000;
                             $nowTimestampMs = (float) $now->format('U.u') * 1000;
-                            $delayMs = (int) \max(0, $nowTimestampMs - $updatedAtTimestampMs);
+                            $arrivalDelayMs = (int) \max(0, $nowTimestampMs - $eventTimestampMs);
 
-                            $register->get('telemetry.deliveryDelayHistogram')->record($delayMs);
+                            $register->get('telemetry.arrivalDelayHistogram')->record($arrivalDelayMs);
                         } catch (\Throwable) {
                             // Ignore invalid timestamp payloads.
                         }
                     }
 
-                    $projectId = $event['project'] ?? null;
+                    if ($event['permissionsChanged'] && isset($event['userId'])) {
+                        $projectId = $event['project'];
+                        $userId = $event['userId'];
 
-                    if (!empty($projectId)) {
-                        // Reached only when $total > 0, and every frame carries the
-                        // literal envelope, so outbound bytes are always non-zero.
-                        $usage->add([
-                            METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => $total,
-                            METRIC_REALTIME_OUTBOUND => $outboundBytes,
-                        ], $projectId);
-                    }
+                        // From connection state rather than the subscription tree: a connection
+                        // opened without channels, or that dropped its last subscription, still
+                        // holds its roles and can subscribe again later.
+                        $connections = $realtime->getUserConnections($projectId, $userId);
+                        // Connections this user opened while impersonating someone else carry
+                        // that user's roles but stand or fall with this user's session and status.
+                        $impersonating = $realtime->getImpersonatorConnections($projectId, $userId);
+                        // Admin-mode connections live in the project they administer, but end with
+                        // this console user's session, status and membership.
+                        $administering = $projectId === 'console' ? $realtime->getAdminConnections($userId) : [];
 
-                }
+                        if (!empty($connections) || !empty($impersonating) || !empty($administering)) {
+                            // Set by the subscriber when verification times out: the connections were
+                            // closed unverified, so a late-finishing child must not touch their state.
+                            $abandoned = false;
 
-                // Connections whose access ended with this event got it above with the
-                // roles they held until now, so the client sees what ended it before the
-                // socket goes. Expired ones got nothing.
-                foreach (\array_keys($closing) as $connection) {
-                    $server->send([$connection], $unauthorizedPayloadJson);
-                    $server->close($connection, $unauthorized->getCode());
-                }
+                            $onTimeout = function () use ($event, $projectId, $userId, $connections, $impersonating, $administering, &$abandoned): array {
+                                // Fail closed: a reconnect re-authenticates with fresh roles, so an
+                                // unverifiable user is excluded rather than served on stale roles.
+                                $abandoned = true;
+                                Console::error('Realtime permission verification timed out (project: ' . $projectId . ', user: ' . $userId . ', event: ' . ($event['data']['events'][0] ?? 'unknown') . '); closing the user\'s connections unverified');
 
-                // Console live event tail: runs for EVERY firehose event, regardless of
-                // whether it had regular subscribers ($total). The firehose is published
-                // unconditionally, so a project tailed from the console with no other
-                // realtime clients must still be observed here.
-                //
-                // Most events carry the owning project in $event['project']. But some
-                // project-owned events (schema changes, deployments, rules, migrations,
-                // project settings) are rerouted by fromPayload() to project='console';
-                // for those the real project id lives in the `projects.<id>` channel.
-                // Resolve that so the tail still receives them.
-                $tailProjectId = $event['project'] ?? '';
-                if ($tailProjectId === 'console') {
-                    $tailProjectId = '';
-                    foreach (($event['data']['channels'] ?? []) as $channel) {
-                        if (\str_starts_with($channel, 'projects.')) {
-                            $tailProjectId = \substr($channel, \strlen('projects.'));
-                            break;
+                                $closing = [];
+                                foreach ([...$connections, ...$impersonating, ...$administering] as $connection) {
+                                    $closing[$connection] = true;
+                                }
+
+                                return $closing;
+                            };
+
+                            $verify = function () use ($realtime, $register, $eventTailRegistry, $projectId, $userId, $connections, $impersonating, $administering, &$abandoned): array {
+                                $closing = [];
+                                $consoleDatabase = getConsoleDB();
+                                $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
+                                $database = getProjectDB($project);
+
+                                /** @var User $user */
+                                $user = $database->getDocument('users', $userId);
+                                $roles = $user->getRoles($database->getAuthorization());
+
+                                // The HTTP API re-checks these on every request; a connection only
+                                // gets here, so this is where it learns that its user is gone or
+                                // blocked, or that the session it was opened with has ended. It
+                                // keeps its roles for this one event and is closed once that has
+                                // been delivered.
+                                $revoked = static fn (?string $sessionId): bool => $user->isEmpty()
+                                    || $user->getAttribute('status') === false
+                                    || ($sessionId !== null && (!$user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null) || !$user->sessionFactorsMet($sessionId)));
+
+                                foreach ($impersonating as $connection) {
+                                    if ($abandoned || !isset($realtime->connections[$connection])) {
+                                        continue;
+                                    }
+
+                                    $impersonatorSessionId = $realtime->connections[$connection]['impersonator']['sessionId'] ?? null;
+
+                                    // The HTTP API also stops impersonating as soon as this user is
+                                    // no longer an impersonator.
+                                    if ($revoked($impersonatorSessionId) || $user->getAttribute('impersonator', false) !== true) {
+                                        $closing[$connection] = true;
+                                        continue;
+                                    }
+
+                                    // The connection runs on this user's session, so extending that
+                                    // session extends the connection.
+                                    if ($impersonatorSessionId !== null) {
+                                        $realtime->connections[$connection]['expire'] = $user->getSessionExpiry($impersonatorSessionId);
+                                    }
+                                }
+
+                                // One query for every administered project, instead of one per connection.
+                                $administeredIds = [];
+                                foreach ($administering as $connection) {
+                                    $administeredIds[$realtime->connections[$connection]['projectId'] ?? ''] = true;
+                                }
+                                unset($administeredIds['']);
+                                $administeredProjects = [];
+                                if (!empty($administeredIds)) {
+                                    $found = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->find('projects', [
+                                        Query::equal('$id', \array_map(\strval(...), \array_keys($administeredIds))),
+                                        Query::limit(\count($administeredIds)),
+                                    ]));
+                                    foreach ($found as $administered) {
+                                        $administeredProjects[$administered->getId()] = $administered;
+                                    }
+                                }
+
+                                foreach ($administering as $connection) {
+                                    if ($abandoned || !isset($realtime->connections[$connection])) {
+                                        continue;
+                                    }
+
+                                    $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
+                                    $admin = $realtime->connections[$connection]['admin'];
+                                    // A deleted project is an empty document here and ends the connection below.
+                                    $administered = $administeredProjects[$realtime->connections[$connection]['projectId'] ?? ''] ?? new Document();
+
+                                    // Its roles came from this membership, so any change to it ends the connection.
+                                    if (
+                                        $revoked($sessionId)
+                                        || $administered->getAttribute('teamId', '') !== $admin['teamId']
+                                        || $user->getMembershipRoles($admin['teamId']) !== $admin['roles']
+                                    ) {
+                                        $closing[$connection] = true;
+                                        continue;
+                                    }
+
+                                    if ($sessionId !== null) {
+                                        $realtime->connections[$connection]['expire'] = $user->getSessionExpiry($sessionId);
+                                    }
+                                }
+
+                                foreach ($connections as $connection) {
+                                    if ($abandoned || !isset($realtime->connections[$connection])) {
+                                        continue;
+                                    }
+
+                                    $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
+
+                                    if ($revoked($sessionId)) {
+                                        $closing[$connection] = true;
+                                        continue;
+                                    }
+
+                                    $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
+                                    $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+                                    $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
+                                    $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
+                                    $presence = $realtime->connections[$connection]['presence'] ?? null;
+                                    $jwtExpire = $realtime->connections[$connection]['jwtExpire'] ?? null;
+                                    $limits = $realtime->connections[$connection]['limits'] ?? null;
+                                    // Re-read, as extending the session moves it. An impersonated
+                                    // connection has no sessionId; its impersonator's events refresh it.
+                                    $expire = $sessionId !== null
+                                        ? $user->getSessionExpiry($sessionId)
+                                        : ($realtime->connections[$connection]['expire'] ?? null);
+                                    $previousUserId = $realtime->connections[$connection]['userId'] ?? '';
+
+                                    $meta = $realtime->getSubscriptionMetadata($connection);
+
+                                    $realtime->unsubscribe($connection);
+
+                                    foreach ($meta as $subscriptionId => $subscription) {
+                                        $queries = Query::parseQueries($subscription['queries'] ?? []);
+                                        $channels = Realtime::rebindAccountChannels(
+                                            $subscription['channels'] ?? [],
+                                            $previousUserId,
+                                            $userId
+                                        );
+                                        $realtime->subscribe(
+                                            $projectId,
+                                            $connection,
+                                            $subscriptionId,
+                                            $roles,
+                                            $channels,
+                                            $queries,
+                                            $userId
+                                        );
+                                    }
+
+
+                                    // Restore authorization after subscribe
+                                    // meta can be empty as well as the channels are not required query param to connect
+                                    // channels and queries can be sent via message later on
+                                    // so if meta is empty we are not subscribing above to the projectId
+                                    if (!isset($realtime->connections[$connection])) {
+                                        $realtime->subscribe($projectId, $connection, '', $roles, [], [], $userId);
+                                    }
+                                    if ($authorization !== null && isset($realtime->connections[$connection])) {
+                                        $realtime->connections[$connection]['authorization'] = $authorization;
+                                        $realtime->connections[$connection]['impersonatedUserId'] = $impersonatedUserId;
+                                        $realtime->connections[$connection]['impersonator'] = $impersonator;
+                                        $realtime->connections[$connection]['sessionId'] = $sessionId;
+                                        $realtime->connections[$connection]['expire'] = $expire;
+                                        $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
+                                        // The presence hold must survive too, or closing the socket later
+                                        // cannot release this worker's count (the holder index is not
+                                        // cleared by unsubscribe, only the connection entry is).
+                                        if ($presence !== null) {
+                                            $realtime->connections[$connection]['presence'] = $presence;
+                                        }
+                                    }
+                                    if ($limits !== null && isset($realtime->connections[$connection])) {
+                                        $realtime->connections[$connection]['limits'] = $limits;
+                                    }
+
+                                    $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
+                                    $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
+                                    if ($subscriptionDelta !== 0) {
+                                        $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
+                                    }
+
+                                    // Tail entries live outside the subscription tree, so the rebuild
+                                    // above doesn't touch them. Drop any whose authorizing team role
+                                    // the connection no longer holds (membership revoked / project moved).
+                                    $eventTailRegistry->revalidateConnection($connection, $roles);
+                                }
+
+                                return $closing;
+                            };
+
+                            $closing += $verifyPermissions($verify, $onTimeout);
+                        }
+                    } elseif ($event['permissionsChanged']) {
+                        // `projects.{projectId}.sessions.delete`: every connection of the named
+                        // project re-validates its session against the new invalidation timestamp.
+                        // `projects.{projectId}.update.team`: every tail of the project is
+                        // re-authorized against the project's new read roles.
+                        // The project is taken from the `projects.<id>` channel, as no single
+                        // userId covers all connections.
+                        $targetProjectId = '';
+                        foreach (($event['data']['channels'] ?? []) as $channel) {
+                            if (\str_starts_with($channel, 'projects.')) {
+                                $targetProjectId = \substr($channel, \strlen('projects.'));
+                                break;
+                            }
+                        }
+
+                        if ($targetProjectId !== '' && $targetProjectId !== 'console') {
+                            // Set by the subscriber when verification times out: the connections were
+                            // closed unverified, so a late-finishing child must not touch their state.
+                            $abandoned = false;
+
+                            $onTimeout = function () use ($realtime, $event, $targetProjectId, &$abandoned): array {
+                                // Fail closed: a reconnect re-authenticates against the new session
+                                // state, so an unverifiable session is excluded rather than kept alive.
+                                $abandoned = true;
+                                Console::error('Realtime permission verification timed out (project: ' . $targetProjectId . ', event: ' . ($event['data']['events'][0] ?? 'unknown') . '); closing its session connections unverified');
+
+                                $closing = [];
+                                foreach ($realtime->getProjectConnections($targetProjectId) as $connection) {
+                                    $userId = $realtime->connections[$connection]['userId'] ?? '';
+                                    $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
+
+                                    if ($userId === '' || $sessionId === null) {
+                                        continue; // Guests and keys hold no project session to invalidate.
+                                    }
+
+                                    $closing[$connection] = true;
+                                }
+
+                                return $closing;
+                            };
+
+                            $verify = function () use ($realtime, $eventTailRegistry, $targetProjectId, &$abandoned): array {
+                                $closing = [];
+                                $consoleDatabase = getConsoleDB();
+                                $targetProject = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $targetProjectId));
+                                $database = getProjectDB($targetProject);
+                                $invalidatedAt = $targetProject->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
+
+                                foreach ($realtime->getProjectConnections($targetProjectId) as $connection) {
+                                    if ($abandoned || !isset($realtime->connections[$connection])) {
+                                        continue;
+                                    }
+
+                                    $userId = $realtime->connections[$connection]['userId'] ?? '';
+                                    $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
+                                    $admin = $realtime->connections[$connection]['admin'] ?? null;
+
+                                    // An admin-mode connection holds no project session, but a transfer
+                                    // ends the access its organization gave it.
+                                    if ($admin !== null) {
+                                        if ($targetProject->getAttribute('teamId', '') !== $admin['teamId']) {
+                                            $closing[$connection] = true;
+                                        }
+                                        continue;
+                                    }
+
+                                    if ($userId === '' || $sessionId === null) {
+                                        continue; // Guests and keys hold no project session to invalidate.
+                                    }
+
+                                    /** @var User $user */
+                                    $user = $database->getDocument('users', $userId);
+
+                                    if (
+                                        $user->isEmpty()
+                                        || $user->getAttribute('status') === false
+                                        || !$user->sessionActive($sessionId, $invalidatedAt)
+                                    ) {
+                                        $closing[$connection] = true;
+                                    }
+                                }
+
+                                if (!$abandoned) {
+                                    $eventTailRegistry->reauthorizeProject(
+                                        $targetProjectId,
+                                        $targetProject->getPermissionsByType(PermissionType::Read),
+                                        fn (int $connection): array => $realtime->connections[$connection]['roles'] ?? [],
+                                    );
+                                }
+
+                                return $closing;
+                            };
+
+                            $closing += $verifyPermissions($verify, $onTimeout);
                         }
                     }
-                }
-                if ($tailProjectId !== '' && $eventTailRegistry->isTailed($tailProjectId)) {
-                    $eventTailRegistry->ingest($tailProjectId, Realtime::toTailMetadata($event), \microtime(true));
+
+                    // Deleting an organization names no user, so end its admin-mode connections here.
+                    if (($event['project'] ?? '') === 'console') {
+                        foreach (($event['data']['events'] ?? []) as $name) {
+                            $parts = \explode('.', $name);
+                            if (\count($parts) === 3 && $parts[0] === 'teams' && $parts[1] !== '*' && $parts[2] === 'delete') {
+                                foreach ($realtime->getTeamAdminConnections($parts[1]) as $connection) {
+                                    $closing[$connection] = true;
+                                }
+                            }
+                        }
+                    }
+
+                    $receivers = $realtime->getSubscribers($event);
+
+                    if (System::getEnv('_APP_ENV', 'production') === 'development' && !empty($receivers)) {
+                        Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
+                        Console::log("[Debug][Worker {$workerId}] Connection IDs: " . json_encode(array_keys($receivers)));
+                        Console::log("[Debug][Worker {$workerId}] Matched: " . json_encode(array_values($receivers)));
+                        Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                    }
+
+                    $total = 0;
+                    $outboundBytes = 0;
+
+                    // One frame per connection: `subscriptions` carries that connection's
+                    // matched subscription IDs, and those are ID::unique() per connection
+                    // (see the subscribe handler), so no two connections can ever share a
+                    // frame. (The grouping this replaced keyed on exactly those IDs and so
+                    // never collapsed -- it always built one group of one.)
+                    //
+                    // `subscriptions` is the only part that varies, and it is small, so the
+                    // document is serialised once per event rather than once per subscriber.
+                    // This loop's json_encode was 26% of realtime's on-CPU work during a
+                    // fan-out burst, against 2.8% at rest.
+                    $data = $event['data'];
+                    unset($data['subscriptions']);
+                    // Decoding into arrays turns objects such as `prefs: {}` into `[]`, so when that
+                    // changed the published JSON, the payload is re-read as objects for the frame.
+                    if ($receivers !== [] && \json_encode($event) !== $payload) {
+                        $data['payload'] = \json_decode($payload)->data->payload ?? $data['payload'];
+                    }
+                    $tail = $data === [] ? '' : ',' . substr(json_encode($data), 1, -1);
+
+                    $now = \time();
+                    foreach ($receivers as $id => $matched) {
+                        // Expiry fires no event, so it is checked on every send. Nothing more
+                        // once the session or JWT has expired, as the HTTP API would refuse it;
+                        // the connection is closed below.
+                        if ($realtime->isExpired($id, $now)) {
+                            $closing[$id] = true;
+                            continue;
+                        }
+
+                        $payloadJson = '{"type":"event","data":{"subscriptions":'
+                            . json_encode(array_keys($matched)) . $tail . '}}';
+
+                        $server->send([$id], $payloadJson);
+
+                        $total++;
+                        $outboundBytes += strlen($payloadJson);
+                    }
+
+                    if ($total > 0) {
+                        $register->get('telemetry.messageSentCounter')->add($total);
+                        $register->get('telemetry.outboundBytesCounter')->add($outboundBytes);
+                        $stats->incr($event['project'], 'messages', $total);
+                        $updatedAt = $event['data']['payload']['$updatedAt'] ?? null;
+                        if (\is_string($updatedAt)) {
+                            try {
+                                $updatedAtDate = new \DateTimeImmutable($updatedAt, new \DateTimeZone('UTC'));
+                                $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+                                $updatedAtTimestampMs = (float) $updatedAtDate->format('U.u') * 1000;
+                                $nowTimestampMs = (float) $now->format('U.u') * 1000;
+                                $delayMs = (int) \max(0, $nowTimestampMs - $updatedAtTimestampMs);
+
+                                $register->get('telemetry.deliveryDelayHistogram')->record($delayMs);
+                            } catch (\Throwable) {
+                                // Ignore invalid timestamp payloads.
+                            }
+                        }
+
+                        $projectId = $event['project'] ?? null;
+
+                        if (!empty($projectId)) {
+                            // Reached only when $total > 0, and every frame carries the
+                            // literal envelope, so outbound bytes are always non-zero.
+                            $usage->add([
+                                METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => $total,
+                                METRIC_REALTIME_OUTBOUND => $outboundBytes,
+                            ], $projectId);
+                        }
+
+                    }
+
+                    // Connections whose access ended with this event got it above with the
+                    // roles they held until now, so the client sees what ended it before the
+                    // socket goes. Expired ones got nothing.
+                    foreach (\array_keys($closing) as $connection) {
+                        $server->send([$connection], $unauthorizedPayloadJson);
+                        $server->close($connection, $unauthorized->getCode());
+                    }
+
+                    // Console live event tail: runs for EVERY firehose event, regardless of
+                    // whether it had regular subscribers ($total). The firehose is published
+                    // unconditionally, so a project tailed from the console with no other
+                    // realtime clients must still be observed here.
+                    //
+                    // Most events carry the owning project in $event['project']. But some
+                    // project-owned events (schema changes, deployments, rules, migrations,
+                    // project settings) are rerouted by fromPayload() to project='console';
+                    // for those the real project id lives in the `projects.<id>` channel.
+                    // Resolve that so the tail still receives them.
+                    $tailProjectId = $event['project'] ?? '';
+                    if ($tailProjectId === 'console') {
+                        $tailProjectId = '';
+                        foreach (($event['data']['channels'] ?? []) as $channel) {
+                            if (\str_starts_with($channel, 'projects.')) {
+                                $tailProjectId = \substr($channel, \strlen('projects.'));
+                                break;
+                            }
+                        }
+                    }
+                    if ($tailProjectId !== '' && $eventTailRegistry->isTailed($tailProjectId)) {
+                        $eventTailRegistry->ingest($tailProjectId, Realtime::toTailMetadata($event), \microtime(true));
+                    }
+                } catch (\Throwable $th) {
+                    // One bad event must not unwind the subscription and stall the firehose.
+                    Console::error('Realtime event handling failed: ' . $th->getMessage());
                 }
             });
         } catch (Throwable $th) {

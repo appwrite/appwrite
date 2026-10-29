@@ -556,6 +556,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_REALTIME_PERMISSION_TIMEOUT',
+                'description' => 'Maximum number of seconds the realtime server waits for a permission-change event to be verified against the database. When verification does not finish in time, the affected connections are closed unverified and event delivery moves on, so one stuck database connection cannot stall realtime delivery. Default value is: 5.',
+                'introduction' => '2.7.0',
+                'default' => '5',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
