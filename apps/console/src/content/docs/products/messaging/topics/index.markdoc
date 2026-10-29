@@ -314,20 +314,20 @@ Learn more about the CLI topics commands
 {% /tabs %}
 
 # Delivery settings for Appwrite Push {% #appwrite-push %}
-Topics delivered through [Appwrite Push](/docs/products/messaging/appwrite-push) take two optional settings, the `qos` and `expiry` parameters of `createTopic` and `updateTopic` in the [Server SDKs](/docs/sdks#server).
+For messages sent over [Appwrite Push](/docs/products/messaging/appwrite-push), a topic has two optional settings. Set them with the `qos` and `expiry` parameters of `createTopic` and `updateTopic` in the [Server SDKs](/docs/sdks#server).
 
 {% table %}
 * Setting
 * Description
 ---
 * **Quality of service** (`qos`)
-* `0` delivers only to devices connected when the message is sent. `1` stores each message and replays it to devices that reconnect. Leave it empty to let each subscriber choose. A message is delivered at the lowest quality of service set by the provider, the topic, and the subscription.
+* `0` delivers only to devices connected when the message is sent. `1` stores each message and replays it to devices that reconnect. Leave it empty to let each app subscription choose with `retry`. A message is delivered at the lowest quality of service set by the provider, the topic, and the subscription.
 ---
 * **Message expiry** (`expiry`)
-* How long, in seconds, messages are kept for offline devices, up to 7 days (`604800`). Leave it empty to use the lowest expiry set on your enabled Appwrite Push providers, or 7 days.
+* How long, in seconds, messages are kept for offline devices, up to 7 days (`604800`). Leave it empty to use the lowest expiry set on your enabled Appwrite Push providers, or 7 days if none of them sets one.
 {% /table %}
 
-Devices receive a topic's messages through their [Appwrite push target](/docs/products/messaging/appwrite-push#push-target), so subscribe that target to the topic.
+Devices receive a topic's messages through their [Appwrite push target](/docs/products/messaging/appwrite-push#push-target), so add that target as a subscriber of the topic. Then call `push.subscribe` with the topic ID in your app.
 
 # Permissions {% #permissions %}
 Before you can subscribe to a topic, a user needs the appropriate permission.

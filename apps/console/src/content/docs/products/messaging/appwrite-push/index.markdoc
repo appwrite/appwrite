@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Appwrite Push
-description: Deliver push notifications to Android, iOS, web, Flutter, and React Native apps straight from Appwrite, without Firebase or device tokens.
+description: Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.
 back: /docs/
 ---
 Appwrite Push is Appwrite's own push provider. With the Appwrite SDK, your app connects to Appwrite's push broker, an MQTT server that relays messages to connected devices. Messages you send with Appwrite Messaging arrive over that connection, so you can reach a signed-in user without setting up Firebase or collecting device tokens.

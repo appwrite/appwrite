@@ -11,7 +11,7 @@ Send push notifications, which are little notification messages that appear on a
 of events or updates. Configure one of the following providers to send push notifications.
 {% cards %}
 {% cards_item href="/docs/products/messaging/appwrite-push" title="Appwrite Push" icon="icon-device-mobile" %}
-Deliver push notifications to Android, iOS, web, Flutter, and React Native apps straight from Appwrite, with no credentials to configure.
+Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, with no credentials to configure.
 {% /cards_item %}
 {% cards_item href="/docs/products/messaging/apns" title="APNS" icon="icon-apple" %}
 Send push notifications to apps on Apple devices through Apple Push Notification service (APNs).
