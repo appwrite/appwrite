@@ -6,8 +6,8 @@ namespace Utopia\VCS\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\VCS\Adapter\Git;
 
 /**
@@ -39,7 +39,7 @@ final class CloneCommandTest extends TestCase
         $this->directory = $this->workspace . '/clone';
         $source = $this->workspace . '/source';
 
-        // The clone command sets init.defaultBranch globally; keep that off the host
+        // Keep the host's global git config out of every clone
         $this->gitConfigGlobal = getenv('GIT_CONFIG_GLOBAL');
         putenv('GIT_CONFIG_GLOBAL=' . $this->workspace . '/gitconfig');
 
@@ -116,6 +116,18 @@ final class CloneCommandTest extends TestCase
         $this->assertFileDoesNotExist($this->directory . '/pwned');
     }
 
+    public function testCloneLeavesTheGlobalConfigAlone(): void
+    {
+        // Concurrent clones in one worker would fail on each other's global
+        // config lock; a global config that cannot be written proves none is
+        putenv('GIT_CONFIG_GLOBAL=' . $this->workspace . '/missing/gitconfig');
+
+        $this->assertSame(0, $this->clone('docs'));
+
+        $this->assertFileExists($this->directory . '/docs/guide.md');
+        $this->assertFileDoesNotExist($this->workspace . '/missing');
+    }
+
     public function testCloneChecksOutATagStartingWithADash(): void
     {
         // git tag refuses the name, but it is a valid ref a provider can hold
@@ -126,14 +138,88 @@ final class CloneCommandTest extends TestCase
         $this->assertFileExists($this->directory . '/README.md');
     }
 
-    private function clone(string $rootDirectory, string $version = 'main', string $versionType = Git::CLONE_TYPE_BRANCH): int
+    /**
+     * `git ls-remote` lists tags in refname order, and the lookup keeps the
+     * last line. 0.1.10 sorts before 0.1.2; the annotated 0.1.2 is the tag
+     * that line names. A namespaced pattern keeps the full name after
+     * `refs/tags/`, so `release/0.1.*` resolves to `release/0.1.2`.
+     */
+    public function testCloneChecksOutATagPattern(): void
+    {
+        $this->tag('0.1.0', "tag-0.1.0\n");
+        $this->tag('0.1.10', "tag-0.1.10\n");
+        $this->tag('0.1.2', "tag-0.1.2\n", annotated: true);
+        $this->tag('0.2.0', "tag-0.2.0\n");
+
+        $this->assertSame(0, $this->clone('', '0.1.*', Git::CLONE_TYPE_TAG));
+
+        $this->assertSame("tag-0.1.2\n", $this->read($this->directory . '/README.md'));
+
+        $this->tag('release/0.1.0', "tag-release-0.1.0\n");
+        $this->tag('release/0.1.10', "tag-release-0.1.10\n");
+        $this->tag('release/0.1.2', "tag-release-0.1.2\n", annotated: true);
+        $this->tag('release/0.2.0', "tag-release-0.2.0\n");
+
+        $this->execute(new Command('rm')->flag('-rf')->argument($this->directory));
+        $this->assertSame(0, $this->clone('', 'release/0.1.*', Git::CLONE_TYPE_TAG));
+
+        $this->assertSame("tag-release-0.1.2\n", $this->read($this->directory . '/README.md'));
+    }
+
+    public function testCloneChecksOutAnExactTag(): void
+    {
+        $this->tag('1.2.3', "tag-1.2.3\n");
+        $this->tag('1.2.4', "tag-1.2.4\n");
+
+        $this->assertSame(0, $this->clone('', '1.2.3', Git::CLONE_TYPE_TAG));
+
+        $this->assertSame("tag-1.2.3\n", $this->read($this->directory . '/README.md'));
+    }
+
+    public function testCloneFailsWhenNoTagMatches(): void
+    {
+        $this->tag('0.1.0', "tag-0.1.0\n");
+
+        $stderr = '';
+        $this->assertNotSame(0, $this->clone('', '9.9.*', Git::CLONE_TYPE_TAG, $stderr));
+        $this->assertStringContainsString('fatal: no tag matching 9.9.*', $stderr);
+    }
+
+    private function tag(string $name, string $content, bool $annotated = false): void
+    {
+        $work = $this->workspace . '/work';
+        if (!is_dir($work . '/.git')) {
+            $this->assertSame(0, $this->execute(new Command('git')->argument('clone')->flag('-q')->argument($this->repository)->argument($work)));
+        }
+
+        file_put_contents($work . '/README.md', $content);
+        $this->assertSame(0, $this->execute(new Command('git')->option('-C', $work)->argument('add')->argument('README.md')));
+        $this->assertSame(0, $this->execute(new Command('git')->option('-C', $work)->option('-c', 'user.name=Test')->option('-c', 'user.email=test@example.com')->argument('commit')->flag('-q')->option('-m', $name)));
+
+        $tag = new Command('git')->option('-C', $work)->option('-c', 'user.name=Test')->option('-c', 'user.email=test@example.com')->argument('tag');
+        if ($annotated) {
+            $tag->flag('-a')->option('-m', $name);
+        }
+        $this->assertSame(0, $this->execute($tag->argument($name)));
+        $this->assertSame(0, $this->execute(new Command('git')->option('-C', $work)->argument('push')->flag('-q')->argument('origin')->argument('refs/tags/' . $name)));
+    }
+
+    private function read(string $path): string
+    {
+        $content = file_get_contents($path);
+        $this->assertIsString($content);
+
+        return $content;
+    }
+
+    private function clone(string $rootDirectory, string $version = 'main', string $versionType = Git::CLONE_TYPE_BRANCH, string &$stderr = ''): int
     {
         $adapter = new LocalGit($this->repository);
 
-        return $this->execute($adapter->generateCloneCommand('owner', 'repository', $version, $versionType, $this->directory, $rootDirectory));
+        return $this->execute($adapter->generateCloneCommand('owner', 'repository', $version, $versionType, $this->directory, $rootDirectory), $stderr);
     }
 
-    private function execute(Command $command): int
+    private function execute(Command $command, string &$stderr = ''): int
     {
         $stdout = '';
         $stderr = '';

@@ -54,10 +54,6 @@
 "api / graphql":
   - "(graphql|gql|mutation)"
 
-# Fixes and upgrades for the Appwrite Assistant.
-"product / assistant":
-  - "(assistant)"
-
 # Fixes and upgrades for the Appwrite Domains.
 "product / domains":
   - "(domain|dns|ssl|certificate)"

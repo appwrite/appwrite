@@ -86,13 +86,16 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyAliasedEmail\Upd
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyCorporateEmail\Update as UpdateDenyCorporateEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyDisposableEmail\Update as UpdateDenyDisposableEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyFreeEmail\Update as UpdateDenyFreeEmailPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyRealtimeGuests\Update as UpdateDenyRealtimeGuestsPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\Get as GetPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\MembershipPrivacy\Update as UpdateMembershipPrivacyPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\MFAFactors\Update as UpdateMFAFactorsPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\Passkey\Update as UpdatePasskeyPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordDictionary\Update as UpdatePasswordDictionaryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordHistory\Update as UpdatePasswordHistoryPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPersonalData\Update as UpdatePasswordPersonalDataPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordPwned\Update as UpdatePasswordPwnedPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordRotation\Update as UpdatePasswordRotationPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\PasswordStrength\Update as UpdatePasswordStrengthPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionAlert\Update as UpdateSessionAlertPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionDuration\Update as UpdateSessionDurationPolicy;
@@ -102,6 +105,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\UserLimit\Update as 
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\XList as ListPolicies;
 use Appwrite\Platform\Modules\Project\Http\Project\Protocols\Update as UpdateProjectProtocol;
 use Appwrite\Platform\Modules\Project\Http\Project\Services\Update as UpdateProjectService;
+use Appwrite\Platform\Modules\Project\Http\Project\Sessions\Delete as DeleteSessions;
 use Appwrite\Platform\Modules\Project\Http\Project\SMTP\Tests\Create as CreateSMTPTest;
 use Appwrite\Platform\Modules\Project\Http\Project\SMTP\Update as UpdateSMTP;
 use Appwrite\Platform\Modules\Project\Http\Project\Templates\Email\Get as GetTemplate;
@@ -129,6 +133,9 @@ class Http extends Service
         $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
         $this->addAction(UpdateProjectProtocol::getName(), new UpdateProjectProtocol());
         $this->addAction(UpdateProjectService::getName(), new UpdateProjectService());
+
+        // Sessions
+        $this->addAction(DeleteSessions::getName(), new DeleteSessions());
 
         // SMTP
         $this->addAction(UpdateSMTP::getName(), new UpdateSMTP());
@@ -182,11 +189,13 @@ class Http extends Service
         $this->addAction(GetPolicy::getName(), new GetPolicy());
         $this->addAction(UpdateMembershipPrivacyPolicy::getName(), new UpdateMembershipPrivacyPolicy());
         $this->addAction(UpdateMFAFactorsPolicy::getName(), new UpdateMFAFactorsPolicy());
+        $this->addAction(UpdatePasskeyPolicy::getName(), new UpdatePasskeyPolicy());
         $this->addAction(UpdatePasswordDictionaryPolicy::getName(), new UpdatePasswordDictionaryPolicy());
         $this->addAction(UpdatePasswordHistoryPolicy::getName(), new UpdatePasswordHistoryPolicy());
         $this->addAction(UpdatePasswordStrengthPolicy::getName(), new UpdatePasswordStrengthPolicy());
         $this->addAction(UpdatePasswordPersonalDataPolicy::getName(), new UpdatePasswordPersonalDataPolicy());
         $this->addAction(UpdatePasswordPwnedPolicy::getName(), new UpdatePasswordPwnedPolicy());
+        $this->addAction(UpdatePasswordRotationPolicy::getName(), new UpdatePasswordRotationPolicy());
         $this->addAction(UpdateSessionAlertPolicy::getName(), new UpdateSessionAlertPolicy());
         $this->addAction(UpdateSessionDurationPolicy::getName(), new UpdateSessionDurationPolicy());
         $this->addAction(UpdateSessionInvalidationPolicy::getName(), new UpdateSessionInvalidationPolicy());
@@ -196,6 +205,7 @@ class Http extends Service
         $this->addAction(UpdateDenyDisposableEmailPolicy::getName(), new UpdateDenyDisposableEmailPolicy());
         $this->addAction(UpdateDenyFreeEmailPolicy::getName(), new UpdateDenyFreeEmailPolicy());
         $this->addAction(UpdateDenyCorporateEmailPolicy::getName(), new UpdateDenyCorporateEmailPolicy());
+        $this->addAction(UpdateDenyRealtimeGuestsPolicy::getName(), new UpdateDenyRealtimeGuestsPolicy());
 
         // Auth Methods
         $this->addAction(UpdateAuthMethod::getName(), new UpdateAuthMethod());

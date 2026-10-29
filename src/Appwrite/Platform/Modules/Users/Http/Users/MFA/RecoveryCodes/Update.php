@@ -72,7 +72,7 @@ class Update extends Action
                     public: false,
                 )
             ])
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -96,11 +96,13 @@ class Update extends Action
         $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
         $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
 
-        $queueForEvents->setParam('userId', $user->getId());
-
         $document = new Document([
             'recoveryCodes' => $mfaRecoveryCodes
         ]);
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($document, Response::MODEL_MFA_RECOVERY_CODES), sensitive: ['recoveryCodes']);
 
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     }

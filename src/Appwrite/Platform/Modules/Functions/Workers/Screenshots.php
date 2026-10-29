@@ -3,21 +3,25 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Appwrite\Screenshots\Client;
+use Appwrite\Screenshots\Exception as ScreenshotsException;
 use Exception;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
@@ -77,8 +81,12 @@ class Screenshots extends Action
         Span::add('deployment.id', $deploymentId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
+        // Deleted since the build queued the capture: there is nothing left to
+        // capture or to attach the screenshots to, on this attempt or any other.
         if ($deployment->isEmpty()) {
-            throw new \Exception('Deployment not found');
+            $this->abandon($project, $deploymentId, 'Deployment not found');
+
+            return;
         }
 
         $siteId = $deployment->getAttribute('resourceId');
@@ -86,7 +94,9 @@ class Screenshots extends Action
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {
-            throw new \Exception('Site not found');
+            $this->abandon($project, $deploymentId, 'Site not found');
+
+            return;
         }
 
         Span::add('site.framework', $site->getAttribute('framework', ''));
@@ -103,6 +113,9 @@ class Screenshots extends Action
         $date = \date('H:i:s');
         $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n");
 
+        $bucket = new Document();
+        $files = [];
+
         try {
             $rule = $dbForPlatform->findOne('rules', [
                 Query::equal("projectInternalId", [$project->getSequence()]),
@@ -112,7 +125,7 @@ class Screenshots extends Action
             ]);
 
             if ($rule->isEmpty()) {
-                throw new \Exception("Rule for deployment not found");
+                throw new PermanentFailure('Rule for deployment not found');
             }
 
             Span::add('rule.domain', $rule->getAttribute('domain', ''));
@@ -121,7 +134,7 @@ class Screenshots extends Action
             $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
             if ($bucket->isEmpty()) {
-                throw new \Exception('Bucket not found');
+                throw new PermanentFailure('Bucket not found');
             }
 
             $routerHost = System::getEnv('_APP_WORKER_SCREENSHOTS_ROUTER', '');
@@ -132,6 +145,9 @@ class Screenshots extends Action
 
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
             $apiKey = $jwtObj->encode([
+                Key::PURPOSE_CLAIM => Key::PURPOSE,
+                'hostname' => $rule->getAttribute('domain'),
+                'deploymentId' => $rule->getAttribute('deploymentId'),
                 'hostnameOverride' => true,
                 'disabledMetrics' => [
                     METRIC_EXECUTIONS,
@@ -181,15 +197,20 @@ class Screenshots extends Action
 
             Span::add('screenshot.count', \count($captures));
 
+            if ($dbForProject->getDocument('deployments', $deployment->getId())->isEmpty()) {
+                throw new PermanentFailure('Deployment deleted during capture');
+            }
+
             $mimeType = "image/png";
             $updates = new Document([]);
 
             foreach ($captures as $key => $screenshot) {
-                $fileId = ID::unique();
+                $fileId = Id::unique();
                 $fileName = $fileId . '.png';
                 $path = $deviceForFiles->getPath($fileName);
                 $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
                 $success = $deviceForFiles->write($path, new Stream($screenshot), $mimeType);
+                $files[$fileId] = $path;
 
                 if (!$success) {
                     throw new \Exception("Screenshot failed to save");
@@ -199,7 +220,7 @@ class Screenshots extends Action
                 $file = new Document([
                     '$id' => $fileId,
                     '$permissions' => [
-                        Permission::read(Role::team(ID::custom($teamId))),
+                        Permission::read(Role::team(Id::custom($teamId))),
                     ],
                     'bucketId' => $bucket->getId(),
                     'bucketInternalId' => $bucket->getSequence(),
@@ -232,6 +253,16 @@ class Screenshots extends Action
             // Apply screenshot properties
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $updates);
 
+            // Deleted while the pages were captured: the update found no row,
+            // and the site must not take an empty preview from it.
+            if ($deployment->isEmpty()) {
+                throw new PermanentFailure('Deployment deleted during capture');
+            }
+
+            // The deployment owns them now, and the Deletes worker removes them with it.
+            $captured = $files;
+            $files = [];
+
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
@@ -240,6 +271,12 @@ class Screenshots extends Action
                 'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
                 'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
             ]));
+
+            // Unless the site is gone: its Deletes worker may have read this deployment before the update above.
+            if ($site->isEmpty()) {
+                $files = $captured;
+                throw new PermanentFailure('Site deleted during capture');
+            }
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
             $reason = $th->getMessage() === '' ? \get_class($th) : $th->getMessage();
@@ -247,10 +284,49 @@ class Screenshots extends Action
 
             $this->recordTelemetry($counter, 'failure');
 
+            // Nothing references a screenshot the deployment did not take, and a retry captures new ones.
+            $this->deleteScreenshots($dbForPlatform, $deviceForFiles, $bucket, $files);
+
+            // Best-effort: a permanent failure, or the last attempt (NATS only), is acknowledged, not dead-lettered.
+            $unroutable = $th instanceof ScreenshotsException && \str_contains($th->getMessage(), 'is not publicly routable');
+            if ($th instanceof PermanentFailure || $unroutable || $message->isLastAttempt()) {
+                $this->abandon($project, $deployment->getId(), $th->getMessage());
+
+                return;
+            }
+
             throw $th;
         }
 
         $this->recordTelemetry($counter, 'success');
+    }
+
+    protected function abandon(Document $project, string $deploymentId, string $reason): void
+    {
+        Span::add('screenshot.status', 'failed');
+        Span::add('screenshot.reason', $reason);
+
+        Console::warning('Screenshot abandoned: project=' . $project->getId() . ' deployment=' . $deploymentId . ' reason=' . $reason);
+    }
+
+    /**
+     * @param array<string, string> $files file ID => path
+     */
+    protected function deleteScreenshots(Database $dbForPlatform, Device $deviceForFiles, Document $bucket, array $files): void
+    {
+        foreach ($files as $fileId => $path) {
+            try {
+                // Keep the row while the object is still there, so it stays findable.
+                if (!$deviceForFiles->delete($path) && $deviceForFiles->exists($path)) {
+                    Console::warning('Failed to delete screenshot ' . $fileId . ': ' . $path);
+                    continue;
+                }
+
+                $dbForPlatform->deleteDocument('bucket_' . $bucket->getSequence(), $fileId);
+            } catch (\Throwable $th) {
+                Console::warning('Failed to delete screenshot ' . $fileId . ': ' . $th->getMessage());
+            }
+        }
     }
 
     protected function recordTelemetry(Counter $counter, string $result): void
@@ -281,6 +357,11 @@ class Screenshots extends Action
     protected function appendToLogs(Database $dbForProject, string $deploymentId, Realtime $queueForRealtime, string $logs)
     {
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        // A deployment deleted mid-capture has no logs left to append to.
+        if ($deployment->isEmpty()) {
+            return;
+        }
 
         $buildLogs = $deployment->getAttribute('buildLogs', '');
         $buildLogs .= $logs;

@@ -235,6 +235,16 @@ abstract class Adapter
      * @param  array<string>  $urls
      * @param  array<string>  $headers
      * @param  array<array<string, mixed>>  $bodies
+     * @param  (Closure(array{
+     *     index: int,
+     *     url: string,
+     *     statusCode: int,
+     *     response: array<string, mixed>|string|null,
+     *     headers: array<string, string>,
+     *     error: string,
+     *     errorCode: int
+     * }): void)|null  $onResult Receives each result as its request completes, in completion order.
+     *         The results are then not kept, so a batch only holds the requests in flight.
      * @return array<array{
      *     index: int,
      *     url: string,
@@ -243,7 +253,7 @@ abstract class Adapter
      *     headers: array<string, string>,
      *     error: string,
      *     errorCode: int
-     * }>
+     * }> Every result in request order, or none when $onResult is given.
      *
      * @throws Exception
      */
@@ -254,6 +264,7 @@ abstract class Adapter
         array $bodies = [],
         int $timeout = 30,
         int $connectTimeout = 10,
+        ?Closure $onResult = null,
     ): array {
         if ($urls === []) {
             throw new \Exception('No URLs provided. Must provide at least one URL.');
@@ -266,51 +277,68 @@ abstract class Adapter
             throw new \Exception('URL and body counts must be equal or one must equal 1.');
         }
 
-        if ($bodyCount > 0 && $urlCount > $bodyCount) {
-            $bodies = array_pad($bodies, $urlCount, $bodies[0]);
-        } elseif ($urlCount < $bodyCount) {
-            $urls = array_pad($urls, $bodyCount, $urls[0]);
-        }
-
-        $requests = [];
-        foreach ($urls as $i => $url) {
-            $requests[$i] = $this->buildRequest($method, $url, $headers, $bodies[$i] ?? null);
-        }
-
+        // Requests are built as they are sent, so a batch holds at most one per
+        // worker rather than one per recipient.
+        $count = max($urlCount, $bodyCount);
         $results = [];
+        $failures = [];
 
-        $run = function () use ($requests, $timeout, $connectTimeout, &$results): void {
+        $run = function () use ($method, $urls, $headers, $bodies, $count, $timeout, $connectTimeout, $onResult, &$results, &$failures): void {
+            $concurrency = max(1, min($count, self::MAX_CONCURRENT_REQUESTS));
+
             $pool = new ConnectionPool(
                 adapter: new SwoolePoolAdapter(),
                 name: self::CONNECTION_POOL_NAME,
-                size: max(1, min(\count($requests), self::MAX_CONCURRENT_REQUESTS)),
+                size: $concurrency,
                 init: $this->clientFactory ?? $this->defaultClient($timeout, $connectTimeout)->withConnectionReuse(...),
-                // A slot per request, so acquisition never queues; the request
+                // A slot per worker coroutine, so acquisition never queues; the request
                 // timeouts belong to the client, not to getting hold of one.
                 timeout: 0.0,
             );
 
+            $next = 0;
             $group = new WaitGroup();
 
-            foreach ($requests as $index => $request) {
+            for ($worker = 0; $worker < $concurrency; $worker++) {
                 $group->add();
 
-                Coroutine::create(function () use ($pool, $request, $index, &$results, $group): void {
+                Coroutine::create(function () use ($pool, $method, $urls, $headers, $bodies, $count, $onResult, &$next, &$results, &$failures, $group): void {
                     try {
-                        $results[$index] = $pool->use(fn (ClientInterface $client): array => $this->buildResult($client->sendRequest($request), (string) $request->getUri()));
-                    } catch (\Throwable $error) {
-                        // Throwable rather than the PSR client exception: pool
-                        // acquisition and factory failures must also land in
-                        // this slot's result — an uncaught throwable in a
-                        // coroutine is fatal and would drop the slot entirely.
-                        $results[$index] = [
-                            'url' => (string) $request->getUri(),
-                            'statusCode' => 0,
-                            'response' => null,
-                            'headers' => [],
-                            'error' => $error->getMessage(),
-                            'errorCode' => (int) $error->getCode(),
-                        ];
+                        while ($failures === [] && ($index = $next++) < $count) {
+                            $url = $urls[$index] ?? $urls[0];
+
+                            try {
+                                $request = $this->buildRequest($method, $url, $headers, $bodies[$index] ?? $bodies[0] ?? null);
+                                $result = ['index' => $index] + $pool->use(fn (ClientInterface $client): array => $this->buildResult($client->sendRequest($request), $url));
+                            } catch (\Throwable $error) {
+                                // Throwable rather than the PSR client exception: request
+                                // building, pool acquisition and factory failures must also
+                                // land in this slot's result — an uncaught throwable in a
+                                // coroutine is fatal and would drop the slot entirely.
+                                $result = [
+                                    'index' => $index,
+                                    'url' => $url,
+                                    'statusCode' => 0,
+                                    'response' => null,
+                                    'headers' => [],
+                                    'error' => $error->getMessage(),
+                                    'errorCode' => (int) $error->getCode(),
+                                ];
+                            }
+
+                            if ($onResult === null) {
+                                $results[$index] = $result;
+                                continue;
+                            }
+
+                            try {
+                                $onResult($result);
+                            } catch (\Throwable $error) {
+                                // Stop every worker and rethrow once they are done, rather
+                                // than let it escape the coroutine and end the process.
+                                $failures[] = $error;
+                            }
+                        }
                     } finally {
                         $group->done();
                     }
@@ -329,12 +357,13 @@ abstract class Adapter
             \Swoole\Coroutine\run($run);
         }
 
-        $responses = [];
-        foreach ($results as $index => $result) {
-            $responses[] = ['index' => $index] + $result;
+        if ($failures !== []) {
+            throw $failures[0];
         }
 
-        return $responses;
+        \ksort($results);
+
+        return \array_values($results);
     }
 
     /**

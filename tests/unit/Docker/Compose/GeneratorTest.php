@@ -24,7 +24,6 @@ final class GeneratorTest extends TestCase
     {
         $compose = $this->render([
             'database' => 'mariadb',
-            'enableAssistant' => false,
         ]);
 
         $this->assertArrayHasKey('mariadb', $compose['services']);
@@ -47,19 +46,6 @@ final class GeneratorTest extends TestCase
         $this->assertArrayNotHasKey('appwrite-mariadb', $compose['volumes']);
     }
 
-    public function testTogglesAssistantService(): void
-    {
-        $disabled = $this->render([
-            'enableAssistant' => false,
-        ]);
-        $enabled = $this->render([
-            'enableAssistant' => true,
-        ]);
-
-        $this->assertArrayNotHasKey('appwrite-assistant', $disabled['services']);
-        $this->assertArrayHasKey('appwrite-assistant', $enabled['services']);
-    }
-
     public function testKeepsProductionWorkers(): void
     {
         $compose = $this->render();
@@ -69,6 +55,7 @@ final class GeneratorTest extends TestCase
         $this->assertArrayHasKey('appwrite-task-interval', $compose['services']);
         $this->assertArrayHasKey('appwrite-embedding', $compose['services']);
         $this->assertArrayHasKey('appwrite-autogravity', $compose['services']);
+        $this->assertArrayHasKey('appwrite-exiftool', $compose['services']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler']);
     }
@@ -168,7 +155,7 @@ final class GeneratorTest extends TestCase
         ]);
 
         $this->assertSame(['mysqld', '--innodb-flush-method=fsync'], $mariadb['services']['mariadb']['command']);
-        $this->assertSame(['postgres'], $postgresql['services']['postgresql']['command']);
+        $this->assertSame(['postgres', '-c', 'max_connections=${_APP_DB_MAX_CONNECTIONS:-500}'], $postgresql['services']['postgresql']['command']);
         $this->assertSame([
             'redis-server',
             '--maxmemory',

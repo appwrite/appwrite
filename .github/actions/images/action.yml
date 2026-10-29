@@ -1,0 +1,59 @@
+name: Images
+description: Pull (or, on GitHub-hosted runners, load) the CI Appwrite image and the compose service images.
+
+inputs:
+  username:
+    description: Docker Hub username
+    required: false
+    default: ''
+  token:
+    description: Docker Hub token; pulls run anonymously without it
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Login to Docker Hub
+      if: inputs.token != ''
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+      with:
+        username: ${{ inputs.username }}
+        password: ${{ inputs.token }}
+
+    # Fork pull requests run on GitHub-hosted runners, which have no gcrunner
+    # registry; the build job uploads the image as an artifact for them instead.
+    - name: Download Appwrite image
+      if: runner.environment == 'github-hosted'
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        name: appwrite-image
+        path: ${{ runner.temp }}/appwrite-image
+
+    - name: Pull images
+      shell: bash
+      run: |
+        if [ "$RUNNER_ENVIRONMENT" = github-hosted ]; then
+          image="$IMAGE"
+          docker load --quiet --input "${RUNNER_TEMP}/appwrite-image/appwrite.tar" &
+        else
+          image="${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+          docker pull --quiet "$image" &
+        fi
+        pull=$!
+
+        # Docker Hub registry timeouts are a common transient CI failure, so retry
+        # the pull; `up` stays single-shot so genuine health failures still surface.
+        for attempt in 1 2 3; do
+          if docker compose pull --quiet --ignore-buildable; then
+            break
+          elif [ "$attempt" -eq 3 ]; then
+            echo "::error::docker compose pull failed after 3 attempts; aborting"
+            exit 1
+          fi
+          echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+          sleep 15
+        done
+
+        wait "$pull"
+        docker tag "$image" "$IMAGE"

@@ -6,6 +6,7 @@ use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Detection;
 use Appwrite\Deployment\GitAction;
+use Appwrite\Deployment\Output;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Jobs as JobsMessage;
@@ -61,7 +62,7 @@ use Utopia\System\System;
  * no-ops here, where a verified build has nothing left to wait for. Whatever the
  * subclass is waiting on reports back as its own callback on this queue, handled
  * in onCallback(), so the waiting happens between callbacks rather than inside one
- * and nothing holds jobs-deployment:<id> while it is outstanding.
+ * and nothing holds the deployment lock while it is outstanding.
  */
 class Jobs extends Action
 {
@@ -159,15 +160,32 @@ class Jobs extends Action
             return;
         }
 
+        $callback = CallbackEvent::tryFrom($event->event);
+        $outputAvailable = null;
+        if ($callback === CallbackEvent::Complete && $deviceForBuilds->getType() !== DeviceType::Local) {
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+            if (!$deployment->isEmpty()
+                && !\in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'], true)
+                && $cache->load(self::key('output', $project, $deploymentId), self::DEDUPE_TTL) === false) {
+                // Do not hold the deployment lock while waiting: the output
+                // and exit callbacks must be free to arrive in the meantime.
+                $outputAvailable = Output::wait($deviceForBuilds, (string) $deployment->getAttribute('buildPath', ''));
+            }
+        }
+
         $failure = null;
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
+        $locks(Deployments::lock($project->getSequence(), $deploymentId), self::LOCK_TTL, function () use ($event, $callback, $outputAvailable, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, &$failure): void {
             if ($event->id !== '') {
-                $key = 'jobs-event-' . $event->id;
+                $key = self::key('event', $project, $event->id);
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
                     return; // already processed
                 }
-                $cache->save($key, true);
+                // Completion may fail on a transient storage/cache error. Do
+                // not suppress its retry before reconciliation has succeeded.
+                if ($callback !== CallbackEvent::Complete) {
+                    $cache->save($key, true);
+                }
             }
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -178,8 +196,20 @@ class Jobs extends Action
             $statusBefore = $deployment->getAttribute('status');
             $durationBefore = $deployment->getAttribute('buildDuration');
 
-            $callback = CallbackEvent::tryFrom($event->event);
             $artifact = $callback === CallbackEvent::Artifact ? JobArtifact::fromArray($event->data) : null;
+
+            if ($outputAvailable === false && $cache->load(self::key('output', $project, $deploymentId), self::DEDUPE_TTL) !== false) {
+                // The output callback may have arrived while we waited, even
+                // if exit has not arrived yet and readiness cannot be joined.
+                $outputAvailable = true;
+            }
+
+            if ($outputAvailable === true) {
+                if ($cache->save(self::key('output', $project, $deploymentId), true) === false) {
+                    throw new \RuntimeException('Failed to record reconciled build output.');
+                }
+                Span::add('build.output.reconciled', true);
+            }
 
             $deployment = match ($callback) {
                 CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
@@ -188,6 +218,12 @@ class Jobs extends Action
                 CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
                 default => $this->onCallback($event->event, $dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
             };
+
+            if ($outputAvailable === false) {
+                // onComplete may already have finalized via an output callback
+                // received during the wait. finalize() preserves that outcome.
+                $deployment = $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build output artifact delivery did not complete.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
+            }
 
             // Outcome and runtime arrive independently. Publish when the second
             // becomes known, once under the per-deployment callback lock.
@@ -230,10 +266,25 @@ class Jobs extends Action
                 Span::add('artifact.error.code', $artifact->error?->code->value);
                 $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
             }
+
+            if ($callback === CallbackEvent::Complete && $event->id !== '') {
+                if ($cache->save(self::key('event', $project, $event->id), true) === false) {
+                    throw new \RuntimeException('Failed to record processed build completion.');
+                }
+            }
         }, self::LOCK_TIMEOUT);
 
         if ($failure !== null) {
             throw $failure;
+        }
+
+        // Deleted mid-build: the deletes worker has already cleared the build
+        // directory, so output written after it is removed here. Outside the
+        // callback's dedupe, so a redelivery after a failed cleanup tries again.
+        if (CallbackEvent::tryFrom($event->event) !== CallbackEvent::Log
+            && $dbForProject->getDocument('deployments', $deploymentId)->isEmpty()
+            && !Deployments::deleteBuildDirectory($deviceForBuilds, $deploymentId)) {
+            throw new \RuntimeException("Failed to delete the build directory of deleted deployment {$deploymentId}");
         }
     }
 
@@ -265,7 +316,7 @@ class Jobs extends Action
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
         if (($update['status'] ?? '') === 'building' && $deployment->getAttribute('status') === 'building') {
-            $this->gitAction('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
+            GitAction::report('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         }
 
         return $deployment;
@@ -361,7 +412,7 @@ class Jobs extends Action
             // skipped), never a failed build.
             $manifest = $artifact->status === 'success' ? $artifact->content : null;
             $files = \is_array($manifest) ? (array) ($manifest['files'] ?? []) : [];
-            $cache->save('jobs-manifest-' . $deployment->getId(), ['files' => \array_values($files)]);
+            $cache->save(self::key('manifest', $project, $deployment->getId()), ['files' => \array_values($files)]);
 
             return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
@@ -383,7 +434,7 @@ class Jobs extends Action
                 return $deployment;
             }
 
-            $cache->save('jobs-output-' . $deployment->getId(), true);
+            $cache->save(self::key('output', $project, $deployment->getId()), true);
 
             return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
         }
@@ -418,7 +469,7 @@ class Jobs extends Action
             'totalSize' => $size + (int) $deployment->getAttribute('buildSize', 0),
         ]));
 
-        if ($cache->load('jobs-complete-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
+        if ($cache->load(self::key('complete', $project, $deployment->getId()), self::DEDUPE_TTL) !== false) {
             $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
         }
 
@@ -482,7 +533,7 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $message, $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
-        $cache->save('jobs-exit-' . $deployment->getId(), true);
+        $cache->save(self::key('exit', $project, $deployment->getId()), true);
 
         return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus);
     }
@@ -509,7 +560,9 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        $cache->save('jobs-complete-' . $deployment->getId(), true);
+        if ($cache->save(self::key('complete', $project, $deployment->getId()), true) === false) {
+            throw new \RuntimeException('Failed to record build completion.');
+        }
 
         $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
 
@@ -598,15 +651,15 @@ class Jobs extends Action
         $deploymentId = $deployment->getId();
         $isSite = $deployment->getAttribute('resourceType') === 'sites';
 
-        if ($cache->load('jobs-exit-' . $deploymentId, self::DEDUPE_TTL) === false || $cache->load('jobs-complete-' . $deploymentId, self::DEDUPE_TTL) === false) {
+        if ($cache->load(self::key('exit', $project, $deploymentId), self::DEDUPE_TTL) === false || $cache->load(self::key('complete', $project, $deploymentId), self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 
-        if ($deviceForBuilds->getType() !== DeviceType::Local && $cache->load('jobs-output-' . $deploymentId, self::DEDUPE_TTL) === false) {
+        if ($deviceForBuilds->getType() !== DeviceType::Local && $cache->load(self::key('output', $project, $deploymentId), self::DEDUPE_TTL) === false) {
             return $deployment;
         }
 
-        $manifest = $isSite ? $cache->load('jobs-manifest-' . $deploymentId, self::DEDUPE_TTL) : null;
+        $manifest = $isSite ? $cache->load(self::key('manifest', $project, $deploymentId), self::DEDUPE_TTL) : null;
         if ($isSite && $manifest === false) {
             return $deployment;
         }
@@ -619,7 +672,7 @@ class Jobs extends Action
         }
 
         $path = (string) $deployment->getAttribute('buildPath', '');
-        if ($path === '' || ! $deviceForBuilds->exists($path)) {
+        if (! Deployments::isArtifact($deviceForBuilds, $path)) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 
@@ -742,15 +795,24 @@ class Jobs extends Action
             $this->updateLatestDeployment($dbForProject, $resource);
         }
 
-        if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
-            $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
-        }
-
+        // The status and the resource's deploymentId commit together, so
+        // executions never reach a deployment that is still building and a
+        // deployment reported ready is already the one they reach. The rules
+        // live in the platform database and are repointed before the commit;
+        // the router keeps serving the active deployment until then.
         if ($applied > 0) {
-            $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
-                Query::equal('$id', [$deployment->getId()]),
-                Query::notEqual('status', 'canceled'),
-            ]);
+            $applied = $dbForProject->withTransaction(function () use ($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus, $success, $terminal): int {
+                $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
+                    Query::equal('$id', [$deployment->getId()]),
+                    Query::notEqual('status', 'canceled'),
+                ]);
+
+                if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
+                    $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+                }
+
+                return $applied;
+            });
             $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         }
 
@@ -783,7 +845,7 @@ class Jobs extends Action
 
         $status = $deployment->getAttribute('status');
         if (\in_array($status, ['ready', 'failed'], true) && ! $resource->isEmpty()) {
-            $this->gitAction($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
+            GitAction::report($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         }
 
         return $deployment;
@@ -838,40 +900,6 @@ class Jobs extends Action
     }
 
     /**
-     * Report a build state to the VCS provider for a VCS deployment
-     * (best-effort; no-op for non-VCS builds).
-     */
-    protected function gitAction(string $status, Document $deployment, Document $project, Database $dbForProject, Database $dbForPlatform, VcsFactory $vcsFactory, array $platform): void
-    {
-        if ($deployment->getAttribute('providerCommitHash', '') === '' && $deployment->getAttribute('providerCommentId', '') === '') {
-            return;
-        }
-
-        try {
-            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
-            $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
-            if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
-                return;
-            }
-
-            GitAction::run(
-                $status,
-                $vcsFactory->fromInstallation($installation),
-                $deployment->getAttribute('providerCommitHash', ''),
-                $deployment->getAttribute('providerRepositoryOwner', ''),
-                $deployment->getAttribute('providerRepositoryName', ''),
-                $project,
-                $resource,
-                $deployment,
-                $dbForPlatform,
-                $platform,
-            );
-        } catch (\Throwable) {
-            // Best-effort — never fails the build.
-        }
-    }
-
-    /**
      * Point the resource at this deployment (auto-activate). Mirrors the
      * essential activation from the Builds worker.
      */
@@ -883,20 +911,20 @@ class Jobs extends Action
         $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
         $branches = $isBranchBuild ? ['', $branch] : [''];
 
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-        }, [
+        foreach ($dbForPlatform->cursor('rules', [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
             Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
             Query::equal('trigger', ['manual']),
             Query::equal('deploymentVcsProviderBranch', $branches),
-        ]);
+        ], batchSize: 25) as $rule) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+        }
 
         $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
             'live' => true,
@@ -918,20 +946,20 @@ class Jobs extends Action
             return;
         }
 
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-        }, [
+        foreach ($dbForPlatform->cursor('rules', [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
             Query::equal('deploymentResourceType', ['function']),
             Query::equal('trigger', ['manual']),
             Query::equal('deploymentVcsProviderBranch', [$branch]),
-        ]);
+        ], batchSize: 25) as $rule) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+        }
     }
 
     /**
@@ -962,9 +990,9 @@ class Jobs extends Action
 
     /**
      * (Re)activate the resource's schedule document so the scheduler enqueues
-     * cron executions. Mirrors the executor Builds worker: a schedule is active
-     * only when the resource has both a cron expression and an active
-     * deployment. Re-reads the resource so it sees a deploymentId just set by
+     * scheduled executions. Mirrors the executor Builds worker: a schedule is
+     * active only when the resource has a cron expression or an interval and an
+     * active deployment. Re-reads the resource so it sees a deploymentId just set by
      * activate().
      */
     protected function schedule(Database $dbForProject, Database $dbForPlatform, Document $resource): void
@@ -983,7 +1011,8 @@ class Jobs extends Action
         $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
             'resourceUpdatedAt' => DateTime::now(),
             'schedule' => $resource->getAttribute('schedule', ''),
-            'active' => ! empty($resource->getAttribute('schedule')) && ! empty($resource->getAttribute('deploymentId')),
+            'interval' => $resource->getAttribute('interval', 0),
+            'active' => (! empty($resource->getAttribute('schedule')) || ! empty($resource->getAttribute('interval'))) && ! empty($resource->getAttribute('deploymentId')),
         ]));
     }
 
@@ -999,13 +1028,12 @@ class Jobs extends Action
         Document $project,
         Document $deployment,
     ): void {
-        $model = new Deployment();
         $update = $queueForEvents
             ->setProject($project)
             ->setEvent(self::event($deployment))
             ->setParam(self::resourceParam($deployment), $deployment->getAttribute('resourceId'))
             ->setParam('deploymentId', $deployment->getId())
-            ->setPayload($deployment->getArrayCopy(\array_keys($model->getRules())));
+            ->setPayload((new Deployment())->payload($deployment));
 
         $queueForWebhooks->from($update)->trigger();
 
@@ -1018,6 +1046,11 @@ class Jobs extends Action
             payload: $update->getPayload(),
             platform: $update->getPlatform(),
         ));
+    }
+
+    protected static function key(string $marker, Document $project, string $id): string
+    {
+        return "jobs-{$marker}-{$project->getSequence()}-{$id}";
     }
 
     private static function event(Document $deployment): string

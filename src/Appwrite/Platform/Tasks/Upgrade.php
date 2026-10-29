@@ -5,8 +5,9 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Appwrite\Platform\Installer\Validator\AppDomain;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Port;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -25,8 +26,8 @@ class Upgrade extends Install
 
         $this
             ->desc('Upgrade Appwrite')
-            ->param('http-port', '', new Text(4), 'Server HTTP port', true)
-            ->param('https-port', '', new Text(4), 'Server HTTPS port', true)
+            ->param('http-port', '', new Port(), 'Server HTTP port, optionally bound to a host IP (127.0.0.1:80)', true)
+            ->param('https-port', '', new Port(), 'Server HTTPS port, optionally bound to a host IP (127.0.0.1:443)', true)
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)

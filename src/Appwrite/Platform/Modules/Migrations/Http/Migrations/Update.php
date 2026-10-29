@@ -40,7 +40,7 @@ class Update extends Action
                 group: null,
                 name: 'retry',
                 description: '/docs/references/migrations/retry-migration.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -48,7 +48,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', false, ['dbForProject'])
+            ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Migration unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -71,7 +71,12 @@ class Update extends Action
             throw new Exception(Exception::MIGRATION_NOT_FOUND);
         }
 
-        if ($migration->getAttribute('status') !== 'failed') {
+        // A worker killed mid-run (restart, OOM) leaves its migration processing for good.
+        $status = $migration->getAttribute('status');
+        $stalled = $status === 'processing'
+            && \strtotime($migration->getUpdatedAt()) < \time() - MIGRATION_STALL_TIMEOUT;
+
+        if ($status !== 'failed' && !$stalled) {
             throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
         }
 

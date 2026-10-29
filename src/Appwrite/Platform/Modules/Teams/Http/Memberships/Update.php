@@ -96,7 +96,7 @@ class Update extends Action
             $ownersCount = $dbForProject->count(
                 collection: 'memberships',
                 queries: [
-                    Query::contains('roles', ['owner']),
+                    Query::containsAny('roles', ['owner']),
                     Query::equal('teamInternalId', [$team->getSequence()])
                 ],
                 max: 2
@@ -135,11 +135,16 @@ class Update extends Action
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
+        // The privacy policy only hides other members, a member always sees their own details
+        $auths = $project->getAttribute('auths', []);
+        $isVisible = $isPrivilegedUser || $isAppUser
+            || ($user->getSequence() !== null && $membership->getAttribute('userInternalId') === $user->getSequence());
+
         $response->dynamic(
             $membership
                 ->setAttribute('teamName', $team->getAttribute('name'))
-                ->setAttribute('userName', $profile->getAttribute('name'))
-                ->setAttribute('userEmail', $profile->getAttribute('email')),
+                ->setAttribute('userName', $isVisible || ($auths['membershipsUserName'] ?? true) ? $profile->getAttribute('name') : '')
+                ->setAttribute('userEmail', $isVisible || ($auths['membershipsUserEmail'] ?? true) ? $profile->getAttribute('email') : ''),
             Response::MODEL_MEMBERSHIP
         );
     }

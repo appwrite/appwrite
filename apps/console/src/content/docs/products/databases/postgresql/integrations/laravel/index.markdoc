@@ -1,0 +1,206 @@
+---
+layout: article
+title: Laravel
+description: Use Laravel and Eloquent with an Appwrite native PostgreSQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.
+---
+
+A native PostgreSQL database is a standard PostgreSQL engine, so [Laravel](https://laravel.com/docs) works against it with no Appwrite-specific configuration. Point the `pgsql` connection in `config/database.php` at the credentials from the [Connections](/docs/products/databases/postgresql/connections) page, then use Eloquent, the query builder, migrations, and queues as you would against any PostgreSQL server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [PostgreSQL databases](/docs/products/databases/postgresql) to create one. To retrieve credentials, open the database in the Console, click **Credentials**, and use the **Details**, **DSN**, **.env**, **Prisma**, **Drizzle**, or **psql** tab. The primary username is `admin`, and the database name is generated per database.
+{% /info %}
+
+# Configure the connection {% #connection %}
+
+Laravel reads database credentials from `.env`. Copy the values from the Console credentials dialog, or fetch them with [`postgresql.get()`](/docs/products/databases/postgresql/connections#credentials), and set the matching connection. Never commit `.env`:
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=db-<hash>.<region>.appwrite.center
+DB_PORT=5432
+DB_DATABASE=<database>
+DB_USERNAME=admin
+DB_PASSWORD=<password>
+DB_SSLMODE=require
+```
+
+The scaffolded `config/database.php` wires these variables into the `pgsql` connection, including SSL:
+
+```php
+'pgsql' => [
+    'driver' => 'pgsql',
+    'url' => env('DB_URL'),
+    'host' => env('DB_HOST', '127.0.0.1'),
+    'port' => env('DB_PORT', '5432'),
+    'database' => env('DB_DATABASE', 'laravel'),
+    'username' => env('DB_USERNAME', 'root'),
+    'password' => env('DB_PASSWORD', ''),
+    'charset' => env('DB_CHARSET', 'utf8'),
+    'prefix' => '',
+    'prefix_indexes' => true,
+    'search_path' => 'public',
+    'sslmode' => env('DB_SSLMODE', 'prefer'),
+],
+```
+
+`sslmode` is a top-level key on the PostgreSQL connection. Setting `DB_SSLMODE=require` matches the `sslmode=require` that Appwrite uses. Appwrite Cloud terminates TLS for every native PostgreSQL database, so certificate files are not needed for `require`. For full certificate verification, set `DB_SSLMODE=verify-full` and point `sslrootcert` at a trusted root store, `system` on libpq 16+, or your OS bundle such as `/etc/ssl/certs/ca-certificates.crt`. The proxy certificate is signed by a public CA, so there is no Appwrite-specific CA to download:
+
+```php
+'sslmode' => env('DB_SSLMODE', 'prefer'),
+'sslrootcert' => env('DB_SSLROOTCERT'),
+```
+
+# Run migrations {% #migrate %}
+
+Define your schema with a migration:
+
+```php
+Schema::create('posts', function (Blueprint $table) {
+    $table->id();
+    $table->string('title');
+    $table->text('body');
+    $table->timestamps();
+});
+```
+
+Apply migrations from your machine or a deploy step:
+
+```bash
+php artisan migrate
+
+# non-interactive, for CI and production deploys
+php artisan migrate --force
+```
+
+Run `migrate` against the **direct** PostgreSQL port (`5432`), not the pooler. Migrations issue DDL that needs a session-level connection, and the transaction-mode pooler can't keep state across statements. The primary `admin` user owns the default database and can run schema changes. Narrower [connection users](/docs/products/databases/postgresql/connections#roles), such as read-only reporting roles, should not run DDL.
+
+# Query with Eloquent {% #query %}
+
+Once the schema is migrated, use Eloquent models and the query builder as usual:
+
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Post extends Model
+{
+    protected $fillable = [
+        'title',
+        'body',
+    ];
+}
+```
+
+Create and query posts through the model:
+
+```php
+use App\Models\Post;
+
+$post = Post::create([
+    'title' => 'Hello from a native PostgreSQL database',
+    'body' => 'Stored in a native PostgreSQL database.',
+]);
+
+$recent = Post::query()
+    ->orderByDesc('created_at')
+    ->limit(10)
+    ->get();
+```
+
+Nothing about the native PostgreSQL database changes how Eloquent, relationships, transactions, or the query builder behave. It is a standard PostgreSQL server behind a TLS connection.
+
+# Pool connections from serverless {% #pooling %}
+
+The right port depends on how your app runs.
+
+A **long-running** PHP process, traditional PHP-FPM with persistent connections, [Laravel Octane](https://laravel.com/docs/octane), or a queue worker, holds its own backend connection for its lifetime. Point these at the **direct** PostgreSQL port (`5432`), or at the [connection pooler](/docs/products/databases/postgresql/connection-pooling) in **session mode**. Don't put a long-lived process behind the transaction-mode pooler.
+
+A **serverless** or per-request deployment (Vercel, AWS Lambda, Cloud Run) opens a fresh connection on every invocation and fans out into far more backend connections than the engine allows. Route that traffic through the pooler's **transaction-mode** port (`6432`) on the same hostname, and give Laravel direct connection details for migrations and other schema operations:
+
+```env
+# Runtime: pooled, transaction mode
+DB_HOST=db-<hash>.<region>.appwrite.center
+DB_PORT=6432
+DB_DATABASE=<database>
+DB_USERNAME=admin
+DB_PASSWORD=<password>
+DB_POOLED=true
+
+# Migrations and schema operations: direct PostgreSQL port
+DB_DIRECT_HOST=db-<hash>.<region>.appwrite.center
+DB_DIRECT_PORT=5432
+DB_DIRECT_USERNAME=admin
+DB_DIRECT_PASSWORD=<password>
+DB_DIRECT_SSLMODE=require
+```
+
+Extend the `pgsql` connection in `config/database.php` with Laravel's pooled connection keys:
+
+```php
+'pgsql' => [
+    'driver' => 'pgsql',
+    'url' => env('DB_URL'),
+    'host' => env('DB_HOST', '127.0.0.1'),
+    'port' => env('DB_PORT', '5432'),
+    'database' => env('DB_DATABASE', 'laravel'),
+    'username' => env('DB_USERNAME', 'root'),
+    'password' => env('DB_PASSWORD', ''),
+    'charset' => env('DB_CHARSET', 'utf8'),
+    'prefix' => '',
+    'prefix_indexes' => true,
+    'search_path' => 'public',
+    'sslmode' => env('DB_SSLMODE', 'prefer'),
+    'pooled' => env('DB_POOLED', false),
+    'direct' => array_filter([
+        'host' => env('DB_DIRECT_HOST'),
+        'port' => env('DB_DIRECT_PORT'),
+        'username' => env('DB_DIRECT_USERNAME'),
+        'password' => env('DB_DIRECT_PASSWORD'),
+        'sslmode' => env('DB_DIRECT_SSLMODE'),
+    ]),
+],
+```
+
+Laravel uses the direct connection for migrations, schema dumps, restores, and database inspection commands when pooled mode is enabled. You can also call `DB::connection('pgsql::direct')` for schema operations that need the direct port. The transaction-mode pooler does not keep a backend connection across statements, so server-side prepared statements, advisory locks, `LISTEN`/`NOTIFY`, and `SET LOCAL` are unavailable. If your app relies on those, use **session mode**. See the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Queues and Horizon {% #queues %}
+
+A queue worker is a long-running process. `php artisan queue:work` boots once and processes jobs for its whole lifetime, holding a persistent database connection the entire time. The same applies to every worker that [Laravel Horizon](https://laravel.com/docs/horizon) supervises. Treat workers like any other long-lived process:
+
+- Connect them to the **direct** PostgreSQL port (`5432`) or the **session-mode** pooler, never the transaction-mode pooler.
+- Restart workers periodically with `--max-time` or `--max-jobs` so a fresh process reclaims memory and reopens its connection. Supervisor or Horizon restarts them automatically.
+
+```bash
+php artisan queue:work --max-time=3600 --max-jobs=500
+```
+
+Each worker counts as one backend connection, so size your worker pool (and Horizon's `maxProcesses`) against the connection budget of your [specification](/docs/products/databases/postgresql). Horizon itself requires Redis for the queue backend; only your application's data connection touches the native PostgreSQL database.
+
+# Use a branch for previews and CI {% #branches %}
+
+PostgreSQL [branches](/docs/products/databases/postgresql/branches) are instant, isolated copies of a database with their own hostname. Create them from the API for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its connection details.
+2. Export them as the `DB_*` variables for the job.
+3. Run `php artisan migrate --force` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations and tests run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connect" %}
+Retrieve credentials, rotate the password, and create scoped connection users.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

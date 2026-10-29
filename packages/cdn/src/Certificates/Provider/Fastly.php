@@ -34,6 +34,7 @@ class Fastly implements Provider
         private readonly string $apiBase = 'https://api.fastly.com',
         private readonly int $deploymentPollAttempts = 10,
         private readonly int $deploymentPollIntervalMilliseconds = 5000,
+        string $tlsConfigurationId = '',
     ) {
         if ($this->deploymentPollAttempts < 1) {
             throw new \InvalidArgumentException('Deployment poll attempts must be at least one.');
@@ -46,7 +47,7 @@ class Fastly implements Provider
         $this->client = $client ?? new Client(new CurlAdapter());
         $this->tls = new FastlyTls(
             apiToken: $this->apiToken,
-            tlsConfigurationId: '',
+            tlsConfigurationId: $tlsConfigurationId,
             certificateAuthority: $certificateAuthority,
             client: $this->client,
             apiBase: $this->apiBase,

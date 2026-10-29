@@ -23,6 +23,13 @@ class Cache
     protected ?Counter $loadResults = null;
 
     /**
+     * @var array<int, array<string, array<string, true>>> Keys purged while each recordPurges() call runs
+     */
+    private array $recordedPurges = [];
+
+    private int $nextRecording = 0;
+
+    /**
      * Set telemetry adapter. Instruments are created lazily on first use to
      * avoid emitting empty data point streams on every export interval.
      */
@@ -286,6 +293,10 @@ class Cache
         $key = $this->caseSensitive ? $key : strtolower($key);
         $hash = $this->caseSensitive ? $hash : strtolower($hash);
 
+        foreach (\array_keys($this->recordedPurges) as $recording) {
+            $this->recordedPurges[$recording][$key][$hash] = true;
+        }
+
         $start = microtime(true);
         $result = $this->adapter->purge($key, $hash);
         $duration = microtime(true) - $start;
@@ -295,6 +306,26 @@ class Cache
         ]);
 
         return $result;
+    }
+
+    /**
+     * Run $callback and return every key it purged, as [key => [hash => true]].
+     * Calls that overlap, for example from concurrent coroutines, each record all purges made while they run.
+     *
+     * @return array<string, array<string, true>>
+     */
+    public function recordPurges(callable $callback): array
+    {
+        $recording = $this->nextRecording++;
+        $this->recordedPurges[$recording] = [];
+
+        try {
+            $callback();
+
+            return $this->recordedPurges[$recording];
+        } finally {
+            unset($this->recordedPurges[$recording]);
+        }
     }
 
     /**

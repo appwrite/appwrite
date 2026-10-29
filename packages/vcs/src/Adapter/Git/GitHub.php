@@ -5,9 +5,10 @@ namespace Utopia\VCS\Adapter\Git;
 use Ahc\Jwt\JWT;
 use Exception;
 use Utopia\Cache\Cache;
-use Utopia\Command;
+use Utopia\Console\Command;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\FileNotFound;
+use Utopia\VCS\Exception\OwnerNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class GitHub extends Git
@@ -713,6 +714,12 @@ class GitHub extends Git
         $url = '/app/installations/' . $installationId;
         $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "Bearer $this->jwtToken"]);
 
+        // Only a missing installation is permanent; rate limits and server errors stay retryable failures
+        $responseHeaders = $response['headers'] ?? [];
+        if (\is_array($responseHeaders) && ($responseHeaders['status-code'] ?? 0) === 404) {
+            throw new OwnerNotFound("Installation '{$installationId}' was not found.");
+        }
+
         $responseBody = $response['body'] ?? [];
         $responseBodyAccount = $responseBody['account'] ?? [];
 
@@ -751,7 +758,7 @@ class GitHub extends Git
     public function getPullRequestFiles(string $owner, string $repositoryName, int $pullRequestNumber): array
     {
         $allFiles = [];
-        $perPage = 30;
+        $perPage = 100;
         $currentPage = 1;
 
         while (true) {
@@ -762,7 +769,16 @@ class GitHub extends Git
                 'page' => $currentPage,
             ]);
 
+            $statusCode = $response['headers']['status-code'] ?? 0;
+            if ($statusCode >= 400) {
+                throw new Exception("Failed to get pull request files: HTTP {$statusCode}", $statusCode);
+            }
+
             $files = $response['body'] ?? [];
+            if (!\is_array($files)) {
+                throw new Exception("Failed to get pull request files: HTTP {$statusCode} returned a non-JSON body");
+            }
+
             $allFiles = array_merge($allFiles, $files);
 
             if (\count($files) < $perPage) {
@@ -997,7 +1013,12 @@ class GitHub extends Git
         $url = "/repos/$owner/$repositoryName/statuses/$commitHash";
 
         $body = [
-            'state' => $state,
+            // A commit status knows no queue or cancellation
+            'state' => match ($state) {
+                'queued', 'in_progress' => 'pending',
+                'cancelled' => 'error',
+                default => $state,
+            },
             'target_url' => $target_url,
             'description' => $description,
             'context' => $context,
@@ -1285,7 +1306,8 @@ class GitHub extends Git
                 $branchDeleted = $payload['deleted'] ?? false;
                 $repositoryId = \strval($payloadRepository['id'] ?? '');
                 $repositoryName = $payloadRepository['name'] ?? '';
-                $branch = str_replace('refs/heads/', '', $payload['ref'] ?? '');
+                $ref = \is_string($payload['ref'] ?? null) ? $payload['ref'] : '';
+                $branch = str_starts_with($ref, 'refs/heads/') ? substr($ref, \strlen('refs/heads/')) : $ref;
                 $repositoryUrl = $payloadRepository['html_url'] ?? '';
                 $branchUrl = !empty($repositoryUrl) && !empty($branch) ? $repositoryUrl . '/tree/' . $branch : '';
                 $commitHash = $payload['after'] ?? '';

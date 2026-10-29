@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Message\StatsResources as StatsResourcesMessage;
 use Appwrite\Platform\Action;
 use Appwrite\Usage\Connection;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -287,7 +287,7 @@ class StatsResources extends Action
         }
 
         return [
-            ['metric' => METRIC_AVATARS_STORAGE, 'value' => $storage, 'service' => '', 'resourceType' => 'project', 'resourceId' => $project->getId()],
+            ['metric' => METRIC_STORAGE, 'value' => $storage, 'service' => 'avatars', 'resourceType' => 'photos', 'resourceId' => $project->getId()],
         ];
     }
 

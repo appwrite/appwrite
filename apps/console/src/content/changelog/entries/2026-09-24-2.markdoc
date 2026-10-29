@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Native PostgreSQL, MySQL, and dedicated databases in every Appwrite Cloud region"
+date: 2026-09-24
+cover: /images/changelog/2026-09-24-2.avif
+tags: databases, infrastructure, console
+---
+
+Native databases launched in Frankfurt and New York. As of today they are available in all six Appwrite Cloud regions: Frankfurt (`fra`), New York (`nyc`), San Francisco (`sfo`), Singapore (`sgp`), Sydney (`syd`), and Toronto (`tor`).
+
+That covers [native PostgreSQL](/docs/products/databases/postgresql), [native MySQL](/docs/products/databases/mysql), and dedicated compute for TablesDB, DocumentsDB, and VectorsDB. A database takes the region of the project that owns it, and its storage, backups, and replicas stay in that region. Specifications, pricing, and plan requirements are the same everywhere.
+
+Open **Databases** in any project and click **Create database** to provision one.
+
+{% arrow_link href="/blog/post/native-databases-all-appwrite-cloud-regions" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/databases/postgresql#regions" %}
+See supported regions
+{% /arrow_link %}
