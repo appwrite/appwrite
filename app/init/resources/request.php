@@ -142,6 +142,7 @@ return function (Container $context): void {
     $context->set('queueForEvents', fn (Publisher $publisher) => new Event($publisher), ['publisher']);
     $context->set('queueForWebhooks', fn (Publisher $publisher) => new Webhook($publisher), ['publisher']);
     $context->set('queueForRealtime', fn () => new Realtime(), []);
+    // A publisher of its own, so it never sends or clears the route's realtime event
     $context->set('connections', fn (Mqtt $mqtt, Realtime $queueForRealtime) => new Connections($mqtt, clone $queueForRealtime), ['mqtt', 'queueForRealtime']);
     $context->set('usage', fn () => new UsageContext(), []);
     $context->set('usageForProject', function (Document $project, UsageConnection $usageConnection): UsageTenant {
