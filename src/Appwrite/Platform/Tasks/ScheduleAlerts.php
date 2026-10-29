@@ -15,7 +15,7 @@ use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
 /**
- * Enqueues every enabled alert rule in the region for evaluation on its
+ * Enqueues every enabled monitor in the region for evaluation on its
  * interval, from the rules' rows in `schedules`. The rule is measured and
  * compared in the `alerts` worker.
  */
@@ -29,7 +29,7 @@ class ScheduleAlerts extends Action
     public function __construct()
     {
         $this
-            ->desc('Schedule alert rule evaluations')
+            ->desc('Schedule monitor evaluations')
             ->inject('publisherForAlerts')
             ->inject('dbForPlatform')
             ->inject('telemetry')
@@ -101,13 +101,13 @@ class ScheduleAlerts extends Action
             $error = null;
 
             try {
-                Span::add('rule.id', $occurrence->id);
+                Span::add('monitor.id', $occurrence->id);
                 Span::add('project.id', $occurrence->payload['project']->getId());
                 Span::add('occurrence.due', $occurrence->due->format('c'));
 
                 if ($publisherForAlerts->enqueue(new AlertMessage(
                     project: $occurrence->payload['project'],
-                    ruleId: $occurrence->payload['ruleId'],
+                    monitorId: $occurrence->payload['monitorId'],
                 )) === false) {
                     $error = new \RuntimeException('Failed to enqueue');
                 }

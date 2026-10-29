@@ -113,22 +113,22 @@ final class DatabaseTest extends TestCase
             $entries[(string) $row->data->getAttribute('resourceId')] = $source->make($row);
         }
 
-        // An organization rule has no project; unlike a function's row, its row is not an orphan.
-        $this->assertSame('spend', $entries['spend']->payload['ruleId']);
+        // A monitor without a project, such as an organization's; unlike a function's row, its row is not an orphan.
+        $this->assertSame('spend', $entries['spend']->payload['monitorId']);
         $this->assertTrue($entries['spend']->payload['project']->isEmpty());
         $this->assertFalse($database->getDocument('schedules', 'organization')->isEmpty());
 
-        $this->assertSame('egress', $entries['egress']->payload['ruleId']);
+        $this->assertSame('egress', $entries['egress']->payload['monitorId']);
         $this->assertSame('project', $entries['egress']->payload['project']->getId());
         $this->assertSame('5', $entries['egress']->payload['project']->getSequence());
     }
 
-    public function testAlertIntervalChangeReschedulesTheRule(): void
+    public function testAlertIntervalChangeReschedulesTheMonitor(): void
     {
         $database = $this->alertSchedules();
         $interval = 60;
         $source = new Alerts($database, function (array $schedules) use (&$interval): array {
-            // The organization's rule is left out, as for an organization that is gone.
+            // The organization's monitor is left out, as for an organization that is gone.
             return ['rule' => $interval];
         });
 
@@ -153,7 +153,7 @@ final class DatabaseTest extends TestCase
                 'projectId' => 'project',
                 'projectInternalId' => '5',
                 'resourceId' => 'egress',
-                'resourceType' => SCHEDULE_RESOURCE_TYPE_ALERT,
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_MONITOR,
                 'active' => true,
                 'resourceUpdatedAt' => '2026-10-29 00:00:00.000',
             ]),
@@ -163,7 +163,7 @@ final class DatabaseTest extends TestCase
                 'projectId' => '',
                 'projectInternalId' => '',
                 'resourceId' => 'spend',
-                'resourceType' => SCHEDULE_RESOURCE_TYPE_ALERT,
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_MONITOR,
                 'active' => true,
                 'resourceUpdatedAt' => '2026-10-29 00:00:00.000',
             ]),

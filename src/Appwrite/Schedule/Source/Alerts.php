@@ -10,13 +10,13 @@ use Utopia\Schedule\Trigger\Interval;
 use Utopia\Schedule\Trigger\Shifted;
 
 /**
- * One evaluation schedule per alert rule, read from the rule's row in
- * `schedules`. A rule keeps its slot across restarts: it is shifted by
- * `crc32(ruleId) mod interval` seconds.
+ * One evaluation schedule per monitor, read from the monitor's row in
+ * `schedules`. A monitor keeps its slot across restarts: it is shifted by
+ * `crc32(monitorId) mod interval` seconds.
  *
  * The interval is not stored on the row: an edition may derive it from
- * something the rule does not own, such as its organization's plan. It is
- * worked out per page of rows and added to each row's version, so a rule whose
+ * something the monitor does not own, such as its organization's plan. It is
+ * worked out per page of rows and added to each row's version, so a monitor whose
  * interval changes moves onto it at the next full snapshot.
  */
 final class Alerts extends Database
@@ -30,7 +30,7 @@ final class Alerts extends Database
         \Utopia\Database\Database $dbForPlatform,
         private readonly \Closure $intervals,
     ) {
-        // The worker loads the rule and its project, so make() reads neither.
+        // The worker loads the monitor and its project, so make() reads neither.
         parent::__construct($dbForPlatform, null, null);
     }
 
@@ -47,8 +47,8 @@ final class Alerts extends Database
     }
 
     /**
-     * Nothing is looked up: the worker loads the rule and its project. An
-     * organization rule belongs to no project and is sent with an empty one.
+     * Nothing is looked up: the worker loads the monitor and its project. A
+     * monitor that belongs to no project is sent with an empty one.
      */
     #[\Override]
     public function make(Row $row): Entry
@@ -66,7 +66,7 @@ final class Alerts extends Database
                 'interval' => (int) $schedule->getAttribute('interval'),
             ]),
             [
-                'ruleId' => (string) $schedule->getAttribute('resourceId'),
+                'monitorId' => (string) $schedule->getAttribute('resourceId'),
                 'project' => $projectId === '' ? new Document() : new Document([
                     '$id' => $projectId,
                     '$sequence' => (string) $schedule->getAttribute('projectInternalId'),
@@ -78,13 +78,13 @@ final class Alerts extends Database
     #[\Override]
     protected function type(): string
     {
-        return SCHEDULE_RESOURCE_TYPE_ALERT;
+        return SCHEDULE_RESOURCE_TYPE_MONITOR;
     }
 
     #[\Override]
     protected function collection(): string
     {
-        return 'alertRules';
+        return 'monitors';
     }
 
     #[\Override]

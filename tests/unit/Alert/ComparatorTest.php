@@ -7,10 +7,12 @@ namespace Tests\Unit\Alert;
 use Appwrite\Alert\Comparator;
 use Appwrite\Alert\Email;
 use Appwrite\Alert\Quantity;
+use Appwrite\Alert\Rules;
 use Appwrite\Alert\Status;
 use Appwrite\Alert\Wording;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Query;
 
 final class ComparatorTest extends TestCase
 {
@@ -166,4 +168,70 @@ final class ComparatorTest extends TestCase
         $this->assertStringContainsString('On recovery, or in 1 hour if still firing', $firing);
         $this->assertStringContainsString('Pause this rule', $firing);
     }
+
+    public function testRulesReadTheComparisonAndScope(): void
+    {
+        $rules = Rules::parse([
+            Query::equal('resourceType', ['bucket'])->toString(),
+            Query::greaterThanEqual('files.storage', 5000)->toString(),
+            Query::equal('resourceId', ['images'])->toString(),
+        ], self::REGISTRY);
+
+        $this->assertSame('files.storage', $rules->metric);
+        $this->assertSame(Comparator::GreaterThanEqual, $rules->comparator);
+        $this->assertEqualsWithDelta(5000.0, $rules->threshold, PHP_FLOAT_EPSILON);
+        $this->assertSame('bucket', $rules->resourceType);
+        $this->assertSame('images', $rules->resourceId);
+        // Normalized with the comparison first, as the console reads them back.
+        $this->assertSame([
+            '{"method":"greaterThanEqual","attribute":"files.storage","values":[5000]}',
+            '{"method":"equal","attribute":"resourceType","values":["bucket"]}',
+            '{"method":"equal","attribute":"resourceId","values":["images"]}',
+        ], $rules->rules);
+    }
+
+    public function testRulesWithoutScopeWatchTheProject(): void
+    {
+        $rules = Rules::parse([Query::lessThan('bandwidth.outbound', 10)->toString()], self::REGISTRY);
+
+        $this->assertSame('project', $rules->resourceType);
+        $this->assertSame('', $rules->resourceId);
+    }
+
+    /**
+     * @return \Iterator<string, array{list<string>, string}>
+     */
+    public static function invalidRules(): \Iterator
+    {
+        yield 'no comparison' => [[Query::equal('resourceType', ['bucket'])->toString()], 'needs one rule comparing a metric'];
+        yield 'two comparisons' => [[Query::greaterThan('files.storage', 1)->toString(), Query::lessThan('files.storage', 9)->toString()], 'one metric comparison'];
+        yield 'unknown metric' => [[Query::greaterThan('functions.executions', 1)->toString()], "'functions.executions', which is not a metric"];
+        yield 'unsupported method' => [[Query::between('files.storage', 1, 2)->toString()], "uses 'between'"];
+        yield 'not a number' => [[Query::greaterThan('files.storage', '5')->toString()], 'with one number'];
+        yield 'not a query' => [['greaterThan(files.storage)'], 'Rule 0 is not a valid query'];
+        yield 'scope not equal' => [[Query::greaterThan('files.storage', 1)->toString(), Query::notEqual('resourceType', 'bucket')->toString()], "must be equal('resourceType'"];
+        yield 'id without type' => [[Query::greaterThan('files.storage', 1)->toString(), Query::equal('resourceId', ['images'])->toString()], "needs a rule on 'resourceType'"];
+        yield 'unknown resource' => [[Query::greaterThan('files.storage', 1)->toString(), Query::equal('resourceType', ['site'])->toString()], "'site' cannot be monitored"];
+        yield 'metric not on resource' => [[Query::greaterThan('bandwidth.outbound', 1)->toString(), Query::equal('resourceType', ['bucket'])->toString()], "not recorded for resource type 'bucket'"];
+    }
+
+    /**
+     * @param list<string> $queries
+     */
+    #[DataProvider('invalidRules')]
+    public function testRulesRefuseWhatAMonitorCannotRead(array $queries, string $reason): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($reason);
+
+        Rules::parse($queries, self::REGISTRY);
+    }
+
+    private const array REGISTRY = [
+        'resources' => ['project' => [], 'bucket' => []],
+        'metrics' => [
+            'bandwidth.outbound' => ['resources' => ['project']],
+            'files.storage' => ['resources' => ['project', 'bucket']],
+        ],
+    ];
 }

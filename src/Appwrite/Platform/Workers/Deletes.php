@@ -511,12 +511,12 @@ class Deletes extends Action
                 $resourceType = $document->getAttribute('resourceType');
                 $resourceId = $document->getAttribute('resourceId');
 
-                // Alert rules live in the platform database, and an organization's
-                // rules have no project, so their rows go once the rule is gone.
-                if ($resourceType === SCHEDULE_RESOURCE_TYPE_ALERT) {
-                    if ($dbForPlatform->getDocument('alertRules', $resourceId)->isEmpty()) {
+                // Monitors live in the platform database, and a monitor need not
+                // belong to a project, so their rows go once the monitor is gone.
+                if ($resourceType === SCHEDULE_RESOURCE_TYPE_MONITOR) {
+                    if ($dbForPlatform->getDocument('monitors', $resourceId)->isEmpty()) {
                         $dbForPlatform->deleteDocument('schedules', $document->getId());
-                        Console::success('Deleting schedule for alert ' . $resourceId);
+                        Console::success('Deleting schedule for monitor ' . $resourceId);
                     }
                     return;
                 }
@@ -1020,14 +1020,16 @@ class Deletes extends Action
             Console::error('Failed to delete webhooks: ' . $th->getMessage());
         }
 
-        // Delete alert rules
-        try {
-            $this->deleteByGroup('alertRules', [
-                Query::equal('projectInternalId', [$projectInternalId]),
-                Query::orderAsc()
-            ], $dbForPlatform);
-        } catch (Throwable $th) {
-            Console::error('Failed to delete alert rules: ' . $th->getMessage());
+        // Delete monitors and the alerts they raised
+        foreach (['monitors', 'alerts'] as $collection) {
+            try {
+                $this->deleteByGroup($collection, [
+                    Query::equal('projectInternalId', [$projectInternalId]),
+                    Query::orderAsc()
+                ], $dbForPlatform);
+            } catch (Throwable $th) {
+                Console::error("Failed to delete {$collection}: " . $th->getMessage());
+            }
         }
 
         // Delete VCS Installations

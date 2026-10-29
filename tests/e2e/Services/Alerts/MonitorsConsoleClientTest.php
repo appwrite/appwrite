@@ -9,9 +9,9 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 
-final class RulesConsoleClientTest extends Scope
+final class MonitorsConsoleClientTest extends Scope
 {
-    use RulesBase;
+    use MonitorsBase;
     use ProjectCustom;
     use SideConsole;
 
@@ -20,14 +20,14 @@ final class RulesConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $list = $this->client->call(Client::METHOD_GET, '/alerts/rules', [
+        $list = $this->client->call(Client::METHOD_GET, '/monitors', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ]);
 
-        // Alert rules belong to a project; the console project has none to manage.
+        // Monitors belong to a project; the console project has none to manage.
         $this->assertSame(401, $list['headers']['status-code']);
         $this->assertSame('general_unauthorized_scope', $list['body']['type']);
     }

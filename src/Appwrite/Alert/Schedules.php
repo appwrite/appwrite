@@ -8,8 +8,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 
 /**
- * An alert rule's row in `schedules`, which the alerts scheduler evaluates the
- * rule from. Moving `resourceUpdatedAt` is what the scheduler syncs on, so
+ * A monitor's row in `schedules`, which the alerts scheduler evaluates the
+ * monitor from. Moving `resourceUpdatedAt` is what the scheduler syncs on, so
  * every write touches it.
  */
 readonly class Schedules
@@ -19,39 +19,39 @@ readonly class Schedules
     }
 
     /**
-     * Creates or refreshes the rule's schedule: active while the rule is enabled.
+     * Creates or refreshes the monitor's schedule: active while the monitor is enabled.
      */
-    public function write(Document $rule): void
+    public function write(Document $monitor): void
     {
-        $schedule = $this->find($rule);
+        $schedule = $this->find($monitor);
         $changes = [
-            'active' => (bool) $rule->getAttribute('enabled', false),
+            'active' => (bool) $monitor->getAttribute('enabled', false),
             'resourceUpdatedAt' => DateTime::now(),
         ];
 
         $this->dbForPlatform->getAuthorization()->skip(fn () => $schedule->isEmpty()
             ? $this->dbForPlatform->createDocument('schedules', new Document([
-                'region' => (string) $rule->getAttribute('region'),
-                'resourceType' => SCHEDULE_RESOURCE_TYPE_ALERT,
-                'resourceId' => $rule->getId(),
-                'resourceInternalId' => (string) $rule->getSequence(),
-                'projectId' => (string) $rule->getAttribute('projectId', ''),
-                // An ID column, which takes no empty string for a rule without a project.
-                'projectInternalId' => $rule->getAttribute('projectInternalId') ?: null,
+                'region' => (string) $monitor->getAttribute('region'),
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_MONITOR,
+                'resourceId' => $monitor->getId(),
+                'resourceInternalId' => (string) $monitor->getSequence(),
+                'projectId' => (string) $monitor->getAttribute('projectId', ''),
+                // An ID column, which takes no empty string for a monitor without a project.
+                'projectInternalId' => $monitor->getAttribute('projectInternalId') ?: null,
                 'schedule' => '',
-                'data' => ['teamInternalId' => (string) $rule->getAttribute('teamInternalId')],
+                'data' => ['teamInternalId' => (string) $monitor->getAttribute('teamInternalId')],
                 ...$changes,
             ]))
             : $this->dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document($changes)));
     }
 
     /**
-     * Stops a deleted rule's schedule; the schedules sweep removes the row once
-     * the rule is gone.
+     * Stops a deleted monitor's schedule; the schedules sweep removes the row once
+     * the monitor is gone.
      */
-    public function stop(Document $rule): void
+    public function stop(Document $monitor): void
     {
-        $schedule = $this->find($rule);
+        $schedule = $this->find($monitor);
         if ($schedule->isEmpty()) {
             return;
         }
@@ -62,13 +62,13 @@ readonly class Schedules
         ])));
     }
 
-    private function find(Document $rule): Document
+    private function find(Document $monitor): Document
     {
         return $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->findOne('schedules', [
-            Query::equal('region', [(string) $rule->getAttribute('region')]),
-            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_ALERT]),
-            Query::equal('projectId', [(string) $rule->getAttribute('projectId', '')]),
-            Query::equal('resourceId', [$rule->getId()]),
+            Query::equal('region', [(string) $monitor->getAttribute('region')]),
+            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_MONITOR]),
+            Query::equal('projectId', [(string) $monitor->getAttribute('projectId', '')]),
+            Query::equal('resourceId', [$monitor->getId()]),
         ]));
     }
 }

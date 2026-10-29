@@ -9,13 +9,13 @@ use Utopia\Usage\Tenant;
 use Utopia\Usage\Usage;
 
 /**
- * Reads the value an alert rule compares, from its project's usage tenant.
+ * Reads the value a usage monitor compares, from its project's usage tenant.
  *
- * Counters are summed over the rule's window. Gauges are the latest sample:
+ * Counters are summed over the monitor's window. Gauges are the latest sample:
  * storage is written by the periodic resource sweep, so it has no window.
  *
  * DocumentsDB and VectorsDB databases report under prefixed names, so a
- * project-wide database rule adds the three engines and a rule on one
+ * project-wide database monitor adds the three engines and a monitor on one
  * database reads its engine's series.
  */
 class Meter
@@ -25,15 +25,15 @@ class Meter
     }
 
     /**
-     * @param string $databaseType the watched database's type, for a rule on one database
-     * @throws \InvalidArgumentException when the rule's metric is not one this meter reads
+     * @param string $databaseType the watched database's type, for a monitor on one database
+     * @throws \InvalidArgumentException when the monitor's metric is not one this meter reads
      */
-    public function measure(Document $rule, \DateTimeImmutable $now, string $databaseType = ''): float
+    public function measure(Document $monitor, \DateTimeImmutable $now, string $databaseType = ''): float
     {
-        $metric = (string) $rule->getAttribute('metric', '');
-        $resourceType = (string) $rule->getAttribute('resourceType', '');
-        $resourceId = (string) $rule->getAttribute('resourceId', '');
-        $since = $this->since((int) $rule->getAttribute('window', 0), $now);
+        $metric = (string) $monitor->getAttribute('metric', '');
+        $resourceType = (string) $monitor->getAttribute('resourceType', '');
+        $resourceId = (string) $monitor->getAttribute('resourceId', '');
+        $since = $this->since((int) $monitor->getAttribute('window', 0), $now);
 
         return match ($metric) {
             'bandwidth.inbound' => $this->sum(METRIC_NETWORK_INBOUND, [...$since, Query::notEqual('resourceType', 'site')]),
@@ -95,7 +95,7 @@ class Meter
 
     /**
      * The usage names a database metric is reported under: every engine's for a
-     * project-wide rule, the watched database's engine's for a rule on one.
+     * project-wide monitor, the watched database's engine's for a monitor on one.
      *
      * @return list<string>
      */

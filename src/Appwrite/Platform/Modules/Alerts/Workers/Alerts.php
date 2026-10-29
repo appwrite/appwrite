@@ -8,6 +8,7 @@ use Appwrite\Alert\Email;
 use Appwrite\Alert\Meter;
 use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Schedules;
+use Appwrite\Alert\State;
 use Appwrite\Alert\Status;
 use Appwrite\Event\Message\Alert as AlertMessage;
 use Appwrite\Event\Message\Notification as NotificationMessage;
@@ -18,15 +19,17 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Usage\Tenant;
 
 /**
- * Measures one alert rule, compares it with its threshold and records the
- * result. A notification goes out only when the rule changes state: entering
- * `firing` (at most once per cooldown) and returning to `ok`.
+ * Measures one monitor, compares it with its threshold and records the result
+ * on the monitor and on the alert it opens while firing. The alert is announced
+ * only when the monitor changes state: entering `firing` (at most once per
+ * cooldown) and returning to `ok`.
  */
 class Alerts extends Action
 {
@@ -61,26 +64,26 @@ class Alerts extends Action
         NotificationPublisher $publisherForNotifications,
         array $platform,
     ): void {
-        $ruleId = AlertMessage::fromArray($message->getPayload())->ruleId;
-        Span::add('rule.id', $ruleId);
+        $monitorId = AlertMessage::fromArray($message->getPayload())->monitorId;
+        Span::add('monitor.id', $monitorId);
 
-        // The project was deleted after the evaluation was scheduled; its rules go with it.
+        // The project was deleted after the evaluation was scheduled; its monitors go with it.
         if ($project->isEmpty()) {
             return;
         }
 
-        $rule = $dbForPlatform->getDocument('alertRules', $ruleId);
-        if ($rule->isEmpty()) {
-            // A schedule that outlived its rule stops here, and the schedules sweep removes it.
+        $monitor = $dbForPlatform->getDocument('monitors', $monitorId);
+        if ($monitor->isEmpty()) {
+            // A schedule that outlived its monitor stops here, and the schedules sweep removes it.
             (new Schedules($dbForPlatform))->stop(new Document([
-                '$id' => $ruleId,
+                '$id' => $monitorId,
                 'region' => (string) $project->getAttribute('region', ''),
                 'projectId' => $project->getId(),
             ]));
 
             return;
         }
-        if (!$rule->getAttribute('enabled', false) || $rule->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
+        if (!$monitor->getAttribute('enabled', false) || $monitor->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
             return;
         }
 
@@ -92,22 +95,23 @@ class Alerts extends Action
         }
 
         $now = new \DateTimeImmutable();
-        $value = $this->measure($rule, $project, $dbForProject, $usageConnection, $now);
+        $value = $this->measure($monitor, $project, $dbForProject, $usageConnection, $now);
 
-        $this->evaluate($rule, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $platform);
+        $this->evaluate($monitor, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $platform);
     }
 
     /**
-     * Compares a measured value with the rule, stores the result and notifies:
-     * a firing is announced once, as soon as the cooldown since the last
-     * announcement allows (on entering firing, or later while it keeps firing),
-     * and its resolution is announced only if the firing was.
-     * Editions that measure rules outside a project's usage call this with their value.
+     * Compares a measured value with the monitor's rules, keeps its alert and
+     * announces it. Entering `firing` opens an alert; it is announced once, as
+     * soon as the cooldown since the last announcement allows (on entering
+     * firing, or later while it keeps firing), and its resolution is announced
+     * only if the firing was. Recovering resolves the alert.
+     * Editions that measure monitors outside a project's usage call this with their value.
      *
      * @param array<string, mixed> $platform
      */
     protected function evaluate(
-        Document $rule,
+        Document $monitor,
         Document $project,
         float $value,
         \DateTimeImmutable $now,
@@ -115,33 +119,34 @@ class Alerts extends Action
         NotificationPublisher $publisherForNotifications,
         array $platform,
     ): void {
-        $matches = Comparator::from((string) $rule->getAttribute('comparator'))->matches($value, (float) $rule->getAttribute('threshold'));
-        $previous = Status::tryFrom((string) $rule->getAttribute('status')) ?? Status::Ok;
+        $comparator = Comparator::from((string) $monitor->getAttribute('comparator'));
+        $matches = $comparator->matches($value, (float) $monitor->getAttribute('threshold'));
+        $previous = Status::tryFrom((string) $monitor->getAttribute('status')) ?? Status::Ok;
         $status = $matches ? Status::Firing : Status::Ok;
         $evaluatedAt = DateTime::format(\DateTime::createFromImmutable($now));
 
-        Span::add('rule.metric', (string) $rule->getAttribute('metric'));
-        Span::add('rule.value', $value);
-        Span::add('rule.status', $status->value);
+        Span::add('monitor.metric', (string) $monitor->getAttribute('metric'));
+        Span::add('monitor.value', $value);
+        Span::add('monitor.status', $status->value);
 
         $changes = new Document([
             'value' => $value,
             'evaluatedAt' => $evaluatedAt,
         ]);
 
-        $announced = (bool) $rule->getAttribute('announced', false);
+        $announced = (bool) $monitor->getAttribute('announced', false);
         if ($status !== $previous) {
             $changes->setAttribute('status', $status->value);
         }
 
         $notify = false;
         if ($status === Status::Firing && !$announced) {
-            // Cooldown counts from the last announced firing, so a rule flapping
+            // Cooldown counts from the last announced firing, so a monitor flapping
             // around its threshold is reported once per cooldown, and a firing
             // that started inside the cooldown is reported once it has passed.
-            $triggeredAt = $rule->getAttribute('triggeredAt');
+            $triggeredAt = $monitor->getAttribute('triggeredAt');
             $cooled = $triggeredAt === null
-                || $now->getTimestamp() - (new \DateTimeImmutable($triggeredAt))->getTimestamp() >= (int) $rule->getAttribute('cooldown');
+                || $now->getTimestamp() - (new \DateTimeImmutable($triggeredAt))->getTimestamp() >= (int) $monitor->getAttribute('cooldown');
 
             if ($cooled) {
                 $changes->setAttribute('triggeredAt', $evaluatedAt);
@@ -153,30 +158,121 @@ class Alerts extends Action
             $notify = $announced;
         }
 
+        // The alert is opened before anything is announced, so the announcement
+        // can link to it. A retry that finds it already open keeps using it.
+        $alert = new Document();
+        if ($status === Status::Firing) {
+            $alert = $this->open($monitor, $value, $comparator, $dbForPlatform);
+            $changes->setAttribute('alertId', $alert->getId());
+        } elseif ($previous === Status::Firing) {
+            $alert = $dbForPlatform->getDocument('alerts', (string) $monitor->getAttribute('alertId', ''));
+            $changes->setAttribute('alertId', '');
+        }
+
         // Publish before the new state is stored: if publishing fails, the retry
         // still sees the transition instead of finding it already recorded.
         if ($notify) {
-            Span::add('rule.notified', true);
-            $this->notify($rule, $project, $status, $value, $evaluatedAt, $dbForPlatform, $publisherForNotifications, $platform);
+            Span::add('monitor.notified', true);
+            $this->notify($monitor, $alert, $project, $status, $value, $evaluatedAt, $dbForPlatform, $publisherForNotifications, $platform);
         }
 
-        $dbForPlatform->updateDocument('alertRules', $rule->getId(), $changes);
+        if (!$alert->isEmpty()) {
+            $this->record($alert, $status, $value, $comparator, $notify, $evaluatedAt, $dbForPlatform);
+        }
+
+        $dbForPlatform->updateDocument('monitors', $monitor->getId(), $changes);
     }
 
     /**
-     * The value the rule compares with its threshold. Editions that register
+     * The monitor's open alert, created when it starts firing. The monitor
+     * points at it once its state is stored; until then, a retry finds the
+     * alert it opened by its monitor and status.
+     */
+    protected function open(Document $monitor, float $value, Comparator $comparator, Database $dbForPlatform): Document
+    {
+        $alert = $dbForPlatform->getDocument('alerts', (string) $monitor->getAttribute('alertId', ''));
+        if ($alert->isEmpty()) {
+            $alert = $dbForPlatform->findOne('alerts', [
+                Query::equal('monitorInternalId', [(string) $monitor->getSequence()]),
+                Query::equal('status', [State::Firing->value]),
+            ]);
+        }
+        if (!$alert->isEmpty() && $alert->getAttribute('status') === State::Firing->value) {
+            return $alert;
+        }
+
+        $alertId = Id::unique();
+
+        return $dbForPlatform->createDocument('alerts', new Document([
+            '$id' => $alertId,
+            '$permissions' => [],
+            'name' => (string) $monitor->getAttribute('name'),
+            'monitorId' => $monitor->getId(),
+            'monitorInternalId' => (string) $monitor->getSequence(),
+            'teamId' => (string) $monitor->getAttribute('teamId'),
+            'teamInternalId' => (string) $monitor->getAttribute('teamInternalId'),
+            'projectId' => (string) $monitor->getAttribute('projectId', ''),
+            // An ID column, which takes no empty string for a monitor without a project.
+            'projectInternalId' => $monitor->getAttribute('projectInternalId') ?: null,
+            'region' => (string) $monitor->getAttribute('region', ''),
+            'status' => State::Firing->value,
+            'rules' => $monitor->getAttribute('rules', []),
+            'type' => (string) $monitor->getAttribute('type'),
+            'resourceType' => (string) $monitor->getAttribute('resourceType'),
+            'resourceId' => (string) $monitor->getAttribute('resourceId'),
+            'metric' => (string) $monitor->getAttribute('metric'),
+            'comparator' => $comparator->value,
+            'threshold' => (float) $monitor->getAttribute('threshold'),
+            'value' => $value,
+            'peak' => $value,
+            'channels' => $monitor->getAttribute('channels', []),
+            'notifications' => 0,
+            'search' => \implode(' ', \array_filter([$alertId, $monitor->getId(), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric')])),
+        ]));
+    }
+
+    /**
+     * Stores a reading on the monitor's alert: the latest value, the one
+     * furthest past the threshold, how often it was announced, and its
+     * resolution once the monitor recovers.
+     */
+    protected function record(Document $alert, Status $status, float $value, Comparator $comparator, bool $announced, string $evaluatedAt, Database $dbForPlatform): void
+    {
+        if ($alert->getAttribute('status') !== State::Firing->value) {
+            return;
+        }
+
+        $changes = new Document(['value' => $value]);
+        $peak = (float) $alert->getAttribute('peak', $value);
+        $worse = \in_array($comparator, [Comparator::LessThan, Comparator::LessThanEqual], true) ? $value < $peak : $value > $peak;
+        if ($status === Status::Firing && $worse) {
+            $changes->setAttribute('peak', $value);
+        }
+        if ($status === Status::Firing && $announced) {
+            $changes->setAttribute('notifications', (int) $alert->getAttribute('notifications', 0) + 1);
+        }
+        if ($status === Status::Ok) {
+            $changes->setAttribute('status', State::Resolved->value);
+            $changes->setAttribute('resolvedAt', $evaluatedAt);
+        }
+
+        $dbForPlatform->updateDocument('alerts', $alert->getId(), $changes);
+    }
+
+    /**
+     * The value the monitor compares with its threshold. Editions that register
      * metrics this meter does not read override this with their own meter.
      */
-    protected function measure(Document $rule, Document $project, Database $dbForProject, Connection $usageConnection, \DateTimeImmutable $now): float
+    protected function measure(Document $monitor, Document $project, Database $dbForProject, Connection $usageConnection, \DateTimeImmutable $now): float
     {
         $databaseType = '';
-        if ($rule->getAttribute('resourceType') === 'database') {
-            $databaseType = (string) $dbForProject->getDocument('databases', (string) $rule->getAttribute('resourceId'))->getAttribute('type', '');
+        if ($monitor->getAttribute('resourceType') === 'database') {
+            $databaseType = (string) $dbForProject->getDocument('databases', (string) $monitor->getAttribute('resourceId'))->getAttribute('type', '');
         }
 
         $meter = new Meter(new Tenant($usageConnection->getUsage(), (string) $project->getSequence()));
 
-        return $meter->measure($rule, $now, $databaseType);
+        return $meter->measure($monitor, $now, $databaseType);
     }
 
     /**
@@ -188,17 +284,19 @@ class Alerts extends Action
     }
 
     /**
-     * Publishes a state change: one message for the rule's webhook, and one per
-     * organization owner for the console bell and email.
+     * Announces the monitor's alert firing or resolving: one message for the
+     * monitor's webhook, and one per organization owner for the console bell
+     * and email. Each links to the alert.
      *
-     * The deduplication key names the rule, its new status and the moment it
+     * The deduplication key names the monitor, its new status and the moment it
      * changed, so an at-least-once redelivery of the same evaluation sends
      * nothing twice while the next transition always gets through.
      *
      * @param array<string, mixed> $platform
      */
     protected function notify(
-        Document $rule,
+        Document $monitor,
+        Document $alert,
         Document $project,
         Status $status,
         float $value,
@@ -207,11 +305,11 @@ class Alerts extends Action
         NotificationPublisher $publisherForNotifications,
         array $platform,
     ): void {
-        $channels = $rule->getAttribute('channels', []);
+        $channels = $monitor->getAttribute('channels', []);
         // Named after the evaluation the decision was made against, so a retried
         // evaluation of the same state reuses the key instead of sending twice.
-        $deduplicationKey = 'alert:' . $rule->getId() . ':' . $status->value . ':' . ($rule->getAttribute('evaluatedAt') ?? $rule->getCreatedAt());
-        $metric = (string) $rule->getAttribute('metric');
+        $deduplicationKey = 'monitor:' . $monitor->getId() . ':' . $status->value . ':' . ($monitor->getAttribute('evaluatedAt') ?? $monitor->getCreatedAt());
+        $metric = (string) $monitor->getAttribute('metric');
         $parent = [
             'parentResourceType' => RESOURCE_TYPE_PROJECTS,
             'parentResourceId' => $project->getId(),
@@ -220,64 +318,68 @@ class Alerts extends Action
 
         $definition = Config::getParam('alerts', [])['metrics'][$metric] ?? [];
         $unit = (string) ($definition['unit'] ?? '');
-        $resourceType = (string) $rule->getAttribute('resourceType');
+        $resourceType = (string) $monitor->getAttribute('resourceType');
         $projectName = (string) $project->getAttribute('name');
-        $team = $dbForPlatform->getDocument('teams', (string) $rule->getAttribute('teamId'));
+        $team = $dbForPlatform->getDocument('teams', (string) $monitor->getAttribute('teamId'));
         $region = (string) $project->getAttribute('region', '');
         $regionName = (string) (Config::getParam('regions', [])[$region]['name'] ?? '');
-        $url = ($platform['consoleUrl'] ?? '') . $this->path($project) . '?rule=' . $rule->getId();
+        $url = ($platform['consoleUrl'] ?? '') . $this->path($project) . '?alert=' . $alert->getId();
+        // The monitor's drawer, which pauses it from its header.
+        $pauseUrl = ($platform['consoleUrl'] ?? '') . $this->path($project) . '?monitor=' . $monitor->getId();
         $notice = new Email(
             status: $status,
-            rule: (string) $rule->getAttribute('name'),
+            rule: (string) $monitor->getAttribute('name'),
             metric: (string) ($definition['label'] ?? $metric),
             place: $projectName,
             value: new Quantity($value, $unit),
-            comparator: Comparator::from((string) $rule->getAttribute('comparator')),
-            threshold: new Quantity((float) $rule->getAttribute('threshold'), $unit),
-            window: ($definition['kind'] ?? '') === 'counter' ? (int) $rule->getAttribute('window') : null,
+            comparator: Comparator::from((string) $monitor->getAttribute('comparator')),
+            threshold: new Quantity((float) $monitor->getAttribute('threshold'), $unit),
+            window: ($definition['kind'] ?? '') === 'counter' ? (int) $monitor->getAttribute('window') : null,
             changedAt: new \DateTimeImmutable($changedAt),
-            details: $resourceType === 'project' ? [] : ['Resource' => \ucfirst($resourceType) . ' ' . $rule->getAttribute('resourceId')],
+            details: $resourceType === 'project' ? [] : ['Resource' => \ucfirst($resourceType) . ' ' . $monitor->getAttribute('resourceId')],
             url: $url,
             reason: 'You\'re receiving this as an owner of ' . $team->getAttribute('name', '') . '.',
             location: \implode(' · ', \array_filter([$projectName, (string) $team->getAttribute('name', ''), $regionName === 'default' ? '' : $regionName])),
-            since: $rule->getAttribute('triggeredAt') ? new \DateTimeImmutable((string) $rule->getAttribute('triggeredAt')) : null,
-            cooldown: (int) $rule->getAttribute('cooldown', 0),
-            // The rule's drawer, which pauses it from its header.
-            pauseUrl: $url,
+            // When the alert opened, for how long it fired once it resolves.
+            since: $alert->isEmpty() ? null : new \DateTimeImmutable($alert->getCreatedAt()),
+            cooldown: (int) $monitor->getAttribute('cooldown', 0),
+            pauseUrl: $pauseUrl,
         );
         $subject = $notice->subject();
         $summary = $notice->summary();
 
-        if (\in_array(Channel::Webhook->value, $channels, true) && $rule->getAttribute('webhookUrl', '') !== '') {
+        if (\in_array(Channel::Webhook->value, $channels, true) && $monitor->getAttribute('webhookUrl', '') !== '') {
             $this->publish($publisherForNotifications, new NotificationMessage(
                 project: $project,
                 recipients: [[
-                    'address' => (string) $rule->getAttribute('webhookUrl'),
+                    'address' => (string) $monitor->getAttribute('webhookUrl'),
                     'channel' => NOTIFICATION_TYPE_WEBHOOK,
-                    'signatureKey' => (string) $rule->getAttribute('webhookSecret', ''),
-                    'resourceType' => RESOURCE_TYPE_ALERT_RULES,
-                    'resourceId' => $rule->getId(),
-                    'resourceInternalId' => (string) $rule->getSequence(),
+                    'signatureKey' => (string) $monitor->getAttribute('webhookSecret', ''),
+                    'resourceType' => RESOURCE_TYPE_MONITORS,
+                    'resourceId' => $monitor->getId(),
+                    'resourceInternalId' => (string) $monitor->getSequence(),
                     ...$parent,
                 ]],
                 templateParams: [
-                    'ruleId' => $rule->getId(),
-                    'ruleName' => $rule->getAttribute('name'),
-                    'status' => $status->value,
+                    'alertId' => $alert->getId(),
+                    'monitorId' => $monitor->getId(),
+                    'monitorName' => $monitor->getAttribute('name'),
+                    'status' => $status === Status::Firing ? State::Firing->value : State::Resolved->value,
+                    'type' => $monitor->getAttribute('type'),
                     'projectId' => $project->getId(),
-                    'resourceType' => $rule->getAttribute('resourceType'),
-                    'resourceId' => $rule->getAttribute('resourceId'),
+                    'resourceType' => $monitor->getAttribute('resourceType'),
+                    'resourceId' => $monitor->getAttribute('resourceId'),
                     'metric' => $metric,
-                    'comparator' => $rule->getAttribute('comparator'),
-                    'threshold' => (float) $rule->getAttribute('threshold'),
-                    'window' => $rule->getAttribute('window'),
+                    'comparator' => $monitor->getAttribute('comparator'),
+                    'threshold' => (float) $monitor->getAttribute('threshold'),
+                    'window' => $monitor->getAttribute('window'),
                     'value' => $value,
                     'changedAt' => (new \DateTimeImmutable($changedAt))->format(\DateTimeInterface::RFC3339_EXTENDED),
                 ],
                 deduplicationKey: $deduplicationKey,
                 subject: $subject,
                 body: $summary,
-                events: ['alerts.' . $status->value],
+                events: ['alerts.' . ($status === Status::Firing ? State::Firing->value : State::Resolved->value)],
             ));
         }
 
@@ -288,7 +390,7 @@ class Alerts extends Action
         }
 
         $body = $notice->render(APP_CE_CONFIG_DIR . '/locale/templates/email-alert.tpl');
-        foreach ($this->owners($dbForPlatform, (string) $rule->getAttribute('teamInternalId')) as $user) {
+        foreach ($this->owners($dbForPlatform, (string) $monitor->getAttribute('teamInternalId')) as $user) {
             $resource = [
                 'resourceType' => RESOURCE_TYPE_USERS,
                 'resourceId' => $user->getId(),
@@ -373,13 +475,13 @@ class Alerts extends Action
     }
 
     /**
-     * A message the broker did not accept fails the evaluation, so the rule's new
+     * A message the broker did not accept fails the evaluation, so the monitor's new
      * status is not stored and the next evaluation sees the transition again.
      */
     protected function publish(NotificationPublisher $publisherForNotifications, NotificationMessage $message): void
     {
         if ($publisherForNotifications->enqueue($message) === false) {
-            throw new \RuntimeException('The notification for the alert rule was not accepted by the queue.');
+            throw new \RuntimeException('The notification for the alert was not accepted by the queue.');
         }
     }
 }

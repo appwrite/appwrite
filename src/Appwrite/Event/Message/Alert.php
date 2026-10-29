@@ -5,14 +5,14 @@ namespace Appwrite\Event\Message;
 use Utopia\Database\Document;
 
 /**
- * One evaluation of an alert rule. The project lets the worker resolve the
- * rule's project and its database before it reads the rule.
+ * One evaluation of a monitor. The project lets the worker resolve the
+ * monitor's project and its database before it reads the monitor.
  */
 final class Alert extends Base
 {
     public function __construct(
         public readonly Document $project,
-        public readonly string $ruleId = '',
+        public readonly string $monitorId = '',
     ) {
     }
 
@@ -21,7 +21,7 @@ final class Alert extends Base
     {
         return [
             'project' => ProjectContext::fromDocument($this->project)->toArray(),
-            'ruleId' => $this->ruleId,
+            'monitorId' => $this->monitorId,
         ];
     }
 
@@ -30,7 +30,7 @@ final class Alert extends Base
     {
         return new self(
             project: new Document($data['project'] ?? []),
-            ruleId: $data['ruleId'] ?? '',
+            monitorId: $data['monitorId'] ?? '',
         );
     }
 }
