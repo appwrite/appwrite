@@ -128,6 +128,9 @@ class Upsert extends Action
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if (!$transaction->isEmpty() && $this->isTransactionTypeMismatch($transaction)) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
+            }
             if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
@@ -152,15 +155,7 @@ class Upsert extends Action
                 'data' => $documents,
             ]);
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                    1
-                );
-            });
+            $this->stage($dbForProject, $transactionId, [$staged], $maxBatch);
 
             $queueForEvents->reset();
 
@@ -181,23 +176,31 @@ class Upsert extends Action
         $upserted = [];
 
         try {
-            $modified = $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
-                return $dbForDatabases->upsertDocuments(
-                    $collectionTableId,
-                    $documents,
-                    onNext: function (Document $document) use ($plan, &$upserted) {
-                        if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                            $upserted[] = $document;
-                        }
-                    },
-                );
-            });
+            $modified = $this->withPermissionPurge(
+                $dbForProject,
+                $database,
+                $collection,
+                \array_any($documents, fn (Document $document): bool => $document->offsetExists('$permissions')),
+                function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
+                    return $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
+                        return $dbForDatabases->upsertDocuments(
+                            $collectionTableId,
+                            $documents,
+                            onNext: function (Document $document) use ($plan, &$upserted) {
+                                if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                                    $upserted[] = $document;
+                                }
+                            },
+                        );
+                    });
+                },
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (UniqueException $e) {
             throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (DuplicateException $e) {
-            throw new Exception($this->getDuplicateException(), previous: $e, params: ['multiple']);
+            throw $this->getBatchDuplicateException($dbForDatabases, $collectionTableId, $documents, $e);
         } catch (NotFoundException $e) {
             if ($dbForProject->getDocument('database_' . $database->getSequence(), $collectionId)->isEmpty()) {
                 throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);

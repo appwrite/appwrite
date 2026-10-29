@@ -16,6 +16,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use InvalidArgumentException;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
@@ -99,12 +100,12 @@ class Decrement extends Action
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database) || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
-        if ($collection->isEmpty()) {
+        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
@@ -113,6 +114,9 @@ class Decrement extends Action
             $transaction = ($isAPIKey || $isPrivilegedUser)
                 ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
+            if (!$transaction->isEmpty() && $this->isTransactionTypeMismatch($transaction)) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
+            }
             if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
@@ -148,15 +152,7 @@ class Decrement extends Action
                 ],
             ]);
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                    1
-                );
-            });
+            $this->stage($dbForProject, $transactionId, [$staged], $maxBatch);
 
             $queueForEvents->reset();
 
@@ -184,14 +180,20 @@ class Decrement extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (NotFoundException) {
-            throw new Exception($this->getStructureNotFoundException());
+            throw $dbForDatabases->getDocument($collectionTableId, $documentId)->isEmpty()
+                ? new Exception($this->getNotFoundException(), params: [$documentId])
+                : new Exception($this->getStructureNotFoundException(), params: [$attribute]);
+        } catch (AuthorizationException $e) {
+            throw $dbForDatabases->getDocument($collectionTableId, $documentId)->isEmpty()
+                ? new Exception($this->getNotFoundException(), params: [$documentId])
+                : new Exception(Exception::USER_UNAUTHORIZED, $e->getMessage());
         } catch (LimitException) {
-            throw new Exception($this->getLimitException(), $this->getSDKNamespace() . ' "' . $attribute . '" has reached the minimum value of ' . $min);
+            throw new Exception($this->getLimitException(), \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" has reached the minimum value of ' . $this->getReachedMinimum($collection, $attribute, $min));
         } catch (TypeException $e) {
             if ($value <= 0) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
             }
-            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $attribute . '" is not a number');
+            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" is not a number');
         } catch (InvalidArgumentException $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
         }

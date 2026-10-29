@@ -92,8 +92,13 @@ class Get extends Action
         // The receipt authenticates Cursor, and this HMAC authenticates the
         // Appwrite Console that started the flow -- without it anyone could
         // attach an installation to an arbitrary projectId.
-        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
-        if (!\hash_equals($signature, $state['signature'] ?? '')) {
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        if (empty($signingKey)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+        }
+
+        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), $signingKey);
+        if (!\hash_equals($signature, \is_string($state['signature'] ?? null) ? $state['signature'] : '')) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
         }
 

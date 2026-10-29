@@ -88,6 +88,41 @@ final class FPMResponseTest extends TestCase
         $this->assertSame('body', $html);
     }
 
+    public function testChunkedResponseCountsDeliveredBytesAndFinishesOnce(): void
+    {
+        $response = new Response();
+        ob_start();
+        try {
+            @$response->chunk('first-');
+            $firstSize = $response->getSize();
+            @$response->chunk('last');
+            @$response->chunk('', true);
+            @$response->chunk('ignored', true);
+            $body = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+
+        $this->assertSame('first-last', $body);
+        $this->assertGreaterThanOrEqual(6, $firstSize);
+        $this->assertSame(4, $response->getSize() - $firstSize);
+        $this->assertTrue($response->isSent());
+    }
+
+    public function testFailedFinalChunkDoesNotFinishOrCountPayload(): void
+    {
+        $response = new FailingWriteResponse();
+        $this->expectException(\RuntimeException::class);
+        ob_start();
+        try {
+            @$response->chunk(\str_repeat('x', 1024), true);
+        } finally {
+            ob_end_clean();
+            $this->assertFalse($response->isSent());
+            $this->assertLessThan(1024, $response->getSize());
+        }
+    }
+
     public function testCanSendMinimalCookie(): void
     {
         ob_start(); //Start of build
@@ -188,5 +223,13 @@ final class FPMResponseTest extends TestCase
 
         $this->assertSame('<script type="text/javascript">window.parent.test({"key":"value"});</script>', $html);
         $this->assertSame('text/html; charset=UTF-8', $this->response->getContentType());
+    }
+}
+
+final class FailingWriteResponse extends Response
+{
+    public function write(string $content): bool
+    {
+        return false;
     }
 }

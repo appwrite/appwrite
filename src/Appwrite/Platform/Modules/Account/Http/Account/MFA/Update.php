@@ -5,11 +5,15 @@ namespace Appwrite\Platform\Modules\Account\Http\Account\MFA;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -58,6 +62,8 @@ class Update extends Action
             ->inject('session')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('project')
+            ->inject('mqtt')
             ->callback($this->action(...));
     }
 
@@ -65,11 +71,18 @@ class Update extends Action
         bool $mfa,
         ?\DateTime $requestTimestamp,
         Response $response,
-        Document $user,
+        User $user,
         Document $session,
         Database $dbForProject,
-        Event $queueForEvents
+        Event $queueForEvents,
+        Document $project,
+        Mqtt $mqtt
     ): void {
+        // Turning off MFA that is in force needs the same recent challenge as deleting an authenticator
+        if (!$mfa && $user->getMinimumFactors() > 1 && !$user->sessionChallengeRecent($session->getId())) {
+            throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
+        }
+
         $user->setAttribute('mfa', $mfa);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['mfa' => $mfa]));
@@ -90,6 +103,13 @@ class Update extends Action
 
             $session->setAttribute('factors', $factors);
             $dbForProject->updateDocument('sessions', $session->getId(), new Document(['factors' => $factors]));
+        }
+
+        // A session left short of factors no longer authorizes its MQTT connections.
+        try {
+            $mqtt->revoke($project->getId(), $user->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
         }
 
         $queueForEvents->setParam('userId', $user->getId());

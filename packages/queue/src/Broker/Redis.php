@@ -12,7 +12,6 @@ use Utopia\Queue\Queue;
 
 class Redis implements Synchronous, Consumer
 {
-    private const int POP_TIMEOUT = 2;
     private const int RECONNECT_BACKOFF_MS = 100;
     private const int RECONNECT_MAX_BACKOFF_MS = 5_000;
 
@@ -58,7 +57,22 @@ class Redis implements Synchronous, Consumer
         // Minimum publish age for recovery without a live heartbeat.
         // Keep conservative until all workers and adapters heartbeat.
         private readonly int $reapAfter = 90_000,
+        // Claims the sweep has requeued this many times are parked on the dead
+        // queue instead; null requeues them unbounded.
+        private readonly ?int $reapMaxAttempts = null,
+        // Claims published longer ago than this many seconds are parked on the
+        // dead queue instead of re-run; null requeues them at any age.
+        private readonly ?int $reapMaxAge = null,
     ) {
+        if ($this->reapMaxAttempts !== null && $this->reapMaxAttempts < 1) {
+            throw new \InvalidArgumentException('reapMaxAttempts must be at least 1, or null to requeue unbounded');
+        }
+
+        // Every claim the sweep reaches is at least reapAfter old, so a ceiling at
+        // or below it would park all of them and recover none.
+        if ($this->reapMaxAge !== null && $this->reapMaxAge <= $this->reapAfter) {
+            throw new \InvalidArgumentException(\sprintf('reapMaxAge (%d) must exceed reapAfter (%d), or be null to requeue at any age', $this->reapMaxAge, $this->reapAfter));
+        }
     }
 
     public function setReconnectCallback(?callable $callback): self
@@ -276,7 +290,7 @@ class Redis implements Synchronous, Consumer
             if ($expired !== []) {
                 $this->script($this->commands, 'recover', [$registry, "{$queue->namespace}.queue.{$queue->name}", ...$expired], [self::REAP_LIMIT]);
             }
-            $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, scan: self::REAP_LIMIT * 2);
+            $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, maxAttempts: $this->reapMaxAttempts, newerThan: $this->reapMaxAge, scan: self::REAP_LIMIT * 2);
         }
     }
 
@@ -374,36 +388,41 @@ class Redis implements Synchronous, Consumer
     {
         $start = time();
         $processed = 0;
+        $failed = "{$queue->namespace}.failed.{$queue->name}";
 
         while ($limit === null || $processed < $limit) {
-            $pid = $this->commands->rightPop("{$queue->namespace}.failed.{$queue->name}", self::POP_TIMEOUT);
+            $pid = $this->commands->listRange($failed, 1, -1)[0] ?? null;
 
             // No more jobs to retry
-            if ($pid === false) {
+            if (!\is_string($pid)) {
                 break;
             }
 
-            // The payload expired; nothing left to requeue.
+            // An expired payload leaves nothing to requeue. One the codec cannot
+            // read is parked, so it stays inspectable and something references it.
             $job = $this->getJob($queue, $pid);
             if ($job === false) {
+                $keys = \is_string($this->commands->get("{$queue->namespace}.jobs.{$queue->name}.{$pid}"))
+                    ? [$failed, "{$queue->namespace}.dead.{$queue->name}"]
+                    : [$failed];
+                $this->script($this->commands, 'retry', $keys, [$pid, $pid]);
                 continue;
             }
 
-            // Wrapped around to a job this sweep already requeued: put the
-            // claim back and stop.
+            // Wrapped around to a job this sweep already requeued: stop.
             if ($job->getTimestamp() >= $start) {
-                $this->commands->rightPush("{$queue->namespace}.failed.{$queue->name}", $pid);
                 break;
             }
 
             if (($maxAttempts !== null && $job->getAttempts() >= $maxAttempts)
                 || ($newerThan !== null && $job->getTimestamp() < $start - $newerThan)) {
-                $this->commands->leftPush("{$queue->namespace}.dead.{$queue->name}", $pid);
+                $this->script($this->commands, 'retry', [$failed, "{$queue->namespace}.dead.{$queue->name}"], [$pid, $pid]);
                 continue;
             }
 
-            $this->requeue($queue, $job);
-            $processed++;
+            if ($this->requeue($queue, $pid, $job)) {
+                $processed++;
+            }
         }
     }
 
@@ -515,10 +534,17 @@ class Redis implements Synchronous, Consumer
     /**
      * Requeue with a fresh pid and timestamp, carrying the attempt count
      * forward so retry() and reap() can park messages that never succeed.
+     * The failed entry and the payload under the old pid go in the same step,
+     * so a sweep that stops part way leaves the job failed rather than nowhere,
+     * and no payload is left behind that nothing references and may never expire.
      */
-    private function requeue(Queue $queue, Message $job): void
+    private function requeue(Queue $queue, string $pid, Message $job): bool
     {
-        $this->commands->leftPush("{$queue->namespace}.queue.{$queue->name}", $this->retryPayload($queue, $job));
+        return $this->script($this->commands, 'retry', [
+            "{$queue->namespace}.failed.{$queue->name}",
+            "{$queue->namespace}.queue.{$queue->name}",
+            "{$queue->namespace}.jobs.{$queue->name}.{$pid}",
+        ], [$pid, $this->retryPayload($queue, $job)]) === 1;
     }
 
     private function retryPayload(Queue $queue, Message $job): string

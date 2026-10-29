@@ -88,12 +88,29 @@ class Filesystem implements Adapter
     /**
      * @param  string  $hash optional
      */
+    /**
+     * @throws Exception when the file is still there after the purge failed to remove it, or its directory cannot be read
+     */
     public function purge(string $key, string $hash = ''): bool
     {
         $file = $this->getPath($key);
 
+        if (! file_exists($file)) {
+            $directory = \dirname($file);
+            if (is_dir($directory) && ! is_executable($directory)) {
+                throw new Exception("Can't purge {$file}: {$directory} is not accessible");
+            }
+
+            return false;
+        }
+
+        if (@unlink($file)) {
+            return true;
+        }
+
+        clearstatcache(true, $file);
         if (file_exists($file)) {
-            return unlink($file);
+            throw new Exception("Can't purge {$file}: " . (error_get_last()['message'] ?? 'unlink failed'));
         }
 
         return false;

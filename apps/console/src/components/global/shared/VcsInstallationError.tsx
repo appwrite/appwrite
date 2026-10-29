@@ -68,6 +68,16 @@ function useVcsInstallationErrorCopy(kind: VcsInstallationErrorKind): {
     }
   }
 
+  if (kind === 'missing') {
+    return {
+      title: t('Repository not available'),
+      description: t(
+        'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.',
+      ),
+      icon: AlertTriangle,
+    }
+  }
+
   if (kind === 'locked') {
     return {
       title: t('This installation is being refreshed'),
@@ -248,7 +258,8 @@ export function VcsInstallationErrorAlert({
     </div>
   )
 
-  if (isReconnectKind(kind)) {
+  // Both need the user: a reconnect, or connecting the repository again
+  if (isReconnectKind(kind) || kind === 'missing') {
     return (
       <WarningAlert title={title} icon={Icon} className={className}>
         {body}

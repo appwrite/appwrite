@@ -417,7 +417,7 @@ parse(version)
 
 const previous =
   readFileSync(COMPOSE_DATA, 'utf-8').match(
-    /APPWRITE_VERSION = "([^"]+)"/,
+    /APPWRITE_VERSION = ['"]([^'"]+)['"]/,
   )?.[1] ?? fail(`APPWRITE_VERSION not found in ${COMPOSE_DATA}`)
 const appwrite =
   options.appwrite ?? process.env.APPWRITE_REPO ?? join(ROOT, '..', '..')

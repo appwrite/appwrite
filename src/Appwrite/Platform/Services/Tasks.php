@@ -11,6 +11,7 @@ use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\Schedule;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
+use Appwrite\Platform\Tasks\ScheduleMaintenance;
 use Appwrite\Platform\Tasks\ScheduleMessages;
 use Appwrite\Platform\Tasks\Screenshot;
 use Appwrite\Platform\Tasks\SDKs;
@@ -40,6 +41,7 @@ class Tasks extends Service
             ->addAction(Schedule::getName(), new Schedule())
             ->addAction(ScheduleFunctions::getName(), new ScheduleFunctions())
             ->addAction(ScheduleExecutions::getName(), new ScheduleExecutions())
+            ->addAction(ScheduleMaintenance::getName(), new ScheduleMaintenance())
             ->addAction(ScheduleMessages::getName(), new ScheduleMessages())
             ->addAction(Specs::getName(), new Specs())
             ->addAction(Upgrade::getName(), new Upgrade())

@@ -128,6 +128,38 @@ final class TablesDBColumnsTest extends Scope
         $this->assertEquals('off', $row['body']['status']);
     }
 
+    public function testBigIntColumnBoundOutOfRangeStatesTheInt64Range(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'BigInt Bounds',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
+            'tableId' => Id::unique(),
+            'name' => 'Counters',
+        ]);
+        $this->assertSame(201, $table['headers']['status-code']);
+
+        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $table['body']['$id'] . '/columns/bigint', $headers, [
+            'key' => 'total',
+            'required' => false,
+            'max' => 1e19,
+        ]);
+
+        $this->assertSame(400, $column['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $column['body']['type']);
+        $this->assertSame('Invalid `max` param: Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807 or null', $column['body']['message']);
+    }
+
     public function testCreateTableUnsupportedColumnType(): void
     {
         $headers = [

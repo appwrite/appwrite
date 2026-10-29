@@ -71,9 +71,15 @@ class Mails extends Listener
             throw new \Exception('Invalid template path');
         }
 
-        $customTemplate =
-            $project->getAttribute('templates', [])["email.sessionAlert-" . $locale->default] ??
-            $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->fallback] ?? [];
+        $smtpEnabled = $smtp['enabled'] ?? false;
+
+        // Custom templates require custom SMTP, as on every other mail path
+        $customTemplate = [];
+        if ($smtpEnabled) {
+            $customTemplate =
+                $project->getAttribute('templates', [])["email.sessionAlert-" . $locale->default] ??
+                $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->fallback] ?? [];
+        }
         $isBranded = $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE;
 
         $subject = $customTemplate['subject'] ?? $locale->getText('emails.sessionAlert.subject');
@@ -125,7 +131,7 @@ class Mails extends Listener
         }
 
         $smtpConfig = [];
-        if ($smtp['enabled'] ?? false) {
+        if ($smtpEnabled) {
             $smtpConfig = [
                 'host' => $smtp['host'] ?? '',
                 'port' => $smtp['port'] ?? '',
