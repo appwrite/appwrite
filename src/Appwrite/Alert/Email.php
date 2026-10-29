@@ -30,16 +30,21 @@ readonly class Email
         public array $details,
         public string $url,
         public string $reason,
+        public Wording $wording = new Wording(),
     ) {
     }
 
     public function subject(): string
     {
-        return ($this->status === Status::Firing ? 'Alert firing: ' : 'Alert resolved: ') . $this->rule;
+        return $this->wording->subject ?? ($this->status === Status::Firing ? 'Alert firing: ' : 'Alert resolved: ') . $this->rule;
     }
 
     public function heading(): string
     {
+        if ($this->wording->heading !== null) {
+            return $this->wording->heading;
+        }
+
         $crossed = ($this->status === Status::Firing ? 'is ' : 'is no longer ') . $this->comparator->phrase();
 
         return "{$this->metric} {$crossed} {$this->threshold->format()}";
@@ -50,6 +55,10 @@ readonly class Email
      */
     public function summary(): string
     {
+        if ($this->wording->summary !== null) {
+            return $this->wording->summary;
+        }
+
         $value = $this->value->format();
         $threshold = $this->threshold->format();
         $over = $this->comparator->phrase();
@@ -87,6 +96,7 @@ readonly class Email
             ->setParam('{{thresholdNote}}', $this->window === null ? 'Compared with the latest reading' : 'Summed over ' . $this->duration())
             ->setParam('{{rows}}', $rows, escapeHtml: false)
             ->setParam('{{url}}', $this->url)
+            ->setParam('{{action}}', $this->wording->action ?? 'View alert')
             ->setParam('{{reason}}', $this->reason)
             ->render(minify: false);
     }

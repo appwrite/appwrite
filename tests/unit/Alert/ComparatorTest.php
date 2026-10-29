@@ -8,6 +8,7 @@ use Appwrite\Alert\Comparator;
 use Appwrite\Alert\Email;
 use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Status;
+use Appwrite\Alert\Wording;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -82,5 +83,30 @@ final class ComparatorTest extends TestCase
 
         // A gauge compares its latest reading, so no window is named.
         $this->assertSame('Outbound bandwidth on Storefront reached 548.73 KB, above the 5 KB threshold.', $email(Status::Firing, null)->summary());
+    }
+
+    public function testEmailWordingReplacesTheGeneratedCopy(): void
+    {
+        $email = new Email(
+            status: Status::Firing,
+            rule: 'Budget cap reached',
+            metric: 'Budget used',
+            place: 'Acme',
+            value: new Quantity(100, 'percent'),
+            comparator: Comparator::GreaterThanEqual,
+            threshold: new Quantity(100, 'percent'),
+            window: null,
+            changedAt: new \DateTimeImmutable('2026-10-29T12:00:00+00:00'),
+            details: [],
+            url: 'https://console.example/organizations/acme/billing',
+            reason: '',
+            wording: new Wording(subject: 'You have reached the budget cap', action: 'Update budget cap'),
+        );
+
+        $this->assertSame('You have reached the budget cap', $email->subject());
+        // Parts left out keep what the rule says.
+        $this->assertSame('Budget used is at or above 100%', $email->heading());
+        $this->assertStringContainsString('>Update budget cap</a>', $email->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl'));
+        $this->assertStringNotContainsString('View alert', $email->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl'));
     }
 }

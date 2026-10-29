@@ -29,7 +29,7 @@
 <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin-top: 32px; width: auto;">
     <tr>
         <td style="border-radius: 8px;">
-            <a class="mobile-full-width" rel="noopener" target="_blank" href="{{url}}" style="font-size: 14px; font-family: Inter, sans-serif; color: #ffffff; text-decoration: none; background-color: #2D2D31; border-radius: 8px; padding: 9px 14px; border: 1px solid #414146; display: inline-block; text-align: center; box-sizing: border-box;">View alert</a>
+            <a class="mobile-full-width" rel="noopener" target="_blank" href="{{url}}" style="font-size: 14px; font-family: Inter, sans-serif; color: #ffffff; text-decoration: none; background-color: #2D2D31; border-radius: 8px; padding: 9px 14px; border: 1px solid #414146; display: inline-block; text-align: center; box-sizing: border-box;">{{action}}</a>
         </td>
     </tr>
 </table>
