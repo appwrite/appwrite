@@ -44,7 +44,6 @@ const EMPTY_CONFIG: RuntimeConfig = {
   blogDrafts: '',
   screenshotMode: '',
   databasePitrRestore: '',
-  projectEnvironments: '',
   extraVcsOAuth: '',
   usageStats: '',
   preLaunch: '',
