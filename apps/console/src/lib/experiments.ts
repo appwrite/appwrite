@@ -32,6 +32,12 @@ export const EXPERIMENTS: readonly Experiment[] = [
     description:
       'Switch between environments of a project, such as staging and production, and create one as a copy of the project.',
   },
+  {
+    flag: 'projectTransfers',
+    name: 'Project transfers',
+    description:
+      'Transfer a project with a link that another organization claims, in place of moving it to one of your organizations.',
+  },
 ]
 
 export function hasQualityLabel(
