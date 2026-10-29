@@ -31,7 +31,7 @@ class Create extends XList
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/documents/query')
             ->desc('Create query')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.read')
+            ->label('scope', ['documents.read', 'rows.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/documents')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')

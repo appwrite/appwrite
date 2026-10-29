@@ -57,7 +57,7 @@ class Upsert extends Action
             ->desc('Upsert a document')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].upsert')
-            ->label('scope', 'documents.write')
+            ->label('scope', ['documents.write', 'rows.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.upsert')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')

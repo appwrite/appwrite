@@ -44,7 +44,7 @@ class Create extends Action
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/string')
             ->desc('Create string attribute')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', 'collections.write')
+            ->label('scope', ['collections.write', 'tables.write', 'attributes.write', 'columns.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
             ->label('audits.event', 'attribute.create')
