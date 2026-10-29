@@ -197,20 +197,22 @@ export function useSetBudgetRulesWebhook(organizationId: string) {
     }: {
       rules: AlertRule[]
       webhookUrl: string
-    }) =>
-      Promise.all(
-        rules.map((rule) => {
-          const others = rule.channels.filter(
-            (channel) => channel !== 'webhook',
-          )
-          return sdk.forConsole.alerts.updateOrganizationRule({
+    }) => {
+      // One at a time: concurrent rule writes contend on the same schedules rows.
+      const updated: AlertRule[] = []
+      for (const rule of rules) {
+        const others = rule.channels.filter((channel) => channel !== 'webhook')
+        updated.push(
+          await sdk.forConsole.alerts.updateOrganizationRule({
             organizationId,
             ruleId: rule.$id,
             channels: webhookUrl === '' ? others : [...others, 'webhook'],
             webhookUrl: webhookUrl === '' ? undefined : webhookUrl,
-          })
-        }),
-      ),
+          }),
+        )
+      }
+      return updated
+    },
     onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: ['alert-rules', 'organization', organizationId],
