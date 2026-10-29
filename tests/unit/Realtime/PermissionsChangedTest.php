@@ -64,7 +64,7 @@ final class PermissionsChangedTest extends TestCase
         }
     }
 
-    private function startServer(bool $frozenBlocks): void
+    private function startServer(bool $frozenBlocks, bool $sessionsInvalidated = false): void
     {
         // A port the kernel just handed out, rather than a random pick, and a log no other run shares.
         $probe = \stream_socket_server('tcp://127.0.0.1:0');
@@ -84,6 +84,7 @@ final class PermissionsChangedTest extends TestCase
             '_APP_TRACE_PROJECT_ID' => '',
             '_APP_TRACE_FUNCTION_ID' => '',
             'TEST_FROZEN_BLOCKS' => $frozenBlocks ? 'true' : 'false',
+            'TEST_SESSIONS_INVALIDATED' => $sessionsInvalidated ? 'true' : 'false',
         ]);
 
         $this->process = \proc_open(
@@ -122,12 +123,14 @@ final class PermissionsChangedTest extends TestCase
         return $content === false ? '(no log)' : \substr($content, -2000);
     }
 
-    private function connect(string $userId, array $channels): WebSocketClient
+    /** @param array<string, string> $params extra harness parameters, such as `testSession` or `testImpersonate` */
+    private function connect(string $userId, array $channels, array $params = [], string $project = self::PROJECT): WebSocketClient
     {
         $query = \http_build_query([
-            'project' => self::PROJECT,
+            'project' => $project,
             'testUser' => $userId,
             'channels' => $channels,
+            ...$params,
         ]);
 
         $client = new WebSocketClient('ws://127.0.0.1:' . $this->port . '/v1/realtime?' . $query, ['timeout' => 10]);
@@ -433,5 +436,112 @@ final class PermissionsChangedTest extends TestCase
             $this->receiveMatch($other, $this->isEvent('follow-up'), 10),
             'Follow-up event was not delivered after the failed verification: ' . $this->tailLog()
         );
+    }
+
+    public function testSessionSweepClosesImpersonatedConnection(): void
+    {
+        $this->startServer(frozenBlocks: false, sessionsInvalidated: true);
+
+        // `imp-project` impersonates `target`; the connection runs on imp-project's session.
+        $impersonated = $this->connect('imp-project', ['documents'], ['testImpersonate' => 'target']);
+        $session = $this->connect('normal', ['documents'], ['testSession' => '1']);
+        $other = $this->connect('other', ['documents']);
+
+        $this->awaitSubscriber($other);
+
+        $this->publish($this->sessionsDeleted(self::PROJECT));
+
+        // The impersonator's session was invalidated with the rest, so its connection ends.
+        $this->assertUnauthorizedClose($impersonated, 10);
+        $this->assertUnauthorizedClose($session, 10);
+
+        $span = $this->awaitProjectSpan(self::PROJECT, 10);
+        $this->assertSame('verified', $span['realtime.verification'] ?? null);
+        $this->assertSame(2, $span['realtime.closed'] ?? null);
+    }
+
+    public function testSessionSweepKeepsConsoleImpersonatorConnection(): void
+    {
+        $this->startServer(frozenBlocks: false, sessionsInvalidated: true);
+
+        // A console impersonator holds a console session, which this project cannot invalidate.
+        $impersonated = $this->connect('imp-console', ['documents'], ['testImpersonate' => 'target', 'testImpersonatorProject' => 'console']);
+        $session = $this->connect('normal', ['documents'], ['testSession' => '1']);
+
+        $this->awaitSubscriber($impersonated);
+
+        $this->publish($this->sessionsDeleted(self::PROJECT));
+
+        // The sweep ran: the project's own session connection ended.
+        $this->assertUnauthorizedClose($session, 10);
+
+        $this->publish($this->event(['documents.x.create'], ['documents'], ['users'], ['$id' => 'follow-up']));
+        $this->assertNotNull(
+            $this->receiveMatch($impersonated, $this->isEvent('follow-up'), 10),
+            'Console impersonator connection must stay open through the project sweep: ' . $this->tailLog()
+        );
+    }
+
+    public function testStuckSessionSweepClosesImpersonatedConnection(): void
+    {
+        $this->startServer(frozenBlocks: true);
+
+        // The project lookup for `frozen-project` never returns, so the sweep times out.
+        $impersonated = $this->connect('imp-project', ['documents'], ['testImpersonate' => 'target'], 'frozen-project');
+        $guest = $this->connect('', ['documents'], [], 'frozen-project');
+        $other = $this->connect('other', ['documents']);
+
+        $this->awaitSubscriber($other);
+
+        $this->publish($this->sessionsDeleted('frozen-project'));
+
+        // Fail closed: the impersonated connection is one the sweep would have checked.
+        $this->assertUnauthorizedClose($impersonated, self::PERMISSION_TIMEOUT + 10);
+
+        $span = $this->awaitProjectSpan('frozen-project', 10);
+        $this->assertSame('timed_out', $span['realtime.verification'] ?? null);
+        $this->assertSame(1, $span['realtime.closed'] ?? null);
+
+        // A guest holds no project session, so it stays.
+        $followUp = $this->event(['documents.x.create'], ['documents'], ['guests'], ['$id' => 'follow-up']);
+        $followUp['project'] = 'frozen-project';
+        $this->publish($followUp);
+        $this->assertNotNull(
+            $this->receiveMatch($guest, $this->isEvent('follow-up'), 10),
+            'Guest connection must stay open through the failed sweep: ' . $this->tailLog()
+        );
+    }
+
+    /** `projects.<id>.sessions.delete`, published when a project invalidates every session; it names no user. */
+    private function sessionsDeleted(string $projectId): array
+    {
+        $event = $this->event(
+            events: ['projects.' . $projectId . '.sessions.delete'],
+            channels: ['projects.' . $projectId],
+            roles: ['team:owners'],
+            payload: ['$id' => $projectId],
+            permissionsChanged: true,
+        );
+        $event['project'] = 'console';
+
+        return $event;
+    }
+
+    /** The `realtime.permissions` span of a project-wide sweep. */
+    private function awaitProjectSpan(string $projectId, int $seconds): array
+    {
+        $deadline = \microtime(true) + $seconds;
+
+        while (\microtime(true) < $deadline) {
+            foreach (\explode("\n", (string) @\file_get_contents($this->log)) as $line) {
+                $span = \json_decode($line, true);
+                if (\is_array($span) && ($span['action'] ?? '') === 'realtime.permissions' && ($span['project.id'] ?? '') === $projectId && !isset($span['user.id'])) {
+                    return $span;
+                }
+            }
+            \usleep(200_000);
+        }
+
+        $this->fail('No project realtime.permissions span for ' . $projectId . ': ' . $this->tailLog());
     }
 }

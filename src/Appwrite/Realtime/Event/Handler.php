@@ -344,6 +344,12 @@ class Handler
                         continue;
                     }
 
+                    // The impersonated connections the sweep checks: those on this project's sessions.
+                    if (($this->realtime->connections[$connection]['impersonator']['projectId'] ?? null) === $projectId) {
+                        $closing[$connection] = true;
+                        continue;
+                    }
+
                     if ($userId === '' || $sessionId === null) {
                         continue; // Guests and keys hold no project session to invalidate.
                     }
@@ -369,6 +375,8 @@ class Handler
         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
         $database = \getProjectDB($project);
         $invalidatedAt = $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
+        // Each impersonator is read once per event, however many connections it holds.
+        $impersonators = [];
 
         foreach ($realtime->getProjectConnections($projectId) as $connection) {
             if ($abandoned || !isset($realtime->connections[$connection])) {
@@ -382,6 +390,30 @@ class Handler
             // An admin-mode connection holds no project session, but a transfer ends its access.
             if ($admin !== null) {
                 if ($project->getAttribute('teamId', '') !== $admin['teamId']) {
+                    $closing[$connection] = true;
+                }
+                continue;
+            }
+
+            // Runs on its impersonator's session, which this sweep ends only for this project's impersonators.
+            $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
+            if ($impersonator !== null) {
+                if (($impersonator['projectId'] ?? '') !== $projectId) {
+                    continue;
+                }
+
+                $impersonatorId = (string) ($impersonator['userId'] ?? '');
+                $impersonatorSessionId = $impersonator['sessionId'] ?? null;
+                /** @var User $user */
+                $user = $impersonators[$impersonatorId] ??= $database->getDocument('users', $impersonatorId);
+
+                if (
+                    $user->isEmpty()
+                    || $user->getAttribute('status') === false
+                    || $impersonatorSessionId === null
+                    || !$user->sessionActive($impersonatorSessionId, $invalidatedAt)
+                    || $user->getAttribute('impersonator', false) !== true
+                ) {
                     $closing[$connection] = true;
                 }
                 continue;

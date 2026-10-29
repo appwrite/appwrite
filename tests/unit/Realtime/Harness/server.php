@@ -9,7 +9,13 @@
  *   on a silently dead (half-open) database connection
  * - `broken`: throws, standing in for a failed database read
  * - `revoked`: resolves to a blocked user
+ * - `imp...`: resolves to an impersonator
  * - anything else: resolves to an active user
+ *
+ * Every user holds one session, `session-<userId>`, created an hour ago. Fake project
+ * lookups:
+ * - `frozen-project`: blocks forever when TEST_FROZEN_BLOCKS=true
+ * - any project: has invalidated every session when TEST_SESSIONS_INVALIDATED=true
  */
 
 // Lead a process group, so the test can signal the Swoole master, manager and worker at once.
@@ -54,10 +60,16 @@ final class FakeDatabase
     public function getDocument(string $collection, string $id): Document
     {
         if ($collection === 'projects') {
+            if ($id === 'frozen-project' && $this->frozenBlocks) {
+                (new Channel(1))->pop(); // never pushed: a read on a half-open connection
+            }
+
             return new Document([
                 '$id' => $id,
                 '$sequence' => 1,
-                'auths' => [],
+                'auths' => \getenv('TEST_SESSIONS_INVALIDATED') === 'true'
+                    ? ['sessionsInvalidatedAt' => DateTime::formatTz(DateTime::now())]
+                    : [],
                 'apis' => [],
                 'platforms' => [],
                 'region' => '',
@@ -132,7 +144,13 @@ function makeUser(string $userId, bool $status = true): User
         'status' => $status,
         'registration' => DateTime::now(),
         'prefs' => [],
-        'sessions' => [],
+        'sessions' => [new Document([
+            '$id' => 'session-' . $userId,
+            '$createdAt' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -3600)),
+            'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 3600)),
+            'factors' => ['password'],
+        ])],
+        'impersonator' => \str_starts_with($userId, 'imp'),
         'memberships' => [],
         'labels' => [],
         'mfa' => false,
@@ -190,9 +208,34 @@ $registerConnectionResources = function (Container $container): void {
         return $userId === '' ? new User([]) : makeUser($userId);
     }, ['request']);
 
-    $container->set('impersonatorUser', fn () => new Document(), []);
-    $container->set('targetUser', fn (User $user) => $user, ['user']);
-    $container->set('session', fn () => null, []);
+    // `testImpersonate=<userId>` makes `testUser` impersonate that user; the impersonator
+    // belongs to `testImpersonatorProject`, the connection's project by default.
+    $container->set('impersonatorUser', function (Request $request, User $user, Document $project): Document {
+        if ($user->isEmpty() || (string) $request->getParam('testImpersonate', '') === '') {
+            return new Document();
+        }
+
+        return new Document([
+            '$id' => $user->getId(),
+            'projectId' => (string) $request->getParam('testImpersonatorProject', $project->getId()),
+        ]);
+    }, ['request', 'user', 'project']);
+
+    $container->set('targetUser', function (Request $request, User $user): User {
+        $targetId = (string) $request->getParam('testImpersonate', '');
+
+        return $targetId === '' ? $user : makeUser($targetId);
+    }, ['request', 'user']);
+
+    // `testSession=1` opens the connection on the user's session (always on it when impersonating).
+    $container->set('session', function (Request $request, User $user): ?Document {
+        $withSession = $request->getParam('testSession', '') !== '' || $request->getParam('testImpersonate', '') !== '';
+        if ($user->isEmpty() || !$withSession) {
+            return null;
+        }
+
+        return $user->getAttribute('sessions')[0];
+    }, ['request', 'user']);
     $container->set('jwtExpire', fn () => null, []);
 };
 
