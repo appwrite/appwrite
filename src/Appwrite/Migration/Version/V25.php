@@ -433,6 +433,18 @@ class V25 extends Migration
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);
+
+                    // Identity email lookups match users, so keep only addresses the owner has verified.
+                    // Other identities regain their email on the next verified sign-in.
+                    $identities = [];
+                    foreach ($this->dbForProject->cursor($id, [Query::notEqual('providerEmail', '')], batchSize: 100) as $identity) {
+                        $identities[] = $identity;
+                        if (\count($identities) === 100) {
+                            $this->clearUnverifiedIdentityEmails($identities);
+                            $identities = [];
+                        }
+                    }
+                    $this->clearUnverifiedIdentityEmails($identities);
                     break;
 
                 case 'sessions':
@@ -607,6 +619,45 @@ class V25 extends Migration
 
             $this->dbForProject->purgeCachedCollection($id);
             $this->dbForProject->purgeCachedDocument(Database::METADATA, $id);
+        }
+    }
+
+    /**
+     * @param array<Document> $identities
+     */
+    private function clearUnverifiedIdentityEmails(array $identities): void
+    {
+        if ($identities === []) {
+            return;
+        }
+
+        $userIds = \array_values(\array_unique(\array_map(
+            fn (Document $identity) => (string) $identity->getAttribute('userId', ''),
+            $identities
+        )));
+
+        $users = [];
+        foreach ($this->dbForProject->find('users', [Query::equal('$id', $userIds), Query::limit(\count($userIds))]) as $user) {
+            $users[$user->getId()] = $user;
+        }
+
+        foreach ($identities as $identity) {
+            $user = $users[$identity->getAttribute('userId', '')] ?? null;
+            if (
+                $user !== null
+                && $user->getAttribute('emailVerification', false) === true
+                && $user->getAttribute('email') === $identity->getAttribute('providerEmail')
+            ) {
+                continue;
+            }
+
+            try {
+                $this->dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                    'providerEmail' => '',
+                ]));
+            } catch (Throwable $th) {
+                Console::warning("Failed to clear \"providerEmail\" for identity {$identity->getId()}: {$th->getMessage()}");
+            }
         }
     }
 

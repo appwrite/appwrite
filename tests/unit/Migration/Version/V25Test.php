@@ -557,4 +557,76 @@ final class V25Test extends TestCase
             $database->getCollection('projects')->attributes()
         ));
     }
+
+    public function testClearsIdentityEmailsOwnersHaveNotVerified(): void
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        $collections = Config::getParam('collections', [])['projects'];
+        // Users keep only the attributes the step reads; the rest carry subquery filters
+        $database->createCollection(Collection::create(
+            id: 'users',
+            attributes: \array_values(\array_filter($collections['users']['attributes'], static fn (Attribute $attribute): bool => \in_array($attribute->key, ['email', 'emailVerification'], true))),
+        ));
+        $database->createCollection(Collection::create(
+            id: 'identities',
+            attributes: \array_values($collections['identities']['attributes']),
+            indexes: \array_values($collections['identities']['indexes']),
+        ));
+
+        $users = [
+            'verified' => ['email' => 'owner@example.com', 'emailVerification' => true],
+            'unverified' => ['email' => 'pending@example.com', 'emailVerification' => false],
+        ];
+        foreach ($users as $userId => $user) {
+            $database->createDocument('users', new Document(['$id' => $userId, ...$user]));
+        }
+
+        // identity => [owner, stored providerEmail, expected providerEmail]
+        $identities = [
+            'matches' => ['verified', 'owner@example.com', 'owner@example.com'],
+            'differs' => ['verified', 'other@example.com', ''],
+            'unverifiedOwner' => ['unverified', 'pending@example.com', ''],
+            'missingOwner' => ['deleted', 'owner@example.com', ''],
+            'empty' => ['verified', '', ''],
+        ];
+        foreach ($identities as $identityId => [$userId, $providerEmail]) {
+            $database->createDocument('identities', new Document([
+                '$id' => $identityId,
+                'userInternalId' => '1',
+                'userId' => $userId,
+                'provider' => 'mock',
+                'providerUid' => $identityId,
+                'providerEmail' => $providerEmail,
+            ]));
+        }
+
+        $migration = new class ($database, $collections['identities']) extends V25 {
+            public function __construct(Database $database, array $identities)
+            {
+                $this->dbForProject = $database;
+                $this->project = new Document(['$id' => 'project', '$sequence' => '1']);
+                $this->collections = ['projects' => ['identities' => $identities]];
+            }
+        };
+
+        \ob_start();
+        try {
+            $migration->execute();
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        foreach ($identities as $identityId => [, , $expected]) {
+            $this->assertSame($expected, (string) $database->getDocument('identities', $identityId)->getAttribute('providerEmail', ''), $identityId);
+        }
+    }
 }
