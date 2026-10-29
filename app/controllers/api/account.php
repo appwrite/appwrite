@@ -2299,7 +2299,20 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         } else {
+            // Follow the provider's attestation, unless another user's identity already holds the address
+            $identityEmail = '';
+            if ($isVerified && !empty($providerEmail)) {
+                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                    Query::equal('providerEmail', [$providerEmail]),
+                    Query::notEqual('userInternalId', $user->getSequence()),
+                ]);
+                if ($identityWithMatchingEmail->isEmpty()) {
+                    $identityEmail = $providerEmail;
+                }
+            }
+
             $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                'providerEmail' => $identityEmail,
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),

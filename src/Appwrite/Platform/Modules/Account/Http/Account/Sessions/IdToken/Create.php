@@ -663,6 +663,18 @@ class Create extends Action
         // one: its claims would otherwise go stale, and it expires within the hour.
         $changes = ['providerIdToken' => $idToken];
 
+        // Follow the provider's attestation, unless another user's identity already holds the address
+        $changes['providerEmail'] = '';
+        if ($isVerified && !empty($providerEmail)) {
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$providerEmail]),
+                Query::notEqual('userInternalId', $user->getSequence()),
+            ]);
+            if ($identityWithMatchingEmail->isEmpty()) {
+                $changes['providerEmail'] = $providerEmail;
+            }
+        }
+
         // Native sign-in often carries no access token at all, so only overwrite
         // the stored credentials when the client actually supplied one.
         if (!empty($accessToken)) {
