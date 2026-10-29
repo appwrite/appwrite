@@ -62,7 +62,7 @@ final class EvaluationCustomServerTest extends Scope
             'sha256=' . \hash_hmac('sha256', $timestamp . '.' . $webhook['body'], $secret),
             $webhook['headers']['X-Appwrite-Webhook-Signature'],
         );
-        $this->assertSame('Alert firing: ' . $name, $webhook['data']['subject']);
+        $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $webhook['data']['subject']);
         $this->assertSame(['alerts.firing'], $webhook['data']['events']);
         $this->assertSame($ruleId, $webhook['data']['params']['ruleId']);
         $this->assertSame('firing', $webhook['data']['params']['status']);
@@ -73,7 +73,7 @@ final class EvaluationCustomServerTest extends Scope
         // The project sends its own mail through custom SMTP; an alert is the
         // platform writing to the organization's owners, so it uses the platform mailer.
         $email = $this->getLastEmailByAddress($this->getRoot()['email'], function (array $email) use ($name) {
-            $this->assertSame('Alert firing: ' . $name, $email['subject']);
+            $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $email['subject']);
         });
         $this->assertSame(System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', 'team@localhost.test'), $email['from'][0]['address']);
         $this->assertStringContainsString($name, (string) $email['html']);
@@ -90,7 +90,7 @@ final class EvaluationCustomServerTest extends Scope
             'queries' => [Query::equal('projectId', [$this->getProject()['$id']])->toString()],
         ]);
         $this->assertSame(200, $bell['headers']['status-code']);
-        $this->assertContains('Alert firing: ' . $name, \array_column($bell['body']['notifications'], 'title'));
+        $this->assertNotEmpty(\array_filter(\array_column($bell['body']['notifications'], 'title'), fn (string $title) => \str_starts_with($title, '[Firing] ' . $name . ' · ')));
 
         // Raising the threshold above any traffic the test made resolves the rule.
         $updated = $this->client->call(Client::METHOD_PUT, '/alerts/rules/' . $ruleId, $this->headers(), [
@@ -102,7 +102,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame($firing['triggeredAt'], $resolved['triggeredAt']);
 
         $webhook = $this->waitForWebhook($path, 'ok');
-        $this->assertSame('Alert resolved: ' . $name, $webhook['data']['subject']);
+        $this->assertStringStartsWith('[Resolved] ' . $name . ' · ', $webhook['data']['subject']);
         $this->assertSame(['alerts.ok'], $webhook['data']['events']);
     }
 

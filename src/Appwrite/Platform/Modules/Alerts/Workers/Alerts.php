@@ -223,24 +223,27 @@ class Alerts extends Action
         $resourceType = (string) $rule->getAttribute('resourceType');
         $projectName = (string) $project->getAttribute('name');
         $team = $dbForPlatform->getDocument('teams', (string) $rule->getAttribute('teamId'));
+        $region = (string) $project->getAttribute('region', '');
+        $regionName = (string) (Config::getParam('regions', [])[$region]['name'] ?? '');
+        $url = ($platform['consoleUrl'] ?? '') . $this->path($project) . '?rule=' . $rule->getId();
         $notice = new Email(
             status: $status,
             rule: (string) $rule->getAttribute('name'),
             metric: (string) ($definition['label'] ?? $metric),
-            place: $resourceType === 'project' ? $projectName : "{$resourceType} {$rule->getAttribute('resourceId')} in {$projectName}",
+            place: $projectName,
             value: new Quantity($value, $unit),
             comparator: Comparator::from((string) $rule->getAttribute('comparator')),
             threshold: new Quantity((float) $rule->getAttribute('threshold'), $unit),
             window: ($definition['kind'] ?? '') === 'counter' ? (int) $rule->getAttribute('window') : null,
             changedAt: new \DateTimeImmutable($changedAt),
-            details: [
-                'Rule' => (string) $rule->getAttribute('name'),
-                'Project' => $projectName,
-                'Resource' => $resourceType === 'project' ? 'Whole project' : \ucfirst($resourceType) . ' ' . $rule->getAttribute('resourceId'),
-                'Notifies' => \implode(', ', \array_map(\ucfirst(...), $channels)),
-            ],
-            url: ($platform['consoleUrl'] ?? '') . $this->path($project) . '?rule=' . $rule->getId(),
-            reason: 'You are receiving this because you own the ' . $team->getAttribute('name', '') . ' organization. To change who is notified, update the rule\'s channels.',
+            details: $resourceType === 'project' ? [] : ['Resource' => \ucfirst($resourceType) . ' ' . $rule->getAttribute('resourceId')],
+            url: $url,
+            reason: 'You\'re receiving this as an owner of ' . $team->getAttribute('name', '') . '.',
+            location: \implode(' · ', \array_filter([$projectName, (string) $team->getAttribute('name', ''), $regionName === 'default' ? '' : $regionName])),
+            since: $rule->getAttribute('triggeredAt') ? new \DateTimeImmutable((string) $rule->getAttribute('triggeredAt')) : null,
+            cooldown: (int) $rule->getAttribute('cooldown', 0),
+            // The rule's drawer, which pauses it from its header.
+            pauseUrl: $url,
         );
         $subject = $notice->subject();
         $summary = $notice->summary();

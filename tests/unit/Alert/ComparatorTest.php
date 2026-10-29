@@ -72,17 +72,17 @@ final class ComparatorTest extends TestCase
         );
 
         $firing = $email(Status::Firing, 3600);
-        $this->assertSame('Alert firing: Egress spike', $firing->subject());
+        $this->assertSame('[Firing] Egress spike · Storefront', $firing->subject());
         $this->assertSame('Outbound bandwidth is above 5 KB', $firing->heading());
-        $this->assertSame('Outbound bandwidth on Storefront reached 548.73 KB in the last hour, above the 5 KB threshold.', $firing->summary());
+        $this->assertSame('Outbound bandwidth reached 548.73 KB in the last hour, 110× the 5 KB threshold.', $firing->summary());
 
         $resolved = $email(Status::Ok, 900);
-        $this->assertSame('Alert resolved: Egress spike', $resolved->subject());
+        $this->assertSame('[Resolved] Egress spike · Storefront', $resolved->subject());
         $this->assertSame('Outbound bandwidth is no longer above 5 KB', $resolved->heading());
-        $this->assertSame('Outbound bandwidth on Storefront is 548.73 KB in the last 15 minutes and no longer above the 5 KB threshold.', $resolved->summary());
+        $this->assertSame('Outbound bandwidth is back to 548.73 KB in the last 15 minutes, no longer above the 5 KB threshold.', $resolved->summary());
 
         // A gauge compares its latest reading, so no window is named.
-        $this->assertSame('Outbound bandwidth on Storefront reached 548.73 KB, above the 5 KB threshold.', $email(Status::Firing, null)->summary());
+        $this->assertSame('Outbound bandwidth reached 548.73 KB, 110× the 5 KB threshold.', $email(Status::Firing, null)->summary());
     }
 
     public function testEmailWordingReplacesTheGeneratedCopy(): void
@@ -126,7 +126,44 @@ final class ComparatorTest extends TestCase
         );
         $this->assertSame('You have reached your budget cap', $worded->heading());
         $this->assertSame('Projects in Acme are now limited.', $worded->summary());
-        $this->assertStringContainsString('Projects in Acme are now limited.', $worded->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl'));
-        $this->assertSame('Alert firing: Budget cap reached', $worded->subject());
+        // The summary is the inbox preview, not repeated in the body.
+        $this->assertStringNotContainsString('Projects in Acme are now limited.', $worded->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl'));
+        $this->assertSame('[Firing] Budget cap reached · Acme', $worded->subject());
+    }
+
+    public function testEmailSaysHowLongAResolvedRuleFired(): void
+    {
+        $template = __DIR__ . '/../../../app/config/locale/templates/email-alert.tpl';
+        $email = fn (Status $status, float $value) => new Email(
+            status: $status,
+            rule: 'Egress spike',
+            metric: 'Outbound bandwidth',
+            place: 'Storefront',
+            value: new Quantity($value, 'bytes'),
+            comparator: Comparator::GreaterThan,
+            threshold: new Quantity(5000, 'bytes'),
+            window: 3600,
+            changedAt: new \DateTimeImmutable('2026-10-29T11:59:00+00:00'),
+            details: [],
+            url: 'https://console.example/projects/storefront/usage/alerts?rule=egress',
+            reason: '',
+            location: 'Storefront · Acme · Frankfurt',
+            since: new \DateTimeImmutable('2026-10-29T09:45:00+00:00'),
+            cooldown: 3600,
+            pauseUrl: 'https://console.example/projects/storefront/usage/alerts?rule=egress',
+        );
+
+        $resolved = $email(Status::Ok, 1200)->render($template);
+        $this->assertStringContainsString('Firing for', $resolved);
+        $this->assertStringContainsString('2 h 14 m', $resolved);
+        $this->assertStringContainsString('09:45 to 11:59 UTC', $resolved);
+        $this->assertStringNotContainsString('Pause this rule', $resolved);
+
+        // Just over the threshold reads as "above"; the ratio is for values well past it.
+        $firing = $email(Status::Firing, 6000)->render($template);
+        $this->assertStringContainsString('Above the threshold', $firing);
+        $this->assertStringContainsString('Storefront · Acme · Frankfurt', $firing);
+        $this->assertStringContainsString('On recovery, or in 1 hour if still firing', $firing);
+        $this->assertStringContainsString('Pause this rule', $firing);
     }
 }
