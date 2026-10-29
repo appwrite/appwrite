@@ -12,7 +12,7 @@ let dsn = Dsn::parse("postgresql://appwrite:secret@db.internal:5432/appwrite")?;
 assert_eq!(dsn.scheme(), "postgresql");
 assert_eq!(dsn.host(), "db.internal");
 assert_eq!(dsn.port(), Some(5432));
-assert_eq!(dsn.path(), "appwrite");
+assert_eq!(dsn.path(), b"appwrite");
 assert_eq!(dsn.user(), Some(&b"appwrite"[..]));
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```

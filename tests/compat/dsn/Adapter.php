@@ -48,6 +48,31 @@ final class Adapter implements Base, Benchmarks
                 return $parts;
             },
             'dsn.get' => fn (array $a, Session $s) => self::parts(self::dsn($a, $s)),
+            'dsn.from' => function (array $a, Session $s) {
+                $dsn = DSN::from(
+                    scheme: $a['scheme'],
+                    host: $a['host'],
+                    user: $a['user'] ?? null,
+                    password: $a['password'] ?? null,
+                    port: $a['port'] ?? null,
+                    path: $a['path'] ?? '',
+                    params: $a['params'] ?? [],
+                );
+                $parts = self::parts($dsn);
+                $parts['string'] = (string) $dsn;
+                if (isset($a['keys'])) {
+                    $parts['keys'] = array_map(static function (string $key) use ($dsn) {
+                        try {
+                            return $dsn->getParam($key);
+                        } catch (\TypeError $error) {
+                            return ['$error' => ['class' => $error::class, 'message' => $error->getMessage()]];
+                        }
+                    }, $a['keys']);
+                }
+
+                return $parts;
+            },
+            'dsn.string' => fn (array $a, Session $s) => (string) new DSN($a['dsn']),
             'dsn.param' => fn (array $a, Session $s) => self::dsn($a, $s)->getParam($a['key'], ...(isset($a['default']) ? ['default' => $a['default']] : [])),
             // Port of DSNTest::testUncaughtRefusalPrintsNoCredentials: the
             // exception as PHP prints it (with its trace and arguments).
