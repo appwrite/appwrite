@@ -226,6 +226,11 @@ export function usePromoBanner() {
   return context
 }
 
+/** Safe when the provider is absent (debug menu, HMR). */
+export function useOptionalPromoBanner() {
+  return useContext(PromoBannerContext)
+}
+
 interface PromoBannerProviderProps {
   children: ReactNode
 }

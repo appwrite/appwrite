@@ -27,6 +27,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { OrgMemberManageMenuTooltip } from '@/components/pages/organizations/$orgId/overview/_components/OrgMemberManageMenuTooltip'
 import { useResendMembershipInvite } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import type { TeamMember } from '@/lib/utils/mock-data'
@@ -35,6 +36,11 @@ interface OrgMemberContextMenuProps {
   orgId: string
   member: TeamMember
   canManageMembers: boolean
+  canRemove?: boolean
+  showDisabledManageActions?: boolean
+  manageDisabledTooltip?: string
+  resendPending?: boolean
+  onResend?: () => void
   onUpdate?: () => void
   onRemove?: () => void
   children: React.ReactNode
@@ -44,6 +50,11 @@ export function OrgMemberContextMenu({
   orgId,
   member,
   canManageMembers,
+  canRemove,
+  showDisabledManageActions = false,
+  manageDisabledTooltip,
+  resendPending,
+  onResend,
   onUpdate,
   onRemove,
   children,
@@ -58,8 +69,24 @@ export function OrgMemberContextMenu({
   const hasName =
     !!member.userName && member.userName !== member.userEmail
   const isPending = member.status === 'pending'
+  const canRemoveMember = canRemove ?? Boolean(onRemove)
+  const permissionTooltip =
+    manageDisabledTooltip ?? t("You don't have permission to manage members.")
+  const isResendPending = resendPending ?? resendInviteMutation.isPending
+  const showResend =
+    isPending && (showDisabledManageActions || canManageMembers)
+  const resendDisabled = !canManageMembers || isResendPending
+  const showRemove = showDisabledManageActions || Boolean(onRemove)
+  const removeDisabled = !canRemoveMember || !onRemove
+  const showUpdate =
+    canManageMembers && !isPending && Boolean(onUpdate)
 
   const handleResend = () => {
+    if (onResend) {
+      onResend()
+      return
+    }
+
     const roles =
       member.roles && member.roles.length > 0 ? member.roles : [member.role]
 
@@ -84,19 +111,24 @@ export function OrgMemberContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        {canManageMembers && isPending && (
+        {showResend ? (
           <>
-            <ContextMenuItem
-              disabled={resendInviteMutation.isPending}
-              onSelect={handleResend}
+            <OrgMemberManageMenuTooltip
+              enabled={resendDisabled && !isResendPending}
+              label={permissionTooltip}
             >
-              <ContextMenuIcon icon={Mail} />
-              {t('Resend')}
-            </ContextMenuItem>
+              <ContextMenuItem
+                disabled={resendDisabled}
+                onSelect={handleResend}
+              >
+                <ContextMenuIcon icon={Mail} />
+                {t('Resend')}
+              </ContextMenuItem>
+            </OrgMemberManageMenuTooltip>
             <ContextMenuSeparator />
           </>
-        )}
-        {canManageMembers && !isPending && onUpdate && (
+        ) : null}
+        {showUpdate ? (
           <>
             <ContextMenuItem onSelect={onUpdate}>
               <ContextMenuIcon icon={UserCog} />
@@ -104,7 +136,7 @@ export function OrgMemberContextMenu({
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
-        )}
+        ) : null}
 
         <ContextMenuSub>
           <ContextMenuSubTrigger>
@@ -151,15 +183,20 @@ export function OrgMemberContextMenu({
           {t('Open in new window')}
         </ContextMenuItem>
 
-        {onRemove && (
+        {showRemove ? (
           <>
             <ContextMenuSeparator />
-            <ContextMenuItem onSelect={onRemove}>
-              <ContextMenuIcon icon={Trash2} />
-              {isPending ? t('Cancel invitation') : t('Remove')}
-            </ContextMenuItem>
+            <OrgMemberManageMenuTooltip
+              enabled={removeDisabled}
+              label={permissionTooltip}
+            >
+              <ContextMenuItem disabled={removeDisabled} onSelect={onRemove}>
+                <ContextMenuIcon icon={Trash2} />
+                {isPending ? t('Cancel invitation') : t('Remove')}
+              </ContextMenuItem>
+            </OrgMemberManageMenuTooltip>
           </>
-        )}
+        ) : null}
       </ContextMenuContent>
     </ContextMenu>
   )

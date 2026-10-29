@@ -20,8 +20,16 @@ import {
 import { Input } from '@/components/ui/input'
 import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
+import { AuthCover } from '@/components/global/auth/AuthCover'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  getAuthEmailSearch,
+  getAuthSignInPath,
+  getAuthSignUpPath,
+  resolveAuthAudience,
+  type AuthAudience,
+} from '@/lib/auth-audience'
 import {
   getLastLoginMethod,
   isOAuthLoginMethod,
@@ -215,6 +223,7 @@ interface SignInProps {
   isLoading?: boolean
   oauthLoading?: OAuthLoginMethod | null
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
+  audience?: AuthAudience
 }
 
 export function SignIn({
@@ -224,7 +233,11 @@ export function SignIn({
   isLoading,
   oauthLoading,
   redirect,
+  audience: audienceProp,
 }: SignInProps) {
+  const audience = audienceProp ?? resolveAuthAudience()
+  const signInPath = getAuthSignInPath(audience)
+  const signUpPath = getAuthSignUpPath(audience)
   const t = useT()
   const { isDebugModeOpen } = useDebugMode()
   const schema =
@@ -505,7 +518,14 @@ export function SignIn({
                         <Link
                           to="/recovery"
                           search={
-                            emailValue ? { email: emailValue } : undefined
+                            emailValue || audience === 'partner'
+                              ? {
+                                  ...(emailValue ? { email: emailValue } : {}),
+                                  ...(audience === 'partner'
+                                    ? { audience: 'partner' as const }
+                                    : {}),
+                                }
+                              : undefined
                           }
                           className="link-neutral text-sm"
                         >
@@ -533,8 +553,8 @@ export function SignIn({
                   ? t("Don't have an account?")
                   : t('Already have an account?')}{' '}
                 <Link
-                  to={mode === 'sign-in' ? '/sign-up' : '/sign-in'}
-                  search={redirect ? { redirect } : undefined}
+                  to={mode === 'sign-in' ? signUpPath : signInPath}
+                  search={getAuthEmailSearch(audience, redirect)}
                   className="link-neutral"
                 >
                   {mode === 'sign-in' ? t('Sign up') : t('Sign in')}
@@ -589,15 +609,7 @@ export function SignIn({
             </div>
           ) : null}
         </div>
-        <div className="hidden bg-background md:block min-h-[600px]">
-          <img
-            alt="Image"
-            className="h-full w-full object-cover"
-            height="600"
-            src="/cover.avif"
-            width="600"
-          />
-        </div>
+        <AuthCover audience={audience} />
       </div>
     </Card>
   )

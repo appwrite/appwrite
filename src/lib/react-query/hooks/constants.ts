@@ -92,6 +92,24 @@ export const SMALL_PAGE_SIZE = 10
 export const TINY_PAGE_SIZE = 6
 
 /**
+ * Invoice list page size on the organization billing tab.
+ * Must match PaymentHistory and billing tab prefetch.
+ */
+export const BILLING_INVOICES_PAGE_SIZE = 5
+
+/**
+ * Credits list page size on the organization billing tab.
+ * Must match AvailableCreditsSection and billing tab prefetch.
+ */
+export const BILLING_CREDITS_PAGE_SIZE = 5
+
+/**
+ * Partner create-client wizard: default page size for the handoff resource picker.
+ * Must match the onboard route loader prefetch and HandoffResourcePicker.
+ */
+export const HANDOFF_RESOURCES_PAGE_SIZE = 5
+
+/**
  * Default page size for billing plan summary project breakdown.
  * When an org has many projects, the breakdown is paginated via getAggregation(limit, offset).
  */

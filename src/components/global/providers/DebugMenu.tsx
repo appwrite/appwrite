@@ -57,7 +57,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { usePromoBanner } from './PromoBanner'
+import { useOptionalPromoBanner } from './PromoBanner'
 import { useDebugMode } from './DebugMode'
 import { useScreenshotMode } from './ScreenshotMode'
 import { DebugMenuSwitch } from '@/components/global/providers/DebugMenuSwitch'
@@ -1000,7 +1000,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const { prompt, promptDialog } = usePromptDialog(DEBUG_MENU_DIALOG_LAYER)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
-  const { addMockBanner, clearAllBanners, banners } = usePromoBanner()
+  const promoBanner = useOptionalPromoBanner()
+  const banners = promoBanner?.banners ?? []
+  const addMockBanner = promoBanner?.addMockBanner
+  const clearAllBanners = promoBanner?.clearAllBanners
   const [faviconStatus, setFaviconStatus] = useState<FaviconStatus>(() =>
     getFaviconStatus(),
   )
@@ -1628,39 +1631,43 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   })),
                 ],
               },
-              {
-                label: 'Promo banner',
-                description:
-                  banners.length > 0
-                    ? `${banners.length} active`
-                    : 'None active',
-                icon: <Megaphone className="h-3 w-3" />,
-                badge: banners.length > 0 ? banners.length : undefined,
-                submenu: [
-                  {
-                    label: 'Add',
-                    description: 'Add a mock promo banner.',
-                    onClick: () => {
-                      addMockBanner()
-                      setIsOpen(false)
-                    },
-                    icon: <Megaphone className="h-3 w-3" />,
-                  },
-                  ...(banners.length > 0
-                    ? [
+              ...(promoBanner
+                ? [
+                    {
+                      label: 'Promo banner',
+                      description:
+                        banners.length > 0
+                          ? `${banners.length} active`
+                          : 'None active',
+                      icon: <Megaphone className="h-3 w-3" />,
+                      badge: banners.length > 0 ? banners.length : undefined,
+                      submenu: [
                         {
-                          label: 'Clear all',
-                          description: 'Remove all promo banners.',
+                          label: 'Add',
+                          description: 'Add a mock promo banner.',
                           onClick: () => {
-                            clearAllBanners()
+                            addMockBanner?.()
                             setIsOpen(false)
                           },
-                          icon: <Trash2 className="h-3 w-3" />,
+                          icon: <Megaphone className="h-3 w-3" />,
                         },
-                      ]
-                    : []),
-                ],
-              },
+                        ...(banners.length > 0
+                          ? [
+                              {
+                                label: 'Clear all',
+                                description: 'Remove all promo banners.',
+                                onClick: () => {
+                                  clearAllBanners?.()
+                                  setIsOpen(false)
+                                },
+                                icon: <Trash2 className="h-3 w-3" />,
+                              },
+                            ]
+                          : []),
+                      ],
+                    },
+                  ]
+                : []),
               {
                 label: 'Fullscreen loader',
                 description: overrides.showFullscreenLoader ? 'On' : 'Off',
@@ -2607,6 +2614,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     overrides,
     isScreenshotModeActive,
     setScreenshotModeActive,
+    promoBanner,
     banners.length,
     actions,
     navigate,

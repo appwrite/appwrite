@@ -172,6 +172,62 @@ export async function fetchProject(projectId: string) {
   return fetchProjectById(projectId)
 }
 
+export const ACTIVE_PROJECTS_DEFAULT_SORT_BY = '$createdAt'
+export const ACTIVE_PROJECTS_DEFAULT_SORT_ORDER = 'desc' as const
+
+export const ACTIVE_PROJECTS_SORTABLE_COLUMNS = [
+  'name',
+  '$id',
+  'region',
+  'status',
+  '$createdAt',
+] as const
+
+export type ActiveProjectsSortBy =
+  (typeof ACTIVE_PROJECTS_SORTABLE_COLUMNS)[number]
+
+function isActiveProjectsSortBy(value: string): value is ActiveProjectsSortBy {
+  return (ACTIVE_PROJECTS_SORTABLE_COLUMNS as readonly string[]).includes(value)
+}
+
+function activeProjectsOrderQuery(
+  sortBy?: string,
+  sortOrder?: 'asc' | 'desc',
+): string {
+  const column = isActiveProjectsSortBy(sortBy ?? '')
+    ? sortBy
+    : ACTIVE_PROJECTS_DEFAULT_SORT_BY
+  const order =
+    sortOrder === 'asc' || sortOrder === 'desc'
+      ? sortOrder
+      : ACTIVE_PROJECTS_DEFAULT_SORT_ORDER
+  return order === 'asc' ? Query.orderAsc(column) : Query.orderDesc(column)
+}
+
+/** Click-cycle for spreadsheet column headers (same as TablesDB rows). */
+export function nextActiveProjectsSort(
+  currentSortBy: string,
+  currentSortOrder: 'asc' | 'desc',
+  columnKey: string,
+): { sortBy: ActiveProjectsSortBy; sortOrder: 'asc' | 'desc' } {
+  const column = isActiveProjectsSortBy(columnKey)
+    ? columnKey
+    : ACTIVE_PROJECTS_DEFAULT_SORT_BY
+  if (currentSortBy === column) {
+    if (currentSortOrder === 'asc') {
+      return { sortBy: column, sortOrder: 'desc' }
+    }
+    if (column === ACTIVE_PROJECTS_DEFAULT_SORT_BY) {
+      return { sortBy: column, sortOrder: 'asc' }
+    }
+    return {
+      sortBy: ACTIVE_PROJECTS_DEFAULT_SORT_BY,
+      sortOrder: ACTIVE_PROJECTS_DEFAULT_SORT_ORDER,
+    }
+  }
+  return { sortBy: column, sortOrder: 'asc' }
+}
+
 /**
  * Query function to fetch active (non-archived) projects for a team/organization
  *
@@ -190,6 +246,9 @@ export async function fetchActiveProjects(
   search?: string,
   excludeProjectIds?: string[],
   restrictToProjectIds?: string[] | null,
+  sortBy?: string,
+  sortOrder?: 'asc' | 'desc',
+  filterQueries?: string[],
 ) {
   if (!teamId) {
     return { projects: [], total: 0 }
@@ -219,6 +278,10 @@ export async function fetchActiveProjects(
   const statusQueries = getProjectStatusQueries()
   const trimmedSearch = search?.trim() ?? ''
   const searchQueries = trimmedSearch ? [projectListSearchOrQuery(trimmedSearch)] : []
+  const extraFilterQueries = (filterQueries ?? []).filter(
+    (query) => typeof query === 'string' && query.length > 0,
+  )
+  const orderQuery = activeProjectsOrderQuery(sortBy, sortOrder)
 
   const baseQueries = [
     Query.select([...PROJECT_LIST_SELECT]),
@@ -226,7 +289,8 @@ export async function fetchActiveProjects(
     ...statusQueries,
     ...restrictQueries,
     ...searchQueries,
-    Query.orderDesc('$createdAt'),
+    ...extraFilterQueries,
+    orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
@@ -239,7 +303,11 @@ export async function fetchActiveProjects(
 
   // `projects.list` only documents filters on name/teamId/labels/search - not `$id`.
   // Pasting a project ID never hits fulltext/labels, so resolve ID-shaped terms via get.
-  if (trimmedSearch && isProbableConsoleProjectId(trimmedSearch)) {
+  if (
+    trimmedSearch &&
+    extraFilterQueries.length === 0 &&
+    isProbableConsoleProjectId(trimmedSearch)
+  ) {
     try {
       const direct = await fetchProjectById(trimmedSearch)
       if (
@@ -267,8 +335,9 @@ export async function fetchActiveProjects(
           ...statusQueries,
           ...restrictQueries,
           ...searchQueries,
+          ...extraFilterQueries,
           ...excludeIds.map((id) => Query.notEqual('$id', id)),
-          Query.orderDesc('$createdAt'),
+          orderQuery,
           Query.limit(limit),
           Query.offset(page * limit),
         ]
@@ -610,12 +679,18 @@ export function activeProjectsQueryOptions(
   search: string = '',
   excludeProjectIds?: string[],
   restrictToProjectIds?: string[] | null,
+  sortBy: string = ACTIVE_PROJECTS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = ACTIVE_PROJECTS_DEFAULT_SORT_ORDER,
+  filterQueries?: string[],
 ) {
   const excludeKey =
     (excludeProjectIds?.length ?? 0) > 0
       ? excludeProjectIds!.slice().sort().join(',')
       : ''
   const restrictKey = projectRestrictionKey(restrictToProjectIds)
+  const filtersKey = filterQueries?.length
+    ? filterQueries.slice().sort().join('\0')
+    : ''
   return queryOptions({
     queryKey: [
       'projects',
@@ -626,6 +701,9 @@ export function activeProjectsQueryOptions(
       search,
       excludeKey,
       restrictKey,
+      sortBy,
+      sortOrder,
+      filtersKey,
     ],
     queryFn: () =>
       fetchActiveProjects(
@@ -635,6 +713,9 @@ export function activeProjectsQueryOptions(
         search,
         excludeProjectIds,
         restrictToProjectIds,
+        sortBy,
+        sortOrder,
+        filterQueries,
       ),
     enabled: !!orgId,
     staleTime: DEFAULT_STALE_TIME,

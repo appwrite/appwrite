@@ -43,6 +43,8 @@ const AUTH_REDIRECT_PATHS = new Set([
   '/mfa',
   '/verify-email',
   '/auth/magic-url',
+  '/partner/sign-in',
+  '/partner/sign-up',
 ])
 
 function isSafeConsoleRedirect(redirect: string): boolean {

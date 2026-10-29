@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { createContext, useContext, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -13,6 +13,16 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   Globe,
   Settings,
   RefreshCw,
@@ -22,6 +32,8 @@ import {
   ExternalLink,
   Square,
   Trash2,
+  Import,
+  type LucideIcon,
 } from 'lucide-react'
 import { fetchDomain, useDeleteOrganizationDomain } from '@/lib/react-query/hooks'
 import {
@@ -36,21 +48,49 @@ import {
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import {
+  ContextMenuIcon,
+  MenuItemContent,
+  MenuItemIcon,
+} from '@/components/global/shared/ContextMenuIcon'
 import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { RetryVerification } from '../RetryVerification'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
+type DomainMenuAction = {
+  icon: LucideIcon
+  label: string
+  onSelect: () => void
+  disabled?: boolean
+}
+
+type DomainMenuModel = {
+  tabs: DomainMenuAction[]
+  copyItems: DomainMenuAction[]
+  links: DomainMenuAction[]
+  handoff: DomainMenuAction | null
+  handleDeleteClick: () => void
+}
+
+const DomainMenuModelContext = createContext<DomainMenuModel | null>(null)
+
 interface DomainContextMenuProps {
   orgId: string
   domain: Models.Domain
+  onHandoff?: (domainId: string) => void
+  handoffIcon?: LucideIcon
+  openResourceInNewTab?: boolean
   children: React.ReactNode
 }
 
 export function DomainContextMenu({
   orgId,
   domain,
+  onHandoff,
+  handoffIcon,
+  openResourceInNewTab = false,
   children,
 }: DomainContextMenuProps) {
   const t = useT()
@@ -108,39 +148,114 @@ export function DomainContextMenu({
       | '/organizations/$orgId/domains/$domainId'
       | '/organizations/$orgId/domains/$domainId/settings',
   ) => {
+    if (openResourceInNewTab) {
+      openInNewTab(
+        buildConsoleUrl(
+          path.replace('$orgId', orgId).replace('$domainId', domain.$id),
+        ),
+      )
+      return
+    }
     navigate({
       to: path,
       params: { orgId, domainId: domain.$id },
     })
   }
 
+  const model = useMemo<DomainMenuModel>(() => {
+    const tabs: DomainMenuAction[] = [
+      {
+        icon: Globe,
+        label: t('DNS Records'),
+        onSelect: () =>
+          navigateToTab('/organizations/$orgId/domains/$domainId'),
+      },
+      {
+        icon: Settings,
+        label: t('Settings'),
+        onSelect: () =>
+          navigateToTab('/organizations/$orgId/domains/$domainId/settings'),
+      },
+    ]
+    if (!isVerified) {
+      tabs.push({
+        icon: RefreshCw,
+        label: t('Retry verification'),
+        onSelect: handleRetryVerificationClick,
+      })
+    }
+
+    return {
+      tabs,
+      copyItems: [
+        {
+          icon: Copy,
+          label: t('Copy ID'),
+          onSelect: () => copyToClipboard('ID', domain.$id),
+        },
+        {
+          icon: Copy,
+          label: t('Copy domain'),
+          onSelect: () => copyToClipboard('Domain', domain.domain),
+        },
+        {
+          icon: Link2,
+          label: t('Copy link'),
+          onSelect: () => copyToClipboard('Link', domainHref),
+        },
+        {
+          icon: FileJson,
+          label: t('Copy as JSON'),
+          onSelect: () =>
+            void copyResourceAsJson(() => fetchDomain(domain.$id)),
+        },
+      ],
+      links: [
+        {
+          icon: ExternalLink,
+          label: t('Open in new tab'),
+          onSelect: () => openInNewTab(domainHref),
+        },
+        {
+          icon: Square,
+          label: t('Open in new window'),
+          onSelect: () => openInNewWindow(domainHref),
+        },
+      ],
+      handoff: onHandoff
+        ? {
+            icon: handoffIcon ?? Import,
+            label: t('Handoff'),
+            onSelect: () =>
+              openDialogAfterOverlayCloses(() => onHandoff(domain.$id)),
+          }
+        : null,
+      handleDeleteClick,
+    }
+  }, [
+    t,
+    domain.$id,
+    domain.domain,
+    domainHref,
+    isVerified,
+    onHandoff,
+    handoffIcon,
+    orgId,
+    openResourceInNewTab,
+    navigate,
+  ])
+
   return (
-    <>
+    <DomainMenuModelContext.Provider value={model}>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
-          <ContextMenuItem
-            onSelect={() =>
-              navigateToTab('/organizations/$orgId/domains/$domainId')
-            }
-          >
-            <ContextMenuIcon icon={Globe} />
-            {t('DNS Records')}
-          </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() =>
-              navigateToTab('/organizations/$orgId/domains/$domainId/settings')
-            }
-          >
-            <ContextMenuIcon icon={Settings} />
-            {t('Settings')}
-          </ContextMenuItem>
-          {!isVerified && (
-            <ContextMenuItem onSelect={handleRetryVerificationClick}>
-              <ContextMenuIcon icon={RefreshCw} />
-              {t('Retry verification')}
+          {model.tabs.map((item) => (
+            <ContextMenuItem key={item.label} onSelect={item.onSelect}>
+              <ContextMenuIcon icon={item.icon} />
+              {item.label}
             </ContextMenuItem>
-          )}
+          ))}
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
@@ -148,44 +263,28 @@ export function DomainContextMenu({
               {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('ID', domain.$id)}
-              >
-                <ContextMenuIcon icon={Copy} />
-                {t('Copy ID')}
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('Domain', domain.domain)}
-              >
-                <ContextMenuIcon icon={Copy} />
-                {t('Copy domain')}
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('Link', domainHref)}
-              >
-                <ContextMenuIcon icon={Link2} />
-                {t('Copy link')}
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() =>
-                  void copyResourceAsJson(() => fetchDomain(domain.$id))
-                }
-              >
-                <ContextMenuIcon icon={FileJson} />
-                {t('Copy as JSON')}
-              </ContextMenuItem>
+              {model.copyItems.map((item) => (
+                <ContextMenuItem key={item.label} onSelect={item.onSelect}>
+                  <ContextMenuIcon icon={item.icon} />
+                  {item.label}
+                </ContextMenuItem>
+              ))}
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => openInNewTab(domainHref)}>
-            <ContextMenuIcon icon={ExternalLink} />
-            {t('Open in new tab')}
-          </ContextMenuItem>
-          <ContextMenuItem onSelect={() => openInNewWindow(domainHref)}>
-            <ContextMenuIcon icon={Square} />
-            {t('Open in new window')}
-          </ContextMenuItem>
+          {model.links.map((item) => (
+            <ContextMenuItem key={item.label} onSelect={item.onSelect}>
+              <ContextMenuIcon icon={item.icon} />
+              {item.label}
+            </ContextMenuItem>
+          ))}
           <ContextMenuSeparator />
+          {model.handoff ? (
+            <ContextMenuItem onSelect={model.handoff.onSelect}>
+              <ContextMenuIcon icon={model.handoff.icon} />
+              {model.handoff.label}
+            </ContextMenuItem>
+          ) : null}
           <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             {t('Delete')}
@@ -216,6 +315,65 @@ export function DomainContextMenu({
         orgId={orgId}
         onVerified={handleDomainVerified}
       />
-    </>
+    </DomainMenuModelContext.Provider>
+  )
+}
+
+export function DomainRowActionsMenu() {
+  const t = useT()
+  const model = useContext(DomainMenuModelContext)
+  if (!model) return null
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <RowActionsMenuTrigger
+          compact
+          onClick={(event) => event.stopPropagation()}
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="w-56"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {model.tabs.map((item) => (
+          <DropdownMenuItem key={item.label} onSelect={item.onSelect}>
+            <MenuItemContent icon={item.icon}>{item.label}</MenuItemContent>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <MenuItemIcon icon={Copy} />
+            {t('Copy')}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            {model.copyItems.map((item) => (
+              <DropdownMenuItem key={item.label} onSelect={item.onSelect}>
+                <MenuItemContent icon={item.icon}>{item.label}</MenuItemContent>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuSeparator />
+        {model.links.map((item) => (
+          <DropdownMenuItem key={item.label} onSelect={item.onSelect}>
+            <MenuItemContent icon={item.icon}>{item.label}</MenuItemContent>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        {model.handoff ? (
+          <DropdownMenuItem onSelect={model.handoff.onSelect}>
+            <MenuItemContent icon={model.handoff.icon}>
+              {model.handoff.label}
+            </MenuItemContent>
+          </DropdownMenuItem>
+        ) : null}
+        <DropdownMenuItem onSelect={model.handleDeleteClick}>
+          <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

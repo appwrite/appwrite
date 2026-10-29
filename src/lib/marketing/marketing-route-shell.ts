@@ -4,6 +4,7 @@ import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   type MarketingPageRouteStaticData,
 } from '@/lib/marketing/route-static-data'
+import { isPartnerConsolePath } from '@/lib/partners'
 
 const CONSOLE_AREA_PREFIXES = new Set([
   'projects',
@@ -15,6 +16,7 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'generator',
   'assistant',
   'agent',
+  'partner',
   'upgrade',
 ])
 
@@ -27,11 +29,16 @@ const CONSOLE_AUTH_EXACT_PATHS = new Set([
   '/mfa',
   '/verify-email',
   '/education/join',
+  '/partner',
+  '/partner/sign-in',
+  '/partner/sign-up',
 ])
 
 export function isConsoleAreaPath(pathname: string): boolean {
   const firstSegment = pathname.split('/').filter(Boolean)[0]
-  return firstSegment ? CONSOLE_AREA_PREFIXES.has(firstSegment) : false
+  if (!firstSegment) return false
+  if (isPartnerConsolePath(pathname)) return true
+  return CONSOLE_AREA_PREFIXES.has(firstSegment)
 }
 
 function normalizeShellPath(pathname: string): string {

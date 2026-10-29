@@ -13,10 +13,14 @@ import { BaaSettingsCard } from './_components/BaaSettingsCard'
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
 const LEGAL_EMAIL = import.meta.env.VITE_LEGAL_EMAIL || 'legal@appwrite.io'
 
-export function ComplianceTab() {
+type ComplianceTabProps = {
+  organizationId?: string
+}
+
+export function ComplianceTab({ organizationId }: ComplianceTabProps = {}) {
   const t = useT()
   const params = useParams({ strict: false })
-  const organizationId = params.orgId as string | undefined
+  const orgId = organizationId ?? (params.orgId as string | undefined)
 
   const cards: SettingsCardItem[] = [
     {
@@ -78,9 +82,7 @@ export function ComplianceTab() {
         title: 'Business associate agreement (BAA)',
         keywords: ['baa', 'hipaa', 'phi', 'healthcare'],
       },
-      node: organizationId ? (
-        <BaaSettingsCard organizationId={organizationId} />
-      ) : null,
+      node: orgId ? <BaaSettingsCard organizationId={orgId} /> : null,
     },
     {
       id: 'soc2',

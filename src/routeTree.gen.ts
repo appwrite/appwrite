@@ -57,6 +57,7 @@ import { Route as PublicBlocksRouteImport } from './routes/_public/blocks'
 import { Route as PublicCacheRouteImport } from './routes/_public/cache'
 import { Route as PublicCompsRouteImport } from './routes/_public/comps'
 import { Route as PublicInitRouteImport } from './routes/_public/init'
+import { Route as PublicPartnerRouteImport } from './routes/_public/partner'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
 import { Route as PublicSalesRouteImport } from './routes/_public/sales'
 import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
@@ -90,6 +91,8 @@ import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-
 import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
+import { Route as AuthPartnerSignInRouteImport } from './routes/_auth/partner.sign-in'
+import { Route as AuthPartnerSignUpRouteImport } from './routes/_auth/partner.sign-up'
 import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog.index'
 import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.$page'
 import { Route as MarketingChangelogIndexRouteImport } from './routes/_marketing/changelog.index'
@@ -124,6 +127,7 @@ import { Route as PublicImpersonateIndexRouteImport } from './routes/_public/imp
 import { Route as PublicImpersonateUserIdRouteImport } from './routes/_public/impersonate.$userId'
 import { Route as PublicMarketplaceAppIdRouteImport } from './routes/_public/marketplace.$appId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicPartnersPartnerIdRouteImport } from './routes/_public/partners.$partnerId'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as DocsPartnersIndexRouteImport } from './routes/docs/partners.index'
 import { Route as GeneratorDiagramsIndexRouteImport } from './routes/generator/diagrams/index'
@@ -159,6 +163,13 @@ import { Route as PublicOrganizationsOrgIdMarketplaceRouteImport } from './route
 import { Route as PublicOrganizationsOrgIdMembersRouteImport } from './routes/_public/organizations.$orgId.members'
 import { Route as PublicOrganizationsOrgIdSettingsRouteImport } from './routes/_public/organizations.$orgId.settings'
 import { Route as PublicOrganizationsOrgIdSupportRouteImport } from './routes/_public/organizations.$orgId.support'
+import { Route as PublicPartnersPartnerIdIndexRouteImport } from './routes/_public/partners.$partnerId.index'
+import { Route as PublicPartnersPartnerIdBillingRouteImport } from './routes/_public/partners.$partnerId.billing'
+import { Route as PublicPartnersPartnerIdClientsRouteImport } from './routes/_public/partners.$partnerId.clients'
+import { Route as PublicPartnersPartnerIdDomainsRouteImport } from './routes/_public/partners.$partnerId.domains'
+import { Route as PublicPartnersPartnerIdOnboardRouteImport } from './routes/_public/partners.$partnerId.onboard'
+import { Route as PublicPartnersPartnerIdProjectsRouteImport } from './routes/_public/partners.$partnerId.projects'
+import { Route as PublicPartnersPartnerIdSettingsRouteImport } from './routes/_public/partners.$partnerId.settings'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_public/projects.$projectId.activity'
 import { Route as PublicProjectsProjectIdAdvisorRouteImport } from './routes/_public/projects.$projectId.advisor'
@@ -195,6 +206,8 @@ import { Route as PublicOrganizationsOrgIdSettingsDangerZoneRouteImport } from '
 import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
 import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
 import { Route as PublicOrganizationsOrgIdSettingsPartnersRouteImport } from './routes/_public/organizations.$orgId.settings.partners'
+import { Route as PublicPartnersPartnerIdClientsIndexRouteImport } from './routes/_public/partners.$partnerId.clients.index'
+import { Route as PublicPartnersPartnerIdClientsClientIdRouteImport } from './routes/_public/partners.$partnerId.clients.$clientId'
 import { Route as PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport } from './routes/_public/projects.$projectId.analytics.$websiteId'
 import { Route as PublicProjectsProjectIdAppsAddRouteImport } from './routes/_public/projects.$projectId.apps.add'
 import { Route as PublicProjectsProjectIdAuthIndexRouteImport } from './routes/_public/projects.$projectId.auth.index'
@@ -670,6 +683,11 @@ const PublicInitRoute = PublicInitRouteImport.update({
   path: '/init',
   getParentRoute: () => PublicRoute,
 } as any)
+const PublicPartnerRoute = PublicPartnerRouteImport.update({
+  id: '/partner',
+  path: '/partner',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicResetRoute = PublicResetRouteImport.update({
   id: '/reset',
   path: '/reset',
@@ -835,6 +853,16 @@ const AuthOauth2ConsentRoute = AuthOauth2ConsentRouteImport.update({
 const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
   id: '/oauth2/device',
   path: '/oauth2/device',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthPartnerSignInRoute = AuthPartnerSignInRouteImport.update({
+  id: '/partner/sign-in',
+  path: '/partner/sign-in',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthPartnerSignUpRoute = AuthPartnerSignUpRouteImport.update({
+  id: '/partner/sign-up',
+  path: '/partner/sign-up',
   getParentRoute: () => AuthRoute,
 } as any)
 const MarketingBlogIndexRoute = MarketingBlogIndexRouteImport.update({
@@ -1022,6 +1050,11 @@ const PublicOrganizationsOrgIdRoute =
     path: '/organizations/$orgId',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicPartnersPartnerIdRoute = PublicPartnersPartnerIdRouteImport.update({
+  id: '/partners/$partnerId',
+  path: '/partners/$partnerId',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicProjectsProjectIdRoute = PublicProjectsProjectIdRouteImport.update({
   id: '/projects/$projectId',
   path: '/projects/$projectId',
@@ -1220,6 +1253,48 @@ const PublicOrganizationsOrgIdSupportRoute =
     id: '/support',
     path: '/support',
     getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicPartnersPartnerIdIndexRoute =
+  PublicPartnersPartnerIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicPartnersPartnerIdRoute,
+  } as any)
+const PublicPartnersPartnerIdBillingRoute =
+  PublicPartnersPartnerIdBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => PublicPartnersPartnerIdRoute,
+  } as any)
+const PublicPartnersPartnerIdClientsRoute =
+  PublicPartnersPartnerIdClientsRouteImport.update({
+    id: '/clients',
+    path: '/clients',
+    getParentRoute: () => PublicPartnersPartnerIdRoute,
+  } as any)
+const PublicPartnersPartnerIdDomainsRoute =
+  PublicPartnersPartnerIdDomainsRouteImport.update({
+    id: '/domains',
+    path: '/domains',
+    getParentRoute: () => PublicPartnersPartnerIdRoute,
+  } as any)
+const PublicPartnersPartnerIdOnboardRoute =
+  PublicPartnersPartnerIdOnboardRouteImport.update({
+    id: '/onboard',
+    path: '/onboard',
+    getParentRoute: () => PublicPartnersPartnerIdRoute,
+  } as any)
+const PublicPartnersPartnerIdProjectsRoute =
+  PublicPartnersPartnerIdProjectsRouteImport.update({
+    id: '/projects',
+    path: '/projects',
+    getParentRoute: () => PublicPartnersPartnerIdRoute,
+  } as any)
+const PublicPartnersPartnerIdSettingsRoute =
+  PublicPartnersPartnerIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicPartnersPartnerIdRoute,
   } as any)
 const PublicProjectsProjectIdIndexRoute =
   PublicProjectsProjectIdIndexRouteImport.update({
@@ -1436,6 +1511,18 @@ const PublicOrganizationsOrgIdSettingsPartnersRoute =
     id: '/partners',
     path: '/partners',
     getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicPartnersPartnerIdClientsIndexRoute =
+  PublicPartnersPartnerIdClientsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicPartnersPartnerIdClientsRoute,
+  } as any)
+const PublicPartnersPartnerIdClientsClientIdRoute =
+  PublicPartnersPartnerIdClientsClientIdRouteImport.update({
+    id: '/$clientId',
+    path: '/$clientId',
+    getParentRoute: () => PublicPartnersPartnerIdClientsRoute,
   } as any)
 const PublicProjectsProjectIdAnalyticsWebsiteIdRoute =
   PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport.update({
@@ -3134,6 +3221,7 @@ export interface FileRoutesByFullPath {
   '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
+  '/partner': typeof PublicPartnerRoute
   '/reset': typeof PublicResetRoute
   '/sales': typeof PublicSalesRoute
   '/upgrade': typeof PublicUpgradeRoute
@@ -3167,6 +3255,8 @@ export interface FileRoutesByFullPath {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/partner/sign-in': typeof AuthPartnerSignInRoute
+  '/partner/sign-up': typeof AuthPartnerSignUpRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
@@ -3194,6 +3284,7 @@ export interface FileRoutesByFullPath {
   '/impersonate/$userId': typeof PublicImpersonateUserIdRoute
   '/marketplace/$appId': typeof PublicMarketplaceAppIdRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
+  '/partners/$partnerId': typeof PublicPartnersPartnerIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/blog/': typeof MarketingBlogIndexRoute
@@ -3233,6 +3324,12 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
+  '/partners/$partnerId/billing': typeof PublicPartnersPartnerIdBillingRoute
+  '/partners/$partnerId/clients': typeof PublicPartnersPartnerIdClientsRouteWithChildren
+  '/partners/$partnerId/domains': typeof PublicPartnersPartnerIdDomainsRoute
+  '/partners/$partnerId/onboard': typeof PublicPartnersPartnerIdOnboardRoute
+  '/partners/$partnerId/projects': typeof PublicPartnersPartnerIdProjectsRoute
+  '/partners/$partnerId/settings': typeof PublicPartnersPartnerIdSettingsRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
@@ -3254,6 +3351,7 @@ export interface FileRoutesByFullPath {
   '/agent/automations/': typeof PublicAgentAutomationsIndexRoute
   '/agent/settings/': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
+  '/partners/$partnerId/': typeof PublicPartnersPartnerIdIndexRoute
   '/projects/$projectId/': typeof PublicProjectsProjectIdIndexRoute
   '/organizations/$orgId/agent/$agentId': typeof PublicOrganizationsOrgIdAgentAgentIdRoute
   '/organizations/$orgId/agent/automations': typeof PublicOrganizationsOrgIdAgentAutomationsRouteWithChildren
@@ -3268,6 +3366,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
+  '/partners/$partnerId/clients/$clientId': typeof PublicPartnersPartnerIdClientsClientIdRoute
   '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
@@ -3303,6 +3402,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/apps/': typeof PublicOrganizationsOrgIdAppsIndexRoute
   '/organizations/$orgId/domains/': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/organizations/$orgId/marketplace/': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
+  '/partners/$partnerId/clients/': typeof PublicPartnersPartnerIdClientsIndexRoute
   '/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
   '/projects/$projectId/databases/': typeof PublicProjectsProjectIdDatabasesIndexRoute
   '/projects/$projectId/firewall/': typeof PublicProjectsProjectIdFirewallIndexRoute
@@ -3551,6 +3651,7 @@ export interface FileRoutesByTo {
   '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
+  '/partner': typeof PublicPartnerRoute
   '/reset': typeof PublicResetRoute
   '/sales': typeof PublicSalesRoute
   '/upgrade': typeof PublicUpgradeRoute
@@ -3584,6 +3685,8 @@ export interface FileRoutesByTo {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/partner/sign-in': typeof AuthPartnerSignInRoute
+  '/partner/sign-up': typeof AuthPartnerSignUpRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
@@ -3642,6 +3745,11 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
+  '/partners/$partnerId/billing': typeof PublicPartnersPartnerIdBillingRoute
+  '/partners/$partnerId/domains': typeof PublicPartnersPartnerIdDomainsRoute
+  '/partners/$partnerId/onboard': typeof PublicPartnersPartnerIdOnboardRoute
+  '/partners/$partnerId/projects': typeof PublicPartnersPartnerIdProjectsRoute
+  '/partners/$partnerId/settings': typeof PublicPartnersPartnerIdSettingsRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
@@ -3653,6 +3761,7 @@ export interface FileRoutesByTo {
   '/agent/automations': typeof PublicAgentAutomationsIndexRoute
   '/agent/settings': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
+  '/partners/$partnerId': typeof PublicPartnersPartnerIdIndexRoute
   '/projects/$projectId': typeof PublicProjectsProjectIdIndexRoute
   '/organizations/$orgId/agent/$agentId': typeof PublicOrganizationsOrgIdAgentAgentIdRoute
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
@@ -3663,6 +3772,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
+  '/partners/$partnerId/clients/$clientId': typeof PublicPartnersPartnerIdClientsClientIdRoute
   '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
@@ -3690,6 +3800,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsIndexRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/organizations/$orgId/marketplace': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
+  '/partners/$partnerId/clients': typeof PublicPartnersPartnerIdClientsIndexRoute
   '/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthIndexRoute
   '/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesIndexRoute
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallIndexRoute
@@ -3930,6 +4041,7 @@ export interface FileRoutesById {
   '/_public/cache': typeof PublicCacheRoute
   '/_public/comps': typeof PublicCompsRoute
   '/_public/init': typeof PublicInitRoute
+  '/_public/partner': typeof PublicPartnerRoute
   '/_public/reset': typeof PublicResetRoute
   '/_public/sales': typeof PublicSalesRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
@@ -3964,6 +4076,8 @@ export interface FileRoutesById {
   '/_auth/education/join': typeof AuthEducationJoinRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/_auth/partner/sign-in': typeof AuthPartnerSignInRoute
+  '/_auth/partner/sign-up': typeof AuthPartnerSignUpRoute
   '/_marketing/blog/$page': typeof MarketingBlogPageRoute
   '/_marketing/init/$ticketId': typeof MarketingInitTicketIdRoute
   '/_marketing/integrations/$slug': typeof MarketingIntegrationsSlugRoute
@@ -3991,6 +4105,7 @@ export interface FileRoutesById {
   '/_public/impersonate/$userId': typeof PublicImpersonateUserIdRoute
   '/_public/marketplace/$appId': typeof PublicMarketplaceAppIdRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
+  '/_public/partners/$partnerId': typeof PublicPartnersPartnerIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/_marketing/blog/': typeof MarketingBlogIndexRoute
@@ -4030,6 +4145,12 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/_public/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/_public/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
+  '/_public/partners/$partnerId/billing': typeof PublicPartnersPartnerIdBillingRoute
+  '/_public/partners/$partnerId/clients': typeof PublicPartnersPartnerIdClientsRouteWithChildren
+  '/_public/partners/$partnerId/domains': typeof PublicPartnersPartnerIdDomainsRoute
+  '/_public/partners/$partnerId/onboard': typeof PublicPartnersPartnerIdOnboardRoute
+  '/_public/partners/$partnerId/projects': typeof PublicPartnersPartnerIdProjectsRoute
+  '/_public/partners/$partnerId/settings': typeof PublicPartnersPartnerIdSettingsRoute
   '/_public/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/_public/projects/$projectId/advisor': typeof PublicProjectsProjectIdAdvisorRoute
   '/_public/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
@@ -4051,6 +4172,7 @@ export interface FileRoutesById {
   '/_public/agent/automations/': typeof PublicAgentAutomationsIndexRoute
   '/_public/agent/settings/': typeof PublicAgentSettingsIndexRoute
   '/_public/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
+  '/_public/partners/$partnerId/': typeof PublicPartnersPartnerIdIndexRoute
   '/_public/projects/$projectId/': typeof PublicProjectsProjectIdIndexRoute
   '/_public/organizations/$orgId/agent/$agentId': typeof PublicOrganizationsOrgIdAgentAgentIdRoute
   '/_public/organizations/$orgId/agent/automations': typeof PublicOrganizationsOrgIdAgentAutomationsRouteWithChildren
@@ -4065,6 +4187,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/_public/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
+  '/_public/partners/$partnerId/clients/$clientId': typeof PublicPartnersPartnerIdClientsClientIdRoute
   '/_public/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/_public/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/_public/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
@@ -4100,6 +4223,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/apps/': typeof PublicOrganizationsOrgIdAppsIndexRoute
   '/_public/organizations/$orgId/domains/': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/_public/organizations/$orgId/marketplace/': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
+  '/_public/partners/$partnerId/clients/': typeof PublicPartnersPartnerIdClientsIndexRoute
   '/_public/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
   '/_public/projects/$projectId/databases/': typeof PublicProjectsProjectIdDatabasesIndexRoute
   '/_public/projects/$projectId/firewall/': typeof PublicProjectsProjectIdFirewallIndexRoute
@@ -4354,6 +4478,7 @@ export interface FileRouteTypes {
     | '/cache'
     | '/comps'
     | '/init'
+    | '/partner'
     | '/reset'
     | '/sales'
     | '/upgrade'
@@ -4387,6 +4512,8 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/partner/sign-in'
+    | '/partner/sign-up'
     | '/blog/$page'
     | '/init/$ticketId'
     | '/integrations/$slug'
@@ -4414,6 +4541,7 @@ export interface FileRouteTypes {
     | '/impersonate/$userId'
     | '/marketplace/$appId'
     | '/organizations/$orgId'
+    | '/partners/$partnerId'
     | '/projects/$projectId'
     | '/generator/diagrams/$generationId'
     | '/blog/'
@@ -4453,6 +4581,12 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
     | '/organizations/$orgId/support'
+    | '/partners/$partnerId/billing'
+    | '/partners/$partnerId/clients'
+    | '/partners/$partnerId/domains'
+    | '/partners/$partnerId/onboard'
+    | '/partners/$partnerId/projects'
+    | '/partners/$partnerId/settings'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
     | '/projects/$projectId/analytics'
@@ -4474,6 +4608,7 @@ export interface FileRouteTypes {
     | '/agent/automations/'
     | '/agent/settings/'
     | '/organizations/$orgId/'
+    | '/partners/$partnerId/'
     | '/projects/$projectId/'
     | '/organizations/$orgId/agent/$agentId'
     | '/organizations/$orgId/agent/automations'
@@ -4488,6 +4623,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
+    | '/partners/$partnerId/clients/$clientId'
     | '/projects/$projectId/analytics/$websiteId'
     | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/oauth2-server'
@@ -4523,6 +4659,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/apps/'
     | '/organizations/$orgId/domains/'
     | '/organizations/$orgId/marketplace/'
+    | '/partners/$partnerId/clients/'
     | '/projects/$projectId/auth/'
     | '/projects/$projectId/databases/'
     | '/projects/$projectId/firewall/'
@@ -4771,6 +4908,7 @@ export interface FileRouteTypes {
     | '/cache'
     | '/comps'
     | '/init'
+    | '/partner'
     | '/reset'
     | '/sales'
     | '/upgrade'
@@ -4804,6 +4942,8 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/partner/sign-in'
+    | '/partner/sign-up'
     | '/blog/$page'
     | '/init/$ticketId'
     | '/integrations/$slug'
@@ -4862,6 +5002,11 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
     | '/organizations/$orgId/support'
+    | '/partners/$partnerId/billing'
+    | '/partners/$partnerId/domains'
+    | '/partners/$partnerId/onboard'
+    | '/partners/$partnerId/projects'
+    | '/partners/$partnerId/settings'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/advisor'
     | '/projects/$projectId/analytics'
@@ -4873,6 +5018,7 @@ export interface FileRouteTypes {
     | '/agent/automations'
     | '/agent/settings'
     | '/organizations/$orgId'
+    | '/partners/$partnerId'
     | '/projects/$projectId'
     | '/organizations/$orgId/agent/$agentId'
     | '/organizations/$orgId/domains/buy'
@@ -4883,6 +5029,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
+    | '/partners/$partnerId/clients/$clientId'
     | '/projects/$projectId/analytics/$websiteId'
     | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/oauth2-server'
@@ -4910,6 +5057,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/apps'
     | '/organizations/$orgId/domains'
     | '/organizations/$orgId/marketplace'
+    | '/partners/$partnerId/clients'
     | '/projects/$projectId/auth'
     | '/projects/$projectId/databases'
     | '/projects/$projectId/firewall'
@@ -5149,6 +5297,7 @@ export interface FileRouteTypes {
     | '/_public/cache'
     | '/_public/comps'
     | '/_public/init'
+    | '/_public/partner'
     | '/_public/reset'
     | '/_public/sales'
     | '/_public/upgrade'
@@ -5183,6 +5332,8 @@ export interface FileRouteTypes {
     | '/_auth/education/join'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
+    | '/_auth/partner/sign-in'
+    | '/_auth/partner/sign-up'
     | '/_marketing/blog/$page'
     | '/_marketing/init/$ticketId'
     | '/_marketing/integrations/$slug'
@@ -5210,6 +5361,7 @@ export interface FileRouteTypes {
     | '/_public/impersonate/$userId'
     | '/_public/marketplace/$appId'
     | '/_public/organizations/$orgId'
+    | '/_public/partners/$partnerId'
     | '/_public/projects/$projectId'
     | '/generator/diagrams/$generationId'
     | '/_marketing/blog/'
@@ -5249,6 +5401,12 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/members'
     | '/_public/organizations/$orgId/settings'
     | '/_public/organizations/$orgId/support'
+    | '/_public/partners/$partnerId/billing'
+    | '/_public/partners/$partnerId/clients'
+    | '/_public/partners/$partnerId/domains'
+    | '/_public/partners/$partnerId/onboard'
+    | '/_public/partners/$partnerId/projects'
+    | '/_public/partners/$partnerId/settings'
     | '/_public/projects/$projectId/activity'
     | '/_public/projects/$projectId/advisor'
     | '/_public/projects/$projectId/analytics'
@@ -5270,6 +5428,7 @@ export interface FileRouteTypes {
     | '/_public/agent/automations/'
     | '/_public/agent/settings/'
     | '/_public/organizations/$orgId/'
+    | '/_public/partners/$partnerId/'
     | '/_public/projects/$projectId/'
     | '/_public/organizations/$orgId/agent/$agentId'
     | '/_public/organizations/$orgId/agent/automations'
@@ -5284,6 +5443,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/settings/members'
     | '/_public/organizations/$orgId/settings/oauth-apps'
     | '/_public/organizations/$orgId/settings/partners'
+    | '/_public/partners/$partnerId/clients/$clientId'
     | '/_public/projects/$projectId/analytics/$websiteId'
     | '/_public/projects/$projectId/apps/add'
     | '/_public/projects/$projectId/auth/oauth2-server'
@@ -5319,6 +5479,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/apps/'
     | '/_public/organizations/$orgId/domains/'
     | '/_public/organizations/$orgId/marketplace/'
+    | '/_public/partners/$partnerId/clients/'
     | '/_public/projects/$projectId/auth/'
     | '/_public/projects/$projectId/databases/'
     | '/_public/projects/$projectId/firewall/'
@@ -5907,6 +6068,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicInitRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/partner': {
+      id: '/_public/partner'
+      path: '/partner'
+      fullPath: '/partner'
+      preLoaderRoute: typeof PublicPartnerRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/reset': {
       id: '/_public/reset'
       path: '/reset'
@@ -6136,6 +6304,20 @@ declare module '@tanstack/react-router' {
       path: '/oauth2/device'
       fullPath: '/oauth2/device'
       preLoaderRoute: typeof AuthOauth2DeviceRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/partner/sign-in': {
+      id: '/_auth/partner/sign-in'
+      path: '/partner/sign-in'
+      fullPath: '/partner/sign-in'
+      preLoaderRoute: typeof AuthPartnerSignInRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/partner/sign-up': {
+      id: '/_auth/partner/sign-up'
+      path: '/partner/sign-up'
+      fullPath: '/partner/sign-up'
+      preLoaderRoute: typeof AuthPartnerSignUpRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_marketing/blog/': {
@@ -6374,6 +6556,13 @@ declare module '@tanstack/react-router' {
       path: '/organizations/$orgId'
       fullPath: '/organizations/$orgId'
       preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/partners/$partnerId': {
+      id: '/_public/partners/$partnerId'
+      path: '/partners/$partnerId'
+      fullPath: '/partners/$partnerId'
+      preLoaderRoute: typeof PublicPartnersPartnerIdRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/projects/$projectId': {
@@ -6620,6 +6809,55 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId/support'
       preLoaderRoute: typeof PublicOrganizationsOrgIdSupportRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/partners/$partnerId/': {
+      id: '/_public/partners/$partnerId/'
+      path: '/'
+      fullPath: '/partners/$partnerId/'
+      preLoaderRoute: typeof PublicPartnersPartnerIdIndexRouteImport
+      parentRoute: typeof PublicPartnersPartnerIdRoute
+    }
+    '/_public/partners/$partnerId/billing': {
+      id: '/_public/partners/$partnerId/billing'
+      path: '/billing'
+      fullPath: '/partners/$partnerId/billing'
+      preLoaderRoute: typeof PublicPartnersPartnerIdBillingRouteImport
+      parentRoute: typeof PublicPartnersPartnerIdRoute
+    }
+    '/_public/partners/$partnerId/clients': {
+      id: '/_public/partners/$partnerId/clients'
+      path: '/clients'
+      fullPath: '/partners/$partnerId/clients'
+      preLoaderRoute: typeof PublicPartnersPartnerIdClientsRouteImport
+      parentRoute: typeof PublicPartnersPartnerIdRoute
+    }
+    '/_public/partners/$partnerId/domains': {
+      id: '/_public/partners/$partnerId/domains'
+      path: '/domains'
+      fullPath: '/partners/$partnerId/domains'
+      preLoaderRoute: typeof PublicPartnersPartnerIdDomainsRouteImport
+      parentRoute: typeof PublicPartnersPartnerIdRoute
+    }
+    '/_public/partners/$partnerId/onboard': {
+      id: '/_public/partners/$partnerId/onboard'
+      path: '/onboard'
+      fullPath: '/partners/$partnerId/onboard'
+      preLoaderRoute: typeof PublicPartnersPartnerIdOnboardRouteImport
+      parentRoute: typeof PublicPartnersPartnerIdRoute
+    }
+    '/_public/partners/$partnerId/projects': {
+      id: '/_public/partners/$partnerId/projects'
+      path: '/projects'
+      fullPath: '/partners/$partnerId/projects'
+      preLoaderRoute: typeof PublicPartnersPartnerIdProjectsRouteImport
+      parentRoute: typeof PublicPartnersPartnerIdRoute
+    }
+    '/_public/partners/$partnerId/settings': {
+      id: '/_public/partners/$partnerId/settings'
+      path: '/settings'
+      fullPath: '/partners/$partnerId/settings'
+      preLoaderRoute: typeof PublicPartnersPartnerIdSettingsRouteImport
+      parentRoute: typeof PublicPartnersPartnerIdRoute
     }
     '/_public/projects/$projectId/': {
       id: '/_public/projects/$projectId/'
@@ -6872,6 +7110,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId/settings/partners'
       preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsPartnersRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/partners/$partnerId/clients/': {
+      id: '/_public/partners/$partnerId/clients/'
+      path: '/'
+      fullPath: '/partners/$partnerId/clients/'
+      preLoaderRoute: typeof PublicPartnersPartnerIdClientsIndexRouteImport
+      parentRoute: typeof PublicPartnersPartnerIdClientsRoute
+    }
+    '/_public/partners/$partnerId/clients/$clientId': {
+      id: '/_public/partners/$partnerId/clients/$clientId'
+      path: '/$clientId'
+      fullPath: '/partners/$partnerId/clients/$clientId'
+      preLoaderRoute: typeof PublicPartnersPartnerIdClientsClientIdRouteImport
+      parentRoute: typeof PublicPartnersPartnerIdClientsRoute
     }
     '/_public/projects/$projectId/analytics/$websiteId': {
       id: '/_public/projects/$projectId/analytics/$websiteId'
@@ -8547,6 +8799,8 @@ interface AuthRouteChildren {
   AuthEducationJoinRoute: typeof AuthEducationJoinRoute
   AuthOauth2ConsentRoute: typeof AuthOauth2ConsentRoute
   AuthOauth2DeviceRoute: typeof AuthOauth2DeviceRoute
+  AuthPartnerSignInRoute: typeof AuthPartnerSignInRoute
+  AuthPartnerSignUpRoute: typeof AuthPartnerSignUpRoute
   AuthAgentMcpCallbackRoute: typeof AuthAgentMcpCallbackRoute
   AuthAssistantMcpCallbackRoute: typeof AuthAssistantMcpCallbackRoute
   AuthAuthOauth2FailureRoute: typeof AuthAuthOauth2FailureRoute
@@ -8565,6 +8819,8 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthEducationJoinRoute: AuthEducationJoinRoute,
   AuthOauth2ConsentRoute: AuthOauth2ConsentRoute,
   AuthOauth2DeviceRoute: AuthOauth2DeviceRoute,
+  AuthPartnerSignInRoute: AuthPartnerSignInRoute,
+  AuthPartnerSignUpRoute: AuthPartnerSignUpRoute,
   AuthAgentMcpCallbackRoute: AuthAgentMcpCallbackRoute,
   AuthAssistantMcpCallbackRoute: AuthAssistantMcpCallbackRoute,
   AuthAuthOauth2FailureRoute: AuthAuthOauth2FailureRoute,
@@ -8983,6 +9239,51 @@ const PublicOrganizationsOrgIdRouteChildren: PublicOrganizationsOrgIdRouteChildr
 const PublicOrganizationsOrgIdRouteWithChildren =
   PublicOrganizationsOrgIdRoute._addFileChildren(
     PublicOrganizationsOrgIdRouteChildren,
+  )
+
+interface PublicPartnersPartnerIdClientsRouteChildren {
+  PublicPartnersPartnerIdClientsClientIdRoute: typeof PublicPartnersPartnerIdClientsClientIdRoute
+  PublicPartnersPartnerIdClientsIndexRoute: typeof PublicPartnersPartnerIdClientsIndexRoute
+}
+
+const PublicPartnersPartnerIdClientsRouteChildren: PublicPartnersPartnerIdClientsRouteChildren =
+  {
+    PublicPartnersPartnerIdClientsClientIdRoute:
+      PublicPartnersPartnerIdClientsClientIdRoute,
+    PublicPartnersPartnerIdClientsIndexRoute:
+      PublicPartnersPartnerIdClientsIndexRoute,
+  }
+
+const PublicPartnersPartnerIdClientsRouteWithChildren =
+  PublicPartnersPartnerIdClientsRoute._addFileChildren(
+    PublicPartnersPartnerIdClientsRouteChildren,
+  )
+
+interface PublicPartnersPartnerIdRouteChildren {
+  PublicPartnersPartnerIdBillingRoute: typeof PublicPartnersPartnerIdBillingRoute
+  PublicPartnersPartnerIdClientsRoute: typeof PublicPartnersPartnerIdClientsRouteWithChildren
+  PublicPartnersPartnerIdDomainsRoute: typeof PublicPartnersPartnerIdDomainsRoute
+  PublicPartnersPartnerIdOnboardRoute: typeof PublicPartnersPartnerIdOnboardRoute
+  PublicPartnersPartnerIdProjectsRoute: typeof PublicPartnersPartnerIdProjectsRoute
+  PublicPartnersPartnerIdSettingsRoute: typeof PublicPartnersPartnerIdSettingsRoute
+  PublicPartnersPartnerIdIndexRoute: typeof PublicPartnersPartnerIdIndexRoute
+}
+
+const PublicPartnersPartnerIdRouteChildren: PublicPartnersPartnerIdRouteChildren =
+  {
+    PublicPartnersPartnerIdBillingRoute: PublicPartnersPartnerIdBillingRoute,
+    PublicPartnersPartnerIdClientsRoute:
+      PublicPartnersPartnerIdClientsRouteWithChildren,
+    PublicPartnersPartnerIdDomainsRoute: PublicPartnersPartnerIdDomainsRoute,
+    PublicPartnersPartnerIdOnboardRoute: PublicPartnersPartnerIdOnboardRoute,
+    PublicPartnersPartnerIdProjectsRoute: PublicPartnersPartnerIdProjectsRoute,
+    PublicPartnersPartnerIdSettingsRoute: PublicPartnersPartnerIdSettingsRoute,
+    PublicPartnersPartnerIdIndexRoute: PublicPartnersPartnerIdIndexRoute,
+  }
+
+const PublicPartnersPartnerIdRouteWithChildren =
+  PublicPartnersPartnerIdRoute._addFileChildren(
+    PublicPartnersPartnerIdRouteChildren,
   )
 
 interface PublicProjectsProjectIdAnalyticsRouteChildren {
@@ -10259,6 +10560,7 @@ interface PublicRouteChildren {
   PublicCacheRoute: typeof PublicCacheRoute
   PublicCompsRoute: typeof PublicCompsRoute
   PublicInitRoute: typeof PublicInitRoute
+  PublicPartnerRoute: typeof PublicPartnerRoute
   PublicResetRoute: typeof PublicResetRoute
   PublicSalesRoute: typeof PublicSalesRoute
   PublicUpgradeRoute: typeof PublicUpgradeRoute
@@ -10274,6 +10576,7 @@ interface PublicRouteChildren {
   PublicImpersonateUserIdRoute: typeof PublicImpersonateUserIdRoute
   PublicMarketplaceAppIdRoute: typeof PublicMarketplaceAppIdRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
+  PublicPartnersPartnerIdRoute: typeof PublicPartnersPartnerIdRouteWithChildren
   PublicProjectsProjectIdRoute: typeof PublicProjectsProjectIdRouteWithChildren
   PublicImpersonateIndexRoute: typeof PublicImpersonateIndexRoute
 }
@@ -10287,6 +10590,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicCacheRoute: PublicCacheRoute,
   PublicCompsRoute: PublicCompsRoute,
   PublicInitRoute: PublicInitRoute,
+  PublicPartnerRoute: PublicPartnerRoute,
   PublicResetRoute: PublicResetRoute,
   PublicSalesRoute: PublicSalesRoute,
   PublicUpgradeRoute: PublicUpgradeRoute,
@@ -10303,6 +10607,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicImpersonateUserIdRoute: PublicImpersonateUserIdRoute,
   PublicMarketplaceAppIdRoute: PublicMarketplaceAppIdRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,
+  PublicPartnersPartnerIdRoute: PublicPartnersPartnerIdRouteWithChildren,
   PublicProjectsProjectIdRoute: PublicProjectsProjectIdRouteWithChildren,
   PublicImpersonateIndexRoute: PublicImpersonateIndexRoute,
 }

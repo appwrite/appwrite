@@ -68,7 +68,7 @@ export function PaymentMethodDropdown({
                   : undefined}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[9999]">
               {completedPaymentMethods.map((method) => (
                 <SelectItem key={method.$id} value={method.$id}>
                   {renderPaymentMethodOption(method)}

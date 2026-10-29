@@ -709,6 +709,42 @@ html:not([lang='en']):not([lang='he']) {
   }
 
   /*
+   * Fullscreen loader: pin tokens on the overlay so it cannot inherit light
+   * :root values for a frame before html.dark exists.
+   */
+  [data-fullscreen-loader] {
+    --background: #ffffff;
+    --foreground: oklch(0.141 0.005 285.823);
+    --muted-foreground: oklch(0.552 0.016 285.938);
+    --border: oklch(0.93 0.0035 286.32);
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  html:is(.dark, .crazy, .stealth, .premium, .high-contrast) [data-fullscreen-loader] {
+    --background: #19191c;
+    --foreground: oklch(0.985 0 0);
+    --muted-foreground: oklch(0.705 0.015 286.067);
+    --border: oklch(0.252 0.005 286.32);
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    html:not(.light):not(.dark):not(.crazy):not(.stealth):not(.premium):not(
+        .high-contrast
+      ):not(.barbie):not(.nineties):not(.legacy)
+      [data-fullscreen-loader] {
+      --background: #19191c;
+      --foreground: oklch(0.985 0 0);
+      --muted-foreground: oklch(0.705 0.015 286.067);
+      --border: oklch(0.252 0.005 286.32);
+      background-color: var(--background);
+      color: var(--foreground);
+    }
+  }
+
+  /*
    * 90s theme: serif body, layered “early web” motifs on <html>, transparent body so texture shows.
    */
   html.nineties {

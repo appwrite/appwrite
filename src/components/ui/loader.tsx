@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
 
 import { getStatusIcon, getStatusPresentation } from '@/lib/cloud-status-copy'
-import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
-import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
+import { LoaderBrandMark } from '@/components/global/shared/LoaderBrandMark'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -12,23 +11,6 @@ import { cn } from '@/lib/utils'
 const SPINNER_DELAY_MS = 1500
 /** Exit fade duration (seconds). Keep short + easeOut so reveal feels instant. */
 const EXIT_DURATION_S = 0.22
-
-function LoaderBrandMark() {
-  return (
-    <div
-      className={cn(
-        'inline-flex items-end gap-1.5 animate-in fade-in duration-500 motion-reduce:animate-none',
-        FORCE_LTR_CLASS,
-      )}
-      dir="ltr"
-    >
-      <AppwriteWordmark className="h-8" />
-      <span className="pb-0.5 text-xs font-extralight tracking-tight text-muted-foreground">
-        / 2.0
-      </span>
-    </div>
-  )
-}
 
 export type FullscreenLoaderStatusBanner = {
   /** Main title (inherits container text color). */
@@ -49,12 +31,14 @@ interface FullscreenLoaderProps {
   onComplete?: () => void
   /** When set, shows a compact notice under the logo that we're experiencing issues (e.g. from status API). */
   statusBanner?: FullscreenLoaderStatusBanner
+  brand?: 'console' | 'partners'
 }
 
 export function FullscreenLoader({
   isVisible,
   onComplete,
   statusBanner,
+  brand = 'console',
 }: FullscreenLoaderProps) {
   const t = useT()
   const hasStatusBanner = Boolean(statusBanner)
@@ -146,7 +130,7 @@ export function FullscreenLoader({
               )
             })()}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <LoaderBrandMark />
+            <LoaderBrandMark brand={brand} />
           </div>
           {showSpinner && !hasStatusBanner ? (
             <div

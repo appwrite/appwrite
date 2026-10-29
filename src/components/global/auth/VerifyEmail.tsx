@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Link } from '@tanstack/react-router'
 import { performConsoleSignOut } from '@/lib/react-query/hooks/auth'
+import { AuthCover } from '@/components/global/auth/AuthCover'
+import { resolveAuthAudience } from '@/lib/auth-audience'
 import { useT } from '@/lib/i18n/translate'
 
 interface VerifyEmailProps {
@@ -27,6 +29,7 @@ export function VerifyEmail({
   preview = false,
 }: VerifyEmailProps) {
   const t = useT()
+  const audience = resolveAuthAudience()
   const queryClient = useQueryClient()
   const [isSigningOutToSignIn, setIsSigningOutToSignIn] = useState(false)
 
@@ -113,15 +116,7 @@ export function VerifyEmail({
             )}
           </div>
         </div>
-        <div className="hidden bg-background md:block min-h-[600px]">
-          <img
-            alt="Image"
-            className="h-full w-full object-cover"
-            height="600"
-            src="/cover.avif"
-            width="600"
-          />
-        </div>
+        <AuthCover audience={audience} />
       </div>
     </Card>
   )

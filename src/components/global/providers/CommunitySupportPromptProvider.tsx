@@ -8,6 +8,7 @@ import { useCommunitySupportPrompt } from '@/lib/react-query/hooks/community-sup
 import type { ConsoleAccountCache } from '@/lib/react-query/hooks/auth'
 import { isConsoleImpersonationActive } from '@/lib/console-impersonation'
 import { setDebugOverride, useDebugOverrides } from '@/lib/debug-overrides'
+import { isPartnerAuthPath } from '@/lib/auth-audience'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 import { useAnalytics } from '@/hooks/use-analytics'
@@ -24,7 +25,8 @@ function isAuthPage(pathname: string): boolean {
     pathname === '/join' ||
     pathname === '/mfa' ||
     pathname === '/verify-email' ||
-    pathname === '/auth/magic-url'
+    pathname === '/auth/magic-url' ||
+    isPartnerAuthPath(pathname)
   )
 }
 

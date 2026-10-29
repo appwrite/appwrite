@@ -19,6 +19,8 @@ export interface Organization {
   status?: string
   /** Cloud billing: scheduled downgrade date or marker. */
   billingPlanDowngrade?: unknown
+  billingPlan?: string
+  managerType?: string
 }
 
 export interface Team {

@@ -9,19 +9,23 @@ import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
-import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import {
   ensureConsoleAccountQueryData,
   refreshConsoleAccountAfterAuth,
 } from '@/lib/react-query/hooks/auth'
 import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import {
+  finishPostAuthNavigation,
   isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
+import {
+  PARTNER_AUTH_ENTRY_PATH,
+  resolveAuthAudience,
+} from '@/lib/auth-audience'
 import { useRouter } from '@tanstack/react-router'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 
@@ -98,7 +102,10 @@ export const Route = createFileRoute('/_auth/verify-email')({
           replace: true,
         })
       }
-      throw redirect({ to: CONSOLE_ENTRY_PATH, replace: true })
+      throw redirect({
+        to: resolveAuthAudience() === 'partner' ? PARTNER_AUTH_ENTRY_PATH : CONSOLE_ENTRY_PATH,
+        replace: true,
+      })
     }
   },
   head: () => ({ meta: [{ title: pageTitle('Verify your email') }] }),
@@ -124,22 +131,8 @@ function VerifyEmailPage() {
         const account = await refreshConsoleAccountAfterAuth(queryClient)
         await prefetchPostAuthDestination(queryClient, account, search.redirect)
         await router.invalidate()
-
-        // If we're headed to a specific destination (e.g. an OAuth2
-        // consent/device flow), go straight there without provisioning a
-        // personal org/project - provisioning throws on single-tenant
-        // profiles and would otherwise drop the pending authorization.
-        const targetRedirect = resolvePostAuthRedirect(search.redirect)
-        if (targetRedirect) {
-          navigate(toRedirectNavigateOptions(targetRedirect))
-          return
-        }
-
-        const orgId = await resolvePostAuthOrganizationId(account)
-        navigate({
-          to: '/organizations/$orgId',
-          params: { orgId },
-          replace: true,
+        await finishPostAuthNavigation(navigate, account, queryClient, {
+          redirect: search.redirect,
         })
       } catch {
         navigate({ to: CONSOLE_ENTRY_PATH })

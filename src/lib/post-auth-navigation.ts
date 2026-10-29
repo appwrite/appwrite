@@ -11,6 +11,14 @@ import {
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
+import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
+import {
+  getAuthEmailSearch,
+  getAuthSignInPath,
+  resolveAuthAudience,
+  type AuthAudience,
+} from '@/lib/auth-audience'
+import { organizationHomeLink } from '@/lib/partners'
 
 /**
  * Cloud (and any profile with userVerification) requires a verified console
@@ -35,6 +43,8 @@ const AUTH_PAGE_PATHS = [
   '/mfa',
   '/verify-email',
   '/auth/magic-url',
+  '/partner/sign-in',
+  '/partner/sign-up',
 ] as const
 
 export function isValidRelativeRedirect(value: string): boolean {
@@ -167,11 +177,65 @@ export async function prefetchPostAuthDestination(
     }
   }
 
+  if (resolveAuthAudience() === 'partner') {
+    await queryClient.ensureQueryData(organizationsQueryOptions()).catch(() => {})
+    return
+  }
+
   try {
     await resolveAndPrefetchDefaultOrganization(queryClient, account)
   } catch (error) {
     if (!isHttpNotFoundError(error)) return
     const orgId = await resolvePostAuthOrganizationId()
     await prefetchOrganizationOverviewSafe(queryClient, orgId)
+  }
+}
+
+type PostAuthNavigate = (opts: {
+  to: string
+  params?: Record<string, string>
+  search?: Record<string, string>
+  href?: string
+  reloadDocument?: boolean
+  replace?: boolean
+}) => unknown
+
+export async function resolvePostAuthHomeTarget(
+  account: Models.User,
+  queryClient: QueryClient,
+  options?: { redirect?: string; audience?: AuthAudience },
+) {
+  const targetRedirect = resolvePostAuthRedirect(options?.redirect)
+  if (targetRedirect) {
+    return { ...toRedirectNavigateOptions(targetRedirect), replace: true as const }
+  }
+
+  const audience = options?.audience ?? resolveAuthAudience()
+  const orgId = await resolvePostAuthOrganizationId(account, queryClient, {
+    audience,
+  })
+  return {
+    ...organizationHomeLink(orgId, audience === 'partner'),
+    replace: true as const,
+  }
+}
+
+/**
+ * Send the user to their console or partner home after a successful auth step.
+ */
+export async function finishPostAuthNavigation(
+  navigate: PostAuthNavigate,
+  account: Models.User,
+  queryClient: QueryClient,
+  options?: { redirect?: string; audience?: AuthAudience },
+): Promise<void> {
+  navigate(await resolvePostAuthHomeTarget(account, queryClient, options))
+}
+
+export function authSignInNavigateTarget(audience?: AuthAudience) {
+  const resolved = audience ?? resolveAuthAudience()
+  return {
+    to: getAuthSignInPath(resolved),
+    search: getAuthEmailSearch(resolved),
   }
 }

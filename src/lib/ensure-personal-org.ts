@@ -38,6 +38,12 @@ import {
 } from '@/lib/react-query/hooks/auth'
 import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
+import {
+  isDeveloperConsoleOrganization,
+  isPartnerOrganization,
+  type PartnerAwareOrganization,
+} from '@/lib/partners'
+import type { AuthAudience } from '@/lib/auth-audience'
 
 const PERSONAL_ORG_NAME = 'Personal Projects'
 const FIRST_PROJECT_NAME = 'My first project'
@@ -60,18 +66,25 @@ function provisioningAccountKey(accountId: string): string {
   return JSON.stringify([getApiEndpoint(), accountId])
 }
 
-async function organizationIsAccessible(
+async function fetchAccessibleOrganization(
   orgId: string,
   queryClient?: QueryClient,
-): Promise<boolean> {
+): Promise<PartnerAwareOrganization | null> {
   try {
     const org = queryClient
       ? await queryClient.ensureQueryData(organizationQueryOptions(orgId))
       : await fetchOrganizationById(orgId)
-    return !!org
+    return (org as PartnerAwareOrganization) ?? null
   } catch (error) {
-    if (isHttpNotFoundError(error)) return false
+    if (isHttpNotFoundError(error)) return null
     throw error
+  }
+}
+
+export class PartnerOrganizationRequiredError extends Error {
+  constructor() {
+    super('No partner organization found for this account')
+    this.name = 'PartnerOrganizationRequiredError'
   }
 }
 
@@ -88,7 +101,9 @@ async function organizationIsAccessible(
 export async function resolvePostAuthOrganizationId(
   account?: Awaited<ReturnType<typeof fetchConsoleAccount>>,
   queryClient?: QueryClient,
+  options?: { audience?: AuthAudience },
 ): Promise<string> {
+  const audience = options?.audience ?? 'console'
   const resolved = account ?? (await fetchConsoleAccount())
   const prefs = (resolved.prefs || {}) as Record<string, unknown>
   const fromPrefs = prefs[USER_PREFS_KEY_ORGANIZATION]
@@ -98,27 +113,56 @@ export async function resolvePostAuthOrganizationId(
       : undefined
 
   if (preferredId) {
-    if (await organizationIsAccessible(preferredId, queryClient)) {
-      prohibitedAccounts.delete(provisioningAccountKey(resolved.$id))
-      return preferredId
-    }
-
-    const restPrefs = { ...prefs }
-    delete restPrefs[USER_PREFS_KEY_ORGANIZATION]
-    const updatedAccount = await updateAccountPrefs(restPrefs)
-    if (
-      updatedAccount &&
-      typeof updatedAccount === 'object' &&
-      '$id' in updatedAccount
-    ) {
-      setConsoleAccountCache(
-        updatedAccount as Models.User,
-        getConsoleAccountQueryRevision(),
-      )
+    const preferredOrg = await fetchAccessibleOrganization(
+      preferredId,
+      queryClient,
+    )
+    if (preferredOrg) {
+      const matchesAudience =
+        audience === 'partner'
+          ? isPartnerOrganization(preferredOrg)
+          : !isPartnerOrganization(preferredOrg)
+      if (matchesAudience) {
+        prohibitedAccounts.delete(provisioningAccountKey(resolved.$id))
+        return preferredId
+      }
+    } else {
+      const restPrefs = { ...prefs }
+      delete restPrefs[USER_PREFS_KEY_ORGANIZATION]
+      const updatedAccount = await updateAccountPrefs(restPrefs)
+      if (
+        updatedAccount &&
+        typeof updatedAccount === 'object' &&
+        '$id' in updatedAccount
+      ) {
+        setConsoleAccountCache(
+          updatedAccount as Models.User,
+          getConsoleAccountQueryRevision(),
+        )
+      }
     }
   }
 
+  if (audience === 'partner') {
+    return await resolvePartnerOrganizationId(queryClient)
+  }
+
   return await ensurePersonalOrgAndFirstProject(queryClient)
+}
+
+async function resolvePartnerOrganizationId(
+  queryClient?: QueryClient,
+): Promise<string> {
+  const response = queryClient
+    ? await queryClient.ensureQueryData(organizationsQueryOptions())
+    : await fetchOrganizations()
+  const partnerOrg = (response.teams || []).find((org) =>
+    isPartnerOrganization(org as PartnerAwareOrganization),
+  )
+  if (!partnerOrg?.$id) {
+    throw new PartnerOrganizationRequiredError()
+  }
+  return partnerOrg.$id
 }
 
 /**
@@ -169,7 +213,9 @@ async function provisionPersonalOrgAndFirstProject(
         })
       : await queryClient.ensureQueryData(organizationsQueryOptions())
     : await fetchOrganizations()
-  const orgs = response.teams || []
+  const orgs = (response.teams || []).filter((org) =>
+    isDeveloperConsoleOrganization(org as PartnerAwareOrganization),
+  )
 
   if (orgs.length === 0) {
     if (prohibited) throw prohibited
@@ -193,8 +239,8 @@ async function provisionPersonalOrgAndFirstProject(
     // loader must not read it as "no organizations" and create another.
     queryClient?.setQueryData(organizationsQueryOptions().queryKey, {
       ...response,
-      teams: [org],
-      total: 1,
+      teams: [...(response.teams || []), org],
+      total: (response.total || 0) + 1,
     })
 
     rememberAccount(
@@ -213,9 +259,15 @@ async function provisionPersonalOrgAndFirstProject(
   }
 
   prohibitedAccounts.delete(accountKey)
-  const orgId = (prefs[USER_PREFS_KEY_ORGANIZATION] as string) || orgs[0].$id
+  const preferredFromPrefs = prefs[USER_PREFS_KEY_ORGANIZATION]
+  const preferredDeveloperId =
+    typeof preferredFromPrefs === 'string' &&
+    orgs.some((org) => org.$id === preferredFromPrefs)
+      ? preferredFromPrefs
+      : undefined
+  const orgId = preferredDeveloperId || orgs[0].$id
 
-  if (!prefs[USER_PREFS_KEY_ORGANIZATION]) {
+  if (!preferredDeveloperId) {
     rememberAccount(
       await updateAccountPrefs({
         ...prefs,

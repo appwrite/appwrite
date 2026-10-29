@@ -43,6 +43,7 @@ interface CreateMarketplaceAppProps {
   onOpenChange: (open: boolean) => void
   onCreate: (input: CreateMarketplaceAppInput) => void | Promise<void>
   isSubmitting?: boolean
+  organizationId?: string
 }
 
 export function CreateMarketplaceApp({
@@ -50,9 +51,11 @@ export function CreateMarketplaceApp({
   onOpenChange,
   onCreate,
   isSubmitting = false,
+  organizationId,
 }: CreateMarketplaceAppProps) {
   const t = useT()
-  const { orgId } = useParams({ strict: false })
+  const { orgId: orgIdFromParams } = useParams({ strict: false })
+  const orgId = organizationId ?? orgIdFromParams
   const { organizations } = useOrganizations()
   const currentTeamName =
     organizations.find((org) => org.$id === orgId)?.name ?? orgId ?? ''

@@ -3,6 +3,7 @@ import {
   MARKETING_PAGE_PATHS,
   normalizeMarketingPath,
 } from '@/lib/marketing/marketing-page-paths'
+import { isPartnerConsolePath } from '@/lib/partners'
 
 /**
  * Path-based marketing page detection for client/runtime code.
@@ -11,6 +12,10 @@ import {
  */
 export function matchesMarketingPagePath(pathname: string): boolean {
   const normalized = normalizeMarketingPath(pathname)
+
+  if (isPartnerConsolePath(normalized)) {
+    return false
+  }
 
   if (normalized === '/docs' || normalized.startsWith('/docs/')) {
     return true

@@ -15,6 +15,12 @@ import {
 import { Input } from '@/components/ui/input'
 import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
+import { AuthCover } from '@/components/global/auth/AuthCover'
+import {
+  getAuthEmailSearch,
+  getAuthSignInPath,
+  resolveAuthAudience,
+} from '@/lib/auth-audience'
 import { useT, type Translator } from '@/lib/i18n/translate'
 
 const createResetPasswordSchema = (t: Translator) =>
@@ -38,6 +44,8 @@ interface ResetProps {
 
 export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
   const t = useT()
+  const audience = resolveAuthAudience()
+  const signInPath = getAuthSignInPath(audience)
   const form = useForm<ResetPasswordValues>({
     resolver: zodResolver(createResetPasswordSchema(t)),
     defaultValues: {
@@ -66,20 +74,12 @@ export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
                   )}
                 </p>
               </div>
-              <Link to="/sign-in">
+              <Link to={signInPath} search={getAuthEmailSearch(audience)}>
                 <Button className="w-full">{t('Sign in')}</Button>
               </Link>
             </div>
           </div>
-          <div className="hidden bg-background md:block min-h-[600px]">
-            <img
-              alt="Image"
-              className="h-full w-full object-cover"
-              height="600"
-              src="/cover.avif"
-              width="600"
-            />
-          </div>
+          <AuthCover audience={audience} />
         </div>
       </Card>
     )
@@ -139,22 +139,18 @@ export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
 
               <p className="text-center text-sm text-muted-foreground">
                 {t('Remember your password?')}{' '}
-                <Link to="/sign-in" className="link-neutral">
+                <Link
+                  to={signInPath}
+                  search={getAuthEmailSearch(audience)}
+                  className="link-neutral"
+                >
                   {t('Sign in')}
                 </Link>
               </p>
             </form>
           </Form>
         </div>
-        <div className="hidden bg-background md:block min-h-[600px]">
-          <img
-            alt="Image"
-            className="h-full w-full object-cover"
-            height="600"
-            src="/cover.avif"
-            width="600"
-          />
-        </div>
+        <AuthCover audience={audience} />
       </div>
     </Card>
   )

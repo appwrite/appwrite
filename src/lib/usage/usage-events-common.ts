@@ -783,6 +783,7 @@ export async function fetchUsageMetricsChartSeriesByMetric(
         to,
         resolvedInterval,
         metric,
+        { seed: projectId },
       )
       const previousChartPoints =
         comparisonMode === 'first_half'
@@ -792,7 +793,7 @@ export async function fetchUsageMetricsChartSeriesByMetric(
               previousTo,
               resolvedInterval,
               metric,
-              { quieter: true },
+              { quieter: true, seed: projectId },
             )
       result.set(metric, { chartPoints, previousChartPoints })
     }
@@ -1198,10 +1199,11 @@ export function fillGaugeChartPointsGaps(
   })
 }
 
-function hashScreenshotMetric(metric: string): number {
+function hashScreenshotMetric(metric: string, seed = ''): number {
+  const input = seed ? `${seed}:${metric}` : metric
   let hash = 0
-  for (let i = 0; i < metric.length; i++) {
-    hash = (hash * 31 + metric.charCodeAt(i)) | 0
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash * 31 + input.charCodeAt(i)) | 0
   }
   return Math.abs(hash)
 }
@@ -1213,7 +1215,6 @@ function getScreenshotMetricScale(metric: string): {
 } {
   const m = metric.toLowerCase()
   if (
-    m.includes('network') ||
     m.includes('bandwidth') ||
     m.includes('inbound') ||
     m.includes('outbound')
@@ -1259,7 +1260,7 @@ export function buildScreenshotModeChartPoints(
   to: Date,
   interval: UsageChartInterval,
   metric: string,
-  options?: { quieter?: boolean; gauge?: boolean },
+  options?: { quieter?: boolean; gauge?: boolean; seed?: string },
 ): UsageChartPoint[] {
   const skeleton = options?.gauge
     ? fillGaugeChartPointsGaps(new Map(), from, to, interval)
@@ -1268,7 +1269,7 @@ export function buildScreenshotModeChartPoints(
   if (skeleton.length === 0) return skeleton
 
   const scale = getScreenshotMetricScale(metric)
-  const phase = (hashScreenshotMetric(metric) % 1000) / 100
+  const phase = (hashScreenshotMetric(metric, options?.seed) % 1000) / 100
   const quieter = options?.quieter ? 0.72 : 1
   const base = scale.base * quieter
   const amplitude = scale.amplitude * quieter
@@ -1424,6 +1425,7 @@ export async function fetchProjectUsageChartOverview(
       to,
       resolvedInterval,
       metricKey,
+      { seed: projectId },
     )
     const previousChartPoints =
       comparisonMode === 'first_half'
@@ -1433,7 +1435,7 @@ export async function fetchProjectUsageChartOverview(
             previousTo,
             resolvedInterval,
             metricKey,
-            { quieter: true },
+            { quieter: true, seed: projectId },
           )
     return {
       changePercent: computeChangePercent(

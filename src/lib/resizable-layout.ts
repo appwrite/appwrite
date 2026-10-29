@@ -32,6 +32,19 @@ export const AI_CHAT_CONVERSATIONS_SIDEBAR_MAX_WIDTH_PX = 420
 export const AI_CHAT_CONVERSATIONS_SIDEBAR_DEFAULT_WIDTH_PX = 288
 export const AI_CHAT_MAIN_MIN_WIDTH_PX = 360
 
+/** Partner workspace clients list (`ClientsResizableLayout`). */
+export const PARTNER_CLIENTS_COLUMN_MIN_WIDTH_PX = 200
+export const PARTNER_CLIENTS_COLUMN_MAX_WIDTH_PX = 420
+export const PARTNER_CLIENTS_COLUMN_DEFAULT_WIDTH_PX = 280
+export const PARTNER_CLIENTS_COLUMN_COLLAPSED_WIDTH_PX = 48
+export const PARTNER_CLIENTS_MAIN_MIN_WIDTH_PX = 360
+
+/** Partner workspace client section menu (Projects, Members, …). */
+export const PARTNER_CLIENT_NAV_COLUMN_MIN_WIDTH_PX = 220
+export const PARTNER_CLIENT_NAV_COLUMN_MAX_WIDTH_PX = 420
+export const PARTNER_CLIENT_NAV_COLUMN_DEFAULT_WIDTH_PX = 280
+export const PARTNER_CLIENT_DETAIL_MIN_WIDTH_PX = 320
+
 const LEGACY_SIDEBAR_PERCENT_MAX = 60
 
 /** Use when the group has not been measured yet so % ↔ px math stays consistent. */
@@ -207,6 +220,20 @@ export function clampAIChatConversationsSidebarWidthPx(px: number): number {
   return Math.min(
     AI_CHAT_CONVERSATIONS_SIDEBAR_MAX_WIDTH_PX,
     Math.max(AI_CHAT_CONVERSATIONS_SIDEBAR_MIN_WIDTH_PX, Math.round(px)),
+  )
+}
+
+export function clampPartnerClientsColumnWidthPx(px: number): number {
+  return Math.min(
+    PARTNER_CLIENTS_COLUMN_MAX_WIDTH_PX,
+    Math.max(PARTNER_CLIENTS_COLUMN_MIN_WIDTH_PX, Math.round(px)),
+  )
+}
+
+export function clampPartnerClientNavColumnWidthPx(px: number): number {
+  return Math.min(
+    PARTNER_CLIENT_NAV_COLUMN_MAX_WIDTH_PX,
+    Math.max(PARTNER_CLIENT_NAV_COLUMN_MIN_WIDTH_PX, Math.round(px)),
   )
 }
 

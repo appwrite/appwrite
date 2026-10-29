@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { cn } from '@/lib/utils'
@@ -54,7 +54,11 @@ import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/P
 import { analyticsAttrs, type AnalyticsActionId } from '@/lib/analytics-actions'
 import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
-import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import {
+  organizationsQueryOptions,
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
 import {
   canShowConnectSection,
   canCreateProject,
@@ -98,6 +102,13 @@ import { useAgentChat } from '@/components/global/providers/AgentChat'
 import { isAgentPagePath } from '@/lib/assistant/agent-paths'
 import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
+import {
+  isPartnerConsolePath,
+  isPartnerPlanId,
+  organizationHomeLink,
+  partitionConsoleOrganizations,
+  type PartnerAwareOrganization,
+} from '@/lib/partners'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { ImpersonateConsoleUserDialog } from '@/components/global/shared/ImpersonateConsoleUserDialog'
@@ -444,7 +455,9 @@ export function ConsoleHeader({
 
   // Fetch current project to get teamId when in project context
   const { project } = useProject(projectId)
-  const orgIdFromRoute = params?.orgId as string | undefined
+  const orgIdFromRoute = (params?.orgId ?? params?.partnerId) as
+    | string
+    | undefined
   const orgId = projectId
     ? (project?.teamId ?? undefined)
     : (orgIdFromRoute ??
@@ -510,6 +523,7 @@ export function ConsoleHeader({
   // Fetch organization plan to check if upgrade button should be shown
   const { plan: organizationPlan, isFetched: isPlanFetched } =
     useOrganizationPlan(orgId)
+  const isPartnerOrg = isPartnerPlanId(organizationPlan?.$id)
   const selfService = organizationPlan?.selfService !== false
 
   const copyToClipboard = (text: string, field: string) => {
@@ -543,7 +557,18 @@ export function ConsoleHeader({
     headerAccount?.mfa === true ||
     headerAccount?.twoFactorAuthenticatorEnabled === true
 
-  const hasSidebar = !isOrgOverview
+  const isPartnerConsole = isPartnerConsolePath(location.pathname)
+  const { data: organizationsData } = useQuery({
+    ...organizationsQueryOptions(),
+    enabled: isPartnerConsole && !preLaunch,
+  })
+  const firstDeveloperOrg = isPartnerConsole
+    ? partitionConsoleOrganizations(
+        (organizationsData?.teams ?? []) as PartnerAwareOrganization[],
+      ).developersPlatform[0]
+    : undefined
+  const showBackToCloud = isPartnerConsole && !showMarketingNav
+  const hasSidebar = !isOrgOverview && !isPartnerConsole
   const isAccountScope = location.pathname.startsWith('/account')
   const isAgentScope = isAgentPagePath(location.pathname)
   const showBackToOrganization =
@@ -604,6 +629,7 @@ export function ConsoleHeader({
     orgId &&
     isPlanFetched &&
     selfService &&
+    !isPartnerOrg &&
     (organizationPlan?.price ?? 0) === 0
   const showChangelogBadge = useChangelogNavBadge()
   const showOrgDomainsLink = Boolean(
@@ -730,10 +756,10 @@ export function ConsoleHeader({
                 : showGuestHeader && features.init
                   ? ({ to: '/init' } as const)
                   : linkOrgId
-                    ? ({
-                        to: '/organizations/$orgId',
-                        params: { orgId: linkOrgId },
-                      } as const)
+                    ? organizationHomeLink(
+                        linkOrgId,
+                        isPartnerOrg && orgId === linkOrgId,
+                      )
                     : ({ to: '/' } as const)
             const logoLink = (childClassName?: string) => (
               <Link
@@ -811,6 +837,30 @@ export function ConsoleHeader({
               </>
             )
           })()}
+
+          {showBackToCloud ? (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="inline-flex h-9 shrink-0 gap-1.5 px-2.5 text-[13px]"
+            >
+              {firstDeveloperOrg ? (
+                <Link
+                  to="/organizations/$orgId"
+                  params={{ orgId: firstDeveloperOrg.$id }}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {headerCopy.actions.backToCloud}
+                </Link>
+              ) : (
+                <Link to="/">
+                  <ArrowLeft className="h-4 w-4" />
+                  {headerCopy.actions.backToCloud}
+                </Link>
+              )}
+            </Button>
+          ) : null}
 
           {/* Account / agent scope quick return */}
           {showBackToOrganization && orgId ? (
@@ -931,14 +981,21 @@ export function ConsoleHeader({
                                 | string
                                 | undefined)
                             if (orgId) {
-                              navigate({
-                                to: '/organizations/$orgId',
-                                params: { orgId },
-                                search: { create: 'project' } as Record<
-                                  string,
-                                  unknown
-                                >,
-                              })
+                              if (isPartnerOrg && orgIdFromRoute) {
+                                navigate({
+                                  to: '/partners/$partnerId',
+                                  params: { partnerId: orgIdFromRoute },
+                                })
+                              } else {
+                                navigate({
+                                  to: '/organizations/$orgId',
+                                  params: { orgId },
+                                  search: { create: 'project' } as Record<
+                                    string,
+                                    unknown
+                                  >,
+                                })
+                              }
                             }
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
@@ -1658,15 +1715,12 @@ export function ConsoleHeader({
                       </DropdownMenuItem>
 
                       <DropdownMenuItem asChild>
-                        <Link
-                          {...(orgId
-                            ? {
-                                to: '/organizations/$orgId',
-                                params: { orgId },
-                              }
-                            : { to: '/' })}
-                          className={ACCOUNT_MENU_ITEM_CLASS}
-                        >
+                          <Link
+                            {...(orgId
+                              ? organizationHomeLink(orgId, isPartnerOrg)
+                              : { to: '/' })}
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                          >
                           <FolderOpen className="h-4 w-4" />
                           <span>{headerCopy.accountMenu.projects}</span>
                         </Link>
@@ -1812,12 +1866,16 @@ export function ConsoleHeader({
                       {accountMenuLinks.includes('console') && (
                         <DropdownMenuItem asChild>
                           <Link
-                            {...(orgId
-                              ? {
-                                  to: '/organizations/$orgId',
-                                  params: { orgId },
-                                }
-                              : { to: '/' })}
+                            {...(isPartnerConsole
+                              ? firstDeveloperOrg
+                                ? {
+                                    to: '/organizations/$orgId' as const,
+                                    params: { orgId: firstDeveloperOrg.$id },
+                                  }
+                                : { to: '/' as const }
+                              : orgId
+                                ? organizationHomeLink(orgId, isPartnerOrg)
+                                : { to: '/' as const })}
                             className={ACCOUNT_MENU_ITEM_CLASS}
                             {...analyticsAttrs('header-console')}
                           >

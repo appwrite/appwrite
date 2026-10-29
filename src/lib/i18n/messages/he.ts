@@ -31,6 +31,7 @@ export const heCatalog: EnCatalog = {
         signUp: 'הירשמו',
         signOut: 'התנתקות',
         backToOrganization: 'חזרה לארגון',
+        backToCloud: 'חזרה ל-Cloud',
       },
       createMenu: {
         ...enCatalog.app.header.createMenu,

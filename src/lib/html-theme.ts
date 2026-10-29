@@ -23,6 +23,36 @@ export const HTML_THEME_CLASSES = [
   'legacy',
 ] as const
 
+const HTML_THEME_CLASS_LIST = [...HTML_THEME_CLASSES, 'system', 'classic'] as const
+
+/** Apply stored next-themes class to `<html>` (client-only; no-op during SSR). */
+function applyStoredHtmlTheme(): void {
+  if (typeof document === 'undefined') return
+
+  try {
+    let stored = localStorage.getItem('theme') || 'system'
+    if (stored === 'classic') {
+      localStorage.setItem('theme', 'dark')
+      stored = 'dark'
+    }
+    const resolved =
+      stored === 'system'
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+        : stored
+    const root = document.documentElement
+    for (const className of HTML_THEME_CLASS_LIST) {
+      root.classList.remove(className)
+    }
+    root.classList.add(resolved)
+  } catch {
+    // Private mode / blocked storage: leave :root as-is.
+  }
+}
+
+applyStoredHtmlTheme()
+
 /** Active theme class on `<html>`, or light/dark from system preference when unset. */
 export function getHtmlThemeKey(): string {
   if (typeof document === 'undefined') return 'light'

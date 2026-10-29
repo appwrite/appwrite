@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createFileRoute,
@@ -12,23 +12,27 @@ import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
+import { resolveAuthAudience, setAuthAudience } from '@/lib/auth-audience'
 import { AppwriteException } from '@appwrite.io/console'
 import { Link } from '@tanstack/react-router'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
+import {
+  finishPostAuthNavigation,
+  prefetchPostAuthDestination,
+} from '@/lib/post-auth-navigation'
 import {
   isConsoleMfaRequiredError,
   purgeConsoleAccountCaches,
   navigateToConsoleMfaAfterSession,
   refreshConsoleAccountAfterAuth,
 } from '@/lib/react-query/hooks/auth'
-import { prefetchPostAuthDestination } from '@/lib/post-auth-navigation'
 
 const searchSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
   secret: z.string().min(1, 'Secret token is required'),
+  audience: z.enum(['partner']).optional(),
 })
 
 export const Route = createFileRoute('/_public/reset')({
@@ -45,6 +49,12 @@ function ResetPage() {
   const queryClient = useQueryClient()
   const [isSuccess, setIsSuccess] = useState(false)
   const [isOpeningMfa, setIsOpeningMfa] = useState(false)
+
+  useEffect(() => {
+    if (search.audience === 'partner') {
+      setAuthAudience('partner')
+    }
+  }, [search.audience])
 
   const resetMutation = useMutation({
     mutationFn: async (data: { password: string }) => {
@@ -87,11 +97,8 @@ function ResetPage() {
         await prefetchPostAuthDestination(queryClient, account)
         await router.invalidate()
         toast.success(t('Password reset successfully'))
-        const orgId = await resolvePostAuthOrganizationId(account)
-        navigate({
-          to: '/organizations/$orgId',
-          params: { orgId },
-          replace: true,
+        await finishPostAuthNavigation(navigate, account, queryClient, {
+          audience: resolveAuthAudience(),
         })
       } catch {
         purgeConsoleAccountCaches(queryClient)

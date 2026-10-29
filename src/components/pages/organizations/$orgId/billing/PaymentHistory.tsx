@@ -15,6 +15,7 @@ import {
   mapInvoiceApiStatus,
 } from '@/lib/utils/status-badge'
 import {
+  BILLING_INVOICES_PAGE_SIZE,
   useOrganizationInvoices,
   organizationBillingInvoicePresenceQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -28,7 +29,7 @@ import { confirmPayment } from '@/lib/utils/stripe'
 import { useT } from '@/lib/i18n/translate'
 import { RetryPayment, type RetryPaymentInvoice } from './RetryPayment'
 
-const ITEMS_PER_PAGE = 5
+const ITEMS_PER_PAGE = BILLING_INVOICES_PAGE_SIZE
 
 /**
  * Map API Invoice model to component Invoice interface.
@@ -68,10 +69,10 @@ function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
   }
 }
 
-export function PaymentHistory() {
+export function PaymentHistory({ orgId: orgIdProp }: { orgId?: string } = {}) {
   const t = useT()
   const params = useParams({ strict: false })
-  const orgId = params.orgId as string | undefined
+  const orgId = orgIdProp ?? (params.orgId as string | undefined)
   const [requestedPage, setRequestedPage] = useState(0)
   const [displayedPage, setDisplayedPage] = useState(0)
 

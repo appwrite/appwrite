@@ -15,6 +15,7 @@ import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
 import { shouldSkipRootAccountProbe } from '@/lib/console-account-get'
 import { resolveRootGuestRedirectPathname } from '@/lib/root-guest-redirect'
 import { resolveAndPrefetchDefaultOrganization } from '@/lib/organization-overview-prefetch'
+import { isPartnerOrganization, organizationHomeLink } from '@/lib/partners'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import { searchParamsFromRouterLocation } from '@/lib/table-filters'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
@@ -22,7 +23,8 @@ import { NOINDEX_ROBOTS_META } from '@/lib/seo/indexing'
 import {
   consoleAccountQueryOptions,
   ensureConsoleAccountQueryData,
-} from '@/lib/react-query/hooks/auth'
+  organizationQueryOptions,
+} from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/')({
   // If HTML is ever served (localhost), do not index `/`.
@@ -87,9 +89,11 @@ export const Route = createFileRoute('/_public/')({
         context.queryClient,
         account,
       )
+      const org = context.queryClient.getQueryData(
+        organizationQueryOptions(orgId).queryKey,
+      )
       throw redirect({
-        to: '/organizations/$orgId',
-        params: { orgId },
+        ...organizationHomeLink(orgId, isPartnerOrganization(org)),
         replace: true,
       })
     } catch (error) {

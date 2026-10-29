@@ -20,14 +20,20 @@ import { Card } from '@/components/ui/card'
 import { ArrowLeft, Smartphone, Mail } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
 import {
+  finishPostAuthNavigation,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
-  resolvePostAuthRedirect,
-  toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
+import { AuthCover } from '@/components/global/auth/AuthCover'
+import {
+  PARTNER_AUTH_ENTRY_PATH,
+  getAuthEmailSearch,
+  getAuthSignInPath,
+  resolveAuthAudience,
+} from '@/lib/auth-audience'
+import { PartnerOrganizationRequiredError } from '@/lib/ensure-personal-org'
 import { useT } from '@/lib/i18n/translate'
 
 interface MFAChallengeProps {
@@ -113,6 +119,7 @@ export async function verifyMFAChallenge(
 
 export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
   const t = useT()
+  const audience = resolveAuthAudience()
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -262,20 +269,17 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
 
         await prefetchPostAuthDestination(queryClient, account, redirect)
         await router.invalidate()
-
-        const targetRedirect = resolvePostAuthRedirect(redirect)
-        if (targetRedirect) {
-          navigate(toRedirectNavigateOptions(targetRedirect))
-          return
-        }
-
-        const orgId = await resolvePostAuthOrganizationId(account)
-        navigate({
-          to: '/organizations/$orgId',
-          params: { orgId },
-          replace: true,
+        await finishPostAuthNavigation(navigate, account, queryClient, {
+          redirect,
         })
       } catch (error: unknown) {
+        if (error instanceof PartnerOrganizationRequiredError) {
+          toast.error(
+            t('This account is not a member of a partner organization.'),
+          )
+          navigate({ to: PARTNER_AUTH_ENTRY_PATH, replace: true })
+          return
+        }
         console.error('Post MFA navigation error:', error)
         toast.error(
           getErrorMessage(error, t('Verified but could not open the console')),
@@ -312,7 +316,10 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
     } catch {
       // Ignore errors - session might not exist
     }
-    navigate({ to: '/sign-in' })
+    navigate({
+      to: getAuthSignInPath(audience),
+      search: getAuthEmailSearch(audience),
+    })
   }
 
   const getFactorDescription = () => {
@@ -567,15 +574,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
             </form>
           </div>
         </div>
-        <div className="hidden bg-background md:block min-h-[600px]">
-          <img
-            alt="Image"
-            className="h-full w-full object-cover"
-            height="600"
-            src="/cover.avif"
-            width="600"
-          />
-        </div>
+        <AuthCover audience={audience} />
       </div>
     </Card>
   )

@@ -369,7 +369,18 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'קוד אימות בן 6 ספרות נשלח לטלפון שלכם. הזינו אותו למטה.',
   'After authorizing, return to your device.':
     'לאחר האישור, חזרו למכשיר שלכם.',
-  'Already have an account?': 'כבר יש לכם חשבון?',
+  'Are you a partner?': 'אתם שותפים?',
+  'Partner login': 'התחברות שותפים',
+  'Developer login': 'התחברות למפתחים',
+  'Looking for the developer console?': 'מחפשים את קונסולת המפתחים?',
+  'Partner sign in': 'התחברות שותפים',
+  'Partner sign up': 'הרשמת שותפים',
+  'No partner organization found': 'לא נמצא ארגון שותפים',
+  'This account is not a member of a partner organization.':
+    'חשבון זה אינו חבר בארגון שותפים.',
+  'This organization is not available here': 'הארגון הזה אינו זמין כאן',
+  'Partner organizations cannot be opened in the console. Use partner login to access them.':
+    'לא ניתן לפתוח ארגוני שותפים בקונסולה. השתמשו בהתחברות שותפים כדי לגשת אליהם.',
   'Already verified?': 'כבר אימתתם?',
   Authorize: 'אישור',
   'Authorizing…': 'מאשר…',

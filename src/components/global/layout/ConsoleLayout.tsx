@@ -57,6 +57,8 @@ interface ConsoleLayoutProps {
   /** Optional footer configuration */
   footer?: {
     expanded?: boolean
+    /** When false, omits the top border separator. Defaults to true. */
+    separator?: boolean
   }
 
   /** Whether the main content should have overflow-hidden (for views that manage their own scrolling) */
@@ -261,7 +263,12 @@ export function ConsoleLayout({
             </div>
           </div>
           {bottomPanel}
-          {showFooter && <ConsoleFooter expanded={footer?.expanded} />}
+          {showFooter && (
+            <ConsoleFooter
+              expanded={footer?.expanded}
+              separator={footer?.separator}
+            />
+          )}
         </main>
       </div>
 
