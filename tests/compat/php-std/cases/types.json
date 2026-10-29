@@ -567,7 +567,7 @@
       "expect": {
         "type": "double",
         "truthy": true,
-        "string": "0.3",
+        "string": "0.30000000000000004",
         "double": 0.30000000000000004
       }
     },

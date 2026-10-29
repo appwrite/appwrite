@@ -447,9 +447,17 @@
       "name": "strval exponent",
       "op": "string.strval",
       "args": {
+        "value": 1e+17
+      },
+      "expect": "1.0E+17"
+    },
+    {
+      "name": "strval 1e15 keeps its digits",
+      "op": "string.strval",
+      "args": {
         "value": 1000000000000000.0
       },
-      "expect": "1.0E+15"
+      "expect": "1000000000000000"
     },
     {
       "name": "strval negative zero",

@@ -2827,7 +2827,7 @@
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Cannot apply increment operator: max/min limit must be a whole number for integer attribute 'big', got 4.0E+15"
+          "expect": "Cannot apply increment operator: max/min limit must be a whole number for integer attribute 'big', got 4000000000000000.5"
         }
       ]
     },

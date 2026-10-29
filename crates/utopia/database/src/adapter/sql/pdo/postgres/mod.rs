@@ -14,7 +14,7 @@
 //!   string that is not valid UTF-8 makes the statement fail silently
 //!   (`execute()` returns `false` without running it);
 //! - fetched booleans are `"1"`/`"0"`, integers are reprinted, floats are
-//!   printed as PHP prints them (precision 14), `bytea` is unescaped, `NULL`
+//!   printed as PHP prints them (`precision` ini), `bytea` is unescaped, `NULL`
 //!   is `null`, everything else is the text the server sent;
 //! - errors are `PDOException`s with PDO's message:
 //!   `SQLSTATE[23505]: Unique violation: 7 ERROR:  ...`, the server's error
