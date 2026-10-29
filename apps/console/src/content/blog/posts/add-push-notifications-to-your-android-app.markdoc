@@ -256,7 +256,7 @@ Sign in to the app as a customer with orders, then leave the app. In the Console
 
 # How quickly notifications arrive
 
-While your app is open, a message arrives within a second. Once it's in the background, Android limits the app's network access, so the SDK wakes the app on a schedule to reconnect and post what arrived. In our tests on Android 15, background notifications arrived between 15 seconds and two minutes after the order changed. The same held after Android killed the app's process and after a reboot. Messages sent while the phone was offline arrived a few seconds after it reconnected. A force-stopped app receives nothing until it's opened again.
+While your app is open, a message arrives within a second of the function sending it. Once it's in the background, Android limits the app's network access, so the SDK wakes the app on a schedule to reconnect and post what arrived. In our tests on Android 15, background notifications arrived between 15 seconds and two minutes after the order changed. The same held after Android killed the app's process and after a reboot. Messages sent while the phone was offline arrived a few seconds after it reconnected. A force-stopped app receives nothing until it's opened again.
 
 For instant delivery in the background, turn on the SDK's foreground service while the app is on screen, for example from a settings toggle:
 
