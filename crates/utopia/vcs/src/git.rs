@@ -71,8 +71,9 @@ pub fn clone_command(
 
     Ok(Command::and(vec![
         Command::new("mkdir")?.flag("-p")?.argument(directory)?,
-        Command::new("git")?.argument("config")?.flag("--global")?.argument("init.defaultBranch")?.argument("main")?,
-        git(directory)?.argument("init")?,
+        // Set for this repository only: concurrent builds writing the global
+        // config fail on each other's lock
+        git(directory)?.option("-c", "init.defaultBranch=main")?.argument("init")?,
         git(directory)?.argument("remote")?.argument("add")?.argument("origin")?.argument(clone_url)?,
         git(directory)?.argument("config")?.argument("core.sparseCheckout")?.argument("true")?,
         Command::append_stdout(
@@ -152,4 +153,71 @@ pub(crate) fn match_glob(names: Vec<Value>, pattern: &str) -> Result<Vec<Value>>
         }
     }
     Ok(kept)
+}
+
+/// The repository path a caller-supplied file path names, normalized
+/// lexically. Rejects a path that climbs out of the checkout through `..`
+/// segments, or that reaches into `.git`, whose config and hooks the
+/// following git commands would run.
+///
+/// PHP: `Git::confinedPath()`.
+pub(crate) fn confined_path(filepath: &str) -> Result<String> {
+    let mut segments: Vec<&str> = Vec::new();
+    let replaced = filepath.replace('\\', "/");
+    for segment in replaced.split('/') {
+        match segment {
+            "" | "." => continue,
+            ".." => {
+                if segments.pop().is_none() {
+                    return Err(Error::exception(format!("File path escapes the repository: {filepath}"), 0));
+                }
+            }
+            other if other.eq_ignore_ascii_case(".git") => {
+                return Err(Error::exception(format!("File path names repository metadata: {filepath}"), 0));
+            }
+            other => segments.push(other),
+        }
+    }
+    if segments.is_empty() {
+        return Err(Error::exception(format!("File path names no file: {filepath}"), 0));
+    }
+    Ok(segments.join("/"))
+}
+
+/// Whether a path is a symbolic link (`is_link()`).
+fn is_link(path: &str) -> bool {
+    std::fs::symlink_metadata(path).map(|m| m.file_type().is_symlink()).unwrap_or(false)
+}
+
+/// Writes a file at a confined path inside a checkout. Lexical confinement
+/// is not enough once the checkout itself carries symlinks: a linked
+/// directory or file would carry the write outside. So each missing
+/// directory is created one at a time and every component is refused if it
+/// is a link, before anything is created beneath it.
+///
+/// PHP: `Git::writeCheckoutFile()`.
+pub(crate) async fn write_checkout_file(directory: &str, relative: &str, content: &[u8]) -> Result<()> {
+    let mut segments: Vec<&str> = relative.split('/').collect();
+    let file = segments.pop().unwrap_or_default();
+    let mut path = directory.to_owned();
+    for segment in segments {
+        path.push('/');
+        path.push_str(segment);
+        if is_link(&path) {
+            return Err(Error::exception(format!("File path escapes the repository: {relative}"), 0));
+        }
+        let target = std::path::Path::new(&path);
+        if !target.is_dir() && (target.exists() || utopia_async::fs::create_dir(&path).await.is_err()) {
+            return Err(Error::exception(format!("Failed to create directory for {relative}"), 0));
+        }
+    }
+    path.push('/');
+    path.push_str(file);
+    if is_link(&path) {
+        return Err(Error::exception(format!("File path escapes the repository: {relative}"), 0));
+    }
+    if utopia_async::fs::write(&path, content).await.is_err() {
+        return Err(Error::exception(format!("Failed to write {relative}"), 0));
+    }
+    Ok(())
 }

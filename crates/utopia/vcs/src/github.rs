@@ -402,8 +402,8 @@ impl Adapter for GitHub {
     async fn installation_repository(&self, repository_name: &str) -> Result<Value> {
         let per_page = 100i64;
         let mut current = 1i64;
-        let mut total = 0i64;
-        while total < 1000 {
+        // No page cap: a selected repository past any cap would be reported as not selected
+        loop {
             let response = self
                 .transport
                 .call(
@@ -428,7 +428,6 @@ impl Adapter for GitHub {
                 break;
             }
             current += 1;
-            total += per_page;
         }
         Err(Error::RepositoryNotFound("Repository not found.".into()))
     }
@@ -613,7 +612,7 @@ impl Adapter for GitHub {
                 let head_commit = or(at(&payload, "head_commit"), Value::Array(Array::new()));
                 let head_commit_author = or(at(&head_commit, "author"), Value::Array(Array::new()));
 
-                let branch = php::str_replace("refs/heads/", "", &or(at(&payload, "ref"), ""));
+                let branch = push_branch(&at(&payload, "ref"));
                 let repository_url = or(at(&repository, "html_url"), "");
                 let branch_url = concat_if_both(&repository_url, "/tree/", &branch);
 
@@ -1181,6 +1180,19 @@ fn with_string_id(body: Value) -> Value {
     let id = Value::Str(php::string(&or(at(&run, "id"), "")));
     php::set(&mut run, "id", id);
     run
+}
+
+/// The branch a push delivery's ref names: only the leading `refs/heads/`
+/// is stripped, so a branch named like a ref keeps its name; a ref that is
+/// not a string names none.
+pub(crate) fn push_branch(reference: &Value) -> Value {
+    match reference {
+        Value::Str(text) => {
+            let bytes = text.as_bytes();
+            Value::Str(php_std::Str::from(bytes.strip_prefix(b"refs/heads/".as_slice()).unwrap_or(bytes).to_vec()))
+        }
+        _ => s(""),
+    }
 }
 
 /// `"$a$infix$b"` when both are non-empty, `''` otherwise.

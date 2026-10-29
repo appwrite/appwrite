@@ -278,8 +278,8 @@ final class Server
     }
 
     /**
-     * Creates a repository with {owner, name, private?, branch?, files?: {path: content}}
-     * committed on its default branch.
+     * Creates a repository with {owner, name, private?, branch?, files?: {path: content},
+     * links?: {path: target}} committed on its default branch.
      *
      * @param array<string, mixed> $seed
      */
@@ -293,8 +293,9 @@ final class Server
         }
         $repository = $world->create($owner, $name, (bool) ($seed['private'] ?? false), $branch);
         $files = \is_array($seed['files'] ?? null) ? $seed['files'] : [];
-        if ($files !== []) {
-            Git::commit($repository->path, $branch, array_map('strval', $files), (string) ($seed['message'] ?? 'Initial commit'), ['name' => 'Fixture', 'email' => 'fixture@example.com']);
+        $links = \is_array($seed['links'] ?? null) ? $seed['links'] : [];
+        if ($files !== [] || $links !== []) {
+            Git::commit($repository->path, $branch, array_map('strval', $files), (string) ($seed['message'] ?? 'Initial commit'), ['name' => 'Fixture', 'email' => 'fixture@example.com'], null, array_map('strval', $links));
         }
     }
 

@@ -28,7 +28,7 @@
             "rootDirectory": ""
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
         },
         {
           "op": "clone.run",
@@ -81,7 +81,7 @@
             "rootDirectory": "."
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
         },
         {
           "op": "clone.run",
@@ -134,7 +134,7 @@
             "rootDirectory": "./"
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
         },
         {
           "op": "clone.run",
@@ -187,7 +187,7 @@
             "rootDirectory": "/"
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
         },
         {
           "op": "clone.run",
@@ -240,7 +240,7 @@
             "rootDirectory": "docs"
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
         },
         {
           "op": "clone.run",
@@ -289,7 +289,7 @@
             "rootDirectory": "docs/"
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
         },
         {
           "op": "clone.run",
@@ -338,7 +338,7 @@
             "rootDirectory": "./docs"
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
         },
         {
           "op": "clone.run",
@@ -387,7 +387,7 @@
             "rootDirectory": "./docs/"
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
         },
         {
           "op": "clone.run",
@@ -436,7 +436,7 @@
             "rootDirectory": "./astro/starter"
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'astro/starter' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'astro/starter' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
         },
         {
           "op": "clone.run",
@@ -485,7 +485,7 @@
             "rootDirectory": "0"
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '0' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '0' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
         },
         {
           "op": "clone.run",
@@ -534,7 +534,7 @@
             "rootDirectory": "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`"
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
         },
         {
           "op": "clone.run",
@@ -549,6 +549,55 @@
             "exit": 0,
             "files": {
               "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCloneLeavesTheGlobalConfigAlone",
+      "steps": [
+        {
+          "op": "clone.setup",
+          "args": {
+            "workspace": "/tmp/compat-fs/${ns}/ws",
+            "files": {
+              "README.md": "# Root",
+              "docs/guide.md": "# Guide",
+              "astro/starter/index.md": "# Starter",
+              "0/zero.md": "# Zero",
+              "src\t--checkpoint=1\t--checkpoint-action=exec=touch pwned;touch pwned$(touch pwned)`touch pwned`/index.md": "# Hostile"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "clone.command",
+          "args": {
+            "repository": "/tmp/compat-fs/${ns}/ws/remote.git",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "rootDirectory": "docs"
+          },
+          "bind": "cclone",
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'docs' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/ws/clone' 'main'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cclone"
+            },
+            "directory": "/tmp/compat-fs/${ns}/ws/clone",
+            "workspace": "/tmp/compat-fs/${ns}/ws"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "docs/guide.md": "# Guide"
             },
             "fatal": [],
             "pwned": false
@@ -592,7 +641,7 @@
             "rootDirectory": ""
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'fetch' '--depth' '1' 'origin' 'refs/tags/-release' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'checkout' 'FETCH_HEAD'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'fetch' '--depth' '1' 'origin' 'refs/tags/-release' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'checkout' 'FETCH_HEAD'"
         },
         {
           "op": "clone.run",
@@ -685,7 +734,7 @@
             "rootDirectory": ""
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'refs=$(git -C \"$1\" ls-remote --refs --tags origin -- \"$2\") || exit\nline=$(printf '\\''%s\\n'\\'' \"$refs\" | tail -n 1)\ntag=${line#*refs/tags/}\nif [ -z \"$tag\" ]; then\n    printf '\\''fatal: no tag matching %s\\n'\\'' \"$2\" >&2\n    exit 1\nfi\ngit -C \"$1\" fetch --depth=1 origin \"refs/tags/$tag\" && git -C \"$1\" checkout FETCH_HEAD' 'sh' '/tmp/compat-fs/${ns}/ws/clone' '0.1.*'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'refs=$(git -C \"$1\" ls-remote --refs --tags origin -- \"$2\") || exit\nline=$(printf '\\''%s\\n'\\'' \"$refs\" | tail -n 1)\ntag=${line#*refs/tags/}\nif [ -z \"$tag\" ]; then\n    printf '\\''fatal: no tag matching %s\\n'\\'' \"$2\" >&2\n    exit 1\nfi\ngit -C \"$1\" fetch --depth=1 origin \"refs/tags/$tag\" && git -C \"$1\" checkout FETCH_HEAD' 'sh' '/tmp/compat-fs/${ns}/ws/clone' '0.1.*'"
         },
         {
           "op": "clone.run",
@@ -759,7 +808,7 @@
             "rootDirectory": ""
           },
           "bind": "cclone2",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone2' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone2/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'refs=$(git -C \"$1\" ls-remote --refs --tags origin -- \"$2\") || exit\nline=$(printf '\\''%s\\n'\\'' \"$refs\" | tail -n 1)\ntag=${line#*refs/tags/}\nif [ -z \"$tag\" ]; then\n    printf '\\''fatal: no tag matching %s\\n'\\'' \"$2\" >&2\n    exit 1\nfi\ngit -C \"$1\" fetch --depth=1 origin \"refs/tags/$tag\" && git -C \"$1\" checkout FETCH_HEAD' 'sh' '/tmp/compat-fs/${ns}/ws/clone2' 'release/0.1.*'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone2' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone2/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone2' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'refs=$(git -C \"$1\" ls-remote --refs --tags origin -- \"$2\") || exit\nline=$(printf '\\''%s\\n'\\'' \"$refs\" | tail -n 1)\ntag=${line#*refs/tags/}\nif [ -z \"$tag\" ]; then\n    printf '\\''fatal: no tag matching %s\\n'\\'' \"$2\" >&2\n    exit 1\nfi\ngit -C \"$1\" fetch --depth=1 origin \"refs/tags/$tag\" && git -C \"$1\" checkout FETCH_HEAD' 'sh' '/tmp/compat-fs/${ns}/ws/clone2' 'release/0.1.*'"
         },
         {
           "op": "clone.run",
@@ -832,7 +881,7 @@
             "rootDirectory": ""
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'fetch' '--depth' '1' 'origin' 'refs/tags/1.2.3' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'checkout' 'FETCH_HEAD'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'fetch' '--depth' '1' 'origin' 'refs/tags/1.2.3' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'checkout' 'FETCH_HEAD'"
         },
         {
           "op": "clone.run",
@@ -895,7 +944,7 @@
             "rootDirectory": ""
           },
           "bind": "cclone",
-          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' 'config' '--global' 'init.defaultBranch' 'main' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'refs=$(git -C \"$1\" ls-remote --refs --tags origin -- \"$2\") || exit\nline=$(printf '\\''%s\\n'\\'' \"$refs\" | tail -n 1)\ntag=${line#*refs/tags/}\nif [ -z \"$tag\" ]; then\n    printf '\\''fatal: no tag matching %s\\n'\\'' \"$2\" >&2\n    exit 1\nfi\ngit -C \"$1\" fetch --depth=1 origin \"refs/tags/$tag\" && git -C \"$1\" checkout FETCH_HEAD' 'sh' '/tmp/compat-fs/${ns}/ws/clone' '9.9.*'"
+          "expect": "'mkdir' '-p' '/tmp/compat-fs/${ns}/ws/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'remote' 'add' 'origin' 'file:///tmp/compat-fs/${ns}/ws/remote.git' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' '*' >> '/tmp/compat-fs/${ns}/ws/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/ws/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'refs=$(git -C \"$1\" ls-remote --refs --tags origin -- \"$2\") || exit\nline=$(printf '\\''%s\\n'\\'' \"$refs\" | tail -n 1)\ntag=${line#*refs/tags/}\nif [ -z \"$tag\" ]; then\n    printf '\\''fatal: no tag matching %s\\n'\\'' \"$2\" >&2\n    exit 1\nfi\ngit -C \"$1\" fetch --depth=1 origin \"refs/tags/$tag\" && git -C \"$1\" checkout FETCH_HEAD' 'sh' '/tmp/compat-fs/${ns}/ws/clone' '9.9.*'"
         },
         {
           "op": "clone.run",

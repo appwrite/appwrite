@@ -296,13 +296,7 @@ impl Gitea {
     ) -> Result<Value> {
         let dir = self.git_clone(owner, repository_name, branch).await?;
         let result = async {
-            let full = format!("{dir}/{filepath}");
-            if let Some(parent) = std::path::Path::new(&full).parent()
-                && !parent.is_dir()
-            {
-                let _ = utopia_async::fs::create_dir_all(parent).await;
-            }
-            let _ = utopia_async::fs::write(&full, content).await;
+            git::write_checkout_file(&dir, filepath, content).await?;
             exec(&git::git(&dir)?.argument("add")?.argument("--")?.argument(filepath)?).await?;
             exec(&git::git(&dir)?.argument("commit")?.option("-m", message)?).await?;
             exec(&git::git(&dir)?.argument("push")?.argument("origin")?.argument(branch)?).await?;
@@ -761,7 +755,7 @@ impl Adapter for Gitea {
                 let head_commit = or(at(&payload, "head_commit"), Value::Array(Array::new()));
                 let head_commit_author = or(at(&head_commit, "author"), Value::Array(Array::new()));
 
-                let branch = php::str_replace("refs/heads/", "", &or(at(&payload, "ref"), ""));
+                let branch = crate::github::push_branch(&at(&payload, "ref"));
                 let repository_url = or(at(&repository, "html_url"), "");
                 let branch_url = concat_if_both(&repository_url, "/src/branch/", &branch);
 
@@ -1155,6 +1149,8 @@ impl Git for Gitea {
         branch: &str,
     ) -> Result<Value> {
         if self.is_gogs() {
+            let confined = git::confined_path(filepath)?;
+            let filepath = confined.as_str();
             if php::filled(branch) {
                 let response = self.get(format!("/repos/{owner}/{repository_name}")).await?;
                 let default = or(response.at("default_branch"), "master");

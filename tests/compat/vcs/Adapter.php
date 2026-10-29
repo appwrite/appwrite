@@ -80,7 +80,7 @@ final class Adapter implements Base, Benchmarks
         'createWebhook', 'deleteInstallation', 'deleteRepository', 'dismissPullRequestReview', 'generateCloneCommand', 'generatePushCommand',
         'getAuthenticatedApp', 'getBlob', 'getBranchUrl', 'getCheckRun', 'getCheckSuite', 'getComment', 'getCommit',
         'getCommitStatuses', 'getCommitUrl', 'getEventHeaderName', 'getEventType', 'getEvents', 'getFileUrl', 'getInstallUrl',
-        'getInstallationRepository', 'getLatestCommit', 'getName', 'getOrganizationUrl', 'getOwnerName', 'getPullRequest',
+        'getInstallationRepository', 'getLatestCommit', 'getMergeBase', 'getName', 'getOrganizationUrl', 'getOwnerName', 'getPullRequest',
         'getPullRequestFiles', 'getPullRequestFromBranch', 'getPullRequestUrl', 'getRateLimit', 'getRepository', 'getRepositoryCloneHeaders',
         'getRepositoryCloneUrl', 'getRepositoryContent', 'getRepositoryName', 'getRepositoryPresignedUrl',
         'getRepositoryPresignedUrlHeaders', 'getRepositoryTree', 'getRepositoryUrl', 'getSignatureHeaderName', 'getSigningKeys',
@@ -92,7 +92,7 @@ final class Adapter implements Base, Benchmarks
         'redeliverWebhookDeliveries', 'searchRepositories', 'setEndpoint', 'setIssuer', 'setSelfSigned', 'setRepositoryEndpoint', 'supportsCommentImages',
         'supportsPublicRepositories', 'supportsRepositoryCloneUrl',
         'supportsRepositoryArchives', 'supportsRepositoryCreation', 'supportsRepositoryDeletion', 'syncMirror', 'updateCheckRun',
-        'updateCheck', 'updateComment', 'updateCommitStatus', 'updatePullRequest', 'updatePullRequestReview', 'validateWebhookEvent', 'verifyReceipt',
+        'updateCheck', 'updateComment', 'updateCommitStatus', 'updateDeployment', 'updatePullRequest', 'updatePullRequestReview', 'validateWebhookEvent', 'verifyReceipt',
     ];
 
     public function benchmarks(): array

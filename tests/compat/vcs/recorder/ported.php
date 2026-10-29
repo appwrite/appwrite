@@ -82,6 +82,9 @@ foreach ([
     $list[] = ['name' => "testCloneChecksOutTheRootDirectory with data set \"{$name}\"", 'steps' => [$setup, ...$clone($root)]];
 }
 $list[] = ['name' => 'testCloneTreatsTheRootDirectoryAsData', 'steps' => [$setup, ...$clone($hostile)]];
+// The command sets the default branch for its own repository only: no step
+// writes the global git config, which concurrent clones would lock
+$list[] = ['name' => 'testCloneLeavesTheGlobalConfigAlone', 'steps' => [$setup, ...$clone('docs')]];
 $list[] = ['name' => 'testCloneChecksOutATagStartingWithADash', 'steps' => [
     $setup,
     step('clone.ref', ['repository' => $ws . '/remote.git', 'ref' => 'refs/tags/-release', 'target' => 'main']),
@@ -138,6 +141,28 @@ $list[] = ['name' => 'testSearchRepositoriesUnknownOwner', 'steps' => [
     ...$github(),
     call('search_repositories', ['owner' => 'unknown-owner', 'page' => 1, 'per_page' => 10]),
     step('fixture.requests'),
+]];
+$list[] = ['name' => 'testUpdateCheckNamesTheStatusAfterItsSuite', 'steps' => [
+    $script([['method' => 'POST', 'path' => '/repos/owner/repo/statuses/abc123', 'status' => 201, 'body' => []]]),
+    ...$github(),
+    call('update_check', ['owner' => 'owner', 'repositoryName' => 'repo', 'SHA' => 'abc123', 'state' => 'queued', 'name' => 'Billing', 'title' => 'Starting...', 'summary' => '- Function Billing', 'detailsUrl' => 'https://cloud.appwrite.io', 'suite' => 'Atlas Production']),
+    call('update_check', ['owner' => 'owner', 'repositoryName' => 'repo', 'SHA' => 'abc123', 'state' => 'success', 'name' => 'Billing', 'title' => 'Build succeeded.']),
+    step('fixture.requests'),
+]];
+$pages = [];
+foreach (range(1, 11) as $page) {
+    $repositories = [];
+    foreach (range(1, $page <= 10 ? 100 : 1) as $index) {
+        $id = ($page - 1) * 100 + $index;
+        $repositories[] = ['id' => $id, 'name' => 'repository-' . $id];
+    }
+    $pages[] = ['method' => 'GET', 'path' => "/installation/repositories?page={$page}&per_page=100", 'body' => ['repositories' => $repositories]];
+}
+$list[] = ['name' => 'testGetInstallationRepositoryScansPastThousandRepositories', 'steps' => [
+    $script($pages),
+    ...$github(),
+    call('get_installation_repository', ['repositoryName' => 'repository-1001']),
+    call('get_installation_repository', ['repositoryName' => 'repository-1002']),
 ]];
 $installation = static fn (string $name, int $status, array $body): array => ['name' => $name, 'steps' => [
     $script([['method' => 'GET', 'path' => '/app/installations/1234', 'status' => $status, 'body' => $body]]),
@@ -486,7 +511,8 @@ $refPayload = static function (string $type, string $ref): array {
                 'repository' => [
                     'id' => 'repo_01ARZ3NDEKTSV4RRFFQ69G5FAV',
                     'path' => 'et/test-project/test-repo',
-                    'default_branch' => 'main',
+                    // Entire names the default branch by its full ref
+                    'default_branch' => 'refs/heads/main',
                     'clone_url' => 'https://aws-us-east-2.entire.io/et/test-project/test-repo',
                     'entire_clone_url' => 'entire://aws-us-east-2.entire.io/et/test-project/test-repo',
                 ],
@@ -710,8 +736,225 @@ $list = [
     ]],
     ['name' => 'testCreateFileRejectsEscapingPath', 'steps' => [$newEntire(), call('create_file', ['owner' => 'owner', 'repositoryName' => 'repo', 'filepath' => '../escape.txt', 'content' => 'content'])]],
     ['name' => 'testCreateFileRejectsEmptyPath', 'steps' => [$newEntire(), call('create_file', ['owner' => 'owner', 'repositoryName' => 'repo', 'filepath' => './.', 'content' => 'content'])]],
+    ['name' => 'testCreateFileRejectsGitMetadataPath', 'steps' => [$newEntire(), call('create_file', ['owner' => 'owner', 'repositoryName' => 'repo', 'filepath' => 'docs/../.Git/config', 'content' => 'content'])]],
 ];
+
+/*
+ * GitHub mirrors, merge bases, shared check suites, deployments, repository
+ * creation and the permission sets a token mint falls back through, against
+ * scripted core and cell routes.
+ */
+$problemHeaders = ['Content-Type' => 'application/problem+json'];
+$repo = ['owner' => 'test-project', 'repositoryName' => 'app'];
+$mint = static fn (array $permissions, int $times = 0): array => ['method' => 'POST', 'path' => $p . '/access-tokens', 'body' => ['token' => 'tok_fixture', 'expires_at' => '2100-01-01T00:00:00Z', 'permissions' => $permissions]] + ($times > 0 ? ['times' => $times] : []);
+$refusal = static fn (string $code, int $status): array => ['method' => 'POST', 'path' => $p . '/access-tokens', 'times' => 1, 'status' => $status, 'headers' => $problemHeaders, 'body' => ['code' => $code]];
+$all = ['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write', 'repositories' => 'create'];
+$mirror = static fn (string $id, string $fullName): array => [
+    'id' => $id,
+    'full_name' => $fullName,
+    'path' => '/gh/' . strtolower($fullName),
+    'entire_clone_url' => 'entire://aws-eu-central-1.entire.io/gh/' . strtolower($fullName),
+    'placements' => [['role' => 'processing_primary', 'api_base_url' => '${base}/entire-cell']],
+];
+$app = [['id' => 'repo_1', 'full_name' => 'et/test-project/app', 'placements' => [['api_base_url' => '${base}/entire-cell', 'role' => 'processing_primary']]]];
+$cellRoutes = [
+    ['method' => 'GET', 'path' => $c . '/repos/repo_1', 'body' => ['id' => 'grepo_1', 'default_branch' => 'main']],
+    ['method' => 'POST', 'path' => $c . '/git/repos/grepo_1/branches-containing', 'body' => ['abc123' => ['refs/heads/feature']]],
+];
+$withPermissions = static fn (array $permissions, array $routes): array => [
+    $entireConfig,
+    step('fixture.script', ['routes' => [$mint($permissions), ['method' => 'GET', 'path' => $p . '/repositories', 'body' => ['repositories' => $app, 'next_cursor' => '']], ...$cellRoutes, ...$routes]]),
+    $newEntire(['endpoint' => $core]),
+    $entireInit,
+];
+$suiteRuns = [
+    ['suite_key' => 'Atlas Production', 'key' => 'Billing', 'status' => 'in_progress', 'conclusion' => null],
+    ['suite_key' => 'Atlas Production', 'key' => 'Hello', 'status' => 'completed', 'conclusion' => 'failure'],
+    ['suite_key' => 'Atlas Staging', 'key' => 'Billing (staging)', 'status' => 'in_progress', 'conclusion' => null],
+    ['suite_key' => 'production', 'key' => 'production/sites/landing', 'status' => 'queued'],
+    'x',
+];
+$checkPath = $c . '/repos/repo_1/commits/abc123/check-runs';
+$deploy = static fn (array $args): array => call('update_deployment', ['owner' => 'test-project', 'repositoryName' => 'app', 'SHA' => 'abc123'] + $args);
+$createRoutes = static fn (array $creates, array $listings): array => [
+    ...array_map(static fn (array $answer): array => ['method' => 'POST', 'path' => '/entire-core/api/v1/repos', 'times' => 1, 'status' => $answer[0], 'headers' => $problemHeaders, 'body' => $answer[1]], $creates),
+    ...array_map(static fn (array $repositories): array => ['method' => 'GET', 'path' => $p . '/repositories', 'times' => 1, 'body' => ['repositories' => $repositories, 'next_cursor' => '']], $listings),
+];
+$pricing = static fn (array $placements): array => [['id' => 'repo_01M5NEW', 'full_name' => 'et/test-project/pricing-site', 'clone_url' => 'https://aws-eu-central-1.entire.io/et/test-project/pricing-site.git', 'placements' => $placements]];
+$placed = [['region' => 'aws-eu-central-1', 'role' => 'processing_primary', 'api_base_url' => '${base}/entire-cell']];
+$create = static fn (bool $private = true): array => call('create_repository', ['owner' => 'test-project', 'repositoryName' => 'pricing-site', 'private' => $private]);
+$minting = static fn (array $routes, array $seed = []): array => [
+    $entireConfig,
+    step('fixture.script', ['routes' => $routes]),
+    step('vcs.new', ['adapter' => 'entire', 'endpoint' => $core, 'issuer' => $issuer] + ($seed === [] ? [] : ['seed' => $seed]), 'a'),
+    $entireInit,
+];
+$cachedWithout = ['entire-ins_fixture' => (string) json_encode(['accessToken' => 'tok_cached', 'expiresAt' => 4102444800, 'permissions' => ['contents' => 'read', 'checks' => 'write']])];
+$refused = 'permission_not_accepted';
+array_push(
+    $list,
+    ['name' => 'testGetEventFromAGithubMirror', 'steps' => [
+        $newEntire(),
+        $events('ref.updated', array_replace_recursive($refPayload('ref.updated', 'refs/heads/main'), ['event' => ['payload' => ['repository' => ['path' => '/gh/octocat/hello-world']]]])),
+    ]],
+    ['name' => 'testMirrorsOfSeveralGithubOwners', 'steps' => [
+        $entireConfig,
+        step('fixture.script', ['routes' => [
+            $mint($all),
+            ['method' => 'GET', 'path' => $p . '/repositories', 'body' => ['repositories' => [$mirror('repo_01M5HELLO', 'Octocat/hello-world'), $mirror('repo_01M5DOCS', 'appwrite/docs'), ['id' => 'repo_x', 'full_name' => '', 'path' => 'gh/Other/docs2']], 'next_cursor' => '']],
+        ]]),
+        $newEntire(['endpoint' => $core]),
+        call('get_repository_url', ['owner' => 'gh/Octocat', 'repositoryName' => 'docs']),
+        $entireInit,
+        call('get_owner_name', ['installationId' => 'ins_fixture']),
+        call('search_repositories', ['owner' => 'gh/Octocat', 'page' => 1, 'per_page' => 10]),
+        call('get_repository_clone_url', ['owner' => 'gh/Octocat', 'repositoryName' => 'docs']),
+        call('get_repository_url', ['owner' => 'gh/Octocat', 'repositoryName' => 'docs']),
+        call('get_repository_url', ['owner' => 'gh/Octocat', 'repositoryName' => 'missing']),
+        call('get_commit_url', ['owner' => 'gh/octocat', 'repositoryName' => 'hello-world', 'commitHash' => 'abc']),
+        call('get_branch_url', ['owner' => 'gh/octocat', 'repositoryName' => 'hello-world', 'branch' => 'feature/pricing']),
+        call('get_file_url', ['owner' => 'gh/octocat', 'repositoryName' => 'hello-world', 'reference' => 'main/docs/guide.md']),
+        call('get_organization_url', ['owner' => 'gh/octocat']),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testGetMergeBase', 'steps' => [
+        ...$withPermissions($all, [
+            ['method' => 'GET', 'path' => $c . '/git/repos/grepo_1/merge-base?commitA=main&commitB=missing', 'status' => 404, 'headers' => $problemHeaders, 'body' => ['code' => 'not_found', 'error' => 'no such commit']],
+            ['method' => 'GET', 'path' => $c . '/git/repos/grepo_1/merge-base', 'body' => ['mergeBaseSHA' => 'abc1234567abc1234567abc1234567abc1234567', 'resolvedSHAs' => ['abc1234567abc1234567abc1234567abc1234567', $sha]]],
+        ]),
+        call('get_merge_base', $repo + ['commitA' => 'main', 'commitB' => $sha]),
+        call('get_merge_base', $repo + ['commitA' => 'main', 'commitB' => 'missing']),
+        call('get_merge_base', ['owner' => 'test-project', 'repositoryName' => 'missing', 'commitA' => 'main', 'commitB' => $sha]),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testCheckRunsShareTheirSuite', 'steps' => [
+        ...$withPermissions($all, [
+            ['method' => 'POST', 'path' => $checkPath, 'status' => 201, 'body' => ['ok' => true]],
+            ['method' => 'GET', 'path' => $checkPath, 'body' => ['check_runs' => $suiteRuns]],
+        ]),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'success', 'name' => 'Billing', 'title' => 'Build succeeded.', 'suite' => 'Atlas Production']),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'success', 'name' => 'Hello', 'title' => 'Build succeeded.', 'suite' => 'Atlas Production']),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'pending', 'name' => 'Billing (staging)', 'title' => 'Building...', 'suite' => 'Atlas Staging', 'detailsUrl' => 'https://x.example.com']),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'queued', 'name' => 'Fresh', 'title' => 'Queued', 'suite' => 'Atlas Fresh']),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'cancelled', 'name' => 'Gone', 'title' => 'Cancelled', 'suite' => 'Atlas Gone']),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testCheckRunsAreKeyedApartFromTheirNames', 'steps' => [
+        ...$withPermissions($all, [
+            ['method' => 'POST', 'path' => $checkPath, 'status' => 201, 'body' => ['ok' => true]],
+            ['method' => 'GET', 'path' => $checkPath, 'body' => ['check_runs' => $suiteRuns]],
+        ]),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'success', 'name' => 'Landing', 'title' => 'Build succeeded.', 'suite' => 'Atlas', 'key' => 'production/sites/landing', 'suiteKey' => 'production']),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'failure', 'name' => 'Landing', 'title' => 'Build failed.', 'suite' => 'Atlas', 'key' => 'staging/sites/landing', 'suiteKey' => 'staging']),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'success', 'name' => '', 'title' => 'Done.', 'key' => 'k1']),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'success', 'name' => 'Solo', 'title' => 'Done.', 'suiteKey' => 'solo-suite']),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testSharedSuiteIsStatedFromEveryRun', 'steps' => [
+        ...$withPermissions($all, [
+            ['method' => 'POST', 'path' => $checkPath, 'status' => 201, 'body' => ['ok' => true]],
+            ['method' => 'GET', 'path' => $checkPath, 'times' => 1, 'status' => 403, 'headers' => $problemHeaders, 'body' => ['code' => 'forbidden', 'detail' => 'checks:read']],
+            ['method' => 'GET', 'path' => $checkPath, 'body' => ['check_runs' => [['suite_key' => 'S', 'key' => 'a', 'status' => 'completed', 'conclusion' => 'skipped'], ['suite_key' => 'S', 'key' => 'b', 'status' => 'completed', 'conclusion' => 'timed_out'], ['suite_key' => 'S', 'key' => 'c', 'status' => 'completed', 'conclusion' => 'odd']]]],
+        ]),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'success', 'name' => 'Billing', 'title' => 'Build succeeded.', 'suite' => 'Atlas Production']),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'success', 'name' => 'a', 'title' => 'Done.', 'suite' => 'S']),
+        call('update_check', $repo + ['SHA' => 'abc123', 'state' => 'unknown', 'name' => 'd', 'title' => 'Done.', 'suite' => 'S']),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testUpdateDeployment', 'steps' => [
+        ...$withPermissions($all, [
+            ['method' => 'POST', 'path' => '/entire-cell/api/v0/repos/repo_1/commits/abc123/deployments', 'times' => 2, 'status' => 201, 'body' => ['ok' => true]],
+            ['method' => 'POST', 'path' => '/entire-cell/api/v0/repos/repo_1/commits/abc123/deployments', 'status' => 422, 'headers' => $problemHeaders, 'body' => ['code' => 'invalid', 'title' => 'Unprocessable']],
+        ]),
+        $deploy(['key' => 'production/landing', 'name' => 'Landing', 'state' => 'success', 'environment' => 'production', 'url' => 'https://landing.appwrite.network', 'logsUrl' => 'https://cloud.appwrite.io/console/logs', 'type' => 'site', 'groupKey' => 'production', 'groupName' => 'Production']),
+        $deploy(['key' => 'p/billing', 'name' => 'Billing', 'state' => 'pending', 'logsUrl' => 'http://localhost/console/logs', 'type' => 'function', 'groupKey' => 'p']),
+        $deploy(['key' => 'p/landing', 'name' => 'Landing', 'state' => 'inactive', 'url' => 'https://landing.appwrite.network', 'logsUrl' => 'https://cloud.appwrite.io/console/logs']),
+        $deploy(['key' => 'p/x', 'name' => 'X', 'state' => 'odd']),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testUpdateDeploymentNeedsTheDeploymentsPermission', 'steps' => [
+        ...$withPermissions(['contents' => 'read', 'checks' => 'write'], []),
+        $deploy(['key' => 'p/landing', 'name' => 'Landing', 'state' => 'success']),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testCreateRepositoryWaitsForItsPlacement', 'steps' => [
+        ...$minting([$mint($all), ...$createRoutes([[201, ['repositoryId' => 'repo_01M5NEW', 'name' => 'pricing-site', 'owningProjectId' => '01M4ZC', 'state' => 'provisioning']]], [$pricing([]), $pricing($placed)])]),
+        $create(false),
+        call('get_repository_url', ['owner' => 'test-project', 'repositoryName' => 'pricing-site']),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testCreateRepositoryOnTheProjectsHomeCore', 'steps' => [
+        ...$minting([
+            $mint($all, 1),
+            ['method' => 'POST', 'path' => $p . '/access-tokens', 'body' => ['token' => 'home', 'expires_at' => '2100-01-01T00:00:00Z', 'permissions' => ['repositories' => 'create', 'installations' => 'read']]],
+            ...$createRoutes([
+                [421, ['error' => 'project "test-project" is homed in jurisdiction "eu"; retry against the home core', 'home_core_url' => $core . '/', 'jurisdiction' => 'eu']],
+                [201, ['repositoryId' => 'repo_01M5NEW', 'name' => 'pricing-site', 'owningProjectId' => '01M4ZC', 'state' => 'active']],
+            ], [$pricing($placed)]),
+        ]),
+        $create(),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testCreateRepositoryFollowsOnlyAKnownCore', 'steps' => [
+        ...$minting([$mint($all), ...$createRoutes([[421, ['error' => 'retry against the home core', 'home_core_url' => 'https://core.example.com']]], [])]),
+        $create(),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testCreateRepositoryNamesAnExistingRepository', 'steps' => [
+        ...$minting([$mint($all), ...$createRoutes([[409, ['type' => 'https://entire.com/errors/name-in-use', 'title' => 'Conflict']], [500, ['title' => 'Internal']]], [])]),
+        $create(),
+        $create(),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testCreateRepositoryNeedsTheRepositoriesPermission', 'steps' => [
+        ...$minting([$mint(['contents' => 'read', 'checks' => 'write'])], $cachedWithout),
+        $create(),
+        $create(),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testCreateRepositoryRefreshesATokenCachedBeforeThePermission', 'steps' => [
+        ...$minting([$mint($all), ...$createRoutes([[201, ['repositoryId' => 'repo_01M5NEW', 'name' => 'pricing-site', 'state' => 'provisioning']]], [$pricing($placed)])], $cachedWithout),
+        $create(),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testAccessTokenFallsBackToAcceptedPermissions', 'steps' => [
+        ...$minting([$refusal('unsupported_permission', 400), $refusal('repository_required', 400), $refusal($refused, 403), $refusal('coverage_changed', 409), $refusal($refused, 403), $refusal($refused, 403), $mint(['contents' => 'read', 'checks' => 'write', 'odd' => 7, 3 => 'x'])]),
+        $deploy(['key' => 'p/landing', 'name' => 'Landing', 'state' => 'success']),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testAccessTokenRefusalIsNotRetried', 'steps' => [
+        ...$minting([$refusal('installation_suspended', 403)]),
+        step('fixture.requests'),
+    ]],
+    ['name' => 'testAccessTokenFailsOnceEverySetIsRefused', 'steps' => [
+        ...$minting([['method' => 'POST', 'path' => $p . '/access-tokens', 'status' => 400, 'headers' => $problemHeaders, 'body' => ['code' => 'repository_required', 'detail' => 'name a repository']]]),
+        step('fixture.requests'),
+    ]],
+);
 write("{$cases}/EntireTest.json", ['source' => 'packages/vcs/tests/EntireTest.php', 'cases' => $list]);
+
+/*
+ * GitTest: the shared checkout write, through Origin's createFile on a
+ * repository whose tree carries symbolic links out of the checkout. Each
+ * write through a link is refused before anything is created.
+ */
+$linked = ['owner' => 'test-owner', 'name' => 'app', 'files' => ['README.md' => "# App\n"], 'links' => ['linked' => '../../outside', 'linked.txt' => '../../outside/target.txt']];
+$write = static fn (string $path): array => call('create_file', ['owner' => 'test-owner', 'repositoryName' => 'app', 'filepath' => $path, 'content' => 'content', 'message' => 'Write ' . $path]);
+$gitSteps = static fn (array $writes): array => [
+    step('fixture.config', ['config' => ['origin' => ['ed25519' => $b64url(sodium_crypto_sign_publickey($appKeys)), 'repositories' => [$linked]]]]),
+    step('vcs.new', ['adapter' => 'origin', 'endpoint' => '${vcs}/~${ns}/origin', 'web' => '${vcs}/~${ns}/origin/web', 'git' => '${vcs-tls}/~${ns}/origin/git'], 'a'),
+    call('initialize_variables', ['installationId' => 'i_fixture', 'privateKey' => $appPem, 'appId' => 'app_fixture']),
+    ...$writes,
+];
+write("{$cases}/GitTest.json", ['source' => 'packages/vcs/tests/GitTest.php', 'cases' => [
+    ['name' => 'testWritesInsideTheCheckout', 'steps' => $gitSteps([
+        $write('docs/./guide.md'),
+        call('get_repository_content', ['owner' => 'test-owner', 'repositoryName' => 'app', 'path' => 'docs/guide.md']),
+    ])],
+    ['name' => 'testRefusesASymlinkedDirectory', 'steps' => $gitSteps([$write('linked/escape.txt')])],
+    ['name' => 'testRefusesASymlinkedParentBeforeCreatingAnythingBeneathIt', 'steps' => $gitSteps([$write('linked/new/escape.txt')])],
+    ['name' => 'testRefusesASymlinkedFile', 'steps' => $gitSteps([$write('linked.txt')])],
+]]);
 
 /*
  * Entire's API end to end against scripted core and cell routes: the

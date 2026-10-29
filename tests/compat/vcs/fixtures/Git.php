@@ -133,8 +133,9 @@ final class Git
      *
      * @param array<string, string|null> $files
      * @param array{name: string, email: string} $author
+     * @param array<string, string> $links Symbolic links to write, path => target
      */
-    public static function commit(string $repo, string $branch, array $files, string $message, array $author, ?string $base = null): ?string
+    public static function commit(string $repo, string $branch, array $files, string $message, array $author, ?string $base = null, array $links = []): ?string
     {
         $parent = self::resolve($repo, 'refs/heads/' . $branch) ?? ($base !== null ? self::resolve($repo, $base) : null);
         $index = tempnam(sys_get_temp_dir(), 'vcs-index-');
@@ -153,6 +154,10 @@ final class Git
             }
             $blob = trim((string) self::out($repo, ['hash-object', '-w', '--stdin'], $content));
             self::out($repo, ['update-index', '--add', '--cacheinfo', '100644,' . $blob . ',' . $path], '', $env);
+        }
+        foreach ($links as $path => $target) {
+            $blob = trim((string) self::out($repo, ['hash-object', '-w', '--stdin'], $target));
+            self::out($repo, ['update-index', '--add', '--cacheinfo', '120000,' . $blob . ',' . $path], '', $env);
         }
         $tree = trim((string) self::out($repo, ['write-tree'], '', $env));
         @unlink($index);
