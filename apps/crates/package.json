@@ -40,6 +40,8 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "overrides": {
-    "fflate": "0.7.5"
+    "fflate": "0.7.5",
+    "seroval": "1.6.12",
+    "seroval-plugins": "1.6.12"
   }
 }
