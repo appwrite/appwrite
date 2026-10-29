@@ -25,6 +25,11 @@ export const EXPERIMENTS: readonly Experiment[] = [
     name: 'Appwrite Analytics',
     description:
       'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.',
+  },  {
+    flag: 'projectTransfers',
+    name: 'Project transfers',
+    description:
+      'Transfer a project with a link that another organization claims, in place of moving it to one of your organizations.',
   },
 ]
 

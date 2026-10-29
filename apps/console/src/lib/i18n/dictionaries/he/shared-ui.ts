@@ -1397,6 +1397,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Appwrite Analytics': 'Appwrite Analytics',
   'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
     'הציגו את אנליטיקה בקונסולה ועקבו אחרי מבקרים, עמודים, מקורות, קמפיינים ואירועים מותאמים בפרויקט.',
+  'Project transfers': 'העברות פרויקטים',
+  'Transfer a project with a link that another organization claims, in place of moving it to one of your organizations.':
+    'העבירו פרויקט באמצעות קישור שארגון אחר מממש, במקום להעביר אותו לאחד מהארגונים שלכם.',
   'Repository not available': 'ה-repo לא זמין',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
