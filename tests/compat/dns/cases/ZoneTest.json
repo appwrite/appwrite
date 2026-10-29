@@ -287,6 +287,150 @@
           }
         }
       ]
+    },
+    {
+      "name": "constructor keeps one copy of identical records",
+      "steps": [
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "example.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "203.0.113.10"
+                },
+                {
+                  "name": "example.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "203.0.113.20"
+                },
+                {
+                  "name": "EXAMPLE.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "203.0.113.10"
+                },
+                {
+                  "name": "example.com",
+                  "type": 1,
+                  "ttl": 60,
+                  "rdata": "203.0.113.10"
+                },
+                {
+                  "name": "example.com",
+                  "type": 15,
+                  "ttl": 300,
+                  "rdata": "mail.example.com",
+                  "priority": 10
+                },
+                {
+                  "name": "example.com",
+                  "type": 15,
+                  "ttl": 300,
+                  "rdata": "mail.example.com",
+                  "priority": 20
+                },
+                {
+                  "name": "example.com",
+                  "type": 15,
+                  "ttl": 300,
+                  "rdata": "mail.example.com",
+                  "priority": 10
+                },
+                {
+                  "name": "example.com",
+                  "type": 15,
+                  "ttl": 300,
+                  "rdata": "."
+                },
+                {
+                  "name": "example.com",
+                  "type": 15,
+                  "ttl": 300,
+                  "rdata": ".",
+                  "priority": 0
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            }
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 60,
+                "rdata": "203.0.113.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "203.0.113.20",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "mail.example.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "mail.example.com",
+                "priority": 20,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 300,
+                "rdata": ".",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
     }
   ]
 }
