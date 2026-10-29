@@ -43,7 +43,8 @@ function isLabel(value: string): boolean {
  *
  * `zone` is `_APP_DOMAIN_EMAIL` from console variables. Returns null when any
  * part is missing, or when the IDs do not fit one DNS label (a function ID
- * with `.` or `_`, or a label over 63 characters), so the console never shows
+ * with `.` or `_`, a project ID ending in `-`, or a label over 63
+ * characters), so the console never shows
  * an address the region does not serve.
  */
 export function buildFunctionEmailAddress(
@@ -57,7 +58,12 @@ export function buildFunctionEmailAddress(
   if (project === '' || fn === '' || domain === '') return null
 
   const label = `${fn}-${project}`
-  if (!isLabel(label) || label.length > MAX_DNS_LABEL_LENGTH) return null
+  if (
+    !isLabel(label) ||
+    label.endsWith('-') ||
+    label.length > MAX_DNS_LABEL_LENGTH
+  )
+    return null
   return `${FUNCTION_EMAIL_LOCAL_PART}@${label}.${domain}`
 }
 

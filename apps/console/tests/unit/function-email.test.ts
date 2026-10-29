@@ -34,6 +34,16 @@ describe('buildFunctionEmailAddress', () => {
     ).toBe('contact@sendmail-my-app.appwrite.email')
   })
 
+  test('accepts a label of exactly 63 characters', () => {
+    expect(
+      buildFunctionEmailAddress(
+        'p'.repeat(31),
+        'f'.repeat(31),
+        'appwrite.email',
+      ),
+    ).toBe(`contact@${'f'.repeat(31)}-${'p'.repeat(31)}.appwrite.email`)
+  })
+
   test('keeps hyphens in the function ID', () => {
     expect(
       buildFunctionEmailAddress('my-app', 'send-mail', 'appwrite.email'),
@@ -41,6 +51,16 @@ describe('buildFunctionEmailAddress', () => {
   })
 
   test('returns null when the IDs do not fit one DNS label', () => {
+    expect(
+      buildFunctionEmailAddress('my-app-', 'sendmail', 'appwrite.email'),
+    ).toBeNull()
+    expect(
+      buildFunctionEmailAddress(
+        'p'.repeat(31),
+        'f'.repeat(32),
+        'appwrite.email',
+      ),
+    ).toBeNull()
     expect(
       buildFunctionEmailAddress('proj', 'Fn.Abc', 'appwrite.email'),
     ).toBeNull()
