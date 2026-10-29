@@ -3541,6 +3541,24 @@
         "proxy.updateRuleStatus": [
             "ruleId"
         ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
+        ],
         "sites.create": [
             "siteId",
             "name",
@@ -7576,6 +7594,24 @@
         ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",

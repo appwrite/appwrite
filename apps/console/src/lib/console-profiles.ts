@@ -67,6 +67,12 @@ export type ConsoleProfileFeatures = {
   nativeDbsMongo: boolean
   /** Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
+  /**
+   * Review product (AI code review of GitHub pull requests) via the `reviews`
+   * service. Shown only where the server reports `_APP_REVIEWS_ENABLED`, since
+   * self-hosted instances run the review service only when they opt in.
+   */
+  reviews: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
   /** Project transfers through the Organization API (transfer card with a claim link), in place of the direct organization move. */
@@ -137,6 +143,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   databaseSpecifications: 'Database specifications',
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
+  reviews: 'Review',
   projectEnvironments: 'Project environments',
   projectTransfers: 'Project transfers',
   multiRegion: 'Multi-region',
@@ -192,6 +199,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: true,
       nativeDbsMongo: false,
       videos: false,
+      reviews: true,
       projectEnvironments: false,
       projectTransfers: false,
       multiRegion: true,
@@ -236,6 +244,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: false,
       nativeDbsMongo: false,
       videos: false,
+      reviews: true,
       projectEnvironments: false,
       projectTransfers: false,
       multiRegion: false,

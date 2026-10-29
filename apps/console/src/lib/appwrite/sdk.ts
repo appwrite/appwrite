@@ -51,6 +51,7 @@ import {
   Waf,
 } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
+import { Reviews } from '@/lib/appwrite/reviews'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
@@ -573,6 +574,8 @@ const sdkForProjectRaw = {
   users: new Users(clientProject),
   vcs: new Vcs(clientProject),
   proxy: new Proxy(clientProject),
+  // Hand-written until a Console SDK release carries the reviews service.
+  reviews: new Reviews(clientProject),
   migrations: new Migrations(clientProject),
   sites: new Sites(clientProject),
   tablesDB: new TablesDB(clientProject),
