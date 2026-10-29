@@ -18,6 +18,6 @@ class Alerts extends Base
 
     public function __construct()
     {
-        parent::__construct('alerts', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('monitorAlerts', self::ALLOWED_ATTRIBUTES);
     }
 }

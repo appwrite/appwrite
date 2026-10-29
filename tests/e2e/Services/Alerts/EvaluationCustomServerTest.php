@@ -196,7 +196,7 @@ final class EvaluationCustomServerTest extends Scope
         // Maintenance removes resolved alerts once they are older than the retention.
         $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ALERTS', '7776000');
         $this->withFactory(function (object $factory) use ($first, $retention): void {
-            $factory->platform()->updateDocument('alerts', $first, new Document([
+            $factory->platform()->updateDocument('monitorAlerts', $first, new Document([
                 'resolvedAt' => DateTime::addSeconds(new \DateTime(), -$retention - 3600),
             ]));
         });

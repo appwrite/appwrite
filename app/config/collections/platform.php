@@ -231,10 +231,10 @@ $platformCollections = [
         ],
     ],
 
-    'alerts' => [
+    'monitorAlerts' => [
         '$collection' => Id::custom(Database::METADATA),
-        '$id' => Id::custom('alerts'),
-        'name' => 'Alerts',
+        '$id' => Id::custom('monitorAlerts'),
+        'name' => 'Monitor Alerts',
         'attributes' => [
             Attribute::string(key: 'name', size: 128, required: true, default: ''),
             Attribute::string(key: 'monitorId', required: true, default: ''),

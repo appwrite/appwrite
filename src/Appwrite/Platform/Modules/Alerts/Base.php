@@ -36,7 +36,7 @@ class Base extends Action
 
     protected function getAlert(Database $dbForPlatform, Authorization $authorization, Document $project, string $alertId): Document
     {
-        $alert = $authorization->skip(fn () => $dbForPlatform->getDocument('alerts', $alertId));
+        $alert = $authorization->skip(fn () => $dbForPlatform->getDocument('monitorAlerts', $alertId));
 
         if ($alert->isEmpty() || $alert->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
             throw new Exception(Exception::ALERT_NOT_FOUND);

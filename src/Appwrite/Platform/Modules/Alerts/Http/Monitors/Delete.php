@@ -73,9 +73,9 @@ class Delete extends Base
         // while a schedule left active after the monitor is gone would fire forever.
         (new Schedules($dbForPlatform))->stop($monitor);
 
-        $alert = $authorization->skip(fn () => $dbForPlatform->getDocument('alerts', (string) $monitor->getAttribute('alertId', '')));
+        $alert = $authorization->skip(fn () => $dbForPlatform->getDocument('monitorAlerts', (string) $monitor->getAttribute('alertId', '')));
         if (!$alert->isEmpty() && $alert->getAttribute('status') === State::Firing->value) {
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('alerts', $alert->getId(), new Document([
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), new Document([
                 'status' => State::Resolved->value,
                 'resolvedAt' => DateTime::now(),
             ])));

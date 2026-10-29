@@ -90,7 +90,7 @@ class XList extends Base
             }
 
             $alertId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->findOne('alerts', [
+            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->findOne('monitorAlerts', [
                 Query::equal('$id', [$alertId]),
                 Query::equal('projectInternalId', [$projectInternalId]),
             ]));
@@ -105,8 +105,8 @@ class XList extends Base
         $filterQueries = Query::groupByType($queries)->filters;
 
         try {
-            $alerts = $authorization->skip(fn () => $dbForPlatform->find('alerts', $queries));
-            $total = $includeTotal ? $authorization->skip(fn () => $dbForPlatform->count('alerts', $filterQueries, APP_LIMIT_COUNT)) : 0;
+            $alerts = $authorization->skip(fn () => $dbForPlatform->find('monitorAlerts', $queries));
+            $total = $includeTotal ? $authorization->skip(fn () => $dbForPlatform->count('monitorAlerts', $filterQueries, APP_LIMIT_COUNT)) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }

@@ -505,7 +505,7 @@ class Deletes extends Action
      */
     private function deleteAlerts(Database $dbForPlatform, string $datetime): void
     {
-        $this->deleteByGroup('alerts', [
+        $this->deleteByGroup('monitorAlerts', [
             Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
             Query::equal('status', ['resolved']),
             Query::lessThan('resolvedAt', $datetime),
@@ -1049,7 +1049,7 @@ class Deletes extends Action
         }
 
         // Delete monitors and the alerts they raised
-        foreach (['monitors', 'alerts'] as $collection) {
+        foreach (['monitors', 'monitorAlerts'] as $collection) {
             try {
                 $this->deleteByGroup($collection, [
                     Query::equal('projectInternalId', [$projectInternalId]),

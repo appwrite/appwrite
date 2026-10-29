@@ -165,7 +165,7 @@ class Alerts extends Action
             $alert = $this->open($monitor, $value, $comparator, $dbForPlatform);
             $changes->setAttribute('alertId', $alert->getId());
         } elseif ($previous === Status::Firing) {
-            $alert = $dbForPlatform->getDocument('alerts', (string) $monitor->getAttribute('alertId', ''));
+            $alert = $dbForPlatform->getDocument('monitorAlerts', (string) $monitor->getAttribute('alertId', ''));
             $changes->setAttribute('alertId', '');
         }
 
@@ -190,9 +190,9 @@ class Alerts extends Action
      */
     protected function open(Document $monitor, float $value, Comparator $comparator, Database $dbForPlatform): Document
     {
-        $alert = $dbForPlatform->getDocument('alerts', (string) $monitor->getAttribute('alertId', ''));
+        $alert = $dbForPlatform->getDocument('monitorAlerts', (string) $monitor->getAttribute('alertId', ''));
         if ($alert->isEmpty()) {
-            $alert = $dbForPlatform->findOne('alerts', [
+            $alert = $dbForPlatform->findOne('monitorAlerts', [
                 Query::equal('monitorInternalId', [(string) $monitor->getSequence()]),
                 Query::equal('status', [State::Firing->value]),
             ]);
@@ -203,7 +203,7 @@ class Alerts extends Action
 
         $alertId = Id::unique();
 
-        return $dbForPlatform->createDocument('alerts', new Document([
+        return $dbForPlatform->createDocument('monitorAlerts', new Document([
             '$id' => $alertId,
             '$permissions' => [],
             'name' => (string) $monitor->getAttribute('name'),
@@ -256,7 +256,7 @@ class Alerts extends Action
             $changes->setAttribute('resolvedAt', $evaluatedAt);
         }
 
-        $dbForPlatform->updateDocument('alerts', $alert->getId(), $changes);
+        $dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $changes);
     }
 
     /**
