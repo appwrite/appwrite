@@ -2,7 +2,7 @@
 
 namespace Utopia\Image;
 
-use Exception;
+use Utopia\Image\Exception\UnsupportedFormatException;
 
 enum Format: string
 {
@@ -36,7 +36,7 @@ enum Format: string
     /**
      * Identify the format from the file signature, so only decoders for these formats ever see the data.
      *
-     * @throws Exception
+     * @throws UnsupportedFormatException
      */
     public static function detect(string $data): self
     {
@@ -46,12 +46,12 @@ enum Format: string
             \str_starts_with($data, 'GIF87a'), \str_starts_with($data, 'GIF89a') => self::Gif,
             \str_starts_with($data, 'RIFF') && \substr($data, 8, 4) === 'WEBP' => self::Webp,
             \substr($data, 4, 4) === 'ftyp' => self::fromBrands($data),
-            default => throw new Exception('Unsupported image format'),
+            default => throw new UnsupportedFormatException(),
         };
     }
 
     /**
-     * @throws Exception
+     * @throws UnsupportedFormatException
      */
     private static function fromBrands(string $data): self
     {
@@ -78,7 +78,7 @@ enum Format: string
             $heic = $heic || \in_array($brand, self::HEIC_BRANDS, true);
         }
 
-        return $heic ? self::Heic : throw new Exception('Unsupported image format');
+        return $heic ? self::Heic : throw new UnsupportedFormatException();
     }
 
     private static function readSize(string $data, string $format, int $offset): int
