@@ -1353,7 +1353,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Load more': 'さらに読み込む',
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
-  Experiments: '実験',
+  Previews: 'プレビュー',
   'Features the quality team can try before they launch. Choices stay in this browser.':
     '公開前に品質チームが試せる機能です。選択内容はこのブラウザに保存されます。',
   'Appwrite Analytics': 'Appwrite Analytics',
@@ -1365,6 +1365,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Project transfers': 'プロジェクトの転送',
   'Transfer a project with a link that another organization claims, in place of moving it to one of your organizations.':
     '自分の組織へ移動する代わりに、別の組織が受け取るリンクでプロジェクトを転送します。',
+  Introduced: '追加日',
   'Repository not available': 'リポジトリを利用できません',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',

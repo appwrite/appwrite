@@ -131,6 +131,31 @@ export function clearDismissedBannerPrefs(
 }
 
 /**
+ * When the user last opened the previews popover. Previews introduced
+ * after it count as unseen. Value: ISO 8601 timestamp string.
+ */
+export const USER_PREFS_KEY_EXPERIMENTS_SEEN_AT = 'console.previews.seenAt'
+
+export function parseExperimentsSeenAt(
+  prefs: UserPrefs | null | undefined,
+): Date | null {
+  const raw = prefs?.[USER_PREFS_KEY_EXPERIMENTS_SEEN_AT]
+  if (typeof raw !== 'string' || !raw) return null
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+export function mergeExperimentsSeenAtPrefs(
+  prefs: UserPrefs | null | undefined,
+  seenAt: Date,
+): UserPrefs {
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_EXPERIMENTS_SEEN_AT]: seenAt.toISOString(),
+  }
+}
+
+/**
  * Project IDs where the user dismissed the Agents landing so project root
  * goes to Overview. Value: JSON string of project ID strings.
  */
