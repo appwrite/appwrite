@@ -1545,6 +1545,44 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertSame('error', \end($frames)['type'] ?? null);
     }
 
+    public function testAdminModeEndsWithOrganizationDeletion(): void
+    {
+        $rootHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+
+        $team = $this->createTeamFixture($rootHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Admin Deletion',
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+        $projectId = $this->createOrganizationProject($rootHeaders, $teamId);
+
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($rootHeaders, $teamId, $member, ['owner']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getAdminWebsocket($projectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        /**
+         * Test for FAILURE
+         */
+        // Deleting the organization ends its members' admin-mode connections.
+        $deletion = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId, $rootHeaders);
+        $this->assertSame(204, $deletion['headers']['status-code']);
+
+        $frames = $this->receiveUntilClosed($client);
+        $this->assertSame('error', \end($frames)['type'] ?? null);
+    }
+
     private function getAdminWebsocket(string $projectId, string $session, array $channels = ['documents']): WebSocketClient
     {
         return $this->getWebsocket($channels, [
