@@ -4,7 +4,7 @@ title: Appwrite Push
 description: Deliver push notifications to Android, iOS, web, Flutter, and React Native apps straight from Appwrite, without Firebase or device tokens.
 back: /docs/
 ---
-Appwrite Push is Appwrite's own push provider. Your app opens a connection to Appwrite's push broker with the Appwrite SDK, and messages you send with Appwrite Messaging arrive over that connection. There is no Firebase project to set up, no service account to upload, and no device token to register before you can reach a signed-in user.
+Appwrite Push is Appwrite's own push provider. Your app opens a connection to Appwrite's push broker with the Appwrite SDK, and messages you send with Appwrite Messaging arrive over that connection. You can reach a signed-in user without setting up Firebase or collecting device tokens.
 
 Appwrite Push works with the Web, Flutter, React Native, Android, and Apple SDKs. On Android it keeps delivering while the app is closed, and on iOS it works together with [APNs](/docs/products/messaging/apns) to show messages while the app is suspended.
 
@@ -12,7 +12,7 @@ Appwrite Push works with the Web, Flutter, React Native, Android, and Apple SDKs
 
 - **Every user has their own topic.** A signed-in user can subscribe to `users/<USER_ID>` without creating a topic first. A message sent with `users: ['<USER_ID>']` reaches all of that user's connected devices.
 - **Targets only when you need them.** Sending to a user with no push targets needs no setup. Register an [Appwrite push target](#push-target) to use topics, iOS background delivery, or Appwrite Push alongside FCM or APNs.
-- **The SDK holds the connection.** `Push` connects with the session the app signed in with, so there is no extra token to manage. When the user is blocked or deleted, Appwrite closes their connections. Signing out doesn't close connections on the user's other devices.
+- **The SDK holds the connection.** `Push` connects with the session the app signed in with, so you don't manage a separate token. When the user is blocked or deleted, Appwrite closes their connections. Signing out doesn't close connections on the user's other devices.
 - **Missed messages are replayed.** With the default delivery guarantee, Appwrite keeps each message for up to 7 days and replays the ones a device missed when it reconnects.
 - **Clients only receive.** Devices can't publish messages. Everything is sent from your server or the Console through [Messaging](/docs/products/messaging/messages).
 
@@ -165,7 +165,7 @@ Import the URL polyfill once, before the SDK:
 import 'react-native-url-polyfill/auto';
 ```
 
-On Expo SDK 52 and older, set `config.resolver.unstable_enablePackageExports = true` in `metro.config.js`. There is no config plugin: if you added `react-native-appwrite` to `plugins` in `app.json` while trying a release candidate, remove it and rebuild.
+On Expo SDK 52 and older, set `config.resolver.unstable_enablePackageExports = true` in `metro.config.js`. The SDK doesn't use a config plugin. If you added `react-native-appwrite` to `plugins` in `app.json` while trying a release candidate, remove it and rebuild.
 {% /tabsitem %}
 
 {% tabsitem #setup-android title="Android" %}
@@ -536,7 +536,7 @@ if (status.bestEffort) {
 }
 ```
 
-Both helpers return `false` when there is nothing to ask, or when the matching permission isn't declared in your manifest. Flutter and React Native have the same methods on `push`, without the `context` argument. They're async, `backgroundStatus()` returns `null` outside Android, and both requests resolve to `false` outside Android.
+Both helpers return `false` when the permission is already granted or not needed, or when the matching permission isn't declared in your manifest. Flutter and React Native have the same methods on `push`, without the `context` argument. They're async, `backgroundStatus()` returns `null` outside Android, and both requests resolve to `false` outside Android.
 
 For immediate delivery, `push.setForeground(true)` runs a foreground service with a quiet ongoing notification. Call it while the app is on screen. The setting is saved across restarts. It uses a `remoteMessaging` foreground service, which Google Play asks you to declare. If you never use it, remove the push service (`io.appwrite.services.PushService` on Android, `io.appwrite.flutter.services.PushService` on Flutter, `io.appwrite.reactnative.services.PushService` on React Native) and the `FOREGROUND_SERVICE_REMOTE_MESSAGING` permission from your merged manifest with `tools:node="remove"`.
 
