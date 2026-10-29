@@ -32,6 +32,44 @@ final class AdapterTest extends TestCase
         $this->testServer('127.0.0.1', 18082);
     }
 
+    public function testSecureSchemeNegotiatesTlsOnNonstandardPort(): void
+    {
+        run(function (): void {
+            $server = new Socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+            $this->assertTrue($server->bind('127.0.0.1', 0));
+            $this->assertTrue($server->listen());
+            $address = $server->getsockname();
+            $this->assertIsArray($address);
+            $port = $address['port'];
+            $this->assertIsInt($port);
+
+            $received = '';
+            Coroutine::create(function () use ($server, &$received): void {
+                $connection = $server->accept(5);
+                if ($connection instanceof Socket) {
+                    $data = $connection->recv(65535, 5);
+                    $received = \is_string($data) ? $data : '';
+                    $connection->close();
+                }
+            });
+
+            $client = new Client('wss://127.0.0.1:' . $port, [
+                'headers' => ['Authorization' => 'Bearer secret'],
+                'timeout' => 2,
+            ]);
+
+            try {
+                $client->connect();
+            } catch (\RuntimeException) {
+            }
+            $server->close();
+
+            $this->assertNotSame('', $received);
+            $this->assertSame("\x16", $received[0], 'Expected a TLS handshake record');
+            $this->assertStringNotContainsString('Bearer secret', $received);
+        });
+    }
+
     public function testSwooleTimesOutStalledSends(): void
     {
         $this->testPendingSends(false);

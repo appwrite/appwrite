@@ -37,6 +37,7 @@ import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
 import { Route as MarketingAffiliatesRouteImport } from './routes/_marketing/affiliates'
+import { Route as MarketingAgenciesRouteImport } from './routes/_marketing/agencies'
 import { Route as MarketingAssetsRouteImport } from './routes/_marketing/assets'
 import { Route as MarketingBaaRouteImport } from './routes/_marketing/baa'
 import { Route as MarketingCommunityRouteImport } from './routes/_marketing/community'
@@ -47,6 +48,7 @@ import { Route as MarketingEducationRouteImport } from './routes/_marketing/educ
 import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
 import { Route as MarketingForAgentsRouteImport } from './routes/_marketing/for-agents'
 import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
+import { Route as MarketingInnovationTeamsRouteImport } from './routes/_marketing/innovation-teams'
 import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
 import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privacy'
@@ -81,6 +83,7 @@ import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changel
 import { Route as ApiDebugIpRouteImport } from './routes/_api/debug.ip'
 import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
+import { Route as ApiOgCoverDotjpgRouteImport } from './routes/_api/og/cover[.]jpg'
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png'
 import { Route as ApiReferencesApiModelRouteImport } from './routes/_api/references-api/model'
@@ -291,6 +294,7 @@ import { Route as PublicProjectsProjectIdAuthPoliciesEmailsRouteImport } from '.
 import { Route as PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport } from './routes/_public/projects.$projectId.auth.policies.memberships'
 import { Route as PublicProjectsProjectIdAuthPoliciesPasskeysRouteImport } from './routes/_public/projects.$projectId.auth.policies.passkeys'
 import { Route as PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport } from './routes/_public/projects.$projectId.auth.policies.passwords'
+import { Route as PublicProjectsProjectIdAuthPoliciesRealtimeRouteImport } from './routes/_public/projects.$projectId.auth.policies.realtime'
 import { Route as PublicProjectsProjectIdAuthPoliciesSessionsRouteImport } from './routes/_public/projects.$projectId.auth.policies.sessions'
 import { Route as PublicProjectsProjectIdAuthPoliciesUsersRouteImport } from './routes/_public/projects.$projectId.auth.policies.users'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId'
@@ -607,6 +611,11 @@ const MarketingAffiliatesRoute = MarketingAffiliatesRouteImport.update({
   path: '/affiliates',
   getParentRoute: () => MarketingRoute,
 } as any)
+const MarketingAgenciesRoute = MarketingAgenciesRouteImport.update({
+  id: '/agencies',
+  path: '/agencies',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingAssetsRoute = MarketingAssetsRouteImport.update({
   id: '/assets',
   path: '/assets',
@@ -657,6 +666,12 @@ const MarketingHomeRoute = MarketingHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => MarketingRoute,
 } as any)
+const MarketingInnovationTeamsRoute =
+  MarketingInnovationTeamsRouteImport.update({
+    id: '/innovation-teams',
+    path: '/innovation-teams',
+    getParentRoute: () => MarketingRoute,
+  } as any)
 const MarketingPartnersRoute = MarketingPartnersRouteImport.update({
   id: '/partners',
   path: '/partners',
@@ -826,6 +841,11 @@ const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
 const ApiGeneratorDiagramRoute = ApiGeneratorDiagramRouteImport.update({
   id: '/_api/generator/diagram',
   path: '/generator/diagram',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOgCoverDotjpgRoute = ApiOgCoverDotjpgRouteImport.update({
+  id: '/_api/og/cover.jpg',
+  path: '/og/cover.jpg',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiOgImageDotpngRoute = ApiOgImageDotpngRouteImport.update({
@@ -2042,6 +2062,12 @@ const PublicProjectsProjectIdAuthPoliciesPasswordsRoute =
   PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport.update({
     id: '/passwords',
     path: '/passwords',
+    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
+  } as any)
+const PublicProjectsProjectIdAuthPoliciesRealtimeRoute =
+  PublicProjectsProjectIdAuthPoliciesRealtimeRouteImport.update({
+    id: '/realtime',
+    path: '/realtime',
     getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
   } as any)
 const PublicProjectsProjectIdAuthPoliciesSessionsRoute =
@@ -3373,6 +3399,7 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/affiliates': typeof MarketingAffiliatesRoute
+  '/agencies': typeof MarketingAgenciesRoute
   '/assets': typeof MarketingAssetsRoute
   '/baa': typeof MarketingBaaRoute
   '/community': typeof MarketingCommunityRoute
@@ -3383,6 +3410,7 @@ export interface FileRoutesByFullPath {
   '/enterprise': typeof MarketingEnterpriseRoute
   '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
+  '/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
   '/privacy': typeof MarketingPrivacyRoute
@@ -3417,6 +3445,7 @@ export interface FileRoutesByFullPath {
   '/debug/ip': typeof ApiDebugIpRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/og/cover.jpg': typeof ApiOgCoverDotjpgRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/references-api/model': typeof ApiReferencesApiModelRoute
@@ -3621,6 +3650,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   '/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  '/projects/$projectId/auth/policies/realtime': typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   '/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
   '/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
@@ -3830,6 +3860,7 @@ export interface FileRoutesByTo {
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/affiliates': typeof MarketingAffiliatesRoute
+  '/agencies': typeof MarketingAgenciesRoute
   '/assets': typeof MarketingAssetsRoute
   '/baa': typeof MarketingBaaRoute
   '/community': typeof MarketingCommunityRoute
@@ -3840,6 +3871,7 @@ export interface FileRoutesByTo {
   '/enterprise': typeof MarketingEnterpriseRoute
   '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
+  '/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
   '/privacy': typeof MarketingPrivacyRoute
@@ -3872,6 +3904,7 @@ export interface FileRoutesByTo {
   '/debug/ip': typeof ApiDebugIpRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/og/cover.jpg': typeof ApiOgCoverDotjpgRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/references-api/model': typeof ApiReferencesApiModelRoute
@@ -4043,6 +4076,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   '/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  '/projects/$projectId/auth/policies/realtime': typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   '/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
   '/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
@@ -4242,6 +4276,7 @@ export interface FileRoutesById {
   '/_auth/sign-up': typeof AuthSignUpRoute
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/_marketing/affiliates': typeof MarketingAffiliatesRoute
+  '/_marketing/agencies': typeof MarketingAgenciesRoute
   '/_marketing/assets': typeof MarketingAssetsRoute
   '/_marketing/baa': typeof MarketingBaaRoute
   '/_marketing/community': typeof MarketingCommunityRoute
@@ -4252,6 +4287,7 @@ export interface FileRoutesById {
   '/_marketing/enterprise': typeof MarketingEnterpriseRoute
   '/_marketing/for-agents': typeof MarketingForAgentsRoute
   '/_marketing/home': typeof MarketingHomeRoute
+  '/_marketing/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/_marketing/partners': typeof MarketingPartnersRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
   '/_marketing/privacy': typeof MarketingPrivacyRoute
@@ -4287,6 +4323,7 @@ export interface FileRoutesById {
   '/_api/debug/ip': typeof ApiDebugIpRoute
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/_api/og/cover.jpg': typeof ApiOgCoverDotjpgRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
   '/_api/og/init.png': typeof ApiOgInitDotpngRoute
   '/_api/references-api/model': typeof ApiReferencesApiModelRoute
@@ -4491,6 +4528,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   '/_public/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/_public/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  '/_public/projects/$projectId/auth/policies/realtime': typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   '/_public/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/_public/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
   '/_public/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
@@ -4704,6 +4742,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/verify-email'
     | '/affiliates'
+    | '/agencies'
     | '/assets'
     | '/baa'
     | '/community'
@@ -4714,6 +4753,7 @@ export interface FileRouteTypes {
     | '/enterprise'
     | '/for-agents'
     | '/home'
+    | '/innovation-teams'
     | '/partners'
     | '/pricing'
     | '/privacy'
@@ -4748,6 +4788,7 @@ export interface FileRouteTypes {
     | '/debug/ip'
     | '/generator/cover'
     | '/generator/diagram'
+    | '/og/cover.jpg'
     | '/og/image.png'
     | '/og/init.png'
     | '/references-api/model'
@@ -4952,6 +4993,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/policies/memberships'
     | '/projects/$projectId/auth/policies/passkeys'
     | '/projects/$projectId/auth/policies/passwords'
+    | '/projects/$projectId/auth/policies/realtime'
     | '/projects/$projectId/auth/policies/sessions'
     | '/projects/$projectId/auth/policies/users'
     | '/projects/$projectId/auth/teams/$teamId'
@@ -5161,6 +5203,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/verify-email'
     | '/affiliates'
+    | '/agencies'
     | '/assets'
     | '/baa'
     | '/community'
@@ -5171,6 +5214,7 @@ export interface FileRouteTypes {
     | '/enterprise'
     | '/for-agents'
     | '/home'
+    | '/innovation-teams'
     | '/partners'
     | '/pricing'
     | '/privacy'
@@ -5203,6 +5247,7 @@ export interface FileRouteTypes {
     | '/debug/ip'
     | '/generator/cover'
     | '/generator/diagram'
+    | '/og/cover.jpg'
     | '/og/image.png'
     | '/og/init.png'
     | '/references-api/model'
@@ -5374,6 +5419,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/policies/memberships'
     | '/projects/$projectId/auth/policies/passkeys'
     | '/projects/$projectId/auth/policies/passwords'
+    | '/projects/$projectId/auth/policies/realtime'
     | '/projects/$projectId/auth/policies/sessions'
     | '/projects/$projectId/auth/policies/users'
     | '/projects/$projectId/auth/teams/$teamId'
@@ -5572,6 +5618,7 @@ export interface FileRouteTypes {
     | '/_auth/sign-up'
     | '/_auth/verify-email'
     | '/_marketing/affiliates'
+    | '/_marketing/agencies'
     | '/_marketing/assets'
     | '/_marketing/baa'
     | '/_marketing/community'
@@ -5582,6 +5629,7 @@ export interface FileRouteTypes {
     | '/_marketing/enterprise'
     | '/_marketing/for-agents'
     | '/_marketing/home'
+    | '/_marketing/innovation-teams'
     | '/_marketing/partners'
     | '/_marketing/pricing'
     | '/_marketing/privacy'
@@ -5617,6 +5665,7 @@ export interface FileRouteTypes {
     | '/_api/debug/ip'
     | '/_api/generator/cover'
     | '/_api/generator/diagram'
+    | '/_api/og/cover.jpg'
     | '/_api/og/image.png'
     | '/_api/og/init.png'
     | '/_api/references-api/model'
@@ -5821,6 +5870,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/auth/policies/memberships'
     | '/_public/projects/$projectId/auth/policies/passkeys'
     | '/_public/projects/$projectId/auth/policies/passwords'
+    | '/_public/projects/$projectId/auth/policies/realtime'
     | '/_public/projects/$projectId/auth/policies/sessions'
     | '/_public/projects/$projectId/auth/policies/users'
     | '/_public/projects/$projectId/auth/teams/$teamId'
@@ -6039,6 +6089,7 @@ export interface RootRouteChildren {
   ApiDebugIpRoute: typeof ApiDebugIpRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
+  ApiOgCoverDotjpgRoute: typeof ApiOgCoverDotjpgRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
   ApiOgInitDotpngRoute: typeof ApiOgInitDotpngRoute
   ApiReferencesApiModelRoute: typeof ApiReferencesApiModelRoute
@@ -6251,6 +6302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingAffiliatesRouteImport
       parentRoute: typeof MarketingRoute
     }
+    '/_marketing/agencies': {
+      id: '/_marketing/agencies'
+      path: '/agencies'
+      fullPath: '/agencies'
+      preLoaderRoute: typeof MarketingAgenciesRouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/assets': {
       id: '/_marketing/assets'
       path: '/assets'
@@ -6319,6 +6377,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof MarketingHomeRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/innovation-teams': {
+      id: '/_marketing/innovation-teams'
+      path: '/innovation-teams'
+      fullPath: '/innovation-teams'
+      preLoaderRoute: typeof MarketingInnovationTeamsRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/partners': {
@@ -6557,6 +6622,13 @@ declare module '@tanstack/react-router' {
       path: '/generator/diagram'
       fullPath: '/generator/diagram'
       preLoaderRoute: typeof ApiGeneratorDiagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/og/cover.jpg': {
+      id: '/_api/og/cover.jpg'
+      path: '/og/cover.jpg'
+      fullPath: '/og/cover.jpg'
+      preLoaderRoute: typeof ApiOgCoverDotjpgRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/og/image.png': {
@@ -8029,6 +8101,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
     }
+    '/_public/projects/$projectId/auth/policies/realtime': {
+      id: '/_public/projects/$projectId/auth/policies/realtime'
+      path: '/realtime'
+      fullPath: '/projects/$projectId/auth/policies/realtime'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesRealtimeRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
+    }
     '/_public/projects/$projectId/auth/policies/sessions': {
       id: '/_public/projects/$projectId/auth/policies/sessions'
       path: '/sessions'
@@ -9325,6 +9404,7 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface MarketingRouteChildren {
   MarketingAffiliatesRoute: typeof MarketingAffiliatesRoute
+  MarketingAgenciesRoute: typeof MarketingAgenciesRoute
   MarketingAssetsRoute: typeof MarketingAssetsRoute
   MarketingBaaRoute: typeof MarketingBaaRoute
   MarketingCommunityRoute: typeof MarketingCommunityRoute
@@ -9335,6 +9415,7 @@ interface MarketingRouteChildren {
   MarketingEnterpriseRoute: typeof MarketingEnterpriseRoute
   MarketingForAgentsRoute: typeof MarketingForAgentsRoute
   MarketingHomeRoute: typeof MarketingHomeRoute
+  MarketingInnovationTeamsRoute: typeof MarketingInnovationTeamsRoute
   MarketingPartnersRoute: typeof MarketingPartnersRoute
   MarketingPricingRoute: typeof MarketingPricingRoute
   MarketingPrivacyRoute: typeof MarketingPrivacyRoute
@@ -9361,6 +9442,7 @@ interface MarketingRouteChildren {
 
 const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingAffiliatesRoute: MarketingAffiliatesRoute,
+  MarketingAgenciesRoute: MarketingAgenciesRoute,
   MarketingAssetsRoute: MarketingAssetsRoute,
   MarketingBaaRoute: MarketingBaaRoute,
   MarketingCommunityRoute: MarketingCommunityRoute,
@@ -9371,6 +9453,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingEnterpriseRoute: MarketingEnterpriseRoute,
   MarketingForAgentsRoute: MarketingForAgentsRoute,
   MarketingHomeRoute: MarketingHomeRoute,
+  MarketingInnovationTeamsRoute: MarketingInnovationTeamsRoute,
   MarketingPartnersRoute: MarketingPartnersRoute,
   MarketingPricingRoute: MarketingPricingRoute,
   MarketingPrivacyRoute: MarketingPrivacyRoute,
@@ -9822,6 +9905,7 @@ interface PublicProjectsProjectIdAuthPoliciesRouteChildren {
   PublicProjectsProjectIdAuthPoliciesMembershipsRoute: typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   PublicProjectsProjectIdAuthPoliciesPasskeysRoute: typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   PublicProjectsProjectIdAuthPoliciesPasswordsRoute: typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  PublicProjectsProjectIdAuthPoliciesRealtimeRoute: typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   PublicProjectsProjectIdAuthPoliciesSessionsRoute: typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   PublicProjectsProjectIdAuthPoliciesUsersRoute: typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
 }
@@ -9836,6 +9920,8 @@ const PublicProjectsProjectIdAuthPoliciesRouteChildren: PublicProjectsProjectIdA
       PublicProjectsProjectIdAuthPoliciesPasskeysRoute,
     PublicProjectsProjectIdAuthPoliciesPasswordsRoute:
       PublicProjectsProjectIdAuthPoliciesPasswordsRoute,
+    PublicProjectsProjectIdAuthPoliciesRealtimeRoute:
+      PublicProjectsProjectIdAuthPoliciesRealtimeRoute,
     PublicProjectsProjectIdAuthPoliciesSessionsRoute:
       PublicProjectsProjectIdAuthPoliciesSessionsRoute,
     PublicProjectsProjectIdAuthPoliciesUsersRoute:
@@ -11278,6 +11364,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDebugIpRoute: ApiDebugIpRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
+  ApiOgCoverDotjpgRoute: ApiOgCoverDotjpgRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,
   ApiOgInitDotpngRoute: ApiOgInitDotpngRoute,
   ApiReferencesApiModelRoute: ApiReferencesApiModelRoute,

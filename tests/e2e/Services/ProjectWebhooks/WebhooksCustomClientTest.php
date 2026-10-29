@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 final class WebhooksCustomClientTest extends Scope
@@ -35,7 +35,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -80,7 +80,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -93,7 +93,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -131,7 +131,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -162,7 +162,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.status"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -198,7 +198,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -227,7 +227,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -309,7 +309,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.delete"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -418,7 +418,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.delete"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -488,7 +488,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.name"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -550,7 +550,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.password"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -612,7 +612,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.email"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -674,7 +674,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.prefs"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -727,7 +727,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.verification.{$verificationId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -793,7 +793,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.verification.{$verificationId}.update"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -843,7 +843,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.recovery.{$recoveryId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -910,7 +910,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.recovery.{$recoveryId}.update"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -964,7 +964,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("teams.{$teamUid}.memberships.{$membershipUid}.update.status"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 

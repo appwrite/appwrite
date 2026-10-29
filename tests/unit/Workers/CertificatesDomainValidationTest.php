@@ -42,6 +42,8 @@ final class CertificatesDomainValidationTest extends TestCase
 {
     private const DOMAIN = 'www.example.invalid';
 
+    private const MAIN_DOMAIN = 'appwrite.example.invalid';
+
     public function testAJobFromAVerifiedEndpointReachesIssuanceWithoutASecondDnsCheck(): void
     {
         $certificates = $this->createMock(Provider::class);
@@ -127,6 +129,7 @@ final class CertificatesDomainValidationTest extends TestCase
             project: new Document(['$id' => 'project-1', '$sequence' => '1']),
             domain: new Document(['domain' => self::DOMAIN, 'domainType' => 'site']),
             action: CertificateEvent::ACTION_GENERATION,
+            validationDomain: self::MAIN_DOMAIN,
             skipDomainValidation: $skipDomainValidation,
         ))->toArray());
 

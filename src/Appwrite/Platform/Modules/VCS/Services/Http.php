@@ -5,6 +5,9 @@ namespace Appwrite\Platform\Modules\VCS\Services;
 use Appwrite\Platform\Modules\VCS\Http\Bitbucket\Authorize\Get as GetBitbucketAuthorize;
 use Appwrite\Platform\Modules\VCS\Http\Bitbucket\Callback\Get as GetBitbucketCallback;
 use Appwrite\Platform\Modules\VCS\Http\Bitbucket\Events\Create as CreateBitbucketEvent;
+use Appwrite\Platform\Modules\VCS\Http\Entire\Authorize\Get as GetEntireAuthorize;
+use Appwrite\Platform\Modules\VCS\Http\Entire\Callback\Get as GetEntireCallback;
+use Appwrite\Platform\Modules\VCS\Http\Entire\Events\Create as CreateEntireEvent;
 use Appwrite\Platform\Modules\VCS\Http\Gitea\Authorize\Get as GetGiteaAuthorize;
 use Appwrite\Platform\Modules\VCS\Http\Gitea\Callback\Get as GetGiteaCallback;
 use Appwrite\Platform\Modules\VCS\Http\Gitea\Events\Create as CreateGiteaEvent;
@@ -57,6 +60,10 @@ class Http extends Service
         $this->addAction(GetOriginAuthorize::getName(), new GetOriginAuthorize());
         $this->addAction(GetOriginCallback::getName(), new GetOriginCallback());
 
+        // Entire Authorization & Callback
+        $this->addAction(GetEntireAuthorize::getName(), new GetEntireAuthorize());
+        $this->addAction(GetEntireCallback::getName(), new GetEntireCallback());
+
         // Installations
         $this->addAction(GetInstallation::getName(), new GetInstallation());
         $this->addAction(ListInstallations::getName(), new ListInstallations());
@@ -77,5 +84,6 @@ class Http extends Service
         $this->addAction(CreateGitlabEvent::getName(), new CreateGitlabEvent());
         $this->addAction(CreateBitbucketEvent::getName(), new CreateBitbucketEvent());
         $this->addAction(CreateOriginEvent::getName(), new CreateOriginEvent());
+        $this->addAction(CreateEntireEvent::getName(), new CreateEntireEvent());
     }
 }

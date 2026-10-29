@@ -1,0 +1,56 @@
+---
+layout: article
+title: Limits and retention
+description: Appwrite Analytics plan limits for events, properties, and data retention, and the size limits for events, properties, and metric queries.
+---
+
+This page lists how many events Appwrite Analytics accepts on each plan and how far back you can see them, and the size limits that apply to every event and request.
+
+# Plan limits {% #plans %}
+
+| | Free | Pro | Enterprise |
+| --- | --- | --- | --- |
+| Events | 50K per month | 100K per month | Custom |
+| Additional events | Not available | $3 per 100K events | Custom |
+| Properties | 1 per project | 5 per project | Unlimited |
+| Data retention | 30 days | 90 days | Custom |
+
+The events limit covers every property in the organization. Every event Appwrite accepts counts toward it, including the automatic events the tracking helpers send, such as `scroll_depth` and `engagement_time`. Events from [bots](/docs/products/analytics/bots) don't count.
+
+For the rest of each plan, see [Pricing](/pricing).
+
+# Retention {% #retention %}
+
+Your plan's retention period sets how far back the dashboard and `listMetrics` can read. A date range that starts earlier, such as **Last 12 months** on the Free plan, starts at the oldest data you can access.
+
+Appwrite stores events for 180 days on every plan, then deletes them. No plan's retention period, including a custom Enterprise one, reaches further back than those 180 days.
+
+# Event limits {% #event-limits %}
+
+- `name`: 1 to 64 characters.
+- `url`: required, with a scheme such as `https://`.
+- `domain`: up to 255 characters.
+- `referrer`: up to 2,048 characters.
+- `scrollDepth`: `0` to `100`.
+- `sessionHash`: up to 128 characters.
+- `props`: up to 32 items, so 16 key and value pairs, each up to 255 characters.
+- `userId`: up to 64 characters.
+- `ip`: up to 45 characters.
+- `userAgent`: up to 2,048 characters.
+
+An event over any limit is rejected with a `400` `general_argument_invalid` error.
+
+# Property limits {% #property-limits %}
+
+- **Property ID**: up to 36 characters. Letters, numbers, periods, hyphens, and underscores, not starting with a special character.
+- **Name**: up to 128 characters.
+- **Domain**: up to 255 characters.
+- **Allowed origins**: up to 64 origins, each up to 255 characters.
+
+# Metric query limits {% #query-limits %}
+
+- `queries`: up to 10 filters.
+- `dimensions`: one dimension per request.
+- `limit`: 1 to 500 rows, 100 by default.
+
+On the dashboard, the hourly **1h** interval is available for date ranges of 31 days or less.
