@@ -1,1 +1,2 @@
-FILE_CONTENT_FROM_WORKSPACE
+<?php
+// restoring via MCP
