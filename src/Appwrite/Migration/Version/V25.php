@@ -13,6 +13,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Query;
+use Utopia\Emails\Email;
 use Utopia\Migration\Resource;
 use Utopia\Query\Schema\ColumnType;
 
@@ -651,7 +652,7 @@ class V25 extends Migration
             if (
                 $user !== null
                 && $user->getAttribute('emailVerification', false) === true
-                && $user->getAttribute('email') === $identity->getAttribute('providerEmail')
+                && $this->isOwnerEmail((string) $identity->getAttribute('providerEmail', ''), (string) $user->getAttribute('email', ''))
             ) {
                 continue;
             }
@@ -660,6 +661,26 @@ class V25 extends Migration
                 'providerEmail' => '',
             ]));
         }
+    }
+
+    /**
+     * Whether the provider email is the owner's email, ignoring case or as the
+     * same-domain canonical form the OAuth2 flow stores on users.
+     */
+    private function isOwnerEmail(string $providerEmail, string $email): bool
+    {
+        if (\mb_strtolower($providerEmail) === \mb_strtolower($email)) {
+            return true;
+        }
+
+        try {
+            $canonicalLocal = \explode('@', (new Email($providerEmail))->getCanonical(), 2)[0];
+        } catch (Throwable) {
+            return false;
+        }
+        $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
+
+        return $canonicalLocal . '@' . $providerDomain === \mb_strtolower($email);
     }
 
     protected function migrateDocument(Document $document): Document

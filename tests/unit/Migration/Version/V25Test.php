@@ -585,6 +585,7 @@ final class V25Test extends TestCase
         $users = [
             'verified' => ['email' => 'owner@example.com', 'emailVerification' => true],
             'unverified' => ['email' => 'pending@example.com', 'emailVerification' => false],
+            'canonical' => ['email' => 'johndoe@gmail.com', 'emailVerification' => true],
         ];
         foreach ($users as $userId => $user) {
             $database->createDocument('users', new Document(['$id' => $userId, ...$user]));
@@ -594,7 +595,10 @@ final class V25Test extends TestCase
         $identities = [
             'matches' => ['verified', 'owner@example.com', 'owner@example.com'],
             'differs' => ['verified', 'other@example.com', ''],
+            'caseOnly' => ['verified', 'Owner@Example.com', 'Owner@Example.com'],
+            'canonicalOnly' => ['canonical', 'John.Doe+oauth@gmail.com', 'John.Doe+oauth@gmail.com'],
             'unverifiedOwner' => ['unverified', 'pending@example.com', ''],
+            'unverifiedOwnerCase' => ['unverified', 'Pending@Example.com', ''],
             'missingOwner' => ['deleted', 'owner@example.com', ''],
             'empty' => ['verified', '', ''],
         ];
