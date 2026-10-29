@@ -16,13 +16,28 @@ export function isFunctionEmailEnabled(
   return func?.emailEnabled === true
 }
 
+/** Local part of the default address. Edge accepts any local part. */
+export const FUNCTION_EMAIL_LOCAL_PART = 'contact'
+
+/** A DNS label is at most 63 characters of `a-z`, `0-9` and `-`. */
+const MAX_DNS_LABEL_LENGTH = 63
+const DNS_LABEL_PART = /^[a-z0-9-]+$/
+
 /**
- * Appwrite-owned testing address, `{functionId}@{projectId}.{zone}`.
+ * Appwrite-owned testing address, `contact@{functionId}-{projectId}.{zone}`.
  *
- * `zone` is `_APP_DOMAIN_EMAIL` from console variables. Project IDs are
- * lowercase-only; the function ID keeps its case because Edge matches the
- * local-part against the real ID. Returns null when any part is missing, so
- * the console never shows an address the region does not serve.
+ * The function and project IDs share one DNS label, so the local part is
+ * free: senders can use any mailbox name or plus-tag
+ * (`orders+eu@{functionId}-{projectId}.{zone}`). DNS is case-insensitive, so
+ * the label is lowercased; Edge matches IDs case-insensitively.
+ *
+ * A function ID with `.` or `_`, or IDs too long for one label, cannot go in
+ * the host, so those fall back to the earlier `{functionId}@{projectId}.{zone}`
+ * form, which Edge still routes and where the function ID keeps its case.
+ *
+ * `zone` is `_APP_DOMAIN_EMAIL` from console variables. Returns null when any
+ * part is missing, so the console never shows an address the region does not
+ * serve.
  */
 export function buildFunctionEmailAddress(
   projectId: string | null | undefined,
@@ -33,6 +48,11 @@ export function buildFunctionEmailAddress(
   const fn = functionId?.trim() ?? ''
   const domain = zone?.trim().toLowerCase() ?? ''
   if (project === '' || fn === '' || domain === '') return null
+
+  const label = `${fn.toLowerCase()}-${project}`
+  if (DNS_LABEL_PART.test(label) && label.length <= MAX_DNS_LABEL_LENGTH) {
+    return `${FUNCTION_EMAIL_LOCAL_PART}@${label}.${domain}`
+  }
   return `${fn}@${project}.${domain}`
 }
 
