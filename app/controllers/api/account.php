@@ -1881,6 +1881,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
         $providerEmail = $oauth2->getUserEmail($accessToken);
         $email = $providerEmail;
+        $isVerified = $oauth2->isEmailVerified($accessToken);
 
         // Check if this identity is connected to a different user
         if (!$user->isEmpty()) {
@@ -1953,8 +1954,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $newTarget = null;
 
         if ($user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
-            $isVerified = $oauth2->isEmailVerified($accessToken);
-
             $identity = $dbForProject->findOne('identities', [
                 Query::equal('provider', [$provider]),
                 Query::equal('providerUid', [$oauth2ID]),
@@ -2156,8 +2155,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'emailIsFree' => null,
             ];
 
-            $isVerified = $oauth2->isEmailVerified($accessToken);
-
             try {
                 $parsedEmail = new Email($providerEmail);
                 $canonical = $parsedEmail->getCanonical();
@@ -2281,7 +2278,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'userId' => $userId,
                     'provider' => $provider,
                     'providerUid' => $oauth2ID,
-                    'providerEmail' => $providerEmail,
+                    // Identity email lookups adopt users, so only store an attested address
+                    'providerEmail' => $isVerified ? $providerEmail : '',
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => $refreshToken,
                     'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
