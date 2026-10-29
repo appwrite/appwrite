@@ -1785,6 +1785,9 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - redis
       - \${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_DNS
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_MEMORY_LIMIT
       - _APP_WORKER_PER_CORE
@@ -2155,7 +2158,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
     name: 'appwrite-browser',
     block: `  appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.9
+    image: appwrite/browser:0.3.10
     networks:
       - browser
     environment:
