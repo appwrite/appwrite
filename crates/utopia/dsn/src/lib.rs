@@ -15,7 +15,9 @@
 //! | `getScheme()`, `getHost()` | [`Dsn::scheme`], [`Dsn::host`] |
 //! | `getUser()`, `getPassword()` | [`Dsn::user`], [`Dsn::password`] (bytes: they are URL-decoded) |
 //! | `getPort()` (`?string`) | [`Dsn::port`] (`Option<u16>`; PHP's string is its decimal form) |
-//! | `getPath()`, `getQuery()` | [`Dsn::path`], [`Dsn::query`] |
+//! | `DSN::from(...)` | [`Dsn::from`] |
+//! | `getPath()`, `getQuery()` | [`Dsn::path`] (bytes: it is URL-decoded), [`Dsn::query`] |
+//! | `__toString()` | [`Dsn`]'s `Display` |
 //! | `getParam($key, $default)` | [`Dsn::param`] (`Ok(None)` where PHP returns `$default`), [`Dsn::param_or`] |
 //! | `\InvalidArgumentException`, `\TypeError` | [`Error::InvalidArgument`], [`Error::Type`] |
 //!
@@ -32,7 +34,7 @@
 //! assert_eq!(dsn.scheme(), "mariadb");
 //! assert_eq!(dsn.host(), "localhost");
 //! assert_eq!(dsn.port(), Some(3306));
-//! assert_eq!(dsn.path(), "appwrite");
+//! assert_eq!(dsn.path(), b"appwrite");
 //! assert_eq!(dsn.param("charset")?, Some(&b"utf8mb4"[..]));
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
@@ -58,8 +60,8 @@ use std::fmt;
 pub struct GettingStarted;
 use std::sync::OnceLock;
 
-use php_std::encoding::{parse_str, urldecode};
-use php_std::{Array, Value};
+use php_std::encoding::{parse_str, rawurldecode, rawurlencode, urldecode};
+use php_std::{Array, ArrayKey, Value};
 
 /// Why a DSN was refused or a parameter could not be read.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -153,7 +155,7 @@ pub struct Dsn {
     password: Option<Vec<u8>>,
     host: String,
     port: Option<u16>,
-    path: String,
+    path: Vec<u8>,
     query: Option<String>,
     /// The query parsed by `parse_str`, on first use.
     params: OnceLock<Array>,
@@ -204,10 +206,118 @@ impl Dsn {
             password: url.pass().map(|p| urldecode(&p)),
             host: text(&host),
             port: url.port(),
-            path: url.path().map(|p| text(php_std::string::ltrim(&p, b"/"))).unwrap_or_default(),
+            path: url.path().map(|p| rawurldecode(php_std::string::ltrim(&p, b"/"))).unwrap_or_default(),
             query: url.query().map(|q| text(&q)),
             params: OnceLock::new(),
         })
+    }
+
+    /// Builds a DSN from its parts, encoding each one, so a value cannot
+    /// reshape it (a `?` in the path starting the query, an `@` in the user
+    /// moving the host).
+    ///
+    /// Fails with [`Error::InvalidArgument`] when `password` is given without
+    /// `user`, or when a part would not read back exactly as given (a host
+    /// holding `/`, `@` or `:`, a parameter key `getParam` rewrites, like
+    /// `a.b` or `x[y]`).
+    ///
+    /// PHP: `DSN::from($scheme, $host, $user, $password, $port, $path,
+    /// $params)`. The port is PHP's `?int`; a key of `params` that is a
+    /// canonical integer is an integer key, as in a PHP array literal, and a
+    /// repeated key keeps its last value.
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// let dsn = Dsn::from(
+    ///     "s3",
+    ///     "minio.example.com",
+    ///     Some(b"admin@example.com"),
+    ///     Some(b"p@ss/word"),
+    ///     Some(9000),
+    ///     b"bucket",
+    ///     &[("region", "us-east-1")],
+    /// )?;
+    /// assert_eq!(dsn.to_string(), "s3://admin%40example.com:p%40ss%2Fword@minio.example.com:9000/bucket?region=us-east-1");
+    /// assert!(Dsn::from("s3", "user@minio.example.com", None, None, None, b"", &[]).is_err());
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// $dsn = DSN::from(
+    ///     scheme: 's3',
+    ///     host: 'minio.example.com',
+    ///     user: 'admin@example.com',
+    ///     password: 'p@ss/word',
+    ///     port: 9000,
+    ///     path: 'bucket',
+    ///     params: ['region' => 'us-east-1'],
+    /// );
+    /// echo $dsn, "\n"; // s3://admin%40example.com:p%40ss%2Fword@minio.example.com:9000/bucket?region=us-east-1
+    /// ```
+    pub fn from(
+        scheme: &str,
+        host: &str,
+        user: Option<&[u8]>,
+        password: Option<&[u8]>,
+        port: Option<i64>,
+        path: &[u8],
+        params: &[(&str, &str)],
+    ) -> Result<Self, Error> {
+        if user.is_none() && password.is_some() {
+            return Err(Error::InvalidArgument("Unable to build DSN: a password needs a user"));
+        }
+        let mut wanted = Array::new();
+        for (key, value) in params {
+            wanted.set(ArrayKey::from(*key), Value::from(*value));
+        }
+
+        let mut dsn = format!("{scheme}://");
+        write_credentials(&mut dsn, user, password);
+        dsn.push_str(host);
+        if let Some(port) = port {
+            dsn.push(':');
+            dsn.push_str(&port.to_string());
+        }
+        write_path(&mut dsn, path);
+        if !wanted.is_empty() {
+            // http_build_query($params, '', '&', PHP_QUERY_RFC3986) of string values.
+            dsn.push('?');
+            for (index, (key, value)) in wanted.iter().enumerate() {
+                if index > 0 {
+                    dsn.push('&');
+                }
+                let key = match key {
+                    php_std::types::KeyRef::Int(i) => i.to_string(),
+                    php_std::types::KeyRef::Str(s) => rawurlencode(s),
+                };
+                dsn.push_str(&key);
+                dsn.push('=');
+                if let Value::Str(value) = value {
+                    dsn.push_str(&rawurlencode(value));
+                }
+            }
+        }
+
+        let parsed = Self::parse(&dsn)?;
+        drop(dsn);
+
+        // getParam() reads the query with parse_str, which nests `a[b]` and
+        // rewrites `.` and spaces in keys.
+        let query = parse_str(parsed.query.as_deref().unwrap_or_default().as_bytes());
+        if parsed.scheme != scheme
+            || parsed.host != host
+            || parsed.user.as_deref() != user
+            || parsed.password.as_deref() != password
+            || parsed.port.map(i64::from) != port
+            || parsed.path != path
+            || !Value::Array(query).strict_eq(&Value::Array(wanted))
+        {
+            return Err(Error::InvalidArgument("Unable to build DSN: a part does not survive encoding"));
+        }
+        Ok(parsed)
     }
 
     /// The scheme: the part before `://`.
@@ -321,15 +431,17 @@ impl Dsn {
         self.port
     }
 
-    /// The path without its leading slashes; empty when there is none.
+    /// The URL-decoded path without its leading slashes, which can be any
+    /// bytes (`%FF`); empty when there is none.
     ///
     /// PHP: `getPath()`.
     ///
     /// ```
     /// use utopia_dsn::Dsn;
     ///
-    /// assert_eq!(Dsn::parse("s3://key:secret@s3.amazonaws.com/backups/daily")?.path(), "backups/daily");
-    /// assert_eq!(Dsn::parse("redis://cache")?.path(), "");
+    /// assert_eq!(Dsn::parse("s3://key:secret@s3.amazonaws.com/backups/daily")?.path(), b"backups/daily");
+    /// assert_eq!(Dsn::parse("s3://localhost/b%3Furl%3Dx")?.path(), b"b?url=x");
+    /// assert_eq!(Dsn::parse("redis://cache")?.path(), b"");
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     ///
@@ -338,7 +450,7 @@ impl Dsn {
     ///
     /// echo (new DSN('s3://key:secret@s3.amazonaws.com/backups/daily'))->getPath(), "\n"; // backups/daily
     /// ```
-    pub fn path(&self) -> &str {
+    pub fn path(&self) -> &[u8] {
         &self.path
     }
 
@@ -428,6 +540,65 @@ impl Dsn {
     }
 }
 
+/// `user[:password]@`, each part `rawurlencode`d.
+fn write_credentials(dsn: &mut String, user: Option<&[u8]>, password: Option<&[u8]>) {
+    if let Some(user) = user {
+        dsn.push_str(&rawurlencode(user));
+        if let Some(password) = password {
+            dsn.push(':');
+            dsn.push_str(&rawurlencode(password));
+        }
+        dsn.push('@');
+    }
+}
+
+/// `/` and the path's segments, each `rawurlencode`d; nothing for an empty path.
+fn write_path(dsn: &mut String, path: &[u8]) {
+    if !path.is_empty() {
+        for segment in path.split(|&b| b == b'/') {
+            dsn.push('/');
+            dsn.push_str(&rawurlencode(segment));
+        }
+    }
+}
+
+impl fmt::Display for Dsn {
+    /// The DSN, with each part encoded as [`Dsn::from`] encodes it, and the
+    /// query as it was given.
+    ///
+    /// PHP: `__toString()`.
+    ///
+    /// ```
+    /// use utopia_dsn::Dsn;
+    ///
+    /// let dsn = Dsn::parse("mariadb://user:p%40ss@localhost:3306/data%20base?charset=utf8")?;
+    /// assert_eq!(dsn.to_string(), "mariadb://user:p%40ss@localhost:3306/data%20base?charset=utf8");
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DSN\DSN;
+    ///
+    /// echo new DSN('mariadb://user:p%40ss@localhost:3306/data%20base?charset=utf8'), "\n";
+    /// // mariadb://user:p%40ss@localhost:3306/data%20base?charset=utf8
+    /// ```
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut dsn = format!("{}://", self.scheme);
+        write_credentials(&mut dsn, self.user.as_deref(), self.password.as_deref());
+        dsn.push_str(&self.host);
+        if let Some(port) = self.port {
+            dsn.push(':');
+            dsn.push_str(&port.to_string());
+        }
+        write_path(&mut dsn, &self.path);
+        if let Some(query) = &self.query {
+            dsn.push('?');
+            dsn.push_str(query);
+        }
+        f.write_str(&dsn)
+    }
+}
+
 /// PHP `empty()` on a string: `""` and `"0"`.
 fn blank(s: &[u8]) -> bool {
     s.is_empty() || s == b"0"
@@ -443,7 +614,7 @@ impl fmt::Debug for Dsn {
             .field("password", &self.password.as_ref().map(|_| "<hidden>"))
             .field("host", &self.host)
             .field("port", &self.port)
-            .field("path", &self.path)
+            .field("path", &String::from_utf8_lossy(&self.path))
             .field("query", &self.query)
             .finish()
     }
@@ -460,12 +631,12 @@ mod tests {
         assert_eq!(d.user(), Some(&b"user"[..]));
         assert_eq!(d.password(), Some(&b"password"[..]));
         assert_eq!(d.port(), Some(3306));
-        assert_eq!(d.path(), "database");
+        assert_eq!(d.path(), b"database");
         assert_eq!(d.param("timezone").unwrap(), Some(&b"UTC"[..]));
         assert_eq!(d.param_or("region", b"us-east-1").unwrap(), b"us-east-1");
         let d = Dsn::parse("sms://user:sl%2Fsh%2B%24%40no%3Aher@localhost").unwrap();
         assert_eq!(d.password(), Some(&b"sl/sh+$@no:her"[..]));
-        assert_eq!(d.path(), "");
+        assert_eq!(d.path(), b"");
         assert_eq!(d.query(), None);
     }
 

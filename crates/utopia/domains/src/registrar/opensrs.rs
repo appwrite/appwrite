@@ -57,18 +57,30 @@ fn s(value: impl Into<String>) -> Item {
 ///
 /// PHP: `createEnvelopItem()`.
 fn envelop_item(key: &str, value: &Item) -> String {
+    let key = escape(key);
     match value {
-        Item::Str(v) => format!("<item key='{key}'>{v}</item>"),
+        Item::Str(v) => format!("<item key='{key}'>{}</item>", escape(v)),
         Item::Int(v) => format!("<item key='{key}'>{v}</item>"),
         // A float reaches a `string|int` parameter: PHP truncates it to an int.
         Item::Float(v) if v.is_finite() && v.abs() < 9.2e18 => format!("<item key='{key}'>{}</item>", v.trunc() as i64),
         Item::Float(v) => format!("<item key='{key}'>{}</item>", php_std::number::to_string(*v)),
-        Item::Array(entries) => create_array(key, entries),
+        Item::Array(entries) => create_array(&key, entries),
     }
 }
 
+/// XML-escapes a key or scalar of the envelope, so a value cannot close its
+/// element and add items of its own (the signature covers the escaped
+/// bytes). Invalid UTF-8 becomes U+FFFD.
+///
+/// PHP: `escape()` (private): `htmlspecialchars($value, ENT_XML1 |
+/// ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')`.
+fn escape(value: &str) -> String {
+    const FLAGS: php_std::encoding::HtmlFlags = php_std::encoding::HtmlFlags::from_php(16 | 3 | 8);
+    String::from_utf8_lossy(&php_std::encoding::htmlspecialchars(value.as_bytes(), FLAGS, true)).into_owned()
+}
+
 fn create_array(key: &str, entries: &[(String, Item)]) -> String {
-    let mut out = vec![format!("<item key=\"{key}\">"), "<dt_array>".to_owned()];
+    let mut out = vec![format!("<item key=\"{}\">", escape(key)), "<dt_array>".to_owned()];
     out.extend(entries.iter().map(|(k, v)| envelop_item(k, v)));
     out.push("</dt_array>".into());
     out.push("</item>".into());
@@ -76,7 +88,7 @@ fn create_array(key: &str, entries: &[(String, Item)]) -> String {
 }
 
 fn create_assoc(key: &str, entries: &[(String, Item)]) -> String {
-    let mut out = vec![format!("<item key=\"{key}\">"), "<dt_assoc>".to_owned()];
+    let mut out = vec![format!("<item key=\"{}\">", escape(key)), "<dt_assoc>".to_owned()];
     for (k, v) in entries {
         out.push(match v {
             Item::Array(inner) if Item::is_list(inner) => create_array(k, inner),
@@ -122,7 +134,7 @@ fn create_contact(kind: &str, contact: &[(String, Item)]) -> String {
         ("owner", "owner"),
         ("org", "org_name"),
     ];
-    let mut out = vec![format!("<item key='{kind}'>"), "<dt_assoc>".to_owned()];
+    let mut out = vec![format!("<item key='{}'>", escape(kind)), "<dt_assoc>".to_owned()];
     for (field, name) in REQUIRED {
         if let Some((_, value)) = contact.iter().find(|(k, _)| k == field) {
             out.push(envelop_item(name, value));
@@ -366,7 +378,19 @@ impl OpenSrs {
                 ["owner", "admin", "tech", "billing"].map(|role| (role.to_owned(), one.clone())).to_vec(),
             ));
         }
-        Ok(Item::Array(contacts.iter().map(|(key, c)| (key.as_string().into_owned(), fields(c))).collect()))
+        let mut sanitized = Vec::with_capacity(contacts.len());
+        for (key, contact) in contacts.iter() {
+            // The key becomes an item attribute; SW_REGISTER knows only these four.
+            if !matches!(key, super::ContactKey::Role(role) if ["owner", "admin", "tech", "billing"].contains(&role.as_str()))
+            {
+                return Err(Error::InvalidContact {
+                    message: format!("Unknown contact type: {}", key.as_string()),
+                    code: 0,
+                });
+            }
+            sanitized.push((key.as_string().into_owned(), fields(contact)));
+        }
+        Ok(Item::Array(sanitized))
     }
 
     /// Places an `SW_REGISTER` order; returns its id.
@@ -819,10 +843,17 @@ impl Adapter for OpenSrs {
         {
             return Ok(true);
         }
-        let details = format!(
-            "//body/data_block/dt_assoc/item[@key=\"attributes\"]/dt_assoc/item[@key=\"details\"]/dt_assoc/item[@key=\"{domain}\"]/dt_assoc/item[@key=\"is_success\"]"
+        // The per-domain verdict is matched here rather than spliced into an
+        // XPath expression, which the domain string could otherwise alter.
+        let details = doc.xpath(
+            doc.root(),
+            "//body/data_block/dt_assoc/item[@key=\"attributes\"]/dt_assoc/item[@key=\"details\"]/dt_assoc/item",
         );
-        let mut elements = doc.xpath(doc.root(), &details);
+        let mut elements = details
+            .into_iter()
+            .find(|&item| doc.attribute(item, "key") == domain)
+            .map(|item| doc.xpath(item, "dt_assoc/item[@key=\"is_success\"]"))
+            .unwrap_or_default();
         if elements.is_empty() {
             elements = doc.xpath(doc.root(), IS_SUCCESS);
         }

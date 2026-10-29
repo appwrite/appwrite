@@ -614,7 +614,7 @@ impl<'t, 'a> State<'t, 'a> {
         while self.current().kind == TokenType::Operator && *self.current().value == *b"::" {
             self.advance();
             let data_type = self.expect_identifier()?;
-            expression = Cast::new(expression, data_type).into();
+            expression = Cast::new(expression, data_type)?.into();
         }
         for operator in operators.into_iter().rev() {
             expression = Unary::new(operator, expression, true).into();
@@ -742,11 +742,11 @@ impl<'t, 'a> State<'t, 'a> {
         if self.is(TokenType::Star) {
             self.advance();
             self.expect(TokenType::RightParen)?;
-            return self.function_postfix(Func::new(name, vec![Star::default().into()]));
+            return self.function_postfix(Func::new(name, vec![Star::default().into()], false, None)?);
         }
         if self.is(TokenType::RightParen) {
             self.advance();
-            return self.function_postfix(Func::new(name, Vec::new()));
+            return self.function_postfix(Func::new(name, Vec::new(), false, None)?);
         }
 
         let mut distinct = false;
@@ -761,7 +761,7 @@ impl<'t, 'a> State<'t, 'a> {
         }
         self.expect(TokenType::RightParen)?;
 
-        self.function_postfix(Func { name, arguments, distinct, filter: None })
+        self.function_postfix(Func::new(name, arguments, distinct, None)?)
     }
 
     fn function_postfix(&mut self, mut function: Func) -> Result<Expression> {
@@ -834,7 +834,7 @@ impl<'t, 'a> State<'t, 'a> {
         self.consume_keyword("AS")?;
         let data_type = self.expect_identifier()?;
         self.expect(TokenType::RightParen)?;
-        Ok(Cast::new(expression, data_type).into())
+        Ok(Cast::new(expression, data_type)?.into())
     }
 
     fn table_source(&mut self) -> Result<TableSource> {

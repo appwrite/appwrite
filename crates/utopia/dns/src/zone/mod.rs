@@ -26,6 +26,9 @@ pub struct Zone {
 impl Zone {
     /// A zone named `name` (lower-cased; `.` is the root).
     ///
+    /// Identical records (same name, type, class, data, priority, weight and
+    /// port) are kept once, with the lowest TTL among them.
+    ///
     /// Fails with [`Error::InvalidArgument`] when `soa` is not an `SOA`
     /// record named like the zone, or a record is an `SOA` or lies outside
     /// the zone.
@@ -45,7 +48,9 @@ impl Zone {
             return Err(Error::InvalidArgument(message));
         }
         let root = &*name == b".";
-        for record in &records {
+        let mut unique: Vec<Record> = Vec::with_capacity(records.len());
+        let mut positions: std::collections::HashMap<Vec<u8>, usize> = std::collections::HashMap::new();
+        for record in records {
             if record.ty() == Record::TYPE_SOA {
                 return Err(Error::invalid("SOA records should be passed as the $soa parameter, not in $records"));
             }
@@ -57,8 +62,35 @@ impl Zone {
                 message.push(b'\'');
                 return Err(Error::InvalidArgument(message));
             }
+
+            // Keep one copy of identical records (RFC 2181 section 5): the one
+            // with the lowest TTL (section 5.2), where the first copy was. An
+            // unset priority, weight or port is encoded as 0, so it is 0 here.
+            let mut key = record.name().to_vec();
+            for part in [
+                record.ty().to_string().as_bytes(),
+                record.class().to_string().as_bytes(),
+                record.rdata(),
+                record.priority().unwrap_or(0).to_string().as_bytes(),
+                record.weight().unwrap_or(0).to_string().as_bytes(),
+                record.port().unwrap_or(0).to_string().as_bytes(),
+            ] {
+                key.push(0);
+                key.extend_from_slice(part);
+            }
+            match positions.get(&key) {
+                Some(&at) => {
+                    if record.ttl() < unique[at].ttl() {
+                        unique[at] = record;
+                    }
+                }
+                None => {
+                    positions.insert(key, unique.len());
+                    unique.push(record);
+                }
+            }
         }
-        Ok(Zone { name, records, soa })
+        Ok(Zone { name, records: unique, soa })
     }
 
     /// The zone name, lower case.

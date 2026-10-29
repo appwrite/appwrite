@@ -40,6 +40,135 @@
         "Utopia\\DSN\\DSN::getParam"
       ]
     },
+    "dsn.from": {
+      "doc": "DSN::from(scheme, host, user?, password?, port?, path?, params?): every getter, the DSN as a string (`string`), and getParam(key) for each of `keys`",
+      "covers": [
+        "Utopia\\DSN\\DSN::from",
+        "Utopia\\DSN\\DSN::__toString",
+        "Utopia\\DSN\\DSN::getParam"
+      ],
+      "fuzz": [
+        {
+          "name": "parts",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "scheme": {
+                "gen": "ref",
+                "name": "dsn_scheme"
+              },
+              "host": {
+                "gen": "ref",
+                "name": "dsn_host"
+              },
+              "user": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": null
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "dsn_text"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "url",
+                    "min": 0,
+                    "max": 10
+                  }
+                ]
+              },
+              "password": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": null
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "dsn_text"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "url",
+                    "min": 0,
+                    "max": 10
+                  }
+                ]
+              },
+              "port": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": null
+                  },
+                  {
+                    "gen": "int",
+                    "min": -2,
+                    "max": 70000
+                  }
+                ]
+              },
+              "path": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": ""
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "dsn_text"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "url",
+                    "min": 0,
+                    "max": 12
+                  }
+                ]
+              },
+              "keys": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "param_key"
+                },
+                "min": 0,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "dsn.string": {
+      "doc": "(string) new DSN(dsn)",
+      "covers": [
+        "Utopia\\DSN\\DSN::__construct",
+        "Utopia\\DSN\\DSN::__toString"
+      ],
+      "fuzz": [
+        {
+          "name": "round trip",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "dsn": {
+                "gen": "ref",
+                "name": "dsn"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
     "dsn.parse": {
       "doc": "new DSN(dsn), every getter, and getParam(key) for each of `params` (a TypeError is reported in place)",
       "covers": [

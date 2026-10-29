@@ -13,6 +13,7 @@
 //! |---|---|
 //! | `AST\Expression` (interface) | [`Expression`] |
 //! | `AST\Call\Func` | [`Func`] |
+//! | `AST\Grammar` | [`Grammar`] |
 //! | `AST\Expression\Aliased`, `Between`, `Binary`, `CaseWhen`, `Cast`, `Conditional`, `Exists`, `In`, `Subquery`, `Unary`, `Window` | [`Aliased`], [`Between`], [`Binary`], [`CaseWhen`], [`Cast`], [`Conditional`], [`Exists`], [`In`] (with [`InList`]), [`Subquery`], [`Unary`], [`Window`] |
 //! | `AST\Literal`, `AST\Placeholder`, `AST\Raw`, `AST\Star` | [`Literal`], [`Placeholder`], [`Raw`], [`Star`] |
 //! | `AST\Reference\Column`, `AST\Reference\Table` | [`Column`], [`Table`] |
@@ -54,11 +55,13 @@
 //! echo (new Serializer())->serialize($select), "\n"; // SELECT * FROM `orders` WHERE `total` > 100 AND `tenant_id` = 42
 //! ```
 
+mod grammar;
 mod node;
 mod parser;
 mod serializer;
 mod walker;
 
+pub use grammar::Grammar;
 pub use node::{
     Aliased, Between, Binary, CaseWhen, Cast, Column, Conditional, Cte, Exists, Expression, Func, In, InList,
     JoinClause, Literal, OrderByItem, Placeholder, Raw, Select, Star, Subquery, SubquerySource, Table, TableSource,
