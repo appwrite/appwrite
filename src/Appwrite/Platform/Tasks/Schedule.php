@@ -123,18 +123,24 @@ class Schedule extends Action
 
     private function loop(string $name, \Closure $task): void
     {
-        Co::create(function () use ($name, $task): void {
-            Span::init('schedule.combined.loop');
-            Span::add('loop', $name);
-            $error = null;
+        // The process outlives any one loop, so nothing else restarts a loop
+        // that throws or returns: its schedules would silently stop firing.
+        Co::create(function () use ($name, $task): never {
+            for (;;) {
+                Span::init('schedule.combined.loop');
+                Span::add('loop', $name);
+                $error = null;
 
-            try {
-                $task();
-            } catch (\Throwable $th) {
-                $error = $th;
-                Console::error('schedule: ' . $name . ' loop stopped: ' . $th->getMessage());
-            } finally {
-                Span::current()?->finish(error: $error);
+                try {
+                    $task();
+                } catch (\Throwable $th) {
+                    $error = $th;
+                    Console::error('schedule: ' . $name . ' loop stopped: ' . $th->getMessage());
+                } finally {
+                    Span::current()?->finish(error: $error);
+                }
+
+                Co::sleep(1);
             }
         });
     }
