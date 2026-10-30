@@ -411,7 +411,7 @@ Not ported, by design: `GeneralTests::testCacheReconnect` (it runs `docker stop`
 
 The PHP package ships no `bin` in its `composer.json`; its scripts (`build`, `start`, `test`, `lint`, `format`, `check`) and its programs (the benchmarking CLI `bin/cli.php`, its `bin/tasks/{load,index,query,relationships,operators}.php` the `bin/view/index.php` results page and the `stubs/Swoole/Database/*.stub.php` PHPStan stubs) are development tooling. The package lives only in the PHP image (`vendor/`), so `bin/compat coverage` discovers them through the PHP driver (`$programs`); each is waived, with its reason, under `tasks_waived` in `spec.d/core.json` (`test`, `lint`, `format` and `check` are development scripts by name and need no waiver).
 
-CI runs the cases in five shards (`spec.json` `shards`, by file prefix): `mysql` (MariaDB and MySQL), `sqlite` (SQLite, Memory and the unit tests' `Unit-*`, which need no service), `mongo`, `redis` (the Redis adapter and caches, Pool, Mirror) and `postgres` (the rest).
+CI runs the cases in eight shards (`spec.json` `shards`, by file prefix, the longest matching): `mariadb` and `mysql` (each adapter's suites and adapter cases), `mariadb-shared` and `mysql-shared` (their `Scope-SharedTables-` suites, apart because MariaDB and MySQL DDL is slow enough that one shard of both outlasts the job), `sqlite` (SQLite, Memory and the unit tests' `Unit-*`, which need no service), `mongo`, `redis` (the Redis adapter and caches, Pool, Mirror) and `postgres` (the rest).
 
 ```bash
 bin/compat-php tests/compat/database/recorder/record.php postgres   # cases/Scope-*.json, PostgresTest.json (any profile above)

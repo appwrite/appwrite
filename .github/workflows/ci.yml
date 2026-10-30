@@ -1213,9 +1213,10 @@ jobs:
   # PHP <-> Rust compatibility of the Utopia libraries (tests/compat): every
   # case on both runtimes, fuzzing with a new seed each run, and the full
   # conversion gate for libraries marked complete. See crates/CONVERSION.md.
-  # The database library's ~12000 cases (every adapter) run as five shards
+  # The database library's ~27000 cases (every adapter) run as eight shards
   # of its own (`bin/compat ci database@<shard>`, tests/compat/database/
-  # spec.json `shards`). The other libraries run as three: `usage` (its
+  # spec.json `shards`); MariaDB and MySQL, whose DDL is the slowest, take
+  # two each (their shared-tables suites apart), as one they outlast the job. The other libraries run as three: `usage` (its
   # ClickHouse cases, ~10 minutes) with php-std (fuzzing, ~7), the libraries
   # on fixture servers of their own with the documentation examples
   # (`integrations`), and the rest with the replay (`libraries`), so none
@@ -1232,8 +1233,14 @@ jobs:
         include:
           - shard: database-postgres
             libs: database@postgres
+          - shard: database-mariadb
+            libs: database@mariadb
+          - shard: database-mariadb-shared
+            libs: database@mariadb-shared
           - shard: database-mysql
             libs: database@mysql
+          - shard: database-mysql-shared
+            libs: database@mysql-shared
           - shard: database-sqlite
             libs: database@sqlite
           - shard: database-mongo

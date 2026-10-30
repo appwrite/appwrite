@@ -63,13 +63,21 @@
     "postgres": [
       "*"
     ],
-    "mysql": [
+    "mariadb": [
       "MariaDB-",
-      "MySQL-",
       "Adapter-MariaDB-",
+      "MariaDBTest"
+    ],
+    "mariadb-shared": [
+      "MariaDB-Scope-SharedTables-"
+    ],
+    "mysql": [
+      "MySQL-",
       "Adapter-MySQL-",
-      "MariaDBTest",
       "MySQLTest"
+    ],
+    "mysql-shared": [
+      "MySQL-Scope-SharedTables-"
     ],
     "sqlite": [
       "Scope-SQLite-",

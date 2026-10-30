@@ -10,7 +10,7 @@ use appwrite_core::database::documents::Attributes;
 const UPLOADER: &str = "uploaderId";
 
 /// Metadata and the user who started the upload.
-pub fn load(document: &Document) -> (Metadata, String) {
+pub(super) fn load(document: &Document) -> (Metadata, String) {
     let Some(json) = document.json("metadata") else {
         return (Metadata::default(), String::new());
     };
@@ -20,7 +20,7 @@ pub fn load(document: &Document) -> (Metadata, String) {
 
 /// `array_merge` of the stored metadata and the metadata this chunk produced.
 /// Parts are unioned and sorted, and `chunks` becomes the number of parts.
-pub fn merge(stored: &Metadata, current: &Metadata, uploader: &str) -> (Metadata, String) {
+pub(super) fn merge(stored: &Metadata, current: &Metadata, uploader: &str) -> (Metadata, String) {
     let mut merged = stored.clone();
     if current.content_type.is_some() {
         merged.content_type.clone_from(&current.content_type);
@@ -53,7 +53,7 @@ pub fn merge(stored: &Metadata, current: &Metadata, uploader: &str) -> (Metadata
 }
 
 /// The document value of metadata, including the uploader.
-pub fn store(metadata: &Metadata, uploader: &str) -> utopia_database::Value {
+pub(super) fn store(metadata: &Metadata, uploader: &str) -> utopia_database::Value {
     let mut map = Map::new();
     if let Some(content_type) = &metadata.content_type {
         map.insert("content_type".to_owned(), json!(content_type));
@@ -82,7 +82,7 @@ pub fn store(metadata: &Metadata, uploader: &str) -> utopia_database::Value {
     utopia_database::Value::from_json(&Json::Object(map))
 }
 
-pub fn upload_id(document: &Document) -> String {
+pub(super) fn upload_id(document: &Document) -> String {
     let json = document.json("metadata");
     json.as_ref().and_then(|json| json.get("uploadId")).and_then(Json::as_str).unwrap_or("").to_owned()
 }
