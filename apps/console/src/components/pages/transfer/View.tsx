@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import {
   keepPreviousData,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
@@ -12,7 +13,14 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { sdk } from '@/lib/appwrite/sdk'
 import { PERSONAL_ORG_NAME } from '@/lib/ensure-personal-org'
 import { useOrganizations } from '@/lib/react-query/hooks'
-import { createOrganization } from '@/lib/react-query/hooks/organizations'
+import {
+  createOrganization,
+  organizationScopesQueryOptions,
+} from '@/lib/react-query/hooks/organizations'
+import {
+  getTransferOrganizations,
+  pickTransferOrganization,
+} from '@/lib/project-transfer'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
@@ -53,11 +61,30 @@ export function ClaimProjectTransfer({
   const hasOrganizations = organizationsLoading || organizations.length > 0
   const { features } = useConsoleProfile()
 
-  useEffect(() => {
-    if (teamId === '' && organizations.length > 0) {
-      setTeamId(organizations[0].$id)
-    }
-  }, [organizations, teamId])
+  // The server only moves a project into an organization the user owns
+  const scopes = useQueries({
+    queries: organizations.map((organization) =>
+      organizationScopesQueryOptions(organization.$id),
+    ),
+  })
+  const rolesLoading = scopes.some((scope) => scope.isLoading)
+  const transferOrganizations = getTransferOrganizations(
+    organizations.map((organization) => organization.$id),
+    Object.fromEntries(
+      organizations.map((organization, index) => [
+        organization.$id,
+        scopes[index]?.data?.roles,
+      ]),
+    ),
+  )
+  const eligibleIds = new Set(
+    transferOrganizations
+      .filter((organization) => organization.eligible)
+      .map((organization) => organization.id),
+  )
+  const hasEligible = eligibleIds.size > 0
+  const canCreateOrganization =
+    features.multiTenancy || organizations.length === 0
 
   // The preview runs as the selected organization, so it reports whether that organization may claim it
   const preview = useQuery({
@@ -90,7 +117,7 @@ export function ClaimProjectTransfer({
     },
   })
 
-  // Someone who signed up to claim a link has no organization to receive it yet
+  // Someone who signed up to claim a link may own no organization to receive it
   const createOrganizationMutation = useMutation({
     mutationFn: () => createOrganization({ name: PERSONAL_ORG_NAME }),
     onSuccess: async (organization) => {
@@ -112,17 +139,32 @@ export function ClaimProjectTransfer({
   const isReserved =
     recipientId !== '' && !organizationsLoading && !isRecipientMember
 
-  // Only one organization may claim it, so pick that one for the user
+  const pickedId = pickTransferOrganization(transferOrganizations, teamId)
+
   useEffect(() => {
-    if (recipientId !== '' && isRecipientMember && teamId !== recipientId) {
-      setTeamId(recipientId)
+    // Only one organization may claim it, so pick that one for the user
+    if (recipientId !== '') {
+      if (isRecipientMember && teamId !== recipientId) setTeamId(recipientId)
+      return
     }
-  }, [recipientId, isRecipientMember, teamId])
+    if (!organizationsLoading && !rolesLoading && pickedId !== teamId) {
+      setTeamId(pickedId)
+    }
+  }, [
+    recipientId,
+    isRecipientMember,
+    teamId,
+    pickedId,
+    organizationsLoading,
+    rolesLoading,
+  ])
 
   const isAlreadyOwner = preview.data?.senderId === teamId
+  const isEligible = eligibleIds.has(teamId)
   const canClaim =
     preview.isSuccess &&
     !isAlreadyOwner &&
+    isEligible &&
     (recipientId === '' || teamId === recipientId) &&
     !claimMutation.isPending
 
@@ -135,7 +177,13 @@ export function ClaimProjectTransfer({
       ? t(
           'The project already belongs to this organization. Select a different one.',
         )
-      : null
+      : teamId !== '' && !isEligible && !rolesLoading
+        ? hasEligible || !canCreateOrganization
+          ? t('Only an owner of the organization can claim a project into it.')
+          : t(
+              'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.',
+            )
+        : null
 
   const switchAccount = useAuthAccountSwitch()
   const goToDashboard = () => navigate({ to: '/' })
@@ -300,14 +348,24 @@ export function ClaimProjectTransfer({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {organizations.map((organization) => (
-                      <SelectItem
-                        key={organization.$id}
-                        value={organization.$id}
-                      >
-                        {organization.name}
-                      </SelectItem>
-                    ))}
+                    {organizations.map((organization) => {
+                      const eligible = eligibleIds.has(organization.$id)
+                      return (
+                        <SelectItem
+                          key={organization.$id}
+                          value={organization.$id}
+                          disabled={!eligible}
+                        >
+                          {organization.name}
+                          {eligible ? null : (
+                            <span className="text-muted-foreground">
+                              {' · '}
+                              {t('Owner role required')}
+                            </span>
+                          )}
+                        </SelectItem>
+                      )
+                    })}
                   </SelectContent>
                 </Select>
                 {problem ? (
@@ -321,13 +379,32 @@ export function ClaimProjectTransfer({
 
               <div className="flex flex-col gap-2">
                 <Button
-                  variant="brandCta"
+                  variant={
+                    hasEligible || !canCreateOrganization
+                      ? 'brandCta'
+                      : 'outline'
+                  }
                   className="w-full"
                   disabled={!canClaim}
                   onClick={() => claimMutation.mutate()}
                 >
                   {t('Claim project')}
                 </Button>
+                {canCreateOrganization && (
+                  <Button
+                    variant={hasEligible ? 'outline' : 'brandCta'}
+                    className="w-full"
+                    disabled={
+                      createOrganizationMutation.isPending ||
+                      claimMutation.isPending
+                    }
+                    onClick={() => createOrganizationMutation.mutate()}
+                  >
+                    {features.billing
+                      ? t('Create a free organization')
+                      : t('Create organization')}
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   className="w-full"

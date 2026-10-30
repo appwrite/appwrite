@@ -1455,4 +1455,9 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Project already claimed': 'כבר נתבעה בעלות על הפרויקט',
   'This project now belongs to an account. Sign in to that account to open it.':
     'הפרויקט שייך עכשיו לחשבון. התחברו לחשבון הזה כדי לפתוח אותו.',
+  'Owner role required': 'נדרש תפקיד בעלים',
+  'Only an owner of the organization can claim a project into it.':
+    'רק בעלים של הארגון יכולים לתבוע בעלות על פרויקט לתוכו.',
+  'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.':
+    'רק בעלים של הארגון יכולים לתבוע בעלות על פרויקט לתוכו. צרו ארגון בבעלותכם כדי לקבל אותו.',
 }

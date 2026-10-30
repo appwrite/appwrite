@@ -1455,4 +1455,9 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Project already claimed': 'このプロジェクトはすでに引き継がれています',
   'This project now belongs to an account. Sign in to that account to open it.':
     'このプロジェクトはすでにアカウントに属しています。開くにはそのアカウントでサインインしてください。',
+  'Owner role required': 'オーナー権限が必要です',
+  'Only an owner of the organization can claim a project into it.':
+    'プロジェクトを組織に引き継げるのは、その組織のオーナーだけです。',
+  'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.':
+    'プロジェクトを組織に引き継げるのは、その組織のオーナーだけです。受け取るには、あなたがオーナーとなる組織を作成してください。',
 }
