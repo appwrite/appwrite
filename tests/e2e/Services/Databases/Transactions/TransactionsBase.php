@@ -7079,6 +7079,19 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders());
 
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tableId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['body' => 'banana'],
+        ]);
+        $this->assertSame(201, $row['headers']['status-code']);
+        $rowId = $row['body']['$id'];
+
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
         $this->assertSame(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
@@ -7088,6 +7101,58 @@ trait TransactionsBase
         /**
          * Test for FAILURE
          */
+        $invalid = [
+            'unknown method' => ['body' => ['$operator' => ['method' => 'explode', 'values' => []]]],
+            'extra key' => ['body' => [...$operator, 'method' => 'stringConcat']],
+            'nested in an object' => ['body' => ['note' => $operator]],
+        ];
+        foreach ($invalid as $name => $data) {
+            foreach ([Client::METHOD_PATCH, Client::METHOD_PUT] as $method) {
+                $response = $this->client->call($method, $this->getRecordUrl($databaseId, $tableId, $rowId), $headers, [
+                    'transactionId' => $transactionId,
+                    'data' => $data,
+                ]);
+                $this->assertSame(400, $response['headers']['status-code'], "{$method} {$name}");
+                $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type'], "{$method} {$name}");
+            }
+
+            $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $tableId), $serverHeaders, [
+                'transactionId' => $transactionId,
+                'queries' => [Query::equal('$id', [$rowId])->toString()],
+                'data' => $data,
+            ]);
+            $this->assertSame(400, $response['headers']['status-code'], "bulk update {$name}");
+            $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type'], "bulk update {$name}");
+
+            $response = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $tableId), $serverHeaders, [
+                'transactionId' => $transactionId,
+                $this->getRecordResource() => [['$id' => $rowId, ...$data]],
+            ]);
+            $this->assertSame(400, $response['headers']['status-code'], "bulk upsert {$name}");
+            $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type'], "bulk upsert {$name}");
+
+            $operations = [
+                'update' => [$this->getRecordIdParam() => $rowId, 'data' => $data],
+                'upsert' => [$this->getRecordIdParam() => $rowId, 'data' => $data],
+                'bulkUpdate' => ['data' => ['queries' => [Query::equal('$id', [$rowId])->toString()], 'data' => $data]],
+                'bulkUpsert' => ['data' => [['$id' => $rowId, ...$data]]],
+            ];
+            foreach ($operations as $action => $operation) {
+                $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $serverHeaders, [
+                    'operations' => [
+                        [
+                            'action' => $action,
+                            'databaseId' => $databaseId,
+                            $this->getContainerIdParam() => $tableId,
+                            ...$operation,
+                        ],
+                    ],
+                ]);
+                $this->assertSame(400, $response['headers']['status-code'], "staged {$action} {$name}");
+                $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type'], "staged {$action} {$name}");
+            }
+        }
+
         $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tableId), $headers, [
             'transactionId' => $transactionId,
             $this->getRecordIdParam() => Id::unique(),
@@ -7112,6 +7177,7 @@ trait TransactionsBase
 
         $transaction = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $headers);
         $this->assertSame(200, $transaction['headers']['status-code']);
+        $this->assertSame('pending', $transaction['body']['status']);
         $this->assertSame(0, $transaction['body']['operations']);
     }
 
