@@ -23,7 +23,7 @@ final class UploadCallbacksTest extends TestCase
         $previousKey = getenv('_APP_OPENSSL_KEY_V1');
         putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
         try {
-            $deployment = new Document(['$id' => 'deployment', '$sequence' => '1', 'type' => 'manual', 'buildCommands' => 'npm ci']);
+            $deployment = new Document(['$id' => 'deployment', '$sequence' => '1', 'type' => 'manual', 'buildCommands' => 'npm ci', 'adapter' => 'ssr', 'fallbackFile' => '404.html']);
             $database = $this->createStub(Database::class);
             $database->method('updateDocument')->willReturnCallback(static function (string $collection, string $id, Document $update) use ($deployment): Document {
                 $deployment->setAttributes($update->getArrayCopy());
@@ -46,6 +46,8 @@ final class UploadCallbacksTest extends TestCase
             ]), clone $deployment, 137);
 
             $this->assertSame('waiting', $result->getAttribute('status'));
+            $this->assertSame('', $result->getAttribute('adapter'));
+            $this->assertSame('404.html', $result->getAttribute('fallbackFile'));
             $this->assertCount(1, $requests);
             // The real SDK serializes the callback filter sent to the service;
             // without this event a failed pre-job extraction is never delivered.

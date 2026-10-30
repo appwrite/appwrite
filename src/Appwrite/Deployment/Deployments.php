@@ -346,6 +346,8 @@ readonly class Deployments
         $queued = $this->dbForProject->updateDocuments('deployments', new Document([
             'status' => 'waiting',
             'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
+            // Only the manifest callback records the deployment's rendering mode.
+            'adapter' => '',
         ]), [
             Query::equal('$id', [$deployment->getId()]),
             Query::notEqual('status', 'canceled'),

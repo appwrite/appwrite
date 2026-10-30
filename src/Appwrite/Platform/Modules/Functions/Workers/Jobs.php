@@ -397,7 +397,7 @@ class Jobs extends Action
             $manifest = $artifact->status === 'success' ? $artifact->content : null;
             $files = \is_array($manifest) ? (array) ($manifest['files'] ?? []) : [];
             if (!\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)
-                && !\in_array('manifest', $deployment->getAttribute('callbacks', []), true)) {
+                && empty($deployment->getAttribute('adapter'))) {
                 [$deployment, $mismatch] = $this->detect($dbForProject, $deployment, \array_values($files));
                 if ($mismatch !== null) {
                     return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $mismatch, $publisherForScreenshots, $vcsFactory, $platform, $bus);
@@ -457,7 +457,7 @@ class Jobs extends Action
             'totalSize' => $size + (int) $deployment->getAttribute('buildSize', 0),
         ]));
 
-        if (\in_array('complete', $deployment->getAttribute('callbacks', []), true)) {
+        if (!empty($deployment->getAttribute('buildEndedAt'))) {
             $deployment = $this->keepStagedSource($dbForProject, $project, $deployment, $deviceForBuilds, $deviceForFunctions, $deviceForSites);
         }
 
@@ -511,7 +511,6 @@ class Jobs extends Action
             'buildDuration' => $duration !== null && \is_finite($duration) && $duration >= 0
                 ? (int) \ceil($duration)
                 : $this->duration($deployment, $this->buildTimeout($dbForPlatform, $project)),
-            'buildEndedAt' => $deployment->getAttribute('buildEndedAt') ?: DateTime::now(),
         ]), [
             Query::equal('$id', [$deployment->getId()]),
             Query::isNull('buildDuration'),
@@ -548,9 +547,9 @@ class Jobs extends Action
         array $plan,
         Bus $bus,
     ): Document {
-        if (!\in_array('complete', $deployment->getAttribute('callbacks', []), true)) {
+        if (empty($deployment->getAttribute('buildEndedAt'))) {
             $dbForProject->updateDocuments('deployments', new Document([
-                'callbacks' => [...$deployment->getAttribute('callbacks', []), 'complete'],
+                'buildEndedAt' => DateTime::now(),
             ]), [
                 Query::equal('$id', [$deployment->getId()]),
                 Query::notEqual('status', 'canceled'),
@@ -642,11 +641,10 @@ class Jobs extends Action
             return $deployment; // already finalized
         }
 
-        $callbacks = $deployment->getAttribute('callbacks', []);
         $isSite = $deployment->getAttribute('resourceType') === 'sites';
         if ($deployment->getAttribute('buildDuration') === null
-            || !\in_array('complete', $callbacks, true)
-            || ($isSite && !\in_array('manifest', $callbacks, true))) {
+            || empty($deployment->getAttribute('buildEndedAt'))
+            || ($isSite && empty($deployment->getAttribute('adapter')))) {
             return $deployment;
         }
 
@@ -688,9 +686,10 @@ class Jobs extends Action
      */
     protected function detect(Database $dbForProject, Document $deployment, array $files): array
     {
-        $site = empty($files) ? new Document() : $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId'));
-        $update = ['callbacks' => [...$deployment->getAttribute('callbacks', []), 'manifest']];
-        if (!$site->isEmpty()) {
+        $site = $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId'));
+        // Empty/failed manifests retain the configured rendering mode, or the static default.
+        $update = ['adapter' => $site->getAttribute('adapter') ?: 'static'];
+        if (!empty($files) && !$site->isEmpty()) {
             $detection = Detection::rendering($site->getAttribute('framework', ''), $files);
             $adapter = $site->getAttribute('adapter', '');
             $update['adapter'] = $detection->getName();
@@ -838,7 +837,7 @@ class Jobs extends Action
      */
     private function duration(Document $deployment, int $timeout): int
     {
-        if (!empty($deployment->getAttribute('buildEndedAt')) && $deployment->getAttribute('buildDuration') !== null) {
+        if ($deployment->getAttribute('buildDuration') !== null) {
             return (int) $deployment->getAttribute('buildDuration', 0);
         }
 
@@ -849,9 +848,10 @@ class Jobs extends Action
 
         try {
             $started = (float) (new \DateTimeImmutable($startedAt))->format('U.u');
-            $ended = empty($deployment->getAttribute('buildEndedAt'))
-                ? \microtime(true)
-                : (float) (new \DateTimeImmutable($deployment->getAttribute('buildEndedAt')))->format('U.u');
+            // Completion can arrive first and includes artifact processing time.
+            $ended = $deployment->getAttribute('status') === 'failed' && !empty($deployment->getAttribute('buildEndedAt'))
+                ? (float) (new \DateTimeImmutable($deployment->getAttribute('buildEndedAt')))->format('U.u')
+                : \microtime(true);
         } catch (\Exception) {
             return 0;
         }
