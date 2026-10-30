@@ -262,6 +262,21 @@ final class JobsCallbacksTest extends TestCase
         $this->assertSame('ssr', $this->database->getDocument('sites', 'site')->getAttribute('adapter'));
     }
 
+    public function testDetectionPreservesConfiguredFallbackFile(): void
+    {
+        $this->database->updateDocument('sites', 'site', new Document(['adapter' => 'static', 'fallbackFile' => '404.html']));
+        $this->database->updateDocument('deployments', 'deployment', new Document(['adapter' => 'static', 'fallbackFile' => '404.html']));
+        $this->send('manifest', ['content' => ['files' => ['index.html', '404.html']]]);
+        \file_put_contents($this->root . '/output.tar.gz', 'build output');
+        $this->send('exit');
+        $this->send('complete');
+
+        $deployment = $this->database->getDocument('deployments', 'deployment');
+        $this->assertSame('ready', $deployment->getAttribute('status'));
+        $this->assertSame('404.html', $deployment->getAttribute('fallbackFile'));
+        $this->assertSame('404.html', $this->database->getDocument('sites', 'site')->getAttribute('fallbackFile'));
+    }
+
     public function testSiteConfiguredBeforeManifestStillRejectsLaterAdapterMismatch(): void
     {
         // The site can be configured after deployment creation, before its manifest.
