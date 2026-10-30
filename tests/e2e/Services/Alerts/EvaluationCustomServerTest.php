@@ -177,6 +177,9 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertContains('monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.resolved', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
         $this->assertSame($firing['alertId'], $delivery['data']['$id']);
         $this->assertNotNull($delivery['data']['resolvedAt']);
+        // The payload is the alert as it stands once resolved, its update time included.
+        $this->assertSame($delivery['data']['resolvedAt'], $delivery['data']['$updatedAt']);
+        $this->assertSame('resolved', $delivery['data']['status']);
 
         $this->assertEventually(function () use ($name) {
             $this->assertSame(['firing' => 1, 'resolved' => 1], $this->teamNotifications($name));
