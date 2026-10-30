@@ -1202,8 +1202,8 @@
         "list": "free"
       },
       "expect": {
-        "domains": 4781,
-        "sha256": "23f32bc22f19aff0f8951b26045fdf5d0e65ebaa192ab796d8b8d5885e94e450"
+        "domains": 31023,
+        "sha256": "475595e040ee1d90127c393b169f4f8ccfa684c6991e929c586e3ec7a162e98c"
       }
     },
     {
@@ -1213,8 +1213,8 @@
         "list": "disposable"
       },
       "expect": {
-        "domains": 72903,
-        "sha256": "57b97795cc5d2d6a10cbf58b5992b2b5fde9702097901f70534c978b1e9b2821"
+        "domains": 98569,
+        "sha256": "d42ace3113a7acdef14010c91f2c72b5c712af041d564ecb6cde6f42b2a76071"
       }
     }
   ]

@@ -165,6 +165,15 @@ pub(in crate::platform) async fn auth(
         ctx.hide_credentials = true;
     }
 
+    // Reading users is not authority over their credentials. Minted keys are
+    // exempt, as their minter could grant users.write and user migrations
+    // read hashes with users.read; OAuth2 tokens only delegate their
+    // holder's role.
+    let minted_key = ctx.key.as_ref().is_some_and(|k| k.kind != KeyType::OAuth2);
+    if scopes.iter().any(|s| s == "users.read") && !scopes.iter().any(|s| s == "users.write") && !minted_key {
+        ctx.hide_credentials = true;
+    }
+
     // Authorization roles.
     let mut all_roles = vec!["any".to_owned()];
     all_roles.extend(extra_roles);

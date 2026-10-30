@@ -1,6 +1,8 @@
 //! Appwrite parameter validators (`Appwrite\Auth\Validator\*`,
 //! `Appwrite\Utopia\Database\Validator\CustomId`).
 
+pub mod hash;
+
 use std::collections::HashSet;
 
 use serde_json::{Map, Value};

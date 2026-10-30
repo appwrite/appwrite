@@ -3,11 +3,11 @@
 use utopia_auth::Hash;
 use utopia_auth::hashes::{Argon2, Bcrypt, Md5, PHPass, Scrypt, ScryptModified, Sha};
 use utopia_http::Response;
-use utopia_validators::{Integer, Text, WhiteList};
+use utopia_validators::{Range, Text, Validator, WhiteList};
 
 use appwrite_core::platform::Context;
 use appwrite_core::response::UserModel;
-use appwrite_core::validators::{CustomId, Password};
+use appwrite_core::validators::{CustomId, Password, hash};
 use appwrite_core::{Error, ErrorType, Result};
 use utopia_emails::EmailValidator;
 
@@ -19,11 +19,11 @@ struct Common {
     password: String,
 }
 
-fn common(ctx: &Context) -> Result<Common> {
+fn common(ctx: &Context, password: &dyn Validator) -> Result<Common> {
     Ok(Common {
         user_id: ctx.required_str("userId", &CustomId)?,
         email: ctx.required_str("email", &EmailValidator::default())?,
-        password: ctx.required_str("password", &Password::default())?,
+        password: ctx.required_str("password", password)?,
     })
 }
 
@@ -53,26 +53,35 @@ fn uncaught(e: utopia_auth::Error) -> Error {
     Error::internal(e.to_string())
 }
 
+/// Setter failures PHP catches as `InvalidArgumentException` are invalid
+/// arguments; anything else stays a 500.
+fn argument(e: utopia_auth::Error) -> Error {
+    match e {
+        utopia_auth::Error::InvalidArgument(m) => Error::with_message(ErrorType::GeneralArgumentInvalid, m),
+        other => Error::internal(other.to_string()),
+    }
+}
+
 pub async fn argon2(ctx: &mut Context) -> Result<Response> {
-    let c = common(ctx)?;
+    let c = common(ctx, &hash::Argon2)?;
     let n = name(ctx)?;
     finish(ctx, c, n, Box::new(Argon2::new())).await
 }
 
 pub async fn bcrypt(ctx: &mut Context) -> Result<Response> {
-    let c = common(ctx)?;
+    let c = common(ctx, &hash::Bcrypt)?;
     let n = name(ctx)?;
     finish(ctx, c, n, Box::new(Bcrypt::new())).await
 }
 
 pub async fn md5(ctx: &mut Context) -> Result<Response> {
-    let c = common(ctx)?;
+    let c = common(ctx, &Password::default())?;
     let n = name(ctx)?;
     finish(ctx, c, n, Box::new(Md5::new())).await
 }
 
 pub async fn sha(ctx: &mut Context) -> Result<Response> {
-    let c = common(ctx)?;
+    let c = common(ctx, &Password::default())?;
     let version = ctx.optional_str(
         "passwordVersion",
         "",
@@ -99,33 +108,32 @@ pub async fn sha(ctx: &mut Context) -> Result<Response> {
 }
 
 pub async fn phpass(ctx: &mut Context) -> Result<Response> {
-    let c = common(ctx)?;
+    let c = common(ctx, &hash::PHPass)?;
     let n = name(ctx)?;
     finish(ctx, c, n, Box::new(PHPass::new())).await
 }
 
 pub async fn scrypt(ctx: &mut Context) -> Result<Response> {
-    let c = common(ctx)?;
+    let c = common(ctx, &Password::default())?;
     let salt = ctx.required_str("passwordSalt", &Text::new(128))?;
-    let int = Integer::default();
-    let cpu = ctx.required("passwordCpu", &int)?;
-    let memory = ctx.required("passwordMemory", &int)?;
-    let parallel = ctx.required("passwordParallel", &int)?;
-    let length = ctx.required("passwordLength", &int)?;
+    let cpu = ctx.required("passwordCpu", &Range::new(2, 65536))?;
+    let memory = ctx.required("passwordMemory", &Range::new(1, 16))?;
+    let parallel = ctx.required("passwordParallel", &Range::new(1, 4))?;
+    let length = ctx.required("passwordLength", &Range::new(16, 128))?;
     let n = name(ctx)?;
-    let as_int = |v: &serde_json::Value| v.as_i64().unwrap_or(0);
+    let as_int = |v: &serde_json::Value| Range::value(v).unwrap_or(0);
     let mut hash = Scrypt::new();
     hash.set_salt(salt.as_bytes())
         .and_then(|h| h.set_cpu_cost(as_int(&cpu)))
         .and_then(|h| h.set_memory_cost(as_int(&memory)))
         .and_then(|h| h.set_parallel_cost(as_int(&parallel)))
         .and_then(|h| h.set_length(as_int(&length)))
-        .map_err(uncaught)?;
+        .map_err(argument)?;
     finish(ctx, c, n, Box::new(hash)).await
 }
 
 pub async fn scrypt_modified(ctx: &mut Context) -> Result<Response> {
-    let c = common(ctx)?;
+    let c = common(ctx, &Password::default())?;
     let salt = ctx.required_str("passwordSalt", &Text::new(128))?;
     let separator = ctx.required_str("passwordSaltSeparator", &Text::new(128))?;
     let signer = ctx.required_str("passwordSignerKey", &Text::new(128))?;
@@ -134,9 +142,6 @@ pub async fn scrypt_modified(ctx: &mut Context) -> Result<Response> {
     hash.set_salt(salt.as_bytes())
         .and_then(|h| h.set_salt_separator(separator.as_bytes()))
         .and_then(|h| h.set_signer_key(signer.as_bytes()))
-        .map_err(|e| match e {
-            utopia_auth::Error::InvalidArgument(m) => Error::with_message(ErrorType::GeneralArgumentInvalid, m),
-            other => Error::internal(other.to_string()),
-        })?;
+        .map_err(argument)?;
     finish(ctx, c, n, Box::new(hash)).await
 }
