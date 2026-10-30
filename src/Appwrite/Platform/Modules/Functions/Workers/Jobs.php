@@ -848,10 +848,9 @@ class Jobs extends Action
 
         try {
             $started = (float) (new \DateTimeImmutable($startedAt))->format('U.u');
-            // Completion can arrive first and includes artifact processing time.
-            $ended = $deployment->getAttribute('status') === 'failed' && !empty($deployment->getAttribute('buildEndedAt'))
-                ? (float) (new \DateTimeImmutable($deployment->getAttribute('buildEndedAt')))->format('U.u')
-                : \microtime(true);
+            $ended = empty($deployment->getAttribute('buildEndedAt'))
+                ? \microtime(true)
+                : (float) (new \DateTimeImmutable($deployment->getAttribute('buildEndedAt')))->format('U.u');
         } catch (\Exception) {
             return 0;
         }
