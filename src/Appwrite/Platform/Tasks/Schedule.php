@@ -6,6 +6,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
+use Appwrite\Maintenance\Cohort;
 use Appwrite\Usage\Connection;
 use Swoole\Coroutine as Co;
 use Utopia\Console\Console;
@@ -26,7 +27,7 @@ class Schedule extends Action
     public function __construct()
     {
         $this
-            ->desc('Run the function, execution, message, inactive project maintenance and, when self-hosted, resource stats schedulers in one process')
+            ->desc('Run the function, execution, message, project maintenance and, when self-hosted, resource stats schedulers in one process')
             ->inject('publisherForFunctions')
             ->inject('publisherForMessaging')
             ->inject('getIsResourceBlocked')
@@ -104,13 +105,18 @@ class Schedule extends Action
         ?Connection $usageConnection = null,
     ): never {
         // Parsed before any loop starts: a loop that throws only ends its own coroutine, so an invalid interval
-        // would otherwise leave the process healthy with inactive projects never maintained.
-        $cycle = ScheduleMaintenance::cycle();
+        // would otherwise leave the process healthy with a cohort of projects never maintained.
+        $cycles = [];
+        foreach (Cohort::cases() as $cohort) {
+            $cycles[] = [$cohort, ScheduleMaintenance::cycle($cohort)];
+        }
 
         $this->loop(ScheduleFunctions::getName(), fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
         $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
         $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks));
-        $this->loop(ScheduleMaintenance::getName(), fn () => (new ScheduleMaintenance())->run(ScheduleMaintenance::loop($cycle, $publisherForMaintenance, $telemetry), $pools));
+        foreach ($cycles as [$cohort, $cycle]) {
+            $this->loop(ScheduleMaintenance::getName() . ':' . $cohort->value, fn () => (new ScheduleMaintenance())->run(ScheduleMaintenance::loop($cohort, $cycle, $publisherForMaintenance, $telemetry), $cohort, $pools));
+        }
 
         if ($publisherForStatsResources !== null && $usageConnection !== null) {
             $this->loop(StatsResources::getName(), fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection, $telemetry));

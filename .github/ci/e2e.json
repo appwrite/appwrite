@@ -59,6 +59,7 @@
         "src/Appwrite/Auth/OIDC/",
         "src/Appwrite/Auth/Passkey/",
         "src/Appwrite/Auth/MFA/",
+        "src/Appwrite/Auth/OTPToken.php",
         "src/Appwrite/Platform/Workers/Mails.php",
         "app/config/oAuthProviders.php",
         "packages/messaging/",

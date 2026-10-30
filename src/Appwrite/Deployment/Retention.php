@@ -41,17 +41,29 @@ readonly class Retention
      * resource queries narrow every pass to that resource's deployments that may retire at all.
      *
      * Age passes come first. The count cutoff is only looked up once they have been consumed, so it sees what they
-     * left behind; a failed lookup throws from the iteration after the age passes were handed out.
+     * left behind; a failed lookup throws from the iteration after the age passes were handed out. When
+     * `$refreshResourceBeforeCount` is set, it runs immediately before that cutoff lookup so protected deployments
+     * stay excluded from the count cap even if they became protected while age passes were retiring deployments.
      *
      * @param list<Query> $resource
+     * @param null|callable(list<Query>): list<Query> $refreshResourceBeforeCount
      * @return \Generator<int, Pass>
      */
-    public function passes(Database $dbForProject, array $resource, int $requested, \DateTime $now): \Generator
-    {
+    public function passes(
+        Database $dbForProject,
+        array $resource,
+        int $requested,
+        \DateTime $now,
+        ?callable $refreshResourceBeforeCount = null,
+    ): \Generator {
         yield from $this->ages($requested, $now);
 
         if ($this->maxCount === 0) {
             return;
+        }
+
+        if ($refreshResourceBeforeCount !== null) {
+            $resource = $refreshResourceBeforeCount($resource);
         }
 
         $cutoff = $dbForProject->find('deployments', [...$resource, ...$this->cutoff()]);

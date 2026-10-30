@@ -11,6 +11,7 @@ use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Exception\SmtpException;
 use Utopia\SMTP\Exception\TransactionException;
+use Utopia\SMTP\Exception\UnconfirmedException;
 use Utopia\SMTP\Mime\Encoding;
 use Utopia\SMTP\Transport\Transport;
 
@@ -127,7 +128,22 @@ final class Client
         // A refusal here is clean -- the server read the dot and is back in
         // command state -- so only a transaction failure keeps the connection.
         // exchange() decides that; a dead or desynchronised stream does not.
-        $result = new Result($this->messageId($this->exchange([250])), $accepted, $rejected);
+        // The dot is already written, so a missing reply is not a refusal:
+        // the server may have queued the message. Nor is a 421, which closes
+        // the channel whether or not the message was taken.
+        try {
+            $reply = $this->exchange([250]);
+        } catch (TransactionException $exception) {
+            if ($exception->reply->code !== 421) {
+                throw $exception;
+            }
+
+            throw new UnconfirmedException($exception->getMessage(), $exception->getCode(), $exception);
+        } catch (ConnectionException|ProtocolException $exception) {
+            throw new UnconfirmedException($exception->getMessage(), $exception->getCode(), $exception);
+        }
+
+        $result = new Result($this->messageId($reply), $accepted, $rejected);
 
         ++$this->transactions;
 
