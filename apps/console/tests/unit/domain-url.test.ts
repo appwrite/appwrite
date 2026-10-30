@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { domainUrl, ownerLinkUrl } from '@/lib/domains/url'
+import { domainUrl, ownerLinkUrl, visitUrl } from '@/lib/domains/url'
 
 describe('domainUrl', () => {
   test('uses http for local site domains', () => {
@@ -36,6 +36,38 @@ describe('domainUrl', () => {
     )
     expect(ownerLinkUrl('blog.sites.localhost', 'token')).toBe(
       'http://blog.sites.localhost/__appwrite/zero?token=token',
+    )
+  })
+})
+
+describe('visitUrl', () => {
+  const domain = 'blog.appwrite.network'
+
+  test('opens the owner link for the owner of an unclaimed Zero project', () => {
+    expect(visitUrl(domain, { status: 'active', accessToken: 'token' })).toBe(
+      'https://blog.appwrite.network/__appwrite/zero?token=token',
+    )
+    expect(visitUrl(domain, { status: 'expired', accessToken: 'token' })).toBe(
+      'https://blog.appwrite.network/__appwrite/zero?token=token',
+    )
+  })
+
+  test('opens the plain domain for a regular account', () => {
+    expect(visitUrl(domain, undefined)).toBe('https://blog.appwrite.network')
+  })
+
+  test('opens the plain domain once the Zero project is claimed or deleted', () => {
+    expect(visitUrl(domain, { status: 'claimed', accessToken: 'token' })).toBe(
+      'https://blog.appwrite.network',
+    )
+    expect(visitUrl(domain, { status: 'deleted', accessToken: 'token' })).toBe(
+      'https://blog.appwrite.network',
+    )
+  })
+
+  test('opens the plain domain while the token is not loaded yet', () => {
+    expect(visitUrl(domain, { status: 'active' })).toBe(
+      'https://blog.appwrite.network',
     )
   })
 })

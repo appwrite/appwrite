@@ -24,3 +24,19 @@ export function domainUrl(domain: string): string {
 export function ownerLinkUrl(domain: string, accessToken: string): string {
   return `${domainUrl(domain)}/__appwrite/zero?token=${encodeURIComponent(accessToken)}`
 }
+
+/**
+ * Where a link that opens a domain should point. Only the owner of a project
+ * that is still unclaimed gets the owner link; everyone else, and a claimed
+ * or deleted project, gets the plain domain. Pass `zero` only when the console
+ * is signed in as a Zero owner.
+ */
+export function visitUrl(
+  domain: string,
+  zero: { status: string; accessToken?: string } | undefined,
+): string {
+  const open = zero?.status === 'active' || zero?.status === 'expired'
+  return open && zero?.accessToken
+    ? ownerLinkUrl(domain, zero.accessToken)
+    : domainUrl(domain)
+}
