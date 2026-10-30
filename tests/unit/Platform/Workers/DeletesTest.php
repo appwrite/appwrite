@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Deployment\Retention;
+use Appwrite\Deployment\Retention\Reason;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -25,6 +26,7 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Lock\Distributed;
 use Utopia\Queue\Message;
@@ -334,6 +336,27 @@ final class DeletesTest extends TestCase
         $this->assertFalse($this->database->getDocument($collection, 'failing')->isEmpty(), 'a resumed upload keeps its row and bytes');
     }
 
+    public function testRetiredDeploymentsAreFetchedInSmallBatches(): void
+    {
+        $queries = [Query::equal('resourceId', ['site'])];
+
+        $database = $this->createMock(Database::class);
+        $database->expects($this->once())
+            ->method('deleteDocuments')
+            ->with('deployments', $queries, 50, $this->isCallable())
+            ->willReturn(0);
+
+        (new TestDeletes())->retire(
+            Reason::Requested,
+            $queries,
+            new Retention(),
+            new Document(['$id' => 'site', '$collection' => 'sites']),
+            $database,
+            $this->createStub(DeletePublisher::class),
+            new Document(['$id' => 'project']),
+        );
+    }
+
     /**
      * @param array<string, array<string, mixed>> $uploads file ID => extra metadata
      */
@@ -455,5 +478,13 @@ final class TestDeletes extends Deletes
     public function stopSchedules(Database $dbForPlatform, string $projectId): void
     {
         $this->deactivateSchedules($dbForPlatform, $projectId);
+    }
+
+    /**
+     * @param Query[] $queries
+     */
+    public function retire(Reason $reason, array $queries, Retention $retention, Document $resource, Database $dbForProject, DeletePublisher $publisherForDeletes, Document $project): void
+    {
+        $this->retireDeployments($reason, $queries, $retention, $resource, $dbForProject, $publisherForDeletes, $project);
     }
 }
