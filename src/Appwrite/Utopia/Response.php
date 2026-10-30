@@ -19,6 +19,9 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
  */
 class Response extends SwooleResponse
 {
+    public const string DISPOSITION_INLINE = 'inline';
+    public const string DISPOSITION_ATTACHMENT = 'attachment';
+
     // General
     public const MODEL_NONE = 'none';
     public const MODEL_ANY = 'any';
@@ -261,6 +264,8 @@ class Response extends SwooleResponse
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
     public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
+    public const MODEL_TRANSFER = 'transfer';
+    public const MODEL_TRANSFER_LIST = 'transferList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_POLICY_LIST = 'policyList';
@@ -281,6 +286,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_DENY_DISPOSABLE_EMAIL = 'policyDenyDisposableEmail';
     public const MODEL_POLICY_DENY_FREE_EMAIL = 'policyDenyFreeEmail';
     public const MODEL_POLICY_DENY_CORPORATE_EMAIL = 'policyDenyCorporateEmail';
+    public const MODEL_POLICY_DENY_REALTIME_GUESTS = 'policyDenyRealtimeGuests';
     public const MODEL_POLICY_PASSKEY = 'policyPasskey';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
@@ -385,6 +391,8 @@ class Response extends SwooleResponse
      */
     protected bool $showSensitive = false;
 
+    protected bool $hideCredentials = false;
+
     /**
      * @var array<string, Model>
      */
@@ -487,8 +495,11 @@ class Response extends SwooleResponse
             $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
         }
 
-        $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model, raw: clone $document);
+        // output() clones the document itself, filters get their own copy as raw content
+        $output = $this->output($document, $model);
+        if ($this->hasFilters()) {
+            $output = $this->applyFilters($output, $model, raw: clone $document);
+        }
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
@@ -614,6 +625,10 @@ class Response extends SwooleResponse
                 if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');
                 }
+            }
+
+            if ($rule['credential'] && ($this->hideCredentials || $this->impersonatorUser !== null)) {
+                $data->setAttribute($key, $rule['default'] ?? '');
             }
 
             if ($rule['type'] === Model::TYPE_DATETIME) {
@@ -800,8 +815,39 @@ class Response extends SwooleResponse
         $this->user = $user;
     }
 
+    public function setHideCredentials(bool $hideCredentials): void
+    {
+        $this->hideCredentials = $hideCredentials;
+    }
+
     public function setImpersonatorUser(Document $impersonatorUser): void
     {
         $this->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
+    }
+
+    /**
+     * RFC 6266 disposition with a printable ASCII fallback and an RFC 5987 UTF-8 name.
+     */
+    public function setContentDisposition(string $type, string $filename): static
+    {
+        $fallback = '';
+        $length = \strlen($filename);
+        for ($i = 0; $i < $length; $i++) {
+            $char = $filename[$i];
+            $code = \ord($char);
+            if ($code >= 0xC0) {
+                $fallback .= '_';
+                continue;
+            }
+            if ($code < 32 || $code >= 127 || $char === '"' || $char === '\\' || $char === ';') {
+                continue;
+            }
+            $fallback .= $char;
+        }
+
+        $fallback = $fallback !== '' ? $fallback : 'download';
+        $encoded = \rawurlencode($filename !== '' ? $filename : 'download');
+
+        return $this->setHeader('Content-Disposition', $type . '; filename="' . $fallback . '"; filename*=UTF-8\'\'' . $encoded);
     }
 }

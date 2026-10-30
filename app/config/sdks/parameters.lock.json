@@ -2848,12 +2848,20 @@
             "expire",
             "description"
         ],
+        "organization.createProjectTransfer": [
+            "projectId",
+            "recipientId",
+            "expire"
+        ],
         "organization.deleteProject": [
             "projectId"
         ],
         "organization.deleteProjectKey": [
             "projectId",
             "keyId"
+        ],
+        "organization.deleteProjectTransfer": [
+            "transferId"
         ],
         "organization.getProject": [
             "projectId"
@@ -2862,7 +2870,16 @@
             "projectId",
             "keyId"
         ],
+        "organization.getProjectTransfer": [
+            "transferId",
+            "secret"
+        ],
         "organization.listProjectKeys": [
+            "projectId",
+            "queries",
+            "total"
+        ],
+        "organization.listProjectTransfers": [
             "projectId",
             "queries",
             "total"
@@ -2883,6 +2900,10 @@
             "scopes",
             "expire",
             "description"
+        ],
+        "organization.updateProjectTransferStatus": [
+            "transferId",
+            "secret"
         ],
         "ping.get": [],
         "presences.delete": [
@@ -2972,6 +2993,7 @@
         "project.deletePlatform": [
             "platformId"
         ],
+        "project.deleteSessions": [],
         "project.deleteVariable": [
             "variableId"
         ],
@@ -3051,6 +3073,9 @@
             "enabled"
         ],
         "project.updateDenyFreeEmailPolicy": [
+            "enabled"
+        ],
+        "project.updateDenyRealtimeGuestsPolicy": [
             "enabled"
         ],
         "project.updateEmailTemplate": [
@@ -6796,6 +6821,115 @@
             "apiSecret",
             "from"
         ],
+        "migrations.createAppwriteMigration": [
+            "resources",
+            "endpoint",
+            "projectId",
+            "apiKey",
+            "onDuplicate"
+        ],
+        "migrations.createCSVExport": [
+            "databaseId",
+            "collectionId",
+            "filename",
+            "columns",
+            "queries",
+            "delimiter",
+            "enclosure",
+            "escape",
+            "header",
+            "notify"
+        ],
+        "migrations.createCSVImport": [
+            "bucketId",
+            "fileId",
+            "databaseId",
+            "collectionId",
+            "internalFile",
+            "onDuplicate"
+        ],
+        "migrations.createFirebaseMigration": [
+            "resources",
+            "serviceAccount"
+        ],
+        "migrations.createJSONExport": [
+            "databaseId",
+            "collectionId",
+            "filename",
+            "columns",
+            "queries",
+            "notify"
+        ],
+        "migrations.createJSONImport": [
+            "bucketId",
+            "fileId",
+            "databaseId",
+            "collectionId",
+            "internalFile",
+            "onDuplicate"
+        ],
+        "migrations.createNHostMigration": [
+            "resources",
+            "subdomain",
+            "region",
+            "adminSecret",
+            "database",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.createSupabaseMigration": [
+            "resources",
+            "endpoint",
+            "apiKey",
+            "databaseHost",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.delete": [
+            "migrationId"
+        ],
+        "migrations.get": [
+            "migrationId"
+        ],
+        "migrations.getAppwriteReport": [
+            "resources",
+            "endpoint",
+            "projectID",
+            "key"
+        ],
+        "migrations.getFirebaseReport": [
+            "resources",
+            "serviceAccount"
+        ],
+        "migrations.getNHostReport": [
+            "resources",
+            "subdomain",
+            "region",
+            "adminSecret",
+            "database",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.getSupabaseReport": [
+            "resources",
+            "endpoint",
+            "apiKey",
+            "databaseHost",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.list": [
+            "queries",
+            "search",
+            "total"
+        ],
+        "migrations.retry": [
+            "migrationId"
+        ],
         "organization.createEphemeralProjectKey": [
             "projectId",
             "scopes",
@@ -6925,6 +7059,7 @@
         "project.deletePlatform": [
             "platformId"
         ],
+        "project.deleteSessions": [],
         "project.deleteVariable": [
             "variableId"
         ],
@@ -7004,6 +7139,9 @@
             "enabled"
         ],
         "project.updateDenyFreeEmailPolicy": [
+            "enabled"
+        ],
+        "project.updateDenyRealtimeGuestsPolicy": [
             "enabled"
         ],
         "project.updateEmailTemplate": [

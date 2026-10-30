@@ -2,8 +2,10 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SMTP\Breaker;
 use Appwrite\SMTP\Refusal;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
 use Exception;
 use Utopia\Console\Console;
@@ -45,6 +47,7 @@ class Mails extends Action
             ->inject('project')
             ->inject('register')
             ->inject('telemetry')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -61,10 +64,11 @@ class Mails extends Action
      * @param Document $project
      * @param Registry $register
      * @param Telemetry $telemetry
+     * @param PublicHostname $publicHostname
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Registry $register, Telemetry $telemetry): void
+    public function action(Message $message, Document $project, Registry $register, Telemetry $telemetry, PublicHostname $publicHostname): void
     {
         $payload = $message->getPayload();
 
@@ -98,9 +102,37 @@ class Mails extends Action
         $body = $payload['body'];
         $preview = $payload['preview'] ?? '';
 
+        $variables['year'] = date('Y');
+
+        $subjectTemplate = Template::fromString($subject);
+        foreach ($variables as $key => $value) {
+            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+        }
+        // render() will return the subject in <p> tags, so use strip_tags() to remove them
+        $subject = \strip_tags($subjectTemplate->render());
+
+        $heading = $subject;
+        if (!empty($variables['heading'])) {
+            $headingTemplate = Template::fromString($variables['heading']);
+            foreach ($variables as $key => $value) {
+                $headingTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $heading = $headingTemplate->render(useContent: true);
+        }
         $variables['subject'] = $subject;
-        $variables['heading'] = $variables['heading'] ?? $subject;
-        $variables['year'] = date("Y");
+        $variables['heading'] = $heading;
+
+        // Expand the body's placeholders once, so values are inserted literally
+        if (!empty($body)) {
+            $bodyContent = Template::fromString($body);
+            foreach ($variables as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value);
+            }
+            foreach ($this->richTextParams as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $body = $bodyContent->render(useContent: true);
+        }
 
         $attachment = $payload['attachment'] ?? [];
         $bodyTemplate = $payload['bodyTemplate'];
@@ -110,8 +142,7 @@ class Mails extends Action
         $bodyTemplate = Template::fromFile($bodyTemplate);
         $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            // TODO: hotfix for redirect param
-            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
+            $bodyTemplate->setParam('{{' . $key . '}}', $value);
         }
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
@@ -140,13 +171,6 @@ class Mails extends Action
 
         $body = $bodyTemplate->render();
 
-        $subjectTemplate = Template::fromString($subject);
-        foreach ($variables as $key => $value) {
-            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
-        }
-        // render() will return the subject in <p> tags, so use strip_tags() to remove them
-        $subject = \strip_tags($subjectTemplate->render());
-
         $breaker = null;
         if ($type === 'smtp') {
             Span::add('mail.smtp_host', $smtp['host']);
@@ -162,22 +186,19 @@ class Mails extends Action
 
                 return;
             }
-        }
 
-        // A pooled adapter belongs to this send alone; a project's own SMTP is
-        // dialled for it and closed after.
-        $adapter = empty($smtp) ? null : new SMTP(
-            host: $smtp['host'],
-            port: (int) $smtp['port'],
-            username: $smtp['username'] ?? '',
-            password: $smtp['password'] ?? '',
-            smtpSecure: $smtp['secure'] ?? '',
-            smtpAutoTLS: false,
-            xMailer: 'Appwrite Mailer',
-            timeout: 10,
-            keepAlive: false,
-            timelimit: 30,
-        );
+            // A host that does not resolve yet is retried below; one that reaches a private address never can be.
+            $host = new Host($publicHostname, resolved: false);
+            if (!$host->isValid($smtp['host'])) {
+                Span::add('mail.status', 'skipped');
+                Span::add('mail.error', 'host');
+                Span::add('mail.error.message', $host->getDescription());
+
+                Console::warning('Mail skipped, project SMTP host refused: project=' . $project->getId() . ' host=' . $smtp['host'] . ' reason=' . $host->getDescription());
+
+                return;
+            }
+        }
 
         // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
@@ -233,6 +254,22 @@ class Mails extends Action
                 headers: $payload['headers'] ?? [],
             );
             $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+
+            // A pooled adapter belongs to this send alone; a project's own SMTP is
+            // dialled for it, on the addresses just checked, and closed after.
+            $adapter = empty($smtp) ? null : new SMTP(
+                host: $smtp['host'],
+                port: (int) $smtp['port'],
+                username: $smtp['username'] ?? '',
+                password: $smtp['password'] ?? '',
+                smtpSecure: $smtp['secure'] ?? '',
+                smtpAutoTLS: false,
+                xMailer: 'Appwrite Mailer',
+                timeout: 10,
+                keepAlive: false,
+                timelimit: 30,
+                addresses: new Host($publicHostname)->addresses($smtp['host']),
+            );
 
             $send = static function (EmailAdapter $adapter) use ($emailMessage, $telemetry): array {
                 $adapter->setTelemetry($telemetry);

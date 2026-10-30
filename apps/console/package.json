@@ -59,8 +59,8 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@79eecfa07bef2761d4ed806524c68df52f19c7f0",
-    "@appwrite.io/specs": "github:appwrite/specs#3aba27c956bf7a3fe64605fed2f5081646ec3c52",
+    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@1d445257d6e99c31967b406a570d4190818d7bdc",
+    "@appwrite.io/specs": "github:appwrite/specs#83b9f17549a0735f29ec89600160ee9cdc9ededd",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -158,7 +158,7 @@
     "tw-animate-css": "^1.3.6",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^5.1.4",
-    "zod": "^4.1.11"
+    "zod": "^4.6.7"
   },
   "overrides": {
     "react": "19.1.1",
@@ -166,7 +166,7 @@
     "use-sync-external-store": "^1.6.0",
     "@tanstack/react-store": "^0.11.2",
     "@tanstack/store": "^0.11.2",
-    "dompurify": "^3.4.16",
+    "dompurify": "^3.4.17",
     "sharp": "^0.35.5"
   },
   "pnpm": {
@@ -175,13 +175,16 @@
       "react-dom": "19.1.1",
       "@tanstack/react-store": "^0.11.2",
       "@tanstack/store": "^0.11.2",
-      "dompurify": "^3.4.16",
+      "dompurify": "^3.4.17",
       "sharp": "^0.35.5"
     }
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^21.0.4",
     "@playwright/test": "^1.58.2",
     "@tanstack/router-cli": "1.167.40",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/bun": "^1.4.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.12.0",
@@ -194,6 +197,7 @@
     "editorconfig-checker": "6.2.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unused-imports": "^4.3.0",
+    "happy-dom": "^21.0.4",
     "prettier": "^3.5.3",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.50.0",

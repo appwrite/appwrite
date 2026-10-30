@@ -214,8 +214,224 @@ final class S3CustomServerTest extends Scope
         $this->assertSame(200, $quoted['headers']['status-code']);
         $disposition = (string) $quoted['headers']['content-disposition'];
         $this->assertStringStartsWith('attachment;', $disposition);
-        $this->assertStringContainsString('filename="caféname.svg"', $disposition);
+        $this->assertStringContainsString('filename="caf_name.svg"', $disposition);
         $this->assertStringContainsString("filename*=UTF-8''" . \rawurlencode($quotedName), $disposition);
+    }
+
+    public function testPutObjectServerSideEncryptionNotReported(): void
+    {
+        $bucketId = $this->setupBucket();
+        $encryption = ['x-amz-server-side-encryption' => 'AES256'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $key = Id::unique() . '.txt';
+        $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: 'appwrite', headers: $encryption);
+        $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $put['headers']);
+
+        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+        $this->assertSame(200, $object['headers']['status-code']);
+        $this->assertSame('appwrite', $object['body']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $object['headers']);
+
+        $head = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $key);
+        $this->assertSame(200, $head['headers']['status-code']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $head['headers']);
+
+        $copied = Id::unique() . '.txt';
+        $copy = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $copied, headers: \array_merge($encryption, [
+            'x-amz-copy-source' => $bucketId . '/' . $key,
+            'x-amz-metadata-directive' => 'REPLACE',
+        ]));
+        $this->assertSame(200, $copy['headers']['status-code'], $copy['body']);
+
+        $copiedObject = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $copied);
+        $this->assertSame(200, $copiedObject['headers']['status-code']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $copiedObject['headers']);
+
+        $multipartKey = 'multipart/' . Id::unique() . '.txt';
+        $uploadId = $this->createMultipartUpload($bucketId, $multipartKey, $encryption);
+        $etag = $this->uploadPart($bucketId, $multipartKey, $uploadId, 1, 'appwrite');
+        $complete = $this->completeMultipartUpload($bucketId, $multipartKey, $uploadId, [1 => $etag]);
+        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+
+        $multipartObject = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $multipartKey);
+        $this->assertSame(200, $multipartObject['headers']['status-code']);
+        $this->assertArrayNotHasKey('x-amz-server-side-encryption', $multipartObject['headers']);
+    }
+
+    public function testPutObjectControlCharacterKey(): void
+    {
+        $bucketId = $this->setupBucket();
+
+        /**
+         * Test for SUCCESS
+         */
+        $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . Id::unique() . '%20%22name%22.txt', body: 'appwrite');
+        $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['%0A', '%0D%0A', '%00', '%7F'] as $control) {
+            $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . Id::unique() . $control . '.txt', body: 'appwrite');
+            $this->assertSame(400, $put['headers']['status-code'], $control);
+        }
+    }
+
+    #[Group('s3')]
+    public function testCopyObjectRequiresSignedCopySource(): void
+    {
+        $bucketId = $this->setupBucket();
+        $source = Id::unique() . '.png';
+        $this->uploadFile($bucketId, 'logo.png', 'image/png', $source);
+        $destination = '/' . $bucketId . '/' . Id::unique() . '.png';
+
+        /**
+         * Test for FAILURE
+         */
+        $unsigned = $this->call(Client::METHOD_PUT, $destination, unsignedHeaders: [
+            'x-amz-copy-source' => $bucketId . '/' . $source,
+        ]);
+        $this->assertSame(403, $unsigned['headers']['status-code'], $unsigned['body']);
+        $this->assertStringContainsString('<Code>AccessDenied</Code>', (string) $unsigned['body']);
+
+        $missing = $this->call(Client::METHOD_GET, $destination);
+        $this->assertSame(404, $missing['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $copy = $this->call(Client::METHOD_PUT, $destination, headers: [
+            'x-amz-copy-source' => $bucketId . '/' . $source,
+        ]);
+        $this->assertSame(200, $copy['headers']['status-code'], $copy['body']);
+
+        $copied = $this->call(Client::METHOD_GET, $destination);
+        $this->assertSame(200, $copied['headers']['status-code']);
+        $this->assertSame(\file_get_contents(\realpath(__DIR__ . '/../../../resources/logo.png')), $copied['body']);
+    }
+
+    #[Group('s3')]
+    public function testUploadPartLimits(): void
+    {
+        $bucketId = $this->setupBucket(['maximumFileSize' => 1024]);
+        $key = 'limits/' . Id::unique() . '.txt';
+        $uploadId = $this->createMultipartUpload($bucketId, $key);
+        $part = \str_repeat('a', 600);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->uploadPart($bucketId, $key, $uploadId, 1, $part);
+        // Retrying a part does not count its earlier size twice.
+        $etag = $this->uploadPart($bucketId, $key, $uploadId, 1, $part);
+
+        /**
+         * Test for FAILURE
+         */
+        $tooLarge = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => '3', 'uploadId' => $uploadId], \str_repeat('a', 1025));
+        $this->assertSame(400, $tooLarge['headers']['status-code'], $tooLarge['body']);
+
+        $replaced = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => '1', 'uploadId' => $uploadId], \str_repeat('b', 600));
+        $this->assertSame(400, $replaced['headers']['status-code'], $replaced['body']);
+
+        $cumulative = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => '2', 'uploadId' => $uploadId], $part);
+        $this->assertSame(400, $cumulative['headers']['status-code'], $cumulative['body']);
+
+        foreach (['0', '10001'] as $partNumber) {
+            $outOfRange = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => $partNumber, 'uploadId' => $uploadId], 'a');
+            $this->assertSame(400, $outOfRange['headers']['status-code'], $partNumber);
+        }
+
+        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [1 => $etag]);
+        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+
+        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+        $this->assertSame(200, $object['headers']['status-code']);
+        $this->assertSame($part, $object['body']);
+    }
+
+    public function testListObjectsWithDuplicateNames(): void
+    {
+        $bucketId = $this->setupBucket();
+        $name = Id::unique() . '.png';
+        $other = Id::unique() . '.png';
+        $this->uploadFile($bucketId, 'logo.png', 'image/png', $name);
+        $this->uploadFile($bucketId, 'logo.png', 'image/png', $name);
+        $this->uploadFile($bucketId, 'logo.png', 'image/png', $other);
+
+        foreach ([['list-type' => '2'], []] as $query) {
+            $list = $this->call(Client::METHOD_GET, '/' . $bucketId, $query);
+            $this->assertSame(200, $list['headers']['status-code'], $list['body']);
+
+            $keys = [];
+            foreach (\simplexml_load_string($list['body'])->Contents as $contents) {
+                $keys[] = (string) $contents->Key;
+            }
+            \sort($keys);
+            $expected = [$name, $other];
+            \sort($expected);
+            $this->assertSame($expected, $keys);
+        }
+
+        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $name);
+        $this->assertSame(200, $object['headers']['status-code']);
+        $this->assertSame(\file_get_contents(\realpath(__DIR__ . '/../../../resources/logo.png')), $object['body']);
+
+        $head = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $name);
+        $this->assertSame(200, $head['headers']['status-code']);
+    }
+
+    #[Group('antivirus')]
+    #[Group('s3')]
+    public function testWriteAntivirusBucket(): void
+    {
+        $bucketId = $this->setupBucket(['antivirus' => true]);
+        $key = Id::unique() . '.txt';
+        $scanned = System::getEnv('_APP_STORAGE_ANTIVIRUS', 'disabled') === 'enabled'
+            && \strtolower(System::getEnv('_APP_STORAGE_DEVICE', 'local')) === 'local';
+
+        $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: 'appwrite');
+        $uploadId = $this->createMultipartUpload($bucketId, $key);
+        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [
+            1 => $this->uploadPart($bucketId, $key, $uploadId, 1, 'appwrite'),
+        ]);
+
+        if ($scanned) {
+            /**
+             * Test for FAILURE
+             */
+            $this->assertSame(400, $put['headers']['status-code'], $put['body']);
+            $this->assertSame(400, $complete['headers']['status-code'], $complete['body']);
+
+            $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+            $this->assertSame(404, $object['headers']['status-code']);
+
+            /**
+             * Test for SUCCESS - files above the scan limit are not scanned by the REST upload either
+             */
+            $key = Id::unique() . '.bin';
+            $uploadId = $this->createMultipartUpload($bucketId, $key);
+            $etags = [];
+            for ($partNumber = 1; $partNumber * self::PART_SIZE <= self::STREAMED_FILE_SIZE; $partNumber++) {
+                $etags[$partNumber] = $this->uploadPart($bucketId, $key, $uploadId, $partNumber, \str_repeat('a', self::PART_SIZE));
+            }
+            $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, $etags);
+            $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+
+            $head = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $key);
+            $this->assertSame(200, $head['headers']['status-code']);
+            return;
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
     }
 
     #[Group('s3')]
@@ -343,27 +559,34 @@ final class S3CustomServerTest extends Scope
         }
     }
 
-    private function setupBucket(): string
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function setupBucket(array $attributes = []): string
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], $this->getHeaders()), \array_merge([
             'bucketId' => Id::unique(),
             'name' => 'S3 Bucket',
             'fileSecurity' => false,
-            // The S3 gateway serves only buckets that store objects as is.
+            // The S3 gateway writes only to buckets that store objects as is and are not scanned.
             'encryption' => false,
             'compression' => 'none',
-        ]);
+            'antivirus' => false,
+        ], $attributes));
         $this->assertSame(201, $bucket['headers']['status-code'], \json_encode($bucket['body']));
 
         return $bucket['body']['$id'];
     }
 
-    private function createMultipartUpload(string $bucketId, string $key): string
+    /**
+     * @param array<string, string> $headers
+     */
+    private function createMultipartUpload(string $bucketId, string $key, array $headers = []): string
     {
-        $upload = $this->call(Client::METHOD_POST, '/' . $bucketId . '/' . $key, ['uploads' => '']);
+        $upload = $this->call(Client::METHOD_POST, '/' . $bucketId . '/' . $key, ['uploads' => ''], headers: $headers);
         $this->assertSame(200, $upload['headers']['status-code'], $upload['body']);
 
         return (string) \simplexml_load_string($upload['body'])->UploadId;
@@ -410,12 +633,14 @@ final class S3CustomServerTest extends Scope
 
     /**
      * Send an AWS Signature V4 request to the gateway. The access key is the
-     * project ID and the secret is the project's API key secret.
+     * project ID and the secret is the project's API key secret. x-amz-* headers
+     * are signed; $unsignedHeaders are sent without being signed.
      *
      * @param array<string, string> $query
      * @param array<string, string> $headers
+     * @param array<string, string> $unsignedHeaders
      */
-    private function call(string $method, string $path, array $query = [], string $body = '', array $headers = []): array
+    private function call(string $method, string $path, array $query = [], string $body = '', array $headers = [], array $unsignedHeaders = []): array
     {
         $endpoint = \parse_url($this->client->getEndpoint());
         $host = $endpoint['host'] . (isset($endpoint['port']) ? ':' . $endpoint['port'] : '');
@@ -432,14 +657,29 @@ final class S3CustomServerTest extends Scope
         $day = \substr($date, 0, 8);
         $payloadHash = \hash('sha256', $body);
         $scope = $day . '/us-east-1/s3/aws4_request';
-        $signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+        $signed = [
+            'host' => $host,
+            'x-amz-content-sha256' => $payloadHash,
+            'x-amz-date' => $date,
+        ];
+        foreach ($headers as $name => $value) {
+            $name = \strtolower($name);
+            if (\str_starts_with($name, 'x-amz-')) {
+                $signed[$name] = $value;
+            }
+        }
+        \ksort($signed);
+        $signedHeaders = \implode(';', \array_keys($signed));
+        $canonicalHeaders = \array_map(
+            fn (string $name, string $value): string => $name . ':' . \trim($value),
+            \array_keys($signed),
+            $signed
+        );
         $canonicalRequest = \implode("\n", [
             $method,
             $uri,
             $canonicalQuery,
-            'host:' . $host,
-            'x-amz-content-sha256:' . $payloadHash,
-            'x-amz-date:' . $date,
+            ...$canonicalHeaders,
             '',
             $signedHeaders,
             $payloadHash,
@@ -458,6 +698,6 @@ final class S3CustomServerTest extends Scope
             'x-amz-content-sha256' => $payloadHash,
             'x-amz-date' => $date,
             'authorization' => 'AWS4-HMAC-SHA256 Credential=' . $this->getProject()['$id'] . '/' . $scope . ', SignedHeaders=' . $signedHeaders . ', Signature=' . $signature,
-        ], $headers), $body, decode: false);
+        ], $headers, $unsignedHeaders), $body, decode: false);
     }
 }

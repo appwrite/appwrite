@@ -93,6 +93,7 @@ class Get extends Action
             'deny-disposable-email' => Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
             'deny-free-email' => Response::MODEL_POLICY_DENY_FREE_EMAIL,
             'deny-corporate-email' => Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            'deny-realtime-guests' => Response::MODEL_POLICY_DENY_REALTIME_GUESTS,
             'passkey' => Response::MODEL_POLICY_PASSKEY,
         ];
     }
@@ -243,6 +244,13 @@ class Get extends Action
                     'enabled' => $auths['corporateEmails'] ?? false,
                 ]),
                 Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            ],
+            'deny-realtime-guests' => [
+                new Document([
+                    '$id' => 'deny-realtime-guests',
+                    'enabled' => $auths['realtimeGuests'] ?? false,
+                ]),
+                Response::MODEL_POLICY_DENY_REALTIME_GUESTS,
             ],
             'passkey' => [
                 new Document([

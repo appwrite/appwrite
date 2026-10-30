@@ -14,6 +14,11 @@ use Appwrite\Platform\Modules\Organization\Http\Projects\Keys\Update as UpdatePr
 use Appwrite\Platform\Modules\Organization\Http\Projects\Keys\XList as ListProjectKeys;
 use Appwrite\Platform\Modules\Organization\Http\Projects\Update as UpdateProject;
 use Appwrite\Platform\Modules\Organization\Http\Projects\XList as ListProjects;
+use Appwrite\Platform\Modules\Organization\Http\Transfers\Create as CreateProjectTransfer;
+use Appwrite\Platform\Modules\Organization\Http\Transfers\Delete as DeleteProjectTransfer;
+use Appwrite\Platform\Modules\Organization\Http\Transfers\Get as GetProjectTransfer;
+use Appwrite\Platform\Modules\Organization\Http\Transfers\Status\Update as UpdateProjectTransferStatus;
+use Appwrite\Platform\Modules\Organization\Http\Transfers\XList as ListProjectTransfers;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -39,5 +44,12 @@ class Http extends Service
         $this->addAction(GetProjectKey::getName(), new GetProjectKey());
         $this->addAction(UpdateProjectKey::getName(), new UpdateProjectKey());
         $this->addAction(DeleteProjectKey::getName(), new DeleteProjectKey());
+
+        // Project transfers
+        $this->addAction(CreateProjectTransfer::getName(), new CreateProjectTransfer());
+        $this->addAction(ListProjectTransfers::getName(), new ListProjectTransfers());
+        $this->addAction(GetProjectTransfer::getName(), new GetProjectTransfer());
+        $this->addAction(DeleteProjectTransfer::getName(), new DeleteProjectTransfer());
+        $this->addAction(UpdateProjectTransferStatus::getName(), new UpdateProjectTransferStatus());
     }
 }

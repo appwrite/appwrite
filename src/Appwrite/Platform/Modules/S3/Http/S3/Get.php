@@ -77,14 +77,13 @@ class Get extends Base
                 return;
             }
             if ($this->hasQuery($request, 'uploads')) {
-                $this->sendXml($response, S3Xml::listMultipartUploads($bucketId, $this->getMultipartUploads($cache, $project, $bucket)));
+                $this->sendXml($response, S3Xml::listMultipartUploads($bucketId, $this->getMultipartUploads($locks, $cache, $dbForProject, $project, $deviceForFiles, $bucket)));
                 return;
             }
 
-            $files = $dbForProject->getAuthorization()->skip(fn () => \iterator_to_array($dbForProject->cursor('bucket_' . $bucket->getSequence(), [
+            $files = $this->uniqueObjects($dbForProject->getAuthorization()->skip(fn () => \iterator_to_array($dbForProject->cursor('bucket_' . $bucket->getSequence(), [
                 Query::orderAsc('$sequence'),
-            ], batchSize: 1000), false));
-            $this->assertUniqueObjectKeys($files);
+            ], batchSize: 1000), false)));
             if ($this->query($request, 'list-type') === '2') {
                 $this->sendXml($response, S3Xml::listObjectsV2(
                     $bucketId,
@@ -194,10 +193,6 @@ class Get extends Base
                 $metadata = $file->getAttribute('metadata', []);
                 foreach (($metadata['userMetadata'] ?? []) as $name => $value) {
                     $response->addHeader('x-amz-meta-' . $name, (string) $value);
-                }
-                $sse = (string) ($metadata['serverSideEncryption'] ?? '');
-                if ($sse !== '') {
-                    $response->addHeader('x-amz-server-side-encryption', $sse);
                 }
 
                 foreach ([
@@ -351,16 +346,14 @@ class Get extends Base
             $disposition = $overrideDisposition;
         }
 
-        if ($this->requiresAttachment($storedType, $contentType)) {
-            $disposition = $this->attachmentDisposition((string) $file->getAttribute('name', ''));
-        }
-
         $response
             ->setContentType($contentType)
             ->addHeader('Content-Security-Policy', "script-src 'none';")
             ->setHeader('X-Content-Type-Options', 'nosniff');
 
-        if ($disposition !== '') {
+        if ($this->requiresAttachment($storedType, $contentType)) {
+            $response->setContentDisposition(Response::DISPOSITION_ATTACHMENT, (string) $file->getAttribute('name', ''));
+        } elseif ($disposition !== '') {
             $response->setHeader('Content-Disposition', $disposition);
         }
     }
@@ -379,30 +372,6 @@ class Get extends Base
         }
 
         return false;
-    }
-
-    private function attachmentDisposition(string $name): string
-    {
-        $fallback = $this->quotedDispositionFilename($name);
-        $encoded = \rawurlencode($name !== '' ? $name : 'download');
-
-        return 'attachment; filename="' . $fallback . '"; filename*=UTF-8\'\'' . $encoded;
-    }
-
-    private function quotedDispositionFilename(string $name): string
-    {
-        $fallback = '';
-        $length = \strlen($name);
-        for ($i = 0; $i < $length; $i++) {
-            $char = $name[$i];
-            $code = \ord($char);
-            if ($code < 32 || $code === 127 || $char === '"' || $char === '\\' || $char === ';') {
-                continue;
-            }
-            $fallback .= $char;
-        }
-
-        return $fallback !== '' ? $fallback : 'download';
     }
 
     /**

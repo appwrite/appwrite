@@ -8,8 +8,10 @@ use Appwrite\Auth\OIDC\Jwks;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -25,6 +27,7 @@ use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -110,6 +113,8 @@ class Create extends Action
             ->inject('cache')
             ->inject('bus')
             ->inject('clientForOAuth2')
+            ->inject('mqtt')
+            ->inject('queueForRealtime')
             ->callback($this->action(...));
     }
 
@@ -138,6 +143,8 @@ class Create extends Action
         Cache $cache,
         Bus $bus,
         Client $clientForOAuth2,
+        Mqtt $mqtt,
+        Realtime $queueForRealtime,
     ): void {
         $profile = new Document(Config::getParam('oAuthProviders', [])[$provider]['idToken'] ?? []);
         if ($profile->isEmpty()) {
@@ -212,7 +219,7 @@ class Create extends Action
             $sessionUpgrade = true;
         }
 
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
         if ($user->isEmpty()) {
             $session = $dbForProject->findOne('sessions', [ // Get user by provider id
@@ -227,7 +234,7 @@ class Create extends Action
         $newUser = null;
         $newTarget = null;
         if ($user->isEmpty()) {
-            [$newUser, $newTarget] = $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization);
+            [$newUser, $newTarget] = $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime);
         }
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -352,7 +359,7 @@ class Create extends Action
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION))
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $bus->dispatch(new SessionCreated(
@@ -375,6 +382,14 @@ class Create extends Action
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        if ($current) {
+            try {
+                $mqtt->revoke($project->getId(), $user->getId());
+            } catch (\Throwable $error) {
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+            }
+        }
     }
 
     /**
@@ -385,7 +400,7 @@ class Create extends Action
      * @return array{?Document, ?Document} the user and email target created by
      *     this request, if any, so they can be rolled back later
      */
-    private function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization): array
+    private function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime): array
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('provider', [$provider]),
@@ -420,6 +435,24 @@ class Create extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
+                if (!$user->getAttribute('emailVerification', false)) {
+                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
+                    $dbForProject->purgeCachedDocument('users', $user->getId());
+
+                    try {
+                        $mqtt->revoke($project->getId(), $user->getId());
+                    } catch (\Throwable $error) {
+                        Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+                    }
+
+                    // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
+                    (clone $queueForRealtime)
+                        ->reset()
+                        ->setProject($project)
+                        ->setEvent('users.[userId].sessions.delete')
+                        ->setParam('userId', $user->getId())
+                        ->trigger();
+                }
                 // The provider verified this address, or its canonical form on the same domain
                 if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
                     $user->setAttribute('emailVerification', true);
@@ -664,8 +697,7 @@ class Create extends Action
                 && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
                 && $isVerified;
             // Keep the provider domain for delivery (e.g. live.com must
-            // not become outlook.com). Still canonicalize the local part
-            // and include the full provider canonical in collision lookups.
+            // not become outlook.com). Still canonicalize the local part.
             if ($canonicalize) {
                 $canonicalLocal = \explode('@', $canonical, 2)[0];
                 $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
@@ -673,7 +705,8 @@ class Create extends Action
             } else {
                 $email = $providerEmail;
             }
-            $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, $canonical])));
+            // Match existing users by the provider's own address only, never by a cross-domain canonical form
+            $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, \mb_strtolower($providerEmail)])));
             $emailMetadata = [
                 'emailCanonical' => $canonical,
                 'emailIsCanonical' => \mb_strtolower($email) === $canonical,

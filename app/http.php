@@ -197,8 +197,20 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         createDatabase($container, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $container) {
             $authorization = $container->get('authorization');
 
-            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
-                $dbForPlatform->createDocument('buckets', new Document([
+            // Console users upload import files here; everything else goes through file permissions.
+            $defaultBucketPermissions = [
+                Permission::create(Role::users()),
+            ];
+
+            $defaultBucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
+            if (!$defaultBucket->isEmpty() && $defaultBucket->getPermissions() !== $defaultBucketPermissions) {
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('buckets', 'default', new Document([
+                    '$permissions' => $defaultBucketPermissions,
+                ])));
+            }
+
+            if ($defaultBucket->isEmpty()) {
+                $authorization->skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => Id::custom('default'),
                     '$collection' => Id::custom('buckets'),
                     'name' => 'Default',
@@ -209,16 +221,11 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     'encryption' => true,
                     'antivirus' => true,
                     'fileSecurity' => true,
-                    '$permissions' => [
-                        Permission::create(Role::any()),
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
+                    '$permissions' => $defaultBucketPermissions,
                     'search' => 'buckets Default',
-                ]));
+                ])));
 
-                $bucket = $dbForPlatform->getDocument('buckets', 'default');
+                $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
 
                 $files = $collections['buckets']['files'] ?? [];
                 if (empty($files)) {
@@ -423,6 +430,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
     $response = new Response($utopiaResponse->getSwooleResponse());
 
     Span::add('http.method', $request->getMethod());
+    Span::add('http.uri', $request->getURI());
 
     if ($files->isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 45); // 45 days cache
@@ -474,7 +482,14 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             // All good, user is optional information
         }
         Span::add('http.hostname', $request->getHostname());
-        Span::add('http.locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
+        $locale = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
+        $localeCodes = \array_map(
+            fn ($entry) => $entry['code'],
+            Config::getParam('locale-codes', []),
+        );
+        if (\in_array($locale, $localeCodes, true)) {
+            Span::add('http.locale', $locale);
+        }
 
         $sdk = $route?->getLabel("sdk", false);
         if (!empty($sdk)) {

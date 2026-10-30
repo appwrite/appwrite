@@ -122,4 +122,9 @@ export const POLICIES_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     title: 'Relying party',
     keywords: ['passkey', 'webauthn', 'rp id', 'domain', 'origins'],
   },
+  {
+    sectionId: 'realtime',
+    title: 'Guests',
+    keywords: ['guest', 'anonymous', 'unauthenticated', 'websocket'],
+  },
 ]

@@ -97,8 +97,16 @@ export function isHttpForbiddenError(error: unknown): boolean {
  * - `provider` - the provider itself failed (outage, rate limit). Also
  *   transient, but a dead token can land here too (see below), so a reconnect
  *   stays available as a secondary action.
+ * - `missing` - the installation works but no longer reaches the repository:
+ *   it was deleted, removed from the installation's repository access, or
+ *   moved to another installation (an Entire mirror detached into a project).
+ *   The resource has to be connected to the repository again.
  */
-export type VcsInstallationErrorKind = 'reconnect' | 'locked' | 'provider'
+export type VcsInstallationErrorKind =
+  | 'reconnect'
+  | 'locked'
+  | 'provider'
+  | 'missing'
 
 /**
  * Classify an error from a VCS endpoint that refreshes the installation token
@@ -118,6 +126,7 @@ export function getVcsInstallationErrorKind(
   if (!error || typeof error !== 'object') return null
   const e = error as { type?: string; message?: string }
   if (e.type === 'general_resource_locked') return 'locked'
+  if (e.type === 'provider_repository_not_found') return 'missing'
   if (e.type !== 'general_provider_failure') return null
   const message = typeof e.message === 'string' ? e.message.toLowerCase() : ''
   return message.includes('reconnect') ? 'reconnect' : 'provider'
@@ -379,13 +388,15 @@ export function formatError(
       }
     }
 
-    // Check for 404 / not found errors
+    // Check for 404 / not found errors. Match the message only without a status:
+    // a 400 such as "Attribute not found in schema" must keep its own message.
     if (
       error.name === 'NotFoundError' ||
       code === 404 ||
-      lowerMessage.includes('not found') ||
-      lowerMessage.includes('404') ||
-      lowerMessage.includes('does not exist')
+      (code === undefined &&
+        (lowerMessage.includes('not found') ||
+          lowerMessage.includes('404') ||
+          lowerMessage.includes('does not exist')))
     ) {
       return {
         title: translate('Not Found'),

@@ -8,10 +8,14 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Redelivery;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
+use Psr\Http\Message\UriInterface;
+use Swoole\Coroutine\System as Resolver;
 use Utopia\Cache\Cache;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -28,6 +32,7 @@ use Utopia\System\System;
 class Webhooks extends Action
 {
     private const MAX_FILE_SIZE = 5242880; // 5 MB
+    private const TIMEOUT = 15;
 
     public static function getName(): string
     {
@@ -48,7 +53,7 @@ class Webhooks extends Action
             ->inject('publisherForUsage')
             ->inject('platform')
             ->inject('plan')
-            ->inject('clientForWebhooks')
+            ->inject('publicHostname')
             ->inject('cache')
             ->callback($this->action(...));
     }
@@ -61,12 +66,12 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
-     * @param Client $clientForWebhooks
+     * @param PublicHostname $publicHostname
      * @param Cache $cache
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $clientForWebhooks, Cache $cache): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, PublicHostname $publicHostname, Cache $cache): void
     {
         $payload = $message->getPayload();
 
@@ -75,10 +80,16 @@ class Webhooks extends Action
         }
 
         $events = $payload['events'];
-        $webhookPayload = json_encode($payload['payload']);
+        $webhookPayload = !empty($payload['body']) ? $payload['body'] : json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
 
         Span::add('project.id', $project->getId());
+
+        // Deleted, or replaced by a project created under the same ID, after the event was queued.
+        if ($project->isEmpty()) {
+            Span::add('webhooks.skipped', 'project_not_found');
+            return;
+        }
 
         // A redelivery retries only the webhooks that failed. When the record of the others
         // cannot be read they are sent to again: a receiver can drop a repeat by its delivery
@@ -101,7 +112,7 @@ class Webhooks extends Action
                 continue;
             }
 
-            $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $clientForWebhooks, $redelivery->id($webhook->getId()));
+            $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $publicHostname, $redelivery->id($webhook->getId()));
             if ($error !== null) {
                 $errors[] = $error;
             } else {
@@ -134,11 +145,11 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
-     * @param Client $clientForWebhooks
+     * @param PublicHostname $publicHostname
      * @param string $deliveryId Identifies this event to this webhook; the same on every attempt
      * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $clientForWebhooks, string $deliveryId): ?string
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, PublicHostname $publicHostname, string $deliveryId): ?string
     {
         $rawUrl = $webhook->getAttribute('url');
 
@@ -146,15 +157,6 @@ class Webhooks extends Action
         $signature = base64_encode(hash_hmac('sha1', $rawUrl . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
-
-        $client = $clientForWebhooks
-            ->withTimeout(15)
-            ->withConnectTimeout(15)
-            ->withSslVerification($webhook->getAttribute('security', true));
-
-        if (!empty($httpUser) && !empty($httpPass)) {
-            $client = $client->withBasicAuth($httpUser, $httpPass);
-        }
 
         $responseBody = '';
         $clientError = '';
@@ -176,12 +178,22 @@ class Webhooks extends Action
                     'X-' . APP_NAME . '-Webhook-Id' => $webhook->getId(),
                     'X-' . APP_NAME . '-Webhook-Delivery-Id' => $deliveryId,
                     'X-' . APP_NAME . '-Webhook-Events' => implode(',', $events),
-                    'X-' . APP_NAME . '-Webhook-Name' => $webhook->getAttribute('name', ''),
+                    'X-' . APP_NAME . '-Webhook-Name' => $this->stripControlCharacters((string) $webhook->getAttribute('name', '')),
                     'X-' . APP_NAME . '-Webhook-User-Id' => $user->getId(),
                     'X-' . APP_NAME . '-Webhook-Project-Id' => $project->getId(),
                     'X-' . APP_NAME . '-Webhook-Signature' => $signature,
                 ],
             );
+
+            $client = $this->client($request->getUri(), $publicHostname)
+                ->withTimeout(self::TIMEOUT)
+                ->withConnectTimeout(self::TIMEOUT)
+                ->withSslVerification($webhook->getAttribute('security', true));
+
+            if (!empty($httpUser) && !empty($httpPass)) {
+                $client = $client->withBasicAuth($httpUser, $httpPass);
+            }
+
             $response = $client->stream(
                 request: $request,
                 sink: function (string $chunk) use (&$responseBody): void {
@@ -405,5 +417,62 @@ class Webhooks extends Action
         }
 
         return false;
+    }
+
+    /**
+     * A client that connects only to the addresses checked for the URL's host, whatever DNS answers later.
+     * The host resolves through the container's own resolver, as cURL would resolve it.
+     *
+     * @throws \InvalidArgumentException When the host does not resolve or resolves to an address the destination does not allow
+     */
+    private function client(UriInterface $uri, PublicHostname $publicHostname): Client
+    {
+        $host = \strtolower(\trim($uri->getHost(), '[]'));
+        $literal = \filter_var($host, FILTER_VALIDATE_IP) !== false;
+        $destinations = $publicHostname->getDestinations();
+        // getaddrinfo() needs a socket type and a service; any port works for the lookup
+        // Both lookups share the connect timeout, so a slow resolver cannot hold the worker
+        $deadline = \microtime(true) + self::TIMEOUT;
+        $addresses = $literal ? [$host] : \array_values(\array_unique([
+            ...(Resolver::getaddrinfo($host, AF_INET, SOCK_STREAM, STREAM_IPPROTO_TCP, '80', self::TIMEOUT) ?: []),
+            ...(Resolver::getaddrinfo($host, AF_INET6, SOCK_STREAM, STREAM_IPPROTO_TCP, '80', \max(0.001, $deadline - \microtime(true))) ?: []),
+        ]));
+
+        if ($addresses === []) {
+            throw new \InvalidArgumentException("Hostname {$host} does not resolve.");
+        }
+
+        foreach ($addresses as $address) {
+            if (!$destinations->allows($address)) {
+                throw new \InvalidArgumentException($literal
+                    ? "Address {$host} is in a private or reserved range."
+                    : "Hostname {$host} resolves to private or reserved address {$address}.");
+            }
+        }
+
+        $options = [];
+
+        if (!$literal) {
+            $port = $uri->getPort() ?? ($uri->getScheme() === 'https' ? 443 : 80);
+            $options[\CURLOPT_RESOLVE] = ["{$host}:{$port}:" . \implode(',', \array_map(
+                fn (string $address): string => \str_contains($address, ':') ? "[{$address}]" : $address,
+                $addresses,
+            ))];
+        }
+
+        return new Client(new CurlAdapter(options: $options), $destinations);
+    }
+
+    /**
+     * Header values cannot carry control characters, so a name with line breaks is sent without them.
+     */
+    private function stripControlCharacters(string $value): string
+    {
+        $controls = [\chr(127) => ''];
+        for ($code = 0; $code < 32; $code++) {
+            $controls[\chr($code)] = '';
+        }
+
+        return strtr($value, $controls);
     }
 }
