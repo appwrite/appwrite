@@ -471,10 +471,13 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $register->get('telemetry.workerCounter')->add(1);
 
     // Reported on every collect, so an idle or stalled worker still shows up.
-    $workerStartedAt = \microtime(true);
-    $telemetry
-        ->createObservableGauge('realtime.server.uptime', 's', 'Seconds since the realtime worker started.')
-        ->observe(fn (callable $observe) => $observe(\microtime(true) - $workerStartedAt, $workerTelemetryAttributes));
+    // No collect timer here: the getTelemetry() that returns a real adapter already runs one.
+    if (!$telemetry instanceof NoTelemetry) {
+        $workerStartedAt = \microtime(true);
+        $telemetry
+            ->createObservableGauge('realtime.server.uptime', 's', 'Seconds since the realtime worker started.')
+            ->observe(fn (callable $observe) => $observe(\microtime(true) - $workerStartedAt, $workerTelemetryAttributes));
+    }
 
     $attempts = 0;
     $start = time();
