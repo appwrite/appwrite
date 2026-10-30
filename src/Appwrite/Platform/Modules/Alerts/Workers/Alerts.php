@@ -226,10 +226,14 @@ class Alerts extends Action
         }
 
         // Every change of state is an event, whatever the cooldown holds back from the team.
+        // Delivery is at least once: the new state is stored only after every queue
+        // accepted the event, so a failed publish is retried rather than lost, and a
+        // receiver tells a repeat by the alert's `$id` and `status`.
         if (!$alert->isEmpty() && $status !== $previous) {
             $this->trigger(
                 $status === Status::Firing ? State::Firing : State::Resolved,
-                new Document(\array_merge($alert->getArrayCopy(), $reading->getArrayCopy())),
+                // The alert as it stands once this reading is stored, which happens after publishing.
+                new Document(\array_merge($alert->getArrayCopy(), $reading->getArrayCopy(), ['$updatedAt' => $evaluatedAt])),
                 $project,
                 $queueForEvents,
                 $queueForWebhooks,
