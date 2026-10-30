@@ -144,14 +144,15 @@ Access tokens from the OAuth2 server are signed JWTs. The function verifies them
 
 ```js
 export const ISSUER = `${ENDPOINT}/oauth2/${PROJECT_ID}`;
+const RESOURCE = 'https://mail-api.example.com/mcp';
 const jwks = createRemoteJWKSet(new URL(`${ISSUER}/.well-known/jwks.json`));
 
-async function fromAccessToken(token, resources) {
-  const { payload } = await jwtVerify(token, jwks, { issuer: ISSUER, typ: 'at+jwt' });
-  const aud = [].concat(payload.aud || []);
-  if (!aud.some((a) => a === PROJECT_AUDIENCE || resources.includes(a))) {
-    throw new HttpError(401, 'The access token was issued for a different resource.');
-  }
+async function fromAccessToken(token) {
+  const { payload } = await jwtVerify(token, jwks, {
+    issuer: ISSUER,
+    audience: RESOURCE,
+    typ: 'at+jwt',
+  });
   return {
     userId: String(payload.sub),
     scopes: String(payload.scope || '').split(' ').filter(Boolean),
@@ -159,7 +160,9 @@ async function fromAccessToken(token, resources) {
 }
 ```
 
-Three checks carry the security. `issuer` proves the token came from this project. The audience check proves it was minted for this server, because the client sent the MCP server's URL as its `resource` during authorization. And `typ: 'at+jwt'` rejects ID tokens, which the same server signs with the same keys but which were never meant to grant API access.
+Three checks carry the security. `issuer` proves the token came from this project. `audience` proves it was minted for this server, because the client sent the MCP server's URL as its `resource` during authorization. And `typ: 'at+jwt'` rejects ID tokens, which the same server signs with the same keys but which were never meant to grant API access.
+
+Keep the audience check strict. The mail app's first version also accepted the project-wide audience that tokens carry when a client requests them without a resource indicator, so its REST API would work for simpler clients. On an MCP endpoint, that fallback lets any token from the project with matching scopes through, including one minted for a different API. Accept only the MCP server's own URL.
 
 ## Tools follow scopes
 
@@ -188,7 +191,7 @@ Speed usually costs security. Here the security properties come from the authori
 - **Redirect URIs match exactly**, and refresh tokens **rotate on every use with reuse detection**.
 - **Access tokens are short-lived**, one hour by default for public clients, and bound to the MCP server's URL.
 - **Data access stays inside row-level permissions**, filtered to the token's user.
-- **Consents are revocable.** Each approval is stored on the user's account, and the Account API lists and deletes them, so a "connected apps" page is two SDK calls.
+- **Consents are revocable, within the token lifetime.** Each approval is stored on the user's account, and the Account API lists and deletes them, so a "connected apps" page is two SDK calls. Deleting a consent stops the client from getting new tokens. Because the server verifies tokens offline, a token it already holds keeps working until it expires, within an hour for AI tools. To shorten that window, lower the access token lifetime in the OAuth2 server settings.
 
 The agent did not implement any of those guarantees, so it could not get any of them subtly wrong.
 
