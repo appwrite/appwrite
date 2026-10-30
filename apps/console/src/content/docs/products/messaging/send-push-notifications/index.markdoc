@@ -29,6 +29,10 @@ then provide the device token to Appwrite.
 
 {% tabs %}
 {% tabsitem #apple-apns title="APNs for Apple" %}
+{% info title="Set up with the CLI" %}
+Run `appwrite init apns` in your iOS project to create the APNs providers and add the push capability to your Xcode target in one step. See [one-click APNs setup](/docs/products/messaging/apns#one-click-setup).
+{% /info %}
+
 First, enable push notification in your app.
 Add push notification capability to your app by clicking your root-level app in XCode > **Signing & Capabilities** > {% icon icon="plus" size="m" /%} Capabilities > Search for **Push Notifications**.
 
