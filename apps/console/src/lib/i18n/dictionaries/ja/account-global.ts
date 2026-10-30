@@ -1452,4 +1452,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'このプロジェクトを引き継ぐには、サインインするかアカウントを作成してください。',
   'The build window ended and the project is paused. Create an account to claim it and bring it back with all its data.':
     'ビルド期間が終了し、プロジェクトは一時停止しています。アカウントを作成して引き継ぐと、すべてのデータとともに再開できます。',
+  'Project already claimed': 'このプロジェクトはすでに引き継がれています',
+  'This project now belongs to an account. Sign in to that account to open it.':
+    'このプロジェクトはすでにアカウントに属しています。開くにはそのアカウントでサインインしてください。',
 }

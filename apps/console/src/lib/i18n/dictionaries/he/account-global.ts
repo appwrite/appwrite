@@ -1452,4 +1452,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'התחברו או צרו חשבון כדי לתבוע בעלות על הפרויקט.',
   'The build window ended and the project is paused. Create an account to claim it and bring it back with all its data.':
     'חלון הבנייה הסתיים והפרויקט מושהה. צרו חשבון כדי לתבוע בעלות עליו ולהחזיר אותו עם כל הנתונים שלו.',
+  'Project already claimed': 'כבר נתבעה בעלות על הפרויקט',
+  'This project now belongs to an account. Sign in to that account to open it.':
+    'הפרויקט שייך עכשיו לחשבון. התחברו לחשבון הזה כדי לפתוח אותו.',
 }

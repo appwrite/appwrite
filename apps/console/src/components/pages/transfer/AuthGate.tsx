@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { Clock, FolderInput, TriangleAlert } from 'lucide-react'
+import { Check, Clock, FolderInput, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AuthFlowDescription,
@@ -44,16 +44,22 @@ export function TransferAuthGate({
 
   const transferPath = `/transfer?${new URLSearchParams({ transferId, secret })}`
 
+  const copy = describeTransferGate(t, now, anonymous ? zero : undefined)
+  // A claimed project's link is spent, so signing in should not come back to it.
+  const redirect = copy.state === 'claimed' ? undefined : transferPath
+
   const leaveForAuth = async (page: AuthPage) => {
     if (!anonymous) {
-      navigate({ to: page, search: { redirect: transferPath } })
+      navigate({ to: page, search: { redirect } })
       return
     }
     // The anonymous session would bounce sign-in and sign-up back to the console.
     setIsLeaving(true)
     try {
       await performConsoleSignOut(queryClient, {
-        destination: `${page}?redirect=${encodeURIComponent(transferPath)}`,
+        destination: redirect
+          ? `${page}?redirect=${encodeURIComponent(redirect)}`
+          : page,
         requireServerRevocation: true,
       })
     } catch {
@@ -61,8 +67,6 @@ export function TransferAuthGate({
       toast.error(t('Could not sign out. Try again.'))
     }
   }
-
-  const copy = describe(t, now, anonymous ? zero : undefined)
 
   return (
     <main id="main-content" className="h-[100dvh] max-h-[100dvh]">
@@ -72,7 +76,7 @@ export function TransferAuthGate({
             <div className="flex flex-col items-center gap-4 text-center">
               <AuthFlowHeaderIcon
                 icon={copy.icon}
-                variant={copy.deleted ? 'destructive' : 'neutral'}
+                variant={copy.state === 'deleted' ? 'destructive' : 'neutral'}
               />
               <div className="space-y-1">
                 <AuthFlowTitle>{copy.title}</AuthFlowTitle>
@@ -85,18 +89,20 @@ export function TransferAuthGate({
               ) : null}
             </div>
             <div className="flex flex-col gap-2">
-              <Button
-                variant="brandCta"
-                className="w-full"
-                onClick={() => void leaveForAuth('/sign-up')}
-                disabled={isLeaving}
-                {...(anonymous ? analyticsAttrs('zero-claim') : {})}
-              >
-                {t('Create an account')}
-              </Button>
-              {!copy.deleted && (
+              {copy.state !== 'claimed' && (
                 <Button
-                  variant="outline"
+                  variant="brandCta"
+                  className="w-full"
+                  onClick={() => void leaveForAuth('/sign-up')}
+                  disabled={isLeaving}
+                  {...(anonymous ? analyticsAttrs('zero-claim') : {})}
+                >
+                  {t('Create an account')}
+                </Button>
+              )}
+              {copy.state !== 'deleted' && (
+                <Button
+                  variant={copy.state === 'claimed' ? 'brandCta' : 'outline'}
                   className="w-full"
                   onClick={() => void leaveForAuth('/sign-in')}
                   disabled={isLeaving}
@@ -112,14 +118,33 @@ export function TransferAuthGate({
   )
 }
 
-function describe(t: Translator, now: number, zero: ZeroProject | undefined) {
+export type TransferGateState = 'claim' | 'claimed' | 'deleted'
+
+/** What the gate tells a visitor, from the Zero project the anonymous owner holds. */
+export function describeTransferGate(
+  t: Translator,
+  now: number,
+  zero: ZeroProject | undefined,
+) {
   if (!zero) {
     return {
       icon: FolderInput,
       title: t('Claim project'),
       description: t('Sign in or create an account to claim this project.'),
       deadline: null,
-      deleted: false,
+      state: 'claim' as TransferGateState,
+    }
+  }
+
+  if (zero.status === 'claimed') {
+    return {
+      icon: Check,
+      title: t('Project already claimed'),
+      description: t(
+        'This project now belongs to an account. Sign in to that account to open it.',
+      ),
+      deadline: null,
+      state: 'claimed' as TransferGateState,
     }
   }
 
@@ -131,7 +156,7 @@ function describe(t: Translator, now: number, zero: ZeroProject | undefined) {
         'This project was not claimed in time, so it and its data were deleted.',
       ),
       deadline: null,
-      deleted: true,
+      state: 'deleted' as TransferGateState,
     }
   }
 
@@ -156,6 +181,6 @@ function describe(t: Translator, now: number, zero: ZeroProject | undefined) {
           '{time}',
           formatRemaining(getRemainingMs(zero.expiresAt, now)),
         ),
-    deleted: false,
+    state: 'claim' as TransferGateState,
   }
 }
