@@ -144,6 +144,8 @@ const bench = define({
     },
     scenarios: [
         { name: 'project.get', route: 'GET /v1/project', weight: 10, run: (api) => api.call('GET', '/project') },
+        { name: 'project.prefs.get', route: 'GET /v1/project/prefs', weight: 4, run: (api) => api.call('GET', '/project/prefs') },
+        { name: 'project.prefs.update', route: 'PUT /v1/project/prefs', weight: 2, note: 'writes the empty object a new project starts with', run: (api) => api.call('PUT', '/project/prefs', { prefs: {} }) },
         {
             name: 'project.delete', route: 'DELETE /v1/project', weight: 0.5,
             note: 'deletes a project created for it (as its console owner); the data is removed in the background',
