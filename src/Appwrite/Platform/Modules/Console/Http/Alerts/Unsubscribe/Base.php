@@ -91,7 +91,7 @@ abstract class Base extends Action
 
     /**
      * The user and the monitor the token names. A monitor deleted since the
-     * email was sent comes back holding only its ID.
+     * email was sent comes back holding only its ID and type.
      *
      * @return array{0: Document, 1: Document}
      */
@@ -102,7 +102,7 @@ abstract class Base extends Action
         $token = $token !== '' ? $token : (string) $request->getQuery('token', '');
 
         try {
-            ['userId' => $userId, 'monitorId' => $monitorId] = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->verify($token);
+            ['userId' => $userId, 'monitorId' => $monitorId, 'type' => $type] = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->verify($token);
         } catch (\InvalidArgumentException) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
@@ -114,7 +114,8 @@ abstract class Base extends Action
 
         $monitor = $authorization->skip(fn () => $dbForPlatform->getDocument('monitors', $monitorId));
 
-        return [$user, $monitor->isEmpty() ? new Document(['$id' => $monitorId]) : $monitor];
+        // The type comes from the token, so a deleted monitor's link still reaches its type-wide opt-out.
+        return [$user, $monitor->isEmpty() ? new Document(['$id' => $monitorId, 'type' => $type]) : $monitor];
     }
 
     /**

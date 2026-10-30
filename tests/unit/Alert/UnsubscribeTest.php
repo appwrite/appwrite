@@ -16,14 +16,14 @@ final class UnsubscribeTest extends TestCase
     {
         $unsubscribe = new Unsubscribe(self::SECRET);
 
-        $this->assertSame(['userId' => 'ana', 'monitorId' => 'egress'], $unsubscribe->verify($unsubscribe->token('ana', 'egress')));
+        $this->assertSame(['userId' => 'ana', 'monitorId' => 'egress', 'type' => 'usage'], $unsubscribe->verify($unsubscribe->token('ana', 'egress', 'usage')));
     }
 
     public function testTokenExpires(): void
     {
         $unsubscribe = new Unsubscribe(self::SECRET, ttl: 3600);
         $now = 1_800_000_000;
-        $token = $unsubscribe->token('ana', 'egress', $now);
+        $token = $unsubscribe->token('ana', 'egress', 'usage', $now);
 
         $this->assertSame('ana', $unsubscribe->verify($token, $now + 3599)['userId']);
 
@@ -33,14 +33,14 @@ final class UnsubscribeTest extends TestCase
 
     public static function forged(): \Iterator
     {
-        $token = (new Unsubscribe(self::SECRET))->token('ana', 'egress');
+        $token = (new Unsubscribe(self::SECRET))->token('ana', 'egress', 'usage');
         [$header, $payload, $signature] = \explode('.', $token);
         $claims = \json_decode((string) \base64_decode(\strtr($payload, '-_', '+/')), true);
         $encode = fn (array $claims): string => \rtrim(\strtr(\base64_encode((string) \json_encode($claims)), '+/', '-_'), '=');
 
         yield 'another user' => [$header . '.' . $encode(['userId' => 'ben'] + $claims) . '.' . $signature];
         yield 'another monitor' => [$header . '.' . $encode(['monitorId' => 'storage'] + $claims) . '.' . $signature];
-        yield 'another secret' => [(new Unsubscribe('another-secret'))->token('ana', 'egress')];
+        yield 'another secret' => [(new Unsubscribe('another-secret'))->token('ana', 'egress', 'usage')];
         yield 'not a token' => ['not-a-token'];
         yield 'empty' => [''];
     }
@@ -55,7 +55,7 @@ final class UnsubscribeTest extends TestCase
 
     public function testRefusesATokenSignedForSomethingElse(): void
     {
-        $other = (new \Ahc\Jwt\JWT(self::SECRET, 'HS256', 3600))->encode(['userId' => 'ana', 'monitorId' => 'egress', 'purpose' => 'notification_track']);
+        $other = (new \Ahc\Jwt\JWT(self::SECRET, 'HS256', 3600))->encode(['userId' => 'ana', 'monitorId' => 'egress', 'type' => 'usage', 'purpose' => 'notification_track']);
 
         $this->expectException(\InvalidArgumentException::class);
 

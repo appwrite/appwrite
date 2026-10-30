@@ -500,7 +500,7 @@ class Alerts extends Action
                 $recipients[] = ['address' => (string) $user->getAttribute('email'), 'channel' => NOTIFICATION_TYPE_EMAIL, ...$resource];
             }
 
-            $token = $unsubscribe->token($user->getId(), $monitor->getId());
+            $token = $unsubscribe->token($user->getId(), $monitor->getId(), $type);
             $email = new Email(
                 ...$notice,
                 reason: 'You\'re receiving this as ' . (\in_array(\strtolower($role[0] ?? ''), ['a', 'e', 'i', 'o', 'u'], true) ? 'an ' : 'a ') . $role . ' of ' . $teamName . '.',

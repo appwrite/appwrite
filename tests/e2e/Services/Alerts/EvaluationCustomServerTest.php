@@ -368,8 +368,8 @@ final class EvaluationCustomServerTest extends Scope
         $forged = $head . '.' . \rtrim(\strtr(\base64_encode((string) \json_encode(['monitorId' => $other] + (array) \json_decode((string) \base64_decode(\strtr($claims, '-_', '+/')), true))), '+/', '-_'), '=') . '.' . $signature;
         foreach ([
             'tampered' => $forged,
-            'expired' => $unsubscribe->token($root['$id'], $monitorId, \time() - ALERT_UNSUBSCRIBE_TTL - 60),
-            'another secret' => (new Unsubscribe('another-secret'))->token($root['$id'], $monitorId),
+            'expired' => $unsubscribe->token($root['$id'], $monitorId, 'usage', \time() - ALERT_UNSUBSCRIBE_TTL - 60),
+            'another secret' => (new Unsubscribe('another-secret'))->token($root['$id'], $monitorId, 'usage'),
             'missing' => '',
         ] as $case => $invalid) {
             foreach ([Client::METHOD_GET, Client::METHOD_POST] as $method) {
@@ -449,7 +449,7 @@ final class EvaluationCustomServerTest extends Scope
     {
         $root = $this->getRoot()['$id'];
         $monitorId = $this->createPausedMonitor('Deleted later ' . \uniqid());
-        $token = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->token($root, $monitorId, type: 'usage');
+        $token = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->token($root, $monitorId, 'usage');
         $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $token, 'all')['headers']['status-code']);
 
         $this->assertSame(204, $this->client->call(Client::METHOD_DELETE, '/monitors/' . $monitorId, $this->headers())['headers']['status-code']);
@@ -486,7 +486,7 @@ final class EvaluationCustomServerTest extends Scope
             \curl_setopt_array($handle, [
                 CURLOPT_POST => true,
                 CURLOPT_HTTPHEADER => ['content-type: application/json', 'x-appwrite-project: console'],
-                CURLOPT_POSTFIELDS => \json_encode(['token' => $unsubscribe->token($root, $scope)]),
+                CURLOPT_POSTFIELDS => \json_encode(['token' => $unsubscribe->token($root, $scope, 'usage')]),
                 CURLOPT_RETURNTRANSFER => true,
             ]);
             \curl_multi_add_handle($multi, $handle);
@@ -510,7 +510,7 @@ final class EvaluationCustomServerTest extends Scope
 
         // And resumed at once, every one of them goes.
         foreach ($scopes as $scope) {
-            $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $unsubscribe->token($root, $scope))['headers']['status-code']);
+            $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $unsubscribe->token($root, $scope, 'usage'))['headers']['status-code']);
         }
         $this->withFactory(function (object $factory) use ($root, &$stored): void {
             $stored = $factory->platform()->getDocument('users', $root)->getAttribute('alertsUnsubscribed', []);
