@@ -9,7 +9,6 @@ readtime: 7
 An email trigger executes your function when an email arrives at one of the function's addresses.
 Each function has a [built-in address](#built-in-address), and you can also connect a [custom domain](#custom-domain).
 Appwrite receives the email and executes your function with the email and its attachments in the request body.
-Appwrite does not store the email.
 Your function can save the email to a table, reply to the sender, or send the content to another service.
 
 Email triggers are available on Appwrite Cloud, and they only receive email.
@@ -33,6 +32,13 @@ The [execute access](/docs/products/functions/functions#execution-access) of the
 
 # Turn on the email trigger {% #turn-on %}
 
+{% only_dark %}
+![Email card with Email trigger turned on and the built-in address under Default address](/images/docs/functions/email/dark/built-in-address.avif)
+{% /only_dark %}
+{% only_light %}
+![Email card with Email trigger turned on and the built-in address under Default address](/images/docs/functions/email/built-in-address.avif)
+{% /only_light %}
+
 Turn on the email trigger of a function before it can receive email at its built-in address or at a custom domain.
 
 1. In the Appwrite Console's sidebar, click **Functions**.
@@ -41,22 +47,15 @@ Turn on the email trigger of a function before it can receive email at its built
 1. In the **Email** card, turn on **Email trigger**.
 1. Click **Update**.
 
-{% only_dark %}
-![Email card with Email trigger turned on and the built-in address under Default address](/images/docs/functions/email/dark/built-in-address.avif)
-{% /only_dark %}
-{% only_light %}
-![Email card with Email trigger turned on and the built-in address under Default address](/images/docs/functions/email/built-in-address.avif)
-{% /only_light %}
-
 # Built-in address {% #built-in-address %}
 
-Each function has its own email domain, `<FUNCTION_ID>-<PROJECT_ID>.appwrite.email`.
-The Console shows `contact@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email` as **Default address** in the **Email** card, but any name before the `@` works.
-For example, `support@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email` and `billing@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email` both execute the same function.
-The function reads which address received the email from [`envelope.to`](#request-body).
-You do not need to configure DNS records for the built-in address.
+Each function has a built-in address that does not need DNS records.
 
-The domain contains the function ID in lowercase.
+- **Domain:** `<FUNCTION_ID>-<PROJECT_ID>.appwrite.email`, with the function ID in lowercase.
+- **Default address:** the **Email** card in the Console shows `contact@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email`.
+- **Other addresses:** any name before the `@` works. For example, `support@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email` and `billing@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email` both execute the same function.
+- **Receiving address:** the function reads which address received the email from [`envelope.to`](#request-body).
+
 A function does not have a built-in address when:
 
 - The function ID contains a `.` or a `_`.
@@ -66,6 +65,13 @@ A function does not have a built-in address when:
 To receive email for such a function, connect a [custom domain](#custom-domain).
 
 # Custom domain {% #custom-domain %}
+
+{% only_dark %}
+![Verify email domain screen with the MX and TXT records for mail.example.com](/images/docs/functions/email/dark/custom-domain.avif)
+{% /only_dark %}
+{% only_light %}
+![Verify email domain screen with the MX and TXT records for mail.example.com](/images/docs/functions/email/custom-domain.avif)
+{% /only_light %}
 
 You can connect a domain that you own, such as `mail.example.com`, to your function.
 Every email sent to that domain goes to your function, so use a domain that you don't use for any other email.
@@ -94,13 +100,6 @@ To connect a domain:
 1. Click **Add**.
 1. At your DNS provider, add the `MX` and `TXT` records that the Console shows.
 1. Click **Verify**.
-
-{% only_dark %}
-![Verify email domain screen with the MX and TXT records for mail.example.com](/images/docs/functions/email/dark/custom-domain.avif)
-{% /only_dark %}
-{% only_light %}
-![Verify email domain screen with the MX and TXT records for mail.example.com](/images/docs/functions/email/custom-domain.avif)
-{% /only_light %}
 
 If the records have not propagated yet, the domain stays unverified.
 To verify it later, under the **Domains** tab, click **Retry** next to the domain. Then click **Verify**.

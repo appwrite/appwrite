@@ -1146,7 +1146,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 # Email {% #email %}
 
-On Appwrite Cloud, after you turn on the email trigger of a function, the function executes when an email arrives at its built-in address or at an address on a custom domain that you connect.
+On Appwrite Cloud, after you turn on the [email trigger](/docs/products/functions/email) of a function, the function executes when an email arrives at its [built-in address](/docs/products/functions/email#built-in-address) or at an address on a [custom domain](/docs/products/functions/email#custom-domain) that you connect.
 The execution receives the email and its attachments in a `multipart/form-data` request body, and the `x-appwrite-trigger` header is `email`.
 Appwrite executes the function while the sending mail server waits, and accepts the email after the function finishes.
 

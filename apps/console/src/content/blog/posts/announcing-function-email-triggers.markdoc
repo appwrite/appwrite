@@ -46,15 +46,17 @@ When your function returns an error, Appwrite still confirms the email, and the 
 
 # Receive email at the built-in address
 
+![Email card with Email trigger turned on and the built-in address under Default address](/images/blog/announcing-function-email-triggers/built-in-address.avif)
+
 Each function has a built-in email domain, `<FUNCTION_ID>-<PROJECT_ID>.appwrite.email`, and it does not need DNS records.
 
 Any name before the `@` works. For example, `support@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email` and `billing@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email` both execute the same function. The function reads the address that received the email from `envelope.to`.
 
 To turn on the trigger, open your function in the Appwrite Console, go to **Settings** > **Executions**, turn on **Email trigger** in the **Email** card, and click **Update**. The card shows an address of the function under **Default address**.
 
-![Email card with Email trigger turned on and the built-in address under Default address](/images/blog/announcing-function-email-triggers/built-in-address.avif)
-
 # Connect a custom domain
+
+![Verify email domain screen with the MX and TXT records for mail.example.com](/images/blog/announcing-function-email-triggers/custom-domain.avif)
 
 You can connect a domain that you own, such as `mail.example.com`. Every email sent to that domain goes to your function, so use a domain that you don't use for any other email.
 
@@ -64,8 +66,6 @@ Turn on the email trigger first. Then open the **Domains** tab of your function,
 - A `TXT` record named `_appwrite.mail` with your project ID as the value. This record proves that you own the domain.
 
 After you add the records, click **Verify**.
-
-![Verify email domain screen with the MX and TXT records for mail.example.com](/images/blog/announcing-function-email-triggers/custom-domain.avif)
 
 {% info title="Domains with a CNAME record" %}
 DNS does not allow an `MX` record on a name that has a `CNAME` record. If `support.example.com` already points to a site with a `CNAME` record, receive email on another subdomain, such as `mail.example.com`.
