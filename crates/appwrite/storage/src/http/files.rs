@@ -506,6 +506,15 @@ async fn finish(
         }
         let mut mime = device.file_mime_type(path).await?;
         mime = rewrite_mime(&mime, file_name);
+        // Strip before hashing so the signature and sizes describe the file we store.
+        let mut file_size = file_size;
+        if bucket.boolean("stripMetadata") == Some(true)
+            && file_size <= READ_BUFFER
+            && METADATA_MIMES.contains(&mime.as_str())
+            && let Some(stripped) = strip_metadata(device, path, &mime).await
+        {
+            file_size = stripped;
+        }
         let hash = device.file_hash(path).await?;
         let (algorithm, sealed) = persist(ctx, device, bucket, path, file_size, &mime).await?;
         let size_actual = device.file_size(path).await? as i64;
@@ -563,6 +572,59 @@ async fn finish(
 struct Sealed {
     iv: String,
     tag: String,
+}
+
+/// Images whose metadata a bucket with `stripMetadata` removes.
+const METADATA_MIMES: [&str; 8] =
+    ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "image/avif", "image/gif", "image/tiff"];
+
+/// `stripMetadata()`: the file sent through the Exiftool service
+/// (`_APP_EXIFTOOL_HOST`) and written back; its new size, or `None` when it
+/// is kept as uploaded (logged, as PHP does).
+async fn strip_metadata(device: &Stored, path: &str, mime: &str) -> Option<i64> {
+    let result: std::result::Result<Vec<u8>, String> = async {
+        let host = utopia_system::env("_APP_EXIFTOOL_HOST").unwrap_or_default();
+        if host.is_empty() {
+            return Err("Exiftool needs to be configured with _APP_EXIFTOOL_HOST to strip metadata".to_owned());
+        }
+        let source = base::read_all(device, path).await.map_err(|e| e.to_string())?;
+        let client =
+            utopia_client::Client::new(utopia_client::Http::new()).with_timeout(30.0).map_err(|e| e.to_string())?;
+        let request = utopia_client::Request::new("POST", &format!("{}/strip", host.trim_end_matches('/')))
+            .and_then(|request| request.header("content-type", "application/octet-stream"))
+            .map(|request| request.body(source))
+            .map_err(|e| e.to_string())?;
+        let response = client.send(request).await.map_err(|e| e.to_string())?;
+        let status = response.status();
+        let body = response.bytes().to_vec();
+        if status >= 400 {
+            let parsed: Json = serde_json::from_slice(&body).unwrap_or(Json::Null);
+            return Err(parsed
+                .get("error")
+                .and_then(Json::as_str)
+                .map_or_else(|| format!("Exiftool failed with status {status}"), str::to_owned));
+        }
+        if body.is_empty() {
+            return Err("Exiftool returned an empty file".to_owned());
+        }
+        Ok(body)
+    }
+    .await;
+    let stripped = match result {
+        Ok(stripped) => stripped,
+        Err(error) => {
+            tracing::warn!(path, error, "Image metadata was not removed");
+            return None;
+        }
+    };
+    let size = stripped.len() as i64;
+    match device.write(path, stripped, mime).await {
+        Ok(()) => Some(size),
+        Err(error) => {
+            tracing::warn!(path, error = %error, "Image metadata was not removed: the stripped file could not be saved");
+            None
+        }
+    }
 }
 
 async fn persist(
