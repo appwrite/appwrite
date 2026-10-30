@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-19T18:05:00Z",
+  "updated": "2026-10-30T22:10:00Z",
   "summary": "Appwrite's API, a PHP 8.5 and Swoole monolith, is moving to Rust one service at a time. First every Utopia library it stands on is converted and proven identical to PHP, then each API service is ported and run side by side with PHP behind Traefik, on the same database, Redis, queues and caches.",
   "sections": [
     {
@@ -208,6 +208,21 @@
       "date": "2026-10-19",
       "title": "The in-memory telemetry backend keeps what PHP keeps",
       "note": "It copied every data point's attributes; it now keeps the values side by side and each run of identical attributes once, as PHP keeps only the values. Per call, a circuit breaker recording telemetry keeps 31 bytes instead of 372 (PHP 16) and a pool 33 instead of 288 (PHP 45), with 2 allocations instead of 12; both run 1.7x faster than before. The in-memory counter is 3.0x faster than PHP (was 0.98x), leaving two gated misses. Those benchmarks keep every point, so Rust's total peak grows with the 6 to 10 times more calls it makes per sample: the telemetry driver peaks at 1.5 GB against PHP's 242 MB."
+    },
+    {
+      "date": "2026-10-29",
+      "title": "Main merged again: 2,124 commits",
+      "note": "No conflicts. Appwrite moved to 2.6.2, PHP's precision to -1, utopia-php/database to 8.3.14 and the PHP SDK to 32.1.0; 28 Rust libraries were then brought level with their PHP packages."
+    },
+    {
+      "date": "2026-10-30",
+      "title": "Storage merged into the Rust branch",
+      "note": "PR #14683, with every review finding fixed and main's storage changes ported; each route in its own file."
+    },
+    {
+      "date": "2026-10-30",
+      "title": "The debug-build stack overflow is gone",
+      "note": "One boxed future in utopia-database's transaction wrapper; nested transactions used to need about 8.4 MB of stack in debug builds."
     }
   ],
   "lessons": [

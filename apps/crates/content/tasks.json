@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-23T02:20:00Z",
+  "updated": "2026-10-30T22:10:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -16,6 +16,14 @@
       "status": "progress",
       "updated": "2026-10-17T19:50:00Z",
       "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
+    },
+    {
+      "id": "mysql-shard",
+      "title": "CI: the database MariaDB/MySQL compat shard runs past an hour",
+      "area": "Infrastructure",
+      "status": "progress",
+      "updated": "2026-10-30T22:10:00Z",
+      "note": "The shard hit the job's 1-hour limit on every run. It is split in four (3ffdb1509c); waiting for CI to show each finishes with time to spare."
     },
     {
       "id": "sites-flake",
@@ -42,20 +50,12 @@
       "note": "36 of Account's 63 routes are implemented in Rust, but Traefik still sends all of them to PHP. The last committed parity diff (d90c55d2f0, Oct 15) had 28 of 2,006 scenarios differ, all in account.sessions (19) and account.mfa (9) and mostly purge counts; re-run it after the Users purge fix, then add the routers."
     },
     {
-      "id": "debug-stack",
-      "title": "Debug build overflows its stack on DELETE /v1/account",
-      "area": "Services",
-      "status": "todo",
-      "updated": "2026-10-17T15:00:00Z",
-      "note": "The debug appwrite-rust aborts with a stack overflow on account deletion even with 8 MiB worker stacks, which stops full local parity runs. Release builds (CI, production) are not affected."
-    },
-    {
       "id": "db-known-gaps",
-      "title": "Database: known gaps after 8.3.10",
+      "title": "Database: known gaps after 8.3.14",
       "area": "Database 8",
       "status": "todo",
-      "updated": "2026-10-19T22:53:00Z",
-      "note": "CollectionTests::testKeywords on postgres and mysql: PHP loses a metadata transaction under lane load (passes alone); the lanes retry such cases. Memory testDeleteBulkDocuments is timing-dependent. PHP's create_prepared writes $sequence back onto the caller's document object, which Rust's by-value API cannot; the cases use a fresh document. Settled since 8.3.6: join aliases and SQL.php line numbers (catch-up A), vector distances (a 1e-4 tolerance against the recording), the garbage DateTime fuzz (profile scrubs that read the clock under any year), groupByType limits (toInteger), and the 30 operations without cases (catch-up G)."
+      "updated": "2026-10-30T22:10:00Z",
+      "note": "CollectionTests::testKeywords on postgres and mysql: PHP loses a metadata transaction under lane load (passes alone); the lanes retry such cases. Memory testDeleteBulkDocuments is timing-dependent. PHP's create_prepared writes $sequence back onto the caller's document object, which Rust's by-value API cannot; the cases use a fresh document. Settled since 8.3.6: join aliases and SQL.php line numbers (catch-up A), vector distances (a 1e-4 tolerance against the recording), the garbage DateTime fuzz (profile scrubs that read the clock under any year), groupByType limits (toInteger), and the 30 operations without cases (catch-up G). Since 8.3.14: PHP's precision is -1 (floats print every digit) and php-std follows it; MongoDB strings with the overlong NUL C0 80 now round-trip through raw BSON, except in findAndModify replies and in later getMore pages of a cursor whose first batch decoded normally."
     },
     {
       "id": "async-compat",
@@ -104,6 +104,30 @@
       "status": "todo",
       "note": "On a quiet machine; the last container runs were taken under load.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "digest-011",
+      "title": "Move the hash stack to digest 0.11 (drops block-buffer 0.10)",
+      "area": "Infrastructure",
+      "status": "todo",
+      "updated": "2026-10-30T22:10:00Z",
+      "note": "GHSA-qwgh-2vcv-g2f7 is still ignored: digest 0.10 comes from the 0.10 hash crates (sha1, sha2, sha3, md-5, hmac 0.12, ripemd, gost94, whirlpool, blake2 via argon2 0.5) and from mysql_common via mysql_async."
+    },
+    {
+      "id": "small-gaps-oct30",
+      "title": "Small parity gaps left after the sync",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-30T22:10:00Z",
+      "note": "config: an unclosed '[' in a PHP config file reads \"Unclosed '['\" in PHP and a generic syntax error in Rust. usage: PHP treats an empty metric type as event, Rust refuses it. image: AVIF and HEIC can't be decoded in Rust (no pure-Rust decoders), and animated WebP frame counts aren't compared (libwebp merges frames depending on exact pixels). domains: OpenSRS testSuggestEscapesKeys needs string-keyed TLDs, which Vec<String> can't hold. span: testSamplerCanFilterByDuration depends on step timing and fails on a loaded machine."
+    },
+    {
+      "id": "debug-stack",
+      "title": "Debug build overflows its stack on DELETE /v1/account",
+      "area": "Services",
+      "status": "done",
+      "updated": "2026-10-30T22:10:00Z",
+      "note": "Fixed (Oct 30). Every layer of utopia-database's transaction wrapper kept the callback's future inline, and unoptimized builds reserve stack for each copy: a transaction nested in another (invite acceptance around revoke_credentials) reached about 8.4 MB over 124 frames. with_adapter_transaction now boxes the future once. Debug builds pass DELETE /v1/account and the invite flow on a 2 MiB worker stack; release builds too."
     },
     {
       "id": "queue-validators",
@@ -632,6 +656,46 @@
       "status": "done",
       "updated": "2026-10-17T19:30:00Z",
       "note": "Both crates showed as behind on composer.json changes only: audit's utopia-php/database floor ^8.3 → ^8.3.4, migration's ^8.1.2 → ^8.3.4. migration's destinations policy (b1de3c2eba) was already ported. Cases re-run against PHP (audit all match; migration 284/284 with its services up) and php-sync moved to 2ca9a38d36."
+    },
+    {
+      "id": "sync-oct29",
+      "title": "Sync with main: 2,124 commits and 28 libraries",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-30T22:10:00Z",
+      "note": "Oct 29-30. Main merged without conflicts (2.6.2). Every crate whose php-sync marker trailed its package was ported: vcs, queue, nats, lock, cache, mqtt, cdn (CloudFront cache and certificates), image (format detection), migration (SDK 32.1.0, 32 MiB responses), messaging, smtp, telemetry, span, storage, query, dns, http, dsn, domains, user-agent, websocket, validators, usage, openapi, locale, client, abuse and servers. 198 crate test suites, 3,806 tests, all pass."
+    },
+    {
+      "id": "precision-1",
+      "title": "PHP precision -1: floats keep every digit",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-30T22:10:00Z",
+      "note": "Main set precision = -1 in docker/php.ini, so (string) of a float prints the shortest round-trip digits. php-std's number::to_string and PDO statements follow it; every crate that prints floats PHP's way goes through them. Only the cases PHP now answers differently were re-recorded (php-std, 128 spatial database steps, numeric guards, span, config, abuse)."
+    },
+    {
+      "id": "uta-parity-oct30",
+      "title": "Users, Teams and Account follow main's PHP",
+      "area": "Services",
+      "status": "done",
+      "updated": "2026-10-30T22:10:00Z",
+      "note": "purpose:key ephemeral keys, account keys only on the console project, exact project admin roles, OTP-Token mail headers, sensitive session event payloads, MQTT revokes, claiming an unverified account when its address is proven, locked email/phone updates, invite acceptance, presence cleanup, console realtime, deny lists, hash limits on user imports, recovery codes needing users.write. Parity: users 660/660, teams 345/345, account 1,154/1,155 before the last fix; CI lanes 2,160/2,160."
+    },
+    {
+      "id": "storage-service",
+      "title": "Storage served by Rust (PR #14683 merged)",
+      "area": "Services",
+      "status": "done",
+      "updated": "2026-10-30T22:10:00Z",
+      "note": "Merged into feat/rust-utopia-conversion on Oct 30. Review fixes: downloads and ranges stream, PHP's base64 AES-GCM files decrypt in both directions, the device factory follows getDevice() including _APP_CONNECTIONS_STORAGE, request bodies have a memory budget and drain/read timeouts, and CI checks X-Appwrite-Backend: rust. Main's storage changes ported (content disposition, CSP, stripMetadata through Exiftool, control-character file names, sizeOriginal on chunked uploads). Each route now has its own file under http/buckets."
+    },
+    {
+      "id": "p256-014",
+      "title": "P-256 stack on 0.14 (crypto-bigint 0.7)",
+      "area": "Infrastructure",
+      "status": "done",
+      "updated": "2026-10-30T22:10:00Z",
+      "note": "p256 0.14, ecdsa 0.17, elliptic-curve 0.14, signature 3.0; RUSTSEC-2026-0387 is gone and its osv-scanner ignore removed. Passkey verification and signatures unchanged: auth 607 cases and 68,650 fuzz inputs, 0 differences."
     }
   ]
 }
