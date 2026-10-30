@@ -11,9 +11,10 @@ use Appwrite\Utopia\Database\Documents\User;
  * without it, an email offers to stop only its own monitor's. The rest describes usage monitors.
  *
  * `resources` are what a usage monitor's `resourceType` rule can scope it to,
- * each with the project collection its ID is looked up in (`project` needs
- * none, it is the project itself) and, for a resource whose usage is recorded
- * under an engine's name, the attribute holding that engine.
+ * each with the name alert emails give the type, the project collection its ID
+ * is looked up in (`project` needs none, it is the project itself) and, for a
+ * resource whose usage is recorded under an engine's name, the attribute
+ * holding that engine.
  *
  * `metrics` are keyed by the usage metric name the project's usage charts
  * read. Each has the name notifications show, the unit its threshold is
@@ -48,19 +49,24 @@ return [
     ],
     'resources' => [
         'project' => [
+            'label' => 'Project',
             'collection' => null,
         ],
         'database' => [
+            'label' => 'Database',
             'collection' => 'databases',
             'engine' => 'type',
         ],
         'bucket' => [
+            'label' => 'Bucket',
             'collection' => 'buckets',
         ],
         'function' => [
+            'label' => 'Function',
             'collection' => 'functions',
         ],
         'site' => [
+            'label' => 'Site',
             'collection' => 'sites',
         ],
     ],

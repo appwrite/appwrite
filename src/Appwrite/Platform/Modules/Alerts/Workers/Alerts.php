@@ -127,7 +127,7 @@ class Alerts extends Action
             return;
         }
 
-        $this->evaluate($monitor, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform);
+        $this->evaluate($monitor, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform, $dbForProject);
     }
 
     /**
@@ -152,6 +152,7 @@ class Alerts extends Action
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
         array $platform,
+        ?Database $dbForProject = null,
     ): void {
         $comparator = Comparator::from((string) $monitor->getAttribute('comparator'));
         $matches = $comparator->matches($value, (float) $monitor->getAttribute('threshold'));
@@ -222,7 +223,7 @@ class Alerts extends Action
         // still sees the transition instead of finding it already recorded.
         if ($notify) {
             Span::add('monitor.notified', true);
-            $this->notify($monitor, $alert, $project, $status, $value, $evaluatedAt, $dbForPlatform, $publisherForNotifications, $platform);
+            $this->notify($monitor, $alert, $project, $status, $value, $evaluatedAt, $dbForPlatform, $publisherForNotifications, $platform, $dbForProject);
         }
 
         // Every change of state is an event, whatever the cooldown holds back from the team.
@@ -425,6 +426,7 @@ class Alerts extends Action
         Database $dbForPlatform,
         NotificationPublisher $publisherForNotifications,
         array $platform,
+        ?Database $dbForProject = null,
     ): void {
         // The project's organization, not the one stored on the monitor: a transferred
         // project's alerts go to the members of the organization it moved to.
@@ -468,7 +470,9 @@ class Alerts extends Action
             'threshold' => new Quantity((float) $monitor->getAttribute('threshold'), $unit),
             'window' => ($definition['kind'] ?? 'gauge') !== 'gauge' ? (int) $monitor->getAttribute('window') : null,
             'changedAt' => new \DateTimeImmutable($changedAt),
-            'details' => $resourceType === 'project' ? [] : ['Resource' => \ucfirst($resourceType) . ' ' . $monitor->getAttribute('resourceId')],
+            'details' => $resourceType === 'project' ? [] : [
+                (string) (Config::getParam('alerts', [])['resources'][$resourceType]['label'] ?? \ucfirst($resourceType)) => $this->resourceName($monitor, $dbForProject) ?: (string) $monitor->getAttribute('resourceId'),
+            ],
             'url' => $consoleUrl . $this->path($project) . '/alerts?alert=' . $alert->getId(),
             'location' => \implode(' · ', \array_filter([$projectName, $teamName, $regionName === 'default' ? '' : $regionName])),
             // When the alert opened, for how long it fired once it resolves.
@@ -530,6 +534,24 @@ class Alerts extends Action
                 ],
             ));
         }
+    }
+
+    /**
+     * The name of the resource a scoped monitor watches, looked up in its type's
+     * collection; empty when the resource is gone or has no name, and the
+     * email shows its ID instead. Editions override this for resource types
+     * kept outside the project's collections.
+     */
+    protected function resourceName(Document $monitor, ?Database $dbForProject): string
+    {
+        $collection = Config::getParam('alerts', [])['resources'][(string) $monitor->getAttribute('resourceType')]['collection'] ?? null;
+        if ($collection === null || $dbForProject === null) {
+            return '';
+        }
+
+        return (string) $dbForProject->getAuthorization()->skip(
+            fn () => $dbForProject->getDocument($collection, (string) $monitor->getAttribute('resourceId'))->getAttribute('name', '')
+        );
     }
 
     /**
