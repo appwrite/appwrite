@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Email triggers for Appwrite Functions"
+date: 2026-10-30
+cover: /images/blog/announcing-function-email-triggers/cover.avif
+tags: functions
+---
+
+Appwrite Functions on Appwrite Cloud can now execute when an email arrives. Turn on the **Email trigger** of a function, and any address at its built-in domain, `<FUNCTION_ID>-<PROJECT_ID>.appwrite.email`, executes it. You can also connect a domain that you own with an `MX` record and a `TXT` record.
+
+Your function receives the email as JSON and each attachment as a file in one `multipart/form-data` request, together with a spam score that it can use to decide what to keep. Appwrite does not store the email.
+
+{% arrow_link href="/blog/post/announcing-function-email-triggers" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/functions/email" %}
+Read the email triggers docs
+{% /arrow_link %}

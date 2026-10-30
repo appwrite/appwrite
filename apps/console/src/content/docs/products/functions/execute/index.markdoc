@@ -36,10 +36,9 @@ Asynchronous executions are created via:
 - The [Create execution](/docs/references/cloud/client-web/functions#createExecution) endpoint where the `async` parameter is `true`
 - Event triggers (when functions are triggered by [platform events](/docs/apis/events))
 - Scheduled executions (intervals, cron jobs, or delayed executions)
-- [Email triggers](/docs/products/functions/email) (when an email arrives at an address of the function)
 
 Asynchronous executions:
-- Have no timeout limitations beyond your function's configured timeout. [Email executions](/docs/products/functions/email#limits) can stop after 60 seconds.
+- Have no timeout limitations beyond your function's configured timeout
 - Are ideal for background processing and event-driven workflows
 
 {% info title="Response body storage" %}
@@ -1148,7 +1147,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 # Email {% #email %}
 
 On Appwrite Cloud, after you turn on the email trigger of a function, the function executes when an email arrives at its built-in address or at an address on a custom domain that you connect.
-The execution receives the parsed email as JSON in the request body, and the `x-appwrite-trigger` header is `email`.
+The execution receives the email and its attachments in a `multipart/form-data` request body, and the `x-appwrite-trigger` header is `email`.
+Appwrite executes the function while the sending mail server waits, and accepts the email after the function finishes.
 
 {% arrow_link href="/docs/products/functions/email" %}
 Learn about email triggers

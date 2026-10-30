@@ -322,7 +322,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 24
+    "readingTimeMinutes": 25
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -3035,7 +3035,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Email triggers",
     "description": "Execute an Appwrite Function when an email arrives at its address. Use the built-in address of the function or connect a custom domain.",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 10
   },
   {
     "slug": "products/functions/environment-variables",

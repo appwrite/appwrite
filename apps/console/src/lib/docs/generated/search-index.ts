@@ -4728,7 +4728,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/functions/email",
     "title": "Email triggers",
     "description": "Execute an Appwrite Function when an email arrives at its address. Use the built-in address of the function or connect a custom domain.",
-    "excerpt": "An email trigger executes your function when an email arrives at one of the function's addresses. Each function has a built-in address, and you can also connect a custom domain. Appwrite receives the email, stores its content and attachments, and executes your function in the background with the parsed email as the request body. Your function can save the email to a table, reply to the sender, or send the content to another service. Email triggers are available on Appwrite…",
+    "excerpt": "An email trigger executes your function when an email arrives at one of the function's addresses. Each function has a built-in address, and you can also connect a custom domain. Appwrite receives the email and executes your function with the email and its attachments in the request body. Appwrite does not store the email. Your function can save the email to a table, reply to the sender, or send the content to another service. Email triggers are available on Appwrite…",
     "breadcrumbs": [
       "Functions",
       "Guides",
