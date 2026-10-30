@@ -177,12 +177,15 @@ final class Adapter implements Base, Benchmarks
             $delay += $frame->getImageDelay();
         }
         $image->setFirstIterator();
+        $format = self::format($blob);
 
         return [
-            'format' => self::format($blob),
+            'format' => $format,
             'width' => $image->getImageWidth(),
             'height' => $image->getImageHeight(),
-            'frames' => $frames,
+            // Null for an animated WebP: libwebp merges frames it finds identical, which
+            // depends on exact pixels and lossy quantization, so only the total delay is compared.
+            'frames' => $format === 'WEBP' && $frames > 1 ? null : $frames,
             'delay' => $delay,
         ];
     }

@@ -3800,7 +3800,7 @@
             "format": "WEBP",
             "width": 32,
             "height": 32,
-            "frames": 5,
+            "frames": null,
             "delay": 50
           }
         },

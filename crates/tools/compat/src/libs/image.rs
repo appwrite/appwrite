@@ -350,7 +350,9 @@ fn ispe(blob: &[u8]) -> Option<(u32, u32)> {
 
 fn summary(blob: &[u8]) -> Result<Value, Fault> {
     let fmt = format(blob);
-    let (width, height, frames, delay) = match fmt {
+    // `frames` is `None` for an animated WebP: libwebp merges frames it finds identical, which
+    // depends on exact pixels and lossy quantization, so only the total delay is compared.
+    let (width, height, frames, delay): (u32, u32, Option<u64>, u64) = match fmt {
         "GIF" => {
             let mut options = gif::DecodeOptions::new();
             options.set_color_output(gif::ColorOutput::Indexed);
@@ -362,25 +364,26 @@ fn summary(blob: &[u8]) -> Result<Value, Fault> {
                 delay += u64::from(frame.delay);
             }
             let (w, h) = first.ok_or_else(|| Fault::new("GIF without frames"))?;
-            (w, h, count, delay)
+            (w, h, Some(count), delay)
         }
         "WEBP" => {
             let decoder = image_webp::WebPDecoder::new(Cursor::new(blob)).map_err(|e| Fault::new(e.to_string()))?;
             let (w, h) = decoder.dimensions();
             if decoder.is_animated() {
                 let delay: u64 = frames_with_delay(blob)?.iter().map(|(_, d)| u64::from(*d)).sum();
-                (w, h, u64::from(decoder.num_frames()), delay)
+                let frames = (decoder.num_frames() == 1).then_some(1);
+                (w, h, frames, delay)
             } else {
-                (w, h, 1, 0)
+                (w, h, Some(1), 0)
             }
         }
         "AVIF" | "HEIC" => {
             let (w, h) = ispe(blob).ok_or_else(|| Fault::new("no ispe box"))?;
-            (w, h, 1, 0)
+            (w, h, Some(1), 0)
         }
         _ => {
             let image = image::load_from_memory(blob).map_err(|e| Fault::new(e.to_string()))?;
-            (image.width(), image.height(), 1, 0)
+            (image.width(), image.height(), Some(1), 0)
         }
     };
     Ok(json!({ "format": fmt, "width": width, "height": height, "frames": frames, "delay": delay }))
