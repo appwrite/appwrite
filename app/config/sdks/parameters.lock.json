@@ -3365,6 +3365,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -7427,6 +7432,11 @@
             "enabled"
         ],
         "project.updateOAuth2Webflow": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Vipps": [
             "clientId",
             "clientSecret",
             "enabled"

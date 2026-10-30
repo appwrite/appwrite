@@ -415,6 +415,7 @@
         "PATCH /v1/project/oauth2/tradeshiftBox",
         "PATCH /v1/project/oauth2/twitch",
         "PATCH /v1/project/oauth2/webflow",
+        "PATCH /v1/project/oauth2/vipps",
         "PATCH /v1/project/oauth2/wordpress",
         "PATCH /v1/project/oauth2/x",
         "PATCH /v1/project/oauth2/yahoo",
