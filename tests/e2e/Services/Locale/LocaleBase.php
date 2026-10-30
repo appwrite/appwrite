@@ -182,9 +182,22 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(117, $response['body']['total']);
+        $this->assertEquals(120, $response['body']['total']);
         $this->assertEquals($response['body']['currencies'][0]['symbol'], '$');
         $this->assertEquals($response['body']['currencies'][0]['name'], 'US Dollar');
+
+        $currencies = \array_column($response['body']['currencies'], null, 'code');
+
+        // Current ISO 4217 codes, redenominated with two minor units
+        foreach (['BYN', 'VES', 'ZMW'] as $code) {
+            $this->assertArrayHasKey($code, $currencies);
+            $this->assertEquals(2, $currencies[$code]['decimalDigits']);
+        }
+
+        // Withdrawn codes stay listed so stored values keep resolving
+        foreach (['BYR', 'VEF', 'ZMK'] as $code) {
+            $this->assertArrayHasKey($code, $currencies);
+        }
 
         /**
          * Test for FAILURE
