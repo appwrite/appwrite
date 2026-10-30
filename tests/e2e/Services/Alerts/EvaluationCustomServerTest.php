@@ -1372,7 +1372,9 @@ final class EvaluationCustomServerTest extends Scope
                 $probe[] = $database->getAttribute('type') . ' ' . $database->getId() . ' ' . \get_class($th) . ': ' . $th->getMessage();
             }
         }
-        \fwrite(STDERR, 'SWEEP PROBE ' . \json_encode($probe) . PHP_EOL);
+        if (!\in_array(METRIC_DATABASES_STORAGE, \array_map(static fn (array $row): string => $row['metric'] . ':' . ($row['resourceType'] ?? ''), $gauges), true) && !\in_array(METRIC_DATABASES_STORAGE . ':project', \array_map(static fn (array $row): string => $row['metric'] . ':' . ($row['resourceType'] ?? ''), $gauges), true)) {
+            throw new \RuntimeException('SWEEP PROBE ' . \json_encode($probe));
+        }
 
         $sweep->action(
             new Message(['pid' => \uniqid(), 'queue' => 'stats-resources', 'timestamp' => \time(), 'payload' => (new StatsResourcesMessage($isolated, $gauges))->toArray()]),
