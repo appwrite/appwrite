@@ -20,7 +20,7 @@ Appwrite supports multiple source destinations for migrating your data. You can 
 | [Cloud](/docs/advanced/migrations/cloud) | enabled | enabled | enabled | enabled | enabled | enabled |
 | [Self hosted](/docs/advanced/migrations/self-hosted) | enabled | enabled | enabled | enabled | enabled | enabled |
 
-## Hosting platforms {% #hosting-platforms %}
+# Hosting platforms {% #hosting-platforms %}
 
 Hosting platforms run your code and databases rather than exposing an API that Migrations can read from, so you move them with standard tools such as Git, `pg_dump`, and `rclone`. These guides walk through each resource:
 

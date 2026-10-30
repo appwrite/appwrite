@@ -154,7 +154,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Migrate from Railway",
     "description": "Move a Railway project to Appwrite. Copy PostgreSQL, MySQL, and bucket data, redeploy services on Sites and Functions, and re-create variables, cron jobs, and domains.",
     "layout": "article",
-    "readingTimeMinutes": 16
+    "readingTimeMinutes": 18
   },
   {
     "slug": "advanced/migrations/self-hosted",

@@ -11,7 +11,7 @@ Railway runs your code as long-lived services next to the databases, buckets, an
 There is no automated [Migrations](/docs/advanced/migrations) source for Railway. You move each resource with the standard tool for it, such as `pg_dump`, `mysqldump`, `rclone`, and Git. The steps are ordered so your app stays online on Railway until you switch your domains.
 
 {% info title="Rotate secrets instead of copying them" %}
-Treat every value in your Railway variables as a credential to replace, not to copy. Issue new API keys and passwords at each provider, set the new values in Appwrite, and revoke the old ones once you cut over. If you are responding to Railway's [October 21, 2026 security disclosure](https://blog.railway.com/p/security-disclosure-wednesday-october-21st), follow Railway's guidance and rotate your credentials first, whether or not you migrate.
+Treat every value in your Railway variables as a credential to replace, not to copy. Issue new API keys and passwords at each provider, set the new values in Appwrite, and revoke the old ones once you cut over.
 {% /info %}
 
 # What maps to Appwrite {% #mapping %}
@@ -28,7 +28,7 @@ Treat every value in your Railway variables as a credential to replace, not to c
 | Volume | [Storage](/docs/products/storage), or a database | Copy the files out and upload them. See [Migrate volumes](#volumes). |
 | Service and shared variables | [Site, function, and project variables](/docs/partners/project/environment-variables) | Re-create them with rotated values. See [Re-create variables](#variables). |
 | Custom domains | [Site](/docs/products/sites/domains) and [function](/docs/products/functions/domains) domains | Add the domain in Appwrite and update DNS. See [Move your domains](#domains). |
-| PR environments | [Preview deployments](/docs/products/sites/previews) and database [branches](/docs/products/databases/postgresql/branches) | Previews are created automatically for pull requests on a Git-connected site. |
+| PR environments | [Preview deployments](/docs/products/sites/previews), plus [PostgreSQL](/docs/products/databases/postgresql/branches) and [MySQL](/docs/products/databases/mysql/branches) branches | Previews are created automatically for pull requests on a Git-connected site. |
 
 # What does not map directly {% #gaps %}
 
@@ -36,10 +36,10 @@ Check these before you start. If your project depends on one of them, plan to ke
 
 - **Always-on processes.** Railway keeps a service running between requests. Appwrite Functions run once per execution, with a maximum timeout of 900 seconds, and Sites serve HTTP requests. Queue consumers, bots that hold a connection open, and other processes that never exit have no direct equivalent. Many can be restructured as [scheduled](/docs/products/functions/execute#schedule) or [event-triggered](/docs/products/functions/execute#events) functions.
 - **Custom Docker images.** Appwrite builds your code from source on its own [runtimes](/docs/products/functions/runtimes). It does not run a `Dockerfile` or a prebuilt image. Railway template services that deploy an image, such as a self-hosted CMS or workflow tool, need a container host.
-- **Long requests and WebSocket servers.** Requests to Sites and to function domains time out after at most 30 seconds. For realtime updates of Appwrite data, use [Appwrite Realtime](/docs/apis/realtime). For your own WebSocket protocol, keep that service on a container host.
+- **Long requests and WebSocket servers.** Requests to function domains time out after 30 seconds. Requests to Sites time out after 15 seconds by default, and you can raise the [timeout](/docs/products/sites/develop#timeouts) to at most 30 seconds. For realtime updates of Appwrite data, use [Appwrite Realtime](/docs/apis/realtime). For your own WebSocket protocol, keep that service on a container host.
 - **Redis.** Appwrite has no managed Redis. Keep Redis with a managed Redis provider and set its connection string as a variable.
 - **MongoDB.** [DocumentsDB](/docs/products/databases/documentsdb) stores schemaless JSON documents, but it is not compatible with the MongoDB wire protocol, so MongoDB drivers cannot connect to it. See [MongoDB](#mongodb).
-- **Private networking.** There is no equivalent of `*.railway.internal`. Appwrite databases are reached on a public hostname over TLS, and you can restrict them with an [IP allowlist](/docs/products/databases/postgresql/network-security#ip-allowlist).
+- **Private networking.** There is no equivalent of `*.railway.internal`. Appwrite databases are reached on a public hostname over TLS, and you can restrict them with an IP allowlist for [PostgreSQL](/docs/products/databases/postgresql/network-security#ip-allowlist) or [MySQL](/docs/products/databases/mysql/network-security#ip-allowlist).
 
 # Before you start {% #before-you-start %}
 
@@ -72,13 +72,15 @@ Install the tools for the resources you're moving:
 
 Sign in to [Appwrite Cloud](https://cloud.appwrite.io) and create a project. Pick the [region](/docs/products/network/regions) closest to your users. Databases take the region of their project, so choose it before you create any.
 
+PostgreSQL and MySQL databases are available on [paid plans](/docs/products/databases/postgresql#plans), with a payment method attached to your organization. On the Free plan, function schedule intervals must be 60 minutes or longer, and cron runs can start up to 5 minutes late. See [schedule](/docs/products/functions/execute#schedule).
+
 ## Plan the cutover {% #plan-cutover %}
 
 A database dump is a snapshot. Rows written to Railway after you take it are not copied. Do a trial run first to measure how long your data takes to copy, then schedule a maintenance window for the final copy, during which your app stops writing to Railway. Keep Railway running until your domains point at Appwrite and you have checked the result.
 
 # Re-create variables {% #variables %}
 
-Railway keeps variables per service and environment, with shared variables at the project level. Appwrite keeps variables per site and per function, with **global variables** at the project level that every site and function inherits.
+Railway keeps variables per service and environment, with shared variables at the project level. Appwrite keeps variables per site and per function, with **project variables** that every site and function inherits.
 
 1. List each service's variables so you have the full set of keys:
 
@@ -90,16 +92,16 @@ Railway keeps variables per service and environment, with shared variables at th
 
 1. For each key, decide where it belongs in Appwrite:
     - Values used by one service become [site variables](/docs/products/sites/environment-variables) or [function variables](/docs/products/functions/environment-variables).
-    - Railway shared variables become [global variables](/docs/partners/project/environment-variables) under your project's **Settings** > **Variables**.
+    - Railway shared variables become [project variables](/docs/partners/project/environment-variables) under your project's **Settings** > **Variables**.
     - Railway reference variables, such as `${{Postgres.DATABASE_URL}}`, have no equivalent. Set the resolved value directly, using the new Appwrite connection string for databases.
-    - Variables Railway provides, such as `RAILWAY_PUBLIC_DOMAIN` or `RAILWAY_GIT_COMMIT_SHA`, are not set on Appwrite. Use the `APPWRITE_` variables that Appwrite injects into [sites](/docs/products/sites/develop) and [functions](/docs/products/functions/environment-variables#appwrite-variables) instead, such as `APPWRITE_VCS_COMMIT_HASH`.
+    - Variables Railway provides, such as `RAILWAY_PUBLIC_DOMAIN` or `RAILWAY_GIT_COMMIT_SHA`, are not set on Appwrite. Use the `APPWRITE_` variables that Appwrite injects into [sites](/docs/products/sites/environment-variables#appwrite-variables) and [functions](/docs/products/functions/environment-variables#appwrite-variables) instead, such as `APPWRITE_VCS_COMMIT_HASH`.
 1. Generate a new value for every secret at its provider, and enter the new value in Appwrite. Select **Secret** on each sensitive variable so nobody can read it back from the Console or API after you create it.
 
 {% only_dark %}
-![Project global variables](/images/docs/platform/dark/env-variables.avif)
+![Project variables](/images/docs/platform/dark/env-variables.avif)
 {% /only_dark %}
 {% only_light %}
-![Project global variables](/images/docs/platform/env-variables.avif)
+![Project variables](/images/docs/platform/env-variables.avif)
 {% /only_light %}
 
 Variable changes take effect on the next deployment, so create them before you deploy.
@@ -121,7 +123,7 @@ When the database is ready, open **Credentials** and copy the connection string 
 ![Database credentials dialog](/images/docs/products/databases/postgresql/credentials.avif)
 {% /only_light %}
 
-## Install your extensions {% #postgresql-extensions %}
+## Connect to both databases {% #postgresql-connect %}
 
 In a separate terminal, open a tunnel to your Railway PostgreSQL service and leave it running:
 
@@ -131,16 +133,22 @@ railway connect <POSTGRES_SERVICE> --tunnel-only -P 15432
 
 The tunnel runs over SSH, so the database doesn't need public access. The command prints the connection details, including a full connection URL on local port `15432`. If public access is already on for the database, you can use its `DATABASE_PUBLIC_URL` variable instead. If you regenerate the database credentials on Railway, reconnect to pick up the new password.
 
-Then list the extensions your Railway database uses:
+Then set both connection strings in your main terminal. The commands below use them:
 
 ```bash
 export RAILWAY_DB="<CONNECTION_URL>"
 export APPWRITE_DB="postgresql://admin:<PASSWORD>@db-<HASH>.<REGION>.appwrite.center:5432/db-<HASH>?sslmode=require"
+```
 
+## Install your extensions {% #postgresql-extensions %}
+
+List the extensions your Railway database uses:
+
+```bash
 psql "$RAILWAY_DB" -c "SELECT extname, extversion FROM pg_extension WHERE extname <> 'plpgsql';"
 ```
 
-Railway's default PostgreSQL template ships without extra extensions, so this list is often empty. If you deployed one of Railway's pgvector or PostGIS templates instead, it shows `vector` or `postgis`. Install each extension on the Appwrite database from **Settings** > **Extensions** before you restore, so the tables that use them can be created. See [extensions](/docs/products/databases/postgresql/extensions) for the catalog.
+If the list includes extensions such as `vector` or `postgis`, install each one on the Appwrite database from **Settings** > **Extensions** before you restore, so the tables that use them can be created. See [extensions](/docs/products/databases/postgresql/extensions) for the catalog. If the list is empty, skip to the next step.
 
 ## Dump and restore {% #postgresql-copy %}
 
@@ -171,7 +179,15 @@ psql "$APPWRITE_DB" -c "SELECT count(*) FROM <TABLE>;"
 
 Run your app against the Appwrite database in a preview or local environment. If you use an ORM with a migrations table, such as Prisma, Drizzle, or Django, check that it reports no pending migrations. The [integrations](/docs/products/databases/postgresql/integrations/prisma) pages show the connection settings for each ORM.
 
-For the final copy, stop writes to Railway, dump again, and restore into a new, empty database with the same extensions installed. Point your app at that database's connection string. Databases are billed by the hour they run, so delete the trial database once your app is running on the new one.
+## Prepare the final copy {% #postgresql-final %}
+
+The final copy goes into a new, empty database, because restoring over the trial copy collides with the tables already there. Set it up before your maintenance window, so the window only covers the copy itself:
+
+1. Create the final database, and install the same extensions on it.
+1. Point your site and function variables at its connection string, and redeploy them. Variable changes only take effect on the next deployment. Nothing serves traffic from Appwrite yet, because your domains still point at Railway.
+1. Delete the trial database. Databases are billed by the hour they run.
+
+During the window, stop writes to Railway, then run the same `pg_dump`, `pg_restore`, and `ANALYZE` commands against the final database, with `APPWRITE_DB` set to its connection string. Check the row counts again before you [move your domains](#domains).
 
 # Migrate MySQL {% #mysql %}
 
@@ -213,16 +229,27 @@ mysql --host=db-<HASH>.<REGION>.appwrite.center --port=3306 --user=admin.<HASH> 
     default < railway.sql
 ```
 
+`mysql` stops at the first statement that fails, and nothing after it in the file is loaded. Read any error before you continue.
+
 ## Verify the copy {% #mysql-verify %}
 
-Compare row counts for your most important tables with `SELECT COUNT(*) FROM <TABLE>;` on both sides, then run your app against the new database before the final copy. As with PostgreSQL, stop writes to Railway before the final dump. `mysqldump` drops and re-creates each table by default, so you can load the final dump into the same database as your trial run.
+Compare row counts for your most important tables with `SELECT COUNT(*) FROM <TABLE>;` on both sides. If your schema has views, triggers, or stored routines, run these on both sides too, and check that each one came across:
+
+```sql
+SHOW FULL TABLES WHERE Table_type = 'VIEW';
+SHOW TRIGGERS;
+SHOW FUNCTION STATUS WHERE Db = DATABASE();
+SHOW PROCEDURE STATUS WHERE Db = DATABASE();
+```
+
+Then run your app against the new database before the final copy. As with PostgreSQL, stop writes to Railway before the final dump. `mysqldump` drops and re-creates each table by default, so you can load the final dump into the same database as your trial run.
 
 # MongoDB {% #mongodb %}
 
 MongoDB drivers cannot connect to Appwrite, so moving a MongoDB database means changing how your app reads and writes data. Choose one of two paths:
 
 - **Keep MongoDB.** Move it to a managed MongoDB provider and set its connection string as a variable on your site or function. Your code stays the same.
-- **Move to DocumentsDB.** Export each collection with `mongoexport --jsonArray`, convert MongoDB Extended JSON values such as `{"$oid": ...}` and `{"$date": ...}` into plain fields, and load each file with [JSON imports](/docs/products/databases/documentsdb/json-imports). Set `$id` from the old `_id` to keep document IDs. Then replace your MongoDB queries with the [DocumentsDB SDK methods](/docs/products/databases/documentsdb/queries).
+- **Move to DocumentsDB.** Export each collection with `mongoexport --jsonArray`, convert MongoDB Extended JSON values such as `{"$oid": ...}` and `{"$date": ...}` into plain fields, and load each file with [JSON imports](/docs/products/databases/documentsdb/json-imports). Rename each `_id` field to `$id` to keep document IDs. Then replace your MongoDB queries with the [DocumentsDB SDK methods](/docs/products/databases/documentsdb/queries).
 
 # Migrate storage buckets {% #buckets %}
 
@@ -242,9 +269,9 @@ Print your Railway bucket's current S3 credentials:
 railway bucket --bucket <RAILWAY_BUCKET> credentials
 ```
 
-The output includes `AWS_ENDPOINT_URL`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_S3_BUCKET_NAME`. Use `AWS_S3_BUCKET_NAME` in the commands below. It is the bucket's S3 name, which differs from the display name in the Railway dashboard.
+The output includes `AWS_ENDPOINT_URL`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_BUCKET_NAME`, `AWS_DEFAULT_REGION`, and `AWS_S3_URL_STYLE`. Use `AWS_S3_BUCKET_NAME` in the commands below. It is the bucket's S3 name, which differs from the display name in the Railway dashboard.
 
-Add both sides to your rclone config, which `rclone config file` locates. Railway buckets use virtual-hosted URLs, so turn path-style addressing off for Railway and on for Appwrite:
+Add both sides to your rclone config, which `rclone config file` locates. Set `force_path_style` for Railway from `AWS_S3_URL_STYLE`: `false` when it is `virtual`, which is the default for new buckets, and `true` otherwise, since some older buckets use path-style URLs. Appwrite only supports path-style addressing, so set it to `true` there:
 
 ```ini
 [railway]
@@ -253,7 +280,7 @@ provider = Other
 endpoint = <AWS_ENDPOINT_URL>
 access_key_id = <AWS_ACCESS_KEY_ID>
 secret_access_key = <AWS_SECRET_ACCESS_KEY>
-region = auto
+region = <AWS_DEFAULT_REGION>
 force_path_style = false
 
 [appwrite]
@@ -303,8 +330,8 @@ Update your code to read and write files through the [Storage API](/docs/product
 Sites builds from the same repository Railway builds from.
 
 1. In your Appwrite project, go to **Sites** > **Create site** and connect your GitHub repository.
-1. Select the production branch your Railway service deploys from.
-1. Check the detected framework. Under **Build settings**, set the install command, build command, output directory, and root directory to match your Railway service. Choose **SSR** for server-rendered apps and **Static** for static exports.
+1. Select the production branch your Railway service deploys from, and the root directory if the app lives in a subfolder of the repository.
+1. Check the detected framework. Under **Build settings**, set the install command, build command, and output directory to match your Railway service. Choose **SSR** for server-rendered apps and **Static** for static exports.
 1. Add the site's variables, as described in [Re-create variables](#variables), and deploy.
 
 {% only_dark %}
@@ -316,7 +343,9 @@ Sites builds from the same repository Railway builds from.
 
 Framework API routes and middleware run inside the site when SSR is enabled, so they need no changes. A Railway start command such as `npm run start` is not needed: Appwrite runs the framework's server for you. See [supported frameworks](/docs/products/sites/frameworks) for the list and [rendering](/docs/products/sites/rendering) for the difference between SSR and static output.
 
-Each pull request against a Git-connected site gets a [preview deployment](/docs/products/sites/previews), which covers what Railway PR environments do for web apps. For a database per preview, create a PostgreSQL [branch](/docs/products/databases/postgresql/branches).
+A single-page app that routes on the client needs a fallback file, such as `index.html`, so that deep links load the app instead of returning a 404. Set it under **Build settings**, as described in [running SPAs](/docs/products/sites/rendering/static#running-spas-on-appwrite-sites).
+
+Each pull request against a Git-connected site gets a [preview deployment](/docs/products/sites/previews), which covers what Railway PR environments do for web apps. For a database per preview, create a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch.
 
 # Move APIs and cron jobs to Functions {% #functions %}
 
@@ -391,7 +420,7 @@ DNS changes can take up to 48 hours to propagate. Lower the TTL of the records y
 
 1. Check your app end to end on its production domain: sign-in, payments, uploads, emails, and scheduled jobs.
 1. Revoke the old credentials you replaced while [re-creating variables](#variables).
-1. Set up [PostgreSQL backups](/docs/products/databases/postgresql/backups) or [MySQL backups](/docs/products/databases/mysql/backups).
+1. Check each database's default backup policy, and enable point-in-time recovery if you need to restore to an exact moment. See [PostgreSQL backups](/docs/products/databases/postgresql/backups) or [MySQL backups](/docs/products/databases/mysql/backups).
 1. Keep the Railway project for a few days as a fallback, then delete its services, volumes, and buckets.
 
 For help planning a large migration, [contact us](/contact-us).
