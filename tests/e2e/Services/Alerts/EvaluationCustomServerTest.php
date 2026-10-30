@@ -185,7 +185,7 @@ final class EvaluationCustomServerTest extends Scope
         ]);
         $this->assertSame(201, $membership['headers']['status-code']);
         $invite = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email, function (array $email) {
-            $this->assertStringContainsString('/join-us', $email['html'] ?? '');
+            $this->assertStringContainsString('/join-us', (string) ($email['html'] ?? ''));
         })['html']);
         $confirmed = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['body']['$id'] . '/status', [
             'origin' => 'http://localhost',
