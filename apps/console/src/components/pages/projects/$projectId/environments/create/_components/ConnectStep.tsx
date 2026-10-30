@@ -41,7 +41,7 @@ export function ConnectStep({ environment }: { environment: Models.Project }) {
         </p>
         <dl className="mt-5 space-y-3">
           <Field label={t('Name')}>{environment.name}</Field>
-          <Field label={t('Environment ID')}>
+          <Field label={t('Project ID')}>
             <CopyableId
               id={environment.$id}
               variant="inline"

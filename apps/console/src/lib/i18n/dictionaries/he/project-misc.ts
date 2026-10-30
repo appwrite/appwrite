@@ -3304,7 +3304,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Create environment': 'יצירת סביבה',
   'Rename environment': 'שינוי שם הסביבה',
   'Delete environment': 'מחיקת סביבה',
-  'Environment ID': 'מזהה סביבה',
   'Enter environment name': 'הזינו שם סביבה',
   'Only the name changes. The environment ID stays the same.':
     'רק השם משתנה. מזהה הסביבה נשאר זהה.',

@@ -3372,7 +3372,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Create environment': '環境を作成',
   'Rename environment': '環境の名前を変更',
   'Delete environment': '環境を削除',
-  'Environment ID': '環境 ID',
   'Enter environment name': '環境名を入力',
   'Only the name changes. The environment ID stays the same.':
     '変更されるのは名前だけです。環境 ID はそのままです。',

@@ -94,7 +94,7 @@ export function DetailsStep({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="environment-id">{t('Environment ID')}</Label>
+        <Label htmlFor="environment-id">{t('Project ID')}</Label>
         <IdInput
           id="environment-id"
           value={environmentId}
