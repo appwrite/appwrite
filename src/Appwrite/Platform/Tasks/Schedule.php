@@ -111,9 +111,9 @@ class Schedule extends Action
             $cycles[] = [$cohort, ScheduleMaintenance::cycle($cohort)];
         }
 
-        $this->loop(ScheduleFunctions::getName(), fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
-        $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
-        $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks));
+        $this->loop(ScheduleFunctions::getName(), fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
+        $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
+        $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $pools));
         foreach ($cycles as [$cohort, $cycle]) {
             $this->loop(ScheduleMaintenance::getName() . ':' . $cohort->value, fn () => (new ScheduleMaintenance())->run(ScheduleMaintenance::loop($cohort, $cycle, $publisherForMaintenance, $telemetry), $cohort, $pools));
         }
