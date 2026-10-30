@@ -79,17 +79,15 @@ final class HandlerTest extends TestCase
     }
 
     /**
-     * @return array<string, array{string, ?\Throwable, float, bool}>
+     * @return \Iterator<string, array{string, (\Throwable | null), float, bool}>
      */
-    public static function spanCases(): array
+    public static function spanCases(): \Iterator
     {
-        return [
-            'fast success' => ['project1', null, 0.01, false],
-            'failed' => ['project1', new \RuntimeException('boom'), 0.01, true],
-            'slow' => ['project1', null, 1.0, true],
-            'traced project' => ['traced', null, 0.01, true],
-            'event without a project' => ['', null, 0.01, false],
-        ];
+        yield 'fast success' => ['project1', null, 0.01, false];
+        yield 'failed' => ['project1', new \RuntimeException('boom'), 0.01, true];
+        yield 'slow' => ['project1', null, 1.0, true];
+        yield 'traced project' => ['traced', null, 0.01, true];
+        yield 'event without a project' => ['', null, 0.01, false];
     }
 
     #[DataProvider('spanCases')]
