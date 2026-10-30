@@ -445,6 +445,30 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('firing', $this->getMonitorBody($monitorId)['status']);
     }
 
+    public function testUnsubscribeLinkOutlivesItsMonitor(): void
+    {
+        $root = $this->getRoot()['$id'];
+        $monitorId = $this->createPausedMonitor('Deleted later ' . \uniqid());
+        $token = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->token($root, $monitorId, type: 'usage');
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $token, 'all')['headers']['status-code']);
+
+        $this->assertSame(204, $this->client->call(Client::METHOD_DELETE, '/monitors/' . $monitorId, $this->headers())['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // The email outlives the monitor: its link still shows and undoes the type-wide opt-out.
+        $page = $this->unsubscribe(Client::METHOD_GET, $token);
+        $this->assertSame(200, $page['headers']['status-code']);
+        $this->assertSame('', $page['body']['monitorName']);
+        $this->assertSame('usage', $page['body']['type']);
+        $this->assertTrue($page['body']['optOut']);
+        $this->assertTrue($page['body']['all']);
+
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $token, 'all')['headers']['status-code']);
+        $this->assertFalse($this->unsubscribe(Client::METHOD_GET, $token)['body']['all']);
+    }
+
     public function testConcurrentUnsubscribesAllHold(): void
     {
         $root = $this->getRoot()['$id'];
