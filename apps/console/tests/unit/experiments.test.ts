@@ -13,11 +13,17 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('starts with Appwrite Analytics', () => {
+  test('lists Appwrite Analytics, project environments, and project transfers', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
+      'projectEnvironments',
+      'projectTransfers',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
-    expect(EXPERIMENTS[0]?.description.length).toBeGreaterThan(0)
+    expect(EXPERIMENTS[1]?.name).toBe('Project environments')
+    expect(EXPERIMENTS[2]?.name).toBe('Project transfers')
+    for (const experiment of EXPERIMENTS) {
+      expect(experiment.description.length).toBeGreaterThan(0)
+    }
   })
 })
