@@ -3,10 +3,12 @@
  */
 
 import {
+  mutationOptions,
   queryOptions,
   useMutation,
   useQuery,
   useQueryClient,
+  type QueryClient,
 } from '@tanstack/react-query'
 import { ID, Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -266,7 +268,16 @@ export function organizationBudgetMonitorsQueryOptions(
 /** Adds or removes a webhook on every budget monitor of an organization. */
 export function useSetBudgetMonitorsWebhook(organizationId: string) {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation(
+    budgetMonitorsWebhookMutationOptions(queryClient, organizationId),
+  )
+}
+
+export function budgetMonitorsWebhookMutationOptions(
+  queryClient: QueryClient,
+  organizationId: string,
+) {
+  return mutationOptions({
     mutationFn: async ({
       monitors,
       webhookUrl,
@@ -293,7 +304,8 @@ export function useSetBudgetMonitorsWebhook(organizationId: string) {
       }
       return updated
     },
-    onSuccess: () =>
+    // A failure partway leaves the earlier monitors changed, so refetch either way.
+    onSettled: () =>
       queryClient.invalidateQueries({
         queryKey: ['monitors', 'organization', organizationId],
       }),

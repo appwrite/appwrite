@@ -1,4 +1,6 @@
-import { describe, expect, test } from 'bun:test'
+import { afterAll, describe, expect, mock, test } from 'bun:test'
+import { MutationObserver, QueryClient } from '@tanstack/react-query'
+import * as actualSdk from '@/lib/appwrite/sdk'
 import {
   formatLength,
   fromBytes,
@@ -282,5 +284,57 @@ describe('alerts feed', () => {
   test('draws only marks when every alert is instant', () => {
     const instant = alert(at(29, 5), at(29, 5))
     expect(barWidths([instant], now).get(instant)).toBe(MIN_BAR_PERCENT)
+  })
+})
+
+describe('budget monitor webhook', () => {
+  afterAll(() => {
+    mock.module('@/lib/appwrite/sdk', () => actualSdk)
+  })
+
+  test('refetches the monitors when an update fails partway', async () => {
+    const monitor = (id: string) =>
+      parseMonitor({
+        $id: id,
+        type: 'budget',
+        name: id,
+        rules: [],
+        channels: ['email'],
+      } as unknown as Monitor)
+    let calls = 0
+    mock.module('@/lib/appwrite/sdk', () => ({
+      ...actualSdk,
+      sdk: {
+        forConsole: {
+          monitors: {
+            updateBudgetMonitor: async (input: { monitorId: string }) => {
+              if (++calls > 1) throw new Error('rejected')
+              return { $id: input.monitorId, type: 'budget', rules: [] }
+            },
+          },
+        },
+      },
+    }))
+    const { budgetMonitorsWebhookMutationOptions } = await import(
+      '@/lib/react-query/hooks/monitors'
+    )
+
+    const queryClient = new QueryClient()
+    const queryKey = ['monitors', 'organization', 'org', 'budget']
+    queryClient.setQueryData(queryKey, [])
+    const observer = new MutationObserver(
+      queryClient,
+      budgetMonitorsWebhookMutationOptions(queryClient, 'org'),
+    )
+
+    await expect(
+      observer.mutate({
+        monitors: [monitor('first'), monitor('second')],
+        webhookUrl: 'https://example.com/hook',
+      }),
+    ).rejects.toThrow('rejected')
+
+    expect(calls).toBe(2)
+    expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true)
   })
 })

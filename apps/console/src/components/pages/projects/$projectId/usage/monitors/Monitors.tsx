@@ -250,6 +250,10 @@ export function Monitors({
       )
   }, [monitors, search, filter, t])
 
+  // The listed copy follows updates and refetches; `selected` is a snapshot.
+  const current =
+    monitors.find((monitor) => monitor.$id === selected?.$id) ?? selected
+
   const handleOpen = (monitor: ParsedMonitor) => {
     openDialogAfterOverlayCloses(() => {
       setSelected(monitor)
@@ -557,7 +561,7 @@ export function Monitors({
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         projectId={projectId}
-        monitor={selected}
+        monitor={current}
         onDelete={requestDelete}
         readOnly={createDisabled}
       />
