@@ -443,8 +443,6 @@ $unauthorizedPayloadJson = json_encode([
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, $permissionTimeout) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
-    $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-
     $telemetry = getTelemetry($workerId);
     $realtimeDelayBuckets = [100, 250, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500, 10000, 15000, 30000];
     $workerTelemetryAttributes = ['workerId' => (string) $workerId];
@@ -624,6 +622,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         unauthorizedPayload: $unauthorizedPayloadJson,
         timeout: $permissionTimeout,
         workerId: $workerId,
+        traceProjectId: System::getEnv('_APP_TRACE_PROJECT_ID', ''),
     );
 
     while ($attempts < 300) {
@@ -645,7 +644,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($eventHandler, $traceProjectId): void {
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($eventHandler): void {
                 $arrivedAt = \microtime(true);
                 $span = Span::init('realtime.event');
 
@@ -660,10 +659,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     ->set('realtime.arrived_at', $arrivedAt)
                     ->set('realtime.resolved_at', $resolvedAt);
 
-                // Every event of every project would flood the logs: log failed and slow events, or all of one traced project.
-                $slow = $resolvedAt - $arrivedAt >= 1;
-                $traced = $traceProjectId !== '' && $outcome['project'] === $traceProjectId;
-                if ($outcome['error'] !== null || $slow || $traced) {
+                // Logging every event would flood the logs.
+                if ($eventHandler->shouldLog($outcome, $resolvedAt - $arrivedAt)) {
                     $span->finish(error: $outcome['error']);
                 }
             });

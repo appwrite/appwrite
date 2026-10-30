@@ -9,6 +9,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Realtime\Event\Handler;
 use Appwrite\Realtime\EventTailRegistry;
 use Appwrite\Realtime\Usage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Table;
 use Utopia\WebSocket\Server;
@@ -60,6 +61,7 @@ final class HandlerTest extends TestCase
             unauthorizedPayload: '{}',
             timeout: 1.0,
             workerId: 0,
+            traceProjectId: 'traced',
         );
     }
 
@@ -74,6 +76,28 @@ final class HandlerTest extends TestCase
             'receivers' => 0,
             'error' => null,
         ], $outcome);
+    }
+
+    /**
+     * @return array<string, array{string, ?\Throwable, float, bool}>
+     */
+    public static function spanCases(): array
+    {
+        return [
+            'fast success' => ['project1', null, 0.01, false],
+            'failed' => ['project1', new \RuntimeException('boom'), 0.01, true],
+            'slow' => ['project1', null, 1.0, true],
+            'traced project' => ['traced', null, 0.01, true],
+            'event without a project' => ['', null, 0.01, false],
+        ];
+    }
+
+    #[DataProvider('spanCases')]
+    public function testLogsOnlyFailedSlowOrTracedEvents(string $project, ?\Throwable $error, float $seconds, bool $expected): void
+    {
+        $outcome = ['project' => $project, 'event' => 'e', 'result' => $error === null ? 'delivered' : 'failed', 'receivers' => 1, 'error' => $error];
+
+        $this->assertSame($expected, $this->handler->shouldLog($outcome, $seconds));
     }
 
     public function testCountsEveryEventAndDropsOnesWithoutSubscribers(): void

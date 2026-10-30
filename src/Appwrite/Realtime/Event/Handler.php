@@ -54,6 +54,7 @@ class Handler
         private readonly string $unauthorizedPayload,
         private readonly float $timeout,
         private readonly int $workerId,
+        private readonly string $traceProjectId = '',
     ) {
         $this->stageSince = \microtime(true);
         $eventStage->observe(fn (callable $observe) => $observe(
@@ -122,6 +123,18 @@ class Handler
             'receivers' => $this->delivered,
             'error' => $error,
         ];
+    }
+
+    /**
+     * Whether an event's span should be logged: failed, slow, or of the traced project.
+     *
+     * @param array{project: string, event: string, result: string, receivers: int, error: ?\Throwable} $outcome
+     */
+    public function shouldLog(array $outcome, float $seconds): bool
+    {
+        return $outcome['error'] !== null
+            || $seconds >= 1
+            || ($this->traceProjectId !== '' && $outcome['project'] === $this->traceProjectId);
     }
 
     private function enter(string $stage): void
