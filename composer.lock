@@ -4431,12 +4431,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "492b4a99d5d3cb7633667da9769e46c2055ff098"
+                "reference": "77990f1f1747623ee59ea51379bb8a60fa52a218"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/492b4a99d5d3cb7633667da9769e46c2055ff098",
-                "reference": "492b4a99d5d3cb7633667da9769e46c2055ff098",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/77990f1f1747623ee59ea51379bb8a60fa52a218",
+                "reference": "77990f1f1747623ee59ea51379bb8a60fa52a218",
                 "shasum": ""
             },
             "require": {
@@ -4496,7 +4496,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/codex/fix-cache-epoch-recovery"
             },
-            "time": "2026-10-30T21:13:33+00:00"
+            "time": "2026-10-30T21:16:02+00:00"
         },
         {
             "name": "utopia-php/mongo",
