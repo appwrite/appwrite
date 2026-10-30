@@ -34,7 +34,7 @@ import { useFunctionWizard } from './WizardContext'
 import { ExternalLink, Play, GitBranch } from 'lucide-react'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
-import { useDomainUrl } from '@/hooks/use-domain-url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -53,7 +53,7 @@ export function DeployingView({
   deploymentId,
 }: DeployingViewProps) {
   const t = useT()
-  const domainUrl = useDomainUrl()
+  const visitUrl = useVisitUrl()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { formData, resetFormData, generateDomain, baseDomain } =
@@ -178,9 +178,9 @@ export function DeployingView({
   const generatedFallback =
     func?.name && baseDomain ? generateDomain(func.name) : ''
   const functionUrl = primaryDomain
-    ? domainUrl(primaryDomain)
+    ? visitUrl(primaryDomain)
     : generatedFallback
-      ? domainUrl(generatedFallback)
+      ? visitUrl(generatedFallback)
       : null
 
   const sidebarContent =

@@ -141,7 +141,7 @@ import { DeploymentsToolbarContext } from './Layout'
 import { getQueryParam, queryParamToMap } from '@/lib/table-filters'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
-import { useDomainUrl } from '@/hooks/use-domain-url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 function formatSize(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
@@ -224,7 +224,7 @@ function detectVcsProvider(
 
 export function View() {
   const t = useT()
-  const domainUrl = useDomainUrl()
+  const visitUrl = useVisitUrl()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
@@ -1098,7 +1098,7 @@ export function View() {
                         {activeDomains.map((rule) => (
                           <a
                             key={rule.$id}
-                            href={domainUrl(rule.domain)}
+                            href={visitUrl(rule.domain)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 text-[13px] font-mono link-neutral"

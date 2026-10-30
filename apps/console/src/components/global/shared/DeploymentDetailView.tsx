@@ -100,7 +100,7 @@ import {
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
 import { domainUrl } from '@/lib/domains/url'
-import { useDomainUrl } from '@/hooks/use-domain-url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 function formatSize(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
@@ -370,7 +370,7 @@ export function DeploymentDetailView({
   fallbackPath,
 }: DeploymentDetailViewConfig) {
   const t = useT()
-  const visitUrl = useDomainUrl()
+  const visitUrl = useVisitUrl()
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()

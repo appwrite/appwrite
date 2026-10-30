@@ -1460,4 +1460,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'プロジェクトを組織に引き継げるのは、その組織のオーナーだけです。',
   'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.':
     'プロジェクトを組織に引き継げるのは、その組織のオーナーだけです。受け取るには、あなたがオーナーとなる組織を作成してください。',
+  'Until the project is claimed, the site only opens on a device that has opened its owner link. Use Visit on that device first.':
+    'プロジェクトが引き継がれるまでは、オーナーリンクを開いたデバイスでのみサイトが開きます。先にそのデバイスで「Visit」を使用してください。',
 }

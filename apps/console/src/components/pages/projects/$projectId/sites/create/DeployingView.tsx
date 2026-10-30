@@ -60,7 +60,8 @@ import { getVcsProvider } from '@/lib/vcs/providers'
 import { useWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
 import { domainUrl } from '@/lib/domains/url'
-import { useDomainUrl } from '@/hooks/use-domain-url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -80,7 +81,8 @@ interface DeployingViewProps {
 
 export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   const t = useT()
-  const visitUrl = useDomainUrl()
+  const visitUrl = useVisitUrl()
+  const isZero = useIsZeroAccount()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -255,9 +257,13 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
 
   // QR code image URL from console avatars API (for "View on mobile" dialog)
   const qrImageUrl = useMemo(() => {
-    if (!siteUrl) return null
-    return sdk.forConsole.avatars.getQR({ text: siteUrl, size: 256 })
-  }, [siteUrl])
+    if (!primaryDomain) return null
+    // The plain domain: a QR code is easy to share, so it never carries the owner link
+    return sdk.forConsole.avatars.getQR({
+      text: domainUrl(primaryDomain),
+      size: 256,
+    })
+  }, [primaryDomain])
 
   // Reset preview loaded state when screenshot URL changes
   useEffect(() => {
@@ -670,12 +676,21 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
           <div className="border-t border-border" />
           <div className="px-6 py-6 flex items-center justify-center">
             {qrImageUrl ? (
-              <div className="p-4 bg-white rounded-lg">
-                <img
-                  src={qrImageUrl}
-                  alt={t('QR code to open site on mobile')}
-                  className="h-48 w-48 rounded"
-                />
+              <div className="flex flex-col items-center gap-3">
+                <div className="p-4 bg-white rounded-lg">
+                  <img
+                    src={qrImageUrl}
+                    alt={t('QR code to open site on mobile')}
+                    className="h-48 w-48 rounded"
+                  />
+                </div>
+                {isZero && (
+                  <p className="max-w-64 text-center text-[12px] text-muted-foreground">
+                    {t(
+                      'Until the project is claimed, the site only opens on a device that has opened its owner link. Use Visit on that device first.',
+                    )}
+                  </p>
+                )}
               </div>
             ) : (
               <p className="text-[13px] text-muted-foreground text-center px-4">

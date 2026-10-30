@@ -47,11 +47,11 @@ import { queryParamToMap } from '@/lib/table-filters'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
-import { useDomainUrl } from '@/hooks/use-domain-url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 export function View() {
   const t = useT()
-  const domainUrl = useDomainUrl()
+  const visitUrl = useVisitUrl()
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as
@@ -215,7 +215,7 @@ export function View() {
                       <TableRow>
                         <TableCell className="px-4 py-3">
                           <a
-                            href={domainUrl(rule.domain)}
+                            href={visitUrl(rule.domain)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"

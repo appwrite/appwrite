@@ -120,7 +120,7 @@ import { useT } from '@/lib/i18n/translate'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
-import { useDomainUrl } from '@/hooks/use-domain-url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 const DEPLOYMENTS_PER_PAGE = 25
 
@@ -175,7 +175,7 @@ function detectVcsProvider(
 
 export function SiteDeploymentsView() {
   const t = useT()
-  const domainUrl = useDomainUrl()
+  const visitUrl = useVisitUrl()
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -1021,7 +1021,7 @@ export function SiteDeploymentsView() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={domainUrl(rule.domain)}
+                                href={visitUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 text-[13px] font-mono link-neutral"
@@ -1220,7 +1220,7 @@ export function SiteDeploymentsView() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={domainUrl(rule.domain)}
+                                href={visitUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"

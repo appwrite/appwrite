@@ -46,7 +46,7 @@ import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
 import { RetryDomainDialog } from './domains/RetryDomain'
 import { ProxyRuleContextMenu } from './domains/ProxyRuleContextMenu'
-import { useDomainUrl } from '@/hooks/use-domain-url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 interface DomainsProps {
   projectId: string
@@ -64,7 +64,7 @@ export function Domains({
   createDisabledTooltip,
 }: DomainsProps) {
   const t = useT()
-  const domainUrl = useDomainUrl()
+  const visitUrl = useVisitUrl()
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
@@ -219,7 +219,7 @@ export function Domains({
                     <TableRow>
                       <TableCell className="px-4 py-3">
                         <a
-                          href={domainUrl(rule.domain)}
+                          href={visitUrl(rule.domain)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"

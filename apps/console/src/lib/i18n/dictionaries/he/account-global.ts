@@ -1460,4 +1460,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'רק בעלים של הארגון יכולים לתבוע בעלות על פרויקט לתוכו.',
   'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.':
     'רק בעלים של הארגון יכולים לתבוע בעלות על פרויקט לתוכו. צרו ארגון בבעלותכם כדי לקבל אותו.',
+  'Until the project is claimed, the site only opens on a device that has opened its owner link. Use Visit on that device first.':
+    'עד שתיתבע בעלות על הפרויקט, האתר נפתח רק במכשיר שפתח את קישור הבעלים שלו. השתמשו קודם ב-Visit באותו מכשיר.',
 }
