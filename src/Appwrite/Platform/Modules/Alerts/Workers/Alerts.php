@@ -500,8 +500,8 @@ class Alerts extends Action
             $email = new Email(
                 ...$notice,
                 reason: 'You\'re receiving this as ' . (\in_array(\strtolower($role[0] ?? ''), ['a', 'e', 'i', 'o', 'u'], true) ? 'an ' : 'a ') . $role . ' of ' . $teamName . '.',
-                unsubscribeUrl: $consoleUrl . '/alerts/unsubscribe?token=' . \urlencode($token),
-                unsubscribeAllUrl: $typeScope === '' ? '' : $consoleUrl . '/alerts/unsubscribe?token=' . \urlencode($unsubscribe->token($user->getId(), $typeScope)),
+                unsubscribeUrl: $consoleUrl . '/auth/alerts/unsubscribe?token=' . \urlencode($token),
+                unsubscribeAllUrl: $typeScope === '' ? '' : $consoleUrl . '/auth/alerts/unsubscribe?token=' . \urlencode($unsubscribe->token($user->getId(), $typeScope)),
                 unsubscribeAllLabel: 'Stop all ' . \strtolower((string) ($typeConfig['label'] ?? $type)) . ' alert emails',
             );
 

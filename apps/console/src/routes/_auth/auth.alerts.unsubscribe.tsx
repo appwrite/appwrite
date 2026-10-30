@@ -8,7 +8,7 @@ const searchSchema = z.object({
   token: z.string().catch(''),
 })
 
-export const Route = createFileRoute('/_auth/alerts/unsubscribe')({
+export const Route = createFileRoute('/_auth/auth/alerts/unsubscribe')({
   validateSearch: searchSchema,
   head: () => ({ meta: [{ title: pageTitle('Alert emails') }] }),
   component: AlertsUnsubscribePage,

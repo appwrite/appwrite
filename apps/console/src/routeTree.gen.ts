@@ -94,7 +94,6 @@ import { Route as ApiReferencesApiServiceRouteImport } from './routes/_api/refer
 import { Route as ApiResendApiKeysRouteImport } from './routes/_api/resend/api-keys'
 import { Route as ApiResendDomainsRouteImport } from './routes/_api/resend/domains'
 import { Route as ApiSitemapNewsDotxmlRouteImport } from './routes/_api/sitemap/news[.]xml'
-import { Route as AuthAlertsUnsubscribeRouteImport } from './routes/_auth/alerts.unsubscribe'
 import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
 import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
@@ -159,6 +158,7 @@ import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/t
 import { Route as ApiResendApiKeysApiKeyIdRouteImport } from './routes/_api/resend/api-keys.$apiKeyId'
 import { Route as AuthAgentMcpCallbackRouteImport } from './routes/_auth/agent.mcp.callback'
 import { Route as AuthAssistantMcpCallbackRouteImport } from './routes/_auth/assistant.mcp.callback'
+import { Route as AuthAuthAlertsUnsubscribeRouteImport } from './routes/_auth/auth.alerts.unsubscribe'
 import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
 import { Route as AuthAuthOauth2SuccessRouteImport } from './routes/_auth/auth.oauth2.success'
 import { Route as MarketingBlogAuthorAuthorRouteImport } from './routes/_marketing/blog.author.$author'
@@ -904,11 +904,6 @@ const ApiSitemapNewsDotxmlRoute = ApiSitemapNewsDotxmlRouteImport.update({
   path: '/sitemap/news.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthAlertsUnsubscribeRoute = AuthAlertsUnsubscribeRouteImport.update({
-  id: '/alerts/unsubscribe',
-  path: '/alerts/unsubscribe',
-  getParentRoute: () => AuthRoute,
-} as any)
 const AuthAuthMagicUrlRoute = AuthAuthMagicUrlRouteImport.update({
   id: '/auth/magic-url',
   path: '/auth/magic-url',
@@ -1258,6 +1253,12 @@ const AuthAssistantMcpCallbackRoute =
   AuthAssistantMcpCallbackRouteImport.update({
     id: '/assistant/mcp/callback',
     path: '/assistant/mcp/callback',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthAuthAlertsUnsubscribeRoute =
+  AuthAuthAlertsUnsubscribeRouteImport.update({
+    id: '/auth/alerts/unsubscribe',
+    path: '/auth/alerts/unsubscribe',
     getParentRoute: () => AuthRoute,
   } as any)
 const AuthAuthOauth2FailureRoute = AuthAuthOauth2FailureRouteImport.update({
@@ -3482,7 +3483,6 @@ export interface FileRoutesByFullPath {
   '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
   '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
-  '/alerts/unsubscribe': typeof AuthAlertsUnsubscribeRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
@@ -3547,6 +3547,7 @@ export interface FileRoutesByFullPath {
   '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
+  '/auth/alerts/unsubscribe': typeof AuthAuthAlertsUnsubscribeRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -3945,7 +3946,6 @@ export interface FileRoutesByTo {
   '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
   '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
-  '/alerts/unsubscribe': typeof AuthAlertsUnsubscribeRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
@@ -4006,6 +4006,7 @@ export interface FileRoutesByTo {
   '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
+  '/auth/alerts/unsubscribe': typeof AuthAuthAlertsUnsubscribeRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -4368,7 +4369,6 @@ export interface FileRoutesById {
   '/_api/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
   '/_api/resend/domains': typeof ApiResendDomainsRoute
   '/_api/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
-  '/_auth/alerts/unsubscribe': typeof AuthAlertsUnsubscribeRoute
   '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/_auth/education/join': typeof AuthEducationJoinRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
@@ -4433,6 +4433,7 @@ export interface FileRoutesById {
   '/_api/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/_auth/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/_auth/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
+  '/_auth/auth/alerts/unsubscribe': typeof AuthAuthAlertsUnsubscribeRoute
   '/_auth/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/_auth/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/_marketing/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -4837,7 +4838,6 @@ export interface FileRouteTypes {
     | '/resend/api-keys'
     | '/resend/domains'
     | '/sitemap/news.xml'
-    | '/alerts/unsubscribe'
     | '/auth/magic-url'
     | '/education/join'
     | '/oauth2/consent'
@@ -4902,6 +4902,7 @@ export interface FileRouteTypes {
     | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
+    | '/auth/alerts/unsubscribe'
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
     | '/blog/author/$author'
@@ -5300,7 +5301,6 @@ export interface FileRouteTypes {
     | '/resend/api-keys'
     | '/resend/domains'
     | '/sitemap/news.xml'
-    | '/alerts/unsubscribe'
     | '/auth/magic-url'
     | '/education/join'
     | '/oauth2/consent'
@@ -5361,6 +5361,7 @@ export interface FileRouteTypes {
     | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
+    | '/auth/alerts/unsubscribe'
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
     | '/blog/author/$author'
@@ -5722,7 +5723,6 @@ export interface FileRouteTypes {
     | '/_api/resend/api-keys'
     | '/_api/resend/domains'
     | '/_api/sitemap/news.xml'
-    | '/_auth/alerts/unsubscribe'
     | '/_auth/auth/magic-url'
     | '/_auth/education/join'
     | '/_auth/oauth2/consent'
@@ -5787,6 +5787,7 @@ export interface FileRouteTypes {
     | '/_api/resend/api-keys/$apiKeyId'
     | '/_auth/agent/mcp/callback'
     | '/_auth/assistant/mcp/callback'
+    | '/_auth/auth/alerts/unsubscribe'
     | '/_auth/auth/oauth2/failure'
     | '/_auth/auth/oauth2/success'
     | '/_marketing/blog/author/$author'
@@ -6752,13 +6753,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSitemapNewsDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth/alerts/unsubscribe': {
-      id: '/_auth/alerts/unsubscribe'
-      path: '/alerts/unsubscribe'
-      fullPath: '/alerts/unsubscribe'
-      preLoaderRoute: typeof AuthAlertsUnsubscribeRouteImport
-      parentRoute: typeof AuthRoute
-    }
     '/_auth/auth/magic-url': {
       id: '/_auth/auth/magic-url'
       path: '/auth/magic-url'
@@ -7205,6 +7199,13 @@ declare module '@tanstack/react-router' {
       path: '/assistant/mcp/callback'
       fullPath: '/assistant/mcp/callback'
       preLoaderRoute: typeof AuthAssistantMcpCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/auth/alerts/unsubscribe': {
+      id: '/_auth/auth/alerts/unsubscribe'
+      path: '/auth/alerts/unsubscribe'
+      fullPath: '/auth/alerts/unsubscribe'
+      preLoaderRoute: typeof AuthAuthAlertsUnsubscribeRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/auth/oauth2/failure': {
@@ -9451,13 +9452,13 @@ interface AuthRouteChildren {
   AuthSignOutRoute: typeof AuthSignOutRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
-  AuthAlertsUnsubscribeRoute: typeof AuthAlertsUnsubscribeRoute
   AuthAuthMagicUrlRoute: typeof AuthAuthMagicUrlRoute
   AuthEducationJoinRoute: typeof AuthEducationJoinRoute
   AuthOauth2ConsentRoute: typeof AuthOauth2ConsentRoute
   AuthOauth2DeviceRoute: typeof AuthOauth2DeviceRoute
   AuthAgentMcpCallbackRoute: typeof AuthAgentMcpCallbackRoute
   AuthAssistantMcpCallbackRoute: typeof AuthAssistantMcpCallbackRoute
+  AuthAuthAlertsUnsubscribeRoute: typeof AuthAuthAlertsUnsubscribeRoute
   AuthAuthOauth2FailureRoute: typeof AuthAuthOauth2FailureRoute
   AuthAuthOauth2SuccessRoute: typeof AuthAuthOauth2SuccessRoute
 }
@@ -9470,13 +9471,13 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSignOutRoute: AuthSignOutRoute,
   AuthSignUpRoute: AuthSignUpRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
-  AuthAlertsUnsubscribeRoute: AuthAlertsUnsubscribeRoute,
   AuthAuthMagicUrlRoute: AuthAuthMagicUrlRoute,
   AuthEducationJoinRoute: AuthEducationJoinRoute,
   AuthOauth2ConsentRoute: AuthOauth2ConsentRoute,
   AuthOauth2DeviceRoute: AuthOauth2DeviceRoute,
   AuthAgentMcpCallbackRoute: AuthAgentMcpCallbackRoute,
   AuthAssistantMcpCallbackRoute: AuthAssistantMcpCallbackRoute,
+  AuthAuthAlertsUnsubscribeRoute: AuthAuthAlertsUnsubscribeRoute,
   AuthAuthOauth2FailureRoute: AuthAuthOauth2FailureRoute,
   AuthAuthOauth2SuccessRoute: AuthAuthOauth2SuccessRoute,
 }

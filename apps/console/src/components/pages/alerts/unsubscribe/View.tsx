@@ -50,7 +50,7 @@ export function View({ token }: { token: string }) {
             )
 
   return (
-    <AuthFlowShell width="narrow">
+    <AuthFlowShell width="narrow" showLegal={false}>
       <AuthFlowNarrowCard>
         <div className="space-y-6">
           <div className="space-y-2">
