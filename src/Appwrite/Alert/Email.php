@@ -247,7 +247,7 @@ readonly class Email
             return '';
         }
 
-        return ' <a rel="noopener" target="_blank" href="' . \htmlspecialchars($this->unsubscribeUrl) . '" style="color: #6c6c75; text-decoration: underline;">Unsubscribe</a>';
+        return ' <a rel="noopener" target="_blank" href="' . \htmlspecialchars($this->unsubscribeUrl) . '" style="color: #6c6c75; text-decoration: underline; white-space: nowrap;">Unsubscribe</a>';
     }
 
     /**

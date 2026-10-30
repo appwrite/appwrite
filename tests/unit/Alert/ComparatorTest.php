@@ -120,6 +120,8 @@ final class ComparatorTest extends TestCase
 
         $html = $email('https://console.example/auth/alerts/unsubscribe?token=one&x=1')->render($template);
         $this->assertMatchesRegularExpression('#You&\#039;re receiving this as an owner of Acme\. <a [^>]*href="https://console\.example/auth/alerts/unsubscribe\?token=one&amp;x=1"[^>]*>Unsubscribe</a></p>#', $html);
+        // Narrow mail clients would otherwise break the word across lines.
+        $this->assertMatchesRegularExpression('#<a [^>]*style="[^"]*white-space: nowrap;[^"]*"[^>]*>Unsubscribe</a>#', $html);
         $this->assertSame(1, \substr_count($html, 'Unsubscribe'));
         // Pausing stays with the alert's own actions.
         $this->assertStringContainsString('>Pause this monitor</a>', $html);
