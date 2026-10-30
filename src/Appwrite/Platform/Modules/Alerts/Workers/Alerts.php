@@ -276,9 +276,11 @@ class Alerts extends Action
      */
     protected function measure(Document $monitor, Document $project, Database $dbForProject, Connection $usageConnection, \DateTimeImmutable $now): float
     {
+        // A resource whose usage is recorded under its engine's name, such as a DocumentsDB database.
+        $resource = Config::getParam('alerts', [])['resources'][(string) $monitor->getAttribute('resourceType')] ?? [];
         $databaseType = '';
-        if ($monitor->getAttribute('resourceType') === 'database') {
-            $databaseType = (string) $dbForProject->getDocument('databases', (string) $monitor->getAttribute('resourceId'))->getAttribute('type', '');
+        if (isset($resource['engine'], $resource['collection'])) {
+            $databaseType = (string) $dbForProject->getDocument($resource['collection'], (string) $monitor->getAttribute('resourceId'))->getAttribute($resource['engine'], '');
         }
 
         $meter = new Meter(new Tenant($usageConnection->getUsage(), (string) $project->getSequence()));
@@ -347,7 +349,7 @@ class Alerts extends Action
             value: new Quantity($value, $unit),
             comparator: Comparator::from((string) $monitor->getAttribute('comparator')),
             threshold: new Quantity((float) $monitor->getAttribute('threshold'), $unit),
-            window: ($definition['kind'] ?? '') === 'counter' ? (int) $monitor->getAttribute('window') : null,
+            window: ($definition['kind'] ?? 'gauge') !== 'gauge' ? (int) $monitor->getAttribute('window') : null,
             changedAt: new \DateTimeImmutable($changedAt),
             details: $resourceType === 'project' ? [] : ['Resource' => \ucfirst($resourceType) . ' ' . $monitor->getAttribute('resourceId')],
             url: $url,

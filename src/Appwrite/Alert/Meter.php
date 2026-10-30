@@ -2,6 +2,7 @@
 
 namespace Appwrite\Alert;
 
+use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Query\Query;
@@ -9,54 +10,61 @@ use Utopia\Usage\Tenant;
 use Utopia\Usage\Usage;
 
 /**
- * Reads the value a usage monitor compares, from its project's usage tenant.
+ * Reads the value a usage monitor compares, from its project's usage tenant,
+ * where `metrics` in `app/config/alerts.php` says the metric's writer records
+ * it for the monitor's scope.
  *
  * Counters are summed over the monitor's window. Gauges are the latest sample:
- * storage is written by the periodic resource sweep, so it has no window.
- *
- * DocumentsDB and VectorsDB databases report under prefixed names, so a
- * project-wide database monitor adds the three engines and a monitor on one
- * database reads its engine's series.
+ * the periodic resource sweep writes them, so they have no window. Growth is
+ * how far a gauge rose over the window, from its last sample before the window.
  */
 class Meter
 {
-    public function __construct(protected readonly Tenant $usage)
+    /**
+     * @var array<string, mixed>
+     */
+    protected readonly array $registry;
+
+    /**
+     * @param ?array<string, mixed> $registry the registry in `app/config/alerts.php`; the configured one when null
+     */
+    public function __construct(protected readonly Tenant $usage, ?array $registry = null)
     {
+        $this->registry = $registry ?? Config::getParam('alerts', []);
     }
 
     /**
-     * @param string $databaseType the watched database's type, for a monitor on one database
-     * @throws \InvalidArgumentException when the monitor's metric is not one this meter reads
+     * @param string $databaseType the engine the watched resource records its usage under, for a resource type with an `engine`
+     * @throws \InvalidArgumentException when the monitor's metric or scope is not one this meter reads
      */
     public function measure(Document $monitor, \DateTimeImmutable $now, string $databaseType = ''): float
     {
         $metric = (string) $monitor->getAttribute('metric', '');
         $resourceType = (string) $monitor->getAttribute('resourceType', '');
-        $resourceId = (string) $monitor->getAttribute('resourceId', '');
-        $since = $this->since((int) $monitor->getAttribute('window', 0), $now);
+        $definition = $this->registry['metrics'][$metric] ?? null;
+        if ($definition === null) {
+            throw new \InvalidArgumentException("Metric '{$metric}' cannot be measured.");
+        }
+        $scope = $definition['resources'][$resourceType] ?? null;
+        if ($scope === null) {
+            throw new \InvalidArgumentException("Metric '{$metric}' is not recorded for resource type '{$resourceType}'.");
+        }
 
-        return match ($metric) {
-            'bandwidth.inbound' => $this->sum(METRIC_NETWORK_INBOUND, [...$since, Query::notEqual('resourceType', 'site')]),
-            'bandwidth.outbound' => $this->sum(METRIC_NETWORK_OUTBOUND, [...$since, Query::notEqual('resourceType', 'site')]),
-            'databases.reads' => \array_sum(\array_map(
-                fn (string $name): float => $this->sum($name, [...$since, ...$this->database($resourceType, $resourceId)]),
-                $this->engines(METRIC_DATABASES_OPERATIONS_READS, $resourceType, $databaseType),
-            )),
-            'databases.writes' => \array_sum(\array_map(
-                fn (string $name): float => $this->sum($name, [...$since, ...$this->database($resourceType, $resourceId)]),
-                $this->engines(METRIC_DATABASES_OPERATIONS_WRITES, $resourceType, $databaseType),
-            )),
-            'databases.storage' => \array_sum(\array_map(
-                fn (string $name): float => $resourceType === 'database'
-                    ? $this->latest($name, [Query::equal('resourceType', ['database']), Query::equal('resourceId', [$resourceId])])
-                    : $this->latest($name, [Query::equal('resourceType', ['project'])]),
-                $this->engines(METRIC_DATABASES_STORAGE, $resourceType, $databaseType),
-            )),
-            'files.storage' => $resourceType === 'bucket'
-                ? $this->latest(METRIC_STORAGE, [Query::equal('resourceType', ['bucket']), Query::equal('resourceId', [$resourceId])])
-                : $this->latest(METRIC_FILES_STORAGE, [Query::equal('resourceType', ['project'])]),
-            default => throw new \InvalidArgumentException("Metric '{$metric}' cannot be measured."),
-        };
+        $window = (int) $monitor->getAttribute('window', 0);
+        $total = 0.0;
+        foreach ($scope['sum'] ?? [$scope] as $series) {
+            $queries = $this->scope($series, $monitor);
+            foreach ($this->engines($series['metric'] ?? $metric, !empty($series['engines']), isset($series['id']), $databaseType) as $name) {
+                $total += match ($definition['kind'] ?? '') {
+                    'counter' => $this->sum($name, [...$this->since($window, $now), ...$queries]),
+                    'gauge' => $this->latest($name, $queries),
+                    'growth' => $this->latest($name, $queries) - $this->latest($name, [...$this->before($window, $now), ...$queries]),
+                    default => throw new \InvalidArgumentException("Metric '{$metric}' has no kind this meter reads."),
+                };
+            }
+        }
+
+        return \max(0.0, $total);
     }
 
     /**
@@ -64,9 +72,15 @@ class Meter
      */
     protected function since(int $window, \DateTimeImmutable $now): array
     {
-        $start = $now->sub(new \DateInterval('PT' . \max(0, $window) . 'S'));
+        return [Query::greaterThanEqual('time', $this->start($window, $now))];
+    }
 
-        return [Query::greaterThanEqual('time', DateTime::format(\DateTime::createFromImmutable($start)))];
+    /**
+     * @return list<Query>
+     */
+    protected function before(int $window, \DateTimeImmutable $now): array
+    {
+        return [Query::lessThan('time', $this->start($window, $now))];
     }
 
     /**
@@ -85,31 +99,54 @@ class Meter
         return (float) \max(0, $this->usage->getTotal($metric, $queries, Usage::TYPE_GAUGE));
     }
 
-    /**
-     * @return list<Query>
-     */
-    private function database(string $resourceType, string $resourceId): array
+    private function start(int $window, \DateTimeImmutable $now): string
     {
-        return $resourceType === 'database' ? [Query::equal('resourceId', [$resourceId])] : [];
+        $start = $now->sub(new \DateInterval('PT' . \max(0, $window) . 'S'));
+
+        return DateTime::format(\DateTime::createFromImmutable($start));
     }
 
     /**
-     * The usage names a database metric is reported under: every engine's for a
-     * project-wide monitor, the watched database's engine's for a monitor on one.
+     * The filters that select one series' rows for the monitor's scope, in the
+     * dimensions its writer records.
+     *
+     * @param array<string, mixed> $series
+     * @return list<Query>
+     */
+    private function scope(array $series, Document $monitor): array
+    {
+        $queries = [];
+        if (isset($series['resourceType'])) {
+            $queries[] = Query::equal('resourceType', [$series['resourceType']]);
+        }
+        if (isset($series['id'])) {
+            $queries[] = Query::equal($series['id'], [(string) $monitor->getAttribute($series['id'], '')]);
+        }
+
+        return $queries;
+    }
+
+    /**
+     * The usage names a series is recorded under: its own, plus every engine's
+     * for a project-wide monitor, or the watched resource's engine's alone.
      *
      * @return list<string>
      */
-    private function engines(string $metric, string $resourceType, string $databaseType): array
+    private function engines(string $metric, bool $engines, bool $single, string $databaseType): array
     {
-        $engines = [
-            DATABASE_TYPE_DOCUMENTSDB => DATABASE_TYPE_DOCUMENTSDB . '.' . $metric,
-            DATABASE_TYPE_VECTORSDB => DATABASE_TYPE_VECTORSDB . '.' . $metric,
-        ];
-
-        if ($resourceType === 'database') {
-            return [$engines[$databaseType] ?? $metric];
+        if (!$engines) {
+            return [$metric];
         }
 
-        return [$metric, ...\array_values($engines)];
+        $names = [];
+        foreach ($this->registry['engines'] ?? [] as $engine) {
+            $names[$engine] = $engine . '.' . $metric;
+        }
+
+        if ($single) {
+            return [$names[$databaseType] ?? $metric];
+        }
+
+        return [$metric, ...\array_values($names)];
     }
 }

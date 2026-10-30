@@ -68,14 +68,14 @@ class Alert extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The monitor\'s rules when the alert fired, as query strings.',
                 'default' => [],
-                'example' => ['{"method":"greaterThan","attribute":"bandwidth.outbound","values":[5000000]}'],
+                'example' => ['{"method":"greaterThan","attribute":"network.outbound","values":[5000000]}'],
                 'array' => true,
             ])
             ->addRule('metric', [
                 'type' => self::TYPE_ENUM,
                 'description' => 'Metric the alert fired on.',
                 'default' => $metrics[0] ?? '',
-                'example' => 'bandwidth.outbound',
+                'example' => 'network.outbound',
                 'enum' => $metrics,
                 'enumSDKName' => 'AlertMetric',
             ])
@@ -115,7 +115,7 @@ class Alert extends Model
             ])
             ->addRule('resourceType', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'Type of the resource the alert fired on: the project, or one database or bucket.',
+                'description' => 'Type of the resource the alert fired on: the project, or one database, bucket, function or site.',
                 'default' => $resources[0] ?? '',
                 'example' => 'database',
                 'enum' => $resources,

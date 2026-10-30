@@ -14,7 +14,7 @@ trait MonitorsBase
 
         $created = $this->createMonitor([
             'name' => $name,
-            'rules' => [Query::greaterThan('bandwidth.outbound', 2.5e9)->toString()],
+            'rules' => [Query::greaterThan('network.outbound', 2.5e9)->toString()],
             'window' => 600,
             'cooldown' => 1800,
             'channels' => ['webhook', 'console'],
@@ -34,7 +34,7 @@ trait MonitorsBase
         $this->assertSame($this->getProject()['$id'], $monitor['body']['projectId']);
         $this->assertSame('project', $monitor['body']['resourceType']);
         $this->assertSame($this->getProject()['$id'], $monitor['body']['resourceId']);
-        $this->assertSame([Query::greaterThan('bandwidth.outbound', 2.5e9)->toString()], $monitor['body']['rules']);
+        $this->assertSame([Query::greaterThan('network.outbound', 2.5e9)->toString()], $monitor['body']['rules']);
         $this->assertSame(600, $monitor['body']['window']);
         $this->assertSame(1800, $monitor['body']['cooldown']);
         $this->assertSame(['webhook', 'console'], $monitor['body']['channels']);
@@ -60,7 +60,7 @@ trait MonitorsBase
 
         $created = $this->createMonitor([
             'rules' => [
-                Query::greaterThan('databases.reads', 1000)->toString(),
+                Query::greaterThan('databases.operations.reads', 1000)->toString(),
                 Query::equal('resourceType', ['database'])->toString(),
                 Query::equal('resourceId', [$databaseId])->toString(),
             ],
@@ -91,7 +91,7 @@ trait MonitorsBase
          */
         $failures = [
             'metric not recorded for the resource' => [[
-                Query::greaterThan('bandwidth.inbound', 1)->toString(),
+                Query::greaterThan('network.inbound', 1)->toString(),
                 Query::equal('resourceType', ['bucket'])->toString(),
                 Query::equal('resourceId', ['anything'])->toString(),
             ], "not recorded for resource type 'bucket'"],
@@ -110,7 +110,7 @@ trait MonitorsBase
         }
 
         $missing = $this->createMonitor(['rules' => [
-            Query::greaterThan('files.storage', 1)->toString(),
+            Query::greaterThan('storage', 1)->toString(),
             Query::equal('resourceType', ['bucket'])->toString(),
             Query::equal('resourceId', ['missing'])->toString(),
         ]]);
@@ -171,7 +171,7 @@ trait MonitorsBase
          * Test for FAILURE
          */
         $outside = $this->updateMonitor($monitorId, ['rules' => [
-            Query::greaterThan('bandwidth.inbound', 1)->toString(),
+            Query::greaterThan('network.inbound', 1)->toString(),
             Query::equal('resourceType', ['bucket'])->toString(),
             Query::equal('resourceId', ['anything'])->toString(),
         ]]);
@@ -284,7 +284,7 @@ trait MonitorsBase
         return $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), \array_merge([
             'monitorId' => 'unique()',
             'name' => 'Monitor ' . \uniqid(),
-            'rules' => [Query::greaterThan('bandwidth.outbound', 1000000)->toString()],
+            'rules' => [Query::greaterThan('network.outbound', 1000000)->toString()],
         ], $params));
     }
 

@@ -51,7 +51,7 @@ class Monitor extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Rules that must all hold for the monitor to fire, as query strings. A usage monitor has one comparing a metric with a threshold, optionally scoped with `equal(\'resourceType\')` and `equal(\'resourceId\')`.',
                 'default' => [],
-                'example' => ['{"method":"greaterThan","attribute":"bandwidth.outbound","values":[5000000]}'],
+                'example' => ['{"method":"greaterThan","attribute":"network.outbound","values":[5000000]}'],
                 'array' => true,
             ])
             ->addRule('type', [
@@ -64,7 +64,7 @@ class Monitor extends Model
             ])
             ->addRule('resourceType', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'Type of the resource the monitor watches, from its rules: the project, or one database or bucket.',
+                'description' => 'Type of the resource the monitor watches, from its rules: the project, or one database, bucket, function or site.',
                 'default' => $resources[0] ?? '',
                 'example' => 'database',
                 'enum' => $resources,

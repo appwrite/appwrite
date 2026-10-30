@@ -80,7 +80,7 @@ readonly class Rules
         }
 
         if ($comparison === null) {
-            throw new \InvalidArgumentException('A monitor needs one rule comparing a metric with a threshold, such as greaterThan(\'bandwidth.outbound\', [5000]).');
+            throw new \InvalidArgumentException('A monitor needs one rule comparing a metric with a threshold, such as greaterThan(\'network.outbound\', [5000]).');
         }
 
         [$metric, $comparator, $threshold] = $comparison;
@@ -93,7 +93,7 @@ readonly class Rules
         if ($resourceId !== '' && !isset($scope[self::RESOURCE_TYPE])) {
             throw new \InvalidArgumentException("A rule on 'resourceId' needs a rule on 'resourceType'.");
         }
-        if (!\in_array($resourceType, $metrics[$metric]['resources'] ?? [], true)) {
+        if (!isset($metrics[$metric]['resources'][$resourceType])) {
             throw new \InvalidArgumentException("Metric '{$metric}' is not recorded for resource type '{$resourceType}'.");
         }
 

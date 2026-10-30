@@ -48,6 +48,17 @@ final class ComparatorTest extends TestCase
         yield 'percent' => [87.5, 'percent', '87.5%'];
         yield 'currency' => [1234.5, 'usd', '$1,234.50'];
         yield 'count with its unit' => [1_200_000, 'operations', '1,200,000 operations'];
+        yield 'one of a count' => [1, 'requests', '1 request'];
+        yield 'requests' => [25_000, 'requests', '25,000 requests'];
+        yield 'executions' => [3, 'executions', '3 executions'];
+        yield 'mb-seconds as gb-hours' => [9_000_000, 'mbSeconds', '2.5 GB-hours'];
+        yield 'small gb-hours' => [1_000, 'mbSeconds', '0.0003 GB-hours'];
+        yield 'users' => [1_500, 'users', '1,500 users'];
+        yield 'otp attempts' => [12, 'attempts', '12 attempts'];
+        yield 'messages' => [1, 'messages', '1 message'];
+        yield 'webhook events' => [40, 'events', '40 events'];
+        yield 'connections' => [342, 'connections', '342 connections'];
+        yield 'screenshots' => [7, 'screenshots', '7 screenshots'];
     }
 
     #[DataProvider('quantities')]
@@ -174,18 +185,18 @@ final class ComparatorTest extends TestCase
     {
         $rules = Rules::parse([
             Query::equal('resourceType', ['bucket'])->toString(),
-            Query::greaterThanEqual('files.storage', 5000)->toString(),
+            Query::greaterThanEqual('storage', 5000)->toString(),
             Query::equal('resourceId', ['images'])->toString(),
         ], self::REGISTRY);
 
-        $this->assertSame('files.storage', $rules->metric);
+        $this->assertSame('storage', $rules->metric);
         $this->assertSame(Comparator::GreaterThanEqual, $rules->comparator);
         $this->assertEqualsWithDelta(5000.0, $rules->threshold, PHP_FLOAT_EPSILON);
         $this->assertSame('bucket', $rules->resourceType);
         $this->assertSame('images', $rules->resourceId);
         // Normalized with the comparison first, as the console reads them back.
         $this->assertSame([
-            '{"method":"greaterThanEqual","attribute":"files.storage","values":[5000]}',
+            '{"method":"greaterThanEqual","attribute":"storage","values":[5000]}',
             '{"method":"equal","attribute":"resourceType","values":["bucket"]}',
             '{"method":"equal","attribute":"resourceId","values":["images"]}',
         ], $rules->rules);
@@ -193,7 +204,7 @@ final class ComparatorTest extends TestCase
 
     public function testRulesWithoutScopeWatchTheProject(): void
     {
-        $rules = Rules::parse([Query::lessThan('bandwidth.outbound', 10)->toString()], self::REGISTRY);
+        $rules = Rules::parse([Query::lessThan('network.outbound', 10)->toString()], self::REGISTRY);
 
         $this->assertSame('project', $rules->resourceType);
         $this->assertSame('', $rules->resourceId);
@@ -205,15 +216,15 @@ final class ComparatorTest extends TestCase
     public static function invalidRules(): \Iterator
     {
         yield 'no comparison' => [[Query::equal('resourceType', ['bucket'])->toString()], 'needs one rule comparing a metric'];
-        yield 'two comparisons' => [[Query::greaterThan('files.storage', 1)->toString(), Query::lessThan('files.storage', 9)->toString()], 'one metric comparison'];
+        yield 'two comparisons' => [[Query::greaterThan('storage', 1)->toString(), Query::lessThan('storage', 9)->toString()], 'one metric comparison'];
         yield 'unknown metric' => [[Query::greaterThan('functions.executions', 1)->toString()], "'functions.executions', which is not a metric"];
-        yield 'unsupported method' => [[Query::between('files.storage', 1, 2)->toString()], "uses 'between'"];
-        yield 'not a number' => [[Query::greaterThan('files.storage', '5')->toString()], 'with one number'];
-        yield 'not a query' => [['greaterThan(files.storage)'], 'Rule 0 is not a valid query'];
-        yield 'scope not equal' => [[Query::greaterThan('files.storage', 1)->toString(), Query::notEqual('resourceType', 'bucket')->toString()], "must be equal('resourceType'"];
-        yield 'id without type' => [[Query::greaterThan('files.storage', 1)->toString(), Query::equal('resourceId', ['images'])->toString()], "needs a rule on 'resourceType'"];
-        yield 'unknown resource' => [[Query::greaterThan('files.storage', 1)->toString(), Query::equal('resourceType', ['site'])->toString()], "'site' cannot be monitored"];
-        yield 'metric not on resource' => [[Query::greaterThan('bandwidth.outbound', 1)->toString(), Query::equal('resourceType', ['bucket'])->toString()], "not recorded for resource type 'bucket'"];
+        yield 'unsupported method' => [[Query::between('storage', 1, 2)->toString()], "uses 'between'"];
+        yield 'not a number' => [[Query::greaterThan('storage', '5')->toString()], 'with one number'];
+        yield 'not a query' => [['greaterThan(storage)'], 'Rule 0 is not a valid query'];
+        yield 'scope not equal' => [[Query::greaterThan('storage', 1)->toString(), Query::notEqual('resourceType', 'bucket')->toString()], "must be equal('resourceType'"];
+        yield 'id without type' => [[Query::greaterThan('storage', 1)->toString(), Query::equal('resourceId', ['images'])->toString()], "needs a rule on 'resourceType'"];
+        yield 'unknown resource' => [[Query::greaterThan('storage', 1)->toString(), Query::equal('resourceType', ['site'])->toString()], "'site' cannot be monitored"];
+        yield 'metric not on resource' => [[Query::greaterThan('network.outbound', 1)->toString(), Query::equal('resourceType', ['bucket'])->toString()], "not recorded for resource type 'bucket'"];
     }
 
     /**
@@ -231,8 +242,8 @@ final class ComparatorTest extends TestCase
     private const array REGISTRY = [
         'resources' => ['project' => [], 'bucket' => []],
         'metrics' => [
-            'bandwidth.outbound' => ['resources' => ['project']],
-            'files.storage' => ['resources' => ['project', 'bucket']],
+            'network.outbound' => ['resources' => ['project' => []]],
+            'storage' => ['resources' => ['project' => [], 'bucket' => ['resourceType' => 'bucket', 'id' => 'resourceId']]],
         ],
     ];
 }
