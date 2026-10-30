@@ -662,8 +662,9 @@ function MonitorState({
           t('Waiting for the first check')
         ) : (
           <>
-            {monitor.value != null &&
-              formatMetricValue(monitor.metric, monitor.value)}
+            {monitor.value != null
+              ? formatMetricValue(monitor.metric, monitor.value)
+              : t('No data')}
             {ratio && (
               <span className="text-red-600 dark:text-red-400"> ({ratio})</span>
             )}

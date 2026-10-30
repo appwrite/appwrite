@@ -77,7 +77,7 @@ class Monitor extends Model
             ])
             ->addRule('window', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Seconds a counter metric is summed over. Gauges compare their latest value.',
+                'description' => 'Seconds a counter metric is summed over, and a growth metric is measured across. Gauges compare their latest value. Usage is read a short lag behind the evaluation (`_APP_ALERTS_USAGE_LAG`, 120 seconds by default) so events still being written are counted by the next evaluation.',
                 'default' => 3600,
                 'example' => 3600,
             ])
@@ -103,7 +103,7 @@ class Monitor extends Model
             ])
             ->addRule('value', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'Metric value at the last evaluation.',
+                'description' => 'Metric value at the last evaluation. Null before the first evaluation, and when the last evaluation (`evaluatedAt`) found no usage recorded to read: without data a monitor is not compared, so it keeps its status and open alert.',
                 'default' => null,
                 'required' => false,
                 'example' => 1250000,

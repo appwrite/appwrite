@@ -106,12 +106,16 @@ function MonitorStatusSummary({ monitor }: { monitor: ParsedMonitor }) {
         label={t('Last value')}
         value={
           monitor.value == null
-            ? '–'
+            ? monitor.evaluatedAt
+              ? t('No data')
+              : '–'
             : formatMetricValue(monitor.metric, monitor.value)
         }
         note={
           monitor.value == null
-            ? t('Waiting for the first check')
+            ? monitor.evaluatedAt
+              ? t('No usage recorded to compare yet')
+              : t('Waiting for the first check')
             : ratio
               ? t('{ratio} the {threshold} threshold')
                   .replace('{ratio}', ratio)

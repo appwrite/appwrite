@@ -47,8 +47,9 @@ final class MeterTest extends TestCase
         $this->assertEqualsWithDelta(7.0, $value, PHP_FLOAT_EPSILON);
         $this->assertSame([Usage::TYPE_EVENT, Usage::TYPE_EVENT, Usage::TYPE_EVENT], \array_column($usage->reads, 'type'));
         foreach ($usage->reads as $read) {
-            $this->assertCount(1, $read['queries'], 'A project-wide counter is filtered by time alone');
+            $this->assertCount(2, $read['queries'], 'A project-wide counter is filtered by time alone');
             $this->assertStringStartsWith('greaterThanEqual:time=', $read['queries'][0]);
+            $this->assertStringStartsWith('lessThan:time=', $read['queries'][1]);
         }
     }
 
@@ -59,7 +60,8 @@ final class MeterTest extends TestCase
         $value = $this->meter($usage)->measure($this->rule(METRIC_STORAGE, 'bucket'), new \DateTimeImmutable());
 
         $this->assertEqualsWithDelta(64.0, $value, PHP_FLOAT_EPSILON);
-        $this->assertSame([['metric' => METRIC_STORAGE, 'type' => Usage::TYPE_GAUGE, 'queries' => ['equal:resourceType=bucket', 'equal:resourceId=main']]], $usage->reads);
+        $this->assertSame(['equal:resourceType=bucket', 'equal:resourceId=main'], \array_slice($usage->reads[0]['queries'], 2));
+        $this->assertSame([METRIC_STORAGE], \array_column($usage->reads, 'metric'));
     }
 
     public function testProjectStorageAddsEachFamilysTotal(): void
@@ -78,7 +80,7 @@ final class MeterTest extends TestCase
 
         $this->assertEqualsWithDelta(63.0, $value, PHP_FLOAT_EPSILON);
         $this->assertNotContains(METRIC_STORAGE, \array_column($usage->reads, 'metric'));
-        $this->assertSame(['equal:resourceType=deployment'], $usage->reads[4]['queries']);
+        $this->assertSame(['equal:resourceType=deployment'], \array_slice($usage->reads[4]['queries'], 2));
     }
 
     public function testUntaggedGaugeIsReadUnfiltered(): void
@@ -88,19 +90,21 @@ final class MeterTest extends TestCase
         $value = $this->meter($usage)->measure($this->rule(METRIC_MAU, 'project'), new \DateTimeImmutable());
 
         $this->assertEqualsWithDelta(12.0, $value, PHP_FLOAT_EPSILON);
-        $this->assertSame([['metric' => METRIC_MAU, 'type' => Usage::TYPE_GAUGE, 'queries' => []]], $usage->reads);
+        $this->assertSame([METRIC_MAU], \array_column($usage->reads, 'metric'));
+        $this->assertCount(2, $usage->reads[0]['queries'], 'An untagged gauge is filtered by time alone');
     }
 
     public function testGrowthIsTheRiseSinceTheWindowOpened(): void
     {
         $usage = new RecordingTenant([
-            METRIC_USERS => static fn (array $queries): int => $queries === [] ? 30 : 18,
+            METRIC_USERS => static fn (array $queries): int => $queries[0]->getMethod()->value === 'lessThan' ? 18 : 30,
         ]);
 
         $value = $this->meter($usage)->measure($this->rule(METRIC_USERS, 'project'), new \DateTimeImmutable());
 
         $this->assertEqualsWithDelta(12.0, $value, PHP_FLOAT_EPSILON);
         $this->assertStringStartsWith('lessThan:time=', $usage->reads[1]['queries'][0]);
+        $this->assertCount(1, $usage->reads[1]['queries'], 'The baseline is any reading before the window');
     }
 
     public function testNegativeTotalsReadAsZero(): void
@@ -114,12 +118,35 @@ final class MeterTest extends TestCase
     {
         foreach ($this->registry()['metrics'] as $metric => $definition) {
             foreach (\array_keys($definition['resources']) as $resourceType) {
-                $usage = new RecordingTenant();
-                $value = $this->meter($usage)->measure($this->rule($metric, $resourceType), new \DateTimeImmutable());
-                $this->assertEqualsWithDelta(0.0, $value, PHP_FLOAT_EPSILON, "{$metric} on {$resourceType}");
-                $this->assertNotEmpty($usage->reads, "{$metric} on {$resourceType}");
+                $value = $this->meter(new RecordingTenant())->measure($this->rule($metric, $resourceType), new \DateTimeImmutable());
+                $this->assertNull($value, "{$metric} on {$resourceType} without rows has no value");
             }
         }
+    }
+
+    public function testNoRowsIsNoValueAndAZeroRowIsZero(): void
+    {
+        $this->assertNull($this->meter(new RecordingTenant())->measure($this->rule(METRIC_NETWORK_REQUESTS, 'project'), new \DateTimeImmutable()));
+        $zero = $this->meter(new RecordingTenant([METRIC_NETWORK_REQUESTS => 0]))->measure($this->rule(METRIC_NETWORK_REQUESTS, 'project'), new \DateTimeImmutable());
+        $this->assertNotNull($zero, 'A row totalling 0 is a reading of 0');
+        $this->assertEqualsWithDelta(0.0, $zero, PHP_FLOAT_EPSILON);
+        // One engine with rows is a reading, though the others have none.
+        $this->assertEqualsWithDelta(2.0, $this->meter(new RecordingTenant([METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB => 2]))->measure($this->rule(METRIC_DATABASES_OPERATIONS_READS, 'project'), new \DateTimeImmutable()), PHP_FLOAT_EPSILON);
+    }
+
+    public function testUsageIsReadBehindTheLag(): void
+    {
+        $now = new \DateTimeImmutable('2026-10-30 12:00:00');
+        $usage = new RecordingTenant([METRIC_NETWORK_REQUESTS => 1, METRIC_MAU => 1]);
+        $meter = new Meter($usage, $this->registry(), lag: 120);
+
+        $meter->measure($this->rule(METRIC_NETWORK_REQUESTS, 'project'), $now);
+        $meter->measure($this->rule(METRIC_MAU, 'project'), $now);
+
+        // The counter's window is [now - lag - window, now - lag).
+        $this->assertSame(['greaterThanEqual:time=2026-10-30 10:58:00.000', 'lessThan:time=2026-10-30 11:58:00.000'], $usage->reads[0]['queries']);
+        // The gauge is the latest sample at or before now - lag, no older than the gauge age limit.
+        $this->assertSame(['lessThanEqual:time=2026-10-30 11:58:00.000', 'greaterThanEqual:time=2026-10-29 11:58:00.000'], $usage->reads[1]['queries']);
     }
 
     public function testUnknownMetricIsRefused(): void

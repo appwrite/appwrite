@@ -28,6 +28,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
+use Utopia\System\System;
 use Utopia\Usage\Tenant;
 
 /**
@@ -111,6 +112,18 @@ class Alerts extends Action
 
         $now = new \DateTimeImmutable();
         $value = $this->measure($monitor, $project, $dbForProject, $usageConnection, $now);
+        if ($value === null) {
+            // Nothing recorded to compare: an idle project or a stalled usage pipeline is
+            // neither a breach nor a recovery, so the monitor keeps its status and alert,
+            // and shows it was checked without a reading.
+            Span::add('monitor.noData', true);
+            $dbForPlatform->updateDocument('monitors', $monitor->getId(), new Document([
+                'value' => null,
+                'evaluatedAt' => DateTime::format(\DateTime::createFromImmutable($now)),
+            ]));
+
+            return;
+        }
 
         $this->evaluate($monitor, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform);
     }
@@ -350,10 +363,11 @@ class Alerts extends Action
     }
 
     /**
-     * The value the monitor compares with its threshold. Editions that register
-     * metrics this meter does not read override this with their own meter.
+     * The value the monitor compares with its threshold, or null when there is no
+     * usage to read. Editions that register metrics this meter does not read
+     * override this with their own meter.
      */
-    protected function measure(Document $monitor, Document $project, Database $dbForProject, Connection $usageConnection, \DateTimeImmutable $now): float
+    protected function measure(Document $monitor, Document $project, Database $dbForProject, Connection $usageConnection, \DateTimeImmutable $now): ?float
     {
         // A resource whose usage is recorded under its engine's name, such as a DocumentsDB database.
         $resource = Config::getParam('alerts', [])['resources'][(string) $monitor->getAttribute('resourceType')] ?? [];
@@ -362,7 +376,12 @@ class Alerts extends Action
             $databaseType = (string) $dbForProject->getDocument($resource['collection'], (string) $monitor->getAttribute('resourceId'))->getAttribute($resource['engine'], '');
         }
 
-        $meter = new Meter(new Tenant($usageConnection->getUsage(), (string) $project->getSequence()));
+        // Unset or empty reads the default; 0 reads usage up to now.
+        $lag = System::getEnv('_APP_ALERTS_USAGE_LAG', '');
+        $meter = new Meter(
+            new Tenant($usageConnection->getUsage(), (string) $project->getSequence()),
+            lag: \is_numeric($lag) ? (int) $lag : ALERTS_USAGE_LAG_SECONDS,
+        );
 
         return $meter->measure($monitor, $now, $databaseType);
     }

@@ -14,9 +14,15 @@ use Utopia\Usage\Usage;
  * where `metrics` in `app/config/alerts.php` says the metric's writer records
  * it for the monitor's scope.
  *
- * Counters are summed over the monitor's window. Gauges are the latest sample:
- * the periodic resource sweep writes them, so they have no window. Growth is
- * how far a gauge rose over the window, from its last sample before the window.
+ * Usage is read `lag` seconds behind now, so events still on their way to the
+ * store are counted by a later evaluation rather than missed by this one.
+ * Counters are summed over the window ending there. Gauges are the latest
+ * sample at or before it, no older than ALERTS_GAUGE_MAX_AGE_SECONDS: the
+ * periodic resource sweep writes them, so they have no window. Growth is how
+ * far a gauge rose over the window, from its last sample before the window.
+ *
+ * A metric with no rows to read has no value: null, not 0, so a monitor on an
+ * idle project, or on a stalled usage pipeline, is not compared at all.
  */
 class Meter
 {
@@ -27,17 +33,19 @@ class Meter
 
     /**
      * @param ?array<string, mixed> $registry the registry in `app/config/alerts.php`; the configured one when null
+     * @param int $lag seconds behind now the usage is read
      */
-    public function __construct(protected readonly Tenant $usage, ?array $registry = null)
+    public function __construct(protected readonly Tenant $usage, ?array $registry = null, protected readonly int $lag = 0)
     {
         $this->registry = $registry ?? Config::getParam('alerts', []);
     }
 
     /**
      * @param string $databaseType the engine the watched resource records its usage under, for a resource type with an `engine`
+     * @return ?float the value, or null when the metric has no rows to read
      * @throws \InvalidArgumentException when the monitor's metric or scope is not one this meter reads
      */
-    public function measure(Document $monitor, \DateTimeImmutable $now, string $databaseType = ''): float
+    public function measure(Document $monitor, \DateTimeImmutable $now, string $databaseType = ''): ?float
     {
         $metric = (string) $monitor->getAttribute('metric', '');
         $resourceType = (string) $monitor->getAttribute('resourceType', '');
@@ -50,21 +58,44 @@ class Meter
             throw new \InvalidArgumentException("Metric '{$metric}' is not recorded for resource type '{$resourceType}'.");
         }
 
+        $kind = $definition['kind'] ?? '';
+        if (!\in_array($kind, ['counter', 'gauge', 'growth'], true)) {
+            throw new \InvalidArgumentException("Metric '{$metric}' has no kind this meter reads.");
+        }
+
+        $end = $now->sub(new \DateInterval('PT' . \max(0, $this->lag) . 'S'));
         $window = (int) $monitor->getAttribute('window', 0);
         $total = 0.0;
+        $read = false;
         foreach ($scope['sum'] ?? [$scope] as $series) {
             $queries = $this->scope($series, $monitor);
             foreach ($this->engines($series['metric'] ?? $metric, !empty($series['engines']), isset($series['id']), $databaseType) as $name) {
-                $total += match ($definition['kind'] ?? '') {
-                    'counter' => $this->sum($name, [...$this->since($window, $now), ...$queries]),
-                    'gauge' => $this->latest($name, $queries),
-                    'growth' => $this->latest($name, $queries) - $this->latest($name, [...$this->before($window, $now), ...$queries]),
-                    default => throw new \InvalidArgumentException("Metric '{$metric}' has no kind this meter reads."),
-                };
+                if ($kind === 'counter') {
+                    $range = [...$this->since($window, $end), Query::lessThan('time', $this->format($end)), ...$queries];
+                    if ($this->recorded($name, $range, Usage::TYPE_EVENT)) {
+                        $read = true;
+                        $total += $this->sum($name, $range);
+                    }
+                    continue;
+                }
+
+                $current = [
+                    Query::lessThanEqual('time', $this->format($end)),
+                    ...$this->since(ALERTS_GAUGE_MAX_AGE_SECONDS, $end),
+                    ...$queries,
+                ];
+                if (!$this->recorded($name, $current, Usage::TYPE_GAUGE)) {
+                    continue;
+                }
+                $read = true;
+                $total += $this->latest($name, $current);
+                if ($kind === 'growth') {
+                    $total -= $this->latest($name, [...$this->before($window, $end), ...$queries]);
+                }
             }
         }
 
-        return \max(0.0, $total);
+        return $read ? \max(0.0, $total) : null;
     }
 
     /**
@@ -81,6 +112,16 @@ class Meter
     protected function before(int $window, \DateTimeImmutable $now): array
     {
         return [Query::lessThan('time', $this->start($window, $now))];
+    }
+
+    /**
+     * Whether the series has any row the filters select, which a total of 0 cannot tell apart from none.
+     *
+     * @param list<Query> $queries
+     */
+    protected function recorded(string $metric, array $queries, string $type): bool
+    {
+        return $this->usage->count([Query::equal('metric', [$metric]), ...$queries], $type, 1) > 0;
     }
 
     /**
@@ -101,9 +142,12 @@ class Meter
 
     private function start(int $window, \DateTimeImmutable $now): string
     {
-        $start = $now->sub(new \DateInterval('PT' . \max(0, $window) . 'S'));
+        return $this->format($now->sub(new \DateInterval('PT' . \max(0, $window) . 'S')));
+    }
 
-        return DateTime::format(\DateTime::createFromImmutable($start));
+    private function format(\DateTimeImmutable $time): string
+    {
+        return DateTime::format(\DateTime::createFromImmutable($time));
     }
 
     /**

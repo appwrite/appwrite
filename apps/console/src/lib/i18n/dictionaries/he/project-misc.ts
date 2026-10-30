@@ -3584,6 +3584,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Read IOPS': 'IOPS קריאה',
   'Select resource': 'בחירת משאב',
   'Select the resource to watch.': 'בחרו את המשאב למעקב.',
+  'No data': 'אין נתונים',
+  'No usage recorded to compare yet': 'עדיין לא נרשם שימוש להשוואה',
   'This project has no buckets yet.': 'בפרויקט הזה עדיין אין באקטים.',
   'This project has no databases of this type yet.':
     'בפרויקט הזה עדיין אין מסדי נתונים מהסוג הזה.',

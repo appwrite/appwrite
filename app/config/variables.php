@@ -2095,6 +2095,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_ALERTS_USAGE_LAG',
+                'description' => 'Seconds behind the evaluation time that usage monitors read usage, so events still being written are counted by a later evaluation instead of missed. The default value is 120 seconds.',
+                'introduction' => '2.7.0',
+                'default' => '120',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],

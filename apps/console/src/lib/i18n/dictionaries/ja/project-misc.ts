@@ -3654,6 +3654,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Read IOPS': '読み取り IOPS',
   'Select resource': 'リソースを選択',
   'Select the resource to watch.': '監視するリソースを選択してください。',
+  'No data': 'データなし',
+  'No usage recorded to compare yet':
+    '比較できる使用量はまだ記録されていません',
   'This project has no buckets yet.':
     'このプロジェクトにはまだバケットがありません。',
   'This project has no databases of this type yet.':

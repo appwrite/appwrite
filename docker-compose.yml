@@ -91,6 +91,7 @@ services:
       - _APP_ENV
       - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
+      - _APP_ALERTS_USAGE_LAG
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
@@ -484,6 +485,7 @@ services:
       - _APP_ENV
       - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
+      - _APP_ALERTS_USAGE_LAG
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE

@@ -608,6 +608,17 @@ const SCHEDULE_RESOURCE_TYPE_MONITOR = 'monitor';
 // Monitor types, the kind of check a monitor runs; see `types` in app/config/alerts.php
 const MONITOR_TYPE_USAGE = 'usage';
 
+// Usage monitors read usage this many seconds old or older, so events still in
+// flight are not missed: StatsUsage writes a batch 5 seconds after it opens and
+// retries a failed one 5 seconds later, and a backed-up queue adds its own delay.
+// `_APP_ALERTS_USAGE_LAG` overrides it.
+const ALERTS_USAGE_LAG_SECONDS = 120;
+
+// A gauge sample older than this is no reading at all: the resource sweep runs
+// every `_APP_STATS_RESOURCES_INTERVAL` (an hour by default), so a day without a
+// sample means the sweep, not the metric, has stopped.
+const ALERTS_GAUGE_MAX_AGE_SECONDS = 86400;
+
 /** Preview cookie */
 const COOKIE_NAME_PREVIEW = 'a_jwt_console';
 
