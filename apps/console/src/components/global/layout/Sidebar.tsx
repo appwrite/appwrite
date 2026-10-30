@@ -59,8 +59,7 @@ import {
   Package,
   FileText,
   AlertTriangle,
-  Radio,
-  ListTree,
+  Joystick,
   type LucideIcon,
 } from 'lucide-react'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
@@ -106,7 +105,7 @@ interface SidebarCopy {
     apps: string
     agents: string
     apiKeys: string
-    explorer: string
+    playground: string
     auth: string
     databases: string
     storage: string
@@ -116,7 +115,6 @@ interface SidebarCopy {
     sites: string
     distribution: string
     activity: string
-    realtime: string
     logs: string
     usage: string
     analytics: string
@@ -170,10 +168,10 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           path: `/projects/${projectId}/api-keys`,
         },
         {
-          id: 'explorer',
-          label: sidebarCopy.items.explorer,
-          icon: ListTree,
-          path: `/projects/${projectId}/explorer`,
+          id: 'playground',
+          label: sidebarCopy.items.playground,
+          icon: Joystick,
+          path: `/projects/${projectId}/playground`,
         },
       ],
     },
@@ -244,12 +242,6 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.analytics,
           icon: ANALYTICS_PRODUCT_ICON,
           path: `/projects/${projectId}/analytics`,
-        },
-        {
-          id: 'realtime',
-          label: sidebarCopy.items.realtime,
-          icon: Radio,
-          path: `/projects/${projectId}/realtime`,
         },
         {
           id: 'activity',

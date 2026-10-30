@@ -4725,6 +4725,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/functions/email",
+    "title": "Email triggers",
+    "description": "Execute an Appwrite Function when an email arrives at its address. Use the built-in address of the function or connect a custom domain.",
+    "excerpt": "An email trigger executes your function when an email arrives at one of the function's addresses. Each function has a built-in address, and you can also connect a custom domain. Appwrite receives the email and executes your function with the email and its attachments in the request body. Your function can save the email to a table, reply to the sender, or send the content to another service. Email triggers are available on Appwrite Cloud, and they only receive email.…",
+    "breadcrumbs": [
+      "Functions",
+      "Guides",
+      "Email triggers"
+    ]
+  },
+  {
     "slug": "products/functions/environment-variables",
     "title": "Environment variables",
     "description": "Set environment variables for your Appwrite Functions to pass constants and secrets at build and runtime.",
@@ -4749,7 +4760,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/functions/execute",
     "title": "Execution",
     "description": "Understand serverless function execution in Appwrite. Explore how triggers, events, and data flow enable dynamic execution of your code.",
-    "excerpt": "Appwrite Functions can be executed in several ways. Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events and scheduled executions. Here are all the different ways to consume your Appwrite Functions. Execution modes Appwrite Functions support two execution modes: **synchronous** and **asynchronous**. Synchronous executions Synchronous executions are those where Appwrite makes the request to the function runtime synchronously and waits for the response. The client making the request will…",
+    "excerpt": "Appwrite Functions can be executed in several ways. Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events, schedules, and incoming email. Here are all the different ways to consume your Appwrite Functions. Execution modes Appwrite Functions support two execution modes: **synchronous** and **asynchronous**. Synchronous executions Synchronous executions are those where Appwrite makes the request to the function runtime synchronously and waits for the response. The client making the request…",
     "breadcrumbs": [
       "Functions",
       "Guides",
