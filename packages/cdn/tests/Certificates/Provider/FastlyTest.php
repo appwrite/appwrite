@@ -519,9 +519,36 @@ final class FastlyTest extends TestCase
 
     public function testDeleteLeavesRoutedDomainUntouched(): void
     {
+        // Even when the configured service's active version also lists the hostname
         $client = new TestClient([
             $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":null,"routing_configuration_id":"routing_1"}]}'),
-            $this->json('{"active_version":{"number":3,"domains":[{"name":"other.example.com"}]}}'),
+            $this->json('{"active_version":{"number":3,"domains":[{"name":"example.com"}]}}'),
+        ]);
+
+        new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');
+
+        $this->assertCount(1, $client->calls);
+    }
+
+    public function testRenewIsRequiredForDetachedDomainOnServiceWithoutActiveVersion(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":null,"routing_configuration_id":null}]}'),
+            $this->json('{"active_version":null}'),
+        ]);
+
+        $renewRequired = new Fastly('token', 'service_1', client: $client)
+            ->isRenewRequired('example.com', null);
+
+        $this->assertTrue($renewRequired);
+        $this->assertCount(2, $client->calls);
+    }
+
+    public function testDeleteOnServiceWithoutActiveVersionLeavesTlsUntouched(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com"}]}'),
+            $this->json('{"active_version":null}'),
         ]);
 
         new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');

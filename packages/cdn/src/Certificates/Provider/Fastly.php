@@ -192,6 +192,12 @@ class Fastly implements Provider
 
         $serviceId = $domainInfo['service_id'] ?? null;
         if (!\is_string($serviceId) || $serviceId === '') {
+            // A routing configuration serves the hostname, so neither a version entry nor its TLS is ours to remove
+            $routingConfigurationId = $domainInfo['routing_configuration_id'] ?? null;
+            if ($routingConfigurationId !== null && $routingConfigurationId !== '') {
+                return;
+            }
+
             $this->deleteClassicDomain($domain, $domainType);
             return;
         }
@@ -328,9 +334,18 @@ class Fastly implements Provider
             throw new \RuntimeException('Fastly service details response was not valid JSON.');
         }
 
-        $activeVersion = $result['response']['active_version'] ?? null;
-        if (!\is_array($activeVersion)) {
+        if (!\array_key_exists('active_version', $result['response'])) {
             throw new \RuntimeException('Fastly service details response was missing its active version.');
+        }
+
+        // A service that was never activated has no version to hold the domain
+        $activeVersion = $result['response']['active_version'];
+        if ($activeVersion === null) {
+            return null;
+        }
+
+        if (!\is_array($activeVersion)) {
+            throw new \RuntimeException('Fastly service details response had an invalid active version.');
         }
 
         $domains = $activeVersion['domains'] ?? [];
