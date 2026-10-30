@@ -39,6 +39,7 @@ use Appwrite\Utopia\Database\Hook\Usage;
 use Appwrite\Utopia\Database\Hook\UserEvents;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use GraphQL\Error\Error as GraphQLError;
 use OpenRuntimes\Orchestrator\Jobs;
 use Swoole\Table;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
@@ -56,6 +57,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
@@ -156,7 +158,8 @@ return function (Container $context): void {
     $context->set('auditContext', fn () => new AuditContext(), []);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {
-        if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
+        // A blocked actor keeps no capability, so the blocked check sees the actor
+        if ($user->isEmpty() || !$user->getAttribute('impersonator', false) || $user->getAttribute('status') === false) {
             return new Document();
         }
 
@@ -771,7 +774,22 @@ return function (Container $context): void {
     $context->set('schema', function ($utopia, $dbForProject, $authorization) {
 
         $complexity = function (int $complexity, array $args) {
-            $queries = Query::parseQueries($args['queries'] ?? []);
+            $rawQueries = $args['queries'] ?? [];
+
+            if (!\is_array($rawQueries)) {
+                if (\is_string($rawQueries)) {
+                    $rawQueries = [$rawQueries];
+                } else {
+                    throw new GraphQLError('Parameter "queries" must be an array of query strings.');
+                }
+            }
+
+            try {
+                $queries = Query::parseQueries($rawQueries);
+            } catch (QueryException $e) {
+                throw new GraphQLError($e->getMessage());
+            }
+
             $query = Query::getByType($queries, [Method::Limit])[0] ?? null;
             $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
@@ -949,19 +967,19 @@ return function (Container $context): void {
     }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
-        $allowed = false;
+        $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
 
-        if (Http::isDevelopment()) {
-            $allowed = true;
-        } elseif (! \is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
-            $allowed = true;
+        if (empty($host)) {
+            return '';
         }
 
-        if ($allowed) {
-            $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
-            if (! empty($host)) {
-                return $host;
-            }
+        if (Http::isDevelopment()) {
+            return $host;
+        }
+
+        // Keys may only override to the hostname they were issued for
+        if (! \is_null($apiKey) && $apiKey->getHostnameOverride() === true && $apiKey->getHostname() === $host) {
+            return $host;
         }
 
         return '';

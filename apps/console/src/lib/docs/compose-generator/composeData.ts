@@ -377,6 +377,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_CONSOLE_HOSTNAMES
       - _APP_REALTIME_TAIL_RATE
+      - _APP_REALTIME_PERMISSION_TIMEOUT
       - _APP_LIMIT_REALTIME_SUBSCRIPTIONS
       - _APP_LIMIT_REALTIME_CHANNELS
       - _APP_LIMIT_REALTIME_QUERIES
@@ -512,7 +513,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=79
+      - _APP_WORKER_MAX_COROUTINES=75
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
@@ -683,6 +684,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {
@@ -732,7 +734,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=79
+      - _APP_WORKER_MAX_COROUTINES=75
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
@@ -894,7 +896,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=79
+      - _APP_WORKER_MAX_COROUTINES=75
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
@@ -1065,6 +1067,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {
@@ -1123,6 +1126,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {
@@ -1536,7 +1540,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_ENV
       - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
-      - _APP_WORKER_MAX_COROUTINES=8
+      - _APP_WORKER_MAX_COROUTINES=4
       - _APP_WORKER_PER_CORE
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
@@ -1785,6 +1789,9 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - redis
       - \${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_DNS
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
       - _APP_MEMORY_LIMIT
       - _APP_WORKER_PER_CORE

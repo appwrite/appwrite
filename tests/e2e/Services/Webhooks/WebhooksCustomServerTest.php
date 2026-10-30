@@ -56,6 +56,40 @@ final class WebhooksCustomServerTest extends Scope
         $this->deleteWebhook($webhookId);
     }
 
+    public function testDeliveryToAPrivateAddressIsRefusedBeforeConnecting(): void
+    {
+        // Test for FAILURE: a public name resolving to a private address is refused on the
+        // address it resolved to, before any connection, so the log says nothing about the port.
+        $userId = Id::unique();
+        $webhook = $this->createWebhook(Id::unique(), 'Private', ["users.{$userId}.create"], true, 'http://webhook-' . \uniqid() . '.127.0.0.2.nip.io:6379/', false, null, null);
+        $this->assertSame(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        try {
+            $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'userId' => $userId,
+                'email' => $userId . '@localhost.test',
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+
+            $this->assertEventually(function () use ($webhookId) {
+                $webhook = $this->getWebhook($webhookId)['body'];
+                $this->assertSame(1, $webhook['attempts']);
+
+                $logs = (string) $webhook['logs'];
+                $this->assertStringContainsString('resolves to private or reserved address 127.0.0.2', $logs);
+                $this->assertStringNotContainsString('not an allowed destination', $logs);
+                $this->assertStringNotContainsString('connect', \strtolower($logs));
+            }, 15000, 500);
+        } finally {
+            $this->deleteWebhook($webhookId);
+        }
+    }
+
     public function testWebhookNameWithLineBreaksIsDelivered(): void
     {
         // Test for SUCCESS: a name with line breaks is accepted and delivered without them in its header.
