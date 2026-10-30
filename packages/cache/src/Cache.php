@@ -65,7 +65,7 @@ class Cache
     /**
      * Initialize with a no-op telemetry adapter by default.
      */
-    public function __construct(private readonly Adapter $adapter)
+    public function __construct(protected readonly Adapter $adapter)
     {
         $this->telemetry = new NoTelemetry();
     }
@@ -196,6 +196,15 @@ class Cache
         }
     }
 
+    public function legacy(): Legacy
+    {
+        $legacy = new Legacy($this->adapter);
+        $legacy->setCaseSensitivity($this->caseSensitive);
+        $legacy->setTelemetry($this->telemetry);
+
+        return $legacy;
+    }
+
     public function supportsVersioning(): bool
     {
         return $this->adapter instanceof Feature\Versioned && $this->adapter->supportsVersioning();
@@ -300,9 +309,7 @@ class Cache
         $key = $this->caseSensitive ? $key : strtolower($key);
         $hash = $this->caseSensitive ? $hash : strtolower($hash);
 
-        foreach (\array_keys($this->recordedPurges) as $recording) {
-            $this->recordedPurges[$recording][$key][$hash] = true;
-        }
+        $this->recordPurge($key, $hash);
 
         $start = microtime(true);
         $result = $this->adapter->purge($key, $hash);
@@ -315,10 +322,16 @@ class Cache
         return $result;
     }
 
+    protected function recordPurge(string $key, string $hash): void
+    {
+        $key = $this->caseSensitive ? $key : \strtolower($key);
+        $hash = $this->caseSensitive ? $hash : \strtolower($hash);
+        foreach (\array_keys($this->recordedPurges) as $recording) {
+            $this->recordedPurges[$recording][$key][$hash] = true;
+        }
+    }
+
     /**
-     * Run $callback and return every key it purged, as [key => [hash => true]].
-     * Calls that overlap, for example from concurrent coroutines, each record all purges made while they run.
-     *
      * @return array<string, array<string, true>>
      */
     public function recordPurges(callable $callback): array

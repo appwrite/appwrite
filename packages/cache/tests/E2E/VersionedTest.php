@@ -25,6 +25,48 @@ final class VersionedTest extends TestCase
     }
 
     #[DataProvider('transports')]
+    public function testLegacyFacadePreservesTheReleasedWireFormat(bool $multiplexed): void
+    {
+        $error = null;
+        run(function () use ($multiplexed, &$error): void {
+            $redis = new Redis();
+            $port = (int) (\getenv('CACHE_VERSIONED_TEST_PORT') ?: Services::REDIS_PORT);
+            $redis->connect(Services::HOST, $port);
+            $adapter = $multiplexed ? new Multiplexing(Services::HOST, $port) : new RedisAdapter($redis);
+            $cache = new Cache(new \Utopia\Cache\Adapter\CircuitBreaker($adapter, new \Utopia\CircuitBreaker\CircuitBreaker()));
+            $legacy = $cache->legacy();
+            $key = 'legacy:'.\bin2hex(\random_bytes(8));
+            try {
+                $this->assertSame('0', $legacy->getLease($key));
+                $this->assertSame('owner', $legacy->save($key, 'owner', 'owner'));
+                $this->assertSame(['owner'], $redis->hKeys($key), 'Old clients must never enumerate opaque version fields as owners');
+                $lease = $legacy->getLease($key);
+                $this->assertTrue($legacy->purge($key, 'owner'));
+                $this->assertSame('1', $legacy->getLease($key));
+                $this->assertFalse($legacy->saveWithLease($key, 'stale', '', $lease));
+                $this->assertSame('fresh', $legacy->saveWithLease($key, 'fresh', '', $legacy->getLease($key)));
+                $this->assertSame('fresh', $legacy->load($key, 60));
+                $this->assertSame([$key], $legacy->list($key));
+                $this->assertTrue($legacy->purge($key));
+                $this->assertSame('2', $legacy->getLease($key));
+                $this->assertSame([], $legacy->list($key));
+                $this->assertFalse($redis->hExists($key, '__utopia_version__'));
+            } catch (Throwable $caught) {
+                $error = $caught;
+            } finally {
+                if ($adapter instanceof Multiplexing) {
+                    $adapter->disconnect();
+                }
+                $redis->del($key);
+                $redis->close();
+            }
+        });
+        if ($error instanceof Throwable) {
+            throw $error;
+        }
+    }
+
+    #[DataProvider('transports')]
     public function testEvictionRejectsAnOldLeaseAndAllowsAFreshFill(bool $multiplexed): void
     {
         $error = null;

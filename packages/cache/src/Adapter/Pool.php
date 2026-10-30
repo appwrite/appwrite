@@ -6,7 +6,7 @@ use Utopia\Cache\Adapter;
 use Utopia\Cache\Feature\Batchable;
 use Utopia\Pools\Pool as UtopiaPool;
 
-class Pool implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned
+class Pool implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned, \Utopia\Cache\Feature\Legacy
 {
     private readonly bool $versioned;
 
@@ -145,6 +145,49 @@ class Pool implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned
          * @var string $result
          */
         $result = $this->delegate(__FUNCTION__, \func_get_args());
+
+        return $result;
+    }
+
+    public function getGeneration(string $key): string
+    {
+        /** @var string $result */
+        $result = $this->pool->use(function (Adapter $adapter) use ($key): string {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
+            }
+
+            return $adapter->getGeneration($key);
+        });
+
+        return $result;
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool
+    {
+        /** @var bool $result */
+        $result = $this->pool->use(function (Adapter $adapter) use ($key, $data, $hash, $generation): bool {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
+            }
+
+            return $adapter->saveWithGeneration($key, $data, $hash, $generation);
+        });
+
+        return $result;
+    }
+
+    public function purgeLegacy(string $key, string $hash = ''): bool
+    {
+        /** @var bool $result */
+        $result = $this->pool->use(function (Adapter $adapter) use ($key, $hash): bool {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
+            }
+
+            return $adapter->purgeLegacy($key, $hash);
+        });
 
         return $result;
     }

@@ -8,7 +8,7 @@ use Utopia\Cache\Codec\Json;
 use Utopia\Cache\Envelope;
 
 /** Single-key versioned reads, CAS and invalidation shared by Redis transports. */
-abstract class Versioned implements \Utopia\Cache\Feature\Versioned
+abstract class Versioned implements \Utopia\Cache\Feature\Versioned, \Utopia\Cache\Feature\Legacy
 {
     /**
      * Reserved hash field that holds a key's version alongside its value
@@ -70,6 +70,63 @@ abstract class Versioned implements \Utopia\Cache\Feature\Versioned
         redis.call('HSET', KEYS[1], ARGV[2], ARGV[3], '__utopia_version__', ARGV[4])
         return 1
         LUA;
+
+    public function getGeneration(string $key): string
+    {
+        $value = $this->leaseRun("return redis.call('HGET', KEYS[1], '__utopia_gen__') or '0'", $key, []);
+
+        return \is_string($value) ? $value : '0';
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool
+    {
+        if ($this->isReserved($hash)) {
+            return false;
+        }
+
+        return (bool) $this->leaseRun(<<<'LUA'
+            local current = redis.call('HGET', KEYS[1], '__utopia_gen__') or '0'
+            if ARGV[1] ~= '*' and current ~= ARGV[1] then return 0 end
+            local deadline = tonumber(redis.call('HGET', KEYS[1], '__utopia_tomb__'))
+            local window = tonumber(ARGV[4])
+            if deadline ~= nil and window > 0 then
+                local t = redis.call('TIME')
+                local now = tonumber(t[1]) * 1000000 + tonumber(t[2])
+                if now < deadline and deadline - now <= window * 1000 then return 0 end
+                redis.call('HDEL', KEYS[1], '__utopia_tomb__')
+            end
+            redis.call('HSET', KEYS[1], ARGV[2], ARGV[3])
+            return 1
+            LUA, $key, [$generation, $hash === '' ? $key : $hash, $this->envelope->encode($data, \time()), (string) $this->leaseGraceWindow]);
+    }
+
+    public function purgeLegacy(string $key, string $hash = ''): bool
+    {
+        if ($this->isReserved($hash)) {
+            return false;
+        }
+
+        return (bool) $this->leaseRun(<<<'LUA'
+            local generation = tonumber(redis.call('HGET', KEYS[1], '__utopia_gen__')) or 0
+            local removed
+            if ARGV[1] == '' then
+                removed = redis.call('HLEN', KEYS[1])
+                    - redis.call('HEXISTS', KEYS[1], '__utopia_gen__')
+                    - redis.call('HEXISTS', KEYS[1], '__utopia_tomb__')
+                redis.call('DEL', KEYS[1])
+            else
+                removed = redis.call('HDEL', KEYS[1], ARGV[1])
+            end
+            redis.call('HSET', KEYS[1], '__utopia_gen__', generation + 1)
+            local window = tonumber(ARGV[2])
+            if window > 0 then
+                local t = redis.call('TIME')
+                redis.call('HSET', KEYS[1], '__utopia_tomb__', tonumber(t[1]) * 1000000 + tonumber(t[2]) + window * 1000)
+            end
+            return removed
+            LUA, $key, [$hash, (string) $this->leaseGraceWindow]);
+    }
 
     public function supportsVersioning(): bool
     {
@@ -170,7 +227,7 @@ abstract class Versioned implements \Utopia\Cache\Feature\Versioned
     /** Reserved internal fields must never be reachable through the public field API. */
     protected function isReserved(string $hash): bool
     {
-        return in_array($hash, [self::TOMBSTONE_FIELD, self::VERSION_FIELD], true);
+        return in_array($hash, [self::TOMBSTONE_FIELD, self::VERSION_FIELD, '__utopia_gen__'], true);
     }
 
     /**
@@ -188,7 +245,7 @@ abstract class Versioned implements \Utopia\Cache\Feature\Versioned
      *
      * @param  array<int, int|string>  $args
      */
-    private function leaseRun(string $script, string $key, array $args): mixed
+    protected function leaseRun(string $script, string $key, array $args): mixed
     {
         try {
             return $this->leaseEvalSha($this->shaFor($script), $key, $args);

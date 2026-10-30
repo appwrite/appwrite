@@ -5,7 +5,7 @@ namespace Utopia\Cache\Adapter;
 use Utopia\Cache\Adapter;
 use Utopia\Cache\Feature\Batchable;
 
-class Sharding implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned
+class Sharding implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned, \Utopia\Cache\Feature\Legacy
 {
     /**
      * @var Adapter[]
@@ -153,6 +153,52 @@ class Sharding implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned
         $index = $hash % $this->count;
 
         return $this->adapters[$index];
+    }
+
+    public function getGeneration(string $key): string
+    {
+        /** @var string $result */
+        $result = (function () use ($key): string {
+            $adapter = $this->getAdapter($key);
+            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
+            }
+
+            return $adapter->getGeneration($key);
+        })();
+
+        return $result;
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool
+    {
+        /** @var bool $result */
+        $result = (function () use ($key, $data, $hash, $generation): bool {
+            $adapter = $this->getAdapter($key);
+            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
+            }
+
+            return $adapter->saveWithGeneration($key, $data, $hash, $generation);
+        })();
+
+        return $result;
+    }
+
+    public function purgeLegacy(string $key, string $hash = ''): bool
+    {
+        /** @var bool $result */
+        $result = (function () use ($key, $hash): bool {
+            $adapter = $this->getAdapter($key);
+            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
+            }
+
+            return $adapter->purgeLegacy($key, $hash);
+        })();
+
+        return $result;
     }
 
     public function supportsVersioning(): bool

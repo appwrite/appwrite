@@ -9,7 +9,7 @@ use Utopia\Cache\Feature;
 use Utopia\CircuitBreaker\CircuitBreaker as UtopiaCircuitBreaker;
 use Utopia\Telemetry\Adapter as Telemetry;
 
-class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Telemetry, \Utopia\Cache\Feature\Versioned
+class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Telemetry, \Utopia\Cache\Feature\Versioned, \Utopia\Cache\Feature\Legacy
 {
     public function __construct(
         private readonly Adapter $adapter,
@@ -164,6 +164,58 @@ class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Telemetry, \
         if ($this->adapter instanceof Feature\Telemetry) {
             $this->adapter->setTelemetry($telemetry);
         }
+    }
+
+    public function getGeneration(string $key): string
+    {
+        /** @var string $result */
+        $result = $this->breaker->call(
+            open: fn (): never => throw new Unavailable('Legacy cache unavailable'),
+            close: function () use ($key): string {
+                if (! $this->adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                    throw new Unavailable('Legacy migration requires Redis');
+                }
+
+                return $this->adapter->getGeneration($key);
+            },
+        );
+
+        return $result;
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool
+    {
+        /** @var bool $result */
+        $result = $this->breaker->call(
+            open: fn (): never => throw new Unavailable('Legacy cache unavailable'),
+            close: function () use ($key, $data, $hash, $generation): bool {
+                if (! $this->adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                    throw new Unavailable('Legacy migration requires Redis');
+                }
+
+                return $this->adapter->saveWithGeneration($key, $data, $hash, $generation);
+            },
+        );
+
+        return $result;
+    }
+
+    public function purgeLegacy(string $key, string $hash = ''): bool
+    {
+        /** @var bool $result */
+        $result = $this->breaker->call(
+            open: fn (): never => throw new Unavailable('Legacy cache unavailable'),
+            close: function () use ($key, $hash): bool {
+                if (! $this->adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                    throw new Unavailable('Legacy migration requires Redis');
+                }
+
+                return $this->adapter->purgeLegacy($key, $hash);
+            },
+        );
+
+        return $result;
     }
 
     public function supportsVersioning(): bool
