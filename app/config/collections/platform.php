@@ -46,6 +46,7 @@ $platformCollections = [
             Attribute::integer(key: 'pingCount', default: 0, signed: false),
             Attribute::datetime(key: 'pingedAt'),
             Attribute::string(key: 'labels', size: 128, default: [], array: true),
+            Attribute::string(key: 'prefs', size: 65535, default: new \stdClass(), filters: [Filter::Json]),
             Attribute::string(key: 'onboarding', size: 65536, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'status', size: 100),
         ],

@@ -1889,6 +1889,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'hours or less for this interval.': 'שעות או פחות למרווח הזה.',
   'Ranges shorter than 15 minutes use the 1m interval.':
     'טווחים קצרים מ-15 דקות משתמשים במרווח של דקה אחת.',
+  'Use a date range longer than this interval.':
+    'השתמשו בטווח תאריכים ארוך מהמרווח הזה.',
   'days or less for this interval.': 'ימים או פחות למרווח הזה.',
   Compute: 'מחשוב',
   'Compute over time': 'חישוב לאורך זמן',

@@ -32,6 +32,132 @@ final class FastlyTest extends TestCase
         $this->assertSame('example.com', $client->calls[3]['body']['data']['relationships']['tls_domains']['data'][0]['id']);
     }
 
+    public function testIssueContinuesWithDomainAddedSinceLookup(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[]}'),
+            $this->json('{"errors":[{"title":"Invalid value for fqdn","detail":"fqdn Domain name has already been taken"}]}', 400),
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":"service_1","routing_configuration_id":null}]}'),
+            $this->json('{"data":[]}'),
+            $this->json('{"data":{"id":"sub_1","attributes":{"state":"pending"}}}', 201),
+        ]);
+
+        $this->assertNull(new Fastly('token', 'service_1', client: $client)->issueCertificate('cert', 'example.com', null));
+
+        $this->assertSame(['GET', 'POST', 'GET', 'GET', 'POST'], array_column($client->calls, 'method'));
+        $this->assertStringStartsWith('https://api.fastly.com/domain-management/v1/domains?', $client->calls[2]['url']);
+        $this->assertSame('https://api.fastly.com/tls/subscriptions', $client->calls[4]['url']);
+    }
+
+    public function testIssueFailsWhenTakenDomainIsNotListed(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[]}'),
+            $this->json('{"errors":[{"title":"Invalid value for fqdn","detail":"fqdn Domain name has already been taken"}]}', 400),
+            $this->json('{"data":[]}'),
+        ]);
+
+        try {
+            new Fastly('token', 'service_1', client: $client)->issueCertificate('cert', 'example.com', null);
+            $this->fail('Expected the taken domain to fail.');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('example.com as already taken', $error->getMessage());
+        }
+
+        $this->assertCount(3, $client->calls);
+    }
+
+    public function testIssueFailsOnOtherDomainCreationErrors(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[]}'),
+            $this->json('{"errors":[{"title":"Invalid value for fqdn","detail":"fqdn is invalid"}]}', 400),
+        ]);
+
+        try {
+            new Fastly('token', 'service_1', client: $client)->issueCertificate('cert', 'example.com', null);
+            $this->fail('Expected domain creation to fail.');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('add Fastly domain with status 400: fqdn is invalid', $error->getMessage());
+        }
+
+        $this->assertCount(2, $client->calls);
+    }
+
+    public function testIssueReassignsDetachedDomainOnceTlsIsIssued(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":null,"routing_configuration_id":null}]}'),
+            $this->json('{"active_version":{"number":3,"domains":[{"name":"other.example.com"}]}}'),
+            $this->json('{"data":[{"id":"sub_1","attributes":{"state":"issued"}}]}'),
+            $this->json('{"data":[{"id":"sub_1","attributes":{"state":"issued"}}]}'),
+            $this->json('{"id":"domain_1","fqdn":"example.com","service_id":"service_1","routing_configuration_id":null}'),
+        ]);
+
+        new Fastly('token', 'service_1', client: $client)->issueCertificate('cert', 'example.com', null);
+
+        $this->assertSame(['GET', 'GET', 'GET', 'GET', 'PATCH'], array_column($client->calls, 'method'));
+        $this->assertSame('https://api.fastly.com/service/service_1/details', $client->calls[1]['url']);
+        $this->assertStringStartsWith('https://api.fastly.com/tls/subscriptions?', $client->calls[2]['url']);
+        $this->assertStringStartsWith('https://api.fastly.com/tls/subscriptions?', $client->calls[3]['url']);
+        $this->assertSame('https://api.fastly.com/domain-management/v1/domains/domain_1', $client->calls[4]['url']);
+        $this->assertSame(['service_id' => 'service_1'], $client->calls[4]['body']);
+    }
+
+    public function testIssueDoesNotReassignDetachedDomainWhileTlsIsPending(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":null,"routing_configuration_id":null}]}'),
+            $this->json('{"active_version":{"number":3,"domains":[]}}'),
+            $this->json('{"data":[{"id":"sub_1","attributes":{"state":"pending"}}]}'),
+            $this->json('{"data":[{"id":"sub_1","attributes":{"state":"pending"}}]}'),
+        ]);
+
+        $this->assertNull(new Fastly('token', 'service_1', client: $client)->issueCertificate('cert', 'example.com', null));
+
+        $this->assertSame(['GET', 'GET', 'GET', 'GET'], array_column($client->calls, 'method'));
+    }
+
+    public function testIssueFailsBeforeTlsWhenReassignedDomainHasNoId(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"fqdn":"example.com","service_id":"old_service"}]}'),
+        ]);
+
+        try {
+            new Fastly('token', 'new_service', client: $client)->issueCertificate('cert', 'example.com', null);
+            $this->fail('Expected the domain without an ID to fail.');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('missing its ID', $error->getMessage());
+        }
+
+        $this->assertCount(1, $client->calls);
+    }
+
+    public function testIssueLeavesClassicDomainOnTheServiceUntouched(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":null,"routing_configuration_id":null}]}'),
+            $this->json('{"active_version":{"number":3,"domains":[{"name":"example.com"}]}}'),
+        ]);
+
+        $this->assertNull(new Fastly('token', 'service_1', client: $client)->issueCertificate('cert', 'example.com', null));
+
+        $this->assertCount(2, $client->calls);
+        $this->assertSame('https://api.fastly.com/service/service_1/details', $client->calls[1]['url']);
+    }
+
+    public function testIssueLeavesRoutedDomainUntouched(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":null,"routing_configuration_id":"routing_1"}]}'),
+        ]);
+
+        $this->assertNull(new Fastly('token', 'service_1', client: $client)->issueCertificate('cert', 'example.com', null));
+
+        $this->assertCount(1, $client->calls);
+    }
+
     public function testTlsConfigurationActivatesIssuedCertificate(): void
     {
         $client = new TestClient([
@@ -192,6 +318,35 @@ final class FastlyTest extends TestCase
     {
         $client = new TestClient([
             $this->json('{"data":[{"id":"domain_1","fqdn":"example.com"}]}'),
+            $this->json('{"active_version":{"number":3,"domains":[{"name":"example.com"}]}}'),
+        ]);
+
+        $renewRequired = new Fastly('token', 'service_1', client: $client)
+            ->isRenewRequired('example.com', null);
+
+        $this->assertFalse($renewRequired);
+        $this->assertCount(2, $client->calls);
+        $this->assertSame('https://api.fastly.com/service/service_1/details', $client->calls[1]['url']);
+    }
+
+    public function testRenewIsRequiredForDetachedDomain(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":null,"routing_configuration_id":null}]}'),
+            $this->json('{"active_version":{"number":3,"domains":[{"name":"other.example.com"}]}}'),
+        ]);
+
+        $renewRequired = new Fastly('token', 'service_1', client: $client)
+            ->isRenewRequired('example.com', null);
+
+        $this->assertTrue($renewRequired);
+        $this->assertCount(2, $client->calls);
+    }
+
+    public function testRenewIsNotRequiredForRoutedDomain(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":null,"routing_configuration_id":"routing_1"}]}'),
         ]);
 
         $renewRequired = new Fastly('token', 'service_1', client: $client)
@@ -199,6 +354,42 @@ final class FastlyTest extends TestCase
 
         $this->assertFalse($renewRequired);
         $this->assertCount(1, $client->calls);
+    }
+
+    public function testDomainLookupFollowsNextCursor(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_0","fqdn":"www.example.com","service_id":"service_1"}],"meta":{"next_cursor":"cursor_2","limit":100}}'),
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":"service_1"}],"meta":{"limit":100}}'),
+            $this->json('{"data":[{"id":"sub_1","attributes":{"state":"issued"}}]}'),
+        ]);
+
+        $renewRequired = new Fastly('token', 'service_1', client: $client)
+            ->isRenewRequired('example.com', null);
+
+        $this->assertFalse($renewRequired);
+        $this->assertCount(3, $client->calls);
+        $this->assertSame('https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100', $client->calls[0]['url']);
+        $this->assertSame('https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100&cursor=cursor_2', $client->calls[1]['url']);
+        $this->assertStringStartsWith('https://api.fastly.com/tls/subscriptions?', $client->calls[2]['url']);
+    }
+
+    public function testDomainLookupStopsAfterItsPageLimit(): void
+    {
+        $pages = [];
+        for ($page = 1; $page <= 11; $page++) {
+            $pages[] = $this->json('{"data":[{"id":"domain_' . $page . '","fqdn":"' . $page . '.example.com"}],"meta":{"next_cursor":"cursor_' . ($page + 1) . '"}}');
+        }
+        $client = new TestClient($pages);
+
+        try {
+            new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');
+            $this->fail('Expected the domain lookup to stop.');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('span more than 10 pages', $error->getMessage());
+        }
+
+        $this->assertCount(10, $client->calls);
     }
 
     public function testRenewDelegatesToTlsWhenDomainBelongsToService(): void
@@ -318,6 +509,46 @@ final class FastlyTest extends TestCase
         $client = new TestClient([
             $this->json('{"data":[{"id":"domain_1","fqdn":"example.com"}]}'),
             $this->json('{"active_version":{"number":3,"domains":[{"name":"other.example.com"}]}}'),
+        ]);
+
+        new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');
+
+        $this->assertCount(2, $client->calls);
+        $this->assertSame('https://api.fastly.com/service/service_1/details', $client->calls[1]['url']);
+    }
+
+    public function testDeleteLeavesRoutedDomainUntouched(): void
+    {
+        // Even when the configured service's active version also lists the hostname
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":null,"routing_configuration_id":"routing_1"}]}'),
+            $this->json('{"active_version":{"number":3,"domains":[{"name":"example.com"}]}}'),
+        ]);
+
+        new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');
+
+        $this->assertCount(1, $client->calls);
+    }
+
+    public function testRenewIsRequiredForDetachedDomainOnServiceWithoutActiveVersion(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com","service_id":null,"routing_configuration_id":null}]}'),
+            $this->json('{"active_version":null}'),
+        ]);
+
+        $renewRequired = new Fastly('token', 'service_1', client: $client)
+            ->isRenewRequired('example.com', null);
+
+        $this->assertTrue($renewRequired);
+        $this->assertCount(2, $client->calls);
+    }
+
+    public function testDeleteOnServiceWithoutActiveVersionLeavesTlsUntouched(): void
+    {
+        $client = new TestClient([
+            $this->json('{"data":[{"id":"domain_1","fqdn":"example.com"}]}'),
+            $this->json('{"active_version":null}'),
         ]);
 
         new Fastly('token', 'service_1', client: $client)->deleteCertificate('example.com');

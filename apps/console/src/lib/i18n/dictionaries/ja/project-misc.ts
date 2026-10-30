@@ -1372,6 +1372,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'hours or less for this interval.': '時間以下 (この間隔の場合)。',
   'Ranges shorter than 15 minutes use the 1m interval.':
     '15分未満の範囲では1分間隔を使用します。',
+  'Use a date range longer than this interval.':
+    'この間隔より長い日付範囲を使用してください。',
   'days or less for this interval.': '日以下 (この間隔の場合)。',
   Compute: 'コンピュート',
   'Compute over time': '経時的なコンピュート',

@@ -1,4 +1,5 @@
 import { FlaskConical } from 'lucide-react'
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -12,31 +13,59 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { EXPERIMENTS, setExperimentEnabled } from '@/lib/experiments'
+import {
+  countUnseenExperiments,
+  EXPERIMENTS,
+  getExperimentIntroducedDate,
+  setExperimentEnabled,
+} from '@/lib/experiments'
+import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
 import { useT } from '@/lib/i18n/translate'
+import { useMarkExperimentsSeen } from '@/lib/react-query/hooks'
+import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
 
 export function ExperimentsPopover() {
   const t = useT()
   const { features } = useConsoleProfile()
+  const { account } = useAuth()
+  const { formatDate } = useLocalizedDateFormat()
+  const markSeen = useMarkExperimentsSeen()
+  const seenAt = parseExperimentsSeenAt(
+    (account as { prefs?: UserPrefs } | null | undefined)?.prefs,
+  )
+  const unseenCount = markSeen.isPending ? 0 : countUnseenExperiments(seenAt)
+  const unseenBadgeLabel =
+    unseenCount > 9 ? '9+' : unseenCount > 0 ? String(unseenCount) : null
+
+  const handleOpenChange = (open: boolean) => {
+    if (open && unseenCount > 0) {
+      markSeen.mutate(new Date())
+    }
+  }
 
   return (
-    <Popover>
+    <Popover onOpenChange={handleOpenChange}>
       <Tooltip>
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground"
-              aria-label={t('Experiments')}
+              className="relative h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground"
+              aria-label={t('Previews')}
               data-analytics-track="false"
             >
               <FlaskConical className="h-4 w-4" />
+              {unseenBadgeLabel ? (
+                <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground">
+                  {unseenBadgeLabel}
+                </span>
+              ) : null}
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{t('Experiments')}</p>
+          <p>{t('Previews')}</p>
         </TooltipContent>
       </Tooltip>
       <PopoverContent
@@ -46,7 +75,7 @@ export function ExperimentsPopover() {
       >
         <div className="px-4 py-3 text-start">
           <p className="text-[13px] font-semibold text-foreground">
-            {t('Experiments')}
+            {t('Previews')}
           </p>
           <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
             {t(
@@ -67,6 +96,13 @@ export function ExperimentsPopover() {
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
                   {t(experiment.description)}
+                </p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {t('Introduced')}{' '}
+                  {formatDate(
+                    getExperimentIntroducedDate(experiment),
+                    'MMM d, yyyy',
+                  )}
                 </p>
               </div>
               <Switch
