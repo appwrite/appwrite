@@ -34,7 +34,7 @@ final class VersionedTest extends TestCase
             $redis->connect(Services::HOST, $port);
             $adapter = $multiplexed ? new Multiplexing(Services::HOST, $port) : new RedisAdapter($redis);
             $adapter->setLeaseGraceWindow(1000);
-            $legacy = (new Cache($adapter))->legacy();
+            $legacy = new Cache($adapter)->legacy();
             $key = 'legacy-grace:'.\bin2hex(\random_bytes(8));
             try {
                 $this->assertSame('first', $legacy->save($key, 'first', 'first'));
