@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Cache\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Utopia\Cache\Adapter;
@@ -19,6 +20,57 @@ use Utopia\Telemetry\Adapter\Test as TestTelemetry;
 
 final class CircuitBreakerTest extends TestCase
 {
+    /** @return iterable<string, array{string}> */
+    public static function coordinationOperations(): iterable
+    {
+        foreach (['getVersion', 'loadVersioned', 'compareAndSwap'] as $operation) {
+            yield $operation => [$operation];
+        }
+    }
+
+    #[DataProvider('coordinationOperations')]
+    public function testOpenCircuitRejectsCoordinationWithoutCallingTheBackend(string $operation): void
+    {
+        $backend = new CoordinationMemory();
+        $version = $backend->getVersion('key');
+        $breaker = new UtopiaCircuitBreaker(timeout: 3600);
+        $breaker->trip();
+        $cache = new CircuitBreaker($backend, $breaker);
+        $before = $backend->calls;
+        try {
+            $operation === 'compareAndSwap'
+                ? $cache->compareAndSwap('key', 'value', '', $version)
+                : $cache->{$operation}('key');
+            $this->fail('An unavailable coordination record must not read as a miss');
+        } catch (Unavailable) {
+            $this->assertSame($before, $backend->calls);
+            $this->assertFalse($backend->load('key', 60));
+        }
+    }
+
+    #[DataProvider('coordinationOperations')]
+    public function testCoordinationFailuresOpenTheCircuitAndRecoveryUsesTheBackend(string $operation): void
+    {
+        $backend = new CoordinationMemory();
+        $version = $backend->getVersion('key');
+        $breaker = new UtopiaCircuitBreaker(timeout: 0, minimumThroughput: 1);
+        $cache = new CircuitBreaker($backend, $breaker);
+        $backend->failing = true;
+        try {
+            $operation === 'compareAndSwap'
+                ? $cache->compareAndSwap('key', 'value', '', $version)
+                : $cache->{$operation}('key');
+            $this->fail('A transport failure must not read as eviction or a CAS conflict');
+        } catch (Unavailable) {
+            $this->assertSame(1, $breaker->getFailureCount());
+        }
+        $backend->failing = false;
+        $version = $cache->getVersion('key');
+        $committed = $cache->compareAndSwap('key', 'recovered', '', $version);
+        $this->assertNotFalse($committed);
+        $this->assertSame(['version' => $committed, 'value' => 'recovered'], $cache->loadVersioned('key'));
+    }
+
     public function testPassesThroughHealthyCacheOperations(): void
     {
         $adapter = new Memory();
@@ -94,10 +146,8 @@ final class CircuitBreakerTest extends TestCase
 
         $this->assertFalse($cache->load('key', 60));
         $this->assertFalse($cache->save('key', 'value'));
-        $this->assertFalse($cache->saveWithLease('key', 'value', 'key', '0'));
         $this->assertFalse($cache->touch('key'));
         $this->assertSame([], $cache->list('key'));
-        $this->assertSame('0', $cache->getGeneration('key'));
         $this->assertFalse($cache->flush());
         $this->assertFalse($cache->ping());
         $this->assertSame(0, $cache->getSize());
@@ -239,5 +289,41 @@ class CountingFailingAdapter extends FailingAdapter
         $this->loads++;
 
         return parent::load($key, $ttl, $hash);
+    }
+}
+
+/** Real in-process cache with a controllable transport failure. */
+final class CoordinationMemory extends Memory
+{
+    public int $calls = 0;
+    public bool $failing = false;
+
+    private function check(): void
+    {
+        $this->calls++;
+        if ($this->failing) {
+            throw new RuntimeException('Transport unavailable');
+        }
+    }
+
+    #[\Override]
+    public function getVersion(string $key): string
+    {
+        $this->check();
+        return parent::getVersion($key);
+    }
+
+    #[\Override]
+    public function loadVersioned(string $key): array
+    {
+        $this->check();
+        return parent::loadVersioned($key);
+    }
+
+    #[\Override]
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): string|false
+    {
+        $this->check();
+        return parent::compareAndSwap($key, $data, $hash, $version);
     }
 }

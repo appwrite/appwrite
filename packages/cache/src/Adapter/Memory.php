@@ -4,10 +4,41 @@ namespace Utopia\Cache\Adapter;
 
 use Utopia\Cache\Adapter;
 
-class Memory implements Adapter
+class Memory implements Adapter, \Utopia\Cache\Feature\Versioned
 {
+    public function supportsVersioning(): bool
+    {
+        return true;
+    }
+
+    public function getVersion(string $key): string
+    {
+        $this->store[$key] ??= ['time' => \time(), 'data' => false];
+
+        return $this->store[$key]['version'] ??= \bin2hex(\random_bytes(16));
+    }
+
+    /** @return array{version: string, value: mixed} */
+    public function loadVersioned(string $key): array
+    {
+        return ['version' => $this->getVersion($key), 'value' => $this->load($key, PHP_INT_MAX)];
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): string|false
+    {
+        if ($this->getVersion($key) !== $version) {
+            return false;
+        }
+        if ($this->save($key, $data, $hash) === false) {
+            throw new \Utopia\Cache\Exception\Unavailable('Unable to save cache snapshot');
+        }
+
+        return $this->store[$key]['version'] = \bin2hex(\random_bytes(16));
+    }
+
     /**
-     * @var array<string, mixed>
+     * @var array<string, array{time: int, data: mixed, version?: string}>
      */
     public $store = [];
 
@@ -42,6 +73,7 @@ class Memory implements Adapter
         $saved = [
             'time' => time(),
             'data' => $data,
+            'version' => \bin2hex(\random_bytes(16)),
         ];
 
         $this->store[$key] = $saved;

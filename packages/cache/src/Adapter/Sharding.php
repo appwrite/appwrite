@@ -4,9 +4,8 @@ namespace Utopia\Cache\Adapter;
 
 use Utopia\Cache\Adapter;
 use Utopia\Cache\Feature\Batchable;
-use Utopia\Cache\Feature\Leasable;
 
-class Sharding implements Adapter, Batchable, Leasable, \Utopia\Cache\Feature\Versioned
+class Sharding implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned
 {
     /**
      * @var Adapter[]
@@ -85,22 +84,6 @@ class Sharding implements Adapter, Batchable, Leasable, \Utopia\Cache\Feature\Ve
         $adapter = $this->getAdapter($key);
 
         return $adapter instanceof Batchable ? $adapter->saveMany($key, $data, $ttl) : false;
-    }
-
-    public function getGeneration(string $key): string
-    {
-        $adapter = $this->getAdapter($key);
-
-        return $adapter instanceof Leasable ? $adapter->getGeneration($key) : '0';
-    }
-
-    public function saveWithLease(string $key, array|string $data, string $hash, string $generation): bool|string|array
-    {
-        $adapter = $this->getAdapter($key);
-
-        return $adapter instanceof Leasable
-            ? $adapter->saveWithLease($key, $data, $hash, $generation)
-            : $adapter->save($key, $data, $hash);
     }
 
     /**
@@ -189,7 +172,7 @@ class Sharding implements Adapter, Batchable, Leasable, \Utopia\Cache\Feature\Ve
     }
 
     /** @param array<int|string, mixed>|string $data */
-    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): bool
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): string|false
     {
         return $this->versionedAdapter($key)->compareAndSwap($key, $data, $hash, $version);
     }

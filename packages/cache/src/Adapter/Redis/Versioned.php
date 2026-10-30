@@ -7,24 +7,8 @@ use Utopia\Cache\Codec;
 use Utopia\Cache\Codec\Json;
 use Utopia\Cache\Envelope;
 
-/**
- * Shared generation-lease + purge-tombstone behaviour for the Redis-protocol
- * cache adapters (Redis and Redis\Multiplexing). Subclasses supply the transport
- * by implementing leaseEvalSha()/leaseEval()/leaseHget(); everything lease-related
- * — the reserved fields, the three atomic single-key Lua scripts, the grace
- * window, getGeneration(), saveWithLease() and purge() — lives here so it can't
- * drift between adapters.
- *
- * Scripts are dispatched through leaseRun(): EVALSHA of the (locally computed)
- * body digest, falling back to EVAL once on NoScript so the server re-caches it.
- * This keeps the hot path a ~40-byte frame instead of the full script body every
- * call, which matters most on the multiplexed connection where a fat frame
- * head-of-line-blocks every other operation queued behind it.
- *
- * Implements the transport-agnostic \Utopia\Cache\Feature\Leasable capability,
- * referenced by FQN to avoid shadowing this class's own short name.
- */
-abstract class Leasable implements \Utopia\Cache\Feature\Leasable, \Utopia\Cache\Feature\Versioned
+/** Single-key versioned reads, CAS and invalidation shared by Redis transports. */
+abstract class Versioned implements \Utopia\Cache\Feature\Versioned
 {
     /**
      * Reserved hash field that holds a key's generation alongside its value
@@ -34,8 +18,6 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable, \Utopia\Cache
      * backends (e.g. Dragonfly), where a multi-key script would span shards.
      * Callers must not use this as a cache hash/field.
      */
-    protected const GENERATION_FIELD = '__utopia_gen__';
-
     protected const VERSION_FIELD = '__utopia_version__';
 
     /**
@@ -45,74 +27,21 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable, \Utopia\Cache
      */
     protected const TOMBSTONE_FIELD = '__utopia_tomb__';
 
-    /**
-     * Save $hash only if the generation token matches and the key is past its
-     * post-purge tombstone. Single-key. KEYS[1]=key; ARGV[1]=hash, ARGV[2]=value,
-     * ARGV[3]=expected generation, ARGV[4]=grace window ms (0 = tombstone off).
-     */
-    protected const LUA_SAVE_WITH_LEASE = <<<'LUA'
-        local current = redis.call('HGET', KEYS[1], '__utopia_gen__')
-        if current == false then current = '0' end
-        if current ~= ARGV[3] then return 0 end
-        local window = tonumber(ARGV[4]) or 0
-        if window > 0 then
-            local tomb = redis.call('HGET', KEYS[1], '__utopia_tomb__')
-            if tomb ~= false then
-                local deadline = tonumber(tomb)
-                if deadline ~= nil then
-                    local t = redis.call('TIME')
-                    local now = tonumber(t[1]) * 1000000 + tonumber(t[2])
-                    -- 2nd clause ignores a deadline left by a since-rewound clock
-                    if now < deadline and (deadline - now) <= window * 1000 then
-                        return 0
-                    end
-                end
-                redis.call('HDEL', KEYS[1], '__utopia_tomb__')
-            end
+    private const string LUA_PURGE = <<<'LUA'
+        local removed = 0
+        if ARGV[1] == '' then
+            removed = redis.call('HLEN', KEYS[1])
+                - redis.call('HEXISTS', KEYS[1], '__utopia_version__')
+                - redis.call('HEXISTS', KEYS[1], '__utopia_tomb__')
+            redis.call('DEL', KEYS[1])
+        else
+            removed = redis.call('HDEL', KEYS[1], ARGV[1])
+            redis.call('HDEL', KEYS[1], '__utopia_version__')
         end
-        redis.call('HSET', KEYS[1], ARGV[1], ARGV[2], '__utopia_version__', ARGV[5])
-        return 1
-        LUA;
-
-    /**
-     * Drop $key's value fields, advance its generation (so an in-flight reader
-     * can't re-cache stale data), and stamp the tombstone when ARGV[1] > 0.
-     * Returns value fields removed (reserved fields excluded), preserving purge()
-     * semantics. Single-key. KEYS[1]=key; ARGV[1]=grace window ms.
-     */
-    protected const LUA_PURGE_BUMP = <<<'LUA'
-        local gen = '__utopia_gen__'
-        local tomb = '__utopia_tomb__'
-        local removed = redis.call('HLEN', KEYS[1]) - redis.call('HEXISTS', KEYS[1], gen) - redis.call('HEXISTS', KEYS[1], tomb) - redis.call('HEXISTS', KEYS[1], '__utopia_version__')
-        local current = redis.call('HGET', KEYS[1], gen)
-        local next = (tonumber(current) or 0) + 1
-        redis.call('DEL', KEYS[1])
-        redis.call('HSET', KEYS[1], gen, next)
-        local window = tonumber(ARGV[1]) or 0
+        local window = tonumber(ARGV[2])
         if window > 0 then
             local t = redis.call('TIME')
-            local now = tonumber(t[1]) * 1000000 + tonumber(t[2])
-            redis.call('HSET', KEYS[1], tomb, now + window * 1000)
-        end
-        return removed
-        LUA;
-
-    /**
-     * Delete one $hash field, advance the generation, and stamp the tombstone when
-     * ARGV[2] > 0 (key-level, so it also briefly blocks re-caching sibling fields).
-     * Single-key. KEYS[1]=key; ARGV[1]=field, ARGV[2]=grace window ms.
-     */
-    protected const LUA_PURGE_FIELD = <<<'LUA'
-        local removed = redis.call('HDEL', KEYS[1], ARGV[1])
-        local current = redis.call('HGET', KEYS[1], '__utopia_gen__')
-        local next = (tonumber(current) or 0) + 1
-        redis.call('HSET', KEYS[1], '__utopia_gen__', next)
-        redis.call('HDEL', KEYS[1], '__utopia_version__')
-        local window = tonumber(ARGV[2]) or 0
-        if window > 0 then
-            local t = redis.call('TIME')
-            local now = tonumber(t[1]) * 1000000 + tonumber(t[2])
-            redis.call('HSET', KEYS[1], '__utopia_tomb__', now + window * 1000)
+            redis.call('HSET', KEYS[1], '__utopia_tomb__', tonumber(t[1]) * 1000000 + tonumber(t[2]) + window * 1000)
         end
         return removed
         LUA;
@@ -136,6 +65,7 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable, \Utopia\Cache
             local t = redis.call('TIME')
             local now = tonumber(t[1]) * 1000000 + tonumber(t[2])
             if now < deadline and deadline - now <= window * 1000 then return 0 end
+            redis.call('HDEL', KEYS[1], '__utopia_tomb__')
         end
         redis.call('HSET', KEYS[1], ARGV[2], ARGV[3], '__utopia_version__', ARGV[4])
         return 1
@@ -171,17 +101,26 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable, \Utopia\Cache
     }
 
     /** @param array<int|string, mixed>|string $data */
-    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): bool
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): string|false
     {
         $hash = $hash === '' ? $key : $hash;
         if ($this->isReserved($hash)) {
             return false;
         }
 
-        return (bool) $this->leaseRun(self::LUA_COMPARE_AND_SWAP, $key, [
-            $version, $hash, $this->envelope->encode($data, \time()),
-            \bin2hex(\random_bytes(16)), (string) $this->leaseGraceWindow,
-        ]);
+        try {
+            $next = \bin2hex(\random_bytes(16));
+            $stored = $this->leaseRun(self::LUA_COMPARE_AND_SWAP, $key, [
+                $version, $hash, $this->envelope->encode($data, \time()),
+                $next, (string) $this->leaseGraceWindow,
+            ]);
+
+            return $stored ? $next : false;
+        } catch (Throwable $error) {
+            $this->recordWriteFailure('compareAndSwap', $error);
+
+            throw $error;
+        }
     }
 
     /**
@@ -212,41 +151,6 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable, \Utopia\Cache
         return $this->leaseGraceWindow;
     }
 
-    public function getGeneration(string $key): string
-    {
-        $gen = $this->leaseHget($key, self::GENERATION_FIELD);
-
-        return \is_string($gen) ? $gen : '0';
-    }
-
-    public function saveWithLease(string $key, array|string $data, string $hash, string $generation): bool|string|array
-    {
-        if ($key === '' || $key === '0' || empty($data)) {
-            return false;
-        }
-
-        if ($hash === '' || $hash === '0') {
-            $hash = $key;
-        }
-
-        if ($this->isReserved($hash)) {
-            return false;
-        }
-
-        try {
-            $value = $this->envelope->encode($data, time());
-            $stored = $this->leaseRun(self::LUA_SAVE_WITH_LEASE, $key, [
-                $hash, $value, $generation, (string) $this->leaseGraceWindow, \bin2hex(\random_bytes(16)),
-            ]);
-
-            return $stored ? $data : false;
-        } catch (Throwable $error) {
-            $this->recordWriteFailure('saveWithLease', $error);
-
-            return false;
-        }
-    }
-
     /**
      * A write that reports its failure as false hands the cause here, so an adapter can make it observable.
      */
@@ -256,21 +160,17 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable, \Utopia\Cache
 
     public function purge(string $key, string $hash = ''): bool
     {
-        if ($hash !== '' && $hash !== '0') {
-            if ($this->isReserved($hash)) {
-                return false;
-            }
-
-            return (bool) $this->leaseRun(self::LUA_PURGE_FIELD, $key, [$hash, (string) $this->leaseGraceWindow]);
+        if ($this->isReserved($hash)) {
+            return false;
         }
 
-        return (bool) $this->leaseRun(self::LUA_PURGE_BUMP, $key, [(string) $this->leaseGraceWindow]);
+        return (bool) $this->leaseRun(self::LUA_PURGE, $key, [$hash, (string) $this->leaseGraceWindow]);
     }
 
     /** Reserved internal fields must never be reachable through the public field API. */
     protected function isReserved(string $hash): bool
     {
-        return in_array($hash, [self::GENERATION_FIELD, self::TOMBSTONE_FIELD, self::VERSION_FIELD], true);
+        return in_array($hash, [self::TOMBSTONE_FIELD, self::VERSION_FIELD], true);
     }
 
     /**
@@ -326,5 +226,4 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable, \Utopia\Cache
     /**
      * HGET $field from hash $key; returns the raw value, or false when absent.
      */
-    abstract protected function leaseHget(string $key, string $field): mixed;
 }

@@ -46,7 +46,9 @@ final class VersionedTest extends TestCase
                 $this->assertSame('fresh', $cache->load($key, 60));
 
                 $snapshot = $cache->loadVersioned($key);
-                $this->assertTrue($cache->compareAndSwap($key, 'next', $snapshot['version']));
+                $committed = $cache->compareAndSwap($key, 'next', $snapshot['version']);
+                $this->assertNotFalse($committed);
+                $this->assertSame(['version' => $committed, 'value' => 'next'], $cache->loadVersioned($key));
                 $this->assertFalse($cache->compareAndSwap($key, 'lost update', $snapshot['version']));
                 $this->assertSame('next', $cache->load($key, 60));
                 $snapshot = $cache->loadVersioned($key);

@@ -3,7 +3,6 @@
 namespace Utopia\Cache;
 
 use Utopia\Cache\Feature\Batchable;
-use Utopia\Cache\Feature\Leasable;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Telemetry\Counter;
@@ -202,15 +201,14 @@ class Cache
         return $this->adapter instanceof Feature\Versioned && $this->adapter->supportsVersioning();
     }
 
-    /** A lease identity that cannot return to zero after eviction, when supported. */
+    /** Opaque identity captured before fetching a value. Empty means unsupported. */
     public function getLease(string $key): string
     {
         if (! $this->supportsVersioning()) {
-            return $this->getGeneration($key);
+            return '';
         }
-        $key = $this->caseSensitive ? $key : \strtolower($key);
 
-        return 'version:'.$this->versionedAdapter()->getVersion($key);
+        return $this->versionedAdapter()->getVersion($this->caseSensitive ? $key : \strtolower($key));
     }
 
     /** @return array{version: string, value: mixed} */
@@ -220,7 +218,7 @@ class Cache
     }
 
     /** @param array<int|string, mixed>|string $data */
-    public function compareAndSwap(string $key, array|string $data, string $version): bool
+    public function compareAndSwap(string $key, array|string $data, string $version): string|false
     {
         $key = $this->caseSensitive ? $key : \strtolower($key);
 
@@ -237,52 +235,18 @@ class Cache
     }
 
     /**
-     * Current generation token for $key (advances on each purge). Returns '0'
-     * when the underlying adapter does not support leasing.
-     */
-    public function getGeneration(string $key): string
-    {
-        if (! $this->adapter instanceof Leasable) {
-            return '0';
-        }
-
-        $key = $this->caseSensitive ? $key : strtolower($key);
-
-        return $this->adapter->getGeneration($key);
-    }
-
-    /**
-     * Save $data only if the key's generation still equals $generation (i.e. no
-     * purge happened since the caller captured it via getGeneration). Closes the
-     * cache-aside read-after-write race. Falls back to an unconditional save when
-     * the adapter does not support leasing.
-     *
-     * @param  string|array<int|string, mixed>  $data
+     * @param array<int|string, mixed>|string $data
      * @return bool|string|array<int|string, mixed>
      */
-    public function saveWithLease(string $key, mixed $data, string $hash, string $generation): bool|string|array
+    public function saveWithLease(string $key, array|string $data, string $hash, string $version): bool|string|array
     {
-        $key = $this->caseSensitive ? $key : strtolower($key);
-        $hash = $this->caseSensitive ? $hash : strtolower($hash);
-        $start = microtime(true);
-
-        try {
-            if (\str_starts_with($generation, 'version:')) {
-                return $this->versionedAdapter()->compareAndSwap($key, $data, $hash, \substr($generation, 8)) ? $data : false;
-            }
-
-            if (! $this->adapter instanceof Leasable) {
-                return $this->adapter->save($key, $data, $hash);
-            }
-
-            return $this->adapter->saveWithLease($key, $data, $hash, $generation);
-        } finally {
-            $duration = microtime(true) - $start;
-            $this->getOperationDuration()->record($duration, [
-                'operation' => 'saveWithLease',
-                'adapter' => $this->adapter->getName($key),
-            ]);
+        if (! $this->supportsVersioning() || $version === '') {
+            return false;
         }
+        $key = $this->caseSensitive ? $key : \strtolower($key);
+        $hash = $this->caseSensitive ? $hash : \strtolower($hash);
+
+        return $this->versionedAdapter()->compareAndSwap($key, $data, $hash, $version) !== false ? $data : false;
     }
 
     /**

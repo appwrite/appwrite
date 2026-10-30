@@ -15,5 +15,5 @@ interface Versioned
     public function loadVersioned(string $key): array;
 
     /** @param array<int|string, mixed>|string $data */
-    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): bool;
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): string|false;
 }

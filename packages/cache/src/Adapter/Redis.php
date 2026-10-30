@@ -6,14 +6,14 @@ use Exception;
 use Redis as Client;
 use Throwable;
 use Utopia\Cache\Adapter;
-use Utopia\Cache\Adapter\Redis\Leasable;
 use Utopia\Cache\Adapter\Redis\NoScript;
+use Utopia\Cache\Adapter\Redis\Versioned;
 use Utopia\Cache\Codec;
 use Utopia\Cache\Codec\Json;
 use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Retryable;
 
-class Redis extends Leasable implements Adapter, Batchable, Retryable
+class Redis extends Versioned implements Adapter, Batchable, Retryable
 {
     protected Client $redis;
 
@@ -326,11 +326,6 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
         }
 
         return $result;
-    }
-
-    protected function leaseHget(string $key, string $field): mixed
-    {
-        return $this->execute(fn (): \Redis|string|false => $this->redis->hGet($key, $field));
     }
 
     public function flush(): bool
