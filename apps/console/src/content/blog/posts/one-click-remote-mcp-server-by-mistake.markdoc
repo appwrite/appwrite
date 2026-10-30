@@ -19,6 +19,8 @@ faqs:
     answer: "Yes, because a client ID grants nothing on its own. It only lets a tool start an authorization request. The user still has to sign in to your product and approve the requested scopes on your consent screen, and the resulting access token is short-lived, bound to your MCP server's URL, and limited to those scopes."
   - question: "Can an MCP server run on Appwrite Functions?"
     answer: "Yes. An [Appwrite Function](/docs/products/functions) gets a public HTTPS domain on deploy, can serve the MCP endpoint and its metadata documents, and verifies access tokens offline against the project's JWKS. Functions return one response per request, so the server answers tool calls with JSON instead of a long-lived stream."
+  - question: "How do I add a remote MCP server to my Appwrite project?"
+    answer: "Connect your AI agent to the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) at `https://mcp.appwrite.io/`, sign in to your Appwrite account, and ask the agent to add a secure remote MCP server to your project. The agent enables the OAuth2 server, defines scopes, adds a consent page to your Site, and deploys the MCP endpoint as a Function. You do not configure anything yourself."
   - question: "Is the Appwrite Email app open source?"
     answer: "Yes. The full source, including the Site, the Functions, the MCP server, and the setup scripts, is at [github.com/appwrite/email](https://github.com/appwrite/email), and the live app runs at [email.appwrite.network](https://email.appwrite.network)."
 ---
@@ -207,16 +209,27 @@ Run `/mcp`, choose **mail**, and select **Authenticate**. Approve the scopes, th
 
 # Build a one-click MCP server on Appwrite Cloud
 
-You do not need an email client to use this pattern. Any product on Appwrite can become one-click reachable from AI tools with the same four steps:
+You do not need an email client, and you do not need to follow any of the steps in this post. Every one of them is an API call, so your agent can make them for you.
 
-1. Enable the OAuth2 server under **Auth**, set the authorization URL to a consent route in your app, and define custom scopes for your data.
-2. Add the consent route to your Site: load the grant, show it in plain language, and approve or reject.
-3. Create a Function that serves `/mcp` and its protected resource metadata, answers unauthenticated calls with a `401`, verifies tokens against the project's JWKS, and checks scopes per tool.
-4. Deploy, add a domain, and give users the URL.
+Connect your agent to the [Appwrite MCP server](/docs/tooling/ai/mcp-servers):
 
-Or do what we did: point your agent at [the mail app's source](https://github.com/appwrite/email) and ask for the same thing in your project. Start on [Appwrite Cloud](https://cloud.appwrite.io), then read:
+```bash
+claude mcp add --transport http appwrite https://mcp.appwrite.io/
+```
 
+Run `/mcp`, choose **appwrite**, and sign in to your Appwrite account. Then ask for what you want:
+
+```text
+> Add a secure remote MCP server to my "Acme" project.
+```
+
+That is the whole setup. The agent turns on the OAuth2 server, defines scopes for your data, adds a consent page to your Site, writes and deploys the MCP function, and hands you the URL to share. Nothing for you to configure, and nothing to wire between vendors.
+
+Everything above this section is what happens behind the scenes, and it is worth knowing if you want to audit the result. Review what the agent builds the way you would review any pull request: the scopes it defined and the tools it exposed. But the scary truth is that you do not need to understand any of it. It just works.
+
+Start on [Appwrite Cloud](https://cloud.appwrite.io), then read:
+
+- [Appwrite MCP server](/docs/tooling/ai/mcp-servers)
 - [OAuth2 server documentation](/docs/products/auth/oauth-server)
-- [Tutorial: turn your app into an MCP server](/blog/post/turn-your-app-into-an-mcp-server)
-- [Appwrite Functions](/docs/products/functions)
-- [Appwrite Sites](/docs/products/sites)
+- [The mail app's source on GitHub](https://github.com/appwrite/email)
+- [Tutorial: build an MCP server by hand](/blog/post/turn-your-app-into-an-mcp-server)
