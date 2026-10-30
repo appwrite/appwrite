@@ -72,7 +72,6 @@ import {
   syncConsoleAccountAfterMutation,
   updateAccountPrefs,
   mapProjectToListItem,
-  useProjectListPlatforms,
   useProjectListRequestsUsage,
   formatProjectNameForDisplay} from '@/lib/react-query/hooks'
 import {
@@ -1907,7 +1906,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const showProjectUsageCharts =
     features.usageStats ||
     (isSelfHosted && !isUsageStatsCapabilityResolved())
-  // Budget-locked projects cannot load platform/usage APIs (402). Skip those
+  // Budget-locked projects cannot load usage APIs (402). Skip those
   // fetches and show N/A on the cards instead.
   const skipProjectCardExtras = showProjectsLockedAlert
 
@@ -1932,23 +1931,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     visibleProjectIds,
     features.usageStats && !skipProjectCardExtras,
     organizationPlan,
-  )
-
-  const projectListPlatformIds = useMemo(() => {
-    if (skipProjectCardExtras) return []
-    return [
-      ...new Set([
-        ...pinnedProjects.map((project) => project.$id),
-        ...displayedProjectsByTeam.flatMap(({ projects }) =>
-          projects.map((project) => project.$id),
-        ),
-      ]),
-    ]
-  }, [skipProjectCardExtras, pinnedProjects, displayedProjectsByTeam])
-
-  const fetchedProjectPlatformsById = useProjectListPlatforms(
-    projectListPlatformIds,
-    projectListPlatformIds.length > 0,
   )
 
   const lockedProjectCardIds = useMemo(() => {
@@ -1978,24 +1960,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   }, [
     skipProjectCardExtras,
     fetchedProjectRequestsUsageById,
-    lockedProjectCardIds,
-  ])
-
-  const projectPlatformsById = useMemo(() => {
-    if (!skipProjectCardExtras) return fetchedProjectPlatformsById
-    const map = new Map(fetchedProjectPlatformsById)
-    for (const projectId of lockedProjectCardIds) {
-      map.set(projectId, {
-        isLoading: false,
-        isError: false,
-        platforms: [],
-        unavailable: true,
-      })
-    }
-    return map
-  }, [
-    skipProjectCardExtras,
-    fetchedProjectPlatformsById,
     lockedProjectCardIds,
   ])
 
@@ -2959,9 +2923,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       projectRequestsUsageById={
                                         projectRequestsUsageById
                                       }
-                                      projectPlatformsById={
-                                        projectPlatformsById
-                                      }
                                       canPinProjects={canPinProjectsResult}
                                       pinnedIds={pinnedIds}
                                       onPinProject={handlePinProject}
@@ -3086,9 +3047,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               project={project}
                                               showSettingsTab={
                                                 showProjectSettingsTab
-                                              }
-                                              platformsByProjectId={
-                                                projectPlatformsById
                                               }
                                             />
                                             {(canReorderPinned ||
@@ -3226,9 +3184,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         projectRequestsUsageById={
                                           projectRequestsUsageById
                                         }
-                                        projectPlatformsById={
-                                          projectPlatformsById
-                                        }
                                         canPinProjects={canPinProjectsResult}
                                         pinnedIds={pinnedIds}
                                         onPinProject={handlePinProject}
@@ -3316,9 +3271,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 project={project}
                                                 showSettingsTab={
                                                   showProjectSettingsTab
-                                                }
-                                                platformsByProjectId={
-                                                  projectPlatformsById
                                                 }
                                               />
                                               {canPin && canPinProjectsResult && (

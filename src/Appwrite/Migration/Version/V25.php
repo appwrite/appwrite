@@ -76,6 +76,12 @@ class V25 extends Migration
                         }
 
                         try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'prefs');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"prefs\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        try {
                             $this->createIndexFromCollection($this->dbForProject, $id, '_key_accessedAt');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
