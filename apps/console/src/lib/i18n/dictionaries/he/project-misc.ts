@@ -765,8 +765,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '1 hour': 'שעה אחת',
   '30 days': '30 ימים',
   'Activity retention': 'שמירת נתוני פעילות',
-  'Upgrade or contact sales for longer retention.':
-    'שדרגו או פנו למכירות לשמירת נתונים ממושכת יותר.',
+  'Upgrade for longer retention.': 'שדרגו לשמירת נתונים ממושכת יותר.',
+  'Longer retention is available on Enterprise.':
+    'שמירת נתונים ממושכת יותר זמינה בתוכנית Enterprise.',
   'Limited activity history': 'היסטוריית פעילות מוגבלת',
   'of activity history.': 'של היסטוריית פעילות.',
   'of activity history. Upgrade for longer retention.':

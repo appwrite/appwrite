@@ -13,6 +13,11 @@ export const SITE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'general',
+    title: 'Preview domain',
+    keywords: ['preview', 'domain', 'branch', 'custom', 'enterprise'],
+  },
+  {
+    sectionId: 'general',
     title: 'Delete site',
     keywords: ['delete', 'remove', 'destroy', 'danger'],
   },
