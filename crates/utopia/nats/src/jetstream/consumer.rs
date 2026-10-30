@@ -307,6 +307,15 @@ pub struct Consumer {
 /// capped at a tenth of the timeout.
 const FETCH_EXPIRY_MARGIN: f64 = 0.1;
 
+/// Seconds a fetch waits past its timeout for each further frame of a reply
+/// the server is bound to end (no_wait, or a pull with an expiry): time for
+/// the rest of it to arrive, since none of it can be new work.
+const FETCH_REPLY_WAIT: f64 = 1.0;
+
+/// The same for a pull the server may hold open (no expiry): enough to read
+/// frames already on the socket, too short to wait for new work.
+const FETCH_DRAIN_WAIT: f64 = 0.05;
+
 impl Consumer {
     /// A consumer of `stream` with this info.
     ///
@@ -335,11 +344,17 @@ impl Consumer {
         let subject = format!("{}.CONSUMER.MSG.NEXT.{}.{}", self.api_prefix, self.stream, self.name());
         let mut request = Object::new();
         request.set("batch", batch);
+        let mut ends = true;
         if no_wait {
             request.set("no_wait", true);
         } else {
+            // Expire the server's pull request just before the timeout, so its
+            // 408 ends a waiting fetch on time.
             let margin = if timeout * 0.1 < FETCH_EXPIRY_MARGIN { timeout * 0.1 } else { FETCH_EXPIRY_MARGIN };
-            request.set("expires", seconds_to_nanos(timeout - margin));
+            let expires = seconds_to_nanos(timeout - margin);
+            request.set("expires", expires);
+            // An expiry of zero is none: the server holds the request open.
+            ends = expires > 0;
         }
         request.opt("max_bytes", max_bytes);
         let payload = crate::json::encode(&request.build())?;
@@ -348,7 +363,10 @@ impl Consumer {
         let sub = conn.subscribe(&inbox, None, None).await?;
         let mut messages = MessageBatch::default();
         let mut pending = match conn.publish(&subject, &payload, Some(&inbox), None).await {
-            Ok(()) => self.collect(conn, &sub, &mut messages, batch, timeout).await.err(),
+            Ok(()) => {
+                let after_timeout = if ends { FETCH_REPLY_WAIT } else { FETCH_DRAIN_WAIT };
+                self.collect(conn, &sub, &mut messages, batch, timeout, after_timeout).await.err()
+            }
             Err(error) => Some(error),
         };
         if let Err(error) = conn.unsubscribe(&sub, None).await {
@@ -360,6 +378,9 @@ impl Consumer {
         }
     }
 
+    /// Gathers up to `batch` messages for a pull request, stopping on the
+    /// server's terminal status, or once the timeout has passed and no
+    /// further frame comes within `after_timeout`.
     async fn collect(
         &self,
         conn: &mut Connection,
@@ -367,14 +388,22 @@ impl Consumer {
         messages: &mut MessageBatch,
         batch: i64,
         timeout: f64,
+        after_timeout: f64,
     ) -> Result<()> {
         let deadline = Instant::now() + Duration::from_secs_f64(timeout.max(0.0));
+        let mut drained = false;
         while (messages.len() as i64) < batch {
+            // Past the timeout, still read what the server sent: it counted each
+            // message as delivered, and one left unread is held until ackWait and
+            // charged an attempt, however late it arrives or is read.
             let remaining = deadline.saturating_duration_since(Instant::now());
-            if remaining.is_zero() {
-                break;
-            }
-            let Some(message) = conn.next_message(sub, Some(remaining)).await? else {
+            let wait = if remaining.is_zero() { Duration::from_secs_f64(after_timeout) } else { remaining };
+            let Some(message) = conn.next_message(sub, Some(wait)).await? else {
+                // A wait that ran into the timeout looks once more before giving up.
+                if !remaining.is_zero() && !drained {
+                    drained = true;
+                    continue;
+                }
                 break;
             };
             if message.headers.is_some() {

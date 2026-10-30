@@ -541,6 +541,606 @@
           }
         }
       ]
+    },
+    {
+      "name": "a batch read after the timeout is returned whole (just past the timeout)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            },
+            "late": true
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm0\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm1\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm2\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "transport.late",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "delay": 0.05
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 3,
+            "timeout": 0.02,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 3,
+            "listed": 3,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "m0",
+                "headers": null,
+                "reply": false
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "m1",
+                "headers": null,
+                "reply": false
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "m2",
+                "headers": null,
+                "reply": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a batch read after the timeout is returned whole (long past the timeout)",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            },
+            "late": true
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm0\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm1\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm2\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "transport.late",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "delay": 1.2
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 3,
+            "timeout": 0.02,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 3,
+            "listed": 3,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "m0",
+                "headers": null,
+                "reply": false
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "m1",
+                "headers": null,
+                "reply": false
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "m2",
+                "headers": null,
+                "reply": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a partial no_wait reply ends at its status",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm0\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm1\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "HMSG _INBOX.scripted 1 28 28\r\nNATS/1.0 404 No Messages\r\n\r\n\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 5,
+            "timeout": 2.0,
+            "no_wait": true,
+            "within": 0.5
+          },
+          "expect": {
+            "count": 2,
+            "listed": 2,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "m0",
+                "headers": null,
+                "reply": false
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "m1",
+                "headers": null,
+                "reply": false
+              }
+            ],
+            "within": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "a no_wait reply still arriving at the timeout is read to its end",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            },
+            "late": true
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm0\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm1\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm2\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "transport.late",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "arrive_after": 0.3
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 3,
+            "timeout": 0.02,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 3,
+            "listed": 3,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "m0",
+                "headers": null,
+                "reply": false
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "m1",
+                "headers": null,
+                "reply": false
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "_INBOX.scripted",
+                "data": "m2",
+                "headers": null,
+                "reply": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a pull without an expiry does not wait for work past its timeout",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            },
+            "late": true
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "MSG _INBOX.scripted 1 2\r\nm0\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "transport.late",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "arrive_after": 0.5
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.0,
+            "within": 0.3
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": [],
+            "within": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "a fetch the server never answers gives up one wait past its timeout",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": "STREAM",
+            "info": {
+              "stream_name": "STREAM",
+              "name": "durable"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k"
+            },
+            "batch": 1,
+            "timeout": 0.05,
+            "no_wait": true,
+            "within": 1.35
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": [],
+            "within": true
+          }
+        }
+      ]
     }
   ]
 }

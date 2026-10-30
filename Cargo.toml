@@ -204,7 +204,7 @@ memchr = "2"
 # constant-time private key operations (the `rsa` crate is open to RUSTSEC-2023-0071).
 openssl = "0.10"
 # NIST P-256 ECDSA (ES256 passkeys, utopia-auth); RustCrypto, pure Rust.
-p256 = { version = "0.13", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
+p256 = { version = "0.14", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
 # Arbitrary-precision integers (utopia-auth: CBOR rational numbers reduced like
 # brick/math); pure Rust, rust-num project.
 num-bigint = { version = "0.4", default-features = false, features = ["std"] }

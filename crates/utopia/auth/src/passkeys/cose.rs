@@ -195,12 +195,13 @@ impl PublicKey {
         if curve != 1 {
             return Err("This key cannot be used with this algorithm".into());
         }
-        let point = p256::EncodedPoint::from_affine_coordinates(
-            p256::FieldBytes::from_slice(&coordinates[0]),
-            p256::FieldBytes::from_slice(&coordinates[1]),
-            false,
-        );
-        let Ok(key) = p256::ecdsa::VerifyingKey::from_encoded_point(&point) else {
+        let (Ok(x), Ok(y)) =
+            (p256::FieldBytes::try_from(&coordinates[0][..]), p256::FieldBytes::try_from(&coordinates[1][..]))
+        else {
+            return Ok(false);
+        };
+        let point = p256::Sec1Point::from_affine_coordinates(&x, &y, false);
+        let Ok(key) = p256::ecdsa::VerifyingKey::from_sec1_point(&point) else {
             return Ok(false);
         };
         let Ok(signature) = p256::ecdsa::Signature::from_slice(&signature) else {

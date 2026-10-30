@@ -4,6 +4,7 @@ namespace Tests\Compat\Nats;
 
 require_once __DIR__ . '/Fake.php';
 require_once __DIR__ . '/Errors.php';
+require_once __DIR__ . '/Late.php';
 
 use Tests\Compat\Adapter as Base;
 use Tests\Compat\Benchmarks;
@@ -72,7 +73,8 @@ use Utopia\NATS\Transport\Transport;
 use Utopia\NATS\Transport\WebSocketTransport;
 
 /**
- * A connection with what its callbacks recorded, and its fake transport.
+ * A connection with what its callbacks recorded, its fake transport, and the
+ * Late decorator around its transport when it was connected with `late`.
  */
 final class Conn
 {
@@ -80,6 +82,8 @@ final class Conn
     public \ArrayObject $log;
 
     public Connection $connection;
+
+    public ?Late $late = null;
 
     public function __construct(public ?Fake $fake = null)
     {
@@ -282,10 +286,11 @@ final class Adapter implements Base, Benchmarks
                 $fake->rules = self::plain($a['rules'] ?? []);
                 $conn = new Conn($fake);
                 $log = $conn->log;
-                $options = self::options($a['options'] ?? [], $conn, ['transportFactory' => function (string $scheme) use ($fake, $log) {
+                $transport = ($a['late'] ?? false) ? $conn->late = new Late($fake) : $fake;
+                $options = self::options($a['options'] ?? [], $conn, ['transportFactory' => function (string $scheme) use ($transport, $log) {
                     $log[] = ['transport', $scheme];
 
-                    return $fake;
+                    return $transport;
                 }]);
                 $conn->connection = Connection::connect($options);
 
@@ -304,6 +309,17 @@ final class Adapter implements Base, Benchmarks
             },
             'fake.fail_reads' => function (array $a, Session $s) {
                 self::fake($a, $s)->failReads = $a['error'] ?? null;
+
+                return;
+            },
+            'transport.late' => function (array $a, Session $s) {
+                $late = self::conn($a, $s)->late ?? throw new \RuntimeException('Not connected with late');
+                if (isset($a['delay'])) {
+                    $late->delayNextRead((float) $a['delay']);
+                }
+                if (isset($a['arrive_after'])) {
+                    $late->arriveAfter((float) $a['arrive_after']);
+                }
 
                 return;
             },
@@ -388,7 +404,12 @@ final class Adapter implements Base, Benchmarks
                 $url = isset($a['url']) ? $a['url'] : $s->service($a['service'] ?? 'nats');
                 $options = $a['options'] ?? [];
                 $options['servers'] ??= $url;
-                $conn->connection = Connection::connect(self::options($options, $conn));
+                $extra = [];
+                if ($a['late'] ?? false) {
+                    $late = $conn->late = new Late(new TcpTransport());
+                    $extra['transportFactory'] = fn (string $scheme): Late => $late;
+                }
+                $conn->connection = Connection::connect(self::options($options, $conn, $extra));
 
                 return $s->handle($conn);
             },

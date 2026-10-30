@@ -101,7 +101,7 @@ pub fn respond(a: &Args) -> Result<Value, Fault> {
     auth.extend_from_slice(&counter.to_be_bytes());
 
     if register {
-        let point = key.verifying_key().to_encoded_point(false);
+        let point = key.verifying_key().to_sec1_point(false);
         let (x, y) = (point.x().ok_or_else(|| Fault::new("no x"))?, point.y().ok_or_else(|| Fault::new("no y"))?);
         let public_key = match a.opt("cose") {
             Some(v) => crate::adapter::bytes(v).ok_or_else(|| Fault::new("`cose` must be bytes"))?,

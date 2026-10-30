@@ -240,7 +240,7 @@
         "note": "The security headers apply once the project, mode, user and API key resolved, as in `general.php`: an error before that is sent with Swoole's `Server` header and no `X-Content-Type-Options`. `appwrite diff` covers no origin, a platform and a foreign origin. An account key, or a key the `apiKey` resource refused, no longer skips the origin check.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/hooks/init/security.rs", "anchor": "// -- CORS / origin (I4)" },
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) fn finalize" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) async fn finalize" },
           { "file": "crates/appwrite/core/src/network.rs", "anchor": "pub fn validate_origin" }
         ]
       }
@@ -283,7 +283,7 @@
         "note": "Error model, status codes, development fields, CORS and no-cache headers match, proven by `appwrite diff` (401, 403, 404 and 400 answers). PHP dispatches RequestCompleted for non-publishable errors, but only the `api` shutdown hook, which does not run after an error, publishes usage: no usage is recorded, as in Rust.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/hooks/error/mod.rs", "anchor": "fn error_response" },
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) fn finalize" }
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) async fn finalize" }
         ]
       }
     },
