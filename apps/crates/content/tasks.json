@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-30T22:10:00Z",
+  "updated": "2026-10-30T23:41:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -16,14 +16,6 @@
       "status": "progress",
       "updated": "2026-10-17T19:50:00Z",
       "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
-    },
-    {
-      "id": "mysql-shard",
-      "title": "CI: the database MariaDB/MySQL compat shard runs past an hour",
-      "area": "Infrastructure",
-      "status": "progress",
-      "updated": "2026-10-30T22:10:00Z",
-      "note": "The shard hit the job's 1-hour limit on every run. It is split in four (3ffdb1509c); waiting for CI to show each finishes with time to spare."
     },
     {
       "id": "sites-flake",
@@ -120,6 +112,14 @@
       "status": "todo",
       "updated": "2026-10-30T22:10:00Z",
       "note": "config: an unclosed '[' in a PHP config file reads \"Unclosed '['\" in PHP and a generic syntax error in Rust. usage: PHP treats an empty metric type as event, Rust refuses it. image: AVIF and HEIC can't be decoded in Rust (no pure-Rust decoders), and animated WebP frame counts aren't compared (libwebp merges frames depending on exact pixels). domains: OpenSRS testSuggestEscapesKeys needs string-keyed TLDs, which Vec<String> can't hold. span: testSamplerCanFilterByDuration depends on step timing and fails on a loaded machine."
+    },
+    {
+      "id": "mysql-shard",
+      "title": "CI: the database MariaDB/MySQL compat shard runs past an hour",
+      "area": "Infrastructure",
+      "status": "done",
+      "updated": "2026-10-30T23:41:00Z",
+      "note": "Fixed (Oct 31). MySQL 8 forces every DDL statement to disk, and the cases create, alter and drop tables constantly: the shard spent 56 minutes in cases and was cancelled at the 1-hour limit on every run since Oct 17. The MariaDB and MySQL case servers now keep their data on tmpfs without durability syncs (the local MySQL run went from 1,414 s to 245 s with identical results), and the shard is split in two: database-mariadb (26 min) and database-mysql (30 min), each about 91k steps, 0 differences. Sharded runs print each case file's time."
     },
     {
       "id": "debug-stack",
