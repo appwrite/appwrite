@@ -394,3 +394,16 @@ describe('alert history pages', () => {
     })
   })
 })
+
+describe('alert email unsubscribe page', () => {
+  test('opens from the email without a console session', async () => {
+    const { isOptionalAuthPage } = await import(
+      '@/components/global/auth/RequireAuth'
+    )
+    const { isSelfHostedAllowedPath } = await import(
+      '@/lib/self-hosted-route-access'
+    )
+    expect(isOptionalAuthPage('/auth/alerts/unsubscribe')).toBe(true)
+    expect(isSelfHostedAllowedPath('/auth/alerts/unsubscribe')).toBe(true)
+  })
+})
