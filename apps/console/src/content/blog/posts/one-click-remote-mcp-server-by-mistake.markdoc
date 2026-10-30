@@ -27,7 +27,13 @@ We were not trying to build an MCP platform. We were testing a feature that hasn
 
 It got out of hand in the good way. Inbox, threads, full-text search, attachments, labels, rules, snooze, send later, vacation replies, two-factor sign-in, and a mobile layout. All of it runs on one Appwrite project, it is [open source](https://github.com/appwrite/email), and it is live at [email.appwrite.network](https://email.appwrite.network).
 
+![The Appwrite Email inbox with mailboxes, labels, a message list, and an open thread with a PDF attachment](/images/blog/one-click-remote-mcp-server-by-mistake/inbox.avif)
+
 Then we did what we now do with everything we build: we pointed our agents at it. We asked a coding agent to give the mail app a remote MCP server so Claude could read and triage the inbox. **Less than a minute later, the MCP server was deployed to production.** A minute after that, Claude was connected and archiving newsletters. The connection took one click, one sign-in we already had, and one consent screen. Nobody copied a client ID, generated an API key, or edited a config file.
+
+![An assistant handling one request with four MCP tool calls: list_messages, update_messages to archive newsletters, read_thread, and reply_to_email](/images/blog/one-click-remote-mcp-server-by-mistake/assistant-flow.avif)
+
+The mail app's landing page uses that exchange as its example. One sentence from the user turns into four tool calls: find the unread mail, archive the newsletters, read the thread, and reply in it.
 
 The agent writing code quickly was not the surprise. Agents write code quickly. The surprise was that **there was nothing left to set up**. Every piece a production remote MCP server needs was already sitting in the project, wired to everything else.
 
@@ -76,7 +82,11 @@ Here is the whole app, one row per Appwrite product:
 | **Realtime** | New mail and state changes synced across tabs |
 | **Sites** | The web app, including the OAuth consent screen at `/oauth/consent` |
 
-The MCP server is the `public` function, served at `email-api.appwrite.network`. You can watch every step of the handshake with `curl`.
+The MCP server is the `public` function, served at `email-api.appwrite.network`. In the same change, the agent added the consent route to the Site and a developer page that gives users the server URL, an install path for each major client, and the scope every tool needs:
+
+![The mail app's developer page: the MCP server URL, setup steps for Claude, ChatGPT, Cursor, VS Code, and Claude Code, and a table of eight tools with their scopes](/images/blog/one-click-remote-mcp-server-by-mistake/mcp-config.avif)
+
+That page is the entire setup guide a user needs. You can watch every step of the handshake behind it with `curl`.
 
 ## The 401 that starts everything
 
