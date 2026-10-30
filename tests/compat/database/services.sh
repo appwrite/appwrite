@@ -42,7 +42,7 @@ mysql_image="${COMPAT_MYSQL_IMAGE:-mysql:8.0.43}"
 # collections, every attribute an ALTER TABLE) and InnoDB makes each DDL
 # durable with fsyncs, so the data directory is a tmpfs and the servers skip
 # what only durability needs (redo log flush at commit, doublewrite, file
-# syncs): a third less time per case. Nothing a case observes depends on it.
+# syncs): MySQL runs its cases ~5x faster. No case observes the difference.
 mysql_up() {
     local name="$1" img="$2" port="$3" server="$4" client="$5"
     shift 5

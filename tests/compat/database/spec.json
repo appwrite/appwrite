@@ -68,16 +68,10 @@
       "Adapter-MariaDB-",
       "MariaDBTest"
     ],
-    "mariadb-shared": [
-      "MariaDB-Scope-SharedTables-"
-    ],
     "mysql": [
       "MySQL-",
       "Adapter-MySQL-",
       "MySQLTest"
-    ],
-    "mysql-shared": [
-      "MySQL-Scope-SharedTables-"
     ],
     "sqlite": [
       "Scope-SQLite-",
