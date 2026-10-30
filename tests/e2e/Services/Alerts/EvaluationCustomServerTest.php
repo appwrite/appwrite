@@ -992,10 +992,13 @@ final class EvaluationCustomServerTest extends Scope
          * Test for SUCCESS
          */
         foreach ($cases as $case => $expectation) {
-            $this->assertGreaterThan(0, $expectation['expected'], "{$case}: the writer recorded something to read");
+            // A reading of 0 still proves the scope: with no rows in its dimension the meter reads null.
+            $this->assertNotNull($expectation['expected'], "{$case}: the writer recorded a reading. Storage rows: " . \json_encode($expectation['recorded']));
+            $this->assertNotNull($expectation['measured'], "{$case}: the meter found the writer's rows");
             $this->assertEqualsWithDelta($expectation['expected'], $expectation['measured'], 0.001, $case);
             if (isset($expectation['wrong'])) {
-                $this->assertNotEqualsWithDelta($expectation['expected'], $expectation['misread'] ?? 0.0, 0.001, "{$case}: reading it in another dimension must miss");
+                $misread = $expectation['misread'];
+                $this->assertTrue($misread === null || \abs($misread - $expectation['expected']) > 0.001, "{$case}: reading it in another dimension must miss, read " . \var_export($misread, true));
             }
         }
     }
@@ -1368,19 +1371,21 @@ final class EvaluationCustomServerTest extends Scope
      *
      * @param array<string, string> $resources
      * @param list<array<string, mixed>> $gauges
-     * @return array<string, array{metric: string, resourceType: string, resourceId: string, expected: float, wrong?: \Closure(array<string, mixed>): array<string, mixed>}>
+     * @return array<string, array{metric: string, resourceType: string, resourceId: string, expected: ?float, recorded: list<array<string, mixed>>, wrong?: \Closure(array<string, mixed>): array<string, mixed>}>
      */
     private function metricCases(array $resources, array $gauges): array
     {
-        $gauge = function (string $metric, ?string $resourceType = null, ?string $resourceId = null) use ($gauges): float {
+        // The sweep's reading for a scope, or null when it recorded none.
+        $gauge = function (string $metric, ?string $resourceType = null, ?string $resourceId = null) use ($gauges): ?float {
             foreach ($gauges as $row) {
                 if ($row['metric'] === $metric && ($row['resourceType'] ?? null) === $resourceType && ($resourceId === null || ($row['resourceId'] ?? null) === $resourceId)) {
                     return (float) $row['value'];
                 }
             }
 
-            return 0.0;
+            return null;
         };
+        $sum = static fn (?float ...$readings): ?float => \in_array(null, $readings, true) ? null : \array_sum($readings);
         $project = $this->getProject()['$id'];
         $sms = \str_replace('{type}', MESSAGE_TYPE_SMS, METRIC_MESSAGES_TYPE_SENT);
         // The sweep records gauges by public ID only; events carry both IDs, so they go wrong by a resource type the writer never records.
@@ -1388,7 +1393,7 @@ final class EvaluationCustomServerTest extends Scope
         $plural = static fn (array $scope): array => ['resourceType' => $scope['resourceType'] . 's'] + $scope;
         $taggedProject = static fn (array $scope): array => ['resourceType' => 'project'] + $scope;
         $oneEngine = static fn (array $scope): array => ['engines' => false] + $scope;
-        $databaseStorage = $gauge(METRIC_DATABASES_STORAGE, 'project') + $gauge(METRIC_DATABASES_STORAGE_DOCUMENTSDB, 'project') + $gauge(METRIC_DATABASES_STORAGE_VECTORSDB, 'project');
+        $databaseStorage = $sum($gauge(METRIC_DATABASES_STORAGE, 'project'), $gauge(METRIC_DATABASES_STORAGE_DOCUMENTSDB, 'project'), $gauge(METRIC_DATABASES_STORAGE_VECTORSDB, 'project'));
 
         $cases = [
             [METRIC_NETWORK_REQUESTS, 'project', '', 2, $taggedProject],
@@ -1414,7 +1419,7 @@ final class EvaluationCustomServerTest extends Scope
             [METRIC_DATABASES_OPERATIONS_WRITES, 'database', $resources['tablesdb'], 2, $plural],
             [METRIC_DATABASES_STORAGE, 'project', '', $databaseStorage],
             [METRIC_DATABASES_STORAGE, 'database', $resources['tablesdb'], $gauge(METRIC_DATABASES_STORAGE, 'database', $resources['tablesdb']), $byInternalId],
-            [METRIC_STORAGE, 'project', '', $gauge(METRIC_FILES_STORAGE, 'project', $project) + $databaseStorage + $gauge(METRIC_DEPLOYMENTS_STORAGE, 'deployment', $project) + $gauge(METRIC_BUILDS_STORAGE, 'build', $project)],
+            [METRIC_STORAGE, 'project', '', $sum($gauge(METRIC_FILES_STORAGE, 'project', $project), $databaseStorage, $gauge(METRIC_DEPLOYMENTS_STORAGE, 'deployment', $project), $gauge(METRIC_BUILDS_STORAGE, 'build', $project))],
             [METRIC_STORAGE, 'bucket', $resources['bucket'], $gauge(METRIC_STORAGE, 'bucket', $resources['bucket']), $byInternalId],
             [METRIC_STORAGE, 'database', $resources['tablesdb'], $gauge(METRIC_STORAGE, 'database', $resources['tablesdb'])],
             [METRIC_STORAGE, 'function', $resources['function'], $gauge(METRIC_STORAGE, 'function', $resources['function'])],
@@ -1434,7 +1439,9 @@ final class EvaluationCustomServerTest extends Scope
                 'metric' => $metric,
                 'resourceType' => $resourceType,
                 'resourceId' => $resourceId,
-                'expected' => (float) $expected,
+                'expected' => $expected === null ? null : (float) $expected,
+                // The sweep's database rows, to show why one is missing.
+                'recorded' => \array_values(\array_filter($gauges, static fn (array $row): bool => \str_contains((string) $row['metric'], 'storage'))),
             ] + (isset($case[4]) ? ['wrong' => $case[4]] : []);
         }
 
