@@ -1003,7 +1003,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Property: 'נכס',
   properties: 'נכסים',
   'Property ID': 'מזהה נכס',
-  'Snippet ID': 'מזהה סניפט',
   'No properties yet': 'אין נכסים עדיין',
   'Create your first property to start tracking analytics for a website or app':
     'צרו את הנכס הראשון שלכם כדי להתחיל לעקוב אחר נתוני אנליטיקה של אתר או אפליקציה',
@@ -1099,7 +1098,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Identifiers and timestamps for this property.':
     'מזהים וחותמות זמן של הנכס הזה.',
   'Property ID:': 'מזהה נכס:',
-  'Snippet ID:': 'מזהה סניפט:',
   'Events are reaching Appwrite.': 'אירועים מגיעים ל-Appwrite.',
   'Install the code and load a page. Checks every few seconds.':
     'התקינו את הקוד וטענו דף. הבדיקה מתבצעת כל כמה שניות.',
@@ -1891,6 +1889,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'hours or less for this interval.': 'שעות או פחות למרווח הזה.',
   'Ranges shorter than 15 minutes use the 1m interval.':
     'טווחים קצרים מ-15 דקות משתמשים במרווח של דקה אחת.',
+  'Use a date range longer than this interval.':
+    'השתמשו בטווח תאריכים ארוך מהמרווח הזה.',
   'days or less for this interval.': 'ימים או פחות למרווח הזה.',
   Compute: 'מחשוב',
   'Compute over time': 'חישוב לאורך זמן',
@@ -2586,8 +2586,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   SMTP: 'SMTP',
   'SMTP server has been disabled.': 'שרת ה-SMTP הושבת.',
   'SMTP server has been enabled.': 'שרת ה-SMTP הופעל.',
-  'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.':
-    'תעודת SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות, לא נדרשת פעולה מצדכם.',
+  "SSL certificate is being issued. This usually takes a few minutes. If the logs ask for a DNS record, add it where your domain's DNS is managed.":
+    'תעודת SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות. אם הלוגים מבקשים רשומת DNS, הוסיפו אותה במקום שבו מנוהל ה-DNS של הדומיין שלכם.',
   'Search domains...': 'חיפוש דומיינים...',
   'Search migrations...': 'חיפוש מיגרציות...',
   'Search webhooks...': 'חיפוש webhooks...',
@@ -3463,6 +3463,50 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Ship your apps to every store': 'הפצת האפליקציות שלכם לכל חנות',
   'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
     'בנו גרסאות Android,‏ iOS ו-Windows ממקום אחד והגישו אותן ל-Google Play,‏ App Store ו-Microsoft Store.',
+  'Create a link that lets another organization claim this project. Each link can be claimed once.':
+    'צרו קישור שמאפשר לארגון אחר לקבל את הפרויקט. ניתן לממש כל קישור פעם אחת.',
+  'Failed to load transfer links': 'טעינת קישורי ההעברה נכשלה',
+  'No active transfer links': 'אין קישורי העברה פעילים',
+  Recipient: 'נמען',
+  'Any organization': 'כל ארגון',
+  'Transfer link actions': 'פעולות לקישור ההעברה',
+  'transfer links': 'קישורי העברה',
+  'Create transfer link': 'יצירת קישור העברה',
+  'Share this link with the recipient organization. You can copy it again from the list.':
+    'שתפו את הקישור עם הארגון הנמען. תוכלו להעתיק אותו שוב מהרשימה.',
+  'Choose how long the link is valid and which organization can claim the project.':
+    'בחרו לכמה זמן הקישור תקף ואיזה ארגון יוכל לקבל את הפרויקט.',
+  'Transfer link': 'קישור ההעברה',
+  'Expires in': 'תוקף הקישור',
+  'Recipient organization ID (optional)': 'מזהה הארגון הנמען (אופציונלי)',
+  'Leave empty to let any organization claim the project.':
+    'השאירו ריק כדי לאפשר לכל ארגון לקבל את הפרויקט.',
+  'Failed to create transfer link': 'יצירת קישור ההעברה נכשלה',
+  'Delete transfer link': 'מחיקת קישור העברה',
+  'The link will stop working and the project can no longer be claimed with it.':
+    'הקישור יפסיק לפעול ולא ניתן יהיה לקבל באמצעותו את הפרויקט.',
+  'Transfer link has been deleted': 'קישור ההעברה נמחק',
+  'Failed to delete transfer link': 'מחיקת קישור ההעברה נכשלה',
+  'Claim project': 'קבלת פרויקט',
+  'Choose the organization that should receive this project.':
+    'בחרו את הארגון שיקבל את הפרויקט.',
+  'Target organization': 'ארגון יעד',
+  'has been claimed': 'התקבל',
+  'Failed to claim project': 'קבלת הפרויקט נכשלה',
+  'This transfer link is incomplete. Ask the sender to share it again.':
+    'קישור ההעברה חלקי. בקשו מהשולח לשתף אותו שוב.',
+  'You need an organization to claim this project. Create one, then open the link again.':
+    'נדרש ארגון כדי לקבל את הפרויקט. צרו ארגון ופתחו את הקישור שוב.',
+  'Link expires': 'תוקף הקישור יפוג',
+  'This transfer link is no longer valid.': 'קישור ההעברה אינו תקף עוד.',
+  'The project already belongs to this organization. Select a different one.':
+    'הפרויקט כבר שייך לארגון זה. בחרו ארגון אחר.',
+  'will move from': 'יועבר מ-',
+  'to the organization you choose.': 'לארגון שתבחרו.',
+  'Only this organization can claim this link.':
+    'רק ארגון זה יכול לקבל את הקישור הזה.',
+  'This transfer is reserved for an organization you are not part of:':
+    'ההעברה הזו שמורה לארגון שאינכם חברים בו:',
   'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
     'בחרו כמה זמן לשמור פריסות לא פעילות. פריסות פעילות ופריסות שמקושרות לדומיין מותאם אישית נשמרות תמיד.',
   'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':
@@ -3478,4 +3522,44 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Your saved retention exceeds your plan limit. Save a supported period to update it.':
     'תקופת השמירה שנשמרה חורגת ממגבלת התוכנית שלכם. בחרו תקופה נתמכת ושמרו לעדכון.',
   '3 Years': '3 שנים',
+
+  // Environment copy at creation, its progress card, and backups in environments
+  'Start from': 'נקודת התחלה',
+  'Empty environment': 'סביבה ריקה',
+  'Nothing is copied from the project.': 'דבר לא מועתק מהפרויקט.',
+  'Copy of the project': 'עותק של הפרויקט',
+  'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
+    'המבנה וההגדרות מועתקים, והנתונים רק היכן שתבקשו זאת. ההעתקה מתבצעת לאחר יצירת הסביבה ושומרת על המזהים של מה שהיא מעתיקה.',
+  'What to copy': 'מה להעתיק',
+  'Pick what to copy, or start from an empty environment.':
+    'בחרו מה להעתיק, או התחילו מסביבה ריקה.',
+  'Environment created. The copy from the project is under way.':
+    'הסביבה נוצרה. ההעתקה מהפרויקט מתבצעת כעת.',
+  'Databases, tables, columns and indexes':
+    'מסדי נתונים, טבלאות, עמודות ואינדקסים',
+  'Rows and documents': 'שורות ומסמכים',
+  'Buckets and their settings': 'באקטים וההגדרות שלהם',
+  'Teams, auth settings, security policies and OAuth2 providers':
+    'צוותים, הגדרות אימות, מדיניות אבטחה וספקי OAuth2',
+  'Users and memberships': 'משתמשים וחברויות',
+  'The newest 90 users, with their passwords. An environment holds 100 users at most, so 10 places stay free for test accounts.':
+    '90 המשתמשים החדשים ביותר, יחד עם הסיסמאות שלהם. סביבה מכילה עד 100 משתמשים, כך ש-10 מקומות נשארים פנויים לחשבונות בדיקה.',
+  'Functions, their variables and their active deployment':
+    'פונקציות, המשתנים שלהן והפריסה הפעילה שלהן',
+  'Every deployment': 'כל הפריסות',
+  'Sites, their variables and their active deployment':
+    'אתרים, המשתנים שלהם והפריסה הפעילה שלהם',
+  'Providers and topics': 'ספקים ונושאים',
+  'Platforms, SMTP, enabled services, project variables and email templates':
+    'פלטפורמות, SMTP, שירותים מופעלים, משתני פרויקט ותבניות אימייל',
+  'Copying from the project': 'ההעתקה מהפרויקט מתבצעת',
+  'Copied from the project': 'הועתק מהפרויקט',
+  'Could not copy from the project': 'לא ניתן היה להעתיק מהפרויקט',
+  Dismiss: 'סגירה',
+  'Backups are not available in environments. Back up the project the environment belongs to.':
+    'גיבויים אינם זמינים בסביבות. גבו את הפרויקט שהסביבה שייכת אליו.',
+  'Backed up with the project': 'מגובה יחד עם הפרויקט',
+  'Backup policies and archives are managed on the project this environment belongs to.':
+    'מדיניות הגיבוי והארכיונים מנוהלים בפרויקט שהסביבה הזו שייכת אליו.',
+  'Open the project': 'פתיחת הפרויקט',
 }

@@ -30,6 +30,7 @@ import {
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 
@@ -56,9 +57,11 @@ export function AddDomainWizard() {
   const [statusCode, setStatusCode] = useState('302')
   const [error, setError] = useState('')
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
+  const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/sites/${siteId}/domains`
   const isPending =
+    registering ||
     createMutation.isPending ||
     verifyMutation.isPending ||
     deleteMutation.isPending
@@ -67,6 +70,7 @@ export function AddDomainWizard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isPending) return
     const d = domain.trim().toLowerCase()
     setError('')
     if (!d) {
@@ -102,6 +106,7 @@ export function AddDomainWizard() {
       }
     }
 
+    setRegistering(true)
     try {
       await ensureApexDomainInOrganization(project?.teamId ?? '', d, {
         skipForSites: true,
@@ -109,9 +114,11 @@ export function AddDomainWizard() {
     } catch (err: unknown) {
       const e = err as { type?: string }
       if (e?.type !== 'domain_already_exists') {
-        toast.error(t('Failed to register domain'))
+        toast.error(getErrorMessage(err, 'Failed to register domain'))
         return
       }
+    } finally {
+      setRegistering(false)
     }
 
     try {
@@ -159,9 +166,6 @@ export function AddDomainWizard() {
     try {
       const updated = await verifyMutation.mutateAsync(rule.$id)
       if (updated.status === 'verified') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'site', projectId, siteId],
-        })
         toast.success(t('Domain verified'))
         navigate({
           to: '/projects/$projectId/sites/$siteId/domains',
@@ -173,9 +177,6 @@ export function AddDomainWizard() {
       ) {
         setVerificationError(dnsPendingVerificationError(t))
       } else {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'site', projectId, siteId],
-        })
         toast.success(t('Verification in progress'))
         navigate({
           to: '/projects/$projectId/sites/$siteId/domains',

@@ -7,6 +7,7 @@ namespace Tests\Unit\Maintenance;
 use Appwrite\Event\Message\Maintenance as MaintenanceMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
+use Appwrite\Maintenance\Cohort;
 use Appwrite\Maintenance\Cycle;
 use Appwrite\Maintenance\Sweep;
 use PHPUnit\Framework\TestCase;
@@ -83,6 +84,54 @@ final class SweepTest extends TestCase
             $this->assertSame('1', $payload['project']['teamInternalId']);
             $this->assertNotEmpty($payload['project']['$createdAt']);
         }
+    }
+
+    public function testActiveCycleReachesEachActiveProjectOnceByHash(): void
+    {
+        // Integer sequences, as on Cloud: active projects are still read by page, not by block.
+        $rows = [];
+        $active = [];
+        for ($sequence = 1; $sequence <= 240; $sequence++) {
+            $kind = ['recent', 'month', 'old', 'never', 'elsewhere'][$sequence % 5];
+            $id = $kind . '-' . ($sequence * self::SPACING);
+            $rows[] = [$id, $sequence * self::SPACING, match ($kind) {
+                'recent', 'elsewhere' => $this->week->modify('-1 day'),
+                'month' => $this->week->modify('-29 days'),
+                'old' => $this->week->modify('-40 days'),
+                'never' => null,
+            }, $kind === 'elsewhere' ? self::ELSEWHERE : self::REGION];
+
+            if (\in_array($kind, ['recent', 'month'], true)) {
+                $active[$id] = $this->due(\crc32($id) % self::SLOTS)->getTimestamp();
+            }
+        }
+        $this->database = Projects::seed(new Memory(), $rows);
+
+        $publisher = $this->publisher();
+        $reached = $this->week($this->sweep($publisher), $publisher, Cohort::Active);
+
+        $this->assertSame($this->keyed($active), $this->keyed(\array_map(fn (array $dues): int => $dues[0], $reached)));
+        $this->assertSame([], \array_keys(\array_filter($reached, fn (array $dues): bool => \count($dues) > 1)));
+    }
+
+    public function testActiveDeferralKeepsItsCohort(): void
+    {
+        $due = $this->week->modify('+3 hours');
+        $this->clock = new TestClock($due);
+
+        $rows = [];
+        for ($sequence = 1; $sequence <= 120; $sequence++) {
+            $rows[] = ['recent-' . $sequence, $sequence, $due->modify('-1 day'), self::REGION];
+        }
+        $this->database = Projects::seed(new Memory(), $rows);
+        $message = new MaintenanceMessage(slot: 0, slots: 1, due: $due->getTimestamp(), period: $this->cycle()->seconds(), region: self::REGION, cohort: Cohort::Active);
+
+        // Backed up with nothing draining, so the first page defers before enqueuing anything.
+        $publisher = new QueuePublisher($this->clock, 0, 150);
+        ($this->sweep($publisher))($message);
+
+        $this->assertSame([], $publisher->payloads(self::QUEUE));
+        $this->assertSame([$message->toArray()], $publisher->payloads(self::MAINTENANCE));
     }
 
     public function testSliceAndCutoffComeFromTheMessage(): void
@@ -295,7 +344,7 @@ final class SweepTest extends TestCase
      *
      * @return array<string, list<int>> project => dues of the slices that enqueued it
      */
-    private function week(Sweep $sweep, QueuePublisher $publisher): array
+    private function week(Sweep $sweep, QueuePublisher $publisher, Cohort $cohort = Cohort::Inactive): array
     {
         $reached = [];
         for ($slice = 0; $slice < self::SLOTS; $slice++) {
@@ -303,7 +352,7 @@ final class SweepTest extends TestCase
             $this->clock->advance((float) $due->getTimestamp() - (float) $this->clock->now()->format('U.u') + 1);
 
             $before = \count($publisher->payloads(self::QUEUE));
-            $sweep($this->message($due));
+            $sweep($this->message($due, cohort: $cohort));
 
             foreach (\array_slice($this->projects($publisher), $before) as $id) {
                 $reached[$id][] = $due->getTimestamp();
@@ -373,7 +422,7 @@ final class SweepTest extends TestCase
         return \intdiv($due, Cycle::INTERVAL) % self::SLOTS;
     }
 
-    private function message(\DateTimeImmutable $due, string $cursor = ''): MaintenanceMessage
+    private function message(\DateTimeImmutable $due, string $cursor = '', Cohort $cohort = Cohort::Inactive): MaintenanceMessage
     {
         return new MaintenanceMessage(
             slot: $this->slot($due->getTimestamp()),
@@ -382,6 +431,7 @@ final class SweepTest extends TestCase
             period: $this->cycle()->seconds(),
             region: self::REGION,
             cursor: $cursor,
+            cohort: $cohort,
         );
     }
 

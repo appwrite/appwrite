@@ -87,7 +87,7 @@ class Get extends Action
 
         try {
             $image = new Image((string) $res->getBody());
-        } catch (\ImagickException) {
+        } catch (\Exception) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 

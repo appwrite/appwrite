@@ -6,6 +6,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
+use Appwrite\Maintenance\Cohort;
 use Appwrite\Usage\Connection;
 use Swoole\Coroutine as Co;
 use Utopia\Console\Console;
@@ -26,7 +27,7 @@ class Schedule extends Action
     public function __construct()
     {
         $this
-            ->desc('Run the function, execution, message, inactive project maintenance and, when self-hosted, resource stats schedulers in one process')
+            ->desc('Run the function, execution, message, project maintenance and, when self-hosted, resource stats schedulers in one process')
             ->inject('publisherForFunctions')
             ->inject('publisherForMessaging')
             ->inject('getIsResourceBlocked')
@@ -104,13 +105,18 @@ class Schedule extends Action
         ?Connection $usageConnection = null,
     ): never {
         // Parsed before any loop starts: a loop that throws only ends its own coroutine, so an invalid interval
-        // would otherwise leave the process healthy with inactive projects never maintained.
-        $cycle = ScheduleMaintenance::cycle();
+        // would otherwise leave the process healthy with a cohort of projects never maintained.
+        $cycles = [];
+        foreach (Cohort::cases() as $cohort) {
+            $cycles[] = [$cohort, ScheduleMaintenance::cycle($cohort)];
+        }
 
         $this->loop(ScheduleFunctions::getName(), fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
         $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
         $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $pools));
-        $this->loop(ScheduleMaintenance::getName(), fn () => (new ScheduleMaintenance())->run(ScheduleMaintenance::loop($cycle, $publisherForMaintenance, $telemetry), $pools));
+        foreach ($cycles as [$cohort, $cycle]) {
+            $this->loop(ScheduleMaintenance::getName() . ':' . $cohort->value, fn () => (new ScheduleMaintenance())->run(ScheduleMaintenance::loop($cohort, $cycle, $publisherForMaintenance, $telemetry), $cohort, $pools));
+        }
 
         if ($publisherForStatsResources !== null && $usageConnection !== null) {
             $this->loop(StatsResources::getName(), fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection, $telemetry));
@@ -123,12 +129,11 @@ class Schedule extends Action
 
     private function loop(string $name, \Closure $task): void
     {
-        Co::create(function () use ($name, $task): void {
-            // A task that throws (a lost Redis connection ends a scheduler
-            // loop) starts again, as its own container would be restarted.
-            while (true) {
-                // Held by reference: the task's own spans replace the current one.
-                $span = Span::init('schedule.combined.loop');
+        // The process outlives any one loop, so nothing else restarts a loop
+        // that throws or returns: its schedules would silently stop firing.
+        Co::create(function () use ($name, $task): never {
+            for (;;) {
+                Span::init('schedule.combined.loop');
                 Span::add('loop', $name);
                 $error = null;
 
@@ -136,16 +141,12 @@ class Schedule extends Action
                     $task();
                 } catch (\Throwable $th) {
                     $error = $th;
+                    Console::error('schedule: ' . $name . ' loop stopped: ' . $th->getMessage());
                 } finally {
-                    $span->finish(error: $error);
+                    Span::current()?->finish(error: $error);
                 }
 
-                if ($error === null) {
-                    return;
-                }
-
-                Console::error('schedule: ' . $name . ' loop failed, restarting in 5s: ' . $error->getMessage());
-                sleep(5);
+                Co::sleep(1);
             }
         });
     }

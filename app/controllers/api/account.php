@@ -4,6 +4,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
+use Appwrite\Auth\OTPToken;
 use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
@@ -23,12 +24,14 @@ use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -89,7 +92,7 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime) {
 
     // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
     $oauthProvider = null;
@@ -229,39 +232,66 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     $authorization->addRole(Role::user($user->getId())->toString());
 
+    // Magic URL and email OTP prove the email, a phone OTP proves the phone
+    $verification = match ($verifiedToken->getAttribute('type')) {
+        TOKEN_TYPE_MAGIC_URL, TOKEN_TYPE_EMAIL => 'emailVerification',
+        TOKEN_TYPE_PHONE => 'phoneVerification',
+        default => null,
+    };
+
     // Claim the token and issue the session together: of concurrent exchanges only the one that deletes the token
-    // gets a session, and a failed insert rolls the claim back so the token can be retried
-    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user) {
+    // gets a session, and a failed insert rolls the claim back so the token can be retried. The user row lock
+    // orders this against an address change, which deletes the token and resets the verification it proves
+    $claimed = false;
+    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project, &$claimed) {
+        $claimed = false; // A retried attempt starts over
+        $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+
         if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        return $dbForProject->createDocument('sessions', $session
+        // Proving an unverified email or phone claims the account, so whoever registered it keeps no other way in
+        if ($verification !== null && !$locked->getAttribute($verification, false)) {
+            $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
+            $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
+            $claimed = true;
+        }
+
+        $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
             ]));
+
+        if ($verification !== null) {
+            $dbForProject->updateDocument('users', $user->getId(), new Document([$verification => true]));
+        }
+
+        return $session;
     });
+
+    if ($verification !== null) {
+        $user->setAttribute($verification, true);
+    }
 
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
-    // Magic URL + Email OTP
-    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_MAGIC_URL || $verifiedToken->getAttribute('type') === TOKEN_TYPE_EMAIL) {
-        $user->setAttribute('emailVerification', true);
-    }
+    if ($claimed) {
+        try {
+            $mqtt->revoke($project->getId(), $user->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
-    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_PHONE) {
-        $user->setAttribute('phoneVerification', true);
-    }
-
-    try {
-        $dbForProject->updateDocument('users', $user->getId(), new Document([
-            'emailVerification' => $user->getAttribute('emailVerification'),
-            'phoneVerification' => $user->getAttribute('phoneVerification'),
-        ]));
-    } catch (\Throwable $th) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
+        // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
+        (clone $queueForRealtime)
+            ->reset()
+            ->setProject($project)
+            ->setEvent('users.[userId].sessions.delete')
+            ->setParam('userId', $user->getId())
+            ->trigger();
     }
 
     $bus->dispatch(new SessionCreated(
@@ -270,10 +300,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         session: $session->getArrayCopy(),
         locale: $locale->default,
     ));
-
-    $queueForEvents
-        ->setParam('userId', $user->getId())
-        ->setParam('sessionId', $session->getId());
 
     $encoded = $store
         ->setProperty('id', $user->getId())
@@ -300,6 +326,11 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ->setAttribute('expire', $expire)
         ->setAttribute('secret', $encoded)
     ;
+
+    $queueForEvents
+        ->setParam('userId', $user->getId())
+        ->setParam('sessionId', $session->getId())
+        ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
     $response->dynamic($session, Response::MODEL_SESSION);
 };
@@ -567,7 +598,9 @@ Http::delete('/v1/account')
     ->inject('publisherForDeletes')
     ->inject('authorization')
     ->inject('mqtt')
-    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization, Mqtt $mqtt) {
+    ->inject('queueForRealtime')
+    ->inject('usage')
+    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime, Context $usage) {
         if ($targetUser->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
@@ -605,6 +638,8 @@ Http::delete('/v1/account')
         } catch (\Throwable $error) {
             Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
         }
+
+        (new PresenceState())->deleteForUser($dbForProject, $project, $targetUser, $queueForRealtime, $usage);
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
@@ -702,7 +737,9 @@ Http::delete('/v1/account/sessions')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('session')
-    ->action(function (bool $current, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $callingSession) {
+    ->inject('project')
+    ->inject('mqtt')
+    ->action(function (bool $current, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $callingSession, Document $project, Mqtt $mqtt) {
 
         // Nothing to keep (e.g. account API key), so refuse rather than delete every session.
         if (!$current && $callingSession === null) {
@@ -741,7 +778,7 @@ Http::delete('/v1/account/sessions')
                 // Use current session for events.
                 $currentSession = $session;
                 $queueForEvents
-                    ->setPayload($response->output($session, Response::MODEL_SESSION));
+                    ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
                 $publisherForDeletes->enqueue(new DeleteMessage(
                     project: $queueForEvents->getProject(),
@@ -752,6 +789,12 @@ Http::delete('/v1/account/sessions')
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        try {
+            $mqtt->revoke($project->getId(), $user->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
         if ($currentSession instanceof Document) {
             $queueForEvents
@@ -853,7 +896,9 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('session')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $current) {
+    ->inject('project')
+    ->inject('mqtt')
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, ?Document $current, Document $project, Mqtt $mqtt) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -890,10 +935,16 @@ Http::delete('/v1/account/sessions/:sessionId')
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
 
+            try {
+                $mqtt->revoke($project->getId(), $user->getId());
+            } catch (\Throwable $error) {
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+            }
+
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $session->getId())
-                ->setPayload($response->output($session, Response::MODEL_SESSION));
+                ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
             $publisherForDeletes->enqueue(new DeleteMessage(
                 project: $queueForEvents->getProject(),
@@ -1010,7 +1061,7 @@ Http::patch('/v1/account/sessions/:sessionId')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION))
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1041,7 +1092,7 @@ Http::post('/v1/account/sessions/email')
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->label('abuse-key', 'projectId:{projectId},url:{url},email:{param-email}')
     ->label('abuse-reset', [201])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
@@ -1206,6 +1257,7 @@ Http::post('/v1/account/sessions/email')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $bus->dispatch(new SessionCreated(
@@ -1350,11 +1402,6 @@ Http::post('/v1/account/sessions/anonymous')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
-
         $encoded = $store
             ->setProperty('id', $user->getId())
             ->setProperty('secret', $secret)
@@ -1378,6 +1425,12 @@ Http::post('/v1/account/sessions/anonymous')
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('secret', $encoded)
+        ;
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1426,6 +1479,8 @@ Http::post('/v1/account/sessions/token')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
+    ->inject('mqtt')
+    ->inject('queueForRealtime')
     ->action($createSession);
 
 Http::get('/v1/account/sessions/oauth2/:provider')
@@ -1462,7 +1517,8 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ->inject('project')
     ->inject('platform')
     ->inject('clientForOAuth2')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('user')
+    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2, User $user) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1526,6 +1582,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             'failure' => $failure,
             'token' => false,
             'nonce' => $nonce,
+            'binding' => \hash_hmac('sha256', $nonce . ':' . $user->getId(), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
             'state' => $state,
         ], $scopes);
 
@@ -1646,7 +1703,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('authorization')
     ->inject('platform')
     ->inject('clientForOAuth2')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('mqtt')
+    ->inject('queueForRealtime')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2, Mqtt $mqtt, Realtime $queueForRealtime) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1753,7 +1812,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         // The state comes back through the provider unchanged, so it says nothing about which
         // browser started the flow (RFC 6749 §10.12). The nonce cookie set alongside it does:
-        // only that browser holds it, and no other site can read or set it. The cookie is not
+        // only that browser holds it. The cookie is not
         // rewritten here: two callbacks finishing together would race on it, and replaying an
         // authorization code is refused by the provider (RFC 6749 §4.1.2).
         // A token flow started by the app's server leaves that cookie on the server, so an unbound
@@ -1761,9 +1820,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // it started this flow, and linking the provider identity to it would let anyone attach
         // their identity to that account by sending the callback link. The app binds the token it
         // receives to its own user through the `state` it passed in.
+        // A sibling site can plant the nonce cookie, so the flow is also bound to the user who started it.
+        // A guest callback accepts a state without a binding: flows started before it existed still finish.
         $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())));
         $stateNonce = \is_string($state['nonce'] ?? null) ? $state['nonce'] : '';
-        if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce))) {
+        $stateBinding = \is_string($state['binding'] ?? null) ? $state['binding'] : '';
+        $binding = \hash_hmac('sha256', $stateNonce . ':' . $user->getId(), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
+        $bound = \hash_equals($binding, $stateBinding) || ($stateBinding === '' && $user->isEmpty());
+        if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce)) || !$bound) {
             if (empty($state['token'])) {
                 $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
             }
@@ -1866,13 +1930,19 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // createSession later. Deleting the current session in that flow would
         // sign the caller out until the exchange, so it is left in place.
         if (empty($state['token'])) {
-            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
             if ($current) { // Replace the current session with the new one.
                 $currentDocument = $dbForProject->getDocument('sessions', $current);
                 if (!$currentDocument->isEmpty()) {
                     $dbForProject->deleteDocument('sessions', $currentDocument->getId());
                     $dbForProject->purgeCachedDocument('users', $user->getId());
+
+                    try {
+                        $mqtt->revoke($project->getId(), $user->getId());
+                    } catch (\Throwable $error) {
+                        Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+                    }
                 }
             }
         }
@@ -1956,7 +2026,22 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
                     if (!$user->getAttribute('emailVerification', false)) {
-                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user));
+                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
+                        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+                        try {
+                            $mqtt->revoke($project->getId(), $user->getId());
+                        } catch (\Throwable $error) {
+                            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+                        }
+
+                        // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
+                        (clone $queueForRealtime)
+                            ->reset()
+                            ->setProject($project)
+                            ->setEvent('users.[userId].sessions.delete')
+                            ->setParam('userId', $user->getId())
+                            ->trigger();
                     }
                     // The provider verified this address, or its canonical form on the same domain
                     if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
@@ -2343,7 +2428,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $session->getId())
-                ->setPayload($response->output($session, Response::MODEL_SESSION))
+                ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
             ;
 
             // TODO: Remove this deprecated workaround - support only token
@@ -2425,7 +2510,8 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ->inject('project')
     ->inject('platform')
     ->inject('clientForOAuth2')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('user')
+    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2, User $user) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -2486,6 +2572,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             'failure' => $failure,
             'token' => true,
             'nonce' => $nonce,
+            'binding' => \hash_hmac('sha256', $nonce . ':' . $user->getId(), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
             'state' => $state,
         ], $scopes);
 
@@ -3221,6 +3308,7 @@ Http::post('/v1/account/tokens/email')
                 variables: $emailVariables,
                 customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
                 platform: $platform,
+                headers: OTPToken::from($tokenSecret, $request->getOrigin())?->toHeaders() ?? [],
             ));
         }
 
@@ -3289,10 +3377,12 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
+    ->inject('mqtt')
+    ->inject('queueForRealtime')
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization, $mqtt, $queueForRealtime) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization, $mqtt, $queueForRealtime);
     });
 
 Http::put('/v1/account/sessions/phone')
@@ -3341,6 +3431,8 @@ Http::put('/v1/account/sessions/phone')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
+    ->inject('mqtt')
+    ->inject('queueForRealtime')
     ->action($createSession);
 
 Http::post('/v1/account/tokens/phone')
@@ -3485,15 +3577,13 @@ Http::post('/v1/account/tokens/phone')
             'ip' => $request->getIP(),
         ]);
 
-        $token = $authorization->skip(fn () => $dbForProject->createDocument('tokens', $token
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($recipient->getId())),
-                Permission::update(Role::user($recipient->getId())),
-                Permission::delete(Role::user($recipient->getId())),
-            ])));
+        $token->setAttribute('$permissions', [
+            Permission::read(Role::user($recipient->getId())),
+            Permission::update(Role::user($recipient->getId())),
+            Permission::delete(Role::user($recipient->getId())),
+        ]);
 
-        $dbForProject->purgeCachedDocument('users', $recipient->getId());
-
+        $sms = null;
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
@@ -3518,14 +3608,33 @@ Http::post('/v1/account/tokens/phone')
                 ],
             ]);
 
-            $publisherForMessaging->enqueue(new MessagingMessage(
+            $sms = new MessagingMessage(
                 type: MESSAGE_SEND_TYPE_INTERNAL,
                 project: $project,
                 message: $messageDoc,
                 recipients: [$phone],
                 providerType: MESSAGE_TYPE_SMS,
-            ));
+            );
+        }
 
+        // Store the token and queue its SMS under the user lock the phone update takes, so a code is never issued or sent for a number that just changed
+        $token = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $recipient, $phone, $token, $sms, $publisherForMessaging) {
+            $current = $dbForProject->getDocument('users', $recipient->getId(), forUpdate: true);
+            if ($current->getAttribute('phone') !== $phone) {
+                throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+            }
+
+            $token = $dbForProject->createDocument('tokens', $token);
+            if ($sms !== null) {
+                $publisherForMessaging->enqueue($sms);
+            }
+
+            return $token;
+        }));
+
+        $dbForProject->purgeCachedDocument('users', $recipient->getId());
+
+        if ($sendSMS) {
             $countryCode = CallingCode::fromPhoneNumber($phone);
             if (!empty($countryCode)) {
                 $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
@@ -3586,13 +3695,18 @@ Http::post('/v1/account/jwts')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('project')
+    ->inject('console')
     ->inject('mode')
-    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, string $mode) {
+    ->action(function (int $duration, Request $request, Response $response, User $user, Store $store, ProofsToken $proofForToken, Document $project, Document $console, string $mode) {
         if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
             throw new Exception(Exception::USER_JWT_CREATION_DENIED);
         }
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
 
         if (!$sessionId) {
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
@@ -3712,7 +3826,8 @@ Http::patch('/v1/account/password')
     ->inject('proofForPassword')
     ->inject('pwnedPasswords')
     ->inject('session')
-    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, PasswordPwned $pwnedPasswords, ?Document $current) {
+    ->inject('mqtt')
+    ->action(function (string $password, string $oldPassword, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, PasswordPwned $pwnedPasswords, ?Document $current, Mqtt $mqtt) {
         $userProofForPassword = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !$userProofForPassword->verify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -3766,6 +3881,12 @@ Http::patch('/v1/account/password')
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        try {
+            $mqtt->revoke($project->getId(), $user->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3960,6 +4081,15 @@ Http::patch('/v1/account/email')
                             TOKEN_TYPE_EMAIL,
                         ]),
                     ]));
+                    $authorization->skip(fn () => $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::EMAIL]),
+                    ]));
+                    // A pending invite was sent to the old address, so it must not prove the new one
+                    $authorization->skip(fn () => $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('confirm', [false]),
+                    ]));
                 }
 
                 return $user;
@@ -4060,8 +4190,6 @@ Http::patch('/v1/account/phone')
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
-        $oldPhone = $user->getAttribute('phone');
-
         $user
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
@@ -4080,12 +4208,42 @@ Http::patch('/v1/account/phone')
         }
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-            $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldPhone);
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone) {
+                $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
-            }
+                $lockedPhone = $current->getAttribute('phone');
+
+                $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $lockedPhone);
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+                }
+
+                $sequence = $user->getSequence();
+                if ($lockedPhone !== $phone && $sequence !== '' && $sequence !== null) {
+                    $authorization->skip(function () use ($dbForProject, $sequence) {
+                        $dbForProject->deleteDocuments('tokens', [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('type', [TOKEN_TYPE_PHONE]),
+                        ]);
+                        $dbForProject->deleteDocuments('challenges', [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('type', [Type::PHONE]),
+                        ]);
+                        // A pending invite was sent to the old number, so it must not prove the new one
+                        $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('confirm', [false]),
+                        ]);
+                    });
+                }
+
+                return $user;
+            });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
@@ -4165,7 +4323,9 @@ Http::patch('/v1/account/status')
     ->inject('cookieDomain')
     ->inject('project')
     ->inject('mqtt')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain, Document $project, Mqtt $mqtt) {
+    ->inject('queueForRealtime')
+    ->inject('usage')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain, Document $project, Mqtt $mqtt, Realtime $queueForRealtime, Context $usage) {
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => false]));
 
         try {
@@ -4173,6 +4333,8 @@ Http::patch('/v1/account/status')
         } catch (\Throwable $error) {
             Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
         }
+
+        (new PresenceState())->deleteForUser($dbForProject, $project, $user, $queueForRealtime, $usage);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -4495,7 +4657,9 @@ Http::put('/v1/account/recovery')
     ->inject('proofForToken')
 ->inject('authorization')
     ->inject('pwnedPasswords')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords) {
+    ->inject('mqtt')
+    ->inject('queueForRealtime')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization, PasswordPwned $pwnedPasswords, Mqtt $mqtt, Realtime $queueForRealtime) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -4547,10 +4711,19 @@ Http::put('/v1/account/recovery')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+        $claimed = false;
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, &$claimed) {
+            $claimed = false; // A retried attempt starts over
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
+            }
+
+            // Recovery proves an unverified email, so whoever registered it keeps no other way in
+            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+            if (!$locked->getAttribute('emailVerification', false)) {
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
+                $claimed = true;
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
@@ -4582,6 +4755,22 @@ Http::put('/v1/account/recovery')
         }
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        try {
+            $mqtt->revoke($project->getId(), $profile->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
+
+        if ($claimed) {
+            // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
+            (clone $queueForRealtime)
+                ->reset()
+                ->setProject($project)
+                ->setEvent('users.[userId].sessions.delete')
+                ->setParam('userId', $profile->getId())
+                ->trigger();
+        }
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
@@ -4847,6 +5036,7 @@ Http::post('/v1/account/recovery/otp')
                 variables: $emailVariables,
                 customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
                 platform: $platform,
+                headers: OTPToken::from($secret, $request->getOrigin())?->toHeaders() ?? [],
             ));
         }
 
@@ -4909,7 +5099,9 @@ Http::put('/v1/account/recovery/otp')
     ->inject('proofForCode')
     ->inject('authorization')
     ->inject('pwnedPasswords')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords) {
+    ->inject('mqtt')
+    ->inject('queueForRealtime')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, PasswordPwned $pwnedPasswords, Mqtt $mqtt, Realtime $queueForRealtime) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -4961,10 +5153,19 @@ Http::put('/v1/account/recovery/otp')
 
         $sessions = $profile->getAttribute('sessions', []);
 
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $verifiedToken, $profile, $newPassword, $history, $passwordPwned, $proofForPassword) {
+        $claimed = false;
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, &$claimed) {
+            $claimed = false; // A retried attempt starts over
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
+            }
+
+            // Recovery proves an unverified email, so whoever registered it keeps no other way in
+            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+            if (!$locked->getAttribute('emailVerification', false)) {
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
+                $claimed = true;
             }
 
             $dbForProject->updateDocument('users', $profile->getId(), new Document(
@@ -4996,6 +5197,22 @@ Http::put('/v1/account/recovery/otp')
         }
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        try {
+            $mqtt->revoke($project->getId(), $profile->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
+
+        if ($claimed) {
+            // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
+            (clone $queueForRealtime)
+                ->reset()
+                ->setProject($project)
+                ->setEvent('users.[userId].sessions.delete')
+                ->setParam('userId', $profile->getId())
+                ->trigger();
+        }
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
@@ -5440,15 +5657,13 @@ Http::post('/v1/account/verifications/phone')
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
-        $verification = $dbForProject->createDocument('tokens', $verification
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+        $verification->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]);
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
-
+        $sms = null;
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
@@ -5468,14 +5683,33 @@ Http::post('/v1/account/verifications/phone')
                 ],
             ]);
 
-            $publisherForMessaging->enqueue(new MessagingMessage(
+            $sms = new MessagingMessage(
                 type: MESSAGE_SEND_TYPE_INTERNAL,
                 project: $project,
                 message: $messageDoc,
                 recipients: [$user->getAttribute('phone')],
                 providerType: MESSAGE_TYPE_SMS,
-            ));
+            );
+        }
 
+        // Store the token and queue its SMS under the user lock the phone update takes, so a code is never issued or sent for a number that just changed
+        $verification = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone, $verification, $sms, $publisherForMessaging) {
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+            if ($current->getAttribute('phone') !== $phone) {
+                throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+            }
+
+            $verification = $dbForProject->createDocument('tokens', $verification);
+            if ($sms !== null) {
+                $publisherForMessaging->enqueue($sms);
+            }
+
+            return $verification;
+        });
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        if ($sendSMS) {
             $countryCode = CallingCode::fromPhoneNumber($phone);
             if (!empty($countryCode)) {
                 $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
@@ -5543,16 +5777,20 @@ Http::put('/v1/account/verifications/phone')
 
         $authorization->addRole(Role::user($profile->getId())->toString());
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(['phoneVerification' => true]));
-
-        $user->setAttributes($profile->getArrayCopy());
-
         $verificationDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
-        /**
-         * We act like we're updating and validating the verification token but actually we don't need it anymore.
-         */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        // Claim the token under the user row lock a phone change takes, which deletes tokens sent to the old number
+        $profile = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $profile, $verifiedToken) {
+            $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
+
+            return $dbForProject->updateDocument('users', $profile->getId(), new Document(['phoneVerification' => true]));
+        });
+
+        $user->setAttributes($profile->getArrayCopy());
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
@@ -6239,6 +6477,7 @@ Http::post('/v1/account/verifications/email/otp')
             variables: $emailVariables,
             customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
             platform: $platform,
+            headers: OTPToken::from($secret, $request->getOrigin())?->toHeaders() ?? [],
         ));
 
         $verification->setAttribute('secret', $secret);

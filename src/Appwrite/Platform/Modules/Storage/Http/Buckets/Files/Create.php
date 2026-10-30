@@ -132,6 +132,9 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
+    /**
+     * @return Document|null The file, when this request completed its upload
+     */
     public function action(
         string $bucketId,
         string $fileId,
@@ -149,7 +152,7 @@ class Create extends Action
         Authorization $authorization,
         callable $locks,
         ExiftoolClient $exiftool
-    ) {
+    ): ?Document {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = $user->isKey($authorization->getRoles());
@@ -247,6 +250,11 @@ class Create extends Action
 
             $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
             $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
+
+            // A range starting at the declared size has no bytes left to address.
+            if ($start >= $fileSize) {
+                throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+            }
         }
 
         $filename = new Filename(0, 0);
@@ -284,6 +292,7 @@ class Create extends Action
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         $completed = false;
+        $finished = null;
         // True when prepareUpload created the pending document in this request.
         // Finalize still sees that document, but it is not a resume.
         $createdInRequest = false;
@@ -370,7 +379,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user, &$finished): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -580,8 +589,7 @@ class Create extends Action
                     ])));
                 }
 
-                // Trigger after create success hook
-                $this->afterCreateSuccess($file);
+                $finished = $file;
             } else {
                 /**
                  * Skip authorization in updateDocument.
@@ -654,16 +662,8 @@ class Create extends Action
             $response->addHeader('Retry-After', '5');
             throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'File upload is busy. Try again.');
         }
-    }
 
-    /**
-     * Hook to run after file is created successfully
-     *
-     * @param Document $file
-     * @return void
-     */
-    protected function afterCreateSuccess(Document $file)
-    {
+        return $finished;
     }
 
     /**

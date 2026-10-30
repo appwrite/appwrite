@@ -89,6 +89,7 @@ services:
       - _APP_DNS_EXTERNAL
       - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
@@ -142,6 +143,7 @@ services:
       - _APP_DOMAIN_TARGET_CAA
       - _APP_DNS
       - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_FUNCTIONS_FALLBACK
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -282,7 +284,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.2.97-self-hosted
+    image: appwrite/new:1.2.108-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
@@ -331,6 +333,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_WORKER_PER_CORE
@@ -338,6 +341,10 @@ services:
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_CONSOLE_HOSTNAMES
       - _APP_REALTIME_TAIL_RATE
+      - _APP_REALTIME_PERMISSION_TIMEOUT
+      - _APP_LIMIT_REALTIME_SUBSCRIPTIONS
+      - _APP_LIMIT_REALTIME_CHANNELS
+      - _APP_LIMIT_REALTIME_QUERIES
       - _APP_OPENSSL_KEY_V1
       - _APP_TRUSTED_HEADERS
       - _APP_TRUSTED_PROXIES
@@ -414,6 +421,7 @@ services:
       - appwrite
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
@@ -473,6 +481,7 @@ services:
       - _APP_DNS_EXTERNAL
       - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
@@ -486,7 +495,7 @@ services:
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=79
+      - _APP_WORKER_MAX_COROUTINES=75
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
@@ -634,6 +643,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
@@ -670,6 +680,7 @@ services:
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL
 
   appwrite-worker-stats-usage:
@@ -723,6 +734,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       # One slot at a time: each job re-checks the deletes backlog before every block.
       - _APP_WORKER_MAX_COROUTINES=1
@@ -777,6 +789,7 @@ services:
       - _APP_DNS_EXTERNAL
       - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -826,6 +839,7 @@ services:
       - appwrite-imports:/storage/imports:rw
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
@@ -908,6 +922,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
@@ -966,6 +981,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -1074,6 +1090,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -1149,8 +1166,9 @@ services:
       - _APP_WORKER_SCREENSHOTS_ROUTER
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
-      - _APP_WORKER_MAX_COROUTINES=8
+      - _APP_WORKER_MAX_COROUTINES=4
       - _APP_WORKER_PER_CORE
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
@@ -1212,6 +1230,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -1257,6 +1276,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
@@ -1298,6 +1318,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
@@ -1347,6 +1368,7 @@ services:
       - _APP_DNS
       - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=6
       - _APP_WORKER_PER_CORE
@@ -1393,7 +1415,11 @@ services:
       - redis
       - ${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_DNS
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_NOTIFICATIONS_TRACKING_SECRET
@@ -1442,6 +1468,7 @@ services:
       - _APP_DNS
       - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
@@ -1508,6 +1535,7 @@ services:
       - _APP_DNS_EXTERNAL
       - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
@@ -1567,6 +1595,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
@@ -1615,6 +1644,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
@@ -1659,6 +1689,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -1700,6 +1731,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -1740,6 +1772,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -1756,7 +1789,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.8
+    image: appwrite/browser:0.3.10
     networks:
       - browser
     environment:
@@ -1886,7 +1919,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.4
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:4.0.0
     restart: unless-stopped
     user: root
     networks:
@@ -2010,6 +2043,9 @@ services:
       start_period: 10s
     command:
       - postgres
+      # Every HTTP worker and worker coroutine pools its own connections; the default of 100 runs out under load
+      - -c
+      - max_connections=${_APP_DB_MAX_CONNECTIONS:-500}
   appwrite-embedding:
     image: appwrite/embedding:0.3.1
     profiles:

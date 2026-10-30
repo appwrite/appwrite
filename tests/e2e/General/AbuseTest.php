@@ -425,6 +425,51 @@ final class AbuseTest extends Scope
         }
     }
 
+    #[Group('abuseEnabled')]
+    public function testAbuseGetFilePreview(): void
+    {
+        $bucketId = $this->createBucket()['bucketId'];
+        $max = 60;
+
+        $fileIds = [];
+        for ($i = 0; $i < 2; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'fileId' => Id::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'preview.png'),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertSame(201, $response['headers']['status-code']);
+            $fileIds[] = $response['body']['$id'];
+        }
+
+        $headers = [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
+        ];
+
+        // Each width is a distinct transform, so none of these are answered from the preview cache.
+        $this->startCountingInOneWindow(60);
+        for ($i = 0; $i < $max; $i++) {
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $i + 1]);
+            $this->assertSame(200, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $max + 1]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A guest previewing past the limit is throttled');
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $max + 2, 'fileId' => $fileIds[1]]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A query param cannot replace the file ID in the limit key');
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[1] . '/preview', $headers, ['width' => 1]);
+        $this->assertSame(200, $response['headers']['status-code'], 'Another file has its own limit');
+    }
+
     private function assertQueryLimited(string $path): void
     {
         $max = 120;
@@ -599,6 +644,61 @@ final class AbuseTest extends Scope
             'secret' => 'wrong-secret',
         ]);
         $this->assertSame(429, $response['headers']['status-code'], 'Changing the user ID must not reset the limit on secret guesses');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseEmailSessionLimitPerProjectAccount(): void
+    {
+        $email = 'login.' . \bin2hex(\random_bytes(8)) . '@example.com';
+        $password = 'password-' . \bin2hex(\random_bytes(4));
+        $projects = [$this->getProject(), $this->getProject(true)];
+
+        foreach ($projects as $project) {
+            $user = $this->client->call(Client::METHOD_POST, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ], [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => $password,
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+        }
+
+        $headers = fn (array $project): array => [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-forwarded-for' => '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+                'email' => $email,
+                'password' => 'wrong-password',
+            ]);
+            $this->assertSame(401, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+            'email' => \strtoupper($email),
+            'password' => 'wrong-password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'Changing the email case must not reset the limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[1]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code'], 'Another project keeps its own limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+            'email' => $email,
+            'password' => 'wrong-password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A sign in on another project must not reset the limit');
     }
 
     #[Group('abuseEnabled')]

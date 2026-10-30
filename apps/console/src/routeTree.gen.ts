@@ -27,6 +27,7 @@ import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
@@ -294,6 +295,7 @@ import { Route as PublicProjectsProjectIdAuthPoliciesEmailsRouteImport } from '.
 import { Route as PublicProjectsProjectIdAuthPoliciesMembershipsRouteImport } from './routes/_public/projects.$projectId.auth.policies.memberships'
 import { Route as PublicProjectsProjectIdAuthPoliciesPasskeysRouteImport } from './routes/_public/projects.$projectId.auth.policies.passkeys'
 import { Route as PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport } from './routes/_public/projects.$projectId.auth.policies.passwords'
+import { Route as PublicProjectsProjectIdAuthPoliciesRealtimeRouteImport } from './routes/_public/projects.$projectId.auth.policies.realtime'
 import { Route as PublicProjectsProjectIdAuthPoliciesSessionsRouteImport } from './routes/_public/projects.$projectId.auth.policies.sessions'
 import { Route as PublicProjectsProjectIdAuthPoliciesUsersRouteImport } from './routes/_public/projects.$projectId.auth.policies.users'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId'
@@ -558,6 +560,11 @@ const SetupDotmdRoute = SetupDotmdRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransferRoute = TransferRouteImport.update({
+  id: '/transfer',
+  path: '/transfer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiHelloRoute = ApiHelloRouteImport.update({
@@ -2063,6 +2070,12 @@ const PublicProjectsProjectIdAuthPoliciesPasswordsRoute =
     path: '/passwords',
     getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
   } as any)
+const PublicProjectsProjectIdAuthPoliciesRealtimeRoute =
+  PublicProjectsProjectIdAuthPoliciesRealtimeRouteImport.update({
+    id: '/realtime',
+    path: '/realtime',
+    getParentRoute: () => PublicProjectsProjectIdAuthPoliciesRoute,
+  } as any)
 const PublicProjectsProjectIdAuthPoliciesSessionsRoute =
   PublicProjectsProjectIdAuthPoliciesSessionsRouteImport.update({
     id: '/sessions',
@@ -3383,6 +3396,7 @@ export interface FileRoutesByFullPath {
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/transfer': typeof TransferRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -3643,6 +3657,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   '/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  '/projects/$projectId/auth/policies/realtime': typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   '/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
   '/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
@@ -3843,6 +3858,7 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/transfer': typeof TransferRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -4068,6 +4084,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   '/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  '/projects/$projectId/auth/policies/realtime': typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   '/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
   '/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
@@ -4258,6 +4275,7 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/transfer': typeof TransferRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
   '/_auth/mfa': typeof AuthMfaRoute
@@ -4519,6 +4537,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/auth/policies/memberships': typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   '/_public/projects/$projectId/auth/policies/passkeys': typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   '/_public/projects/$projectId/auth/policies/passwords': typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  '/_public/projects/$projectId/auth/policies/realtime': typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   '/_public/projects/$projectId/auth/policies/sessions': typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   '/_public/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
   '/_public/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
@@ -4723,6 +4742,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/setup.md'
     | '/sitemap.xml'
+    | '/transfer'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -4983,6 +5003,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/policies/memberships'
     | '/projects/$projectId/auth/policies/passkeys'
     | '/projects/$projectId/auth/policies/passwords'
+    | '/projects/$projectId/auth/policies/realtime'
     | '/projects/$projectId/auth/policies/sessions'
     | '/projects/$projectId/auth/policies/users'
     | '/projects/$projectId/auth/teams/$teamId'
@@ -5183,6 +5204,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/setup.md'
     | '/sitemap.xml'
+    | '/transfer'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -5408,6 +5430,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/policies/memberships'
     | '/projects/$projectId/auth/policies/passkeys'
     | '/projects/$projectId/auth/policies/passwords'
+    | '/projects/$projectId/auth/policies/realtime'
     | '/projects/$projectId/auth/policies/sessions'
     | '/projects/$projectId/auth/policies/users'
     | '/projects/$projectId/auth/teams/$teamId'
@@ -5597,6 +5620,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/setup.md'
     | '/sitemap.xml'
+    | '/transfer'
     | '/_api/hello'
     | '/_auth/join'
     | '/_auth/mfa'
@@ -5858,6 +5882,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/auth/policies/memberships'
     | '/_public/projects/$projectId/auth/policies/passkeys'
     | '/_public/projects/$projectId/auth/policies/passwords'
+    | '/_public/projects/$projectId/auth/policies/realtime'
     | '/_public/projects/$projectId/auth/policies/sessions'
     | '/_public/projects/$projectId/auth/policies/users'
     | '/_public/projects/$projectId/auth/teams/$teamId'
@@ -6064,6 +6089,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TransferRoute: typeof TransferRoute
   ApiHelloRoute: typeof ApiHelloRoute
   CliInstallDotps1Route: typeof CliInstallDotps1Route
   CliInstallDotshRoute: typeof CliInstallDotshRoute
@@ -6217,6 +6243,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transfer': {
+      id: '/transfer'
+      path: '/transfer'
+      fullPath: '/transfer'
+      preLoaderRoute: typeof TransferRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/hello': {
@@ -8088,6 +8121,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesPasswordsRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
     }
+    '/_public/projects/$projectId/auth/policies/realtime': {
+      id: '/_public/projects/$projectId/auth/policies/realtime'
+      path: '/realtime'
+      fullPath: '/projects/$projectId/auth/policies/realtime'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthPoliciesRealtimeRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthPoliciesRoute
+    }
     '/_public/projects/$projectId/auth/policies/sessions': {
       id: '/_public/projects/$projectId/auth/policies/sessions'
       path: '/sessions'
@@ -9885,6 +9925,7 @@ interface PublicProjectsProjectIdAuthPoliciesRouteChildren {
   PublicProjectsProjectIdAuthPoliciesMembershipsRoute: typeof PublicProjectsProjectIdAuthPoliciesMembershipsRoute
   PublicProjectsProjectIdAuthPoliciesPasskeysRoute: typeof PublicProjectsProjectIdAuthPoliciesPasskeysRoute
   PublicProjectsProjectIdAuthPoliciesPasswordsRoute: typeof PublicProjectsProjectIdAuthPoliciesPasswordsRoute
+  PublicProjectsProjectIdAuthPoliciesRealtimeRoute: typeof PublicProjectsProjectIdAuthPoliciesRealtimeRoute
   PublicProjectsProjectIdAuthPoliciesSessionsRoute: typeof PublicProjectsProjectIdAuthPoliciesSessionsRoute
   PublicProjectsProjectIdAuthPoliciesUsersRoute: typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
 }
@@ -9899,6 +9940,8 @@ const PublicProjectsProjectIdAuthPoliciesRouteChildren: PublicProjectsProjectIdA
       PublicProjectsProjectIdAuthPoliciesPasskeysRoute,
     PublicProjectsProjectIdAuthPoliciesPasswordsRoute:
       PublicProjectsProjectIdAuthPoliciesPasswordsRoute,
+    PublicProjectsProjectIdAuthPoliciesRealtimeRoute:
+      PublicProjectsProjectIdAuthPoliciesRealtimeRoute,
     PublicProjectsProjectIdAuthPoliciesSessionsRoute:
       PublicProjectsProjectIdAuthPoliciesSessionsRoute,
     PublicProjectsProjectIdAuthPoliciesUsersRoute:
@@ -11329,6 +11372,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TransferRoute: TransferRoute,
   ApiHelloRoute: ApiHelloRoute,
   CliInstallDotps1Route: CliInstallDotps1Route,
   CliInstallDotshRoute: CliInstallDotshRoute,

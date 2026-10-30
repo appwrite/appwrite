@@ -450,6 +450,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_MEMORY_LIMIT',
+                'description' => 'PHP memory limit of each Appwrite process, including the API, Realtime, workers and tasks. Accepts any PHP memory_limit value, such as \'2G\', or \'-1\' for no limit. Raise it when a Realtime container holds thousands of connections. By default, set to \'512M\'.',
+                'introduction' => '2.6.2',
+                'default' => '512M',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_SESSION_ALERTS',
                 'description' => 'This option allows you configure if a new login in the Appwrite Console should send an alert email to the user. It\'s disabled by default with value "disabled", and to enable it, pass value "enabled".',
                 'introduction' => '1.6.0',
@@ -517,6 +526,42 @@ return [
                 'description' => "DSN of the service the password pwned project policy asks whether a password has been breached. The scheme picks the adapter. Nothing is asked until you set it: the default, `none://localhost`, reports every password as safe, so the policy protects nothing until this points at a service.\n\nOptions:\n- None: `none://localhost` — the default. Reports every password as safe without asking anyone, for a server that must not or cannot reach a breach service\n- Have I Been Pwned: `hibp://localhost` — the public range API, which only ever receives the first five characters of the password SHA-1 hash. No other detail is read from the DSN\n- [Appwrite Pwned](https://github.com/appwrite-labs/pwned): `appwrite://SECRET@appwrite-pwned/v1/detection` — a service you run yourself, which answers from its own copy of the Have I Been Pwned corpus, so nothing about the password leaves your network. It receives only the SHA-1 hash of the password, never the password itself, authenticated with `SECRET` as a Bearer token, which must match the service's `APPWRITE_PWNED_SECRET`. That hash is unsalted, so only point it at a service on your own network or behind TLS. The path defaults to `v1/detection` and the connection is plain HTTP unless you add `?tls=true`\n- Testing: `mock://localhost` — reports a fixed list of passwords as breached without leaving the process. Refused on a production server, since it would report every real password as safe",
                 'introduction' => '2.3.0',
                 'default' => 'none://localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_SUBSCRIPTIONS',
+                'description' => 'Maximum number of subscriptions one realtime connection can hold. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_CHANNELS',
+                'description' => 'Maximum number of channels one realtime connection can subscribe to, counted across all of its subscriptions. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_QUERIES',
+                'description' => 'Maximum number of queries one realtime connection can hold, counted across all of its subscriptions and including queries nested in and/or. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REALTIME_PERMISSION_TIMEOUT',
+                'description' => 'Maximum number of seconds the realtime server waits for a permission-change event to be verified against the database. When verification fails or does not finish in time, the affected connections are closed unverified and event delivery moves on, so one stuck database connection cannot stall realtime delivery. Clients re-authenticate on reconnect. Minimum 0.1. Default value is: 5.',
+                'introduction' => '2.7.0',
+                'default' => '5',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -589,6 +634,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_MAX_CONNECTIONS',
+                'description' => 'Maximum number of connections the bundled PostgreSQL server accepts. Every API worker and worker coroutine holds its own connections, so raise it on hosts with many cores. Default value is: 500.',
+                'introduction' => '2.7.0',
+                'default' => '500',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_DB_ADAPTER_DOCUMENTSDB',
@@ -1831,7 +1885,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_MAINTENANCE_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
+                'description' => 'How often, in seconds, the maintenance process runs system cleanups, and how often the scheduler runs maintenance for each project accessed in the last 30 days. Those projects are spread across five-minute slices like inactive ones, so use a multiple of 300. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
                 'required' => false,
@@ -1867,7 +1921,7 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_START_TIME',
-                'description' => 'The time of day (in 24-hour format) when the maintenance process should start. The default value is 00:00.',
+                'description' => 'The time of day (in 24-hour format) when the maintenance process should start its system cleanups. Project maintenance runs in slices around the clock. The default value is 00:00.',
                 'introduction' => '1.6.2',
                 'default' => '00:00',
                 'required' => false,
