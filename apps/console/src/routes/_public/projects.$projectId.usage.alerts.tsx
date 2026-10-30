@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
-  alertsQueryOptions,
+  alertsInfiniteQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { AlertHistory } from '@/components/pages/projects/$projectId/usage/alerts/AlertHistory'
@@ -46,8 +46,8 @@ export const Route = createFileRoute(
       projectQueryOptions(params.projectId),
     )
     // The feed's first page, the "All" filter, so it renders without a skeleton.
-    await context.queryClient.ensureQueryData(
-      alertsQueryOptions(params.projectId),
+    await context.queryClient.ensureInfiniteQueryData(
+      alertsInfiniteQueryOptions(params.projectId),
     )
   },
   component: UsageAlertsPage,

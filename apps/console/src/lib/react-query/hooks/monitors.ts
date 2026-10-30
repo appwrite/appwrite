@@ -3,6 +3,7 @@
  */
 
 import {
+  infiniteQueryOptions,
   mutationOptions,
   queryOptions,
   useMutation,
@@ -24,6 +25,7 @@ import {
 } from '@/lib/appwrite/monitors'
 import { fetchAlertSeries, hasSeries } from '@/lib/alerts/series'
 import { DEFAULT_STALE_TIME } from './constants'
+import { nextCursorAfter } from './cursor'
 
 /** The API caps a page at 100; the tabs list them all client-side like webhooks. */
 const PAGE_LIMIT = 100
@@ -84,24 +86,32 @@ export async function fetchAlert(
   return await sdk.forProject(projectId).alerts.get({ alertId })
 }
 
-/** Newest first; `status` narrows to firing or resolved alerts. */
-export function alertsQueryOptions(
+/**
+ * Newest first, a cursor page at a time; `status` narrows to firing or
+ * resolved alerts.
+ */
+export function alertsInfiniteQueryOptions(
   projectId: string | null | undefined,
   filter: { status?: Alert['status']; monitorId?: string } = {},
 ) {
-  return queryOptions({
+  return infiniteQueryOptions({
     queryKey: ['alerts', 'project', projectId, filter],
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       const queries = [Query.orderDesc('$createdAt'), Query.limit(PAGE_LIMIT)]
       if (filter.status) queries.push(Query.equal('status', [filter.status]))
       if (filter.monitorId) {
         queries.push(Query.equal('monitorId', [filter.monitorId]))
       }
+      if (pageParam) queries.push(Query.cursorAfter(pageParam))
       const response = await sdk.forProject(projectId!).alerts.list({
         queries,
+        total: false,
       })
-      return { alerts: response.alerts ?? [], total: response.total ?? 0 }
+      return { alerts: response.alerts ?? [] }
     },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      nextCursorAfter(lastPage.alerts, PAGE_LIMIT),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,

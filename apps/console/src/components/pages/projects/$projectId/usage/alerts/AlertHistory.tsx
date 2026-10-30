@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Bell, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { Button } from '@/components/ui/button'
 import type { Alert } from '@/lib/appwrite/monitors'
 import {
   COMPARATORS,
@@ -19,7 +20,7 @@ import {
   type AlertDay,
 } from '@/lib/alerts/timeline'
 import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
-import { alertsQueryOptions, fetchAlert } from '@/lib/react-query/hooks'
+import { alertsInfiniteQueryOptions, fetchAlert } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
@@ -61,13 +62,23 @@ export function AlertHistory({
   const t = useT()
   const [filter, setFilter] = useState<Filter>('all')
   // Switching filters keeps the current feed on screen until the next one arrives.
-  const { data, isLoading } = useQuery({
-    ...alertsQueryOptions(projectId, {
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useInfiniteQuery({
+    ...alertsInfiniteQueryOptions(projectId, {
       status: filter === 'all' ? undefined : filter,
     }),
     placeholderData: keepPreviousData,
   })
-  const alerts = useMemo(() => data?.alerts ?? [], [data])
+  const alerts = useMemo(
+    () => data?.pages.flatMap((page) => page.alerts) ?? [],
+    [data],
+  )
   // One clock for the whole feed, so ongoing bars and day labels agree.
   const now = useMemo(() => (data ? Date.now() : 0), [data])
   const days = useMemo(() => groupAlertsByDay(alerts, now), [alerts, now])
@@ -189,6 +200,25 @@ export function AlertHistory({
               </ol>
             </section>
           ))}
+          {hasNextPage ? (
+            <div className="flex flex-col items-center gap-2">
+              {isFetchNextPageError ? (
+                <p className="text-[12px] text-destructive">
+                  {t('Loading more failed. Try again.')}
+                </p>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-[12px]"
+                disabled={isFetchingNextPage}
+                onClick={() => void fetchNextPage()}
+              >
+                {t('Load more')}
+              </Button>
+            </div>
+          ) : null}
         </div>
       )}
 

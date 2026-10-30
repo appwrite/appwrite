@@ -362,3 +362,51 @@ describe('budget monitor webhook', () => {
     expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true)
   })
 })
+
+describe('alert history pages', () => {
+  afterAll(() => {
+    mock.module('@/lib/appwrite/sdk', () => actualSdk)
+  })
+
+  test('loads the alerts past the first page after the last one', async () => {
+    const page = (from: number, count: number) =>
+      Array.from({ length: count }, (_, i) => ({ $id: `a${from + i}` }))
+    const requests: string[][] = []
+    mock.module('@/lib/appwrite/sdk', () => ({
+      ...actualSdk,
+      sdk: {
+        forProject: () => ({
+          alerts: {
+            list: async ({ queries }: { queries: string[] }) => {
+              requests.push(queries)
+              return {
+                alerts: requests.length === 1 ? page(0, 100) : page(100, 3),
+              }
+            },
+          },
+        }),
+      },
+    }))
+    const { alertsInfiniteQueryOptions } = await import(
+      '@/lib/react-query/hooks/monitors'
+    )
+
+    const queryClient = new QueryClient()
+    const options = alertsInfiniteQueryOptions('project', { status: 'firing' })
+    await queryClient.fetchInfiniteQuery({ ...options, pages: 3 })
+
+    const data = queryClient.getQueryData(options.queryKey)
+    expect(data?.pages.flatMap((p) => p.alerts)).toHaveLength(103)
+    expect(requests).toHaveLength(2)
+    expect(requests[1].map((query) => JSON.parse(query))).toContainEqual({
+      method: 'cursorAfter',
+      values: ['a99'],
+    })
+    // The filter holds on every page.
+    expect(requests[1].map((query) => JSON.parse(query))).toContainEqual({
+      method: 'equal',
+      attribute: 'status',
+      values: ['firing'],
+    })
+  })
+})
